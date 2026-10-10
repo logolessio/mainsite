@@ -1,0 +1,12 @@
+pmOnFail: ignore
+
+minimumReleaseAgeExclude:
+  - '@next/*'
+  - next
+
+# Packages allowed to run install scripts. esbuild and workerd are needed by Cloudflare's wrangler.
+allowBuilds:
+  esbuild: true
+  workerd: true
+  inotify: false
+  pnpm: false

@@ -1,0 +1,120 @@
+'use client'
+
+import { AdminList } from './admin-list'
+import { ActionButton } from './ui'
+import { Badge } from './table'
+
+// TODO(backend): replace the empty arrays with API data. Row shapes are the contract.
+
+type Flag = { id: string; clipper: string; campaign: string; reason: string; severity: 'low' | 'medium' | 'high'; date: string }
+export function FraudTable() {
+  const rows: Flag[] = []
+  return (
+    <AdminList
+      rows={rows}
+      searchKeys={['clipper', 'campaign', 'reason']}
+      filterLabel="Severity"
+      filterKey="severity"
+      filterOptions={['low', 'medium', 'high']}
+      emptyTitle="No fraud flags"
+      emptyBody="Suspicious clips surfaced by the checks will appear here."
+      columns={[
+        { key: 'c', header: 'Clipper', render: (r) => `@${r.clipper}` },
+        { key: 'ca', header: 'Campaign', render: (r) => r.campaign },
+        { key: 'r', header: 'Reason', render: (r) => r.reason },
+        { key: 's', header: 'Severity', render: (r) => <Badge tone={r.severity === 'high' ? 'bad' : r.severity === 'medium' ? 'warn' : 'neutral'}>{r.severity}</Badge> },
+        { key: 'd', header: 'Date', render: (r) => r.date },
+        { key: 'a', header: '', render: () => <ActionButton variant="ghost">Review</ActionButton>, className: 'text-right' },
+      ]}
+    />
+  )
+}
+
+type Camp = { id: string; title: string; brand: string; status: 'draft' | 'live' | 'paused' | 'ended'; budget: number; clips: number }
+export function CampaignsTable() {
+  const rows: Camp[] = []
+  return (
+    <AdminList
+      rows={rows}
+      searchKeys={['title', 'brand']}
+      filterLabel="Status"
+      filterKey="status"
+      filterOptions={['draft', 'live', 'paused', 'ended']}
+      emptyTitle="No campaigns"
+      columns={[
+        { key: 't', header: 'Campaign', render: (r) => r.title },
+        { key: 'b', header: 'Brand', render: (r) => r.brand },
+        { key: 's', header: 'Status', render: (r) => <Badge tone={r.status === 'live' ? 'good' : 'neutral'}>{r.status}</Badge> },
+        { key: 'bu', header: 'Budget', render: (r) => `$${r.budget.toLocaleString()}`, className: 'text-right' },
+        { key: 'c', header: 'Clips', render: (r) => r.clips, className: 'text-right' },
+        { key: 'a', header: '', render: () => <ActionButton variant="ghost">Pause</ActionButton>, className: 'text-right' },
+      ]}
+    />
+  )
+}
+
+type User = { id: string; name: string; email: string; role: 'clipper' | 'brand' | 'admin'; status: 'active' | 'suspended'; joined: string }
+export function UsersTable() {
+  const rows: User[] = []
+  return (
+    <AdminList
+      rows={rows}
+      searchKeys={['name', 'email']}
+      filterLabel="Roles"
+      filterKey="role"
+      filterOptions={['clipper', 'brand', 'admin']}
+      emptyTitle="No users"
+      emptyBody="Accounts will be listed here once people sign up."
+      columns={[
+        { key: 'n', header: 'Name', render: (r) => r.name },
+        { key: 'e', header: 'Email', render: (r) => r.email },
+        { key: 'r', header: 'Role', render: (r) => <Badge>{r.role}</Badge> },
+        { key: 's', header: 'Status', render: (r) => <Badge tone={r.status === 'active' ? 'good' : 'bad'}>{r.status}</Badge> },
+        { key: 'j', header: 'Joined', render: (r) => r.joined },
+        { key: 'a', header: '', render: (r) => <ActionButton variant={r.status === 'active' ? 'danger' : 'ghost'}>{r.status === 'active' ? 'Suspend' : 'Restore'}</ActionButton>, className: 'text-right' },
+      ]}
+    />
+  )
+}
+
+type Payout = { id: string; clipper: string; amount: number; status: 'paid' | 'in_transit' | 'held' | 'failed'; date: string; stripeId: string }
+export function PayoutsTable() {
+  const rows: Payout[] = []
+  return (
+    <AdminList
+      rows={rows}
+      searchKeys={['clipper', 'stripeId']}
+      filterLabel="Status"
+      filterKey="status"
+      filterOptions={['paid', 'in_transit', 'held', 'failed']}
+      emptyTitle="No payouts"
+      columns={[
+        { key: 'c', header: 'Clipper', render: (r) => `@${r.clipper}` },
+        { key: 'a', header: 'Amount', render: (r) => `$${r.amount.toFixed(2)}` },
+        { key: 's', header: 'Status', render: (r) => <Badge tone={r.status === 'paid' ? 'good' : r.status === 'failed' ? 'bad' : 'warn'}>{r.status.replace('_', ' ')}</Badge> },
+        { key: 'st', header: 'Stripe ID', render: (r) => <code className="font-mono text-xs">{r.stripeId}</code> },
+        { key: 'd', header: 'Date', render: (r) => r.date },
+        { key: 'x', header: '', render: () => <ActionButton variant="ghost">Hold</ActionButton>, className: 'text-right' },
+      ]}
+    />
+  )
+}
+
+type Log = { id: string; actor: string; action: string; target: string; date: string }
+export function AuditTable() {
+  const rows: Log[] = []
+  return (
+    <AdminList
+      rows={rows}
+      searchKeys={['actor', 'action', 'target']}
+      emptyTitle="No activity logged"
+      emptyBody="Every admin action is recorded here."
+      columns={[
+        { key: 'd', header: 'When', render: (r) => r.date },
+        { key: 'a', header: 'Admin', render: (r) => r.actor },
+        { key: 'ac', header: 'Action', render: (r) => r.action },
+        { key: 't', header: 'Target', render: (r) => r.target },
+      ]}
+    />
+  )
+}
