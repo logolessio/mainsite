@@ -36,8 +36,19 @@ export async function ensureHuman(): Promise<void> {
   overlay.className = 'fixed inset-0 z-[100] grid place-items-center bg-black/70 px-5'
   overlay.setAttribute('role', 'dialog')
   overlay.setAttribute('aria-label', 'Checking that you are human')
-  overlay.innerHTML =
-    '<div class="w-full max-w-sm rounded-[28px] border border-white/15 bg-[#09090a] p-6 text-center"><p class="font-display text-2xl">One quick check</p><p class="mt-2 text-sm text-white/55">Making sure you are a person, not a bot.</p><div data-slot class="mt-5 grid min-h-[70px] place-items-center"></div></div>'
+  const card = document.createElement('div')
+  card.className = 'w-full max-w-sm rounded-[28px] border border-white/15 bg-[#09090a] p-6 text-center'
+  const h = document.createElement('p')
+  h.className = 'font-display text-2xl'
+  h.textContent = 'One quick check'
+  const sub = document.createElement('p')
+  sub.className = 'mt-2 text-sm text-white/55'
+  sub.textContent = 'Making sure you are a person, not a bot.'
+  const slotEl = document.createElement('div')
+  slotEl.dataset.slot = ''
+  slotEl.className = 'mt-5 grid min-h-[70px] place-items-center'
+  card.append(h, sub, slotEl)
+  overlay.append(card)
   document.body.appendChild(overlay)
   const slot = overlay.querySelector('[data-slot]') as HTMLElement
 
