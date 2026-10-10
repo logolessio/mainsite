@@ -23,6 +23,8 @@ export const SITE = {
   platformFeePct: 10, // TODO: confirm
   minPayoutUsd: 20, // TODO: confirm
   minTopUpUsd: 100, // TODO: confirm
+  maxTopUpUsd: 10000, // per top-up; raise once you trust the flow
+  holdDays: 3, // how long earnings stay pending before they can be withdrawn
   legalUpdated: 'October 10, 2026',
 }
 

@@ -8,6 +8,7 @@ import { TransitionLink } from '@/components/shell/transition-link'
 import { useMounted } from '@/hooks/use-motion-prefs'
 import { EASE_OUT } from '@/lib/layout'
 import { DEFAULT_DATA, type OnboardingData } from '@/lib/onboarding'
+import { getConnectStatus, getFinance } from '@/lib/stripe-client'
 import { cn } from '@/lib/utils'
 import { AccountStep } from './steps/account-step'
 import { BillingStep } from './steps/billing-step'
@@ -125,6 +126,38 @@ export function OnboardingFlow({ initialRole, sessionUser }: { initialRole?: 'cl
       /* private mode */
     }
   }, [data, index, restored, finished])
+
+  // Back from Stripe (?stripe=return after onboarding, ?topup=success after paying): confirm with the server.
+  useEffect(() => {
+    if (!restored) return
+    const q = new URLSearchParams(window.location.search)
+    const connectBack = q.get('stripe') === 'return'
+    const paidBack = q.get('topup') === 'success'
+    if (!connectBack && !paidBack) return
+    window.history.replaceState(null, '', `/onboarding?role=${q.get('role') ?? data.role}`)
+    let live = true
+    ;(async () => {
+      if (connectBack) {
+        const r = await getConnectStatus().catch(() => null)
+        if (live && r?.status === 'ready') setData((d) => ({ ...d, stripeConnected: true }))
+      }
+      if (paidBack) {
+        // the payment confirmation reaches us a moment after the redirect, so look a few times
+        for (let i = 0; i < 10 && live; i++) {
+          const f = await getFinance().catch(() => null)
+          if (f && f.balances.brand > 0) {
+            setData((d) => ({ ...d, stripeConnected: true }))
+            break
+          }
+          await new Promise((r) => setTimeout(r, 2000))
+        }
+      }
+    })()
+    return () => {
+      live = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restored])
 
   const update = useCallback((patch: Partial<OnboardingData>) => setData((d) => ({ ...d, ...patch })), [])
   const go = useCallback((to: number) => {

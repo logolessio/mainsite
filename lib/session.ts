@@ -6,7 +6,8 @@ import { auth, authConfigured } from '@/auth'
 export async function getSession() {
   try {
     return await auth()
-  } catch {
+  } catch (e) {
+    console.error('getSession failed:', e instanceof Error ? `${e.name}: ${e.message}` : String(e))
     return null
   }
 }

@@ -1,3 +1,8 @@
+import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare'
+
+// Lets `next dev` use the same bindings (the D1 database) that the deployed Worker has, stored locally in .wrangler.
+initOpenNextCloudflareForDev()
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: { optimizePackageImports: ['lucide-react', 'framer-motion'] },

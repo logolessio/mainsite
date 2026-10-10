@@ -2,19 +2,25 @@
 
 import { Banknote, Check, Landmark, Loader2, Lock, Zap } from 'lucide-react'
 import { useState } from 'react'
-import { connectStripe } from '@/lib/onboarding'
+import { startConnect } from '@/lib/stripe-client'
 import { SITE } from '@/lib/site'
 import type { StepProps } from '../types'
 import { Panel, PrimaryBtn, StepTitle } from '../ui'
 
 export function PayoutsStep({ data, update }: StepProps) {
   const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
 
   const connect = async () => {
     setBusy(true)
-    const ok = await connectStripe('clipper')
-    setBusy(false)
-    if (ok) update({ stripeConnected: true })
+    setError('')
+    try {
+      // The browser leaves for Stripe and comes back to this step; the flow then checks the account's status.
+      await startConnect('/onboarding')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not open Stripe.')
+      setBusy(false)
+    }
   }
 
   return (
@@ -56,7 +62,10 @@ export function PayoutsStep({ data, update }: StepProps) {
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Banknote className="size-4" />}
               Connect with Stripe
             </PrimaryBtn>
-            <p className="mt-3 text-xs text-mute">Takes about five minutes. You can also do this later from your dashboard.</p>
+            <p role="alert" className="mt-3 min-h-4 text-xs text-signal">
+              {error}
+            </p>
+            <p className="mt-1 text-xs text-mute">Takes about five minutes. You can also do this later from your dashboard.</p>
           </>
         )}
       </Panel>

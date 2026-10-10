@@ -87,13 +87,6 @@ export async function resendEmailCode(_email: string): Promise<void> {
   await new Promise((r) => setTimeout(r, 300))
 }
 
-export async function connectStripe(_role: Role): Promise<boolean> {
-  // TODO(backend): clippers -> create a Connect Express account + AccountLink and redirect to it;
-  // brands -> create a Checkout session or SetupIntent. Return true once Stripe reports the account as ready.
-  await new Promise((r) => setTimeout(r, 900))
-  return true
-}
-
 export async function completeOnboarding(_data: OnboardingData): Promise<void> {
   // TODO(backend): PUT /api/me/onboarding. Persist the profile, interests and brand details, then set onboarded = true.
   await new Promise((r) => setTimeout(r, 400))

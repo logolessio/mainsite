@@ -2,20 +2,27 @@
 
 import { Check, CreditCard, Loader2, Lock } from 'lucide-react'
 import { useState } from 'react'
-import { FUND_PRESETS, connectStripe } from '@/lib/onboarding'
+import { FUND_PRESETS } from '@/lib/onboarding'
+import { startTopup } from '@/lib/stripe-client'
 import { SITE } from '@/lib/site'
 import type { StepProps } from '../types'
 import { Chip, Panel, PrimaryBtn, StepTitle } from '../ui'
 
 export function BillingStep({ data, update }: StepProps) {
   const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
   const amount = data.fundAmount ?? FUND_PRESETS[1]
 
   const pay = async () => {
     setBusy(true)
-    const ok = await connectStripe('brand')
-    setBusy(false)
-    if (ok) update({ stripeConnected: true, fundAmount: amount })
+    setError('')
+    try {
+      // Leaves for Stripe Checkout and comes back to this step once the payment is confirmed.
+      await startTopup(amount, '/onboarding')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not open checkout.')
+      setBusy(false)
+    }
   }
 
   return (
@@ -43,7 +50,10 @@ export function BillingStep({ data, update }: StepProps) {
               {busy ? <Loader2 className="size-4 animate-spin" /> : <CreditCard className="size-4" />}
               Add ${amount.toLocaleString()} with Stripe
             </PrimaryBtn>
-            <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-mute">
+            <p role="alert" className="mt-3 min-h-4 text-center text-xs text-signal">
+              {error}
+            </p>
+            <p className="mt-1 flex items-center justify-center gap-1.5 text-xs text-mute">
               <Lock className="size-3" /> Secure checkout by Stripe. Minimum ${SITE.minTopUpUsd}.
             </p>
           </>

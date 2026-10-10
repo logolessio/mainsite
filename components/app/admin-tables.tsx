@@ -77,24 +77,34 @@ export function UsersTable() {
   )
 }
 
-type Payout = { id: string; clipper: string; amount: number; status: 'paid' | 'in_transit' | 'held' | 'failed'; date: string; stripeId: string }
-export function PayoutsTable() {
-  const rows: Payout[] = []
+export type PayoutRow = { id: string; clipper: string; amount: number; status: 'pending' | 'sent' | 'failed' | 'reversed'; date: string; stripeId: string; note: string }
+export function PayoutsTable({ rows }: { rows: PayoutRow[] }) {
   return (
     <AdminList
       rows={rows}
       searchKeys={['clipper', 'stripeId']}
       filterLabel="Status"
       filterKey="status"
-      filterOptions={['paid', 'in_transit', 'held', 'failed']}
+      filterOptions={['pending', 'sent', 'failed', 'reversed']}
       emptyTitle="No payouts"
+      emptyBody="Withdrawals made through Stripe appear here."
       columns={[
-        { key: 'c', header: 'Clipper', render: (r) => `@${r.clipper}` },
+        { key: 'c', header: 'Clipper', render: (r) => r.clipper },
         { key: 'a', header: 'Amount', render: (r) => `$${r.amount.toFixed(2)}` },
-        { key: 's', header: 'Status', render: (r) => <Badge tone={r.status === 'paid' ? 'good' : r.status === 'failed' ? 'bad' : 'warn'}>{r.status.replace('_', ' ')}</Badge> },
-        { key: 'st', header: 'Stripe ID', render: (r) => <code className="font-mono text-xs">{r.stripeId}</code> },
+        { key: 's', header: 'Status', render: (r) => <Badge tone={r.status === 'sent' ? 'good' : r.status === 'pending' ? 'warn' : 'bad'}>{r.status}</Badge> },
+        {
+          key: 'st',
+          header: 'Stripe transfer',
+          render: (r) =>
+            r.stripeId ? (
+              <a href={`https://dashboard.stripe.com/connect/transfers/${r.stripeId}`} target="_blank" rel="noreferrer" className="font-mono text-xs underline underline-offset-4">
+                {r.stripeId}
+              </a>
+            ) : (
+              <span className="text-xs text-mute">{r.note || '-'}</span>
+            ),
+        },
         { key: 'd', header: 'Date', render: (r) => r.date },
-        { key: 'x', header: '', render: () => <ActionButton variant="ghost">Hold</ActionButton>, className: 'text-right' },
       ]}
     />
   )

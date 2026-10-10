@@ -15,6 +15,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
         { label: 'Fraud flags', href: '/admin/fraud', icon: 'ShieldAlert' },
         { label: 'Campaigns', href: '/admin/campaigns', icon: 'Megaphone' },
         { label: 'Users', href: '/admin/users', icon: 'Users' },
+        { label: 'Earnings', href: '/admin/earnings', icon: 'CircleDollarSign' },
         { label: 'Payouts', href: '/admin/payouts', icon: 'Banknote' },
         { label: 'Audit log', href: '/admin/audit', icon: 'ScrollText' },
         { label: 'Settings', href: '/admin/settings', icon: 'Settings' },
