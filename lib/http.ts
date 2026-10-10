@@ -24,16 +24,40 @@ export function route<A extends unknown[]>(fn: (...args: A) => Promise<Response>
   }
 }
 
-/** Blocks cross-site form posts. Browsers send Origin on POSTs, and it must match this site. */
+/**
+ * CSRF defence for anything that changes state. Browsers always tell us where a request came from:
+ * Origin on POSTs, Sec-Fetch-Site on every request. Anything that is not clearly from this site is refused.
+ * (Session cookies are also SameSite=Lax, which is the second layer.)
+ */
 export function assertSameOrigin(req: Request) {
   const origin = req.headers.get('origin')
-  if (origin && new URL(origin).host !== new URL(req.url).host) throw new HttpError(403, 'Cross-site request blocked.')
+  if (origin) {
+    let host = ''
+    try {
+      host = new URL(origin).host
+    } catch {
+      /* falls through to the refusal below */
+    }
+    if (host !== new URL(req.url).host) throw new HttpError(403, 'Cross-site request blocked.')
+    return
+  }
+  const site = req.headers.get('sec-fetch-site')
+  if (site === 'same-origin' || site === 'none') return
+  throw new HttpError(403, 'Cross-site request blocked.')
 }
 
-export async function body<T>(req: Request): Promise<T> {
+const MAX_BODY = 64 * 1024
+
+/** Reads a JSON body, refusing anything larger than `max` bytes (default 64 KB) before parsing it. */
+export async function body<T>(req: Request, max = MAX_BODY): Promise<T> {
+  const declared = Number(req.headers.get('content-length') ?? 0)
+  if (declared > max) throw new HttpError(413, 'That request is too large.')
   try {
-    return (await req.json()) as T
-  } catch {
+    const text = await req.text()
+    if (text.length > max) throw new HttpError(413, 'That request is too large.')
+    return JSON.parse(text) as T
+  } catch (e) {
+    if (e instanceof HttpError) throw e
     throw new HttpError(400, 'Invalid request.')
   }
 }

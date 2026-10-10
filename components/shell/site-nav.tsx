@@ -9,17 +9,19 @@ import { EASE_OUT } from '@/lib/layout'
 import { NAV_LINKS } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import { TransitionLink } from './transition-link'
+import { NavUserActions, useNavUser } from './nav-user'
 import { useTransitions } from './transition-provider'
 
 const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin']
 export const TOUR_EVENT = 'logoless:tour'
 
-const LINKS = [...NAV_LINKS, { label: 'Log in', href: '/login' }]
 
 export function SiteNav() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const { navigate } = useTransitions()
+  const { user } = useNavUser()
+  const links = [...NAV_LINKS, user?.signedIn ? { label: 'Dashboard', href: '/dashboard' } : { label: 'Log in', href: '/login' }]
   const toggleRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -66,14 +68,23 @@ export function SiteNav() {
           </TransitionLink>
 
           <div className="pointer-events-auto flex items-center gap-3">
-            <TransitionLink
-              href="/onboarding"
-              data-tour="get-started"
-              onClick={() => setOpen(false)}
-              className="inline-flex h-11 items-center bg-paper px-5 text-sm font-medium text-ink transition-colors hover:bg-paper/85 rounded-full"
-            >
-              Get started
-            </TransitionLink>
+            {user?.signedIn ? (
+              <NavUserActions onNavigate={() => setOpen(false)} />
+            ) : (
+              <TransitionLink
+                href="/onboarding"
+                data-tour="get-started"
+                onClick={() => setOpen(false)}
+                aria-hidden={user === null}
+                tabIndex={user === null ? -1 : undefined}
+                className={cn(
+                  'inline-flex h-11 items-center rounded-full bg-paper px-5 text-sm font-medium text-ink transition-all hover:bg-paper/85',
+                  user === null && 'pointer-events-none opacity-0',
+                )}
+              >
+                Get started
+              </TransitionLink>
+            )}
             <button
               ref={toggleRef}
               type="button"
@@ -117,7 +128,7 @@ export function SiteNav() {
                 variants={{ show: { transition: { staggerChildren: 0.06, delayChildren: 0.18 } } }}
                 className="flex flex-col"
               >
-                {LINKS.map((link, i) => (
+                {links.map((link, i) => (
                   <motion.li
                     key={link.href}
                     variants={{
@@ -153,7 +164,7 @@ export function SiteNav() {
                     <span className="font-display text-4xl md:text-5xl text-mute transition-all duration-300 group-hover:translate-x-2 group-hover:text-paper">
                       Take the tour
                     </span>
-                    <span className="font-mono text-xs text-mute">07</span>
+                    <span className="font-mono text-xs text-mute">0{links.length + 1}</span>
                   </button>
                 </motion.li>
               </motion.ul>

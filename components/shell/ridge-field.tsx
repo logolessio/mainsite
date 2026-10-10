@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 
 const ROWS = 54
+export const DOT_EVENT = 'logoless:dots'
 
 /**
  * Full-page background: rows of soft-edged dots that roll like a landscape and peak in the middle.
@@ -19,17 +20,25 @@ export function RidgeField() {
     const ctx = canvas?.getContext('2d', { alpha: false })
     if (!canvas || !ctx) return
 
-    // one soft glowing dot, drawn once and stamped thousands of times
+    // one soft dot, drawn once and stamped thousands of times. Profiles can change its colour.
     const sprite = document.createElement('canvas')
     sprite.width = sprite.height = 96
-    const sg = sprite.getContext('2d')!
-    const grad = sg.createRadialGradient(48, 48, 0, 48, 48, 48)
-    grad.addColorStop(0, 'rgba(255,255,255,0.95)')
-    grad.addColorStop(0.5, 'rgba(255,255,255,0.85)')
-    grad.addColorStop(0.78, 'rgba(255,255,255,0.35)')
-    grad.addColorStop(1, 'rgba(255,255,255,0)')
-    sg.fillStyle = grad
-    sg.fillRect(0, 0, 96, 96)
+    const buildSprite = (hex: string) => {
+      const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex)
+      const [r, g, b] = m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [255, 255, 255]
+      const sg = sprite.getContext('2d')!
+      sg.clearRect(0, 0, 96, 96)
+      const grad = sg.createRadialGradient(48, 48, 0, 48, 48, 48)
+      grad.addColorStop(0, `rgba(${r},${g},${b},0.95)`)
+      grad.addColorStop(0.5, `rgba(${r},${g},${b},0.85)`)
+      grad.addColorStop(0.78, `rgba(${r},${g},${b},0.35)`)
+      grad.addColorStop(1, `rgba(${r},${g},${b},0)`)
+      sg.fillStyle = grad
+      sg.fillRect(0, 0, 96, 96)
+    }
+    buildSprite(document.documentElement.dataset.dotColor ?? '#ffffff')
+    const onDots = (e: Event) => buildSprite(String((e as CustomEvent).detail ?? '#ffffff'))
+    window.addEventListener(DOT_EVENT, onDots)
 
     let w = 0
     let h = 0
@@ -155,6 +164,7 @@ export function RidgeField() {
     }
     return () => {
       cancelAnimationFrame(raf)
+      window.removeEventListener(DOT_EVENT, onDots)
       window.removeEventListener('resize', resize)
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerdown', onDown)

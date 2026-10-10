@@ -48,6 +48,7 @@ export const LEGAL_LINKS = [
   { label: 'Payments & Payouts', href: '/legal/payments' },
   { label: 'Cookie Policy', href: '/legal/cookies' },
   { label: 'Do Not Sell or Share', href: '/legal/do-not-sell' },
+  { label: 'External Links', href: '/legal/external-links' },
   { label: 'Copyright / DMCA', href: '/legal/dmca' },
   { label: 'Refund Policy', href: '/legal/refunds' },
 ]

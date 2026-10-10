@@ -163,6 +163,21 @@ export const LEGAL: LegalDoc[] = [
       { h: 'Timing', p: ['Refunds are issued through Stripe and typically appear within 5 to 10 business days, depending on your bank.'] },
     ],
   },
+  {
+    slug: 'external-links',
+    title: 'External Links & Profiles',
+    summary: `How links on ${S} profiles work, and what to know before you follow one.`,
+    sections: [
+      { h: 'What this covers', p: [`${S} members can add social links, a Discord invite and a website to their public profile. This page explains how those links are handled and what ${S} is and is not responsible for.`] },
+      { h: 'Links are added by members, not by us', p: [`Every link on a profile was added by the member who owns that profile. They are not official ${S} links, and ${S} does not own, run, check or endorse the sites, servers or accounts they lead to. A link appearing on ${S} is not a recommendation.`] },
+      { h: 'The leaving-site page', p: ['Website links open a short notice page first. It shows the full address you are about to visit, and you continue only after you press "I understand". Social links and Discord invites are limited to each platform\'s own domain, but they are still created by members, so the same care applies.'] },
+      { h: 'Staying safe', p: ['Check the address on the notice page before you continue. Never enter your password, a recovery code or payment details on a site you reached through a profile link unless you are certain it is the real service. We will never ask you to log in to logoless through a link on someone\'s profile.', 'Be careful with Discord invites and downloads, and never share a login or a verification code with someone you met through a link.'] },
+      { h: 'What members may not link to', p: ['Members may not link to phishing or scam pages, malware, sites that impersonate logoless or another business, illegal content, adult content, or anything that breaks our Acceptable Use Policy. Profile links must use https.'] },
+      { h: 'Reporting and removal', p: [`If you see a link that breaks these rules, report it to ${SITE.emails.abuse}. We may remove a link, hide a profile, or restrict an account without notice when we believe a link is harmful.`] },
+      { h: 'Our responsibility', p: [`To the fullest extent permitted by law, ${C} is not responsible for the content, availability, security or practices of any site reached through a member\'s profile, or for loss or damage that results from visiting one. Your use of a third-party site is at your own risk and under that site\'s own terms.`] },
+      { h: 'Contact', p: [`Questions about this page: ${SITE.emails.legal}.`] },
+    ],
+  },
 ]
 
 export const getLegal = (slug: string) => LEGAL.find((d) => d.slug === slug)

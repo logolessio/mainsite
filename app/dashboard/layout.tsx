@@ -13,6 +13,8 @@ export default async function Layout({ children }: { children: React.ReactNode }
         { label: 'My clips', href: '/dashboard/submissions', icon: 'Clapperboard' },
         { label: 'Earnings', href: '/dashboard/earnings', icon: 'CircleDollarSign' },
         { label: 'Payouts', href: '/dashboard/payouts', icon: 'Landmark' },
+        { label: 'Profile', href: '/dashboard/profile', icon: 'UserCheck' },
+        { label: 'Achievements', href: '/dashboard/achievements', icon: 'Trophy' },
         { label: 'Linked accounts', href: '/dashboard/accounts', icon: 'Link2' },
         { label: 'Settings', href: '/dashboard/settings', icon: 'Settings' },
       ]}
