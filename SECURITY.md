@@ -25,7 +25,7 @@ Money moves through this site, so every route that changes something follows the
 | 17 | Security headers | CSP, HSTS, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`. Test them in `/admin/keys`. |
 | 18 | Secure cookies | `HttpOnly`, `Secure`, `SameSite=Lax`, `__Secure-` prefix in production. |
 | 19 | Disable debug | No source maps, no `X-Powered-By`, visitors see generic error text, details go only to server logs. |
-| 20 | (not visible in the video) | Covered instead: every admin action and every text change goes into a hash-chained log that shows tampering (`/admin/audit`), and D1 keeps 30 days of point-in-time restore. |
+| 20 | (not visible in the video) | Covered instead: every admin action and every text change goes into a hash-chained log that shows tampering (`/admin/audit`), and D1 Time Travel can restore the database to any minute in the last 7 to 30 days (depends on your Cloudflare plan). |
 
 ## Account checks for VPN / proxy / data-centre networks
 
