@@ -100,7 +100,7 @@ export function NavUserActions({ onNavigate }: { onNavigate?: () => void }) {
         href="/dashboard"
         data-tour="get-started"
         onClick={onNavigate}
-        className="inline-flex h-11 items-center rounded-full bg-paper px-5 text-sm font-medium text-ink transition-colors hover:bg-paper/85"
+        className="inline-flex h-11 items-center rounded-full bg-paper px-4 text-sm font-medium text-ink transition-colors hover:bg-paper/85 md:px-5"
       >
         Dashboard
       </TransitionLink>
