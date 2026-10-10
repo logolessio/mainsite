@@ -22,7 +22,9 @@ export function SubmitClip({ campaign }: { campaign: Campaign }) {
   const [error, setError] = useState<string | null>(null)
   const [sent, setSent] = useState(false)
 
-  const submit = (e: React.FormEvent) => {
+  const [busy, setBusy] = useState(false)
+
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     let host = ''
     try {
@@ -34,7 +36,22 @@ export function SubmitClip({ campaign }: { campaign: Campaign }) {
       return setError(`That doesn’t look like a ${PLATFORM_LABEL[platform]} link.`)
     }
     setError(null)
-    setSent(true)
+    setBusy(true)
+    try {
+      const res = await fetch(`/api/campaigns/${campaign.id}/submit`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ platform, url: url.trim() }),
+      })
+      const j = (await res.json().catch(() => ({}))) as { error?: string }
+      if (res.status === 401) return setError('Log in to submit a clip.')
+      if (!res.ok) return setError(j.error ?? 'Could not submit that clip.')
+      setSent(true)
+    } catch {
+      setError('Could not reach the server. Please try again.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -125,7 +142,8 @@ export function SubmitClip({ campaign }: { campaign: Campaign }) {
               </div>
               <button
                 type="submit"
-                className="inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-full bg-paper px-5 text-sm font-medium text-ink transition-colors hover:bg-paper/85"
+                disabled={busy}
+                className="inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-full bg-paper px-5 text-sm font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-60"
               >
                 Submit
                 <ArrowUpRight aria-hidden="true" className="size-4" />

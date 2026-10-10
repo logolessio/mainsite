@@ -7,6 +7,8 @@ import { TOUR_EVENT } from '@/components/shell/site-nav'
 import type { Campaign, Platform } from '@/lib/campaigns'
 import { Layer, Tilt3D } from '@/components/motion/tilt'
 import { Words } from '@/components/motion/words'
+import { useCopy } from '@/components/shell/copy-provider'
+import { HERO_VARIANTS_DEFAULT, HERO_VARIANTS_KEY } from '@/lib/copy-key'
 import { EASE_OUT } from '@/lib/layout'
 import { CampaignGrid } from './campaign-grid'
 import { FilterBar, type SortKey } from './filter-bar'
@@ -40,11 +42,20 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
       .sort((a, b) => (sort === 'rate' ? b.ratePer1k - a.ratePer1k : sort === 'budget' ? b.budget - a.budget : end(a) - end(b)))
   }, [campaigns, deferred, category, platforms, sort])
 
-  // The hero shows either the headline or the big logo, picked at random on each visit.
+  // Each visit the hero shows the big logo, one of many ways of saying "views have value", or one of three greetings.
   // It is chosen after mount so the server and browser HTML always match.
-  const [hero, setHero] = useState<'text' | 'logo' | null>(null)
+  const { tx, overrides } = useCopy()
+  const [hero, setHero] = useState<{ kind: 'logo' } | { kind: 'text'; text: string } | null>(null)
+  const count = campaigns.length
   useEffect(() => {
-    setHero(Math.random() < 0.5 ? 'text' : 'logo')
+    const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)]
+    const variants = (overrides[HERO_VARIANTS_KEY] ?? HERO_VARIANTS_DEFAULT.join('\n')).split('\n').map((v) => v.trim()).filter(Boolean)
+    const greetings = [tx('welcome to logoless'), tx('browse {n} campaigns').replace('{n}', String(count)), tx('explore our campaigns')]
+    const r = Math.random()
+    if (r < 0.3) setHero({ kind: 'logo' })
+    else if (r < 0.8) setHero({ kind: 'text', text: variants.length ? pick(variants) : 'views have value' })
+    else setHero({ kind: 'text', text: pick(greetings) })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -64,35 +75,38 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
         <h1 className="sr-only" id="hero-title">
           logoless: views have value
         </h1>
-        <Tilt3D global glare={false} max={5} className="flex min-h-[150px] w-full items-center justify-center md:min-h-[290px]">
-          {hero === 'text' && (
+        <Tilt3D global glare={false} max={hero?.kind === 'logo' ? 0.8 : 5} className="flex min-h-[150px] w-full items-center justify-center md:min-h-[290px]">
+          {hero?.kind === 'text' && (
             <Layer z={90}>
               <Words
+                key={hero.text}
                 as="p"
                 sweep
                 immediate
                 delay={0.1}
                 stagger={0.12}
-                text="views have value"
-                className="mx-auto max-w-[10ch] font-display text-[15vw] leading-[0.95] md:text-[8.5vw] xl:text-[132px]"
+                text={hero.text}
+                className={`mx-auto font-display leading-[0.95] ${
+                  hero.text.length > 24
+                    ? 'max-w-[16ch] text-[11vw] md:text-[6.4vw] xl:text-[100px]'
+                    : hero.text.length > 14
+                      ? 'max-w-[12ch] text-[13vw] md:text-[7.6vw] xl:text-[118px]'
+                      : 'max-w-[10ch] text-[15vw] md:text-[8.5vw] xl:text-[132px]'
+                }`}
               />
             </Layer>
           )}
-          {hero === 'logo' && (
-            <Layer z={90}>
+          {hero?.kind === 'logo' && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.9, ease: EASE_OUT }}
+              className="relative mx-auto aspect-[1100/587] w-[min(620px,82vw)]"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <motion.img
-                src="/logo-lg.png"
-                alt=""
-                width={1100}
-                height={587}
-                initial={{ opacity: 0, scale: 0.94 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.9, ease: EASE_OUT }}
-                className="mx-auto block w-[min(620px,82vw)] select-none"
-                draggable={false}
-              />
-            </Layer>
+              <img src="/logo-lg.png" alt="" width={1100} height={587} className="absolute inset-0 block size-full select-none" draggable={false} />
+              <span aria-hidden="true" className="logo-sweep absolute inset-0" />
+            </motion.div>
           )}
         </Tilt3D>
         <motion.button
@@ -135,7 +149,7 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
 
       <section id="campaigns" aria-label="Campaigns" className="scroll-mt-40">
         {results.length > 0 ? (
-          <div className="mx-auto max-w-[1300px] rounded-[56px] border border-white/10 bg-white/[0.025] p-4 shadow-[inset_0_1px_0_rgb(255_255_255/0.06)] sm:p-6 md:rounded-[72px] md:p-10">
+          <div className="mx-auto max-w-[1300px] rounded-[56px] border border-white/[0.12] bg-[#0a0a0c]/[0.93] p-4 shadow-[inset_0_1px_0_rgb(255_255_255/0.06)] sm:p-6 md:rounded-[72px] md:p-10">
             <CampaignGrid campaigns={results} />
           </div>
         ) : (

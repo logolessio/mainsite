@@ -11,6 +11,8 @@ type TransitionContextValue = {
   phase: Phase
   navigate: (href: string) => void
   expand: (campaign: Campaign) => void
+  /** Navigates while the cover art of campaign `id` glides from where it is to where it lands. */
+  morph: (href: string, id: string) => void
 }
 
 const TransitionContext = createContext<TransitionContextValue | null>(null)
@@ -52,15 +54,56 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
     [pathname, reduced, router],
   )
 
+  // Shared-element transition: the browser keeps the cover art as one object and animates it between the two pages,
+  // while everything else cross-fades. Browsers without the View Transitions API (and reduced motion) get the plain fade.
+  const morph = useCallback(
+    (href: string, id: string) => {
+      const doc = document as Document & { startViewTransition?: (cb: () => Promise<void>) => { finished: Promise<unknown>; ready?: Promise<unknown>; updateCallbackDone?: Promise<unknown> } }
+      const sel = `[data-vt-cover="${CSS.escape(id)}"]`
+      const old = document.querySelector<HTMLElement>(sel)
+      if (reduced || !doc.startViewTransition || !old) {
+        navigate(href)
+        return
+      }
+      const target = href.split(/[?#]/)[0]
+      document.documentElement.dataset.vt = '1'
+      old.style.setProperty('view-transition-name', 'cover')
+      const run = doc.startViewTransition(async () => {
+        router.push(href)
+        await new Promise<void>((resolve) => {
+          const t0 = performance.now()
+          const poll = () => {
+            const el = document.querySelector<HTMLElement>(sel)
+            if (window.location.pathname === target && el && el !== old) {
+              old.style.removeProperty('view-transition-name')
+              el.style.setProperty('view-transition-name', 'cover')
+              return resolve()
+            }
+            if (performance.now() - t0 > 3000) return resolve()
+            window.setTimeout(poll, 40) // a timer, not rAF, so a tab in the background cannot stall the transition
+          }
+          poll()
+        })
+      })
+      run.ready?.catch(() => {})
+      run.updateCallbackDone?.catch(() => {})
+      run.finished.catch(() => {}).finally(() => {
+        delete document.documentElement.dataset.vt
+        document.querySelectorAll<HTMLElement>(sel).forEach((e) => e.style.removeProperty('view-transition-name'))
+      })
+    },
+    [navigate, reduced, router],
+  )
+
   const expand = useCallback(
     (campaign: Campaign) => {
       router.prefetch(`/campaign/${campaign.id}`)
-      navigate(`/campaign/${campaign.id}`)
+      morph(`/campaign/${campaign.id}`, campaign.id)
     },
-    [navigate, router],
+    [morph, router],
   )
 
-  const value = useMemo(() => ({ phase, navigate, expand }), [phase, navigate, expand])
+  const value = useMemo(() => ({ phase, navigate, expand, morph }), [phase, navigate, expand, morph])
 
   return <TransitionContext.Provider value={value}>{children}</TransitionContext.Provider>
 }

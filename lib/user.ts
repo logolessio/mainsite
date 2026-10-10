@@ -1,6 +1,9 @@
+import { notFound, redirect } from 'next/navigation'
+import { connection } from 'next/server'
 import { db, nowSec, uid } from './db'
 import { HttpError } from './http'
 import { getSession } from './session'
+import { getSetting } from './settings'
 
 export type UserRow = {
   id: string
@@ -24,6 +27,7 @@ export async function findOrCreateUser(email: string, name?: string | null, imag
   const e = email.trim().toLowerCase()
   const existing = await d.prepare('SELECT * FROM users WHERE email = ?1').bind(e).first<UserRow>()
   if (existing) return { ...existing, isNew: false }
+  if ((await getSetting('signups_paused')) === '1') throw new HttpError(403, 'New accounts are paused for a moment. Please try again soon.')
   await d
     .prepare('INSERT OR IGNORE INTO users (id, email, name, image, created_at) VALUES (?1, ?2, ?3, ?4, ?5)')
     .bind(uid(), e, name ?? null, image ?? null, nowSec())
@@ -67,4 +71,23 @@ export async function touch(user: UserRow) {
   if (user.last_seen_at && t - user.last_seen_at < 60) return
   const d = await db()
   await d.prepare('UPDATE users SET last_seen_at = ?2 WHERE id = ?1').bind(user.id, t).run()
+}
+
+/** For server-rendered pages: the signed-in person's row, or a redirect to /login. */
+export async function pageUser() {
+  await connection()
+  const session = await getSession()
+  const email = session?.user?.email
+  if (!email) redirect('/login')
+  const u = await findOrCreateUser(email, session.user?.name, session.user?.image)
+  if (u.status === 'banned') redirect('/login')
+  return u
+}
+
+/** For admin pages: anyone who is not an admin sees a plain 404, so the page does not even confirm it exists. */
+export async function pageAdmin() {
+  await connection()
+  const session = await getSession()
+  if (session?.user?.role !== 'admin') notFound()
+  return pageUser()
 }

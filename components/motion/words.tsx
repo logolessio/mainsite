@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
+import { useCopy } from '@/components/shell/copy-provider'
 
 type Props = {
   text: string
@@ -22,14 +23,16 @@ type Props = {
 /** Masked word-by-word rise. Each word slides up from behind its own baseline. */
 export function Words({ id, sweep = false, text, className, delay = 0, stagger = 0.07, immediate, as = 'h2', accent = [] }: Props) {
   const Tag = motion[as] as typeof motion.h2
-  const words = text.split(' ')
+  const { tx } = useCopy()
+  const shown = tx(text)
+  const words = shown.split(' ')
   const trigger = immediate
     ? { animate: 'show' }
     : { whileInView: 'show', viewport: { once: true, margin: '0px 0px -12% 0px' } }
   return (
     <Tag
       id={id}
-      aria-label={text}
+      aria-label={shown}
       initial="hidden"
       {...trigger}
       transition={{ staggerChildren: stagger, delayChildren: delay }}

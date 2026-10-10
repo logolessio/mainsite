@@ -20,7 +20,7 @@ const cols: Column<SubmissionRow>[] = [
     key: 'l',
     header: 'Link',
     render: (r) => (
-      <a href={r.url} className="underline underline-offset-4 hover:text-paper" target="_blank" rel="noreferrer">
+      <a href={r.url} rel="noopener noreferrer nofollow" className="underline underline-offset-4 hover:text-paper" target="_blank">
         Open
       </a>
     ),

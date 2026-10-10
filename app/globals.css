@@ -268,3 +268,57 @@
     animation: none;
   }
 }
+
+/* A bright band that sweeps across the logo, clipped to the logo's own shape by its alpha. */
+@keyframes logo-sweep {
+  0% {
+    background-position: 130% 0;
+  }
+  45%,
+  100% {
+    background-position: -30% 0;
+  }
+}
+.logo-sweep {
+  background-image: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 0.85) 48%, rgb(255 255 255 / 0.95) 50%, rgb(255 255 255 / 0.85) 52%, transparent 62%);
+  background-size: 250% 100%;
+  background-repeat: no-repeat;
+  -webkit-mask-image: url(/logo-lg.png);
+  mask-image: url(/logo-lg.png);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  mix-blend-mode: overlay;
+  animation: logo-sweep 5.5s ease-in-out 0.8s infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo-sweep {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* Cover art glides between the browse page and a campaign (View Transitions API). The rest of the page cross-fades. */
+::view-transition-group(cover) {
+  animation-duration: 0.7s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+::view-transition-old(cover),
+::view-transition-new(cover) {
+  height: 100%;
+  object-fit: cover;
+  animation-duration: 0.7s;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.45s;
+  animation-timing-function: ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

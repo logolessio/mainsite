@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { FAQ } from '@/lib/faq'
 import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
+import { T } from '@/components/shell/copy-provider'
 
 export function FaqTabs() {
   const tabs = Object.keys(FAQ) as (keyof typeof FAQ)[]
@@ -55,7 +56,7 @@ export function FaqTabs() {
                     onClick={() => setOpen(isOpen ? null : i)}
                     className="flex w-full items-center justify-between gap-6 py-8 text-center"
                   >
-                    <span className="flex-1 font-display text-2xl md:text-4xl">{item.q}</span>
+                    <span className="flex-1 font-display text-2xl md:text-4xl"><T>{item.q}</T></span>
                     <Plus
                       aria-hidden="true"
                       className={cn('size-5 shrink-0 transition-transform duration-300', isOpen && 'rotate-45')}
@@ -71,7 +72,7 @@ export function FaqTabs() {
                       transition={{ duration: 0.4, ease: EASE_OUT }}
                       className="overflow-hidden"
                     >
-                      <p className="mx-auto max-w-xl pb-10 text-pretty leading-relaxed text-mute">{item.a}</p>
+                      <p className="mx-auto max-w-xl pb-10 text-pretty leading-relaxed text-mute"><T>{item.a}</T></p>
                     </motion.div>
                   )}
                 </AnimatePresence>

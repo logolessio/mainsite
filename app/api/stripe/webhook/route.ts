@@ -1,7 +1,8 @@
 import type Stripe from 'stripe'
 import { db, nowSec, uid } from '@/lib/db'
 import { HttpError, json, route } from '@/lib/http'
-import { creditTopup, debitRefund, reverseWithdrawal } from '@/lib/ledger'
+import { notify, notifyAdmins } from '@/lib/notify'
+import { creditTopup, debitRefund, fundCampaign, reverseWithdrawal } from '@/lib/ledger'
 import { Stripe as StripeLib, stripe, webhookSecret } from '@/lib/stripe'
 
 /**
@@ -35,33 +36,53 @@ export const POST = route(async (req: Request) => {
     case 'checkout.session.completed':
     case 'checkout.session.async_payment_succeeded': {
       const session = event.data.object as Stripe.Checkout.Session
-      if (session.metadata?.kind !== 'topup' || session.payment_status !== 'paid') break
-      const userId = session.metadata.user_id
+      const kind = session.metadata?.kind
+      if ((kind !== 'topup' && kind !== 'campaign') || session.payment_status !== 'paid') break
+      const userId = session.metadata?.user_id
+      const campaignId = kind === 'campaign' ? (session.metadata?.campaign_id ?? null) : null
       const amount = session.amount_total ?? 0
-      if (!userId || amount <= 0) break
+      if (!userId || amount <= 0 || (kind === 'campaign' && !campaignId)) break
       const pi = typeof session.payment_intent === 'string' ? session.payment_intent : (session.payment_intent?.id ?? null)
 
       let receipt: string | null = null
+      let processingFee = 0
       if (pi) {
         try {
-          const intent = await s.paymentIntents.retrieve(pi, { expand: ['latest_charge'] })
+          const intent = await s.paymentIntents.retrieve(pi, { expand: ['latest_charge.balance_transaction'] })
           const charge = intent.latest_charge as Stripe.Charge | null
           receipt = charge?.receipt_url ?? null
+          const bt = charge?.balance_transaction as Stripe.BalanceTransaction | null | undefined
+          processingFee = bt && typeof bt === 'object' ? bt.fee : 0
         } catch {
-          /* the receipt link is a nicety, never block the credit on it */
+          /* the receipt link and fee are niceties, never block the credit on them */
         }
       }
 
       const t = nowSec()
       await d
         .prepare(
-          `INSERT INTO topups (id, user_id, session_id, payment_intent, amount_cents, status, receipt_url, created_at, paid_at)
-           VALUES (?1, ?2, ?3, ?4, ?5, 'paid', ?6, ?7, ?7)
-           ON CONFLICT(session_id) DO UPDATE SET status='paid', payment_intent=excluded.payment_intent, receipt_url=excluded.receipt_url, paid_at=excluded.paid_at`,
+          `INSERT INTO topups (id, user_id, session_id, payment_intent, amount_cents, status, receipt_url, created_at, paid_at, stripe_fee_cents, campaign_id)
+           VALUES (?1, ?2, ?3, ?4, ?5, 'paid', ?6, ?7, ?7, ?8, ?9)
+           ON CONFLICT(session_id) DO UPDATE SET status='paid', payment_intent=excluded.payment_intent, receipt_url=excluded.receipt_url,
+             paid_at=excluded.paid_at, stripe_fee_cents=excluded.stripe_fee_cents, campaign_id=excluded.campaign_id`,
         )
-        .bind(uid(), userId, session.id, pi, amount, receipt, t)
+        .bind(uid(), userId, session.id, pi, amount, receipt, t, processingFee, campaignId)
         .run()
-      await creditTopup(d, userId, session.id, amount)
+      if (campaignId) {
+        // The artist paid for their campaign: the money goes into that campaign's pool and the admin is told it can launch.
+        const camp = await d.prepare('SELECT title, status, budget_cents FROM campaigns WHERE id = ?1 AND brand_user_id = ?2').bind(campaignId, userId).first<{ title: string; status: string; budget_cents: number }>()
+        if (camp) {
+          await fundCampaign(d, userId, campaignId, session.id, amount)
+          await d
+            .prepare("UPDATE campaigns SET status = 'paid', paid_at = ?2, updated_at = ?2 WHERE id = ?1 AND status IN ('awaiting_payment','requested')")
+            .bind(campaignId, t)
+            .run()
+          await notify(userId, { kind: 'campaign', title: `Payment received for ${camp.title}`, body: 'We will launch your campaign shortly.', href: '/brand/campaigns', dedupe: `camp-paid:${campaignId}` })
+          await notifyAdmins({ title: `Paid: ${camp.title} is ready to launch`, body: `$${(amount / 100).toFixed(2)} received.`, href: '/admin/campaigns', dedupe: `camp-paid:${campaignId}` })
+        }
+      } else {
+        await creditTopup(d, userId, session.id, amount)
+      }
       break
     }
 
@@ -93,11 +114,12 @@ export const POST = route(async (req: Request) => {
       const ch = event.data.object as Stripe.Charge
       const pi = typeof ch.payment_intent === 'string' ? ch.payment_intent : ch.payment_intent?.id
       if (!pi) break
-      const topup = await d.prepare('SELECT user_id, refunded_cents FROM topups WHERE payment_intent = ?1').bind(pi).first<{ user_id: string; refunded_cents: number }>()
+      const topup = await d.prepare('SELECT user_id, refunded_cents, campaign_id FROM topups WHERE payment_intent = ?1').bind(pi).first<{ user_id: string; refunded_cents: number; campaign_id: string | null }>()
       if (!topup) break
       const delta = ch.amount_refunded - topup.refunded_cents
       if (delta > 0) {
-        await debitRefund(d, topup.user_id, delta, `refund:${ch.id}:${ch.amount_refunded}`)
+        await debitRefund(d, topup.user_id, delta, `refund:${ch.id}:${ch.amount_refunded}`, topup.campaign_id)
+        if (topup.campaign_id) await d.prepare("UPDATE campaigns SET status = 'paused', admin_note = 'Payment refunded: review before relaunching', updated_at = ?2 WHERE id = ?1 AND status IN ('live','paid')").bind(topup.campaign_id, nowSec()).run()
         await d.prepare('UPDATE topups SET refunded_cents = ?2 WHERE payment_intent = ?1').bind(pi, ch.amount_refunded).run()
       }
       break

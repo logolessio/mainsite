@@ -11,13 +11,13 @@ export default async function Layout({ children }: { children: React.ReactNode }
       area="Admin"
       items={[
         { label: 'Overview', href: '/admin', icon: 'LayoutDashboard', exact: true },
-        { label: 'Review queue', href: '/admin/submissions', icon: 'Clapperboard' },
-        { label: 'Fraud flags', href: '/admin/fraud', icon: 'ShieldAlert' },
         { label: 'Campaigns', href: '/admin/campaigns', icon: 'Megaphone' },
-        { label: 'Users', href: '/admin/users', icon: 'Users' },
-        { label: 'Earnings', href: '/admin/earnings', icon: 'CircleDollarSign' },
+        { label: 'Review queue', href: '/admin/submissions', icon: 'Clapperboard' },
         { label: 'Payouts', href: '/admin/payouts', icon: 'Banknote' },
+        { label: 'Users', href: '/admin/users', icon: 'Users' },
+        { label: 'Site text', href: '/admin/text', icon: 'FileCheck2' },
         { label: 'Audit log', href: '/admin/audit', icon: 'ScrollText' },
+        { label: 'Keys and tests', href: '/admin/keys', icon: 'ShieldCheck' },
         { label: 'Settings', href: '/admin/settings', icon: 'Settings' },
       ]}
     >

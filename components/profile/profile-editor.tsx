@@ -18,6 +18,7 @@ import {
   type ShowMap,
 } from '@/lib/profile-style'
 import { cn } from '@/lib/utils'
+import { uploadImage } from '@/lib/image-client'
 import { bannerStyle, ProfileScreen } from './profile-screen'
 import { ProfileTheme } from './profile-theme'
 
@@ -28,29 +29,6 @@ async function api<T>(path: string, method: string, data?: unknown): Promise<T> 
   const j = (await res.json().catch(() => null)) as ({ error?: string } & T) | null
   if (!res.ok) throw new Error(j?.error ?? 'Something went wrong. Please try again.')
   return j as T
-}
-
-/** Shrinks and re-encodes a picture in the browser. This also removes any hidden data inside the original file. */
-async function prepareImage(file: File, w: number, h: number): Promise<string> {
-  const bmp = await createImageBitmap(file)
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  const ctx = canvas.getContext('2d')!
-  const scale = Math.max(w / bmp.width, h / bmp.height)
-  const dw = bmp.width * scale
-  const dh = bmp.height * scale
-  ctx.drawImage(bmp, (w - dw) / 2, (h - dh) / 2, dw, dh)
-  for (const q of [0.88, 0.78, 0.66, 0.54, 0.42]) {
-    const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, 'image/webp', q))
-    if (blob && blob.size <= 420 * 1024) {
-      const buf = new Uint8Array(await blob.arrayBuffer())
-      let bin = ''
-      for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000))
-      return btoa(bin)
-    }
-  }
-  throw new Error('That picture is too detailed to shrink enough. Try a simpler one.')
 }
 
 export function ProfileEditor() {
@@ -80,8 +58,7 @@ export function ProfileEditor() {
     setError('')
     setBusy(kind)
     try {
-      const data = await prepareImage(file, kind === 'avatar' ? 512 : 1600, kind === 'avatar' ? 512 : 600)
-      const { id } = await api<{ id: string }>('/api/me/upload', 'POST', { kind, data })
+      const id = await uploadImage(kind, file)
       if (kind === 'avatar') {
         setPendingAvatar(id)
         set('avatar', `/api/img/${id}`)

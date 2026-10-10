@@ -2,10 +2,12 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { Check } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
 import { useTransitions } from '@/components/shell/transition-provider'
 import { Field, Input, Select, Textarea } from '@/components/ui/fields'
+import { uploadImage } from '@/lib/image-client'
 import { EASE_OUT } from '@/lib/layout'
 import { SITE } from '@/lib/site'
 import { cn } from '@/lib/utils'
@@ -19,8 +21,10 @@ export function CampaignWizard() {
   const [step, setStep] = useState(0)
   const [d, setD] = useState({
     title: '',
+    creator: '',
     type: 'Music',
     cover: '',
+    coverPreview: '',
     platforms: ['tiktok'] as string[],
     summary: '',
     clipThis: '',
@@ -28,22 +32,61 @@ export function CampaignWizard() {
     rate: '2.50',
     budget: '1000',
     endsOn: '',
-    approval: 'auto',
   })
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
   const set = (k: keyof typeof d, v: string | string[]) => setD((s) => ({ ...s, [k]: v }))
   const rate = Number(d.rate) || 0
   const budget = Number(d.budget) || 0
   const maxViews = rate > 0 ? Math.floor((budget / rate) * 1000) : 0
   const valid = [
-    d.title.trim() && d.platforms.length > 0,
+    d.title.trim().length >= 2 && d.creator.trim().length >= 2 && d.platforms.length > 0,
     d.summary.trim().length >= 20,
     rate > 0 && budget >= SITE.minTopUpUsd,
     true,
   ][step]
 
-  const publish = () => {
-    // TODO(backend): POST /api/brand/campaigns, reserve budget from balance, then redirect
-    navigate('/brand/campaigns')
+  const lines = (v: string) => v.split('\n').map((x) => x.trim()).filter(Boolean)
+
+  const pickCover = async (file: File | undefined) => {
+    if (!file) return
+    setError('')
+    try {
+      const id = await uploadImage('cover', file)
+      setD((s) => ({ ...s, cover: id, coverPreview: `/api/img/${id}` }))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Upload failed.')
+    }
+  }
+
+  const publish = async () => {
+    setBusy(true)
+    setError('')
+    try {
+      const res = await fetch('/api/campaigns', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          title: d.title,
+          creator: d.creator,
+          type: d.type,
+          cover: d.cover || null,
+          platforms: d.platforms,
+          summary: d.summary,
+          clipThis: lines(d.clipThis),
+          offLimits: lines(d.offLimits),
+          rate,
+          budget,
+          endsOn: d.endsOn || null,
+        }),
+      })
+      const j = (await res.json().catch(() => ({}))) as { error?: string }
+      if (!res.ok) throw new Error(j.error ?? 'Could not send your request.')
+      navigate('/brand/campaigns?requested=1')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not send your request.')
+      setBusy(false)
+    }
   }
 
   return (
@@ -71,9 +114,14 @@ export function CampaignWizard() {
           >
             {step === 0 && (
               <>
-                <Field label="Campaign name">
-                  <Input value={d.title} onChange={(e) => set('title', e.target.value)} placeholder="e.g. Red Room" />
-                </Field>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <Field label="Campaign name">
+                    <Input value={d.title} maxLength={60} onChange={(e) => set('title', e.target.value)} placeholder="e.g. Red Room" />
+                  </Field>
+                  <Field label="Artist or brand name">
+                    <Input value={d.creator} maxLength={60} onChange={(e) => set('creator', e.target.value)} placeholder="e.g. KXNG VALE" />
+                  </Field>
+                </div>
                 <div className="grid gap-5 sm:grid-cols-2">
                   <Field label="Type">
                     <Select value={d.type} onChange={(e) => set('type', e.target.value)}>
@@ -82,8 +130,12 @@ export function CampaignWizard() {
                       ))}
                     </Select>
                   </Field>
-                  <Field label="Cover image" hint="Square, at least 800px.">
-                    <Input type="file" accept="image/*" className="py-3" />
+                  <Field label="Cover image" hint="Square works best. We shrink it for you.">
+                    <div className="flex items-center gap-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {d.coverPreview && <img src={d.coverPreview} alt="" className="size-12 rounded-xl object-cover" />}
+                      <Input type="file" accept="image/png,image/jpeg,image/webp" className="py-3" onChange={(e) => pickCover(e.target.files?.[0])} />
+                    </div>
                   </Field>
                 </div>
                 <fieldset>
@@ -132,14 +184,8 @@ export function CampaignWizard() {
                   </Field>
                 </div>
                 <div className="grid gap-5 sm:grid-cols-2">
-                  <Field label="End date">
+                  <Field label="End date (optional)">
                     <Input type="date" value={d.endsOn} onChange={(e) => set('endsOn', e.target.value)} />
-                  </Field>
-                  <Field label="Clip approval">
-                    <Select value={d.approval} onChange={(e) => set('approval', e.target.value)}>
-                      <option value="auto">Automatic, checked against the brief</option>
-                      <option value="manual">Manual, I approve every clip</option>
-                    </Select>
                   </Field>
                 </div>
                 <p className="border border-line bg-ink/50 p-4 text-sm text-mute rounded-2xl">
@@ -152,18 +198,27 @@ export function CampaignWizard() {
               <dl className="grid gap-4 text-sm sm:grid-cols-2">
                 {[
                   ['Name', d.title],
+                  ['Artist or brand', d.creator],
                   ['Type', d.type],
                   ['Platforms', d.platforms.join(', ')],
                   ['Rate', `$${rate.toFixed(2)} / 1,000 views`],
                   ['Budget', `$${budget.toLocaleString()}`],
                   ['Ends', d.endsOn || 'No end date'],
-                  ['Approval', d.approval === 'auto' ? 'Automatic' : 'Manual'],
                 ].map(([k, v]) => (
                   <div key={k} className="border border-line p-4 rounded-2xl">
                     <dt className="font-mono text-xs text-mute">{k}</dt>
                     <dd className="mt-1">{v}</dd>
                   </div>
                 ))}
+                <div className="border border-line p-4 sm:col-span-2 rounded-2xl">
+                  <dt className="font-mono text-xs text-mute">What happens next</dt>
+                  <dd className="mt-2 grid gap-1.5 text-mute">
+                    <span><span className="text-paper">1.</span> You send this request. Nothing is charged yet.</span>
+                    <span><span className="text-paper">2.</span> We review it and confirm we will launch it.</span>
+                    <span><span className="text-paper">3.</span> You pay the ${budget.toLocaleString()} budget securely with Stripe.</span>
+                    <span><span className="text-paper">4.</span> We launch your campaign and clippers can start posting.</span>
+                  </dd>
+                </div>
                 <div className="border border-line p-4 sm:col-span-2 rounded-2xl">
                   <dt className="font-mono text-xs text-mute">Brief</dt>
                   <dd className="mt-1 whitespace-pre-wrap text-mute">{d.summary}</dd>
@@ -172,6 +227,7 @@ export function CampaignWizard() {
             )}
           </motion.div>
         </AnimatePresence>
+        {error && <p role="alert" className="mt-4 text-sm text-signal">{error}</p>}
         <div className="mt-8 flex justify-between">
           <ActionButton variant="ghost" onClick={() => setStep((s) => s - 1)} disabled={step === 0}>
             Back
@@ -181,7 +237,10 @@ export function CampaignWizard() {
               Continue
             </ActionButton>
           ) : (
-            <ActionButton onClick={publish}>Publish campaign</ActionButton>
+            <ActionButton onClick={publish} disabled={busy}>
+              {busy && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
+              Send request
+            </ActionButton>
           )}
         </div>
       </Card>

@@ -1,7 +1,11 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
+import { connection } from 'next/server'
+import { TextEditor } from '@/components/admin/text-editor'
 import { AppShell } from '@/components/shell/app-shell'
+import { CopyProvider } from '@/components/shell/copy-provider'
+import { getOverrides } from '@/lib/copy'
+import { getSession } from '@/lib/session'
 import { SITE } from '@/lib/site'
 import './globals.css'
 
@@ -22,12 +26,18 @@ export const viewport: Viewport = {
   colorScheme: 'dark',
 }
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // Site text can be edited by the owner, so every page is built per request with the current wording.
+  await connection()
+  const [overrides, session] = await Promise.all([getOverrides(), getSession()])
+  const isAdmin = session?.user?.role === 'admin'
   return (
     <html lang="en" className={`${geist.variable} ${geistMono.variable} bg-ink`}>
       <body className="antialiased">
-        <AppShell>{children}</AppShell>
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        <CopyProvider overrides={overrides} isAdmin={isAdmin}>
+          <AppShell>{children}</AppShell>
+          {isAdmin && <TextEditor />}
+        </CopyProvider>
       </body>
     </html>
   )

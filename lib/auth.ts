@@ -1,6 +1,7 @@
 // Google and Discord sign-in are real (Auth.js, see /auth.ts). Email sign-in, sign-up and password reset are still UI-only stubs.
 // Every function resolves with the path the user should land on next.
 import { signIn } from 'next-auth/react'
+import { ensureHuman } from './human-client'
 
 export type Role = 'clipper' | 'brand'
 export type Provider = 'discord' | 'google'
@@ -16,6 +17,7 @@ export async function signInWithProvider(provider: Provider, role?: Role, callba
     .then((r) => r.json())
     .catch(() => ({}))) as Record<string, unknown>
   if (!providers[provider]) throw new Error(`${LABEL[provider]} sign-in is not set up yet.`)
+  await ensureHuman() // Cloudflare Turnstile; skipped until its keys are added
   await signIn(provider, { callbackUrl: callbackUrl ?? (role === 'brand' ? '/brand' : '/dashboard') })
   return ''
 }

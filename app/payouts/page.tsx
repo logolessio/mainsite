@@ -4,6 +4,7 @@ import { CtaBand, FeatureGrid, SectionTitle } from '@/components/marketing/block
 import { PageHero, Section } from '@/components/marketing/page-hero'
 import { StickyStory } from '@/components/motion/sticky-story'
 import { SITE } from '@/lib/site'
+import { T } from '@/components/shell/copy-provider'
 
 export const metadata: Metadata = {
   title: 'Payouts — logoless',
@@ -43,8 +44,8 @@ export default function Page() {
       <Section className="py-16 md:py-28">
         <SectionTitle eyebrow="Good to know" title="The small print" />
         <ul className="max-w-2xl space-y-4 text-mute">
-          <li>You are responsible for taxes on your earnings. Stripe may collect tax information.</li>
-          <li>Payouts for clips later found to be fraudulent may be reversed.</li>
+          <li><T>You are responsible for taxes on your earnings. Stripe may collect tax information.</T></li>
+          <li><T>Payouts for clips later found to be fraudulent may be reversed.</T></li>
           <li>
             Read the full terms in{' '}
             <a href="/legal/payments" className="text-paper underline underline-offset-4">

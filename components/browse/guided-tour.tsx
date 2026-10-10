@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTransitions } from '@/components/shell/transition-provider'
 import { useMotionPrefs, useMounted } from '@/hooks/use-motion-prefs'
-import { campaigns } from '@/lib/campaigns'
 import { EASE_OUT } from '@/lib/layout'
 
 type Step = {
@@ -102,7 +101,6 @@ export const CAMPAIGN_STEPS: Step[] = [
   },
 ]
 
-const firstCampaignId = campaigns[0].id
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 const clamp = (v: number, a: number, b: number) => Math.min(Math.max(v, a), b)
 
@@ -141,6 +139,9 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
   // Smoothed values, written straight to the DOM every frame so nothing re-renders mid-glide.
   const view = useRef({ x: 0, y: 0, w: 0, h: 0, r: 0, cx: 0, cy: 0, init: false })
   const scrollAnim = useRef(0)
+  // The spotlight only follows a target once the page has finished scrolling to it. Moving both at the same time
+  // made the spotlight chase a moving target and overshoot, so each step now goes: close, scroll, open.
+  const settled = useRef(true)
 
   // Lock the page while the tour is open. Programmatic scrolling still works.
   useEffect(() => {
@@ -186,17 +187,26 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
 
     const from = window.scrollY
     const delta = desired - from
-    if (Math.abs(delta) < 3) return
-    if (reduced) {
-      window.scrollTo(0, desired)
+    if (Math.abs(delta) < 3) {
+      settled.current = true
       return
     }
-    const duration = clamp(650 + Math.abs(delta) * 0.35, 750, 1300)
+    if (reduced) {
+      window.scrollTo(0, desired)
+      settled.current = true
+      return
+    }
+    settled.current = false
+    const duration = clamp(420 + Math.abs(delta) * 0.25, 480, 850)
     const t0 = performance.now()
     const tick = (now: number) => {
       const p = clamp((now - t0) / duration, 0, 1)
       window.scrollTo(0, from + delta * ease(p))
       if (p < 1) scrollAnim.current = requestAnimationFrame(tick)
+      else {
+        window.scrollTo(0, desired) // land exactly on the spot
+        settled.current = true
+      }
     }
     scrollAnim.current = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(scrollAnim.current)
@@ -216,13 +226,18 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
       const vh = window.innerHeight
       const s = stepRef.current
       const el = s.target ? document.querySelector(s.target) : null
+      const follow = settled.current
 
       let tx = vw / 2
       let ty = vh / 2
       let tw = 0
       let th = 0
       let tr = 0
-      if (el) {
+      if (!follow && v.init) {
+        // page is still scrolling: let the spotlight close up where it is
+        tx = v.x + v.w / 2
+        ty = v.y + v.h / 2
+      } else if (el) {
         const r = el.getBoundingClientRect()
         const pad = s.pad ?? 8
         tx = r.left - pad
@@ -258,7 +273,7 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
         st.borderRadius = `${rr}px`
         st.opacity = hasHole ? '1' : '0'
       }
-      if (card.current) {
+      if (card.current && follow) {
         const cw = card.current.offsetWidth
         const ch = card.current.offsetHeight
         const gap = 22
@@ -305,8 +320,10 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
     onClose()
     if (step.go) {
       // open the same tile that is highlighted, which depends on the current sort and filters
-      const shown = document.querySelector('[data-tour="tile"]')?.getAttribute('data-campaign') ?? firstCampaignId
-      navigate(step.go === '__first_campaign__' ? `/campaign/${shown}?tour=1` : step.go)
+      const shown = document.querySelector('[data-tour="tile"]')?.getAttribute('data-campaign')
+      if (step.go === '__first_campaign__') {
+        if (shown) navigate(`/campaign/${shown}?tour=1`)
+      } else navigate(step.go)
     }
   }
 

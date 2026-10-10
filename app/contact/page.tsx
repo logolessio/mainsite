@@ -3,6 +3,7 @@ import { ContactForm } from '@/components/marketing/contact-form'
 import { PageHero, Section } from '@/components/marketing/page-hero'
 import { Reveal } from '@/components/motion/reveal'
 import { SITE } from '@/lib/site'
+import { T } from '@/components/shell/copy-provider'
 
 export const metadata: Metadata = { title: 'Contact — logoless', description: 'Get in touch with the logoless team.' }
 
@@ -30,7 +31,7 @@ export default function Page() {
               </div>
             ))}
             <div>
-              <dt className="font-mono text-xs text-mute">Community</dt>
+              <dt className="font-mono text-xs text-mute"><T>Community</T></dt>
               <dd className="mt-1 text-lg">
                 <a href={SITE.social.discord} className="underline-offset-4 hover:underline">
                   Join our Discord

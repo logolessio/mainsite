@@ -22,8 +22,11 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
   const py = useMotionValue(0.5)
   const sx = useSpring(px, SPRING)
   const sy = useSpring(py, SPRING)
-  const rotateY = useTransform(sx, [0, 1], [-7, 7])
-  const rotateX = useTransform(sy, [0, 1], [7, -7])
+  const rotateY = useTransform(sx, [0, 1], [-12, 12])
+  const rotateX = useTransform(sy, [0, 1], [12, -12])
+  // the cover slides the other way inside the frame, which makes it read as a real object with depth
+  const imgX = useTransform(sx, [0, 1], [9, -9])
+  const imgY = useTransform(sy, [0, 1], [9, -9])
   const sheenPos = useTransform([sx, sy], ([x, y]: number[]) => ((x + y) / 2) * 100)
   const sheenStart = useTransform(sheenPos, (v) => v - 22)
   const sheenEnd = useTransform(sheenPos, (v) => v + 22)
@@ -43,11 +46,12 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
         py.set((e.clientY - r.top) / r.height)
       }}
       onPointerLeave={reset}
+      data-vt-cover={campaign.id}
       initial="rest"
       animate={canHover ? 'rest' : 'hover'}
       whileHover="hover"
-      style={tilt ? { rotateX, rotateY, transformPerspective: 900 } : undefined}
-      className="relative aspect-square w-full overflow-hidden rounded-[8px] bg-surface"
+      style={tilt ? { rotateX, rotateY, transformPerspective: 700 } : undefined}
+      className="relative aspect-square w-full overflow-hidden rounded-[8px] bg-surface shadow-[0_14px_26px_-14px_rgb(0_0_0/0.9)] transition-shadow duration-300 hover:shadow-[0_34px_50px_-18px_rgb(0_0_0/0.95),0_0_0_1px_rgb(255_255_255/0.12)]"
     >
       <button
         type="button"
@@ -62,7 +66,8 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
           src={campaign.cover}
           alt=""
           loading={priority ? 'eager' : 'lazy'}
-          variants={{ rest: { scale: 1 }, hover: { scale: 1.05 } }}
+          variants={{ rest: { scale: 1.12 }, hover: { scale: 1.18 } }}
+          style={tilt ? { x: imgX, y: imgY } : undefined}
           transition={{ duration: 0.6, ease: EASE_OUT }}
           className="absolute inset-0 h-full w-full object-cover"
         />

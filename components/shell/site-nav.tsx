@@ -9,6 +9,7 @@ import { EASE_OUT } from '@/lib/layout'
 import { NAV_LINKS } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import { TransitionLink } from './transition-link'
+import { T } from './copy-provider'
 import { NavUserActions, useNavUser } from './nav-user'
 import { useTransitions } from './transition-provider'
 
@@ -144,7 +145,7 @@ export function SiteNav() {
                       className="group flex items-baseline justify-between py-3"
                     >
                       <span className="font-display text-4xl md:text-5xl transition-transform duration-300 group-hover:translate-x-2">
-                        {link.label}
+                        <T>{link.label}</T>
                       </span>
                       <span className="font-mono text-xs text-mute">0{i + 1}</span>
                     </TransitionLink>

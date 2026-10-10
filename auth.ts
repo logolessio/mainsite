@@ -18,7 +18,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     ...(process.env.AUTH_DISCORD_ID && process.env.AUTH_DISCORD_SECRET ? [Discord] : []),
   ],
   pages: { signIn: '/login', error: '/login' },
-  session: { strategy: 'jwt' },
+  // Two weeks, not a month: a stolen session cookie stops working sooner.
+  session: { strategy: 'jwt', maxAge: 14 * 24 * 60 * 60 },
+  useSecureCookies: process.env.NODE_ENV === 'production',
   callbacks: {
     // TODO(backend): look the user up in your database here and put their real role (clipper, brand, admin) in the token.
     jwt({ token }) {

@@ -5,6 +5,7 @@ import { useRef } from 'react'
 import { EASE_OUT } from '@/lib/layout'
 import { Tilt3D } from './tilt'
 import { Words } from './words'
+import { T } from '@/components/shell/copy-provider'
 
 export type Step = { title: string; body: string; detail?: string[] }
 
@@ -17,7 +18,7 @@ export function StickyStory({ eyebrow, title, steps }: { eyebrow: string; title:
 
   return (
     <div ref={ref} className="flex flex-col items-center text-center">
-      <p className="font-mono text-xs tracking-widest text-mute uppercase">{eyebrow}</p>
+      <p className="font-mono text-xs tracking-widest text-mute uppercase"><T>{eyebrow}</T></p>
       <Words text={title} className="mt-6 max-w-[12ch] font-display text-6xl leading-[0.98] md:text-9xl" />
       <div className="sticky top-24 z-10 mt-16 h-px w-full max-w-sm bg-line">
         <motion.div style={{ width }} className="h-full bg-paper" />
@@ -34,14 +35,14 @@ export function StickyStory({ eyebrow, title, steps }: { eyebrow: string; title:
           >
             <Tilt3D max={3} glare={false}>
               <p className="font-display text-8xl leading-none text-paper/15 md:text-[11rem]">{String(i + 1).padStart(2, '0')}</p>
-              <h3 className="-mt-6 font-display text-4xl md:-mt-12 md:text-6xl">{s.title}</h3>
-              <p className="mx-auto mt-6 max-w-lg text-pretty text-lg leading-relaxed text-mute">{s.body}</p>
+              <h3 className="-mt-6 font-display text-4xl md:-mt-12 md:text-6xl"><T>{s.title}</T></h3>
+              <p className="mx-auto mt-6 max-w-lg text-pretty text-lg leading-relaxed text-mute"><T>{s.body}</T></p>
               {s.detail && (
                 <ul className="mt-8 flex flex-col items-center gap-2 text-sm text-paper/80">
                   {s.detail.map((d) => (
                     <li key={d} className="flex items-center gap-3">
                       <span aria-hidden="true" className="size-1 shrink-0 bg-signal" />
-                      {d}
+                      <T>{d}</T>
                     </li>
                   ))}
                 </ul>

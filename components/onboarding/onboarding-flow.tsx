@@ -64,11 +64,10 @@ const BRAND: StepDef[] = [
   { id: 'goals', label: 'Goals', Component: GoalsStep, valid: (d) => d.goals.length > 0 },
   {
     id: 'billing',
-    label: 'Billing',
+    label: 'How it works',
     Component: BillingStep,
     valid: () => true,
-    optional: true,
-    cta: (d) => (d.stripeConnected ? 'Continue' : 'Skip for now'),
+    cta: () => 'Continue',
   },
   { id: 'done', label: 'Ready', Component: DoneStep, valid: () => true, bare: true },
 ]

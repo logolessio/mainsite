@@ -5,6 +5,7 @@ import { PageHero, Section } from '@/components/marketing/page-hero'
 import { PillLink } from '@/components/motion/cta'
 import { ScrollText } from '@/components/motion/scroll-text'
 import { SITE } from '@/lib/site'
+import { T } from '@/components/shell/copy-provider'
 
 export const metadata: Metadata = {
   title: 'For brands — logoless',
@@ -49,16 +50,16 @@ export default function Page() {
 
       <Section className="py-16 md:py-28">
         <Split label="Set your own rate">
-          <p>
+          <p><T>
             You decide what 1,000 verified views are worth for your content. Higher rates attract more clippers faster.
             You can change the rate on a live campaign.
-          </p>
+          </T></p>
         </Split>
         <Split label="Pay on delivery" flip>
-          <p>
+          <p><T>
             Budget is reserved when a campaign launches and released to clippers only as views are verified. Whatever
             is left when a campaign ends goes back to your balance.
-          </p>
+          </T></p>
         </Split>
         <Split label="Simple fees">
           <p>

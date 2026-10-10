@@ -1,4 +1,5 @@
 import type { Campaign, Platform } from './campaigns'
+import { shortDate } from './campaign-input'
 import { db } from './db'
 
 export type CampaignRow = {
@@ -45,7 +46,7 @@ export function toCampaign(r: CampaignRow): Campaign {
     platforms: list(r.platforms_json).filter((p): p is Platform => ['tiktok', 'youtube', 'instagram'].includes(p)),
     ratePer1k: r.rate_cents / 100,
     budget: r.budget_cents / 100,
-    endsOn: r.ends_on ?? '',
+    endsOn: shortDate(r.ends_on),
     summary: r.summary,
     clipThis: list(r.clip_this_json),
     offLimits: list(r.off_limits_json),

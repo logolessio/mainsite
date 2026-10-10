@@ -8,6 +8,7 @@ import { Tilt3D } from '@/components/motion/tilt'
 import { Words } from '@/components/motion/words'
 import { CONTAINER, EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
+import { T } from '@/components/shell/copy-provider'
 
 export type Feature = { icon: IconName; title: string; body: string }
 
@@ -25,8 +26,8 @@ export function FeatureGrid({ features, cols = 3 }: { features: Feature[]; cols?
         >
           <Tilt3D max={5} className="h-full p-10 text-center md:p-16">
           <Icon name={f.icon} aria-hidden="true" className="mx-auto size-6 text-mute transition-colors group-hover:text-paper" />
-          <h3 className="mt-10 font-display text-3xl md:text-4xl">{f.title}</h3>
-          <p className="mx-auto mt-4 max-w-xs text-pretty leading-relaxed text-mute">{f.body}</p>
+          <h3 className="mt-10 font-display text-3xl md:text-4xl"><T>{f.title}</T></h3>
+          <p className="mx-auto mt-4 max-w-xs text-pretty leading-relaxed text-mute"><T>{f.body}</T></p>
           </Tilt3D>
         </motion.li>
       ))}
@@ -47,7 +48,7 @@ export function SectionTitle({
   return (
     <div className={cn('mb-16 flex flex-col items-center text-center md:mb-24', className)}>
       <Reveal y={10}>
-        <p className="font-mono text-xs tracking-widest text-mute uppercase">{eyebrow}</p>
+        <p className="font-mono text-xs tracking-widest text-mute uppercase"><T>{eyebrow}</T></p>
       </Reveal>
       <Words text={title} className="mt-6 max-w-[14ch] font-display text-5xl leading-[0.98] md:text-8xl" />
     </div>
@@ -72,10 +73,10 @@ export function CtaBand({
       <div className={`${CONTAINER} flex flex-col items-center gap-14 text-center`}>
         <Words text={title} className="max-w-[12ch] font-display text-6xl leading-[0.98] md:text-9xl" />
         <Reveal delay={0.3} className="flex flex-wrap justify-center gap-3">
-          <PillLink href={href}>{label}</PillLink>
+          <PillLink href={href}><T>{label}</T></PillLink>
           {secondaryHref && (
             <PillLink href={secondaryHref} variant="ghost">
-              {secondaryLabel}
+              <T>{secondaryLabel ?? ''}</T>
             </PillLink>
           )}
         </Reveal>
@@ -96,7 +97,7 @@ export function Split({
   return (
     <div className="mx-auto flex max-w-2xl flex-col items-center border-t border-line py-20 text-center md:py-28">
       <Reveal y={20}>
-        <h3 className="font-display text-4xl leading-[0.95] md:text-6xl">{label}</h3>
+        <h3 className="font-display text-4xl leading-[0.95] md:text-6xl"><T>{label}</T></h3>
       </Reveal>
       <Reveal delay={0.15} y={20} className="mt-8 text-pretty text-lg leading-relaxed text-mute">
         {children}

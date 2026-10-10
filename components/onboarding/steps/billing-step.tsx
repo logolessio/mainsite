@@ -1,67 +1,37 @@
 'use client'
 
-import { Check, CreditCard, Loader2, Lock } from 'lucide-react'
-import { useState } from 'react'
-import { FUND_PRESETS } from '@/lib/onboarding'
-import { startTopup } from '@/lib/stripe-client'
+import { Lock } from 'lucide-react'
 import { SITE } from '@/lib/site'
-import type { StepProps } from '../types'
-import { Chip, Panel, PrimaryBtn, StepTitle } from '../ui'
+import { Panel, StepTitle } from '../ui'
 
-export function BillingStep({ data, update }: StepProps) {
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
-  const amount = data.fundAmount ?? FUND_PRESETS[1]
+const STEPS = [
+  ['Tell us about the campaign', 'Brief, rate per 1,000 views, budget and platforms. Nothing is charged.'],
+  ['We review it and say yes', 'You get a notification the moment we confirm we will launch it.'],
+  ['You pay with Stripe', 'Your budget is held for clippers. Unspent budget stays yours.'],
+  ['We launch it', 'Clippers can see it and start posting straight away.'],
+]
 
-  const pay = async () => {
-    setBusy(true)
-    setError('')
-    try {
-      // Leaves for Stripe Checkout and comes back to this step once the payment is confirmed.
-      await startTopup(amount, '/onboarding')
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not open checkout.')
-      setBusy(false)
-    }
-  }
-
+export function BillingStep() {
   return (
     <div>
-      <StepTitle title="Fund your first campaign" sub="Add money to your balance with Stripe. Unspent budget always stays yours." />
-
+      <StepTitle title="How your campaign starts" sub="You never pay before we have said yes." />
       <Panel className="mt-7">
-        {data.stripeConnected ? (
-          <p role="status" className="flex items-center justify-center gap-2 text-sm">
-            <span className="grid size-6 place-items-center rounded-full bg-paper text-ink">
-              <Check className="size-3.5" />
-            </span>
-            ${amount.toLocaleString()} added to your balance.
-          </p>
-        ) : (
-          <>
-            <div className="flex flex-wrap justify-center gap-2">
-              {FUND_PRESETS.map((p) => (
-                <Chip key={p} on={amount === p} onClick={() => update({ fundAmount: p })}>
-                  ${p.toLocaleString()}
-                </Chip>
-              ))}
-            </div>
-            <PrimaryBtn onClick={pay} disabled={busy || amount < SITE.minTopUpUsd} className="mt-5 w-full">
-              {busy ? <Loader2 className="size-4 animate-spin" /> : <CreditCard className="size-4" />}
-              Add ${amount.toLocaleString()} with Stripe
-            </PrimaryBtn>
-            <p role="alert" className="mt-3 min-h-4 text-center text-xs text-signal">
-              {error}
-            </p>
-            <p className="mt-1 flex items-center justify-center gap-1.5 text-xs text-mute">
-              <Lock className="size-3" /> Secure checkout by Stripe. Minimum ${SITE.minTopUpUsd}.
-            </p>
-          </>
-        )}
+        <ol className="grid gap-4 text-left">
+          {STEPS.map(([t, b], i) => (
+            <li key={t} className="flex gap-4">
+              <span className="grid size-7 shrink-0 place-items-center rounded-full border border-line-strong font-mono text-xs">{i + 1}</span>
+              <span>
+                <span className="block text-sm">{t}</span>
+                <span className="block text-xs text-mute">{b}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+        <p className="mt-5 flex items-center justify-center gap-1.5 text-xs text-mute">
+          <Lock className="size-3" /> Payments are handled by Stripe. We never see your card.
+        </p>
       </Panel>
-      <p className="mt-5 text-center text-xs leading-relaxed text-mute">
-        A {SITE.platformFeePct}% platform fee applies to payouts only. You can skip this and add funds when you create a campaign.
-      </p>
+      <p className="mt-5 text-center text-xs leading-relaxed text-mute">A {SITE.platformFeePct}% platform fee applies to payouts only.</p>
     </div>
   )
 }

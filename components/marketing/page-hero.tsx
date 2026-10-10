@@ -3,6 +3,7 @@ import { Layer, Tilt3D } from '@/components/motion/tilt'
 import { Words } from '@/components/motion/words'
 import { CONTAINER } from '@/lib/layout'
 import { cn } from '@/lib/utils'
+import { T } from '@/components/shell/copy-provider'
 
 /** Hero for inner pages. Everything is centred and sits in a gently reactive 3D scene. */
 export function PageHero({
@@ -23,7 +24,7 @@ export function PageHero({
       <Tilt3D global glare={false} max={4} className="mx-auto max-w-6xl">
         <div className="flex flex-col items-center text-center">
           <Reveal y={10}>
-            <p className="font-mono text-xs tracking-widest text-mute uppercase">{eyebrow}</p>
+            <p className="font-mono text-xs tracking-widest text-mute uppercase"><T>{eyebrow}</T></p>
           </Reveal>
           <Layer z={70}>
             <Words
@@ -38,7 +39,7 @@ export function PageHero({
           {lede && (
             <Layer z={25}>
               <Reveal delay={0.5}>
-                <p className="mx-auto mt-10 max-w-xl text-pretty text-lg leading-relaxed text-mute md:text-xl">{lede}</p>
+                <p className="mx-auto mt-10 max-w-xl text-pretty text-lg leading-relaxed text-mute md:text-xl"><T>{lede}</T></p>
               </Reveal>
             </Layer>
           )}

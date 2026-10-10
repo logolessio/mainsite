@@ -30,11 +30,6 @@ const go = (url: string) => {
   window.location.href = url
 }
 
-/** Sends the brand to Stripe Checkout. Resolves only if something fails, because success leaves the page. */
-export async function startTopup(amountUsd: number, returnTo: string) {
-  const { url } = await api<{ url: string }>('/api/stripe/checkout', { method: 'POST', data: { amount: amountUsd, returnTo } })
-  go(url)
-}
 export async function startConnect(returnTo: string) {
   const { url } = await api<{ url: string }>('/api/stripe/connect/onboard', { method: 'POST', data: { returnTo } })
   go(url)

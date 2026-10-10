@@ -47,3 +47,19 @@ export async function unreadCount(userId: string) {
   const r = await d.prepare('SELECT COUNT(*) AS n FROM notifications WHERE user_id = ?1 AND read_at IS NULL').bind(userId).first<{ n: number }>()
   return r?.n ?? 0
 }
+
+/** Tells every admin something needs their attention (a campaign was paid, a withdrawal is waiting). */
+export async function notifyAdmins(n: { title: string; body?: string; href?: string; dedupe: string }) {
+  try {
+    const d = await db()
+    await d
+      .prepare(
+        `INSERT OR IGNORE INTO notifications (id, user_id, kind, title, body, href, dedupe_key, created_at)
+         SELECT lower(hex(randomblob(16))), u.id, 'account', ?1, ?2, ?3, ?4, ?5 FROM users u WHERE u.role = 'admin'`,
+      )
+      .bind(n.title.slice(0, 120), (n.body ?? '').slice(0, 240), n.href ?? null, n.dedupe.slice(0, 120), nowSec())
+      .run()
+  } catch (e) {
+    console.error('notifyAdmins failed', e instanceof Error ? e.message : e)
+  }
+}

@@ -11,7 +11,7 @@ import { SITE } from './site'
  */
 
 export type Balances = {
-  brand: number // money a brand has added and not spent
+  brand: number // money a brand has added and not spent (legacy balance top-ups)
   available: number // clipper earnings that can be withdrawn now
   pending: number // clipper earnings still inside the hold window
   earned: number // lifetime clipper earnings
@@ -50,47 +50,80 @@ export async function creditTopup(d: D1Database, userId: string, sessionId: stri
   return res.meta.changes === 1
 }
 
+/** Puts a paid campaign budget into that campaign's pool. Safe to call twice for the same Stripe session. */
+export async function fundCampaign(d: D1Database, brandUserId: string, campaignId: string, sessionId: string, amountCents: number) {
+  const t = nowSec()
+  const res = await d
+    .prepare(
+      `INSERT OR IGNORE INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at, campaign_id)
+       VALUES (?1, ?2, 'campaign', 'campaign_fund', ?3, ?4, ?5, 'Campaign budget', ?4, ?6)`,
+    )
+    .bind(uid(), brandUserId, amountCents, t, sessionId, campaignId)
+    .run()
+  return res.meta.changes === 1
+}
+
+export async function campaignPool(campaignId: string) {
+  const d = await db()
+  const r = await d
+    .prepare("SELECT COALESCE(SUM(amount_cents), 0) AS pool FROM ledger WHERE account = 'campaign' AND campaign_id = ?1")
+    .bind(campaignId)
+    .first<{ pool: number }>()
+  return r?.pool ?? 0
+}
+
 /**
- * Moves money from a brand to a clipper for verified views. The platform fee is taken out of the clipper's
- * share, so the brand never pays more than the gross amount. Returns false if the brand cannot cover it.
- * Stand-in for the automatic view verification that does not exist yet: an admin triggers it.
+ * Pays a clipper for verified views out of a campaign's pool. The platform fee is taken out of the clipper's share,
+ * so the brand never pays more than the gross amount. Returns null if the pool cannot cover it.
+ * People with extra checks switched on (for example a VPN at sign-up) wait twice as long for the money to clear.
  */
-export async function creditEarning(input: { brandId: string; clipperId: string; grossCents: number; campaign?: string; note?: string }) {
-  const { brandId, clipperId, grossCents } = input
+export async function creditEarning(input: {
+  campaignId: string
+  clipperId: string
+  grossCents: number
+  submissionId?: string
+  note?: string
+}) {
+  const { campaignId, clipperId, grossCents } = input
   if (!Number.isInteger(grossCents) || grossCents <= 0) throw new HttpError(400, 'Enter a valid amount.')
   const d = await db()
+  const camp = await d.prepare('SELECT brand_user_id, title FROM campaigns WHERE id = ?1').bind(campaignId).first<{ brand_user_id: string | null; title: string }>()
+  if (!camp?.brand_user_id) throw new HttpError(400, 'That campaign has no funded budget.')
+  const clipper = await d.prepare('SELECT risk_level, status FROM users WHERE id = ?1').bind(clipperId).first<{ risk_level: string; status: string }>()
+  if (!clipper || clipper.status !== 'active') throw new HttpError(400, 'That account cannot be paid right now.')
+
   const fee = feeFor(grossCents)
   const net = grossCents - fee
   const t = nowSec()
   const spendId = uid()
   const earningId = uid()
-  const release = t + SITE.holdDays * 86400
+  const release = t + SITE.holdDays * (clipper.risk_level === 'low' ? 1 : 2) * 86400
 
   const results = await d.batch([
-    // 1) the brand pays, only if the balance covers it
+    // 1) the campaign pays, only if its pool covers it
     d
       .prepare(
-        `INSERT INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at)
-         SELECT ?1, ?2, 'brand', 'spend', -?3, ?4, ?1, ?5, ?4
-         WHERE (SELECT COALESCE(SUM(amount_cents), 0) FROM ledger WHERE user_id = ?2 AND account = 'brand') >= ?3`,
+        `INSERT INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at, campaign_id)
+         SELECT ?1, ?2, 'campaign', 'spend', -?3, ?4, ?1, ?5, ?4, ?6
+         WHERE (SELECT COALESCE(SUM(amount_cents), 0) FROM ledger WHERE account = 'campaign' AND campaign_id = ?6) >= ?3`,
       )
-      .bind(spendId, brandId, grossCents, t, input.campaign ?? 'Earnings'),
+      .bind(spendId, camp.brand_user_id, grossCents, t, camp.title, campaignId),
     // 2) the clipper is credited, only if (1) happened
     d
       .prepare(
-        `INSERT INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at)
-         SELECT ?1, ?2, 'clipper', 'earning', ?3, ?4, ?5, ?6, ?7
+        `INSERT INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at, campaign_id)
+         SELECT ?1, ?2, 'clipper', 'earning', ?3, ?4, ?5, ?6, ?7, ?8
          WHERE EXISTS (SELECT 1 FROM ledger WHERE id = ?5)`,
       )
-      .bind(earningId, clipperId, net, release, spendId, input.campaign ?? 'Earnings', t),
+      .bind(earningId, clipperId, net, release, spendId, camp.title, t, campaignId),
     // 3) audit row, only if (1) happened
     d
       .prepare(
-        `INSERT INTO earnings (id, brand_user_id, clipper_user_id, campaign, gross_cents, fee_cents, net_cents, note, created_at)
-         SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9
+        `INSERT INTO earnings (id, brand_user_id, clipper_user_id, campaign, gross_cents, fee_cents, net_cents, note, created_at, campaign_id, submission_id)
+         SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?11, ?12
          WHERE EXISTS (SELECT 1 FROM ledger WHERE id = ?10)`,
       )
-      .bind(earningId, brandId, clipperId, input.campaign ?? null, grossCents, fee, net, input.note ?? null, t, spendId),
+      .bind(earningId, camp.brand_user_id, clipperId, camp.title, grossCents, fee, net, input.note ?? null, t, spendId, campaignId, input.submissionId ?? null),
   ])
   if (results[0].meta.changes !== 1) return null
   return { gross: grossCents, fee, net, releasesAt: release }
@@ -147,14 +180,14 @@ export async function reverseWithdrawal(payoutId: string, status: 'failed' | 're
   return true
 }
 
-/** Takes refunded money back off a brand balance. `ref` makes each refund amount apply once. */
-export async function debitRefund(d: D1Database, userId: string, amountCents: number, ref: string) {
+/** Takes refunded money back off a brand balance, or off a campaign's pool. `ref` makes each refund amount apply once. */
+export async function debitRefund(d: D1Database, userId: string, amountCents: number, ref: string, campaignId?: string | null) {
   const t = nowSec()
   await d
     .prepare(
-      `INSERT OR IGNORE INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at)
-       VALUES (?1, ?2, 'brand', 'refund', -?3, ?4, ?5, 'Refund', ?4)`,
+      `INSERT OR IGNORE INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at, campaign_id)
+       VALUES (?1, ?2, ?3, 'refund', -?4, ?5, ?6, 'Refund', ?5, ?7)`,
     )
-    .bind(uid(), userId, amountCents, t, ref)
+    .bind(uid(), userId, campaignId ? 'campaign' : 'brand', amountCents, t, ref, campaignId ?? null)
     .run()
 }

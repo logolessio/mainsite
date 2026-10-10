@@ -7,6 +7,7 @@ import { Reveal } from '@/components/motion/reveal'
 import { CONTAINER } from '@/lib/layout'
 import { FOOTER, LEGAL_LINKS, SITE } from '@/lib/site'
 import { TransitionLink } from './transition-link'
+import { T } from '@/components/shell/copy-provider'
 
 const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin']
 
@@ -21,7 +22,7 @@ export function SiteFooter() {
           <Reveal className="flex flex-col items-center">
             <Logo className="h-16 md:h-20" />
             <p className="mx-auto mt-8 max-w-xs text-sm leading-relaxed text-mute">
-              Brands, artists and streamers fund a brief. Clippers cut it, post it and are paid for every verified view.
+              <T>Brands, artists and streamers fund a brief. Clippers cut it, post it and are paid for every verified view.</T>
             </p>
             <div className="mt-8 flex items-center justify-center gap-6 text-mute">
               <a href={SITE.social.discord} aria-label="Discord" className="transition-colors hover:text-paper">
@@ -45,12 +46,12 @@ export function SiteFooter() {
           <div className="grid w-full grid-cols-2 gap-14 sm:grid-cols-4">
             {Object.entries(FOOTER).map(([group, links], i) => (
               <Reveal key={group} delay={0.08 * (i + 1)}>
-                <h3 className="font-mono text-xs text-mute">{group}</h3>
+                <h3 className="font-mono text-xs text-mute"><T>{group}</T></h3>
                 <ul className="mt-5 flex flex-col gap-3 text-sm">
                   {links.map((l) => (
                     <li key={l.href}>
                       <TransitionLink href={l.href} className="text-paper/85 transition-colors hover:text-paper">
-                        {l.label}
+                        <T>{l.label}</T>
                       </TransitionLink>
                     </li>
                   ))}

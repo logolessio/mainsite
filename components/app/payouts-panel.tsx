@@ -9,7 +9,7 @@ import { Badge, DataTable, EmptyState } from './table'
 import { ActionButton, Card, StatCard } from './ui'
 
 const date = (s: number) => new Date(s * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-const LABEL: Record<string, string> = { sent: 'Sent', pending: 'Processing', failed: 'Failed', reversed: 'Reversed' }
+const LABEL: Record<string, string> = { sent: 'Sent', pending: 'Processing', review: 'Being checked', failed: 'Failed', reversed: 'Reversed' }
 
 export function PayoutsPanel() {
   const [fin, setFin] = useState<Finance | null>(null)
@@ -172,7 +172,7 @@ export function PayoutsPanel() {
           rows={(fin?.payouts ?? []).map((p) => ({ ...p }))}
           columns={[
             { key: 'd', header: 'Date', render: (r) => date(r.created_at) },
-            { key: 's', header: 'Status', render: (r) => <Badge tone={r.status === 'sent' ? 'good' : r.status === 'pending' ? 'warn' : 'bad'}>{LABEL[r.status] ?? r.status}</Badge> },
+            { key: 's', header: 'Status', render: (r) => <Badge tone={r.status === 'sent' ? 'good' : r.status === 'pending' || r.status === 'review' ? 'warn' : 'bad'}>{LABEL[r.status] ?? r.status}</Badge> },
             { key: 'a', header: 'Amount', render: (r) => cents(r.amount_cents), className: 'text-right' },
           ]}
           empty={<EmptyState title="No withdrawals yet" body="Completed payouts show here." />}

@@ -1,13 +1,19 @@
-import { balances, markPayoutSent, reverseWithdrawal, startWithdrawal } from '@/lib/ledger'
-import { assertSameOrigin, body, HttpError, json, route } from '@/lib/http'
+import { auditSafe } from '@/lib/chain'
+import { protect } from '@/lib/guard'
+import { balances, startWithdrawal } from '@/lib/ledger'
+import { body, HttpError, json, route } from '@/lib/http'
+import { notify } from '@/lib/notify'
+import { reviewReason, sendPayout } from '@/lib/payout'
+import { getSetting } from '@/lib/settings'
 import { SITE } from '@/lib/site'
-import { stripe } from '@/lib/stripe'
 import { requireUser } from '@/lib/user'
+import { db, nowSec } from '@/lib/db'
 
 /** Clipper withdraws earnings to their connected Stripe account. */
 export const POST = route(async (req: Request) => {
-  assertSameOrigin(req)
   const user = await requireUser()
+  await protect(req, { name: 'withdraw', max: 6, windowSec: 600, userId: user.id })
+  if ((await getSetting('payouts_paused')) === '1') throw new HttpError(503, 'Withdrawals are paused for a short while. Your balance is safe.')
   const { amount } = await body<{ amount?: number }>(req).catch(() => ({ amount: undefined }))
 
   if (!user.stripe_account_id || !user.connect_ready) throw new HttpError(400, 'Connect your Stripe account first.')
@@ -17,27 +23,20 @@ export const POST = route(async (req: Request) => {
   if (!Number.isInteger(cents) || cents <= 0) throw new HttpError(400, 'Enter a valid amount.')
   if (cents < SITE.minPayoutUsd * 100) throw new HttpError(400, `The minimum withdrawal is $${SITE.minPayoutUsd}.`)
 
-  // reserve the money first; this is the step that prevents double withdrawals
+  // Decide first whether it can go straight out, then reserve the money (this step stops double withdrawals).
+  const reason = await reviewReason(user, req, cents)
   const payoutId = await startWithdrawal(user.id, cents)
   if (!payoutId) throw new HttpError(409, 'That is more than your available balance.')
 
-  try {
-    const s = await stripe()
-    const transfer = await s.transfers.create(
-      {
-        amount: cents,
-        currency: 'usd',
-        destination: user.stripe_account_id,
-        transfer_group: `payout_${payoutId}`,
-        metadata: { payout_id: payoutId, user_id: user.id },
-      },
-      { idempotencyKey: `payout_${payoutId}` },
-    )
-    await markPayoutSent(payoutId, transfer.id)
-    return json({ ok: true, payoutId, amount: cents })
-  } catch (e) {
-    const reason = e instanceof Error ? e.message : 'Transfer failed'
-    await reverseWithdrawal(payoutId, 'failed', reason)
-    throw new HttpError(502, 'We could not send that payout right now. Your balance has not changed. Please try again later.')
+  if (reason) {
+    const d = await db()
+    await d.prepare("UPDATE payouts SET status = 'review', review_reason = ?2, updated_at = ?3 WHERE id = ?1").bind(payoutId, reason.slice(0, 300), nowSec()).run()
+    await auditSafe({ id: user.id, email: user.email }, 'payout.held', payoutId, reason)
+    await notify(user.id, { kind: 'payout', title: 'Your withdrawal is being checked', body: 'We review some withdrawals before sending them. This usually takes under a day.', href: '/dashboard/payouts', dedupe: `payout-review:${payoutId}` })
+    return json({ ok: true, payoutId, amount: cents, review: true })
   }
+
+  const sent = await sendPayout(payoutId)
+  if (!sent.ok) throw new HttpError(502, 'We could not send that payout right now. Your balance has not changed. Please try again later.')
+  return json({ ok: true, payoutId, amount: cents })
 })

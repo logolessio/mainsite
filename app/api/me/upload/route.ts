@@ -4,7 +4,7 @@ import { body, HttpError, json, route } from '@/lib/http'
 import { requireUser } from '@/lib/user'
 
 const MAX_BYTES = 450 * 1024
-const LIMITS = { avatar: { w: 512, h: 512 }, banner: { w: 1600, h: 600 } } as const
+const LIMITS = { avatar: { w: 512, h: 512 }, banner: { w: 1600, h: 600 }, cover: { w: 900, h: 900 } } as const
 
 /** Reads width/height from the file header itself, so we never trust what the browser says. */
 function dimensions(b: Uint8Array, mime: string): { w: number; h: number } | null {
@@ -51,7 +51,7 @@ export const POST = route(async (req: Request) => {
   const user = await requireUser()
   await protect(req, { name: 'upload', max: 12, windowSec: 600, userId: user.id })
   const { kind, data } = await body<{ kind?: string; data?: string }>(req, MAX_BYTES * 1.5)
-  if (kind !== 'avatar' && kind !== 'banner') throw new HttpError(400, 'Unknown upload type.')
+  if (kind !== 'avatar' && kind !== 'banner' && kind !== 'cover') throw new HttpError(400, 'Unknown upload type.')
   if (typeof data !== 'string' || !/^[A-Za-z0-9+/=]+$/.test(data)) throw new HttpError(400, 'That file could not be read.')
   let bytes: Uint8Array
   try {

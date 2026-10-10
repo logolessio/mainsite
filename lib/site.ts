@@ -2,7 +2,7 @@
 export const SITE = {
   name: 'logoless',
   tagline: 'Views have value',
-  url: 'https://logoless.com', // TODO: production domain
+  url: 'https://logoless.io',
   company: 'Logoless Inc.', // TODO: registered legal entity
   address: '[Registered business address]', // TODO
   emails: {

@@ -5,8 +5,10 @@ import { ArrowLeft, Minus, Plus } from 'lucide-react'
 import { BrandIcon, PLATFORM_LABEL } from '@/components/brand-icon'
 import { Layer, Tilt3D } from '@/components/motion/tilt'
 import { TransitionLink } from '@/components/shell/transition-link'
+import { useTransitions } from '@/components/shell/transition-provider'
 import { type Campaign, usd } from '@/lib/campaigns'
 import { EASE_OUT } from '@/lib/layout'
+import { FavoriteButton } from './favorite-button'
 import { PreviewPlayer } from './preview-player'
 import { SubmitClip } from './submit-clip'
 
@@ -14,6 +16,7 @@ const D3 = '[transform-style:preserve-3d]'
 
 /** One wide floating card: full-height cover on the left, everything else on the right. */
 export function CampaignCard({ campaign }: { campaign: Campaign }) {
+  const { morph } = useTransitions()
   return (
     <div className="mx-auto max-w-6xl">
       <motion.div
@@ -24,6 +27,11 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
       >
         <TransitionLink
           href="/"
+          onClick={(e) => {
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
+            e.preventDefault()
+            morph('/', campaign.id)
+          }}
           className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line-strong px-4 text-xs text-mute transition-colors hover:text-paper"
         >
           <ArrowLeft aria-hidden="true" className="size-3.5" />
@@ -40,7 +48,7 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
             {/* left: a true square cover, then the preview and the brief */}
             <div className={`${D3} flex min-w-0 flex-col gap-2.5`}>
               <Layer z={22}>
-                <div data-tour="cc-cover" className="relative aspect-square w-full overflow-hidden rounded-[8px]">
+                <div data-tour="cc-cover" data-vt-cover={campaign.id} className="relative aspect-square w-full overflow-hidden rounded-[8px]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={campaign.cover} alt={`${campaign.title} cover art`} fetchPriority="high" className="absolute inset-0 h-full w-full object-cover" />
                 </div>
@@ -63,7 +71,8 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
             {/* right: title, numbers, rules, submit */}
             <div className={`${D3} flex min-w-0 flex-col gap-2.5 py-1 pr-1`}>
               <Layer z={36}>
-                <div data-tour="cc-head" className="px-3 pt-2 pb-1 text-center">
+                <div data-tour="cc-head" className="relative px-3 pt-2 pb-1 text-center">
+                  <FavoriteButton id={campaign.id} className="absolute top-1 right-1" />
                   <p className="font-mono text-[11px] tracking-widest text-mute uppercase">{campaign.type}</p>
                   <h1 className="mt-1.5 font-display text-4xl leading-none md:text-5xl">{campaign.title}</h1>
                   <p className="mt-1.5 text-sm text-mute">by {campaign.creator}</p>

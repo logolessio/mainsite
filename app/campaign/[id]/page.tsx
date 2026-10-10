@@ -2,16 +2,14 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { CampaignCard } from '@/components/campaign/campaign-card'
 import { CampaignTour } from '@/components/campaign/campaign-tour'
-import { campaigns, getCampaign } from '@/lib/campaigns'
+import { connection } from 'next/server'
+import { liveCampaign } from '@/lib/campaigns-db'
 
 type Props = { params: Promise<{ id: string }> }
 
-export function generateStaticParams() {
-  return campaigns.map((c) => ({ id: c.id }))
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const campaign = getCampaign((await params).id)
+  await connection()
+  const campaign = await liveCampaign((await params).id)
   if (!campaign) return {}
   return {
     title: `${campaign.title} by ${campaign.creator} — logoless`,
@@ -21,7 +19,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function CampaignPage({ params }: Props) {
-  const campaign = getCampaign((await params).id)
+  await connection()
+  const campaign = await liveCampaign((await params).id)
   if (!campaign) notFound()
 
   return (
