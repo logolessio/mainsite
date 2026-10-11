@@ -7,7 +7,8 @@ import { ConnectManage } from '@/components/app/connect-embed'
 import { BankForm, PayoutSetup } from '@/components/app/payout-setup'
 import { ActionButton, Card } from '@/components/app/ui'
 import type { ConnectStatus } from '@/lib/connect-fields'
-import { getConnect, getPayoutOverview, type PayoutOverview } from '@/lib/stripe-client'
+import { useNavUser } from '@/components/shell/nav-user'
+import { getConnect, getPayoutOverview, type PayoutOverview, resetPayoutAccount } from '@/lib/stripe-client'
 
 const money = (amount: number, currency: string) => new Intl.NumberFormat('en', { style: 'currency', currency: currency.toUpperCase() }).format(amount / 100)
 const day = (s: number) => new Date(s * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
@@ -31,16 +32,61 @@ export function PayoutAccount({ onChanged }: { onChanged?: () => void }) {
       .catch((e) => setError(e instanceof Error ? e.message : 'Could not load your payout account.'))
   }, [])
 
-  if (error) return <p role="alert" className="rounded-2xl border border-signal/40 px-4 py-3 text-sm text-signal">{error}</p>
-  if (!status)
-    return (
-      <p className="flex items-center gap-2 text-sm text-mute">
-        <Loader2 aria-hidden="true" className="size-4 animate-spin" /> Loading your payout account…
-      </p>
-    )
-  if (status.status !== 'ready') return <PayoutSetup status={status} onChange={apply} />
-  if (status.mode === 'embedded') return <ConnectManage />
-  return <Ready status={status} onChange={apply} />
+  const body = (() => {
+    if (error) return <p role="alert" className="rounded-2xl border border-signal/40 px-4 py-3 text-sm text-signal">{error}</p>
+    if (!status)
+      return (
+        <p className="flex items-center gap-2 text-sm text-mute">
+          <Loader2 aria-hidden="true" className="size-4 animate-spin" /> Loading your payout account…
+        </p>
+      )
+    if (status.status !== 'ready') return <PayoutSetup status={status} onChange={apply} />
+    if (status.mode === 'embedded') return <ConnectManage />
+    return <Ready status={status} onChange={apply} />
+  })()
+
+  return (
+    <div className="grid gap-6">
+      {body}
+      {status && <ResetButton status={status} onReset={async () => {
+        await resetPayoutAccount()
+        setError('')
+        setStatus(await getConnect())
+        onChanged?.()
+      }} />}
+    </div>
+  )
+}
+
+/** Admins only, and only while Stripe is in test mode: deletes your own test payout account so you can start over. */
+function ResetButton({ status, onReset }: { status: ConnectStatus; onReset: () => Promise<void> }) {
+  const { user } = useNavUser()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  if (!user?.signedIn || !user.isAdmin || !status.publishableKey?.startsWith('pk_test_') || status.status === 'not_connected') return null
+  return (
+    <div className="grid justify-items-start gap-2">
+      <button
+        type="button"
+        disabled={busy}
+        onClick={async () => {
+          if (!window.confirm('Delete your Stripe test payout account and start setup again? Your earnings and history are not touched.')) return
+          setBusy(true)
+          setError('')
+          try {
+            await onReset()
+          } catch (e) {
+            setError(e instanceof Error ? e.message : 'Could not reset.')
+          }
+          setBusy(false)
+        }}
+        className="rounded-full border border-dashed border-amber-400/50 px-4 py-1.5 text-xs text-amber-200 hover:bg-amber-400/10 disabled:opacity-50"
+      >
+        {busy ? 'Resetting…' : 'Reset'}
+      </button>
+      {error && <p role="alert" className="text-xs text-signal">{error}</p>}
+    </div>
+  )
 }
 
 function Ready({ status, onChange }: { status: ConnectStatus; onChange: (s: ConnectStatus) => void }) {

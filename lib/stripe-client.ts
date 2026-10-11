@@ -78,3 +78,4 @@ export async function tokenizeBank(publishableKey: string, f: { country: string;
   if (!res.ok || !j?.id) throw new Error(j?.error?.message?.replace(/Stripe/g, 'the bank') ?? 'Those bank details were not accepted.')
   return j.id
 }
+export const resetPayoutAccount = () => api<{ ok: true; deleted: boolean }>('/api/stripe/connect/reset', { method: 'POST', data: {} })
