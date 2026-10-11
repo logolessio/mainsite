@@ -21,5 +21,9 @@
       "binding": "WORKER_SELF_REFERENCE",
       "service": "mainsite"
     }
-  ]
+  ],
+  // The dev site. The same worker and database as the live site, so there is nothing to keep in sync: on this host every
+  // feature is switched on and only admins can get in. Pushing a feature turns it on for logoless.io (see /admin/push).
+  // logoless.io itself is attached to this worker in the Cloudflare dashboard, and is deliberately not listed here.
+  "routes": [{ "pattern": "dev.logoless.io", "custom_domain": true }]
 }
