@@ -5,12 +5,14 @@ export type Country = { code: string; name: string; currency: string; bank: Bank
 
 const eu = (code: string, name: string, currency = 'eur'): Country => ({ code, name, currency, bank: 'iban' })
 
-/** Where clippers can be paid. Each needs its own bank fields. More can be added here. */
+/**
+ * Where clippers can be paid. A UK Stripe platform can pay accounts in the US, UK, EEA, Canada and Switzerland only
+ * (Stripe's cross-border payout rules), and only under the full service agreement. Each country needs its own bank fields.
+ */
 export const COUNTRIES: Country[] = [
   { code: 'US', name: 'United States', currency: 'usd', bank: 'us', state: true },
   { code: 'GB', name: 'United Kingdom', currency: 'gbp', bank: 'gb' },
   { code: 'CA', name: 'Canada', currency: 'cad', bank: 'ca', state: true },
-  { code: 'AU', name: 'Australia', currency: 'aud', bank: 'au', state: true },
   eu('AT', 'Austria'), eu('BE', 'Belgium'), eu('BG', 'Bulgaria', 'bgn'), eu('HR', 'Croatia'), eu('CY', 'Cyprus'),
   eu('CZ', 'Czechia', 'czk'), eu('DK', 'Denmark', 'dkk'), eu('EE', 'Estonia'), eu('FI', 'Finland'), eu('FR', 'France'),
   eu('DE', 'Germany'), eu('GR', 'Greece'), eu('HU', 'Hungary', 'huf'), eu('IE', 'Ireland'), eu('IT', 'Italy'),

@@ -5,9 +5,6 @@ import { HttpError } from './http'
 import { isTestMode, stripe } from './stripe'
 import type { UserRow } from './user'
 
-/** Countries where logoless's own Stripe agreement covers the account. Elsewhere the lighter "recipient" agreement is used. */
-const FULL_AGREEMENT = new Set(['GB', 'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'CH'])
-
 /**
  * Creates the clipper's Stripe account. There is no Stripe-hosted page or dashboard anywhere: logoless collects the
  * details in its own forms and sends them to Stripe, which keeps them and does the identity checks. Because logoless
@@ -24,7 +21,7 @@ export async function createConnectAccount(user: UserRow, country: string, tos: 
     business_type: 'individual',
     business_profile: { mcc: '7311', url: 'https://logoless.io', product_description: 'Creates and posts short video clips for advertisers on logoless.' },
     capabilities: { transfers: { requested: true } },
-    tos_acceptance: { date: Math.floor(Date.now() / 1000), ip: tos.ip, user_agent: tos.userAgent.slice(0, 200), ...(FULL_AGREEMENT.has(c.code) ? {} : { service_agreement: 'recipient' as const }) },
+    tos_acceptance: { date: Math.floor(Date.now() / 1000), ip: tos.ip, user_agent: tos.userAgent.slice(0, 200) },
     settings: { payouts: { schedule: { interval: 'daily' } } },
     metadata: { user_id: user.id },
   })

@@ -34,7 +34,7 @@ Clippers set up payouts in logoless's own forms. Nothing is embedded and nobody 
 2. Cloudflare > Worker > Variables and secrets: add `STRIPE_PUBLISHABLE_KEY` (a normal variable is fine).
 3. In the Connect wizard choose: buyers purchase from you, payouts split between sellers, **build your own** onboarding, **build your own** account management.
 4. Because logoless collects the details, logoless is the one Stripe bills for the account's fees and the one that covers any losses (the account is created with those settings). Stripe charges the platform a small monthly fee per active clipper account plus a fee per payout; check Stripe's Connect pricing for your country.
-5. Countries offered are listed in `lib/connect-fields.ts`. Each needs its own bank fields; add more there. Payouts to a country outside the UK/EEA use Stripe's "recipient" agreement.
+5. Countries offered are listed in `lib/connect-fields.ts`. Each needs its own bank fields; add more there. Stripe only lets a platform pay connected accounts in the US, UK, EEA, Canada and Switzerland from a UK platform (other countries, such as Australia, are not possible with Connect).
 6. Test in the sandbox: Payouts page > pick United States > use Stripe's test values (date of birth `01/01/1901`, SSN last 4 `0000`, address `address_full_match`, routing `110000000`, account `000123456789`).
 
 ## 3. Going live
