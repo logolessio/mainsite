@@ -116,6 +116,85 @@ export const LINK_PLATFORMS = [
   P('website', 'Website', [], 'https://your-site.com', 'Other'),
 ] as const
 export type LinkPlatform = (typeof LINK_PLATFORMS)[number]['id']
+
+/** Platforms where a username is enough. `{u}` is replaced with it. Others need the full link (a song, a numeric ID…). */
+export const USERNAME_LINKS: Record<string, { tpl: string; label: string }> = {
+  tiktok: { tpl: 'https://tiktok.com/@{u}', label: 'tiktok.com/@' },
+  youtube: { tpl: 'https://youtube.com/@{u}', label: 'youtube.com/@' },
+  instagram: { tpl: 'https://instagram.com/{u}', label: 'instagram.com/' },
+  x: { tpl: 'https://x.com/{u}', label: 'x.com/' },
+  twitch: { tpl: 'https://twitch.tv/{u}', label: 'twitch.tv/' },
+  snapchat: { tpl: 'https://snapchat.com/add/{u}', label: 'snapchat.com/add/' },
+  reddit: { tpl: 'https://reddit.com/user/{u}', label: 'reddit.com/user/' },
+  facebook: { tpl: 'https://facebook.com/{u}', label: 'facebook.com/' },
+  threads: { tpl: 'https://threads.net/@{u}', label: 'threads.net/@' },
+  bluesky: { tpl: 'https://bsky.app/profile/{u}', label: 'bsky.app/profile/' },
+  telegram: { tpl: 'https://t.me/{u}', label: 't.me/' },
+  whatsapp: { tpl: 'https://wa.me/{u}', label: 'wa.me/' },
+  pinterest: { tpl: 'https://pinterest.com/{u}', label: 'pinterest.com/' },
+  kick: { tpl: 'https://kick.com/{u}', label: 'kick.com/' },
+  discord: { tpl: 'https://discord.gg/{u}', label: 'discord.gg/' },
+  soundcloud: { tpl: 'https://soundcloud.com/{u}', label: 'soundcloud.com/' },
+  audiomack: { tpl: 'https://audiomack.com/{u}', label: 'audiomack.com/' },
+  bandcamp: { tpl: 'https://{u}.bandcamp.com', label: '.bandcamp.com' },
+  steam: { tpl: 'https://steamcommunity.com/id/{u}', label: 'steamcommunity.com/id/' },
+  patreon: { tpl: 'https://patreon.com/{u}', label: 'patreon.com/' },
+  kofi: { tpl: 'https://ko-fi.com/{u}', label: 'ko-fi.com/' },
+  buymeacoffee: { tpl: 'https://buymeacoffee.com/{u}', label: 'buymeacoffee.com/' },
+  paypal: { tpl: 'https://paypal.me/{u}', label: 'paypal.me/' },
+  github: { tpl: 'https://github.com/{u}', label: 'github.com/' },
+  behance: { tpl: 'https://behance.net/{u}', label: 'behance.net/' },
+  dribbble: { tpl: 'https://dribbble.com/{u}', label: 'dribbble.com/' },
+  artstation: { tpl: 'https://artstation.com/{u}', label: 'artstation.com/' },
+  vimeo: { tpl: 'https://vimeo.com/{u}', label: 'vimeo.com/' },
+  tumblr: { tpl: 'https://{u}.tumblr.com', label: '.tumblr.com' },
+  medium: { tpl: 'https://medium.com/@{u}', label: 'medium.com/@' },
+  substack: { tpl: 'https://{u}.substack.com', label: '.substack.com' },
+  linktree: { tpl: 'https://linktr.ee/{u}', label: 'linktr.ee/' },
+}
+
+/**
+ * Turns whatever someone typed into a full https link. A username ("@you" or "you") is slotted into the platform's
+ * address; a pasted link (with or without https://) is tidied up. Returns an error message when it cannot work.
+ */
+export function buildLink(platform: string, raw: string): { url: string } | { error: string } {
+  const m = LINK_PLATFORMS.find((p) => p.id === platform)
+  const input = raw.trim()
+  if (!m || !input) return { error: 'Type your username or paste your link.' }
+  const spec = USERNAME_LINKS[platform]
+  const bare = input.replace(/^https?:\/\//i, '').toLowerCase()
+  const isLink = /^https?:\/\//i.test(input) || input.includes('/') || (m.hosts as readonly string[]).some((h) => bare === h || bare.endsWith(`.${h}`))
+  if (isLink || !spec) {
+    const bad = spec ? 'Type your username, or paste the full link.' : 'Paste the full link to it.'
+    let u: URL
+    try {
+      u = new URL(/^https?:\/\//i.test(input) ? input : `https://${input}`)
+    } catch {
+      return { error: bad }
+    }
+    if (!u.hostname.includes('.')) return { error: bad }
+    u.protocol = 'https:'
+    if (m.hosts.length && !m.hosts.some((h) => u.hostname === h || u.hostname.endsWith(`.${h}`))) return { error: `That does not look like a ${m.label} link.` }
+    return { url: u.toString() }
+  }
+  const name = input.replace(/^@+/, '')
+  const ok = platform === 'whatsapp' ? /^\d{6,16}$/.test(name.replace(/^\+/, '')) : /^[A-Za-z0-9._-]{1,60}$/.test(name)
+  if (!ok) return { error: platform === 'whatsapp' ? 'Type your number with the country code, digits only.' : 'Usernames use letters, numbers, dots, dashes and underscores only.' }
+  return { url: spec.tpl.replace('{u}', platform === 'whatsapp' ? name.replace(/^\+/, '') : name) }
+}
+
+/** The username part of a saved link, so editing shows "you" instead of the whole address. */
+export function usernameOf(platform: string, url: string): string {
+  const spec = USERNAME_LINKS[platform]
+  if (!spec || !url) return url
+  const [pre, post = ''] = spec.tpl.split('{u}')
+  const clean = url.replace(/\/$/, '')
+  if (clean.startsWith(pre) && (!post || clean.endsWith(post))) {
+    const name = clean.slice(pre.length, post ? clean.length - post.length : undefined)
+    if (name && !name.includes('/') && !name.includes('?')) return name
+  }
+  return url
+}
 export const LINK_GROUPS = ['Social', 'Music', 'Gaming', 'Support', 'Other'] as const
 /** Links that open the "you are leaving logoless" page first, because they are the ones scammers use. */
 export const WARN_PLATFORMS = ['website', 'discord', 'linktree', 'telegram', 'whatsapp']

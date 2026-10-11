@@ -18,7 +18,10 @@ import {
   DOT_SWATCHES,
   FONT_OPTIONS,
   LINK_GROUPS,
+  buildLink,
   LINK_PLATFORMS,
+  USERNAME_LINKS,
+  usernameOf,
   MAX_LINKS,
   NAME_EFFECTS,
   SHOW_OPTIONS,
@@ -445,23 +448,19 @@ function LinkDialog({ platform, current, onClose, onSave, onRemove }: { platform
   const [url, setUrl] = useState('')
   const [err, setErr] = useState('')
   useEffect(() => {
-    setUrl(current)
+    setUrl(platform ? usernameOf(platform, current) : current)
     setErr('')
   }, [platform, current])
   const m = platform ? meta(platform) : null
 
   const submit = () => {
     if (!m) return
-    let u: URL
-    try {
-      u = new URL(url.trim())
-    } catch {
-      return setErr('Paste the full link, starting with https://')
-    }
-    if (u.protocol !== 'https:') return setErr('The link must start with https://')
-    if (m.hosts.length && !m.hosts.some((h) => u.hostname === h || u.hostname.endsWith(`.${h}`))) return setErr(`That does not look like a ${m.label} link.`)
-    onSave({ platform: m.id as ProfileLink['platform'], url: u.toString() })
+    const r = buildLink(m.id, url)
+    if ('error' in r) return setErr(r.error)
+    onSave({ platform: m.id as ProfileLink['platform'], url: r.url })
   }
+  const spec = m ? USERNAME_LINKS[m.id] : undefined
+  const built = m && url.trim() ? buildLink(m.id, url) : null
 
   return (
     <Modal open={Boolean(m)} onClose={onClose} title={m ? `${current ? 'Edit' : 'Add'} ${m.label}` : ''}>
@@ -475,11 +474,30 @@ function LinkDialog({ platform, current, onClose, onSave, onRemove }: { platform
         >
           <div className="flex items-center gap-3">
             <span className="grid size-12 place-items-center rounded-xl bg-white/[0.07]">{m.id === 'website' ? <Globe className="size-6" /> : <BrandIcon name={m.id} className="size-6" />}</span>
-            <p className="text-sm text-mute">{m.id === 'website' ? 'Visitors see a warning page before your site opens.' : `Paste the link to your ${m.label}.`}</p>
+            <p className="text-sm text-mute">{m.id === 'website' ? 'Visitors see a warning page before your site opens.' : spec ? `Just type your ${m.label} username. We build the link for you.` : `Paste the link to your ${m.label}.`}</p>
           </div>
-          <Field label="Link">
-            <Input autoFocus value={url} onChange={(e) => { setUrl(e.target.value); setErr('') }} placeholder={m.placeholder} inputMode="url" aria-invalid={Boolean(err)} />
+          <Field label={spec ? 'Username' : 'Link'}>
+            <div className="flex items-stretch">
+              {spec && <span className="grid shrink-0 place-items-center rounded-l-[inherit] border border-r-0 border-line-strong bg-white/[0.04] px-3 font-mono text-xs text-mute select-none">{spec.label}</span>}
+              <Input
+                autoFocus
+                value={url}
+                onChange={(e) => {
+                  setUrl(e.target.value)
+                  setErr('')
+                }}
+                placeholder={spec ? 'yourname' : m.placeholder}
+                inputMode={spec ? 'text' : 'url'}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                aria-invalid={Boolean(err)}
+                className="min-w-0 flex-1"
+              />
+            </div>
           </Field>
+          {built && 'url' in built && !err && <p className="-mt-2 truncate text-xs text-mute">Opens <span className="text-paper/80">{built.url.replace(/^https:\/\//, '')}</span></p>}
+          {spec && !err && !built && <p className="-mt-2 text-xs text-mute">Already have the full link? Paste it instead, that works too.</p>}
           {err && <p role="alert" className="text-sm text-signal">{err}</p>}
           <div className="flex flex-wrap items-center gap-2">
             <ActionButton type="submit" className="rounded-full">{current ? 'Save link' : 'Add link'}</ActionButton>
