@@ -16,7 +16,7 @@ export const POST = route(async (req: Request) => {
     id = await createConnectAccount(user, String(country ?? '').toUpperCase(), { ip: clientIp(req), userAgent: req.headers.get('user-agent') ?? '' })
   } catch (e) {
     if (e instanceof HttpError) throw e
-    throw stripeProblem(e)
+    throw await stripeProblem(e)
   }
   logEvent({ kind: 'money', name: 'payout account created', actor: user.email, detail: String(country), req })
   return json(await connectStatus({ ...user, stripe_account_id: id }))

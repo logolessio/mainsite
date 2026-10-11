@@ -2,7 +2,7 @@ import type Stripe from 'stripe'
 import { db, setting } from './db'
 import { type ConnectStatus, countryOf, errorMessage } from './connect-fields'
 import { HttpError } from './http'
-import { stripe } from './stripe'
+import { isTestMode, stripe } from './stripe'
 import type { UserRow } from './user'
 
 /** Countries where logoless's own Stripe agreement covers the account. Elsewhere the lighter "recipient" agreement is used. */
@@ -62,7 +62,7 @@ export async function connectStatus(user: UserRow): Promise<ConnectStatus> {
 }
 
 /** Turns Stripe's complaints about a field into a message that is safe and useful to show. */
-export function stripeProblem(e: unknown): HttpError {
+export async function stripeProblem(e: unknown): Promise<HttpError> {
   const msg = e instanceof Error ? e.message : ''
   const param = (e as { param?: string })?.param ?? ''
   if (/id_number|ssn/i.test(param)) return new HttpError(400, 'That ID number was not accepted. Check it and try again.')
@@ -70,6 +70,8 @@ export function stripeProblem(e: unknown): HttpError {
   if (/address|postal/i.test(param)) return new HttpError(400, 'That address was not accepted. Check it and try again.')
   if (/phone/i.test(param)) return new HttpError(400, 'That phone number was not accepted. Include the country code.')
   if (/external_account|bank|routing|account_number|iban/i.test(param + msg)) return new HttpError(400, 'That bank account was not accepted. Check the numbers and try again.')
-  console.error('stripe connect error', param, msg.slice(0, 200))
-  return new HttpError(502, 'Stripe could not accept that. Check your details and try again.')
+  console.error('stripe connect error', param, msg.slice(0, 300))
+  // In test mode show Stripe's own reason, so a setup problem is easy to spot. Live mode stays generic.
+  const detail = (await isTestMode()) && msg ? ` (Stripe said: ${msg.slice(0, 300)})` : ''
+  return new HttpError(502, `Stripe could not accept that. Check your details and try again.${detail}`)
 }

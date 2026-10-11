@@ -69,7 +69,7 @@ export const POST = route(async (req: Request) => {
     const s = await stripe()
     await s.accounts.update(user.stripe_account_id, { individual: ind })
   } catch (e) {
-    throw stripeProblem(e)
+    throw await stripeProblem(e)
   }
   logEvent({ kind: 'money', name: 'payout details saved', actor: user.email, detail: [...new Set(changed)].join(', '), req })
   return json(await connectStatus(user))

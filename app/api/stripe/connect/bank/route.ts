@@ -19,7 +19,7 @@ export const POST = route(async (req: Request) => {
     const s = await stripe()
     await s.accounts.createExternalAccount(user.stripe_account_id, { external_account: token, default_for_currency: true })
   } catch (e) {
-    throw stripeProblem(e)
+    throw await stripeProblem(e)
   }
   logEvent({ kind: 'money', name: 'payout bank saved', actor: user.email, req })
   return json(await connectStatus(user))
