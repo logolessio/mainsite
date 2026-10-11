@@ -11,6 +11,7 @@ export type FeatureDef = {
 
 export const FEATURES: FeatureDef[] = [
   { id: 'spotlight', name: 'Spotlight search', category: 'Discover', path: '/', description: 'Press ⌘K (or /) anywhere on the public site to search every live campaign and jump to any page. Press ? for the shortcut list.' },
+  { id: 'reels', name: 'Reels: swipe through campaigns', category: 'Discover', path: '/reels', description: 'A full-screen, swipeable way to browse live campaigns, one at a time. The track plays as you scroll, with the rate, pool and a one-tap Clip this button. Keyboard friendly (↑ ↓, M for sound).' },
   { id: 'leaderboard', name: 'Clipper leaderboard', category: 'Discover', path: '/leaderboard', description: 'A public ranking of the top clippers by verified views, for people who have chosen to show their views. Gold, silver and bronze podium.' },
   { id: 'live-numbers', name: 'Live numbers on the home page', category: 'Trust', path: '/', description: 'A band under the campaigns with real totals: live campaigns, paid out so far, clips posted. It stays hidden until the numbers are worth showing.' },
   { id: 'calculators', name: 'Earnings and budget calculators', category: 'Discover', path: '/for-clippers', description: 'An interactive "what could I earn" calculator on the For clippers page and a "what will my budget buy" calculator on the For brands page.' },

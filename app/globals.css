@@ -529,3 +529,8 @@ html.calm *::after {
   animation-iteration-count: 1 !important;
   scroll-behavior: auto !important;
 }
+
+@keyframes reel-eq {
+  from { transform: scaleY(0.25); }
+  to { transform: scaleY(1); }
+}

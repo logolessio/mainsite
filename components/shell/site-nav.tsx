@@ -26,7 +26,8 @@ export function SiteNav() {
   const { navigate } = useTransitions()
   const { user } = useNavUser()
   const board = useFeature('leaderboard')
-  const links = [...NAV_LINKS, ...(board ? [{ label: 'Leaderboard', href: '/leaderboard' }] : []), user?.signedIn ? { label: 'Dashboard', href: '/dashboard' } : { label: 'Log in', href: '/login' }]
+  const reels = useFeature('reels')
+  const links = [...NAV_LINKS, ...(reels ? [{ label: 'Reels', href: '/reels' }] : []), ...(board ? [{ label: 'Leaderboard', href: '/leaderboard' }] : []), user?.signedIn ? { label: 'Dashboard', href: '/dashboard' } : { label: 'Log in', href: '/login' }]
   const toggleRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
