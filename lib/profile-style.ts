@@ -44,6 +44,16 @@ export const CARD_EFFECTS = [
   { id: 'fireflies', label: 'Fireflies' },
   { id: 'petals', label: 'Petals' },
   { id: 'bubbles', label: 'Bubbles' },
+  { id: 'lightning', label: 'Storm' },
+  { id: 'smoke', label: 'Smoke' },
+  { id: 'leaves', label: 'Autumn' },
+  { id: 'confetti', label: 'Confetti' },
+  { id: 'fireworks', label: 'Fireworks' },
+  { id: 'rays', label: 'Light shafts' },
+  { id: 'caustics', label: 'Underwater' },
+  { id: 'code', label: 'Code' },
+  { id: 'film', label: 'Old film' },
+  { id: 'vhs', label: 'VHS' },
 ] as const
 export type CardEffect = (typeof CARD_EFFECTS)[number]['id']
 export const CARD_EFFECT_IDS = CARD_EFFECTS.map((e) => e.id) as string[]

@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Ban, Bug, Camera, Check, CircleDot, CloudRain, Download, Eye, EyeOff, Flame, Flower2, Globe, ImagePlus, Loader2, Pencil, Plus, Snowflake, Sparkles, Star, Trash2, Waves, X, type LucideIcon } from 'lucide-react'
+import { Ban, Binary, Bug, Camera, Check, CircleDot, CloudRain, Download, Droplets, Eye, EyeOff, Film, Flame, Flower2, Globe, ImagePlus, Leaf, Loader2, PartyPopper, Pencil, Plus, Rocket, Snowflake, Sparkles, Star, Sun, Trash2, Tv, Waves, Wind, X, Zap, type LucideIcon } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActionButton, Card, Toggle } from '@/components/app/ui'
 import { BrandIcon } from '@/components/brand-icon'
@@ -531,7 +531,7 @@ function Swatches({ label, value, options, onChange }: { label: string; value: s
   )
 }
 
-const EFFECT_ICONS: Record<string, LucideIcon> = { none: Ban, snow: Snowflake, rain: CloudRain, embers: Flame, sparkle: Sparkles, stars: Star, aurora: Waves, fireflies: Bug, petals: Flower2, bubbles: CircleDot }
+const EFFECT_ICONS: Record<string, LucideIcon> = { none: Ban, snow: Snowflake, rain: CloudRain, embers: Flame, sparkle: Sparkles, stars: Star, aurora: Waves, fireflies: Bug, petals: Flower2, bubbles: CircleDot, lightning: Zap, smoke: Wind, leaves: Leaf, confetti: PartyPopper, fireworks: Rocket, rays: Sun, caustics: Droplets, code: Binary, film: Film, vhs: Tv }
 
 function Slider({ label, hint, value, onChange }: { label: string; hint: string; value: number; onChange: (v: number) => void }) {
   return (
