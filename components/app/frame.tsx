@@ -1,12 +1,13 @@
 'use client'
 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { ArrowUpRight, CornerDownLeft, Ellipsis, LogOut, Search, X } from 'lucide-react'
+import { ArrowUpRight, CornerDownLeft, Ellipsis, LogOut, Search, ShieldCheck, X } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon, type IconName } from '@/components/icons'
 import { Logo } from '@/components/logo'
+import { useNavUser } from '@/components/shell/nav-user'
 import { NotificationBell } from '@/components/shell/notifications'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { useTransitions } from '@/components/shell/transition-provider'
@@ -24,6 +25,8 @@ const isActive = (pathname: string, it: AppNavItem) => (it.exact ? pathname === 
  */
 export function AppFrame({ area, items, children }: { area: string; items: AppNavItem[]; children: React.ReactNode }) {
   const pathname = usePathname()
+  const { user } = useNavUser()
+  const showAdmin = Boolean(user?.signedIn && user.isAdmin) && area !== 'Admin'
   const reduced = useReducedMotion()
   const [palette, setPalette] = useState(false)
   const [more, setMore] = useState(false)
@@ -69,6 +72,12 @@ export function AppFrame({ area, items, children }: { area: string; items: AppNa
           </div>
         </div>
         <div className="flex items-center gap-2.5">
+          {showAdmin && (
+            <TransitionLink href="/admin" aria-label="Admin dashboard" className="glass-liquid flex h-10 items-center gap-2 rounded-full px-4 text-sm font-medium transition-transform hover:text-paper active:scale-95 max-md:size-10 max-md:justify-center max-md:p-0">
+              <ShieldCheck aria-hidden="true" className="size-4" />
+              <span className="hidden md:inline">Admin dashboard</span>
+            </TransitionLink>
+          )}
           <button type="button" onClick={() => setPalette(true)} aria-label="Jump to…" className="glass-liquid flex h-10 items-center gap-3 rounded-full pr-2 pl-4 text-sm text-mute transition-colors hover:text-paper max-md:size-10 max-md:justify-center max-md:p-0">
             <Search aria-hidden="true" className="size-4" />
             <span className="hidden md:inline">Jump to…</span>
