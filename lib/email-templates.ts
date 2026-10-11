@@ -66,7 +66,11 @@ function codeBoxes(code: string) {
     )
     .join('<td width="6" style="width:6px"></td>')
   return `<table role="presentation" align="center" cellpadding="0" cellspacing="0" style="margin:0 auto"><tr>${cells}</tr></table>
-<p style="margin:16px 0 0;font:400 12px/1.4 ${SANS};color:#6c6c75">Easier to copy: <span style="font-family:${MONO};color:#bdbdc4;letter-spacing:.12em">${esc(code)}</span></p>`
+<table role="presentation" align="center" cellpadding="0" cellspacing="0" style="margin:18px auto 0"><tr>
+<td style="background:#ffffff;border-radius:999px 0 0 999px;padding:11px 16px 11px 18px;font:600 13px/1 ${SANS};color:#0a0a0b">Copy code</td>
+<td style="background:#16161a;border:1px solid #303036;border-left:0;border-radius:0 999px 999px 0;padding:10px 18px 10px 14px;font:600 15px/1 ${MONO};letter-spacing:.14em;color:#ffffff"><span style="-webkit-user-select:all;user-select:all">${esc(code.replace(/\D/g, '').slice(0, 6))}</span></td>
+</tr></table>
+<p style="margin:10px 0 0;font:400 12px/1.4 ${SANS};color:#6c6c75">Tap or double-click the code to select it, then copy.</p>`
 }
 
 function expiry() {
