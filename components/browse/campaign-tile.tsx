@@ -81,24 +81,7 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
           />
         )}
 
-        <motion.span
-          variants={{ rest: { y: '101%' }, hover: { y: '0%' } }}
-          transition={{ duration: 0.4, ease: EASE_OUT }}
-          className="absolute inset-x-0 bottom-0 block bg-ink/80 px-4 py-3"
-        >
-          <span className="block truncate font-display text-lg leading-tight md:text-xl">{campaign.title}</span>
-          <span className="mt-0.5 block truncate text-xs text-mute">
-            {campaign.creator} · {campaign.type}
-          </span>
-        </motion.span>
       </button>
-
-      <span
-        data-rate
-        className="pointer-events-none absolute top-3 left-3 rounded-full bg-ink/70 px-2.5 py-1 font-mono text-[11px] text-paper"
-      >
-        {usd(campaign.ratePer1k, 2)}/1K
-      </span>
 
       <button
         type="button"
