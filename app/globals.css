@@ -387,25 +387,6 @@
 }
 
 /* ---------- Motion extras ---------- */
-/* A pool of light under the cursor, drawn on the card edge itself. Needs data-spot on the card. */
-.spot {
-  isolation: isolate;
-}
-.spot::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: -1;
-  opacity: 0;
-  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgb(255 255 255 / 0.11), transparent 70%);
-  transition: opacity 0.35s ease;
-}
-.spot:hover::before {
-  opacity: 1;
-}
-
 /* Links get an underline that draws in from the left. */
 .link-u {
   background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;

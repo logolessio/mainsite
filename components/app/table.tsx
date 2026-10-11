@@ -14,9 +14,13 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center px-6 py-14 text-center">
-      {icon && <Icon name={icon} aria-hidden="true" className="size-6 text-mute" />}
-      <p className="mt-4 font-display text-3xl">{title}</p>
-      {body && <p className="mt-2 max-w-sm text-sm text-mute">{body}</p>}
+      {icon && (
+        <span className="grid size-12 place-items-center rounded-full bg-white/[0.05]">
+          <Icon name={icon} aria-hidden="true" className="size-5 text-mute" />
+        </span>
+      )}
+      <p className="mt-5 text-lg font-medium tracking-tight">{title}</p>
+      {body && <p className="mt-2 max-w-sm text-sm leading-relaxed text-mute">{body}</p>}
       {action && <div className="mt-6">{action}</div>}
     </div>
   )
@@ -34,12 +38,12 @@ export function DataTable<T extends { id: string }>({
   empty: React.ReactNode
 }) {
   return (
-    <div className="overflow-x-auto border border-line bg-surface/80 rounded-2xl">
+    <div data-table className="overflow-x-auto rounded-3xl border border-line bg-white/[0.02]">
       <table className="w-full min-w-[640px] text-left text-sm">
         <thead>
-          <tr className="border-b border-line font-mono text-xs text-mute">
+          <tr className="border-b border-line text-xs text-mute">
             {columns.map((c) => (
-              <th key={c.key} scope="col" className={cn('px-5 py-3 font-normal', c.className)}>
+              <th key={c.key} scope="col" className={cn('px-6 py-3 font-normal', c.className)}>
                 {c.header}
               </th>
             ))}
@@ -48,9 +52,9 @@ export function DataTable<T extends { id: string }>({
         {rows.length > 0 && (
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="border-b border-line last:border-0 hover:bg-paper/[0.03]">
+              <tr key={r.id} className="border-b border-line/60 transition-colors last:border-0 hover:bg-white/[0.025]">
                 {columns.map((c) => (
-                  <td key={c.key} className={cn('px-5 py-4', c.className)}>
+                  <td key={c.key} className={cn('px-6 py-4', c.className)}>
                     {c.render(r)}
                   </td>
                 ))}
@@ -65,13 +69,12 @@ export function DataTable<T extends { id: string }>({
 }
 
 const TONES = {
-  neutral: 'border-line-strong text-mute',
-  good: 'border-emerald-400/40 text-emerald-300',
-  warn: 'border-amber-400/40 text-amber-300',
-  bad: 'border-signal/50 text-signal',
+  neutral: 'bg-white/[0.07] text-mute',
+  good: 'bg-emerald-400/10 text-emerald-300',
+  warn: 'bg-amber-400/10 text-amber-300',
+  bad: 'bg-signal/10 text-signal',
 }
 
 export function Badge({ children, tone = 'neutral' }: { children: React.ReactNode; tone?: keyof typeof TONES }) {
-  return <span className={cn('inline-flex items-center border px-2 py-0.5 font-mono text-[11px]', TONES[tone])}>{children}</span>
+  return <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-xs leading-none font-medium', TONES[tone])}>{children}</span>
 }
-

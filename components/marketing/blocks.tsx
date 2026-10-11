@@ -22,7 +22,7 @@ export function FeatureGrid({ features, cols = 3 }: { features: Feature[]; cols?
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '0px 0px -10% 0px' }}
           transition={{ duration: 0.8, delay: (i % 3) * 0.1, ease: EASE_OUT }}
-          data-spot className="spot group relative bg-ink transition-colors hover:bg-surface"
+          className="group relative bg-ink transition-colors hover:bg-surface"
         >
           <Tilt3D max={5} className="h-full p-10 text-center md:p-16">
           <Icon name={f.icon} aria-hidden="true" className="mx-auto size-6 text-mute transition-colors group-hover:text-paper" />

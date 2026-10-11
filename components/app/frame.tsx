@@ -26,7 +26,7 @@ export function AppFrame({
   const [open, setOpen] = useState(false)
 
   const nav = (
-    <nav aria-label={`${area} navigation`} className="flex flex-col gap-1">
+    <nav aria-label={`${area} navigation`} className="flex flex-col gap-0.5">
       {items.map((it) => {
         const active = it.exact ? pathname === it.href : pathname === it.href || pathname.startsWith(`${it.href}/`)
         return (
@@ -36,18 +36,18 @@ export function AppFrame({
             onClick={() => setOpen(false)}
             aria-current={active ? 'page' : undefined}
             className={cn(
-              'relative flex h-11 items-center gap-3 px-3 text-sm transition-colors',
-              active ? 'text-paper' : 'text-mute hover:text-paper',
+              'relative flex h-10 items-center gap-3 rounded-xl px-3 text-[15px] transition-colors',
+              active ? 'font-medium text-paper' : 'text-mute hover:bg-white/[0.04] hover:text-paper',
             )}
           >
             {active && (
               <motion.span
                 layoutId={`${area}-active`}
-                transition={{ duration: 0.4, ease: EASE_OUT }}
-                className="absolute inset-0 border border-line-strong bg-paper/[0.06] rounded-2xl"
+                transition={{ duration: 0.35, ease: EASE_OUT }}
+                className="absolute inset-0 rounded-xl bg-white/[0.08]"
               />
             )}
-            <Icon name={it.icon} aria-hidden="true" className="relative size-4" />
+            <Icon name={it.icon} aria-hidden="true" className="relative size-[18px]" />
             <span className="relative">{it.label}</span>
           </TransitionLink>
         )
@@ -56,33 +56,33 @@ export function AppFrame({
   )
 
   const footer = (
-    <div className="mt-auto flex flex-col gap-1 border-t border-line pt-4 text-sm">
-      <TransitionLink href="/" className="flex h-10 items-center px-3 text-mute hover:text-paper">
+    <div className="mt-auto flex flex-col gap-0.5 border-t border-line pt-4 text-[15px]">
+      <TransitionLink href="/" className="flex h-10 items-center rounded-xl px-3 text-mute transition-colors hover:bg-white/[0.04] hover:text-paper">
         Back to site
       </TransitionLink>
       <button
         type="button"
         onClick={() => signOut({ callbackUrl: '/' })}
-        className="flex h-10 items-center gap-3 px-3 text-left text-mute hover:text-paper"
+        className="flex h-10 items-center gap-3 rounded-xl px-3 text-left text-mute transition-colors hover:bg-white/[0.04] hover:text-paper"
       >
-        <LogOut aria-hidden="true" className="size-4" />
+        <LogOut aria-hidden="true" className="size-[18px]" />
         Log out
       </button>
     </div>
   )
 
   return (
-    <div className="relative z-10 min-h-dvh lg:grid lg:grid-cols-[250px_1fr]">
-      <aside className="sticky top-0 hidden h-dvh flex-col gap-8 border-r border-line bg-ink/90 p-5 lg:flex">
+    <div className="relative z-10 min-h-dvh lg:grid lg:grid-cols-[264px_1fr]">
+      <aside className="sticky top-0 hidden h-dvh flex-col gap-6 border-r border-line bg-ink p-5 lg:flex">
         <TransitionLink href="/" aria-label="logoless home">
           <Logo className="h-12" />
         </TransitionLink>
-        <p className="-mb-5 px-3 font-mono text-xs text-mute">{area}</p>
+        <p className="-mb-2 px-3 text-xs font-medium tracking-wide text-mute uppercase">{area}</p>
         {nav}
         {footer}
       </aside>
 
-      <div className="flex h-16 items-center justify-between border-b border-line bg-ink/90 px-5 lg:hidden">
+      <div className="flex h-16 items-center justify-between border-b border-line bg-ink px-5 lg:hidden">
         <TransitionLink href="/" aria-label="logoless home">
           <Logo className="h-10" />
         </TransitionLink>
@@ -127,7 +127,9 @@ export function AppFrame({
         )}
       </AnimatePresence>
 
-      <main className="min-w-0 px-5 py-8 md:px-10 md:py-12">{children}</main>
+      <main className="min-w-0 px-5 py-8 md:px-12 md:py-14">
+        <div className="mx-auto max-w-[1080px]">{children}</div>
+      </main>
     </div>
   )
 }
