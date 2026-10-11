@@ -42,7 +42,8 @@ export function AppFrame({ area, items, children }: { area: string; items: AppNa
   useEffect(() => setMore(false), [pathname])
 
   const logout = () => signOut({ callbackUrl: '/' })
-  const hiddenOnPhone = (i: number) => (i >= 4 ? 'hidden md:flex' : 'flex')
+  const phoneItem = (i: number) => (i >= 4 ? 'hidden' : 'flex')
+  const [panelOpen, setPanelOpen] = useState(false)
 
   return (
     <div className="relative z-10 min-h-dvh">
@@ -70,18 +71,18 @@ export function AppFrame({ area, items, children }: { area: string; items: AppNa
         </button>
       </header>
 
-      <main className="px-5 pt-4 pb-40 md:px-10 md:pt-6">
+      <main className="px-5 pt-4 pb-40 md:pr-10 md:pb-16 md:pl-[104px] md:pt-6">
         <div className="mx-auto max-w-[1160px]">{children}</div>
       </main>
 
       {/* ---------- the floating glass pill ---------- */}
-      <nav aria-label={`${area} navigation`} className="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-3 md:bottom-7">
+      <nav aria-label={`${area} navigation`} className="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-3 md:hidden">
         <motion.div layout transition={reduced ? { duration: 0 } : SPRING} initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="pointer-events-auto relative isolate flex max-w-full items-center gap-0.5 rounded-full p-1.5">
           <span aria-hidden="true" className="glass-liquid pointer-events-none absolute inset-0 -z-10 rounded-full shadow-[0_24px_60px_-18px_rgb(0_0_0/0.95)] backdrop-blur-xl backdrop-saturate-150" />
           {items.map((it, i) => {
             const active = isActive(pathname, it)
             return (
-              <TransitionLink key={it.href} href={it.href} aria-label={it.label} aria-current={active ? 'page' : undefined} className={cn('group relative h-11 items-center rounded-full px-3.5 transition-transform duration-300 hover:scale-110 active:scale-95', hiddenOnPhone(i))}>
+              <TransitionLink key={it.href} href={it.href} aria-label={it.label} aria-current={active ? 'page' : undefined} className={cn('group relative h-11 items-center rounded-full px-3.5 transition-transform duration-300 hover:scale-110 active:scale-95', phoneItem(i))}>
                 {active && <motion.span layoutId={`${area}-dock-pill`} transition={SPRING} className="absolute inset-0 rounded-full bg-white/[0.16] shadow-[inset_0_1px_0_rgb(255_255_255/0.25)]" />}
                 <Icon name={it.icon} aria-hidden="true" className={cn('relative size-5 shrink-0 transition-colors', active ? 'text-paper' : 'text-mute group-hover:text-paper')} />
                 <AnimatePresence initial={false}>
@@ -98,14 +99,60 @@ export function AppFrame({ area, items, children }: { area: string; items: AppNa
             )
           })}
           <span aria-hidden="true" className="mx-1 h-6 w-px shrink-0 bg-line-strong" />
-          <button type="button" aria-label="Jump to…" onClick={() => setPalette(true)} className="group relative hidden h-11 items-center rounded-full px-3.5 text-mute transition-transform duration-300 hover:scale-110 hover:text-paper active:scale-95 md:flex">
-            <Search aria-hidden="true" className="size-5" />
-          </button>
           <button type="button" aria-label="More" aria-expanded={more} onClick={() => setMore((v) => !v)} className={cn('relative grid h-11 w-11 place-items-center rounded-full transition-transform duration-300 hover:scale-110 active:scale-95', more ? 'bg-white/[0.16] text-paper' : 'text-mute hover:text-paper')}>
             <Ellipsis className="size-5" />
           </button>
         </motion.div>
       </nav>
+
+
+      {/* ---------- the floating glass panel (larger screens) ---------- */}
+      <motion.aside
+        aria-label={`${area} navigation`}
+        initial={false}
+        animate={{ width: panelOpen ? 244 : 64 }}
+        transition={reduced ? { duration: 0 } : SPRING}
+        onMouseEnter={() => setPanelOpen(true)}
+        onMouseLeave={() => setPanelOpen(false)}
+        onFocusCapture={() => setPanelOpen(true)}
+        onBlurCapture={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setPanelOpen(false)
+        }}
+        className="glass-liquid fixed top-1/2 left-5 z-40 hidden -translate-y-1/2 flex-col rounded-[2rem] p-2 shadow-[0_30px_80px_-20px_rgb(0_0_0/0.95)] backdrop-blur-xl backdrop-saturate-150 md:flex"
+      >
+        <motion.p animate={{ opacity: panelOpen ? 1 : 0, height: panelOpen ? 28 : 0 }} transition={{ duration: 0.2 }} className="overflow-hidden px-4 pt-2 text-[11px] font-medium tracking-[0.16em] whitespace-nowrap text-mute uppercase">
+          {area}
+        </motion.p>
+        <nav className="flex max-h-[calc(100dvh-14rem)] flex-col gap-0.5 overflow-y-auto overflow-x-hidden">
+          {items.map((it) => {
+            const active = isActive(pathname, it)
+            return (
+              <TransitionLink key={it.href} href={it.href} aria-label={it.label} aria-current={active ? 'page' : undefined} className="group relative flex h-11 shrink-0 items-center rounded-full pl-[14px] text-[15px] whitespace-nowrap">
+                {active && <motion.span layoutId={`${area}-panel-pill`} transition={SPRING} className="absolute inset-0 rounded-full bg-white/[0.16] shadow-[inset_0_1px_0_rgb(255_255_255/0.25)]" />}
+                <span className="absolute inset-0 rounded-full bg-white/0 transition-colors group-hover:bg-white/[0.06]" />
+                <Icon name={it.icon} aria-hidden="true" className={cn('relative size-5 shrink-0 transition-all duration-300 group-hover:scale-110', active ? 'text-paper' : 'text-mute group-hover:text-paper')} />
+                <motion.span animate={{ opacity: panelOpen ? 1 : 0, x: panelOpen ? 0 : -10 }} transition={{ duration: 0.22, delay: panelOpen ? 0.05 : 0 }} className={cn('relative ml-4', active ? 'text-paper' : 'text-mute group-hover:text-paper')}>
+                  {it.label}
+                </motion.span>
+              </TransitionLink>
+            )
+          })}
+        </nav>
+        <span aria-hidden="true" className="mx-3 my-2 h-px bg-line-strong" />
+        <button type="button" aria-label="Jump to…" onClick={() => setPalette(true)} className="group relative flex h-11 shrink-0 items-center rounded-full pl-[14px] text-left text-[15px] whitespace-nowrap text-mute transition-colors hover:bg-white/[0.06] hover:text-paper">
+          <Search aria-hidden="true" className="size-5 shrink-0" />
+          <motion.span animate={{ opacity: panelOpen ? 1 : 0, x: panelOpen ? 0 : -10 }} transition={{ duration: 0.22 }} className="ml-4 flex flex-1 items-center justify-between pr-3">
+            Jump to…
+            <kbd className="rounded-full bg-white/[0.08] px-2 py-0.5 font-mono text-[11px]">⌘K</kbd>
+          </motion.span>
+        </button>
+        <button type="button" aria-label="More" aria-expanded={more} onClick={() => setMore((v) => !v)} className={cn('group relative flex h-11 shrink-0 items-center rounded-full pl-[14px] text-left text-[15px] whitespace-nowrap transition-colors hover:bg-white/[0.06] hover:text-paper', more ? 'bg-white/[0.12] text-paper' : 'text-mute')}>
+          <Ellipsis aria-hidden="true" className="size-5 shrink-0" />
+          <motion.span animate={{ opacity: panelOpen ? 1 : 0, x: panelOpen ? 0 : -10 }} transition={{ duration: 0.22 }} className="ml-4">
+            Account
+          </motion.span>
+        </button>
+      </motion.aside>
 
       <AnimatePresence>
         {more && (
@@ -117,7 +164,7 @@ export function AppFrame({ area, items, children }: { area: string; items: AppNa
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 12, scale: 0.97 }}
               transition={{ duration: 0.28, ease: EASE_OUT }}
-              className="glass-liquid fixed bottom-24 left-1/2 z-50 backdrop-blur-xl w-[min(24rem,calc(100vw-1.5rem))] -translate-x-1/2 rounded-[2rem] p-3 md:bottom-28"
+              className="glass-liquid fixed bottom-24 left-1/2 z-50 w-[min(24rem,calc(100vw-1.5rem))] -translate-x-1/2 rounded-[2rem] p-3 backdrop-blur-xl md:top-1/2 md:bottom-auto md:left-[88px] md:w-72 md:translate-x-0 md:-translate-y-1/2"
             >
               {items.length > 4 && (
                 <div className="mb-2 grid grid-cols-3 gap-2 md:hidden">
