@@ -189,7 +189,7 @@ export function OnboardingFlow({ initialRole, sessionUser }: { initialRole?: 'cl
     <div className="relative z-10 flex min-h-dvh flex-col">
       <header className="flex items-center justify-between px-4 py-4 md:px-6">
         <TransitionLink href="/" aria-label="logoless home">
-          <Logo className="h-7 md:h-9" />
+          <Logo />
         </TransitionLink>
         <p className="text-sm text-mute">
           Have an account?{' '}

@@ -22,7 +22,7 @@ export function InviteBlocked({ kind, slug, hint }: { kind: keyof typeof COPY; s
   return (
     <div className="fixed inset-0 z-[80] grid place-items-center bg-ink px-5 text-center text-paper">
       <div className="max-w-md">
-        <Logo className="mx-auto h-9" />
+        <Logo className="mx-auto h-12" />
         <h1 className="mt-10 font-display text-4xl font-medium tracking-tight">{c.title}</h1>
         <p className="mt-4 leading-relaxed text-mute">{c.body}</p>
         {hint && <p className="mt-3 text-sm text-mute">Expected: <span className="text-paper">{hint}</span></p>}

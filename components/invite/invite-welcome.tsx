@@ -56,7 +56,7 @@ export function InviteWelcome({ name, slug, state, email, lockedTo, admin }: Pro
 
       <div className="relative mx-auto flex min-h-full max-w-3xl flex-col items-center px-5 py-10 text-center">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE_OUT }}>
-          <Logo className="h-8 md:h-10" />
+          <Logo className="h-11 md:h-14" />
         </motion.div>
 
         <div className="my-auto w-full py-12">

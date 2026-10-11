@@ -107,10 +107,10 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
               initial={{ opacity: 0, scale: 0.94 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.9, ease: EASE_OUT }}
-              className="relative mx-auto aspect-[1100/347] w-[min(620px,82vw)]"
+              className="relative mx-auto aspect-[1100/577] w-[min(480px,74vw)]"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-lg.png" alt="" width={1100} height={347} className="absolute inset-0 block size-full select-none" draggable={false} />
+              <img src="/logo-lg.png" alt="" width={1100} height={577} className="absolute inset-0 block size-full select-none" draggable={false} />
               <span aria-hidden="true" className="logo-sweep absolute inset-0" />
             </motion.div>
           )}

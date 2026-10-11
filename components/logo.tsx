@@ -7,9 +7,9 @@ export function Logo({ className }: { className?: string }) {
       src="/logo-sm.png"
       alt="logoless"
       width={640}
-      height={202}
+      height={336}
       decoding="async"
-      className={cn('block h-7 w-auto md:h-9', className)}
+      className={cn('block h-10 w-auto md:h-12', className)}
     />
   )
 }

@@ -213,7 +213,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
       <Backdrop step={step} />
       <div ref={scroller} className="relative h-full overflow-y-auto overscroll-contain">
         <header className="sticky top-0 z-20 flex h-20 items-center justify-between bg-gradient-to-b from-ink from-60% to-transparent px-5 md:px-10">
-          <Logo className="h-7 md:h-8" />
+          <Logo className="h-10 md:h-11" />
           <div className="flex items-center gap-4 text-sm text-mute">
             <span aria-live="polite" className="hidden items-center gap-1.5 sm:inline-flex">
               {saved === 'saving' ? <Loader2 className="size-3.5 animate-spin" /> : saved === 'saved' ? <Check className="size-3.5" /> : null}

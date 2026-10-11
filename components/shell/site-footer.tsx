@@ -21,7 +21,7 @@ export function SiteFooter() {
       <div className={`${CONTAINER} py-24 md:py-36`}>
         <div className="flex flex-col items-center gap-20 text-center">
           <Reveal className="flex flex-col items-center">
-            <Logo className="h-11 md:h-14" />
+            <Logo className="h-16 md:h-20" />
             <p className="mx-auto mt-8 max-w-xs text-sm leading-snug text-mute">
               <T>Brands, artists and streamers fund a brief. Clippers cut it, post it and are paid for every verified view.</T>
             </p>

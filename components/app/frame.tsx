@@ -51,7 +51,7 @@ export function AppFrame({ area, items, children }: { area: string; items: AppNa
       <header className="sticky top-0 z-30 flex h-[88px] items-center justify-between bg-gradient-to-b from-ink from-55% to-transparent px-5 pb-3 md:px-10">
         <div className="flex items-center gap-4">
           <TransitionLink href="/" aria-label="logoless home" className="shrink-0">
-            <Logo className="h-7 md:h-8" />
+            <Logo className="h-10 md:h-11" />
           </TransitionLink>
           <span aria-hidden="true" className="hidden h-5 w-px bg-line-strong md:block" />
           <div className="hidden items-center gap-2 text-sm text-mute md:flex">
