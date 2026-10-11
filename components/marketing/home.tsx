@@ -175,7 +175,8 @@ function PayoutCard() {
 
 function Doors() {
   return (
-    <section className={`${CONTAINER} grid gap-px bg-line py-0 md:grid-cols-2`}>
+    <section className={CONTAINER}>
+      <div className="grid gap-px bg-line md:grid-cols-2">
       {[
         { kicker: 'For brands', title: 'Fund views, not guesses', body: 'Set your budget and your rate. Pay only for views that pass our checks.', href: '/for-brands', cta: 'Launch a campaign' },
         { kicker: 'For clippers', title: 'Turn your edits into income', body: 'No follower minimum. No fee to join. Just a brief, a clip and a link.', href: '/for-clippers', cta: 'Start clipping' },
@@ -195,6 +196,7 @@ function Doors() {
           </Tilt3D>
         </Reveal>
       ))}
+      </div>
     </section>
   )
 }
