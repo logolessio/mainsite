@@ -1,19 +1,25 @@
 'use client'
 
 import { ImagePlus } from 'lucide-react'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Field, Input, Select } from '@/components/ui/fields'
+import { uploadImage } from '@/lib/image-client'
 import { INDUSTRIES } from '@/lib/onboarding'
 import type { StepProps } from '../types'
 import { StepTitle } from '../ui'
 
 export function BrandStep({ data, update }: StepProps) {
   const file = useRef<HTMLInputElement>(null)
-  const onFile = (f?: File | null) => {
+  const [error, setError] = useState('')
+  const onFile = async (f?: File | null) => {
     if (!f || !f.type.startsWith('image/')) return
-    if (data.logo) URL.revokeObjectURL(data.logo)
-    // TODO(backend): upload and store the returned URL
-    update({ logo: URL.createObjectURL(f) })
+    setError('')
+    try {
+      const id = await uploadImage('avatar', f)
+      update({ logo: `/api/img/${id}`, avatarKey: id })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not upload that picture.')
+    }
   }
   return (
     <div>
@@ -35,6 +41,7 @@ export function BrandStep({ data, update }: StepProps) {
         </button>
         <input ref={file} type="file" accept="image/*" className="sr-only" onChange={(e) => onFile(e.target.files?.[0])} />
         <span className="text-xs text-mute">Logo or artist photo</span>
+        {error && <span role="alert" className="text-xs text-signal">{error}</span>}
       </div>
 
       <div className="mt-6 grid gap-4">
