@@ -35,11 +35,15 @@ export const NAME_EFFECT_IDS = NAME_EFFECTS.map((e) => e.id) as string[]
 /** Little animated particles that float over the card. */
 export const CARD_EFFECTS = [
   { id: 'none', label: 'None' },
-  { id: 'sparkle', label: 'Sparkle' },
   { id: 'snow', label: 'Snow' },
-  { id: 'embers', label: 'Embers' },
   { id: 'rain', label: 'Rain' },
-  { id: 'stars', label: 'Stars' },
+  { id: 'embers', label: 'Embers' },
+  { id: 'sparkle', label: 'Glitter' },
+  { id: 'stars', label: 'Starfield' },
+  { id: 'aurora', label: 'Aurora' },
+  { id: 'fireflies', label: 'Fireflies' },
+  { id: 'petals', label: 'Petals' },
+  { id: 'bubbles', label: 'Bubbles' },
 ] as const
 export type CardEffect = (typeof CARD_EFFECTS)[number]['id']
 export const CARD_EFFECT_IDS = CARD_EFFECTS.map((e) => e.id) as string[]
@@ -152,6 +156,8 @@ export type ProfileView = {
   font: FontId
   nameEffect: NameEffect
   cardEffect: CardEffect
+  effectIntensity: number
+  effectSpeed: number
   pronouns: string
   online: boolean
   links: ProfileLink[]

@@ -1,7 +1,11 @@
+import { homedir } from 'node:os'
+import { join } from 'node:path'
 import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare'
 
 // Lets `next dev` use the same bindings (the D1 database) that the deployed Worker has, stored locally in .wrangler.
-initOpenNextCloudflareForDev()
+// The local test database lives outside the project folder. Inside it, every database write (and the site now writes a
+// log row on every page view) looked like a file change to the dev server, which reloaded the page forever.
+initOpenNextCloudflareForDev({ persist: { path: join(homedir(), '.logoless-dev-db', 'v3') } })
 
 const isProd = process.env.NODE_ENV === 'production'
 

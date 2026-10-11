@@ -39,6 +39,8 @@ type ProfileRow = {
   name_effect: string
   pronouns: string
   card_effect: string
+  effect_intensity: number
+  effect_speed: number
   font: string
   links_json: string
   website: string | null
@@ -76,6 +78,8 @@ export function toView(row: ProfileRow, isStaff: boolean, online = false): Profi
     font: (FONT_IDS.includes(row.font) ? row.font : 'geist') as FontId,
     nameEffect: (NAME_EFFECT_IDS.includes(row.name_effect) ? row.name_effect : 'solid') as NameEffect,
     cardEffect: (CARD_EFFECT_IDS.includes(row.card_effect) ? row.card_effect : 'none') as CardEffect,
+    effectIntensity: Number.isFinite(row.effect_intensity) ? row.effect_intensity : 50,
+    effectSpeed: Number.isFinite(row.effect_speed) ? row.effect_speed : 50,
     pronouns: row.pronouns,
     online: online && show.status,
     links,
@@ -209,6 +213,8 @@ export type ProfileInput = {
   font?: string
   nameEffect?: string
   cardEffect?: string
+  effectIntensity?: number
+  effectSpeed?: number
   pronouns?: string
   links?: unknown
   website?: string | null
@@ -286,6 +292,8 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
     if (!CARD_EFFECT_IDS.includes(input.cardEffect)) throw new HttpError(400, 'Unknown effect.')
     next.card_effect = input.cardEffect
   }
+  if (input.effectIntensity !== undefined) next.effect_intensity = Math.min(100, Math.max(0, Math.round(Number(input.effectIntensity) || 0)))
+  if (input.effectSpeed !== undefined) next.effect_speed = Math.min(100, Math.max(0, Math.round(Number(input.effectSpeed) || 0)))
   if (input.pronouns !== undefined) next.pronouns = clean(input.pronouns).slice(0, 30)
   if (input.font !== undefined) {
     if (!FONT_IDS.includes(input.font)) throw new HttpError(400, 'Unknown font.')
@@ -336,7 +344,7 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
     await d
       .prepare(
         `UPDATE profiles SET handle=?2, display_name=?3, bio=?4, country=?5, banner_kind=?6, banner_value=?7, dot_color=?8,
-           accent=?9, font=?10, links_json=?11, website=?12, show_json=?13, badges_json=?14, updated_at=?15, avatar_key=?16, accent2=?17, name_effect=?18, card_effect=?19, pronouns=?20 WHERE user_id=?1`,
+           accent=?9, font=?10, links_json=?11, website=?12, show_json=?13, badges_json=?14, updated_at=?15, avatar_key=?16, accent2=?17, name_effect=?18, card_effect=?19, pronouns=?20, effect_intensity=?21, effect_speed=?22 WHERE user_id=?1`,
       )
       .bind(
         user.id,
@@ -359,6 +367,8 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
         next.name_effect,
         next.card_effect,
         next.pronouns,
+        next.effect_intensity,
+        next.effect_speed,
       )
       .run()
   } catch (e) {

@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Camera, Check, Download, Globe, ImagePlus, Loader2, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { Ban, Bug, Camera, Check, CircleDot, CloudRain, Download, Eye, EyeOff, Flame, Flower2, Globe, ImagePlus, Loader2, Pencil, Plus, Snowflake, Sparkles, Star, Trash2, Waves, X, type LucideIcon } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActionButton, Card, Toggle } from '@/components/app/ui'
 import { BrandIcon } from '@/components/brand-icon'
@@ -28,6 +28,7 @@ import {
 } from '@/lib/profile-style'
 import { cn } from '@/lib/utils'
 import { bannerStyle, ProfileCard } from './profile-card'
+import { MiniDots } from './mini-dots'
 import { ProfileTheme } from './profile-theme'
 
 type Loaded = { profile: ProfileView; unlocked: string[]; discordImport: boolean }
@@ -135,6 +136,8 @@ export function ProfileEditor() {
         font: f.font,
         nameEffect: f.nameEffect,
         cardEffect: f.cardEffect,
+        effectIntensity: f.effectIntensity,
+        effectSpeed: f.effectSpeed,
         links: f.links,
         show: f.show,
         ...(pendingAvatar !== undefined ? { avatar: pendingAvatar } : {}),
@@ -270,74 +273,89 @@ export function ProfileEditor() {
           </div>
         </Card>
 
-        <Card title="Banner and background">
-          <div className="grid gap-5">
+        <Card title="Banner">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+            {BANNER_PRESETS.map((b) => (
+              <button key={b.id} type="button" onClick={() => setF((c) => (c ? { ...c, bannerKind: 'preset', banner: b.id } : c))} aria-label={b.label} aria-pressed={f.bannerKind === 'preset' && f.banner === b.id} className={cn('relative h-14 overflow-hidden rounded-xl border', f.bannerKind === 'preset' && f.banner === b.id ? 'border-paper' : 'border-line')} style={bannerStyle('preset', b.id)}>
+                {f.bannerKind === 'preset' && f.banner === b.id && <Check className="absolute top-1.5 right-1.5 size-4" />}
+              </button>
+            ))}
+            <button type="button" onClick={() => bannerInput.current?.click()} className={cn('grid h-14 place-items-center rounded-xl border border-dashed text-xs text-mute hover:text-paper', f.bannerKind === 'image' ? 'border-paper text-paper' : 'border-line-strong')}>
+              {busy === 'banner' ? <Loader2 className="size-4 animate-spin" /> : <span className="inline-flex items-center gap-1"><ImagePlus className="size-4" /> Upload</span>}
+            </button>
+            <input ref={bannerInput} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => upload('banner', e.target.files?.[0])} />
+          </div>
+          <div className="mt-4">
+            <Swatches label="Or a single colour" value={f.bannerKind === 'color' ? f.banner : '#000000'} options={ACCENT_SWATCHES} onChange={(v) => setF((c) => (c ? { ...c, bannerKind: 'color', banner: v } : c))} />
+          </div>
+        </Card>
+
+        <Card title="Background and effects">
+          <div className="grid gap-6">
             <div>
-              <p className="font-mono text-xs text-mute">Banner</p>
-              <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5">
-                {BANNER_PRESETS.map((b) => (
-                  <button key={b.id} type="button" onClick={() => setF((c) => (c ? { ...c, bannerKind: 'preset', banner: b.id } : c))} aria-label={b.label} aria-pressed={f.bannerKind === 'preset' && f.banner === b.id} className={cn('relative h-14 overflow-hidden rounded-xl border', f.bannerKind === 'preset' && f.banner === b.id ? 'border-paper' : 'border-line')} style={bannerStyle('preset', b.id)}>
-                    {f.bannerKind === 'preset' && f.banner === b.id && <Check className="absolute top-1.5 right-1.5 size-4" />}
-                  </button>
-                ))}
-                <button type="button" onClick={() => bannerInput.current?.click()} className={cn('grid h-14 place-items-center rounded-xl border border-dashed text-xs text-mute hover:text-paper', f.bannerKind === 'image' ? 'border-paper text-paper' : 'border-line-strong')}>
-                  {busy === 'banner' ? <Loader2 className="size-4 animate-spin" /> : <span className="inline-flex items-center gap-1"><ImagePlus className="size-4" /> Upload</span>}
-                </button>
-                <input ref={bannerInput} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => upload('banner', e.target.files?.[0])} />
-              </div>
-              <div className="mt-3">
-                <Swatches label="Or a single colour" value={f.bannerKind === 'color' ? f.banner : '#000000'} options={ACCENT_SWATCHES} onChange={(v) => setF((c) => (c ? { ...c, bannerKind: 'color', banner: v } : c))} />
-              </div>
+              <Swatches label="Background effect colour" value={f.dotColor} options={DOT_SWATCHES} onChange={(v) => set('dotColor', v)} />
+              <p className="mt-2 text-xs text-mute">The glowing dots behind your card. The preview on the right shows them in this colour.</p>
             </div>
-            <Swatches label="Background dot colour" value={f.dotColor} options={DOT_SWATCHES} onChange={(v) => set('dotColor', v)} />
             <div>
               <p className="font-mono text-xs text-mute">Card effect</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {CARD_EFFECTS.map((o) => (
-                  <button key={o.id} type="button" onClick={() => set('cardEffect', o.id)} aria-pressed={f.cardEffect === o.id} className={cn('h-9 rounded-full border px-4 text-sm', f.cardEffect === o.id ? 'border-paper bg-paper/10' : 'border-line text-mute hover:text-paper')}>
-                    {o.label}
-                  </button>
-                ))}
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">
+                {CARD_EFFECTS.map((o) => {
+                  const Icon = EFFECT_ICONS[o.id] ?? Ban
+                  const on = f.cardEffect === o.id
+                  return (
+                    <button key={o.id} type="button" onClick={() => set('cardEffect', o.id)} aria-pressed={on} className={cn('flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-xs transition-all hover:-translate-y-0.5', on ? 'border-paper bg-paper/10' : 'border-line text-mute hover:bg-paper/5 hover:text-paper')}>
+                      <Icon className="size-5" />
+                      {o.label}
+                    </button>
+                  )
+                })}
               </div>
             </div>
+            {f.cardEffect !== 'none' && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="grid gap-4 overflow-hidden rounded-2xl border border-line bg-ink/50 p-4">
+                <Slider label="Intensity" hint="How much there is" value={f.effectIntensity} onChange={(v) => set('effectIntensity', v)} />
+                <Slider label="Speed" hint="How fast it moves" value={f.effectSpeed} onChange={(v) => set('effectSpeed', v)} />
+                <button type="button" onClick={() => { set('effectIntensity', 50); set('effectSpeed', 50) }} className="w-fit text-xs text-mute underline underline-offset-4 hover:text-paper">Reset to normal</button>
+              </motion.div>
+            )}
           </div>
         </Card>
 
         <Card title="What strangers can see">
-          <ul className="divide-y divide-line">
-            {SHOW_OPTIONS.map((o) => (
-              <li key={o.key} className="flex items-center justify-between gap-4 py-3">
-                <div>
-                  <p className="text-sm">{o.label}</p>
-                  <p className="text-xs text-mute">{o.hint}</p>
-                </div>
-                <Toggle label={o.label} checked={f.show[o.key]} onChange={(v) => set('show', { ...f.show, [o.key]: v } as ShowMap)} />
-              </li>
-            ))}
-          </ul>
-          <p className="mt-3 text-xs text-mute">Your username, name, picture and banner are always public. Everything above is your choice.</p>
+          <Visibility show={f.show} onChange={(show) => set('show', show)} />
         </Card>
 
-        <div className="sticky bottom-4 z-10 flex flex-wrap items-center gap-3 rounded-full border border-line-strong bg-surface/95 p-2 pl-4 backdrop-blur">
-          <ActionButton onClick={save} disabled={saving} className="rounded-full">
-            {saving && <Loader2 className="size-4 animate-spin" />} Save profile
-          </ActionButton>
-          <a href={`/@${f.handle}`} className="text-sm text-mute hover:text-paper">View public page</a>
-          {note && <span role="status" className="max-w-md text-sm text-mute">{note}</span>}
-          {error && <span role="alert" className="text-sm text-signal">{error}</span>}
+        <div className="sticky bottom-4 z-10 rounded-3xl border border-line-strong bg-surface/95 p-2.5 backdrop-blur">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pl-1.5">
+            <ActionButton onClick={save} disabled={saving} className="rounded-full">
+              {saving && <Loader2 className="size-4 animate-spin" />} Save profile
+            </ActionButton>
+            <a href={`/@${f.handle}`} className="text-sm text-mute hover:text-paper">View public page</a>
+          </div>
+          {(note || error) && (
+            <p role={error ? 'alert' : 'status'} className={cn('mt-2.5 rounded-2xl px-3.5 py-2.5 text-sm leading-snug', error ? 'bg-signal/10 text-signal' : 'bg-paper/[0.06] text-paper/80')}>
+              {error || note}
+            </p>
+          )}
         </div>
       </div>
 
       <div className="min-w-0 xl:sticky xl:top-6 xl:self-start">
-        <p className="mb-3 font-mono text-xs text-mute">Live preview</p>
-        <div className="flex justify-center overflow-hidden rounded-[28px] border border-line bg-ink/60 p-6">
-          <ProfileCard
-            preview
-            isOwner
-            view={f}
-            stats={{ ...(f.show.clips ? { clips: 0 } : {}), ...(f.show.views ? { views: 0 } : {}), ...(f.show.earnings ? { earnedCents: 0 } : {}), ...(f.show.campaigns ? { campaigns: 0 } : {}) }}
-            links={previewLinks}
-          />
+        <p className="mb-3 flex items-center justify-between font-mono text-xs text-mute">
+          <span>Live preview</span>
+          <span>Example numbers</span>
+        </p>
+        <div className="relative overflow-hidden rounded-[28px] border border-line bg-black">
+          <MiniDots color={f.dotColor} />
+          <div className="relative flex justify-center px-4 py-8">
+            <ProfileCard
+              preview
+              isOwner
+              view={f}
+              stats={{ ...(f.show.clips ? { clips: 12 } : {}), ...(f.show.views ? { views: 48200 } : {}), ...(f.show.earnings ? { earnedCents: 32000 } : {}), ...(f.show.campaigns ? { campaigns: 4 } : {}) }}
+              links={previewLinks}
+            />
+          </div>
         </div>
       </div>
 
@@ -491,6 +509,82 @@ function Swatches({ label, value, options, onChange }: { label: string; value: s
           <input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="absolute inset-0 cursor-pointer opacity-0" aria-label={`Custom ${label}`} />
         </label>
       </div>
+    </div>
+  )
+}
+
+const EFFECT_ICONS: Record<string, LucideIcon> = { none: Ban, snow: Snowflake, rain: CloudRain, embers: Flame, sparkle: Sparkles, stars: Star, aurora: Waves, fireflies: Bug, petals: Flower2, bubbles: CircleDot }
+
+function Slider({ label, hint, value, onChange }: { label: string; hint: string; value: number; onChange: (v: number) => void }) {
+  return (
+    <label className="block">
+      <span className="flex items-baseline justify-between">
+        <span className="text-sm">{label} <span className="text-xs text-mute">{hint}</span></span>
+        <span className="font-mono text-xs text-mute tabular-nums">{value}</span>
+      </span>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="mt-2 h-2 w-full cursor-pointer appearance-none rounded-full bg-line-strong accent-white [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-paper [&::-webkit-slider-thumb]:shadow-[0_0_0_4px_rgb(255_255_255/0.12)]"
+      />
+    </label>
+  )
+}
+
+const SHOW_GROUPS: { title: string; keys: string[] }[] = [
+  { title: 'On your card', keys: ['badges', 'joined', 'country', 'status', 'links'] },
+  { title: 'Your numbers', keys: ['clips', 'views', 'earnings', 'campaigns'] },
+]
+
+/** One tap per thing. Public things are bright with an open eye, hidden things are dim with a crossed eye. */
+function Visibility({ show, onChange }: { show: ShowMap; onChange: (s: ShowMap) => void }) {
+  const total = SHOW_OPTIONS.length
+  const shown = SHOW_OPTIONS.filter((o) => show[o.key]).length
+  const setAll = (fn: (k: keyof ShowMap, def: boolean) => boolean) => onChange(Object.fromEntries(SHOW_OPTIONS.map((o) => [o.key, fn(o.key, o.on)])) as ShowMap)
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="mr-1 font-mono text-xs text-mute">{shown} of {total} public</span>
+        <button type="button" onClick={() => setAll(() => true)} className="h-8 rounded-full border border-line-strong px-3.5 text-xs hover:bg-paper/10">Show all</button>
+        <button type="button" onClick={() => setAll((_k, def) => def)} className="h-8 rounded-full border border-line-strong px-3.5 text-xs hover:bg-paper/10">Recommended</button>
+        <button type="button" onClick={() => setAll(() => false)} className="h-8 rounded-full border border-line-strong px-3.5 text-xs hover:bg-paper/10">Hide all</button>
+      </div>
+      <div className="mt-4 grid gap-5">
+        {SHOW_GROUPS.map((g) => (
+          <div key={g.title}>
+            <p className="mb-2 text-xs text-mute">{g.title}</p>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {g.keys.map((k) => {
+                const o = SHOW_OPTIONS.find((x) => x.key === k)
+                if (!o) return null
+                const on = show[o.key]
+                return (
+                  <button
+                    key={o.key}
+                    type="button"
+                    role="switch"
+                    aria-checked={on}
+                    onClick={() => onChange({ ...show, [o.key]: !on } as ShowMap)}
+                    className={cn('group flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition-all active:scale-[0.98]', on ? 'border-paper/60 bg-paper/[0.09]' : 'border-line bg-transparent opacity-60 hover:opacity-100')}
+                  >
+                    <span className={cn('grid size-9 shrink-0 place-items-center rounded-full transition-colors', on ? 'bg-paper text-ink' : 'bg-line text-mute')}>
+                      {on ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm leading-tight">{o.label}</span>
+                      <span className="block truncate text-xs text-mute">{on ? 'Public' : 'Hidden'} · {o.hint}</span>
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-4 text-xs text-mute">Your username, name, picture and banner are always public. The preview updates as you tap.</p>
     </div>
   )
 }

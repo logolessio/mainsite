@@ -81,7 +81,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
         background: `linear-gradient(165deg, color-mix(in srgb, ${view.accent} 34%, #101113) 0%, color-mix(in srgb, ${view.accent2} 24%, #0b0b0c) 100%)`,
       }}
     >
-      <CardEffectLayer effect={view.cardEffect} />
+      <CardEffectLayer effect={view.cardEffect} intensity={view.effectIntensity} speed={view.effectSpeed} colors={[view.accent, view.accent2]} />
 
       {/* banner */}
       <div className="relative h-[136px] overflow-hidden" style={bannerStyle(view.bannerKind, view.banner)}>
