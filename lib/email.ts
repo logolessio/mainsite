@@ -35,4 +35,4 @@ export async function sendEmail(o: { to: string; subject: string; html: string; 
   return { id }
 }
 
-export { alreadyMemberEmail, codeEmail, plainTestEmail } from './email-templates'
+export { alreadyMemberEmail, codeEmail, inviteEmail, plainTestEmail } from './email-templates'

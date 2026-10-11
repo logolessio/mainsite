@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { usePathname } from 'next/navigation'
+import { isInvitePath } from '@/lib/invite-shared'
 
 const APP_AREAS = ['/dashboard', '/brand', '/admin']
 
@@ -9,6 +10,8 @@ const APP_AREAS = ['/dashboard', '/brand', '/admin']
 export default function Template({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const app = APP_AREAS.some((p) => pathname.startsWith(p))
+  // An artist's private page fills the screen itself, so it must not sit inside an animated (transformed) wrapper.
+  if (isInvitePath(pathname)) return <>{children}</>
   // During a cover-art transition the browser does the cross-fade itself, so the page must already be visible.
   const handoff = typeof document !== 'undefined' && document.documentElement.dataset.vt === '1'
   return (

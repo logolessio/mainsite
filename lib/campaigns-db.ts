@@ -22,6 +22,7 @@ export type CampaignRow = {
   payment_session_id: string | null
   paid_at: number | null
   launched_at: number | null
+  invite_id: string | null
   created_at: number
   updated_at: number
 }

@@ -12,7 +12,7 @@ Everything below is a one-off. Nothing here is pushed to GitHub: keys live in Cl
    npx wrangler d1 migrations apply DB --remote
    ```
 
-   This runs every migration not yet applied (`0006` and `0007` are the newest: profile styles and the activity log). `0003` also adds the 10 sample campaigns, marked "sample" in the admin list. Delete them from `/admin/campaigns` when you have real ones.
+   This runs every migration not yet applied (`0010` is the newest: artist links). `0003` also adds the 10 sample campaigns, marked "sample" in the admin list. Delete them from `/admin/campaigns` when you have real ones.
 
 ## 2. Secrets (Cloudflare > Workers & Pages > mainsite > Settings > Variables and Secrets, type **Secret**)
 
@@ -85,3 +85,20 @@ How passwords are kept safe: they are salted and run through PBKDF2 (100,000 rou
 Heads up: hashing a password takes real computing time. Cloudflare's free Workers plan gives each request only about 10 milliseconds of computing, which a password check can exceed. If logins fail with an error, upgrade to Workers Paid ($5 a month), which also fixes the free daily database limit.
 
 Resend's free plan allows 100 emails a day and 3,000 a month. Past that, upgrade it.
+
+## Artist links (logoless.io/artistname)
+
+When an artist or brand agrees to try logoless (by Instagram DM or email), make them a private page at **Admin > Artist links**:
+
+1. Type their name. The address is built from it (`logoless.io/kxng-vale`), and you can change it. Names that clash with real pages (`/pricing`, `/admin`, ...) are refused.
+2. Pick how you contacted them. For an email contact you can **lock the link to that email**: nobody else can claim it. For Instagram contacts, leave the lock off: the first person to sign in claims it, and **Hand back** gives it to someone else if the wrong person got there first.
+3. **Copy message** gives you a ready DM. **Email it** sends a branded email (needs `RESEND_API_KEY`).
+
+What the artist goes through (their answers save as they go, so a refresh or a new device picks up where they stopped):
+sign in or create an account > "Yes, this is me" > name and username > genres and pitch > links (just usernames for most platforms) > profile picture and cover art > what they are promoting > the brief > budget and rate (with a live view estimate) > how it works and terms > review > create the campaign > pay with Stripe, or later.
+
+An invited artist's campaign skips the review step and goes straight to "waiting for payment", because you have already agreed it. Once they pay you still press **Launch** in Campaigns, as for any campaign. Afterwards the same page is their hub: dashboard, clips, funding, public page. In **Funding** they can add more money to a running campaign at any time (Stripe takes the payment, the webhook adds it to that campaign's pool and budget). In **Clips** they can turn down an off-brief clip before it has been paid for; approving and paying clips stays with you.
+
+## Launch readiness
+
+**Admin > Launch readiness** checks the real site (secrets, Stripe mode, webhook, database migrations, sample campaigns, money books, errors, payouts sent) and lists the things only you can confirm (Google app published, Cloudflare Access, mailboxes, legal review...) as tick boxes. It scores everything, says "Not ready / Almost / Ready", and lists the must-do items first with plain steps for each.

@@ -74,14 +74,17 @@ export function AuthCard({ mode }: { mode: Mode }) {
     return () => clearTimeout(id)
   }, [cooldown])
 
-  const done = () => navigate(role === 'brand' && mode === 'signup' ? '/brand' : '/dashboard')
+  // ?next=/some-page sends the person back there afterwards (only paths on this site are accepted).
+  const nextRaw = params.get('next')
+  const next = nextRaw && /^\/(?!\/)[A-Za-z0-9\-_/?=&.%]*$/.test(nextRaw) ? nextRaw : null
+  const done = () => navigate(next ?? (role === 'brand' && mode === 'signup' ? '/brand' : '/dashboard'))
   const fail = (e: unknown, fallback = 'Something went wrong. Please try again.') => setError(e instanceof Error ? e.message : fallback)
 
   const provider = async (p: Provider) => {
     setBusy(true)
     setError('')
     try {
-      await signInWithProvider(p, mode === 'signup' ? role : undefined)
+      await signInWithProvider(p, mode === 'signup' ? role : undefined, next ?? undefined)
     } catch (e) {
       fail(e)
       setBusy(false)

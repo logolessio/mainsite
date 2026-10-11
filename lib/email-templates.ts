@@ -125,6 +125,25 @@ export function alreadyMemberEmail(test = false, meta?: Meta): Mail {
   }
 }
 
+/** The private link sent to an artist we have spoken to. The name and link are escaped, so nothing typed by an admin can inject HTML. */
+export function inviteEmail(artistName: string, url: string, test = false): Mail {
+  const first = artistName.trim().slice(0, 60)
+  const note = 'This link is only for you. If you were not expecting it, you can ignore this email.'
+  return {
+    subject: `${test ? '[TEST] ' : ''}${first}, your logoless page is ready`,
+    text: `${test ? 'THIS IS A TEST from the admin panel.\n\n' : ''}Hey ${first},\n\nYour private logoless page is ready. It takes a few minutes: set up your artist page, launch your first campaign and start getting clips made.\n\n${url}\n\n${note}\n\nlogoless`,
+    html: layout({
+      preheader: 'Set up your page and launch your first campaign in a few minutes.',
+      tag: test ? 'Test' : 'Invitation',
+      title: `Hey ${first}`,
+      intro: 'Your private logoless page is ready. Set up your artist page, launch your first campaign and get clippers posting your music.',
+      body: `${button(url, 'Open my page')}<p style="margin:18px 0 0;font:400 13px/1.5 ${SANS};color:#80808a">Or paste this into your browser:<br><span style="color:#bdbdc4">${esc(url)}</span></p>`,
+      note,
+      test,
+    }),
+  }
+}
+
 /** A plain message to prove sending works. */
 export function plainTestEmail(): Mail {
   return {

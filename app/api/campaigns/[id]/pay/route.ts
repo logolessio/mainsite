@@ -18,6 +18,9 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
   const s = await stripe()
   const d = await db()
   const origin = new URL(req.url).origin
+  // A campaign made through an invite sends the artist back to their own link afterwards.
+  const inv = c.invite_id ? await d.prepare('SELECT slug FROM artist_invites WHERE id = ?1').bind(c.invite_id).first<{ slug: string }>() : null
+  const back = inv ? `${origin}/${inv.slug}` : `${origin}/brand/campaigns`
 
   let customer = user.stripe_customer_id
   if (!customer) {
@@ -33,8 +36,8 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
     line_items: [{ quantity: 1, price_data: { currency: 'usd', unit_amount: c.budget_cents, product_data: { name: `logoless campaign: ${c.title}` } } }],
     payment_intent_data: { description: `logoless campaign ${c.id}`, metadata: { user_id: user.id, kind: 'campaign', campaign_id: c.id } },
     metadata: { user_id: user.id, kind: 'campaign', campaign_id: c.id },
-    success_url: `${origin}/brand/campaigns?paid=${encodeURIComponent(c.id)}`,
-    cancel_url: `${origin}/brand/campaigns?cancelled=1`,
+    success_url: `${back}?paid=${encodeURIComponent(c.id)}`,
+    cancel_url: `${back}?cancelled=1`,
   })
   if (!session.url) throw new HttpError(502, 'Stripe did not return a checkout link.')
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import { isInvitePath } from '@/lib/invite-shared'
 import { BrandIcon } from '@/components/brand-icon'
 import { Logo } from '@/components/logo'
 import { Reveal } from '@/components/motion/reveal'
@@ -13,7 +14,7 @@ const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin', '/@', '/u/']
 
 export function SiteFooter() {
   const pathname = usePathname()
-  if (HIDDEN.some((p) => pathname.startsWith(p))) return null
+  if (HIDDEN.some((p) => pathname.startsWith(p)) || isInvitePath(pathname)) return null
 
   return (
     <footer className="relative z-10 border-t border-line bg-ink [contain-intrinsic-size:auto_600px] [content-visibility:auto]">

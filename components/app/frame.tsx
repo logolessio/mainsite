@@ -71,7 +71,7 @@ export function AppFrame({ area, items, children }: { area: string; items: AppNa
         </button>
       </header>
 
-      <main className="px-5 pt-4 pb-40 md:pr-10 md:pb-16 md:pl-[104px] md:pt-6">
+      <main className="px-5 pt-4 pb-40 md:pr-10 md:pb-16 md:pl-[108px] md:pt-6">
         <div className="mx-auto max-w-[1160px]">{children}</div>
       </main>
 
@@ -106,11 +106,14 @@ export function AppFrame({ area, items, children }: { area: string; items: AppNa
       </nav>
 
 
-      {/* ---------- the floating glass panel (larger screens) ---------- */}
+      {/* ---------- the slide-out glass panel (larger screens) ---------- */}
+      <AnimatePresence>
+        {panelOpen && <motion.div key="scrim" aria-hidden="true" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="pointer-events-none fixed inset-0 z-30 hidden bg-black/45 md:block" />}
+      </AnimatePresence>
       <motion.aside
         aria-label={`${area} navigation`}
         initial={false}
-        animate={{ width: panelOpen ? 244 : 64 }}
+        animate={{ width: panelOpen ? 264 : 72 }}
         transition={reduced ? { duration: 0 } : SPRING}
         onMouseEnter={() => setPanelOpen(true)}
         onMouseLeave={() => setPanelOpen(false)}
@@ -118,12 +121,12 @@ export function AppFrame({ area, items, children }: { area: string; items: AppNa
         onBlurCapture={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setPanelOpen(false)
         }}
-        className="glass-liquid fixed top-1/2 left-5 z-40 hidden -translate-y-1/2 flex-col rounded-[2rem] p-2 shadow-[0_30px_80px_-20px_rgb(0_0_0/0.95)] backdrop-blur-xl backdrop-saturate-150 md:flex"
+        className="glass-liquid fixed top-[84px] bottom-4 left-3 z-40 hidden flex-col rounded-[2rem] border-paper/30 p-2.5 shadow-[0_0_0_1px_rgb(0_0_0/0.9),0_0_0_2px_rgb(243_242_238/0.07),24px_0_70px_-18px_rgb(0_0_0/0.95)] backdrop-blur-xl backdrop-saturate-150 md:flex"
       >
-        <motion.p animate={{ opacity: panelOpen ? 1 : 0, height: panelOpen ? 28 : 0 }} transition={{ duration: 0.2 }} className="overflow-hidden px-4 pt-2 text-[11px] font-medium tracking-[0.16em] whitespace-nowrap text-mute uppercase">
+        <motion.p animate={{ opacity: panelOpen ? 1 : 0, height: panelOpen ? 36 : 0 }} transition={{ duration: 0.2 }} className="overflow-hidden px-4 pt-3 text-[11px] font-medium tracking-[0.16em] whitespace-nowrap text-mute uppercase">
           {area}
         </motion.p>
-        <nav className="flex max-h-[calc(100dvh-14rem)] flex-col gap-0.5 overflow-y-auto overflow-x-hidden">
+        <nav className="my-auto flex max-h-full flex-col gap-0.5 overflow-x-hidden overflow-y-auto py-2">
           {items.map((it) => {
             const active = isActive(pathname, it)
             return (
@@ -138,7 +141,7 @@ export function AppFrame({ area, items, children }: { area: string; items: AppNa
             )
           })}
         </nav>
-        <span aria-hidden="true" className="mx-3 my-2 h-px bg-line-strong" />
+        <span aria-hidden="true" className="mx-3 my-2 h-px shrink-0 bg-line-strong" />
         <button type="button" aria-label="Jump to…" onClick={() => setPalette(true)} className="group relative flex h-11 shrink-0 items-center rounded-full pl-[14px] text-left text-[15px] whitespace-nowrap text-mute transition-colors hover:bg-white/[0.06] hover:text-paper">
           <Search aria-hidden="true" className="size-5 shrink-0" />
           <motion.span animate={{ opacity: panelOpen ? 1 : 0, x: panelOpen ? 0 : -10 }} transition={{ duration: 0.22 }} className="ml-4 flex flex-1 items-center justify-between pr-3">
@@ -164,7 +167,7 @@ export function AppFrame({ area, items, children }: { area: string; items: AppNa
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 12, scale: 0.97 }}
               transition={{ duration: 0.28, ease: EASE_OUT }}
-              className="glass-liquid fixed bottom-24 left-1/2 z-50 w-[min(24rem,calc(100vw-1.5rem))] -translate-x-1/2 rounded-[2rem] p-3 backdrop-blur-xl md:top-1/2 md:bottom-auto md:left-[88px] md:w-72 md:translate-x-0 md:-translate-y-1/2"
+              className="glass-liquid fixed bottom-24 left-1/2 z-50 w-[min(24rem,calc(100vw-1.5rem))] -translate-x-1/2 rounded-[2rem] p-3 backdrop-blur-xl md:top-1/2 md:bottom-auto md:left-[96px] md:w-72 md:translate-x-0 md:-translate-y-1/2"
             >
               {items.length > 4 && (
                 <div className="mb-2 grid grid-cols-3 gap-2 md:hidden">

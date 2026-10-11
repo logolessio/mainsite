@@ -42,11 +42,11 @@ export const POST = route(async (req: Request) => {
     case 'checkout.session.async_payment_succeeded': {
       const session = event.data.object as Stripe.Checkout.Session
       const kind = session.metadata?.kind
-      if ((kind !== 'topup' && kind !== 'campaign') || session.payment_status !== 'paid') break
+      if ((kind !== 'topup' && kind !== 'campaign' && kind !== 'campaign_topup') || session.payment_status !== 'paid') break
       const userId = session.metadata?.user_id
-      const campaignId = kind === 'campaign' ? (session.metadata?.campaign_id ?? null) : null
+      const campaignId = kind === 'campaign' || kind === 'campaign_topup' ? (session.metadata?.campaign_id ?? null) : null
       const amount = session.amount_total ?? 0
-      if (!userId || amount <= 0 || (kind === 'campaign' && !campaignId)) break
+      if (!userId || amount <= 0 || ((kind === 'campaign' || kind === 'campaign_topup') && !campaignId)) break
       const pi = typeof session.payment_intent === 'string' ? session.payment_intent : (session.payment_intent?.id ?? null)
 
       let receipt: string | null = null
@@ -77,13 +77,20 @@ export const POST = route(async (req: Request) => {
         // The artist paid for their campaign: the money goes into that campaign's pool and the admin is told it can launch.
         const camp = await d.prepare('SELECT title, status, budget_cents FROM campaigns WHERE id = ?1 AND brand_user_id = ?2').bind(campaignId, userId).first<{ title: string; status: string; budget_cents: number }>()
         if (camp) {
-          await fundCampaign(d, userId, campaignId, session.id, amount)
-          await d
-            .prepare("UPDATE campaigns SET status = 'paid', paid_at = ?2, updated_at = ?2 WHERE id = ?1 AND status IN ('awaiting_payment','requested')")
-            .bind(campaignId, t)
-            .run()
-          await notify(userId, { kind: 'campaign', title: `Payment received for ${camp.title}`, body: 'We will launch your campaign shortly.', href: '/brand/campaigns', dedupe: `camp-paid:${campaignId}` })
-          await notifyAdmins({ title: `Paid: ${camp.title} is ready to launch`, body: `$${(amount / 100).toFixed(2)} received.`, href: '/admin/campaigns', dedupe: `camp-paid:${campaignId}` })
+          const credited = await fundCampaign(d, userId, campaignId, session.id, amount)
+          if (kind === 'campaign_topup') {
+            // More money for a campaign that already exists: the pool and the budget both grow, the status does not change.
+            if (credited) await d.prepare('UPDATE campaigns SET budget_cents = budget_cents + ?2, updated_at = ?3 WHERE id = ?1').bind(campaignId, amount, t).run()
+            await notify(userId, { kind: 'campaign', title: `$${(amount / 100).toFixed(2)} added to ${camp.title}`, body: 'The new funds are available to pay clippers right away.', href: '/brand/billing', dedupe: `camp-topup:${session.id}` })
+            await notifyAdmins({ title: `${camp.title} was topped up`, body: `$${(amount / 100).toFixed(2)} added.`, href: '/admin/campaigns', dedupe: `camp-topup:${session.id}` })
+          } else {
+            await d
+              .prepare("UPDATE campaigns SET status = 'paid', paid_at = ?2, updated_at = ?2 WHERE id = ?1 AND status IN ('awaiting_payment','requested')")
+              .bind(campaignId, t)
+              .run()
+            await notify(userId, { kind: 'campaign', title: `Payment received for ${camp.title}`, body: 'We will launch your campaign shortly.', href: '/brand/campaigns', dedupe: `camp-paid:${campaignId}` })
+            await notifyAdmins({ title: `Paid: ${camp.title} is ready to launch`, body: `$${(amount / 100).toFixed(2)} received.`, href: '/admin/campaigns', dedupe: `camp-paid:${campaignId}` })
+          }
         }
       } else {
         await creditTopup(d, userId, session.id, amount)

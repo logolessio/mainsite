@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { usePathname } from 'next/navigation'
+import { isInvitePath } from '@/lib/invite-shared'
 import { useEffect, useRef, useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
 import { Logo } from '@/components/logo'
@@ -43,7 +44,7 @@ export function SiteNav() {
     }
   }, [open])
 
-  if (HIDDEN.some((p) => pathname.startsWith(p))) return null
+  if (HIDDEN.some((p) => pathname.startsWith(p)) || isInvitePath(pathname)) return null
 
   const startTour = () => {
     setOpen(false)
