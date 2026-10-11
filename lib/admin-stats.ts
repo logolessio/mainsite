@@ -74,7 +74,7 @@ export async function health(): Promise<Health[]> {
   out.push({ key: 'auth', label: 'Sign-in secret', state: secret.length >= 32 ? 'ok' : secret ? 'warn' : 'bad', detail: secret.length >= 32 ? 'Set and long enough' : secret ? 'Set but short: use 32+ characters' : 'Not set' })
   out.push({ key: 'google', label: 'Google sign-in', state: (await has('AUTH_GOOGLE_ID')) && (await has('AUTH_GOOGLE_SECRET')) ? 'ok' : 'bad', detail: (await has('AUTH_GOOGLE_ID')) ? 'Set' : 'Not set' })
   out.push({ key: 'captcha', label: 'Human check (Turnstile)', state: (await captchaConfigured()) ? 'ok' : 'warn', detail: (await captchaConfigured()) ? 'Active on sign-in' : 'Not set up: bots can sign up' })
-  out.push({ key: 'email', label: 'Email (Resend)', state: (await has('RESEND_API_KEY')) ? 'ok' : 'warn', detail: (await has('RESEND_API_KEY')) ? 'Key set. Run the email test to check the domain.' : 'Not set: email sign-in is off' })
+  out.push({ key: 'email', label: 'Email (Resend)', state: (await has('RESEND_API_KEY')) ? 'ok' : 'warn', detail: (await has('RESEND_API_KEY')) ? 'Key set. Run the email test to check the domain.' : 'Not set: email sign-up and password reset are off' })
   const admins = ((await setting('ADMIN_EMAILS')) ?? '').split(',').filter((e) => e.trim()).length
   out.push({ key: 'admins', label: 'Admin accounts', state: admins > 0 ? 'ok' : 'bad', detail: admins ? `${admins} admin email${admins > 1 ? 's' : ''}` : 'ADMIN_EMAILS is empty' })
   return out

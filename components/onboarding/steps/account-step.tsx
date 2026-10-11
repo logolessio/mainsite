@@ -1,12 +1,12 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Loader2, MailCheck } from 'lucide-react'
+import { Eye, EyeOff, Loader2, MailCheck } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { Field, Input } from '@/components/ui/fields'
-import { type Provider, type Role, sendEmailCode, signInWithProvider } from '@/lib/auth'
+import { type Provider, type Role, signInWithProvider, signUpWithEmail } from '@/lib/auth'
 import { resendEmailCode, verifyEmailCode } from '@/lib/onboarding'
 import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
@@ -22,6 +22,7 @@ export function AccountStep({ data, update, next }: StepProps) {
   const [phase, setPhase] = useState<'choose' | 'verify'>('choose')
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [showPw, setShowPw] = useState(false)
   const [code, setCode] = useState('')
   const [cooldown, setCooldown] = useState(0)
 
@@ -55,10 +56,12 @@ export function AccountStep({ data, update, next }: StepProps) {
     if (needTerms()) return
     const f = new FormData(e.currentTarget)
     const address = String(f.get('email')).trim()
+    const password = String(f.get('password'))
+    if (password.length < 10) return setError('Use at least 10 characters for your password.')
     setBusy('email')
     setError('')
     try {
-      await sendEmailCode(address)
+      await signUpWithEmail({ email: address, password, name: '' })
       update({ email: address, method: 'email' })
       setPhase('verify')
       setCooldown(30)
@@ -131,6 +134,15 @@ export function AccountStep({ data, update, next }: StepProps) {
               <Field label="Email">
                 <Input required type="email" name="email" autoComplete="email" placeholder="you@example.com" defaultValue={data.email} />
               </Field>
+              <Field label="Password" hint="At least 10 characters. We check it has not been in a data breach.">
+                <span className="relative block">
+                  <Input required name="password" type={showPw ? 'text' : 'password'} autoComplete="new-password" minLength={10} className="pr-12" />
+                  <button type="button" aria-label={showPw ? 'Hide password' : 'Show password'} onClick={() => setShowPw((v) => !v)} className="absolute inset-y-0 right-0 grid w-12 place-items-center text-mute hover:text-paper">
+                    {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </span>
+              </Field>
+
               <label className="mt-1 flex items-start gap-3 text-xs leading-relaxed text-mute">
                 <input
                   type="checkbox"
@@ -160,7 +172,7 @@ export function AccountStep({ data, update, next }: StepProps) {
 
               <PrimaryBtn type="submit" disabled={busy !== null} className="mt-1">
                 {busy === 'email' && <Loader2 className="size-4 animate-spin" />}
-                Email me a code
+                Create account
               </PrimaryBtn>
             </form>
             <p role="alert" className="mt-3 min-h-5 text-center text-xs text-signal">

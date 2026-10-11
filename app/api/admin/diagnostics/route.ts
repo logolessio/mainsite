@@ -109,7 +109,7 @@ export const POST = route(async (req: Request) => {
     case 'email': {
       out.title = 'Email (Resend)'
       const key = await setting('RESEND_API_KEY')
-      if (!key) return json({ ...out, ok: false, lines: ['RESEND_API_KEY is not set, so email sign-in is switched off.'] })
+      if (!key) return json({ ...out, ok: false, lines: ['RESEND_API_KEY is not set, so email sign-up and password reset are switched off.'] })
       const from = (await setting('RESEND_FROM')) ?? 'logoless <login@verify.logoless.io>'
       const domain = (/@([^>\s]+)/.exec(from)?.[1] ?? '').toLowerCase()
       const res = await fetch('https://api.resend.com/domains', { headers: { authorization: `Bearer ${key}` } })

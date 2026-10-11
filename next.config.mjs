@@ -54,11 +54,10 @@ const nextConfig = {
     return [{ source: '/@:handle', destination: '/u/:handle' }]
   },
   async redirects() {
-    // Sign-in is by emailed code now, so the old password pages go to the login page.
+    // Old placeholder pages now live inside the login and forgot-password pages.
     return [
       { source: '/campaigns', destination: '/', permanent: true },
-      { source: '/forgot-password', destination: '/login', permanent: true },
-      { source: '/reset-password', destination: '/login', permanent: true },
+      { source: '/reset-password', destination: '/forgot-password', permanent: true },
       { source: '/verify-email', destination: '/login', permanent: true },
     ]
   },

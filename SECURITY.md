@@ -10,7 +10,7 @@ Money moves through this site, so every route that changes something follows the
 | 2 | Environment variables | Set in Cloudflare, never in files. `.env.example` has names only. `/admin/keys` shows set / not set and never a value. |
 | 3 | Keys in git | `.gitignore` now blocks `.env*`, `.dev.vars`, `*.pem`, `*.key` and service-account files. The tree and the full git history were scanned: clean. |
 | 4 | Protect admin routes | Three layers: the admin layout, a check inside every admin page (non-admins get a plain 404), and a check inside every admin API. Add Cloudflare Access (see `PLATFORM_SETUP.md`) for a fourth. |
-| 5 | Authentication | Google (Auth.js), 14-day sessions, human check (Turnstile) before sign-in starts. Suspended or banned accounts are refused everywhere. |
+| 5 | Authentication | Google and Discord (Auth.js), plus email and password with the address confirmed by an emailed code. Passwords are salted, peppered and hashed (PBKDF2), screened against breached-password lists, and login tries are limited. Sessions last 14 days, sessions, human check (Turnstile) before sign-in starts. Suspended or banned accounts are refused everywhere. |
 | 6 | User permissions | Every query is scoped to the signed-in user's id (clips, notifications, favourites, payouts). Only the campaign's owner can pay for it. Admin comes only from `ADMIN_EMAILS`. |
 | 7 | Sanitise inputs | zod schemas, length caps, https-only link checks per platform, control characters stripped, request bodies capped at 64 KB. |
 | 8 | XSS | React escapes all text. There is no raw HTML injection anywhere. Edited site text is stored and shown as plain text. CSP is on. Uploaded images are re-encoded and served with `nosniff` and a sandboxing CSP. SVG uploads are refused. |
