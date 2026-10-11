@@ -1,17 +1,17 @@
 'use client'
 
-import { ShieldCheck } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { useState } from 'react'
-import { VerifyAccountDialog } from '@/components/app/verify-account-dialog'
+import { AddAccountDialog } from '@/components/app/add-account-dialog'
 import { BrandIcon } from '@/components/brand-icon'
 import type { SocialPlatform } from '@/lib/accounts'
 import type { StepProps } from '../types'
 import { StepTitle } from '../ui'
 
 const ROWS: { key: SocialPlatform; label: string; body: string }[] = [
-  { key: 'tiktok', label: 'TikTok', body: 'Verify with a code in your bio' },
-  { key: 'youtube', label: 'YouTube', body: 'Verify with a code in your channel description' },
-  { key: 'instagram', label: 'Instagram', body: 'Verify with a code in your bio' },
+  { key: 'tiktok', label: 'TikTok', body: 'The account you post Reels from' },
+  { key: 'youtube', label: 'YouTube', body: 'Your channel for Shorts and long-form' },
+  { key: 'instagram', label: 'Instagram', body: 'Where your Reels live' },
 ]
 
 export function SocialsStep({ data, update }: StepProps) {
@@ -20,7 +20,7 @@ export function SocialsStep({ data, update }: StepProps) {
 
   return (
     <div>
-      <StepTitle title="Link where you post" sub="Paste a short code in your bio so we know the account is yours. We never ask for passwords." />
+      <StepTitle title="Link where you post" sub="Add the accounts you post from. They show on your profile, and we check clips against them. We never ask for passwords." />
 
       <ul className="mt-7 grid gap-2">
         {ROWS.map((r) => {
@@ -36,7 +36,7 @@ export function SocialsStep({ data, update }: StepProps) {
               </span>
               {handle ? (
                 <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 px-2.5 py-1 font-mono text-[11px] text-emerald-300">
-                  <ShieldCheck className="size-3" /> Verified
+                  <Check className="size-3" /> Added
                 </span>
               ) : (
                 <button
@@ -44,7 +44,7 @@ export function SocialsStep({ data, update }: StepProps) {
                   onClick={() => setDialog(r.key)}
                   className="h-10 rounded-full bg-paper px-5 text-sm font-medium text-ink transition-colors hover:bg-paper/85"
                 >
-                  Verify
+                  Add
                 </button>
               )}
               {handle && (
@@ -67,14 +67,17 @@ export function SocialsStep({ data, update }: StepProps) {
       <p className="mt-5 text-center text-xs leading-relaxed text-mute">
         {count > 0
           ? 'Nice. You can add more any time from your dashboard.'
-          : 'You need at least one verified account to submit clips. You can skip this and do it later.'}
+          : 'Add at least one so we can match your clips to you. You can skip this and do it later.'}
       </p>
 
-      <VerifyAccountDialog
+      <AddAccountDialog
         platform={dialog}
         open={dialog !== null}
         onClose={() => setDialog(null)}
-        onVerified={(p, h) => update({ linked: { ...data.linked, [p]: h } })}
+        onAdded={(p, h) => {
+          setDialog(null)
+          update({ linked: { ...data.linked, [p]: h } })
+        }}
       />
     </div>
   )

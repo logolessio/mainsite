@@ -3,16 +3,19 @@
 import { Camera, Check, Loader2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Field, Input, Select, Textarea } from '@/components/ui/fields'
+import { uploadImage } from '@/lib/image-client'
 import { COUNTRIES, checkHandleAvailable } from '@/lib/onboarding'
 import { cn } from '@/lib/utils'
 import type { StepProps } from '../types'
 import { StepTitle } from '../ui'
 
-const HANDLE_RE = /^[a-z0-9._]{3,24}$/
+const HANDLE_RE = /^[a-z0-9_]{3,20}$/
 
 export function ProfileStep({ data, update }: StepProps) {
   const file = useRef<HTMLInputElement>(null)
   const [state, setState] = useState<'idle' | 'checking' | 'ok' | 'taken' | 'invalid'>('idle')
+  const [photoBusy, setPhotoBusy] = useState(false)
+  const [photoError, setPhotoError] = useState('')
 
   useEffect(() => {
     const h = data.handle
@@ -30,12 +33,18 @@ export function ProfileStep({ data, update }: StepProps) {
     }
   }, [data.handle])
 
-  const onFile = (f?: File | null) => {
-    if (!f) return
-    if (!f.type.startsWith('image/')) return
-    if (data.avatar) URL.revokeObjectURL(data.avatar)
-    // TODO(backend): upload the file and store the returned URL instead of this local preview
-    update({ avatar: URL.createObjectURL(f) })
+  const onFile = async (f?: File | null) => {
+    if (!f || !f.type.startsWith('image/')) return
+    setPhotoBusy(true)
+    setPhotoError('')
+    try {
+      const id = await uploadImage('avatar', f)
+      update({ avatar: `/api/img/${id}`, avatarKey: id })
+    } catch (e) {
+      setPhotoError(e instanceof Error ? e.message : 'Could not upload that picture.')
+    } finally {
+      setPhotoBusy(false)
+    }
   }
 
   const initials = (data.name || data.handle || '?').trim().slice(0, 2).toUpperCase()
@@ -64,31 +73,33 @@ export function ProfileStep({ data, update }: StepProps) {
         <input ref={file} type="file" accept="image/*" className="sr-only" onChange={(e) => onFile(e.target.files?.[0])} />
         <div className="flex items-center gap-3 text-xs text-mute">
           <button type="button" onClick={() => file.current?.click()} className="underline underline-offset-4 hover:text-paper">
-            {data.avatar ? 'Change photo' : 'Add a photo'}
+            {photoBusy ? 'Uploading…' : data.avatar ? 'Change photo' : 'Add a photo'}
           </button>
           {data.avatar && (
-            <button type="button" onClick={() => update({ avatar: null })} className="hover:text-paper">
+            <button type="button" onClick={() => update({ avatar: null, avatarKey: null })} className="hover:text-paper">
               Remove
             </button>
           )}
         </div>
       </div>
 
+      {photoError && <p role="alert" className="mt-3 text-center text-sm text-signal">{photoError}</p>}
+
       <div className="mt-6 grid gap-4">
         <Field label="Display name">
           <Input value={data.name} onChange={(e) => update({ name: e.target.value })} autoComplete="name" placeholder="Your name or alias" maxLength={40} />
         </Field>
 
-        <Field label="Username" hint="Lowercase letters, numbers, dots and underscores. 3 to 24 characters.">
+        <Field label="Username" hint="Lowercase letters, numbers and underscores. 3 to 20 characters.">
           <span className="relative block">
             <span className="pointer-events-none absolute inset-y-0 left-4 grid place-items-center text-mute">@</span>
             <Input
               value={data.handle}
-              onChange={(e) => update({ handle: e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, '') })}
+              onChange={(e) => update({ handle: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') })}
               autoComplete="off"
               spellCheck={false}
               placeholder="yourhandle"
-              maxLength={24}
+              maxLength={20}
               className={cn('pr-12 pl-8', state === 'taken' || state === 'invalid' ? 'border-signal/70' : '')}
             />
             <span className="absolute inset-y-0 right-4 grid place-items-center">

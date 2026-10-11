@@ -64,8 +64,8 @@ export default function Page() {
       <Section className="py-16 md:py-28">
         <p className="mx-auto max-w-2xl text-lg leading-snug text-mute">
           If you think a decision on your clip is wrong, you can appeal from the submission page. To report abuse or botting, contact{' '}
-          <a href="mailto:abuse@logoless.com" className="text-paper underline underline-offset-4">
-            abuse@logoless.com
+          <a href="mailto:abuse@logoless.io" className="text-paper underline underline-offset-4">
+            abuse@logoless.io
           </a>
           .
         </p>

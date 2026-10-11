@@ -155,9 +155,9 @@ export function SubmitClip({ campaign }: { campaign: Campaign }) {
               </p>
             )}
             <p className="mt-4 text-sm text-mute">
-              Post from an account you have verified.{' '}
+              Only submit clips you posted yourself.{' '}
               <TransitionLink href="/dashboard/accounts" className="underline underline-offset-4 hover:text-paper">
-                Link an account
+                Your accounts
               </TransitionLink>
             </p>
           </motion.form>

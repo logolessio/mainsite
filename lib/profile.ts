@@ -221,6 +221,7 @@ export type ProfileInput = {
   show?: Partial<ShowMap>
   badges?: string[]
   country?: string | null
+  niches?: string[]
 }
 
 /** Applies a profile edit. Returns which customisations actually changed, for achievements. */
@@ -324,6 +325,10 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
     const c = (input.country ?? '').toUpperCase()
     next.country = /^[A-Z]{2}$/.test(c) ? c : null
   }
+  if (input.niches !== undefined) {
+    const list = (Array.isArray(input.niches) ? input.niches : []).map((n) => clean(String(n)).slice(0, 24)).filter(Boolean)
+    next.niches_json = JSON.stringify([...new Set(list)].slice(0, 10))
+  }
   if (input.badges !== undefined) {
     if (!Array.isArray(input.badges) || input.badges.length > 5) throw new HttpError(400, 'You can equip up to 5 badges.')
     const ids = [...new Set(input.badges.map(String))]
@@ -344,7 +349,7 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
     await d
       .prepare(
         `UPDATE profiles SET handle=?2, display_name=?3, bio=?4, country=?5, banner_kind=?6, banner_value=?7, dot_color=?8,
-           accent=?9, font=?10, links_json=?11, website=?12, show_json=?13, badges_json=?14, updated_at=?15, avatar_key=?16, accent2=?17, name_effect=?18, card_effect=?19, pronouns=?20, effect_intensity=?21, effect_speed=?22 WHERE user_id=?1`,
+           accent=?9, font=?10, links_json=?11, website=?12, show_json=?13, badges_json=?14, updated_at=?15, avatar_key=?16, accent2=?17, name_effect=?18, card_effect=?19, pronouns=?20, effect_intensity=?21, effect_speed=?22, niches_json=?23 WHERE user_id=?1`,
       )
       .bind(
         user.id,
@@ -369,6 +374,7 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
         next.pronouns,
         next.effect_intensity,
         next.effect_speed,
+        next.niches_json,
       )
       .run()
   } catch (e) {

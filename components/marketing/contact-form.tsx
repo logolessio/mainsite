@@ -6,6 +6,27 @@ import { Field, Input, PrimaryButton, Select, Textarea } from '@/components/ui/f
 
 export function ContactForm() {
   const [sent, setSent] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (busy) return
+    setBusy(true)
+    setError('')
+    const data = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>
+    try {
+      const res = await fetch('/api/contact', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) })
+      const j = (await res.json().catch(() => ({}))) as { error?: string }
+      if (!res.ok) setError(j.error ?? 'Something went wrong. Please try again.')
+      else setSent(true)
+    } catch {
+      setError('We could not reach the server. Check your connection and try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   if (sent)
     return (
       <div role="status" className="border border-line p-10 rounded-2xl">
@@ -17,20 +38,13 @@ export function ContactForm() {
       </div>
     )
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault()
-        // TODO(backend): POST /api/contact
-        setSent(true)
-      }}
-      className="grid gap-5"
-    >
+    <form onSubmit={submit} className="grid gap-5">
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Name">
-          <Input required name="name" autoComplete="name" />
+          <Input required name="name" autoComplete="name" maxLength={80} />
         </Field>
         <Field label="Email">
-          <Input required type="email" name="email" autoComplete="email" />
+          <Input required type="email" name="email" autoComplete="email" maxLength={254} />
         </Field>
       </div>
       <Field label="Topic">
@@ -43,10 +57,17 @@ export function ContactForm() {
         </Select>
       </Field>
       <Field label="Message">
-        <Textarea required name="message" rows={6} />
+        <Textarea required name="message" rows={6} minLength={5} maxLength={4000} />
       </Field>
-      <PrimaryButton type="submit" className="self-start">
-        Send message
+      {/* Honeypot: hidden from people, irresistible to bots. */}
+      <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 opacity-0" />
+      {error && (
+        <p role="alert" className="text-sm text-signal">
+          {error}
+        </p>
+      )}
+      <PrimaryButton type="submit" disabled={busy} className="self-start">
+        {busy ? 'Sending…' : 'Send message'}
       </PrimaryButton>
     </form>
   )

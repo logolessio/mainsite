@@ -14,7 +14,8 @@ export type OnboardingData = {
   handle: string
   bio: string
   country: string
-  avatar: string | null // object URL, never persisted
+  avatar: string | null // a preview address
+  avatarKey: string | null // the stored picture's id
   // socials: platform -> verified handle
   linked: Partial<Record<SocialPlatform, string>>
   // interests
@@ -45,6 +46,7 @@ export const DEFAULT_DATA: OnboardingData = {
   bio: '',
   country: '',
   avatar: null,
+  avatarKey: null,
   linked: {},
   niches: [],
   styles: [],
@@ -68,12 +70,15 @@ export const BUDGETS = ['Under $500', '$500 – $2,500', '$2,500 – $10,000', '
 export const COUNTRIES = ['United States', 'United Kingdom', 'Canada', 'Australia', 'Ireland', 'Germany', 'France', 'Netherlands', 'Spain', 'Singapore', 'Other']
 export const FUND_PRESETS = [250, 500, 1000, 5000]
 
-const RESERVED = new Set(['admin', 'logoless', 'support', 'root', 'staff', 'help', 'api'])
-
+/** Asks the server whether a username is free. */
 export async function checkHandleAvailable(handle: string): Promise<boolean> {
-  // TODO(backend): GET /api/handles/:handle
-  await new Promise((r) => setTimeout(r, 450))
-  return !RESERVED.has(handle.toLowerCase())
+  try {
+    const res = await fetch(`/api/me/handle?h=${encodeURIComponent(handle)}`, { cache: 'no-store' })
+    if (!res.ok) return true // the real check happens again when the profile is saved
+    return ((await res.json()) as { available: boolean }).available
+  } catch {
+    return true
+  }
 }
 
 export async function verifyEmailCode(email: string, code: string): Promise<boolean> {
@@ -89,7 +94,26 @@ export async function resendEmailCode(email: string): Promise<void> {
   await resendSignupCode(email)
 }
 
-export async function completeOnboarding(_data: OnboardingData): Promise<void> {
-  // TODO(backend): PUT /api/me/onboarding. Persist the profile, interests and brand details, then set onboarded = true.
-  await new Promise((r) => setTimeout(r, 400))
+/** Saves what the person told us as their real profile. Throws with a readable message if it cannot. */
+export async function completeOnboarding(data: OnboardingData): Promise<void> {
+  const res = await fetch('/api/me/onboarding', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      role: data.role,
+      name: data.name,
+      handle: data.handle,
+      bio: data.bio,
+      country: data.country,
+      avatarKey: data.avatarKey,
+      linked: data.linked,
+      niches: data.niches,
+      company: data.company,
+      website: data.website,
+      industry: data.industry,
+      goals: data.goals,
+      budget: data.budget,
+    }),
+  })
+  if (!res.ok) throw new Error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? 'Could not save your profile.')
 }

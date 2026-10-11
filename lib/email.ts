@@ -8,7 +8,7 @@ export async function emailEnabled() {
 }
 
 /** Sends one email through Resend. Locally, with no key, it prints the message to the server log instead. */
-export async function sendEmail(o: { to: string; subject: string; html: string; text: string; template?: string }): Promise<{ id: string | null }> {
+export async function sendEmail(o: { to: string; subject: string; html: string; text: string; template?: string; replyTo?: string }): Promise<{ id: string | null }> {
   const key = await setting('RESEND_API_KEY')
   const label = o.template ?? 'email'
   const who = o.to.replace(/^(.).*(@.*)$/, '$1***$2') // addresses are masked in the log
@@ -22,7 +22,7 @@ export async function sendEmail(o: { to: string; subject: string; html: string; 
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ from, to: [o.to], subject: o.subject, html: o.html, text: o.text }),
+    body: JSON.stringify({ from, to: [o.to], subject: o.subject, html: o.html, text: o.text, ...(o.replyTo ? { reply_to: o.replyTo } : {}) }),
   })
   if (!res.ok) {
     const detail = (await res.text().catch(() => '')).slice(0, 300)

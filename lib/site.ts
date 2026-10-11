@@ -6,11 +6,11 @@ export const SITE = {
   company: 'Logoless Inc.', // TODO: registered legal entity
   address: '[Registered business address]', // TODO
   emails: {
-    support: 'support@logoless.com',
-    legal: 'legal@logoless.com',
-    privacy: 'privacy@logoless.com',
-    press: 'press@logoless.com',
-    abuse: 'abuse@logoless.com',
+    support: 'support@logoless.io',
+    legal: 'legal@logoless.io',
+    privacy: 'privacy@logoless.io',
+    press: 'press@logoless.io',
+    abuse: 'abuse@logoless.io',
   },
   social: {
     discord: 'https://discord.gg/logoless',
