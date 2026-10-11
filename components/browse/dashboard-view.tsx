@@ -107,10 +107,10 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
               initial={{ opacity: 0, scale: 0.94 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.9, ease: EASE_OUT }}
-              className="relative mx-auto aspect-square w-[min(300px,62vw)] md:w-[min(340px,40vw)]"
+              className="relative mx-auto aspect-[1100/587] w-[min(620px,82vw)]"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/brand/logo-mark-hero.png" alt="" width={1024} height={1024} className="absolute inset-0 block size-full select-none" draggable={false} />
+              <img src="/logo-lg.png" alt="" width={1100} height={587} className="absolute inset-0 block size-full select-none" draggable={false} />
               <span aria-hidden="true" className="logo-sweep absolute inset-0" />
             </motion.div>
           )}

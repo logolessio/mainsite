@@ -283,8 +283,8 @@
   background-image: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 0.85) 48%, rgb(255 255 255 / 0.95) 50%, rgb(255 255 255 / 0.85) 52%, transparent 62%);
   background-size: 250% 100%;
   background-repeat: no-repeat;
-  -webkit-mask-image: url(/brand/logo-mark-hero.png);
-  mask-image: url(/brand/logo-mark-hero.png);
+  -webkit-mask-image: url(/logo-lg.png);
+  mask-image: url(/logo-lg.png);
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
   mix-blend-mode: overlay;
