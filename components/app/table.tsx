@@ -38,7 +38,7 @@ export function DataTable<T extends { id: string }>({
   empty: React.ReactNode
 }) {
   return (
-    <div data-table className="overflow-x-auto rounded-3xl border border-line bg-white/[0.02]">
+    <div data-table className="overflow-x-auto rounded-3xl border border-line bg-[#0a0a0b]">
       <table className="w-full min-w-[640px] text-left text-sm">
         <thead>
           <tr className="border-b border-line text-xs text-mute">

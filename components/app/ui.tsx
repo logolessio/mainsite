@@ -39,7 +39,7 @@ export function Card({ className, children, title, sub, action }: { className?: 
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: EASE_OUT }}
-      className={cn('overflow-hidden rounded-3xl border border-line bg-white/[0.02]', className)}
+      className={cn('overflow-hidden rounded-3xl border border-line bg-[#0a0a0b] shadow-[0_1px_0_0_rgb(255_255_255/0.04)_inset]', className)}
     >
       {title && (
         <div className="flex items-start justify-between gap-4 px-6 pt-6">
@@ -62,7 +62,7 @@ export function StatCard({ label, value, note }: { label: string; value: string;
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: EASE_OUT }}
-      className="rounded-3xl border border-line bg-white/[0.02] p-6"
+      className="rounded-3xl border border-line bg-[#0a0a0b] p-6"
     >
       <p className="text-sm text-mute">{label}</p>
       <p className="mt-3 font-display text-4xl leading-none font-medium tracking-tight tabular-nums">
