@@ -22,8 +22,12 @@
       "service": "mainsite"
     }
   ],
-  // The dev site. The same worker and database as the live site, so there is nothing to keep in sync: on this host every
-  // feature is switched on and only admins can get in. Pushing a feature turns it on for logoless.io (see /admin/push).
-  // logoless.io itself is attached to this worker in the Cloudflare dashboard, and is deliberately not listed here.
-  "routes": [{ "pattern": "dev.logoless.io", "custom_domain": true }]
+  // Both of the site's addresses are attached to this worker here. Wrangler treats this list as the complete set, so
+  // logoless.io MUST stay in it: leaving it out takes the live site offline. Add new addresses; never remove this one.
+  // The dev site is the same worker and database: on dev.logoless.io every feature is on and only admins get in.
+  // Pushing a feature turns it on for logoless.io (see /admin/push).
+  "routes": [
+    { "pattern": "logoless.io", "custom_domain": true },
+    { "pattern": "dev.logoless.io", "custom_domain": true }
+  ]
 }
