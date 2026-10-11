@@ -34,6 +34,8 @@ export function sectionOf(req: string): Section {
 }
 
 export type ConnectStatus = {
+  /** 'embedded' shows Stripe's own forms inside logoless. 'custom' shows logoless's own forms. Set by PAYOUT_SETUP in Cloudflare. */
+  mode: 'embedded' | 'custom'
   status: 'not_connected' | 'incomplete' | 'ready'
   country: string | null
   currency: string | null

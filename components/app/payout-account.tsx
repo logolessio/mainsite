@@ -3,6 +3,7 @@
 import { Landmark, Loader2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Badge } from '@/components/app/table'
+import { ConnectManage } from '@/components/app/connect-embed'
 import { BankForm, PayoutSetup } from '@/components/app/payout-setup'
 import { ActionButton, Card } from '@/components/app/ui'
 import type { ConnectStatus } from '@/lib/connect-fields'
@@ -38,6 +39,7 @@ export function PayoutAccount({ onChanged }: { onChanged?: () => void }) {
       </p>
     )
   if (status.status !== 'ready') return <PayoutSetup status={status} onChange={apply} />
+  if (status.mode === 'embedded') return <ConnectManage />
   return <Ready status={status} onChange={apply} />
 }
 

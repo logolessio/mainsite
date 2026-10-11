@@ -10,19 +10,26 @@ import type { UserRow } from './user'
  * details in its own forms and sends them to Stripe, which keeps them and does the identity checks. Because logoless
  * collects them, logoless is also the one Stripe bills for fees and the one that covers any losses.
  */
+/** Which setup screens clippers get. Default is Stripe's own forms inside logoless; set PAYOUT_SETUP=custom for logoless's own forms. */
+export async function payoutMode(): Promise<'embedded' | 'custom'> {
+  return (await setting('PAYOUT_SETUP')) === 'custom' ? 'custom' : 'embedded'
+}
+
 export async function createConnectAccount(user: UserRow, country: string, tos: { ip: string; userAgent: string }) {
   const c = countryOf(country)
   if (!c) throw new HttpError(400, 'Payouts are not available in that country yet.')
   const s = await stripe()
+  const embedded = (await payoutMode()) === 'embedded'
   const params = (cardPayments: boolean): Stripe.AccountCreateParams => ({
-    controller: { stripe_dashboard: { type: 'none' }, fees: { payer: 'application' }, losses: { payments: 'application' }, requirement_collection: 'application' },
+    // Embedded: Stripe collects the details in its own forms. Custom: logoless collects them in its own forms.
+    controller: { stripe_dashboard: { type: 'none' }, fees: { payer: 'application' }, losses: { payments: 'application' }, requirement_collection: embedded ? 'stripe' : 'application' },
     country: c.code,
     email: user.email,
     business_type: 'individual',
     business_profile: { mcc: '7311', url: 'https://logoless.io', product_description: 'Creates and posts short video clips for advertisers on logoless.' },
     // Stripe will not let some countries (the US so far) receive transfers without also having the card capability.
     capabilities: { transfers: { requested: true }, ...(cardPayments ? { card_payments: { requested: true } } : {}) },
-    tos_acceptance: { date: Math.floor(Date.now() / 1000), ip: tos.ip, user_agent: tos.userAgent.slice(0, 200) },
+    ...(embedded ? {} : { tos_acceptance: { date: Math.floor(Date.now() / 1000), ip: tos.ip, user_agent: tos.userAgent.slice(0, 200) } }),
     settings: { payouts: { schedule: { interval: 'daily' } } },
     metadata: { user_id: user.id },
   })
@@ -41,7 +48,8 @@ export async function createConnectAccount(user: UserRow, country: string, tos: 
 
 export async function connectStatus(user: UserRow): Promise<ConnectStatus> {
   const publishableKey = (await setting('STRIPE_PUBLISHABLE_KEY')) ?? null
-  const empty: ConnectStatus = { status: 'not_connected', country: null, currency: null, publishableKey, due: [], pastDue: [], pending: [], errors: [], disabledReason: null, bank: null }
+  const mode = await payoutMode()
+  const empty: ConnectStatus = { mode, status: 'not_connected', country: null, currency: null, publishableKey, due: [], pastDue: [], pending: [], errors: [], disabledReason: null, bank: null }
   if (!user.stripe_account_id) return empty
   const s = await stripe()
   const a = await s.accounts.retrieve(user.stripe_account_id, { expand: ['external_accounts'] })
@@ -54,6 +62,7 @@ export async function connectStatus(user: UserRow): Promise<ConnectStatus> {
   const r = a.requirements
   const bank = (a.external_accounts?.data ?? []).find((x): x is Stripe.BankAccount => x.object === 'bank_account')
   return {
+    mode,
     status: ready ? 'ready' : 'incomplete',
     country: a.country ?? null,
     currency: a.default_currency ?? null,

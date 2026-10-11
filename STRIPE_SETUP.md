@@ -28,6 +28,12 @@ one-time steps that need your accounts. Do them in TEST mode first.
    (Or in a terminal: `npx wrangler d1 migrations apply DB --remote`.)
 4. Worker project > Settings > Variables and secrets: add `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` and `STRIPE_CONNECT_WEBHOOK_SECRET` as **Secrets**.
 
+## 2a. Which payout screens clippers get (`PAYOUT_SETUP`)
+The Payouts page can show two different setups, switched by one Cloudflare variable, no code change:
+- **Stripe's own forms inside logoless (default).** Stripe collects identity and bank details in its embedded onboarding and shows balances, payouts and account details in its embedded components, themed to match the site. Needs `STRIPE_PUBLISHABLE_KEY`. Accounts are created so that Stripe collects the details.
+- **logoless's own forms.** Set `PAYOUT_SETUP` to `custom`. logoless collects and sends the details itself (section 2b). Accounts are created so that logoless collects the details.
+An account is created for one mode and cannot be switched: after changing `PAYOUT_SETUP`, test accounts made under the old mode need deleting in Stripe (Workbench > Overview > Review test data) and re-creating.
+
 ## 2b. Payout setup on our own site (no Stripe screens)
 Clippers set up payouts in logoless's own forms. Nothing is embedded and nobody is sent to stripe.com: logoless sends the details to Stripe by API and Stripe does the identity checks and holds the data. Bank numbers are swapped for a one-time token in the browser, so logoless never sees them; ID photos pass through to Stripe and are not stored.
 1. Stripe > Developers > API keys > copy the **Publishable key** (`pk_test_...`). It is meant to be public.

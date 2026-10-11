@@ -6,7 +6,8 @@ import { ActionButton, Card } from '@/components/app/ui'
 import { useNavUser } from '@/components/shell/nav-user'
 import { Field, Input, Select } from '@/components/ui/fields'
 import { COUNTRIES, type ConnectStatus, countryOf, requirementLabel, type Section, sectionOf, TEST_BANKS, TEST_DETAILS } from '@/lib/connect-fields'
-import { createPayoutAccount, savePayoutBank, savePayoutDetails, tokenizeBank, uploadIdPhoto } from '@/lib/stripe-client'
+import { ConnectOnboarding } from '@/components/app/connect-embed'
+import { createPayoutAccount, getConnect, savePayoutBank, savePayoutDetails, tokenizeBank, uploadIdPhoto } from '@/lib/stripe-client'
 import { cn } from '@/lib/utils'
 
 const msg = (e: unknown, fallback = 'Something went wrong. Please try again.') => (e instanceof Error ? e.message : fallback)
@@ -18,6 +19,8 @@ const msg = (e: unknown, fallback = 'Something went wrong. Please try again.') =
  */
 export function PayoutSetup({ status, onChange }: { status: ConnectStatus; onChange: (s: ConnectStatus) => void }) {
   if (status.status === 'not_connected') return <Start status={status} onChange={onChange} />
+  // Stripe's own forms, shown inside logoless.
+  if (status.mode === 'embedded') return <EmbeddedSetup onDone={() => getConnect().then(onChange).catch(() => null)} />
 
   const needed = new Set<Section>([...status.due, ...status.pastDue].map(sectionOf))
   const pending = status.pending.length > 0
@@ -54,6 +57,17 @@ export function PayoutSetup({ status, onChange }: { status: ConnectStatus; onCha
       {status.disabledReason?.startsWith('rejected') && <p className="rounded-2xl border border-signal/40 px-4 py-3 text-sm text-signal">Payouts could not be switched on for this account. Contact support.</p>}
     </div>
   )
+}
+
+function EmbeddedSetup({ onDone }: { onDone: () => void }) {
+  const [failed, setFailed] = useState(false)
+  if (failed)
+    return (
+      <p role="alert" className="rounded-2xl border border-signal/40 px-4 py-3 text-sm text-signal">
+        Stripe&apos;s form could not load. Refresh the page to try again. If it keeps failing, contact support.
+      </p>
+    )
+  return <ConnectOnboarding onDone={onDone} onUnavailable={() => setFailed(true)} />
 }
 
 function Step({ n, title, done, open, errors, still, children }: { n: number; title: string; done: boolean; open: boolean; errors: string[]; still?: string[]; children: React.ReactNode }) {
