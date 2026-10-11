@@ -39,7 +39,6 @@ export function DoneStep({ data, onFinish }: StepProps) {
         ['Account created', data.accountCreated],
         ['Brand profile', data.company.trim().length > 1],
         ['Goals and budget', data.goals.length > 0],
-        ['Balance funded', data.stripeConnected],
       ]
     : [
         ['Account created', data.accountCreated],
