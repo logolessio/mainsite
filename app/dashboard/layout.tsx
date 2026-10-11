@@ -6,6 +6,7 @@ import { requireSession } from '@/lib/session'
 export default async function Layout({ children }: { children: React.ReactNode }) {
   await requireSession()
   const saved = await featureOn('saved-campaigns')
+  const recap = await featureOn('recap')
   return (
     <AppFrame
       area="Clipper"
@@ -17,6 +18,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
         { label: 'Payouts', href: '/dashboard/payouts', icon: 'Landmark' },
         { label: 'Profile', href: '/dashboard/profile', icon: 'UserCheck' },
         { label: 'Achievements', href: '/dashboard/achievements', icon: 'Trophy' },
+        ...(recap ? [{ label: 'Your recap', href: '/dashboard/recap', icon: 'Sparkles' as const }] : []),
         { label: 'Notifications', href: '/dashboard/notifications', icon: 'Bell' },
         ...(saved ? [{ label: 'Saved', href: '/dashboard/saved', icon: 'Heart' as const }] : []),
         { label: 'Linked accounts', href: '/dashboard/accounts', icon: 'Link2' },

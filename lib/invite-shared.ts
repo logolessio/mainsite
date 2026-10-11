@@ -10,7 +10,7 @@ export const RESERVED_SLUGS = new Set([
   'terms', 'privacy', 'settings', 'account', 'billing', 'pay', 'app', 'www', 'mail', 'email', 'dev', 'test', 'blog', 'news', 'press', 'jobs', 'status',
   'security', 'invite', 'invites', 'join', 'start', 'artist', 'artists', 'clipper', 'clippers', 'profile', 'profiles', 'search', 'home', 'index', 'null',
   'undefined', 'official', 'team', 'discord', 'stripe', 'webhook', 'webhooks', 'auth', 'oauth', 'callback',
-  'leaderboard', 'reels', 'recap', 'compare', 'saved', 'health', 'manifest', 'explore', 'discover', 'trending', 'rankings', 'wrapped', 'spotlight', 'notifications', 'achievements',
+  'leaderboard', 'reels', 'recap', 'earn-demo', 'compare', 'saved', 'health', 'manifest', 'explore', 'discover', 'trending', 'rankings', 'wrapped', 'spotlight', 'notifications', 'achievements',
 ])
 
 export const slugFromName = (name: string) =>
