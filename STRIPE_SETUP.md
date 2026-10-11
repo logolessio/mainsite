@@ -28,6 +28,13 @@ one-time steps that need your accounts. Do them in TEST mode first.
    (Or in a terminal: `npx wrangler d1 migrations apply DB --remote`.)
 4. Worker project > Settings > Variables and secrets: add `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` and `STRIPE_CONNECT_WEBHOOK_SECRET` as **Secrets**.
 
+## 2b. Setup form on our own site (embedded onboarding)
+Clippers fill in their ID and bank details in a form shown inside logoless, styled to match the site, instead of being sent to stripe.com.
+1. Stripe > Developers > API keys > copy the **Publishable key** (`pk_test_...`). It is meant to be public.
+2. Cloudflare > Worker > Variables and secrets: add `STRIPE_PUBLISHABLE_KEY` (a normal variable is fine).
+3. Without that variable the Payouts page quietly falls back to Stripe's own hosted page, so nothing breaks.
+The look is set in `components/app/connect-onboarding.tsx` (the `appearance` block).
+
 ## 3. Going live
 Repeat steps 1.4 to 1.5 and 2.4 with your **live** keys only after test mode works end to end,
 and only after a lawyer or accountant has looked at how you hold and move funds.

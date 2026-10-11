@@ -3,6 +3,7 @@
 import { ExternalLink, Landmark, Loader2, ShieldCheck } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Input } from '@/components/ui/fields'
+import { ConnectOnboarding } from '@/components/app/connect-onboarding'
 import { cents, type Finance, getConnectStatus, getFinance, openStripeDashboard, startConnect, withdraw } from '@/lib/stripe-client'
 import { SITE } from '@/lib/site'
 import { Badge, DataTable, EmptyState } from './table'
@@ -15,6 +16,7 @@ export function PayoutsPanel() {
   const [fin, setFin] = useState<Finance | null>(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [embedded, setEmbedded] = useState(false)
   const [busy, setBusy] = useState<'connect' | 'withdraw' | 'dash' | null>(null)
   const [amount, setAmount] = useState('')
 
@@ -43,15 +45,25 @@ export function PayoutsPanel() {
   const available = fin?.balances.available ?? 0
   const minCents = SITE.minPayoutUsd * 100
 
-  const connect = async () => {
-    setBusy('connect')
+  // Opens the setup form inside logoless. If that is not available, falls back to Stripe's own page.
+  const connect = () => {
     setError('')
+    setEmbedded(true)
+  }
+  const hosted = async () => {
+    setEmbedded(false)
+    setBusy('connect')
     try {
       await startConnect('/dashboard/payouts')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not open Stripe.')
       setBusy(null)
     }
+  }
+  const finished = async () => {
+    setEmbedded(false)
+    await getConnectStatus().catch(() => null)
+    await load()
   }
   const dash = async () => {
     setBusy('dash')
@@ -135,6 +147,8 @@ export function PayoutsPanel() {
           )}
         </div>
       </Card>
+
+      {embedded && <ConnectOnboarding onDone={finished} onUnavailable={hosted} />}
 
       <Card title="Withdraw">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
