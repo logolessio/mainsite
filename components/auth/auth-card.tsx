@@ -31,7 +31,13 @@ export function AuthCard({ mode }: { mode: Mode }) {
   const [role, setRole] = useState<Role>(params.get('role') === 'brand' ? 'brand' : 'clipper')
   const [busy, setBusy] = useState(false)
   const [show, setShow] = useState(false)
-  const [error, setError] = useState(params.get('error') ? 'Sign-in did not complete. Please try again.' : '')
+  const [error, setError] = useState(
+    params.get('error') === 'AccessDenied'
+      ? 'That account’s email is not verified. Verify it with Discord or Google, then try again.'
+      : params.get('error')
+        ? 'Sign-in did not complete. Please try again.'
+        : '',
+  )
   const [sent, setSent] = useState(false)
 
   const run = async (fn: () => Promise<string | void>) => {

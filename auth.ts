@@ -33,6 +33,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: 'jwt', maxAge: 14 * 24 * 60 * 60 },
   useSecureCookies: process.env.NODE_ENV === 'production',
   callbacks: {
+    // Accounts are matched by email, so only a provider-verified email may sign in. Otherwise someone could make a
+    // Discord account with a stranger's email address (unverified) and walk into that stranger's account.
+    signIn({ account, profile }) {
+      if (account?.provider === 'discord') return (profile as { verified?: boolean } | undefined)?.verified === true
+      if (account?.provider === 'google') return (profile as { email_verified?: boolean } | undefined)?.email_verified === true
+      return true
+    },
     // TODO(backend): look the user up in your database here and put their real role (clipper, brand, admin) in the token.
     jwt({ token }) {
       token.role = admins.includes((token.email ?? '').toLowerCase()) ? 'admin' : 'user'
