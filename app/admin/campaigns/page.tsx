@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { AdminButton } from '@/components/admin/ui'
 import { money, when } from '@/lib/format'
 import { CampaignEditor } from '@/components/admin/campaign-editor'
+import { RemoveSamples } from '@/components/admin/remove-samples'
 import { Badge } from '@/components/app/table'
 import { Card, PageHeader } from '@/components/app/ui'
 import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
@@ -41,7 +42,7 @@ export default async function Page() {
 
   return (
     <>
-      <PageHeader title="Campaigns" sub="Accept a request, wait for the artist to pay, then launch. Nothing goes live until it is paid." />
+      <PageHeader title="Campaigns" sub="Accept a request, wait for the artist to pay, then launch. Nothing goes live until it is paid." actions={<RemoveSamples count={rows.filter((r) => r.admin_note === 'sample').length} />} />
       {groups.length === 0 && <p className="text-mute">No campaigns yet.</p>}
       <div className="grid gap-8">
         {groups.map((g) => (
