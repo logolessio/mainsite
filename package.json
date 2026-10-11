@@ -10,7 +10,8 @@
     "preview": "next build && next start",
     "cf:build": "opennextjs-cloudflare build && node scripts/patch-open-next.mjs",
     "cf:preview": "pnpm run cf:build && opennextjs-cloudflare preview",
-    "cf:deploy": "pnpm run cf:build && opennextjs-cloudflare deploy"
+    "cf:deploy": "pnpm run cf:build && opennextjs-cloudflare deploy",
+    "cf:deploy:dev": "opennextjs-cloudflare build --env dev && node scripts/patch-open-next.mjs && opennextjs-cloudflare deploy --env dev"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

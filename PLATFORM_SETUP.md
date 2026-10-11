@@ -85,3 +85,13 @@ How passwords are kept safe: they are salted and run through PBKDF2 (100,000 rou
 Heads up: hashing a password takes real computing time. Cloudflare's free Workers plan gives each request only about 10 milliseconds of computing, which a password check can exceed. If logins fail with an error, upgrade to Workers Paid ($5 a month), which also fixes the free daily database limit.
 
 Resend's free plan allows 100 emails a day and 3,000 a month. Past that, upgrade it.
+
+## The test site (dev.logoless.io)
+
+A full second copy of logoless for trying things before members see them. It is a separate Worker (`mainsite-dev`) with its own database (`logoless-dev`) and its own secrets, so nothing done there touches real accounts, clips or money. It tells search engines to stay away.
+
+- **Update it:** `pnpm cf:deploy:dev` builds the current code and deploys it to dev.logoless.io. It does not touch the real site.
+- **Its database:** apply new migrations to it with `npx wrangler d1 migrations apply DB --env dev --remote` (the real one stays `npx wrangler d1 migrations apply DB --remote`).
+- **Its secrets:** Cloudflare > Workers & Pages > `mainsite-dev` > Settings > Variables and Secrets. `AUTH_SECRET` and `PASSWORD_PEPPER` are already set (different from the real site, on purpose). Add the rest as needed: `ADMIN_EMAILS`, `RESEND_API_KEY` (so sign-up codes can be emailed), `AUTH_GOOGLE_ID/SECRET`, `AUTH_DISCORD_ID/SECRET`, Stripe **test** keys. Never put live Stripe keys here.
+- **Social sign-in:** add `https://dev.logoless.io/api/auth/callback/google` and `.../discord` to the redirect list of each OAuth app.
+- **Lock it:** Cloudflare Zero Trust > Access > Applications > Self-hosted, domain `dev.logoless.io`, allow only your email. Then only you can open it.
