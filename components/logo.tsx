@@ -6,10 +6,10 @@ export function Logo({ className }: { className?: string }) {
     <img
       src="/logo-sm.png"
       alt="logoless"
-      width={460}
-      height={246}
+      width={640}
+      height={202}
       decoding="async"
-      className={cn('block h-9 w-auto md:h-11', className)}
+      className={cn('block h-7 w-auto md:h-9', className)}
     />
   )
 }

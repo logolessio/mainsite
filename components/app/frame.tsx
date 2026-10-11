@@ -75,7 +75,7 @@ export function AppFrame({
     <div className="relative z-10 min-h-dvh lg:grid lg:grid-cols-[264px_1fr]">
       <aside className="sticky top-0 hidden h-dvh flex-col gap-6 border-r border-line bg-ink p-5 lg:flex">
         <TransitionLink href="/" aria-label="logoless home">
-          <Logo className="h-12" />
+          <Logo className="h-9" />
         </TransitionLink>
         <p className="-mb-2 px-3 text-xs font-medium tracking-wide text-mute uppercase">{area}</p>
         {nav}
@@ -84,7 +84,7 @@ export function AppFrame({
 
       <div className="flex h-16 items-center justify-between border-b border-line bg-ink px-5 lg:hidden">
         <TransitionLink href="/" aria-label="logoless home">
-          <Logo className="h-10" />
+          <Logo className="h-8" />
         </TransitionLink>
         <button
           type="button"
