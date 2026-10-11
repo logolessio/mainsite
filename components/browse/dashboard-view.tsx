@@ -1,13 +1,15 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Compass } from 'lucide-react'
+import { Compass, Smartphone } from 'lucide-react'
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { TOUR_EVENT } from '@/components/shell/site-nav'
 import type { Campaign, Platform } from '@/lib/campaigns'
 import { Layer, Tilt3D } from '@/components/motion/tilt'
 import { Words } from '@/components/motion/words'
 import { useCopy } from '@/components/shell/copy-provider'
+import { Feature } from '@/components/shell/features-provider'
+import { TransitionLink } from '@/components/shell/transition-link'
 import { HERO_VARIANTS_DEFAULT, HERO_VARIANTS_KEY } from '@/lib/copy-key'
 import { EASE_OUT } from '@/lib/layout'
 import { CampaignGrid } from './campaign-grid'
@@ -115,17 +117,27 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
             </motion.div>
           )}
         </Tilt3D>
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          type="button"
-          onClick={() => setTourOpen(true)}
-          className="glass-liquid mt-10 inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm transition-all hover:brightness-125"
-        >
-          <Compass aria-hidden="true" className="size-4" />
-          Take the tour
-        </motion.button>
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+            type="button"
+            onClick={() => setTourOpen(true)}
+            className="glass-liquid inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm transition-all hover:brightness-125"
+          >
+            <Compass aria-hidden="true" className="size-4" />
+            Take the tour
+          </motion.button>
+          <Feature id="reels">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }}>
+              <TransitionLink href="/reels" className="glass-liquid inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm transition-all hover:brightness-125">
+                <Smartphone aria-hidden="true" className="size-4" />
+                Swipe through campaigns
+              </TransitionLink>
+            </motion.div>
+          </Feature>
+        </div>
       </section>
 
       <motion.div
