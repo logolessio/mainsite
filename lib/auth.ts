@@ -22,20 +22,40 @@ export async function signInWithProvider(provider: Provider, role?: Role, callba
   return ''
 }
 
-export async function signInWithEmail(_email: string, _password: string): Promise<string> {
-  // TODO(backend): verify credentials
-  return '/dashboard'
+async function post(path: string, data: unknown, fallback: string) {
+  const res = await fetch(path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) })
+  if (!res.ok) throw new Error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? fallback)
 }
 
-export async function signUpWithEmail(input: { email: string; password: string; name: string; role: Role }): Promise<string> {
-  // TODO(backend): create user, send verification email
-  return `/verify-email?email=${encodeURIComponent(input.email)}&role=${input.role}`
+/** Step one of signing up: checks the password and emails a six-digit code to the address. */
+export async function signUpWithEmail(input: { email: string; password: string; name?: string }): Promise<void> {
+  await ensureHuman()
+  await post('/api/auth/signup', input, 'We could not start your sign-up. Please try again.')
 }
 
-export async function requestPasswordReset(_email: string): Promise<void> {
-  // TODO(backend): send reset email
+/** Sends the sign-up code again. */
+export async function resendSignupCode(email: string): Promise<void> {
+  await post('/api/auth/signup/resend', { email }, 'We could not send the code. Please try again.')
 }
 
-export async function resetPassword(_token: string, _password: string): Promise<void> {
-  // TODO(backend): set new password
+/** Step two: the emailed code creates the account and signs the person in. */
+export async function confirmSignup(email: string, code: string): Promise<void> {
+  const r = await signIn('email-code', { email, code, redirect: false })
+  if (!r || r.error || r.ok === false) throw new Error('That code is not right, or it has expired. Check the 6 digits or ask for a new one.')
+}
+
+export async function signInWithEmail(email: string, password: string): Promise<void> {
+  const r = await signIn('password', { email, password, redirect: false })
+  if (!r || r.error || r.ok === false) throw new Error('That email and password do not match. If you signed up with Google or Discord, use that button instead.')
+}
+
+/** Emails a reset code. The answer is the same for every address, so it reveals nothing. */
+export async function requestPasswordReset(email: string): Promise<void> {
+  await ensureHuman()
+  await post('/api/auth/password/forgot', { email }, 'We could not send the code. Please try again.')
+}
+
+/** Sets a new password using the emailed code. */
+export async function resetPassword(email: string, code: string, password: string): Promise<void> {
+  await post('/api/auth/password/reset', { email, code, password }, 'We could not reset your password. Please try again.')
 }

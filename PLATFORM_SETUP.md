@@ -24,6 +24,7 @@ Everything below is a one-off. Nothing here is pushed to GitHub: keys live in Cl
 | `STRIPE_SECRET_KEY` | start with a **test** key (`sk_test_...`) |
 | `STRIPE_WEBHOOK_SECRET` | from the Stripe webhook endpoint (`whsec_...`) |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile widget (step 3) |
+| `RESEND_API_KEY` | Switches on sign-in by emailed code (see "Email sign-in" below) |
 | `DISCORD_BOT_TOKEN` | Optional. Switches on "Import from Discord" on profiles (see below) |
 
 You can check which are set, and test them, at `/admin/keys`. Secret values are never shown there.
@@ -67,3 +68,20 @@ Discord only lets a bot read someone's picture, banner, colour and name from the
 Every request, page view, sign-in, security event and money movement is written to the database and shown at `/admin/logs`, where you can filter it and download it as CSV or JSON. Two plumbing calls that fire on every page (`/api/me/nav` and `/api/security/config`) are left out when they succeed. Visitors are stored as a salted hash, never a raw address.
 
 Cloudflare's free D1 plan allows 100,000 row writes a day across everything, and the log uses some of them on every page. If the site gets busy, upgrade to the Workers Paid plan ($5 a month), and use "Delete activity log rows older than..." on the Logs page now and then.
+
+## Email sign-up with a password (Resend)
+
+People can sign up with an email and a password. We email a six-digit code (valid 10 minutes) to prove the address is real, and nothing is created until they type it in. After that they log in with email and password. "Forgot your password?" emails a reset code the same way. Google and Discord keep working.
+
+1. In Resend, make sure the domain `verify.logoless.io` shows **Verified** (Domains page). If not, add the DNS records it lists in Cloudflare (DNS) and press Verify.
+2. Resend > **API Keys** > Create API Key. Permission **Sending access**, domain `verify.logoless.io`.
+3. Add it in Cloudflare as a **Secret** called `RESEND_API_KEY`.
+4. Optional: add a plain variable `RESEND_FROM` to change the sender. The default is `logoless <login@verify.logoless.io>`.
+5. Optional but wise: add a secret `PASSWORD_PEPPER` (a long random string). It is mixed into every password before hashing. **Never change it afterwards**, or every password stops matching. If you skip it, `AUTH_SECRET` is used, so then never change that either.
+6. Open `/admin/email` in the admin area. It sends a test of every email we send (sign-up code, password reset, already-a-member, plain), runs a full code round trip to your inbox, and lists recent sends with a "Check delivery" button. `/admin/keys` also has an **Email (Resend)** test for the key and domain.
+
+How passwords are kept safe: they are salted and run through PBKDF2 (100,000 rounds, the most Cloudflare allows) with the pepper, and only that result is stored. New passwords must be 10+ characters, not common, not contain the email name, and not appear in a known data breach (checked with Have I Been Pwned without sending the password: only the first 5 characters of its fingerprint leave). Logins are limited to 10 tries per address every 15 minutes and 20 per network.
+
+Heads up: hashing a password takes real computing time. Cloudflare's free Workers plan gives each request only about 10 milliseconds of computing, which a password check can exceed. If logins fail with an error, upgrade to Workers Paid ($5 a month), which also fixes the free daily database limit.
+
+Resend's free plan allows 100 emails a day and 3,000 a month. Past that, upgrade it.

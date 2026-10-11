@@ -57,16 +57,16 @@ export function AccountStep({ data, update, next }: StepProps) {
     const f = new FormData(e.currentTarget)
     const address = String(f.get('email')).trim()
     const password = String(f.get('password'))
-    if (password.length < 8) return setError('Use at least 8 characters for your password.')
+    if (password.length < 10) return setError('Use at least 10 characters for your password.')
     setBusy('email')
     setError('')
     try {
-      await signUpWithEmail({ email: address, password, name: '', role: data.role })
+      await signUpWithEmail({ email: address, password, name: '' })
       update({ email: address, method: 'email' })
       setPhase('verify')
       setCooldown(30)
-    } catch {
-      setError('Could not create your account. Please try again.')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not send the code. Please try again.')
     } finally {
       setBusy(null)
     }
@@ -134,15 +134,10 @@ export function AccountStep({ data, update, next }: StepProps) {
               <Field label="Email">
                 <Input required type="email" name="email" autoComplete="email" placeholder="you@example.com" defaultValue={data.email} />
               </Field>
-              <Field label="Password" hint="At least 8 characters.">
+              <Field label="Password" hint="At least 10 characters. We check it has not been in a data breach.">
                 <span className="relative block">
-                  <Input required name="password" type={showPw ? 'text' : 'password'} autoComplete="new-password" minLength={8} className="pr-12" />
-                  <button
-                    type="button"
-                    aria-label={showPw ? 'Hide password' : 'Show password'}
-                    onClick={() => setShowPw((v) => !v)}
-                    className="absolute inset-y-0 right-0 grid w-12 place-items-center text-mute hover:text-paper"
-                  >
+                  <Input required name="password" type={showPw ? 'text' : 'password'} autoComplete="new-password" minLength={10} className="pr-12" />
+                  <button type="button" aria-label={showPw ? 'Hide password' : 'Show password'} onClick={() => setShowPw((v) => !v)} className="absolute inset-y-0 right-0 grid w-12 place-items-center text-mute hover:text-paper">
                     {showPw ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
                 </span>
@@ -219,8 +214,13 @@ export function AccountStep({ data, update, next }: StepProps) {
               type="button"
               disabled={cooldown > 0}
               onClick={async () => {
-                await resendEmailCode(data.email)
-                setCooldown(30)
+                setError('')
+                try {
+                  await resendEmailCode(data.email)
+                  setCooldown(30)
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : 'Could not send the code.')
+                }
               }}
               className="mt-5 text-xs text-mute underline underline-offset-4 hover:text-paper disabled:no-underline disabled:opacity-60"
             >

@@ -8,7 +8,7 @@ import { stripe } from '@/lib/stripe'
 import { requireAdmin } from '@/lib/user'
 import { stripeBalance } from '@/lib/admin-stats'
 
-const schema = z.object({ check: z.enum(['stripe', 'webhook', 'database', 'ledger', 'chains', 'captcha', 'auth', 'connect']) })
+const schema = z.object({ check: z.enum(['stripe', 'webhook', 'database', 'ledger', 'chains', 'captcha', 'auth', 'connect', 'email']) })
 
 type Result = { ok: boolean; title: string; lines: string[] }
 
@@ -104,6 +104,30 @@ export const POST = route(async (req: Request) => {
       const codes = j['error-codes'] ?? []
       out.ok = !codes.includes('invalid-input-secret')
       out.lines = [out.ok ? 'The secret key is accepted by Cloudflare.' : 'Cloudflare says the secret key is wrong.', 'Both keys are set. Sign-in asks for the check.']
+      break
+    }
+    case 'email': {
+      out.title = 'Email (Resend)'
+      const key = await setting('RESEND_API_KEY')
+      if (!key) return json({ ...out, ok: false, lines: ['RESEND_API_KEY is not set, so email sign-up and password reset are switched off.'] })
+      const from = (await setting('RESEND_FROM')) ?? 'logoless <login@verify.logoless.io>'
+      const domain = (/@([^>\s]+)/.exec(from)?.[1] ?? '').toLowerCase()
+      const res = await fetch('https://api.resend.com/domains', { headers: { authorization: `Bearer ${key}` } })
+      if (res.status === 401 || res.status === 403) {
+        const j = (await res.json().catch(() => ({}))) as { name?: string }
+        // A key limited to "Sending access" can send but is not allowed to read domain settings. That is fine.
+        if (j.name === 'restricted_api_key') return json({ ...out, ok: true, lines: ['The key is valid and can send email.', 'It is limited to sending, so it cannot read the domain status. Open the Email page and send a test to prove delivery.', `Emails are sent from: ${from}`] })
+        return json({ ...out, ok: false, lines: ['Resend refused the key. Create a new one in Resend > API Keys, with permission to send.'] })
+      }
+      if (!res.ok) return json({ ...out, ok: false, lines: [`Resend answered ${res.status}.`] })
+      const list = ((await res.json().catch(() => ({}))) as { data?: { name: string; status: string }[] }).data ?? []
+      const d = list.find((x) => x.name.toLowerCase() === domain)
+      out.ok = d?.status === 'verified'
+      out.lines = [
+        'The key works.',
+        d ? `${d.name} is ${d.status}.${d.status === 'verified' ? '' : ' Add the DNS records Resend shows, then press Verify in Resend.'}` : `${domain} is not in this Resend account. Add it under Domains.`,
+        `Emails are sent from: ${from}`,
+      ]
       break
     }
     case 'auth': {

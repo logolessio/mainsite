@@ -58,7 +58,12 @@ const nextConfig = {
     return [{ source: '/@:handle', destination: '/u/:handle' }]
   },
   async redirects() {
-    return [{ source: '/campaigns', destination: '/', permanent: true }]
+    // Old placeholder pages now live inside the login and forgot-password pages.
+    return [
+      { source: '/campaigns', destination: '/', permanent: true },
+      { source: '/reset-password', destination: '/forgot-password', permanent: true },
+      { source: '/verify-email', destination: '/login', permanent: true },
+    ]
   },
   typescript: {
     ignoreBuildErrors: false,
