@@ -21,23 +21,5 @@
       "binding": "WORKER_SELF_REFERENCE",
       "service": "mainsite"
     }
-  ],
-  // The test copy of the site at dev.logoless.io. It has its own worker, its own database and its own secrets,
-  // so nothing done there can touch real members or real money. Deploy it with: pnpm cf:deploy:dev
-  "env": {
-    "dev": {
-      "name": "mainsite-dev",
-      "vars": { "SITE_ENV": "dev" },
-      "routes": [{ "pattern": "dev.logoless.io", "custom_domain": true }],
-      "d1_databases": [
-        {
-          "binding": "DB",
-          "database_name": "logoless-dev",
-          "database_id": "66a9ca3b-7eea-4679-8f65-1765ca052776",
-          "migrations_dir": "migrations"
-        }
-      ],
-      "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "mainsite-dev" }]
-    }
-  }
+  ]
 }
