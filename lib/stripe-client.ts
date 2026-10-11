@@ -38,8 +38,4 @@ export async function openBillingPortal() {
   const { url } = await api<{ url: string }>('/api/stripe/portal', { method: 'POST', data: {} })
   go(url)
 }
-export async function openStripeDashboard() {
-  const { url } = await api<{ url: string }>('/api/stripe/connect/dashboard', { method: 'POST', data: {} })
-  window.open(url, '_blank', 'noopener')
-}
 export const withdraw = (amountUsd?: number) => api<{ ok: true; amount: number }>('/api/payouts/withdraw', { method: 'POST', data: amountUsd ? { amount: amountUsd } : {} })

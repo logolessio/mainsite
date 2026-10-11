@@ -30,7 +30,9 @@ export async function isTestMode() {
 export async function ensureConnectAccount(s: Stripe, user: { id: string; email: string; stripe_account_id: string | null }) {
   if (user.stripe_account_id) return user.stripe_account_id
   const a = await s.accounts.create({
-    type: 'express',
+    // No Stripe-hosted dashboard: clippers manage everything inside logoless. Because of that, logoless is the one
+    // Stripe bills for the account's fees and covers any losses, and Stripe still collects and checks identity details.
+    controller: { stripe_dashboard: { type: 'none' }, fees: { payer: 'application' }, losses: { payments: 'application' }, requirement_collection: 'stripe' },
     email: user.email,
     capabilities: { transfers: { requested: true } },
     business_type: 'individual',

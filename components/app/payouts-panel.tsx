@@ -1,10 +1,10 @@
 'use client'
 
-import { ExternalLink, Landmark, Loader2, ShieldCheck } from 'lucide-react'
+import { Landmark, Loader2, ShieldCheck } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Input } from '@/components/ui/fields'
-import { ConnectOnboarding } from '@/components/app/connect-onboarding'
-import { cents, type Finance, getConnectStatus, getFinance, openStripeDashboard, startConnect, withdraw } from '@/lib/stripe-client'
+import { ConnectManage, ConnectOnboarding } from '@/components/app/connect-embed'
+import { cents, type Finance, getConnectStatus, getFinance, startConnect, withdraw } from '@/lib/stripe-client'
 import { SITE } from '@/lib/site'
 import { Badge, DataTable, EmptyState } from './table'
 import { ActionButton, Card, StatCard } from './ui'
@@ -17,7 +17,7 @@ export function PayoutsPanel() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [embedded, setEmbedded] = useState(false)
-  const [busy, setBusy] = useState<'connect' | 'withdraw' | 'dash' | null>(null)
+  const [busy, setBusy] = useState<'connect' | 'withdraw' | null>(null)
   const [amount, setAmount] = useState('')
 
   const load = useCallback(async () => {
@@ -64,16 +64,6 @@ export function PayoutsPanel() {
     setEmbedded(false)
     await getConnectStatus().catch(() => null)
     await load()
-  }
-  const dash = async () => {
-    setBusy('dash')
-    setError('')
-    try {
-      await openStripeDashboard()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not open Stripe.')
-    }
-    setBusy(null)
   }
   const doWithdraw = async () => {
     setBusy('withdraw')
@@ -134,12 +124,7 @@ export function PayoutsPanel() {
               </p>
             </div>
           </div>
-          {state === 'ready' ? (
-            <ActionButton variant="ghost" onClick={dash} disabled={busy !== null} className="shrink-0">
-              {busy === 'dash' ? <Loader2 aria-hidden="true" className="size-4 animate-spin" /> : <ExternalLink aria-hidden="true" className="size-4" />}
-              Open Stripe
-            </ActionButton>
-          ) : (
+          {state === 'ready' ? null : (
             <ActionButton onClick={connect} disabled={busy !== null} className="shrink-0">
               {busy === 'connect' && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
               {state === 'incomplete' ? 'Finish setup' : 'Connect with Stripe'}
@@ -149,6 +134,7 @@ export function PayoutsPanel() {
       </Card>
 
       {embedded && <ConnectOnboarding onDone={finished} onUnavailable={hosted} />}
+      {state !== 'not_connected' && !embedded && <ConnectManage />}
 
       <Card title="Withdraw">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">

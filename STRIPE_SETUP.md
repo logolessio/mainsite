@@ -6,7 +6,7 @@ one-time steps that need your accounts. Do them in TEST mode first.
 ## 1. Stripe dashboard (test mode)
 1. Create/open your Stripe account and switch on **Test mode**.
 2. **Connect**: Settings > Connect > turn it on, choose "Platform or marketplace", fill in the platform profile.
-   Clippers are Express accounts, so Stripe collects their ID, bank and tax details.
+   In the Connect setup wizard choose: buyers purchase from you, payouts split between sellers, embedded onboarding components, embedded account components. Clippers get Stripe accounts with no Stripe-hosted dashboard: Stripe still collects their ID, bank and tax details, but the forms and dashboard are shown inside logoless. (Stripe charges the platform a small monthly fee per active clipper account plus a fee per payout; check Stripe's Connect pricing for your country.)
 3. **Customer portal**: Settings > Billing > Customer portal > Activate (lets brands manage cards and receipts).
 4. **API key**: Developers > API keys > copy the **Secret key** (`sk_test_...`).
 5. **Webhook**: Developers > Webhooks > Add endpoint
