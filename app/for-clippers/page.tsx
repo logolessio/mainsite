@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 
 import { CtaBand, FeatureGrid, SectionTitle } from '@/components/marketing/blocks'
+import { HorizontalStory, Principles, SplitBeat, StatRow, Ticker } from '@/components/marketing/layouts'
+import { SITE } from '@/lib/site'
 import { PageHero, Section } from '@/components/marketing/page-hero'
 import { PillLink } from '@/components/motion/cta'
 import { Reveal } from '@/components/motion/reveal'
-import { StickyStory } from '@/components/motion/sticky-story'
 
 export const metadata: Metadata = {
   title: 'For clippers — logoless',
@@ -39,19 +40,39 @@ export default function Page() {
         />
       </Section>
 
-      <Section>
-        <StickyStory
-          eyebrow="Your first clip"
-          title="Zero to paid"
-          steps={[
-            { title: 'Create your account', body: 'Sign in with Discord, Google or email. It takes less than a minute.' },
-            { title: 'Link where you post', body: 'Connect the accounts you will publish from so we can read view counts on your clips.' },
-            { title: 'Join a campaign and post', body: 'Read the brief, make the clip and paste the link into the campaign page.' },
-            { title: 'Withdraw through Stripe', body: 'Add a payout method once. When your balance passes the minimum, withdraw.' },
-          ]}
-        />
-      </Section>
-
+      <StatRow
+        stats={[
+          { value: '0', label: 'To join', note: 'No fee, no application' },
+          { value: '0', label: 'Follower minimum', note: 'Campaigns pay for views, not audience size' },
+          { value: `$${SITE.minPayoutUsd}`, label: 'Minimum payout', note: 'Withdraw through Stripe' },
+        ]}
+      />
+      <SplitBeat n="01" label="Your account" title="Post on your own channels" list={['Keep your audience', 'Keep your content', 'Link TikTok, YouTube and Instagram once']}>
+        <p>Your clip lives on your account, not ours. We only read the view counts so that you can be paid for them.</p>
+      </SplitBeat>
+      <SplitBeat n="02" label="Your rate" title="Know before you start" flip>
+        <p>The rate per 1,000 views is on every campaign before you join, so you always know what a clip could earn.</p>
+      </SplitBeat>
+      <HorizontalStory
+        eyebrow="Your first clip"
+        title="Zero to paid"
+        steps={[
+          { title: 'Create your account', body: 'Sign in with Discord, Google or email. It takes less than a minute.' },
+          { title: 'Link where you post', body: 'Connect the accounts you will publish from so we can read view counts on your clips.' },
+          { title: 'Join a campaign and post', body: 'Read the brief, make the clip and paste the link into the campaign page.' },
+          { title: 'Withdraw through Stripe', body: 'Add a payout method once. When your balance passes the minimum, withdraw.' },
+        ]}
+      />
+      <Principles
+        eyebrow="Good to know"
+        title="Straight answers"
+        items={[
+          { title: 'What if a clip is rejected?', body: 'You will see the reason on the submission, and you can appeal or resubmit a fixed version when the campaign allows it.' },
+          { title: 'When do views count?', body: 'After your clip is approved against the brief. Views are then re-checked on a schedule, and only verified views are paid.' },
+          { title: 'Which platforms work?', body: 'TikTok, YouTube (Shorts and long-form) and Instagram Reels. Each campaign lists the platforms it accepts.' },
+        ]}
+      />
+      <Ticker words={['Cut it', 'Post it', 'Earn from it']} />
       <Reveal>
         <CtaBand title="Find your first campaign" href="/" label="Browse campaigns" secondaryHref="/onboarding?role=clipper" secondaryLabel="Create account" />
       </Reveal>

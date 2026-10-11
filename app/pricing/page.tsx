@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
-import { CtaBand, SectionTitle, Split } from '@/components/marketing/blocks'
+import { CtaBand } from '@/components/marketing/blocks'
+import { Compare, SplitBeat, Ticker } from '@/components/marketing/layouts'
 import { PageHero, Section } from '@/components/marketing/page-hero'
 import { Reveal } from '@/components/motion/reveal'
 import { SITE } from '@/lib/site'
@@ -44,27 +45,30 @@ export default function Page() {
           </Reveal>
         </div>
       </Section>
-      <Section>
-        <SectionTitle eyebrow="The detail" title="How billing works" />
-        <Split label="Funding">
-          <p><T>Add funds by card or bank transfer through Stripe. Funds are assigned to campaigns as you create them.</T></p>
-        </Split>
-        <Split label="Payouts" flip>
-          <p><T>
-            Clippers are paid from campaign budget as views are verified. The platform fee is taken from the payout
-            amount, so the budget you set is the most you will ever spend on views.
-          </T></p>
-        </Split>
-        <Split label="Refunds">
-          <p>
-            Unspent campaign budget can be refunded to your original payment method. See our{' '}
-            <a href="/legal/refunds" className="text-paper underline underline-offset-4">
-              refund policy
-            </a>
-            .
-          </p>
-        </Split>
-      </Section>
+      <Ticker words={['No subscription', 'No joining fee', 'No minimum term', 'Only verified views']} />
+      <SplitBeat n="01" label="Funding" title="Add funds your way">
+        <p><T>Add funds by card or bank transfer through Stripe. Funds are assigned to campaigns as you create them.</T></p>
+      </SplitBeat>
+      <SplitBeat n="02" label="Payouts" title="The budget is the cap" flip>
+        <p>
+          <T>
+            Clippers are paid from campaign budget as views are verified. The platform fee is taken from the payout amount, so the budget you set is the most you will ever spend on views.
+          </T>
+        </p>
+      </SplitBeat>
+      <SplitBeat n="03" label="Refunds" title="Keep what you do not use">
+        <p>
+          Unspent campaign budget can be refunded to your original payment method. See our{' '}
+          <a href="/legal/refunds" className="text-paper underline underline-offset-4">
+            refund policy
+          </a>
+          .
+        </p>
+      </SplitBeat>
+      <Compare
+        left={{ title: 'Brands', items: ['Pay a platform fee on paid-out views', 'Choose the rate per 1,000 views', 'Change the rate on a live campaign', 'Get unspent budget back'] }}
+        right={{ title: 'Clippers', items: ['Never pay to join or to submit', 'Earn at the campaign rate', `Withdraw from $${SITE.minPayoutUsd}`, 'See every earning and fee itemised'] }}
+      />
       <CtaBand title="Start for free" href="/onboarding" label="Create an account" />
     </main>
   )

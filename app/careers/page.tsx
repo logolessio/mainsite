@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Principles, Ticker } from '@/components/marketing/layouts'
 import { PageHero, Section } from '@/components/marketing/page-hero'
 import { PillLink } from '@/components/motion/cta'
 import { SITE } from '@/lib/site'
@@ -23,6 +24,16 @@ export default function Page() {
           </div>
         </div>
       </Section>
+      <Ticker words={['Small team', 'Plain words', 'Real views']} />
+      <Principles
+        eyebrow="How we work"
+        title="What we care about"
+        items={[
+          { title: 'Real over loud', body: 'We would rather pay for fewer views that are real than more that are not.' },
+          { title: 'Plain language', body: 'Briefs, rules and policies are written so that anyone can follow them.' },
+          { title: 'Fair by default', body: 'Decisions come with reasons, and honest work is never penalised.' },
+        ]}
+      />
     </main>
   )
 }

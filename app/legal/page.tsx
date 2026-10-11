@@ -3,6 +3,7 @@ import { PageHero, Section } from '@/components/marketing/page-hero'
 import { Reveal } from '@/components/motion/reveal'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { LEGAL } from '@/lib/legal'
+import { readMinutes } from '@/lib/legal-read'
 
 export const metadata: Metadata = { title: 'Legal — logoless', description: 'Terms, privacy and policies.' }
 
@@ -20,7 +21,9 @@ export default function Page() {
                     <span className="block font-display text-3xl transition-transform duration-300 group-hover:scale-[1.03] md:text-5xl">{d.title}</span>
                     <span className="mt-1 block text-sm text-mute">{d.summary}</span>
                   </span>
-                  <span className="font-mono text-xs text-mute">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="font-mono text-xs text-mute">
+                    {String(i + 1).padStart(2, '0')} · {readMinutes(d)} min read · {d.sections.length} sections
+                  </span>
                 </TransitionLink>
               </li>
             </Reveal>

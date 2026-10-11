@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
-import { CtaBand, FeatureGrid, SectionTitle, Split } from '@/components/marketing/blocks'
+import { CtaBand, FeatureGrid, SectionTitle } from '@/components/marketing/blocks'
+import { SplitBeat, StatRow, Ticker, Timeline } from '@/components/marketing/layouts'
 import { PageHero, Section } from '@/components/marketing/page-hero'
 import { PillLink } from '@/components/motion/cta'
 import { ScrollText } from '@/components/motion/scroll-text'
@@ -34,6 +35,7 @@ export default function Page() {
         />
       </Section>
 
+      <Ticker words={['Briefs', 'Budgets', 'Clips', 'Verified views']} />
       <Section>
         <SectionTitle eyebrow="What you get" title="Built for control" align="center" />
         <FeatureGrid
@@ -48,30 +50,46 @@ export default function Page() {
         />
       </Section>
 
-      <Section className="py-16 md:py-28">
-        <Split label="Set your own rate">
-          <p><T>
-            You decide what 1,000 verified views are worth for your content. Higher rates attract more clippers faster.
-            You can change the rate on a live campaign.
-          </T></p>
-        </Split>
-        <Split label="Pay on delivery" flip>
-          <p><T>
-            Budget is reserved when a campaign launches and released to clippers only as views are verified. Whatever
-            is left when a campaign ends goes back to your balance.
-          </T></p>
-        </Split>
-        <Split label="Simple fees">
-          <p>
-            No subscription. A {SITE.platformFeePct}% platform fee applies to payouts.{' '}
-            <a href="/pricing" className="text-paper underline underline-offset-4">
-              See pricing
-            </a>
-            .
-          </p>
-        </Split>
-      </Section>
-
+      <StatRow
+        stats={[
+          { value: `${SITE.platformFeePct}%`, label: 'Platform fee', note: 'On paid-out views only' },
+          { value: '3', label: 'Platforms', note: 'TikTok, YouTube and Instagram' },
+          { value: `$${SITE.minTopUpUsd}`, label: 'Minimum top-up', note: 'No contract, no minimum term' },
+        ]}
+      />
+      <SplitBeat n="01" label="Your rate" title="Set your own rate">
+        <p>
+          <T>
+            You decide what 1,000 verified views are worth for your content. Higher rates attract more clippers faster. You can change the rate on a live campaign.
+          </T>
+        </p>
+      </SplitBeat>
+      <SplitBeat n="02" label="Your risk" title="Pay on delivery" flip>
+        <p>
+          <T>
+            Budget is reserved when a campaign launches and released to clippers only as views are verified. Whatever is left when a campaign ends goes back to your balance.
+          </T>
+        </p>
+      </SplitBeat>
+      <SplitBeat n="03" label="Your cost" title="Simple fees">
+        <p>
+          No subscription. A {SITE.platformFeePct}% platform fee applies to payouts.{' '}
+          <a href="/pricing" className="text-paper underline underline-offset-4">
+            See pricing
+          </a>
+          .
+        </p>
+      </SplitBeat>
+      <Timeline
+        eyebrow="Your first campaign"
+        title="Four steps to live"
+        items={[
+          { tag: 'Step 1', title: 'Write the brief', body: 'Say what to clip, which platforms count and what is off limits, in plain language.' },
+          { tag: 'Step 2', title: 'Set rate and budget', body: 'Choose what 1,000 verified views are worth, and how much you want to spend at most.' },
+          { tag: 'Step 3', title: 'Fund and go live', body: 'Add funds through Stripe and launch. Clippers can join straight away.' },
+          { tag: 'Step 4', title: 'Pay for what is real', body: 'Clips are checked, views are verified and only then does money move.' },
+        ]}
+      />
       <CtaBand title="Launch your first campaign" href="/onboarding?role=brand" label="Get started" secondaryHref="/how-it-works" secondaryLabel="How it works" />
     </main>
   )
