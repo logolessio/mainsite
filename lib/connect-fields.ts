@@ -86,3 +86,16 @@ export function requirementLabel(req: string): string {
   ]
   return m.find(([re]) => re.test(req))?.[1] ?? req.replace(/_/g, ' ').replace(/\./g, ' ')
 }
+
+/** Stripe's published sandbox values. Every one passes Stripe's checks, and only works with sandbox (test) keys. */
+export const TEST_DETAILS = {
+  firstName: 'Test', lastName: 'Clipper', day: '1', month: '1', year: '1901',
+  line1: 'address_full_match', line2: '', city: 'San Francisco', state: 'CA', postalCode: '94103', phone: '+1 000 000 0000',
+}
+export const TEST_BANKS: Record<BankKind, { routing?: string; account: string }> = {
+  us: { routing: '110000000', account: '000123456789' },
+  gb: { routing: '108800', account: '00012345' },
+  ca: { routing: '11000-000', account: '000123456789' },
+  au: { routing: '110000', account: '000123456' },
+  iban: { account: 'DE89370400440532013000' },
+}

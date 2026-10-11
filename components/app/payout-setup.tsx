@@ -3,8 +3,9 @@
 import { Check, ChevronDown, Loader2, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import { ActionButton, Card } from '@/components/app/ui'
+import { useNavUser } from '@/components/shell/nav-user'
 import { Field, Input, Select } from '@/components/ui/fields'
-import { COUNTRIES, type ConnectStatus, countryOf, requirementLabel, type Section, sectionOf } from '@/lib/connect-fields'
+import { COUNTRIES, type ConnectStatus, countryOf, requirementLabel, type Section, sectionOf, TEST_BANKS, TEST_DETAILS } from '@/lib/connect-fields'
 import { createPayoutAccount, savePayoutBank, savePayoutDetails, tokenizeBank, uploadIdPhoto } from '@/lib/stripe-client'
 import { cn } from '@/lib/utils'
 
@@ -16,7 +17,7 @@ const msg = (e: unknown, fallback = 'Something went wrong. Please try again.') =
  * browser first, so they never reach logoless.
  */
 export function PayoutSetup({ status, onChange }: { status: ConnectStatus; onChange: (s: ConnectStatus) => void }) {
-  if (status.status === 'not_connected') return <Start onChange={onChange} />
+  if (status.status === 'not_connected') return <Start status={status} onChange={onChange} />
 
   const needed = new Set<Section>([...status.due, ...status.pastDue].map(sectionOf))
   const pending = status.pending.length > 0
@@ -76,6 +77,17 @@ function Step({ n, title, done, open, errors, still, children }: { n: number; ti
   )
 }
 
+/** Admins only, and only while Stripe is in test mode: fills this step with Stripe's sandbox values. */
+function TestCredentials({ status, onFill }: { status: ConnectStatus; onFill: () => void }) {
+  const { user } = useNavUser()
+  if (!user?.signedIn || !user.isAdmin || !status.publishableKey?.startsWith('pk_test_')) return null
+  return (
+    <button type="button" onClick={onFill} className="justify-self-start rounded-full border border-dashed border-amber-400/50 px-4 py-1.5 text-xs text-amber-200 hover:bg-amber-400/10">
+      Test credentials
+    </button>
+  )
+}
+
 function useSubmit(fn: () => Promise<void>) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -115,7 +127,7 @@ function Submit({ busy, error, label, saved }: { busy: boolean; error: string; l
   )
 }
 
-function Start({ onChange }: { onChange: (s: ConnectStatus) => void }) {
+function Start({ status, onChange }: { status: ConnectStatus; onChange: (s: ConnectStatus) => void }) {
   const [country, setCountry] = useState('')
   const [ok, setOk] = useState(false)
   const { busy, error, run } = useSubmit(async () => {
@@ -125,6 +137,13 @@ function Start({ onChange }: { onChange: (s: ConnectStatus) => void }) {
   return (
     <Card title="Get paid">
       <form onSubmit={run} className="grid max-w-lg gap-5">
+        <TestCredentials
+          status={status}
+          onFill={() => {
+            setCountry('US')
+            setOk(true)
+          }}
+        />
         <p className="text-sm text-mute">It takes about five minutes: who you are, an ID number, and where to send the money. Your details go to our payment partner, Stripe, who checks them and holds them. logoless never keeps your ID or bank numbers.</p>
         <Field label="Country of your bank account" hint="You cannot change this later.">
           <Select value={country} onChange={(e) => setCountry(e.target.value)} required>
@@ -173,6 +192,7 @@ function DetailsForm({ status, onChange }: { status: ConnectStatus; onChange: (s
   })
   return (
     <form onSubmit={run} className="grid max-w-lg gap-4">
+      <TestCredentials status={status} onFill={() => setF({ ...TEST_DETAILS, state: c?.state ? TEST_DETAILS.state : '' })} />
       <p className="text-sm text-mute">Use your legal name and home address, exactly as on your ID.</p>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="First name"><Input value={f.firstName} onChange={set('firstName')} autoComplete="given-name" required /></Field>
@@ -209,6 +229,7 @@ function IdForm({ status, onChange }: { status: ConnectStatus; onChange: (s: Con
   if (!wants.some((r) => sectionOf(r) === 'id')) return <p className="text-sm text-mute">Nothing more needed here.</p>
   return (
     <form onSubmit={run} className="grid max-w-lg gap-4">
+      <TestCredentials status={status} onFill={() => setV(last4 ? '0000' : '000000000')} />
       <p className="text-sm text-mute">Stripe uses this to confirm you are who you say you are. It is sent to Stripe and not kept by logoless.</p>
       <Field label={label}>
         <Input value={v} onChange={(e) => setV(e.target.value.replace(/[^\dA-Za-z-]/g, ''))} maxLength={last4 ? 4 : 20} inputMode={last4 ? 'numeric' : 'text'} autoComplete="off" required />
@@ -255,6 +276,15 @@ export function BankForm({ status, onChange, onDone }: { status: ConnectStatus; 
   const [aLabel, bLabel] = labels[c.bank]
   return (
     <form onSubmit={run} className="grid max-w-lg gap-4">
+      <TestCredentials
+        status={status}
+        onFill={() => {
+          const t = TEST_BANKS[c.bank]
+          setName('Test Clipper')
+          setA(t.account)
+          setB(t.routing ?? '')
+        }}
+      />
       <p className="flex items-start gap-2 text-sm text-mute">
         <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
         Your numbers go straight to Stripe from this page. logoless only gets a one-time token, never the account number. Payouts are in {c.currency.toUpperCase()}.
