@@ -11,7 +11,7 @@ export const GET = route(async () => {
   const d = await db()
   const items = (
     await d
-      .prepare('SELECT id, kind, title, body, href, read_at, created_at FROM notifications WHERE user_id = ?1 ORDER BY created_at DESC LIMIT 40')
+      .prepare('SELECT id, kind, title, body, href, read_at, created_at FROM notifications WHERE user_id = ?1 ORDER BY created_at DESC LIMIT 80')
       .bind(user.id)
       .all<Row>()
   ).results
@@ -29,11 +29,13 @@ export const POST = route(async (req: Request) => {
   return json({ ok: true })
 })
 
-/** Clears the list. */
+/** Removes one notification (send its id) or clears the whole list. */
 export const DELETE = route(async (req: Request) => {
   const user = await requireUser()
   await protect(req, { name: 'notif', max: 60, windowSec: 60, userId: user.id })
+  const { id } = await body<{ id?: string }>(req).catch(() => ({}) as { id?: string })
   const d = await db()
-  await d.prepare('DELETE FROM notifications WHERE user_id = ?1').bind(user.id).run()
+  if (id) await d.prepare('DELETE FROM notifications WHERE id = ?1 AND user_id = ?2').bind(id, user.id).run()
+  else await d.prepare('DELETE FROM notifications WHERE user_id = ?1').bind(user.id).run()
   return json({ ok: true })
 })

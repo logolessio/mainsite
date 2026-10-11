@@ -15,6 +15,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
         { label: 'Payouts', href: '/dashboard/payouts', icon: 'Landmark' },
         { label: 'Profile', href: '/dashboard/profile', icon: 'UserCheck' },
         { label: 'Achievements', href: '/dashboard/achievements', icon: 'Trophy' },
+        { label: 'Notifications', href: '/dashboard/notifications', icon: 'Bell' },
         { label: 'Linked accounts', href: '/dashboard/accounts', icon: 'Link2' },
         { label: 'Settings', href: '/dashboard/settings', icon: 'Settings' },
       ]}

@@ -1,7 +1,7 @@
 'use client'
 
 import { animate, motion, useInView } from 'framer-motion'
-import { ArrowUpRight, CalendarDays, Flag, Globe, Pencil, ShieldCheck } from 'lucide-react'
+import { CalendarDays, Flag, Globe, Pencil, ShieldCheck } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { BadgeStar } from '@/components/badges/badge-star'
 import { BrandIcon } from '@/components/brand-icon'
@@ -192,24 +192,25 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
 
           {showLinks && (
             <Section title="Connections">
-              <ul className="flex flex-wrap gap-1.5">
+              <ul className="flex flex-wrap gap-2">
                 {links.map((l) => (
                   <li key={l.platform}>
                     <a
                       href={preview ? undefined : l.href}
                       target="_blank"
                       rel="noopener noreferrer nofollow ugc"
-                      className="group inline-flex h-9 items-center gap-2 rounded-lg bg-white/[0.07] px-3 text-sm transition-all hover:-translate-y-0.5 hover:bg-white/[0.15]"
+                      aria-label={l.label}
+                      title={l.label}
+                      className="group relative grid size-11 place-items-center overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.06] transition-all duration-200 hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.14] active:scale-95"
                     >
-                      {l.platform === 'website' ? <Globe className="size-4" /> : <BrandIcon name={l.platform} className="size-4" />}
-                      {l.label}
-                      <ArrowUpRight className="size-3.5 text-paper/50 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                      <span aria-hidden="true" className="absolute inset-y-0 -left-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-[220%]" />
+                      {l.platform === 'website' ? <Globe className="relative size-5" /> : <BrandIcon name={l.platform} className="relative size-5" />}
                     </a>
                   </li>
                 ))}
               </ul>
-              <p className="mt-2.5 text-[11px] leading-snug text-paper/45">
-                Added by this member. Not official {SITE.name} links.{' '}
+              <p className="mt-2.5 text-[11px] leading-snug text-paper/40">
+                Added by this member, not official {SITE.name} links.{' '}
                 <TransitionLink href="/legal/external-links" className="underline underline-offset-2 hover:text-paper">
                   Learn more
                 </TransitionLink>

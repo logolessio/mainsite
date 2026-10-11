@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon, type IconName } from '@/components/icons'
 import { Logo } from '@/components/logo'
+import { NotificationBell } from '@/components/shell/notifications'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { useTransitions } from '@/components/shell/transition-provider'
 import { EASE_OUT } from '@/lib/layout'
@@ -64,11 +65,14 @@ export function AppFrame({ area, items, children }: { area: string; items: AppNa
             </AnimatePresence>
           </div>
         </div>
-        <button type="button" onClick={() => setPalette(true)} aria-label="Jump to…" className="glass-liquid flex h-10 items-center gap-3 rounded-full pr-2 pl-4 text-sm text-mute transition-colors hover:text-paper max-md:size-10 max-md:justify-center max-md:p-0">
-          <Search aria-hidden="true" className="size-4" />
-          <span className="hidden md:inline">Jump to…</span>
-          <kbd className="hidden rounded-full bg-white/[0.08] px-2.5 py-1 font-mono text-[11px] md:inline">⌘K</kbd>
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button type="button" onClick={() => setPalette(true)} aria-label="Jump to…" className="glass-liquid flex h-10 items-center gap-3 rounded-full pr-2 pl-4 text-sm text-mute transition-colors hover:text-paper max-md:size-10 max-md:justify-center max-md:p-0">
+            <Search aria-hidden="true" className="size-4" />
+            <span className="hidden md:inline">Jump to…</span>
+            <kbd className="hidden rounded-full bg-white/[0.08] px-2.5 py-1 font-mono text-[11px] md:inline">⌘K</kbd>
+          </button>
+          <NotificationBell />
+        </div>
       </header>
 
       <main className="px-5 pt-4 pb-40 md:pr-10 md:pb-16 md:pl-[108px] md:pt-6">

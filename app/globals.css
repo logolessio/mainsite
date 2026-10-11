@@ -481,3 +481,39 @@ tbody tr:nth-child(n + 7) { animation-delay: 0.24s; }
     animation: none;
   }
 }
+
+/* ---------- badge artwork ---------- */
+.b-spin,
+.b-spin-slow,
+.b-flip,
+.b-flicker,
+.b-blink,
+.b-twinkle,
+.b-pulse,
+.b-hue,
+.b-shine {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.b-spin { animation: b-spin 9s linear infinite; }
+.b-spin-slow { animation: b-spin 40s linear infinite; transform-box: view-box; transform-origin: 60px 60px; }
+.b-flip { animation: b-flip 3.6s ease-in-out infinite; }
+.b-flicker { animation: b-flicker 1.6s ease-in-out infinite; transform-origin: 50% 90%; }
+.b-blink { animation: b-blink 5s ease-in-out infinite; }
+.b-twinkle { animation: b-twinkle 2.4s ease-in-out infinite; }
+.b-pulse { animation: b-pulse 1.8s ease-in-out infinite; }
+.b-hue { animation: b-hue 7s linear infinite; }
+.b-shine { animation: b-shine 4.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+.b-float { animation: b-float 4.5s ease-in-out infinite; }
+@keyframes b-spin { to { transform: rotate(360deg); } }
+@keyframes b-flip { 0%, 40%, 100% { transform: scaleX(1); } 55% { transform: scaleX(0.12); } 70% { transform: scaleX(-1); } 85% { transform: scaleX(1); } }
+@keyframes b-flicker { 0%, 100% { transform: scale(1, 1); } 30% { transform: scale(1.03, 1.06); } 60% { transform: scale(0.98, 1.02); } }
+@keyframes b-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.08); } }
+@keyframes b-twinkle { 0%, 100% { opacity: 0.25; transform: scale(0.6) rotate(0deg); } 50% { opacity: 1; transform: scale(1.1) rotate(45deg); } }
+@keyframes b-pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+@keyframes b-hue { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+@keyframes b-shine { 0%, 55% { transform: translateX(0); } 100% { transform: translateX(260px); } }
+@keyframes b-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) {
+  .b-spin, .b-spin-slow, .b-flip, .b-flicker, .b-blink, .b-twinkle, .b-pulse, .b-hue, .b-shine, .b-float { animation: none; }
+}

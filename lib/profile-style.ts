@@ -100,16 +100,11 @@ export const LINK_PLATFORMS = [
   P('spotify', 'Spotify', ['spotify.com'], 'https://open.spotify.com/artist/…', 'Music'),
   P('soundcloud', 'SoundCloud', ['soundcloud.com'], 'https://soundcloud.com/you', 'Music'),
   P('applemusic', 'Apple Music', ['music.apple.com'], 'https://music.apple.com/…', 'Music'),
-  P('youtubemusic', 'YouTube Music', ['music.youtube.com'], 'https://music.youtube.com/…', 'Music'),
   P('bandcamp', 'Bandcamp', ['bandcamp.com'], 'https://you.bandcamp.com', 'Music'),
-  P('beatport', 'Beatport', ['beatport.com'], 'https://beatport.com/artist/…', 'Music'),
   P('audiomack', 'Audiomack', ['audiomack.com'], 'https://audiomack.com/you', 'Music'),
-  P('deezer', 'Deezer', ['deezer.com'], 'https://deezer.com/artist/…', 'Music'),
-  P('tidal', 'Tidal', ['tidal.com'], 'https://tidal.com/artist/…', 'Music'),
   P('steam', 'Steam', ['steamcommunity.com', 'steampowered.com'], 'https://steamcommunity.com/id/you', 'Gaming'),
-  P('roblox', 'Roblox', ['roblox.com'], 'https://roblox.com/users/…', 'Gaming'),
   P('epicgames', 'Epic Games', ['epicgames.com'], 'https://epicgames.com/…', 'Gaming'),
-  P('playstation', 'PlayStation', ['playstation.com'], 'https://playstation.com/…', 'Gaming'),
+  P('playstation', 'PlayStation', ['psnprofiles.com', 'playstation.com'], 'https://psnprofiles.com/you', 'Gaming'),
   P('patreon', 'Patreon', ['patreon.com'], 'https://patreon.com/you', 'Support'),
   P('kofi', 'Ko-fi', ['ko-fi.com'], 'https://ko-fi.com/you', 'Support'),
   P('buymeacoffee', 'Buy Me a Coffee', ['buymeacoffee.com'], 'https://buymeacoffee.com/you', 'Support'),
@@ -161,6 +156,10 @@ export const USERNAME_LINKS: Record<string, { tpl: string; label: string }> = {
   medium: { tpl: 'https://medium.com/@{u}', label: 'medium.com/@' },
   substack: { tpl: 'https://{u}.substack.com', label: '.substack.com' },
   linktree: { tpl: 'https://linktr.ee/{u}', label: 'linktr.ee/' },
+  spotify: { tpl: 'https://open.spotify.com/user/{u}', label: 'open.spotify.com/user/' },
+  applemusic: { tpl: 'https://music.apple.com/profile/{u}', label: 'music.apple.com/profile/' },
+  epicgames: { tpl: 'https://store.epicgames.com/u/{u}', label: 'epicgames.com/u/' },
+  playstation: { tpl: 'https://psnprofiles.com/{u}', label: 'psnprofiles.com/' },
 }
 
 /**

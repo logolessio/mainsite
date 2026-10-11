@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Ban, Binary, Bug, Camera, Check, CircleDot, CloudRain, Download, Droplets, Eye, EyeOff, Film, Flame, Flower2, Globe, ImagePlus, Leaf, Loader2, PartyPopper, Pencil, Plus, Rocket, Snowflake, Sparkles, Star, Sun, Trash2, Tv, Waves, Wind, X, Zap, type LucideIcon } from 'lucide-react'
+import { Ban, Binary, Bug, Camera, Check, ChevronDown, CircleDot, CloudRain, Download, Droplets, Eye, EyeOff, Film, Flame, Flower2, Globe, ImagePlus, Leaf, Link2, Loader2, Palette, PartyPopper, Pencil, Plus, Rocket, Search, Snowflake, Sparkles, Star, Sun, Trash2, Tv, Undo2, User, Waves, Wind, X, Zap, type LucideIcon } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActionButton, Card, Toggle } from '@/components/app/ui'
 import { BrandIcon } from '@/components/brand-icon'
@@ -53,9 +53,11 @@ export function ProfileEditor() {
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState<'avatar' | 'banner' | 'discord' | null>(null)
   const [pendingAvatar, setPendingAvatar] = useState<string | null | undefined>(undefined)
-  const [picker, setPicker] = useState(false)
   const [editing, setEditing] = useState<string | null>(null) // platform being edited
   const [discordId, setDiscordId] = useState('')
+  const [tab, setTab] = useState<TabId>('profile')
+  const [discordOpen, setDiscordOpen] = useState(false)
+  const [q, setQ] = useState('')
   const avatarInput = useRef<HTMLInputElement>(null)
   const bannerInput = useRef<HTMLInputElement>(null)
 
@@ -146,6 +148,7 @@ export function ProfileEditor() {
         ...(pendingAvatar !== undefined ? { avatar: pendingAvatar } : {}),
       })
       setF(res.profile)
+      setLoaded((l) => (l ? { ...l, profile: res.profile } : l))
       setPendingAvatar(undefined)
       window.dispatchEvent(new Event(NAV_USER_REFRESH))
       const names = res.newBadges.map((id) => BADGE_BY_ID[id]?.name).filter(Boolean)
@@ -165,175 +168,271 @@ export function ProfileEditor() {
 
   const previewLinks = f.links.map((l) => ({ platform: l.platform, href: l.url, label: meta(l.platform)?.label ?? l.platform }))
   const nameVars = { ['--na' as string]: f.accent, ['--nb' as string]: f.accent2 }
+  const dirty = pendingAvatar !== undefined || JSON.stringify(f) !== JSON.stringify(loaded.profile)
+  const discard = () => {
+    setF(loaded.profile)
+    setPendingAvatar(undefined)
+    setError('')
+    setNote('')
+  }
+  const matches = (p: (typeof LINK_PLATFORMS)[number]) => !q.trim() || p.label.toLowerCase().includes(q.trim().toLowerCase())
+  const tabs: { id: TabId; label: string; icon: LucideIcon; badge?: number }[] = [
+    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'style', label: 'Style', icon: Palette },
+    { id: 'effects', label: 'Effects', icon: Sparkles },
+    { id: 'links', label: 'Links', icon: Link2, badge: f.links.length },
+    { id: 'privacy', label: 'Privacy', icon: Eye },
+    { id: 'preview', label: 'Preview', icon: Eye },
+  ]
 
   return (
-    <div className="grid gap-8 xl:grid-cols-[minmax(0,560px)_1fr]">
+    <div className="grid gap-8 xl:grid-cols-[minmax(0,600px)_1fr]">
       <ProfileTheme dot={f.dotColor} />
-      <div className="grid content-start gap-6">
-        {/* ---------- import ---------- */}
-        <Card title="Import from Discord">
-          <p className="text-sm text-mute">Bring your Discord picture, banner, colour and name across in one go.</p>
-          {!loaded.discordImport && <p className="mt-3 rounded-xl border border-line bg-ink/60 p-3 text-xs text-mute">This is not switched on yet. The site owner needs to add a Discord bot token first (see PLATFORM_SETUP.md).</p>}
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Input value={discordId} onChange={(e) => setDiscordId(e.target.value.replace(/\D/g, '').slice(0, 22))} placeholder="Your Discord user ID" inputMode="numeric" className="max-w-xs flex-1" aria-label="Discord user ID" />
-            <ActionButton onClick={importDiscord} disabled={!loaded.discordImport || busy === 'discord' || discordId.length < 15} className="rounded-full">
-              {busy === 'discord' ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Import
-            </ActionButton>
-          </div>
-          <details className="mt-3 text-xs text-mute">
-            <summary className="cursor-pointer hover:text-paper">Where do I find my ID?</summary>
-            <p className="mt-2 leading-snug">In Discord open User Settings, then Advanced, and turn on Developer Mode. Then right-click your name anywhere and choose Copy User ID. Discord does not let apps read your “About me” text or your connections, so those you add by hand below.</p>
-          </details>
-        </Card>
-
-        {/* ---------- identity ---------- */}
-        <Card title="Identity">
-          <div className="grid gap-4">
-            <div className="flex items-center gap-4">
-              <button type="button" onClick={() => avatarInput.current?.click()} className="group relative grid size-20 shrink-0 place-items-center overflow-hidden rounded-full border border-line-strong bg-raised" aria-label="Change profile picture">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                {f.avatar ? <img src={f.avatar} alt="" className="size-full object-cover" referrerPolicy="no-referrer" /> : <Camera className="size-5 text-mute" />}
-                <span className="absolute inset-0 grid place-items-center bg-ink/60 opacity-0 transition-opacity group-hover:opacity-100">{busy === 'avatar' ? <Loader2 className="size-5 animate-spin" /> : <Camera className="size-5" />}</span>
+      <div className="min-w-0">
+        {/* ---------- the tab bar ---------- */}
+        <div role="tablist" aria-label="Profile sections" className="sticky top-[84px] z-20 -mx-1 mb-5 flex gap-1 overflow-x-auto rounded-full border border-line-strong bg-[#0b0b0d]/90 p-1.5 backdrop-blur-xl [scrollbar-width:none]">
+          {tabs.map((t) => {
+            const on = tab === t.id
+            return (
+              <button key={t.id} type="button" role="tab" aria-selected={on} onClick={() => setTab(t.id)} className={cn('relative inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm transition-colors', on ? 'text-ink' : 'text-mute hover:text-paper', t.id === 'preview' && 'xl:hidden')}>
+                {on && <motion.span layoutId="profile-tab" transition={{ type: 'spring', stiffness: 420, damping: 34 }} className="absolute inset-0 rounded-full bg-paper" />}
+                <t.icon className="relative size-4" />
+                <span className="relative">{t.label}</span>
+                {t.badge ? <span className={cn('relative rounded-full px-1.5 font-mono text-[10px]', on ? 'bg-ink/10' : 'bg-white/10')}>{t.badge}</span> : null}
               </button>
-              <input ref={avatarInput} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => upload('avatar', e.target.files?.[0])} />
-              <div className="text-sm text-mute">
-                <p>Profile picture</p>
-                <button type="button" onClick={() => { setPendingAvatar(null); set('avatar', null) }} className="mt-1 inline-flex items-center gap-1 text-xs hover:text-paper">
-                  <Trash2 className="size-3" /> Use my sign-in picture
-                </button>
-              </div>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Display name"><Input value={f.displayName} maxLength={40} onChange={(e) => set('displayName', e.target.value)} /></Field>
-              <Field label="Username" hint={`logoless.io/@${f.handle}`}><Input value={f.handle} maxLength={20} onChange={(e) => set('handle', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} /></Field>
-              <Field label="Pronouns (optional)"><Input value={f.pronouns} maxLength={30} placeholder="e.g. she/her" onChange={(e) => set('pronouns', e.target.value)} /></Field>
-              <Field label="Country (optional)">
-                <Select value={f.country ?? ''} onChange={(e) => set('country', e.target.value || null)}>
-                  <option value="">Prefer not to say</option>
-                  {['US', 'GB', 'CA', 'AU', 'DE', 'FR', 'SG', 'NL', 'SE', 'BR', 'IN', 'NG', 'ZA', 'PH', 'ID', 'MX', 'JP', 'KR'].map((c) => <option key={c} value={c}>{c}</option>)}
-                </Select>
-              </Field>
-            </div>
-            <Field label="About me" hint={`${f.bio.length}/400`}><Textarea value={f.bio} maxLength={400} rows={4} onChange={(e) => set('bio', e.target.value)} /></Field>
-          </div>
-        </Card>
+            )
+          })}
+        </div>
 
-        {/* ---------- connections ---------- */}
-        <Card title="Connections">
-          <div className="flex flex-wrap gap-2">
-            <AnimatePresence initial={false}>
-              {f.links.map((l) => (
-                <motion.div key={l.platform} layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="group inline-flex h-10 items-center rounded-lg bg-white/[0.07]">
-                  <button type="button" onClick={() => setEditing(l.platform)} className="inline-flex h-full items-center gap-2 pr-2 pl-3 text-sm hover:text-paper" aria-label={`Edit ${meta(l.platform)?.label}`}>
-                    {l.platform === 'website' ? <Globe className="size-4" /> : <BrandIcon name={l.platform} className="size-4" />}
-                    {meta(l.platform)?.label}
-                    <Pencil className="size-3 text-mute opacity-0 transition-opacity group-hover:opacity-100" />
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22, ease: EASE_OUT }} className={cn(tab !== 'preview' && 'rounded-[2rem] border border-line bg-[#0a0a0b] p-5 sm:p-7')}>
+            {/* ================= PROFILE ================= */}
+            {tab === 'profile' && (
+              <div className="grid gap-7">
+                <div className="flex items-center gap-5">
+                  <button type="button" onClick={() => avatarInput.current?.click()} className="group relative grid size-24 shrink-0 place-items-center overflow-hidden rounded-full border border-line-strong bg-raised" aria-label="Change profile picture">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {f.avatar ? <img src={f.avatar} alt="" className="size-full object-cover" referrerPolicy="no-referrer" /> : <Camera className="size-6 text-mute" />}
+                    <span className="absolute inset-0 grid place-items-center bg-ink/60 opacity-0 transition-opacity group-hover:opacity-100">{busy === 'avatar' ? <Loader2 className="size-5 animate-spin" /> : <Camera className="size-5" />}</span>
                   </button>
-                  <button type="button" onClick={() => removeLink(l.platform)} aria-label={`Remove ${meta(l.platform)?.label}`} className="grid h-full w-8 place-items-center rounded-r-lg text-mute hover:bg-signal/20 hover:text-signal">
-                    <X className="size-3.5" />
-                  </button>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-            {f.links.length < MAX_LINKS && (
-              <button type="button" onClick={() => setPicker(true)} className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-dashed border-line-strong px-4 text-sm text-mute transition-colors hover:border-paper hover:text-paper">
-                <Plus className="size-4" /> Add
-              </button>
-            )}
-          </div>
-          <p className="mt-3 text-xs leading-snug text-mute">
-            Press Add, pick an icon, then paste your link. On your profile each one is a button. Visitors see a note that these are not official logoless links, and websites and invites open a warning page first.
-          </p>
-        </Card>
-
-        {/* ---------- look ---------- */}
-        <Card title="Name style">
-          <div className="grid gap-5">
-            <div>
-              <p className="font-mono text-xs text-mute">Font</p>
-              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {FONT_OPTIONS.map((o) => (
-                  <button key={o.id} type="button" onClick={() => set('font', o.id)} aria-pressed={f.font === o.id} className={cn('rounded-xl border px-3 py-2.5 text-left transition-colors', f.font === o.id ? 'border-paper bg-paper/10' : 'border-line hover:bg-paper/5')}>
-                    <span className={cn('block truncate text-lg leading-tight', PROFILE_FONT_CLASS[o.id])}>{o.label}</span>
-                    <span className="block text-[11px] text-mute">{o.note}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="font-mono text-xs text-mute">Effect</p>
-              <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
-                {NAME_EFFECTS.map((o) => (
-                  <button key={o.id} type="button" onClick={() => set('nameEffect', o.id)} aria-pressed={f.nameEffect === o.id} className={cn('rounded-xl border px-2 py-2.5 text-center', f.nameEffect === o.id ? 'border-paper bg-paper/10' : 'border-line hover:bg-paper/5')}>
-                    <span style={nameVars} className={cn('block text-base font-bold', `nx-${o.id}`, o.id === 'gradient' && 'w-fit mx-auto')}>Aa</span>
-                    <span className="block text-[11px] text-mute">{o.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-            <Swatches label="Primary colour" value={f.accent} options={ACCENT_SWATCHES} onChange={(v) => set('accent', v)} />
-            <Swatches label="Accent colour" value={f.accent2} options={ACCENT_SWATCHES} onChange={(v) => set('accent2', v)} />
-          </div>
-        </Card>
-
-        <Card title="Banner">
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-            {BANNER_PRESETS.map((b) => (
-              <button key={b.id} type="button" onClick={() => setF((c) => (c ? { ...c, bannerKind: 'preset', banner: b.id } : c))} aria-label={b.label} aria-pressed={f.bannerKind === 'preset' && f.banner === b.id} className={cn('relative h-14 overflow-hidden rounded-xl border', f.bannerKind === 'preset' && f.banner === b.id ? 'border-paper' : 'border-line')} style={bannerStyle('preset', b.id)}>
-                {f.bannerKind === 'preset' && f.banner === b.id && <Check className="absolute top-1.5 right-1.5 size-4" />}
-              </button>
-            ))}
-            <button type="button" onClick={() => bannerInput.current?.click()} className={cn('grid h-14 place-items-center rounded-xl border border-dashed text-xs text-mute hover:text-paper', f.bannerKind === 'image' ? 'border-paper text-paper' : 'border-line-strong')}>
-              {busy === 'banner' ? <Loader2 className="size-4 animate-spin" /> : <span className="inline-flex items-center gap-1"><ImagePlus className="size-4" /> Upload</span>}
-            </button>
-            <input ref={bannerInput} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => upload('banner', e.target.files?.[0])} />
-          </div>
-          <div className="mt-4">
-            <Swatches label="Or a single colour" value={f.bannerKind === 'color' ? f.banner : '#000000'} options={ACCENT_SWATCHES} onChange={(v) => setF((c) => (c ? { ...c, bannerKind: 'color', banner: v } : c))} />
-          </div>
-        </Card>
-
-        <Card title="Background and effects">
-          <div className="grid gap-6">
-            <div>
-              <Swatches label="Background effect colour" value={f.dotColor} options={DOT_SWATCHES} onChange={(v) => set('dotColor', v)} />
-              <p className="mt-2 text-xs text-mute">The glowing dots behind your card. The preview on the right shows them in this colour.</p>
-            </div>
-            <div>
-              <p className="font-mono text-xs text-mute">Card effect</p>
-              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">
-                {CARD_EFFECTS.map((o) => {
-                  const Icon = EFFECT_ICONS[o.id] ?? Ban
-                  const on = f.cardEffect === o.id
-                  return (
-                    <button key={o.id} type="button" onClick={() => set('cardEffect', o.id)} aria-pressed={on} className={cn('flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-xs transition-all hover:-translate-y-0.5', on ? 'border-paper bg-paper/10' : 'border-line text-mute hover:bg-paper/5 hover:text-paper')}>
-                      <Icon className="size-5" />
-                      {o.label}
+                  <input ref={avatarInput} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => upload('avatar', e.target.files?.[0])} />
+                  <div className="min-w-0 flex-1">
+                    <Field label="Display name"><Input value={f.displayName} maxLength={40} onChange={(e) => set('displayName', e.target.value)} /></Field>
+                    <button type="button" onClick={() => { setPendingAvatar(null); set('avatar', null) }} className="mt-2 inline-flex items-center gap-1 text-xs text-mute hover:text-paper">
+                      <Trash2 className="size-3" /> Use my sign-in picture
                     </button>
-                  )
-                })}
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Username" hint={`logoless.io/@${f.handle}`}><Input value={f.handle} maxLength={20} onChange={(e) => set('handle', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} /></Field>
+                  <Field label="Pronouns (optional)"><Input value={f.pronouns} maxLength={30} placeholder="e.g. she/her" onChange={(e) => set('pronouns', e.target.value)} /></Field>
+                </div>
+                <Field label="About me" hint={`${f.bio.length}/400`}><Textarea value={f.bio} maxLength={400} rows={4} onChange={(e) => set('bio', e.target.value)} /></Field>
+                <Field label="Country (optional)">
+                  <Select value={f.country ?? ''} onChange={(e) => set('country', e.target.value || null)}>
+                    <option value="">Prefer not to say</option>
+                    {['US', 'GB', 'CA', 'AU', 'DE', 'FR', 'SG', 'NL', 'SE', 'BR', 'IN', 'NG', 'ZA', 'PH', 'ID', 'MX', 'JP', 'KR'].map((c) => <option key={c} value={c}>{c}</option>)}
+                  </Select>
+                </Field>
+
+                <div className="rounded-2xl border border-line">
+                  <button type="button" onClick={() => setDiscordOpen((v) => !v)} aria-expanded={discordOpen} className="flex w-full items-center gap-3 px-4 py-3.5 text-left">
+                    <BrandIcon name="discord" className="size-5" />
+                    <span className="flex-1 text-sm">Import from Discord<span className="block text-xs text-mute">Bring your picture, banner, colour and name across</span></span>
+                    <ChevronDown className={cn('size-4 text-mute transition-transform', discordOpen && 'rotate-180')} />
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {discordOpen && (
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                        <div className="border-t border-line px-4 pt-4 pb-4">
+                          {!loaded.discordImport && <p className="mb-3 rounded-xl border border-line bg-ink/60 p-3 text-xs text-mute">This is not switched on yet. The site owner needs to add a Discord bot token first.</p>}
+                          <div className="flex flex-wrap gap-2">
+                            <Input value={discordId} onChange={(e) => setDiscordId(e.target.value.replace(/\D/g, '').slice(0, 22))} placeholder="Your Discord user ID" inputMode="numeric" className="max-w-xs flex-1" aria-label="Discord user ID" />
+                            <ActionButton onClick={importDiscord} disabled={!loaded.discordImport || busy === 'discord' || discordId.length < 15} className="rounded-full">
+                              {busy === 'discord' ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Import
+                            </ActionButton>
+                          </div>
+                          <p className="mt-3 text-xs leading-snug text-mute">Find your ID: Discord Settings, Advanced, turn on Developer Mode, then right-click your name and choose Copy User ID. Discord does not share your “About me” or connections, so add those yourself.</p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
-            </div>
-            {f.cardEffect !== 'none' && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="grid gap-4 overflow-hidden rounded-2xl border border-line bg-ink/50 p-4">
-                <Slider label="Intensity" hint="How much there is" value={f.effectIntensity} onChange={(v) => set('effectIntensity', v)} />
-                <Slider label="Speed" hint="How fast it moves" value={f.effectSpeed} onChange={(v) => set('effectSpeed', v)} />
-                <button type="button" onClick={() => { set('effectIntensity', 50); set('effectSpeed', 50) }} className="w-fit text-xs text-mute underline underline-offset-4 hover:text-paper">Reset to normal</button>
-              </motion.div>
             )}
-          </div>
-        </Card>
 
-        <Card title="What strangers can see">
-          <Visibility show={f.show} onChange={(show) => set('show', show)} />
-        </Card>
+            {/* ================= STYLE ================= */}
+            {tab === 'style' && (
+              <div className="grid gap-8">
+                <Group title="Name font" hint="Shown with your own name">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {FONT_OPTIONS.map((o) => (
+                      <button key={o.id} type="button" onClick={() => set('font', o.id)} aria-pressed={f.font === o.id} className={cn('rounded-xl border px-3 py-2.5 text-left transition-colors', f.font === o.id ? 'border-paper bg-paper/10' : 'border-line hover:bg-paper/5')}>
+                        <span className={cn('block truncate text-lg leading-tight', PROFILE_FONT_CLASS[o.id])}>{f.displayName || o.label}</span>
+                        <span className="block text-[11px] text-mute">{o.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </Group>
+                <Group title="Name effect">
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                    {NAME_EFFECTS.map((o) => (
+                      <button key={o.id} type="button" onClick={() => set('nameEffect', o.id)} aria-pressed={f.nameEffect === o.id} className={cn('rounded-xl border px-2 py-2.5 text-center', f.nameEffect === o.id ? 'border-paper bg-paper/10' : 'border-line hover:bg-paper/5')}>
+                        <span style={nameVars} className={cn('block text-base font-bold', `nx-${o.id}`, o.id === 'gradient' && 'mx-auto w-fit')}>Aa</span>
+                        <span className="block text-[11px] text-mute">{o.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </Group>
+                <Group title="Colours" hint="Your card is tinted with these">
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <Swatches label="Primary" value={f.accent} options={ACCENT_SWATCHES} onChange={(v) => set('accent', v)} />
+                    <Swatches label="Accent" value={f.accent2} options={ACCENT_SWATCHES} onChange={(v) => set('accent2', v)} />
+                  </div>
+                </Group>
+                <Group title="Banner">
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                    {BANNER_PRESETS.map((b) => (
+                      <button key={b.id} type="button" onClick={() => setF((c) => (c ? { ...c, bannerKind: 'preset', banner: b.id } : c))} aria-label={b.label} aria-pressed={f.bannerKind === 'preset' && f.banner === b.id} className={cn('relative h-14 overflow-hidden rounded-xl border', f.bannerKind === 'preset' && f.banner === b.id ? 'border-paper' : 'border-line')} style={bannerStyle('preset', b.id)}>
+                        {f.bannerKind === 'preset' && f.banner === b.id && <Check className="absolute top-1.5 right-1.5 size-4" />}
+                      </button>
+                    ))}
+                    <button type="button" onClick={() => bannerInput.current?.click()} className={cn('grid h-14 place-items-center rounded-xl border border-dashed text-xs text-mute hover:text-paper', f.bannerKind === 'image' ? 'border-paper text-paper' : 'border-line-strong')}>
+                      {busy === 'banner' ? <Loader2 className="size-4 animate-spin" /> : <span className="inline-flex items-center gap-1"><ImagePlus className="size-4" /> Upload</span>}
+                    </button>
+                    <input ref={bannerInput} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => upload('banner', e.target.files?.[0])} />
+                  </div>
+                  <div className="mt-4">
+                    <Swatches label="Or one flat colour" value={f.bannerKind === 'color' ? f.banner : '#000000'} options={ACCENT_SWATCHES} onChange={(v) => setF((c) => (c ? { ...c, bannerKind: 'color', banner: v } : c))} />
+                  </div>
+                </Group>
+              </div>
+            )}
 
-        <div className="sticky bottom-4 z-10 rounded-3xl border border-line-strong bg-surface/95 p-2.5 backdrop-blur">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pl-1.5">
-            <ActionButton onClick={save} disabled={saving} className="rounded-full">
+            {/* ================= EFFECTS ================= */}
+            {tab === 'effects' && (
+              <div className="grid gap-8">
+                <Group title="Card effect" hint="Moves over your whole card">
+                  <div className="grid gap-5">
+                    <button type="button" onClick={() => set('cardEffect', 'none')} aria-pressed={f.cardEffect === 'none'} className={cn('flex h-11 items-center gap-2 justify-self-start rounded-full border px-4 text-sm transition-colors', f.cardEffect === 'none' ? 'border-paper bg-paper/10' : 'border-line text-mute hover:text-paper')}>
+                      <Ban className="size-4" /> No effect
+                    </button>
+                    {EFFECT_GROUPS.map((g) => (
+                      <div key={g.title}>
+                        <p className="mb-2 text-xs text-mute">{g.title}</p>
+                        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                          {g.ids.map((id) => {
+                            const o = CARD_EFFECTS.find((x) => x.id === id)
+                            if (!o) return null
+                            const Icon = EFFECT_ICONS[o.id] ?? Ban
+                            const on = f.cardEffect === o.id
+                            return (
+                              <button key={o.id} type="button" onClick={() => set('cardEffect', o.id)} aria-pressed={on} className={cn('flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-xs transition-all hover:-translate-y-0.5', on ? 'border-paper bg-paper/10' : 'border-line text-mute hover:bg-paper/5 hover:text-paper')}>
+                                <Icon className="size-5" />
+                                {o.label}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Group>
+                <AnimatePresence initial={false}>
+                  {f.cardEffect !== 'none' && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                      <div className="grid gap-4 rounded-2xl border border-line bg-ink/50 p-4">
+                        <Slider label="Intensity" hint="How much there is" value={f.effectIntensity} onChange={(v) => set('effectIntensity', v)} />
+                        <Slider label="Speed" hint="How fast it moves" value={f.effectSpeed} onChange={(v) => set('effectSpeed', v)} />
+                        <button type="button" onClick={() => { set('effectIntensity', 50); set('effectSpeed', 50) }} className="w-fit text-xs text-mute underline underline-offset-4 hover:text-paper">Reset to normal</button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <Group title="Page background" hint="The dots behind your card">
+                  <Swatches label="Dot colour" value={f.dotColor} options={DOT_SWATCHES} onChange={(v) => set('dotColor', v)} />
+                </Group>
+              </div>
+            )}
+
+            {/* ================= LINKS ================= */}
+            {tab === 'links' && (
+              <div className="grid gap-7">
+                <Group title="On your profile" hint={`${f.links.length} of ${MAX_LINKS}`}>
+                  {f.links.length === 0 ? (
+                    <p className="rounded-2xl border border-dashed border-line-strong px-4 py-6 text-center text-sm text-mute">Nothing yet. Pick a platform below and type your username.</p>
+                  ) : (
+                    <ul className="flex flex-wrap gap-2">
+                      <AnimatePresence initial={false}>
+                        {f.links.map((l) => (
+                          <motion.li key={l.platform} layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="group/l relative">
+                            <button type="button" onClick={() => setEditing(l.platform)} aria-label={`Edit ${meta(l.platform)?.label}`} title={`${meta(l.platform)?.label}: ${usernameOf(l.platform, l.url)}`} className="grid size-14 place-items-center rounded-2xl border border-line-strong bg-white/[0.05] transition-all hover:-translate-y-0.5 hover:bg-white/[0.12]">
+                              {l.platform === 'website' ? <Globe className="size-6" /> : <BrandIcon name={l.platform} className="size-6" />}
+                            </button>
+                            <button type="button" onClick={() => removeLink(l.platform)} aria-label={`Remove ${meta(l.platform)?.label}`} className="absolute -top-1.5 -right-1.5 hidden size-6 place-items-center rounded-full bg-signal text-ink group-hover/l:grid group-focus-within/l:grid">
+                              <X className="size-3.5" />
+                            </button>
+                          </motion.li>
+                        ))}
+                      </AnimatePresence>
+                    </ul>
+                  )}
+                </Group>
+                <Group title="Add a platform" hint="Just your username">
+                  <label className="mb-4 flex h-11 items-center gap-2 rounded-full border border-line-strong bg-ink/60 px-4 focus-within:border-paper/60">
+                    <Search className="size-4 text-mute" />
+                    <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search TikTok, Spotify, Twitch…" aria-label="Search platforms" className="h-full flex-1 bg-transparent text-sm outline-none placeholder:text-mute" />
+                  </label>
+                  {LINK_GROUPS.map((g) => {
+                    const list = LINK_PLATFORMS.filter((p) => p.group === g && matches(p))
+                    if (!list.length) return null
+                    return (
+                      <div key={g} className="mb-5 last:mb-0">
+                        <p className="mb-2 font-mono text-[11px] tracking-widest text-mute uppercase">{g}</p>
+                        <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+                          {list.map((p) => {
+                            const have = f.links.some((l) => l.platform === p.id)
+                            return (
+                              <button key={p.id} type="button" onClick={() => setEditing(p.id)} disabled={!have && f.links.length >= MAX_LINKS} title={p.label} className={cn('group relative flex flex-col items-center gap-1.5 rounded-xl border px-1 py-3 text-[11px] leading-tight transition-all hover:-translate-y-0.5 hover:bg-paper/10 disabled:opacity-35', have ? 'border-paper/50 bg-paper/[0.07]' : 'border-line text-mute hover:text-paper')}>
+                                {p.id === 'website' ? <Globe className="size-5" /> : <BrandIcon name={p.id} className="size-5" />}
+                                <span className="max-w-full truncate">{p.label}</span>
+                                {have && <Check className="absolute top-1 right-1 size-3 text-paper" />}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </Group>
+                <p className="text-xs leading-snug text-mute">Each one shows on your profile as a small icon button. Visitors are told these are not official logoless links, and websites and invites open a warning page first.</p>
+              </div>
+            )}
+
+            {/* ================= PRIVACY ================= */}
+            {tab === 'privacy' && <Visibility show={f.show} onChange={(show) => set('show', show)} />}
+
+            {/* ================= PREVIEW (small screens) ================= */}
+            {tab === 'preview' && <PreviewPane f={f} previewLinks={previewLinks} />}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* ---------- save bar ---------- */}
+        <div className="sticky bottom-4 z-20 mt-5 rounded-3xl border border-line-strong bg-surface/95 p-2.5 backdrop-blur">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pl-1.5">
+            <ActionButton onClick={save} disabled={saving || !dirty} className="rounded-full">
               {saving && <Loader2 className="size-4 animate-spin" />} Save profile
             </ActionButton>
-            <a href={`/@${f.handle}`} className="text-sm text-mute hover:text-paper">View public page</a>
+            {dirty && (
+              <button type="button" onClick={discard} className="inline-flex h-10 items-center gap-1.5 rounded-full px-3 text-sm text-mute hover:text-paper">
+                <Undo2 className="size-4" /> Discard
+              </button>
+            )}
+            <span className="flex items-center gap-2 text-xs text-mute">
+              <span className={cn('size-2 rounded-full', dirty ? 'bg-amber-300' : 'bg-emerald-400')} />
+              {dirty ? 'Unsaved changes' : 'All saved'}
+            </span>
+            <a href={`/@${f.handle}`} className="ml-auto pr-2 text-sm text-mute hover:text-paper">View public page</a>
           </div>
           {(note || error) && (
             <p role={error ? 'alert' : 'status'} className={cn('mt-2.5 rounded-2xl px-3.5 py-2.5 text-sm leading-snug', error ? 'bg-signal/10 text-signal' : 'bg-paper/[0.06] text-paper/80')}>
@@ -343,54 +442,10 @@ export function ProfileEditor() {
         </div>
       </div>
 
-      <div className="min-w-0 xl:sticky xl:top-6 xl:self-start">
-        <p className="mb-3 flex items-center justify-between font-mono text-xs text-mute">
-          <span>Live preview</span>
-          <span>Example numbers</span>
-        </p>
-        <div className="relative overflow-hidden rounded-[28px] border border-line bg-black">
-          <MiniDots color={f.dotColor} />
-          <div className="relative flex justify-center px-4 py-8">
-            <ProfileCard
-              preview
-              isOwner
-              view={f}
-              stats={{ ...(f.show.clips ? { clips: 12 } : {}), ...(f.show.views ? { views: 48200 } : {}), ...(f.show.earnings ? { earnedCents: 32000 } : {}), ...(f.show.campaigns ? { campaigns: 4 } : {}) }}
-              links={previewLinks}
-            />
-          </div>
-        </div>
+      {/* ---------- live preview (wide screens) ---------- */}
+      <div className="hidden min-w-0 xl:sticky xl:top-[104px] xl:block xl:self-start">
+        <PreviewPane f={f} previewLinks={previewLinks} />
       </div>
-
-      <Modal open={picker} onClose={() => setPicker(false)} title="Add a connection">
-        <div className="grid gap-5">
-          {LINK_GROUPS.map((g) => (
-            <div key={g}>
-              <p className="mb-2 font-mono text-[11px] tracking-widest text-mute uppercase">{g}</p>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                {LINK_PLATFORMS.filter((p) => p.group === g).map((p) => {
-                  const have = f.links.some((l) => l.platform === p.id)
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => {
-                        setPicker(false)
-                        setEditing(p.id)
-                      }}
-                      className={cn('group flex flex-col items-center gap-2 rounded-xl border px-2 py-3 text-xs transition-all hover:-translate-y-0.5 hover:bg-paper/10', have ? 'border-paper/50 bg-paper/5' : 'border-line')}
-                    >
-                      {p.id === 'website' ? <Globe className="size-6" /> : <BrandIcon name={p.id} className="size-6" />}
-                      <span className="text-center leading-tight">{p.label}</span>
-                      {have && <span className="text-[10px] text-mute">added</span>}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      </Modal>
 
       <LinkDialog
         platform={editing}
@@ -405,6 +460,50 @@ export function ProfileEditor() {
           setEditing(null)
         }}
       />
+    </div>
+  )
+}
+
+type TabId = 'profile' | 'style' | 'effects' | 'links' | 'privacy' | 'preview'
+
+const EFFECT_GROUPS: { title: string; ids: string[] }[] = [
+  { title: 'Weather', ids: ['snow', 'rain', 'lightning', 'smoke'] },
+  { title: 'Nature', ids: ['petals', 'leaves', 'fireflies', 'aurora', 'caustics', 'rays'] },
+  { title: 'Sparkle and celebrate', ids: ['embers', 'sparkle', 'fireworks', 'confetti', 'stars', 'bubbles'] },
+  { title: 'Screen', ids: ['code', 'film', 'vhs'] },
+]
+
+function Group({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <h2 className="text-[15px] font-medium">{title}</h2>
+        {hint && <p className="text-xs text-mute">{hint}</p>}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+function PreviewPane({ f, previewLinks }: { f: ProfileView; previewLinks: { platform: string; href: string; label: string }[] }) {
+  return (
+    <div>
+      <p className="mb-3 flex items-center justify-between font-mono text-xs text-mute">
+        <span>Live preview</span>
+        <span>Example numbers</span>
+      </p>
+      <div className="relative overflow-hidden rounded-[28px] border border-line bg-black">
+        <MiniDots color={f.dotColor} />
+        <div className="relative flex justify-center px-4 py-8">
+          <ProfileCard
+            preview
+            isOwner
+            view={f}
+            stats={{ ...(f.show.clips ? { clips: 12 } : {}), ...(f.show.views ? { views: 48200 } : {}), ...(f.show.earnings ? { earnedCents: 32000 } : {}), ...(f.show.campaigns ? { campaigns: 4 } : {}) }}
+            links={previewLinks}
+          />
+        </div>
+      </div>
     </div>
   )
 }
