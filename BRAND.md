@@ -1,28 +1,28 @@
 # The logoless mark
 
-Files are in `public/brand/`. Earlier versions are kept in `v1`, `v2` and `v3`.
+Files are in `public/brand/`. Earlier versions are kept in `v1` to `v4`.
 
 ## What it is
 
-A perfect square, made of two pieces that fit together: a solid **L**, and a **square clip card** with a play button cut clean through it. Nothing is added to the square. Nothing sticks out of it.
+Two bold letters, **L** and **l**, built to fill one perfect square. The silhouette is exactly 1:1, so the mark is its own app icon: it needs no box around it.
 
 ## What it means
 
-1. **The square is the frame.** Every clip lives in a frame: a screen, a post, a thumbnail. It is also the shape of every app icon, so the mark is its own container. One shape, one idea, at every size.
-2. **The solid L is the platform, and the "L" in logoless.** It runs the full height of the square and the full width, and the clip rests inside its reach. It holds the work up and keeps it from falling out of the frame. It does not cover it.
-3. **The gap is a second, empty L.** The channel between the pieces is the same width all the way round, and it bends the same way the solid L does. So the mark spells "ll" twice: one L you can see, one you can't. **Logo** and **less**. The empty one is the point of the name.
-4. **The card is a perfect square, and the hero.** It is the only piece with a window in it, and it gets the middle of the frame. In logoless the clip is what gets the room.
-5. **The play button is punched all the way through.** Where a logo would normally sit there is only a way to look through. The window is never filled in, so it always shows what is behind the mark. Its point faces right: forward, onward, the way views and earnings travel.
-6. **Both top-left corners are clipped at exactly 45 degrees**, like a trimmed clip or a turned corner. The two cuts run parallel, as if one diagonal line sliced through both pieces.
-7. **Everything lines up.** The tops of the L and the card are flush. The right edge of the foot and the right edge of the card are flush. The stem, the gap and the card are all multiples of the same small unit (104 : 24 : 192), so the mark can be drawn on any grid.
+1. **"ll", twice.** The name is logo-less, and the mark is two l's: a big L that holds the play button, and a second l that has been cut into. One letter carries the clip. The other carries the space the clip left behind. Logo, less.
+2. **The play button is a hole in the L.** The first letter is the "logo", and its middle has been removed. What shows through the gap is a play button. A logo normally takes that spot. Here it is empty, and the empty spot is the clip. It is cut clean through, so it always shows what is behind it.
+3. **One line runs through the mark.** The hole in the L and the notch in the second letter sit on the same horizontal line, and both point the same way. Read left to right, it is a clip travelling: from the person who made it, past the foot of the L, into the second letter, and out to the views it earns.
+4. **The second letter is cut where the clip passes.** The notch on its left edge has the same angle as the play button. The clip leaves a mark on what it moves through, the way a good clip leaves a mark on a campaign.
+5. **Clipped corners.** Both letters have their top-left corner cut at exactly 45 degrees, like a trimmed clip. The foot of the L is trimmed at the same angle. One angle, used everywhere.
+6. **Same height, same baseline.** Clippers, brands and viewers are equals. Neither letter is taller or louder than the other.
+7. **A square, filled completely.** Nothing is left over and nothing sticks out. The mark fills its frame the way a clip fills a screen.
 
 ## Rules
 
 - Colours: `#f3f2ee` (paper) on `#0b0b0c` (ink). The light version swaps them. A single red `#ff2a2a` may replace paper for promotions.
-- Never stretch, rotate, outline, shadow or glow the mark. Never fill the play window.
-- Keep clear space around the mark of at least the width of the L's stem (one third of the mark).
-- For tiny sizes (favicons) use `favicon-*.png`, which are scaled up inside the square.
-- In app icons the mark covers 55% of the square, which keeps it fully visible inside round and rounded Android and iOS masks.
+- Never stretch, rotate, outline, shadow or glow the mark. Never fill the play hole.
+- Keep clear space around the mark of at least the width of the L's stem (about one third of the mark).
+- For tiny sizes (favicons) use `favicon-*.png`, which scale the mark up inside the square.
+- In app icons the mark covers 57% of the square, which keeps it fully visible inside round and rounded Android and iOS masks.
 
 ## Files
 
