@@ -219,12 +219,13 @@ function NotificationBell({ onNavigate }: { onNavigate?: () => void }) {
         className="glass-liquid grid size-11 place-items-center rounded-full"
       >
         <Bell className="size-[18px]" />
-        {unread > 0 && (
-          <span className="absolute -top-1 -right-1 grid min-w-5 place-items-center rounded-full bg-paper px-1 text-[10px] font-semibold leading-5 text-ink">
-            {unread > 9 ? '9+' : unread}
-          </span>
-        )}
       </button>
+      {/* The badge sits outside the glass button: the glass clips anything that pokes past its edge. */}
+      {unread > 0 && (
+        <span aria-hidden="true" className="pointer-events-none absolute -top-1 -right-1 z-10 grid min-w-5 place-items-center rounded-full bg-paper px-1 text-[10px] leading-5 font-semibold text-ink ring-2 ring-ink">
+          {unread > 9 ? '9+' : unread}
+        </span>
+      )}
       <AnimatePresence>
         {open && (
           <motion.div
