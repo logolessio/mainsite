@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { CtaBand } from '@/components/marketing/blocks'
 import { Compare, HorizontalStory, Principles, Ticker } from '@/components/marketing/layouts'
+import { EarnDemo } from '@/components/marketing/earn-demo'
 import { PageHero } from '@/components/marketing/page-hero'
 
 export const metadata: Metadata = {
@@ -27,6 +28,7 @@ export default function Page() {
           { title: 'Withdraw with Stripe', body: 'Connect a bank account through Stripe once. Withdraw whenever your balance passes the minimum.', detail: ['Stripe handles identity checks', 'Payout history and receipts in one place'] },
         ]}
       />
+      <EarnDemo />
       <Compare
         left={{ title: 'If you are a brand', items: ['Write the brief and the rules', 'Set a budget and a rate per 1,000 views', 'Fund the campaign and go live', 'Watch verified views and spend in real time'] }}
         right={{ title: 'If you are a clipper', items: ['Join a live campaign, no application', 'Cut the clip and post it on your own account', 'Paste the link and let the checks run', 'Withdraw your balance through Stripe'] }}
