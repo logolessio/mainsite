@@ -1,3 +1,3 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <g transform="translate(256 256) scale(1.0) translate(-310 -256)" fill="#0b0b0c" stroke="#0b0b0c" stroke-width="16" stroke-linejoin="round"><path fill-rule="evenodd" d="M148 202 L194 156 H236 V284 H290 L308 302 V356 H148 Z"/><path fill-rule="evenodd" d="M348 202 L394 156 H472 V356 H348 Z M380 240 L448 280 L380 320 Z"/></g>
+  <g transform="translate(256 256) scale(0.88) translate(-160 -256)" fill="#0b0b0c" stroke="#0b0b0c" stroke-width="16" stroke-linejoin="round"><path fill-rule="evenodd" d="M 8.00 155.30 L 59.30 104.00 L 96.00 104.00 L 96.00 320.00 L 312.00 320.00 L 312.00 408.00 L 8.00 408.00 Z"/><path fill-rule="evenodd" d="M 136.00 147.30 L 179.30 104.00 L 312.00 104.00 L 312.00 280.00 L 136.00 280.00 Z M 188.00 140.10 L 188.00 243.90 L 278.10 192.00 Z"/></g>
 </svg>
