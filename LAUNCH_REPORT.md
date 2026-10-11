@@ -1,6 +1,6 @@
 # Your overnight report
 
-_Written overnight, 11 October 2026. This is the same text that was emailed to emile@logoless.io._
+_Written overnight, 11 to 12 October 2026. This is the same text that was emailed to emile@logoless.io._
 
 You asked for everything I could do to get the site ready, a dev site with a push button, and a full lowdown. This is it. The short version comes first, the detail after.
 
@@ -102,3 +102,31 @@ Covered in the chat as it happened, repeated here so this email is the full reco
 ---
 
 Sent by the logoless site itself, as you asked. A copy of this report is saved in the project as LAUNCH_REPORT.md.
+
+
+# Overnight report: addendum
+
+_Follow-up, same night. Also emailed._
+
+A short follow-up. I kept going after the first email went out, so here is what changed since, and one thing to check.
+
+## Added since the first email
+
+- **A 14th feature: Pool remaining meter.** On every funded campaign page, a bar and a number show how much of the pool is still unpaid, straight from the money ledger. Campaigns that have not been funded (like the samples) show nothing rather than a made-up figure. On the dev site now; hidden on logoless.io until pushed.
+- **A Reels button on the home page.** With Reels switched on, the home page gets a "Swipe through campaigns" button next to "Take the tour".
+- **The push button counts.** The white pill on the dev site now shows how many features are on the dev site but not on logoless.io yet, so you can see at a glance what is waiting.
+- **Brand sign-up saves the logo.** The logo a brand picks during sign-up was only a temporary preview. It is now uploaded and saved as the brand's picture. I also removed a "Balance funded" checklist row at the end of brand sign-up that could never be ticked.
+
+## One thing to check before you sign in on dev.logoless.io
+
+- **AUTH_URL.** In Cloudflare > Workers > mainsite > Settings > Variables and Secrets, if there is a variable called AUTH_URL (or NEXTAUTH_URL) set to https://logoless.io, delete it. The project does not need it, and it would send you to the live site when you try to sign in on the dev site. If it is not there, there is nothing to do.
+
+## State when I wrote this
+
+- logoless.io and dev.logoless.io both answer, the health check is green (database, sign-in, payments, email), and the last Cloudflare build succeeded.
+- Everything is pushed. The first email was sent once by the site (a second attempt correctly sent nothing).
+- The checklist in the first email is still the list of what needs you. Nothing in this email adds to it except the AUTH_URL check above.
+
+---
+
+Sent by the logoless site itself. The full text of both emails is saved in the project as LAUNCH_REPORT.md.
