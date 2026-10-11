@@ -33,6 +33,8 @@ export const POST = route(async (req: Request) => {
   const ind: Stripe.AccountUpdateParams.Individual = {}
   const changed: string[] = []
 
+  // Stripe wants the email on the person as well as on the account.
+  if (b.firstName !== undefined) ind.email = user.email
   if (b.firstName !== undefined) (ind.first_name = text(b.firstName, 60)), changed.push('name')
   if (b.lastName !== undefined) ind.last_name = text(b.lastName, 60)
   if (b.dob) {

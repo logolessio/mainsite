@@ -4,7 +4,7 @@ import { Check, ChevronDown, Loader2, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import { ActionButton, Card } from '@/components/app/ui'
 import { Field, Input, Select } from '@/components/ui/fields'
-import { COUNTRIES, type ConnectStatus, countryOf, type Section, sectionOf } from '@/lib/connect-fields'
+import { COUNTRIES, type ConnectStatus, countryOf, requirementLabel, type Section, sectionOf } from '@/lib/connect-fields'
 import { createPayoutAccount, savePayoutBank, savePayoutDetails, tokenizeBank, uploadIdPhoto } from '@/lib/stripe-client'
 import { cn } from '@/lib/utils'
 
@@ -29,13 +29,14 @@ export function PayoutSetup({ status, onChange }: { status: ConnectStatus; onCha
     ...(needed.has('document') ? [{ id: 'document' as Section, title: 'Photo of your ID' }] : []),
     { id: 'bank', title: 'Bank account' },
   ]
+  const stillFor = (sec: Section) => [...new Set([...status.due, ...status.pastDue].filter((r) => sectionOf(r) === sec).map(requirementLabel))]
   const errFor = (sec: Section) => status.errors.filter((e) => sectionOf(e.requirement) === sec).map((e) => e.message)
 
   return (
     <div className="grid gap-4">
       <ol className="grid gap-3">
         {steps.map((st, i) => (
-          <Step key={st.id} n={i + 1} title={st.title} done={!needed.has(st.id)} open={current === st.id} errors={errFor(st.id)}>
+          <Step key={st.id} n={i + 1} title={st.title} done={!needed.has(st.id)} open={current === st.id} errors={errFor(st.id)} still={stillFor(st.id)}>
             {st.id === 'details' && <DetailsForm status={status} onChange={onChange} />}
             {st.id === 'id' && <IdForm status={status} onChange={onChange} />}
             {st.id === 'document' && <DocumentForm onChange={onChange} />}
@@ -54,7 +55,7 @@ export function PayoutSetup({ status, onChange }: { status: ConnectStatus; onCha
   )
 }
 
-function Step({ n, title, done, open, errors, children }: { n: number; title: string; done: boolean; open: boolean; errors: string[]; children: React.ReactNode }) {
+function Step({ n, title, done, open, errors, still, children }: { n: number; title: string; done: boolean; open: boolean; errors: string[]; still?: string[]; children: React.ReactNode }) {
   const [manual, setManual] = useState(false)
   const show = open || manual
   return (
@@ -69,6 +70,7 @@ function Step({ n, title, done, open, errors, children }: { n: number; title: st
           {e}
         </p>
       ))}
+      {open && still && still.length > 0 && <p className="mt-3 text-xs text-mute">Stripe still needs: {still.join(', ')}.</p>}
       {show && <div className="mt-5">{children}</div>}
     </li>
   )
@@ -77,21 +79,24 @@ function Step({ n, title, done, open, errors, children }: { n: number; title: st
 function useSubmit(fn: () => Promise<void>) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [saved, setSaved] = useState(false)
   const run = async (e?: React.FormEvent) => {
     e?.preventDefault()
     setBusy(true)
     setError('')
+    setSaved(false)
     try {
       await fn()
+      setSaved(true)
     } catch (err) {
       setError(msg(err))
     }
     setBusy(false)
   }
-  return { busy, error, run }
+  return { busy, error, run, saved }
 }
 
-function Submit({ busy, error, label }: { busy: boolean; error: string; label: string }) {
+function Submit({ busy, error, label, saved }: { busy: boolean; error: string; label: string; saved?: boolean }) {
   return (
     <div className="mt-5 grid gap-3">
       {error && (
@@ -99,6 +104,7 @@ function Submit({ busy, error, label }: { busy: boolean; error: string; label: s
           {error}
         </p>
       )}
+      {saved && !error && !busy && <p role="status" className="text-sm text-mute">Saved. Stripe has the details above; anything it still needs is listed at the top of this step.</p>}
       <div>
         <ActionButton type="submit" disabled={busy} className="rounded-full">
           {busy && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
@@ -154,7 +160,7 @@ function DetailsForm({ status, onChange }: { status: ConnectStatus; onChange: (s
   const c = countryOf(status.country)
   const [f, setF] = useState({ firstName: '', lastName: '', day: '', month: '', year: '', line1: '', line2: '', city: '', state: '', postalCode: '', phone: '' })
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement>) => setF((v) => ({ ...v, [k]: e.target.value }))
-  const { busy, error, run } = useSubmit(async () => {
+  const { busy, error, run, saved } = useSubmit(async () => {
     onChange(
       await savePayoutDetails({
         firstName: f.firstName,
@@ -187,7 +193,7 @@ function DetailsForm({ status, onChange }: { status: ConnectStatus; onChange: (s
       </div>
       <Field label="Postcode"><Input value={f.postalCode} onChange={set('postalCode')} autoComplete="postal-code" required /></Field>
       <Field label="Phone" hint="With the country code, for example +44 7700 900000."><Input value={f.phone} onChange={set('phone')} type="tel" autoComplete="tel" required /></Field>
-      <Submit busy={busy} error={error} label="Save and continue" />
+      <Submit busy={busy} error={error} label="Save and continue" saved={saved} />
     </form>
   )
 }

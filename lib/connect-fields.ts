@@ -73,3 +73,16 @@ export function errorMessage(code: string): string {
   }
   return m[code] ?? 'Stripe could not accept one of the details. Check them and try again.'
 }
+
+/** A requirement name from Stripe, in plain words. */
+export function requirementLabel(req: string): string {
+  const m: [RegExp, string][] = [
+    [/first_name/, 'first name'], [/last_name/, 'last name'], [/dob/, 'date of birth'], [/address\.line1/, 'street address'],
+    [/address\.city/, 'city'], [/address\.state/, 'state or region'], [/address\.postal_code/, 'postcode'], [/address/, 'address'],
+    [/\.email/, 'email'], [/\.phone/, 'phone number'], [/ssn_last_4/, 'last 4 digits of your SSN'], [/id_number/, 'ID number'],
+    [/verification\.document/, 'photo of your ID'], [/verification\.additional_document/, 'a second ID document'],
+    [/external_account/, 'bank account'], [/tos_acceptance/, 'accepting the terms'], [/business_profile\.url/, 'website'],
+    [/business_profile/, 'business details'], [/political_exposure/, 'political exposure answer'],
+  ]
+  return m.find(([re]) => re.test(req))?.[1] ?? req.replace(/_/g, ' ').replace(/\./g, ' ')
+}
