@@ -24,6 +24,7 @@ Everything below is a one-off. Nothing here is pushed to GitHub: keys live in Cl
 | `STRIPE_SECRET_KEY` | start with a **test** key (`sk_test_...`) |
 | `STRIPE_WEBHOOK_SECRET` | from the Stripe webhook endpoint (`whsec_...`) |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile widget (step 3) |
+| `RESEND_API_KEY` | Switches on sign-in by emailed code (see "Email sign-in" below) |
 | `DISCORD_BOT_TOKEN` | Optional. Switches on "Import from Discord" on profiles (see below) |
 
 You can check which are set, and test them, at `/admin/keys`. Secret values are never shown there.
@@ -67,3 +68,15 @@ Discord only lets a bot read someone's picture, banner, colour and name from the
 Every request, page view, sign-in, security event and money movement is written to the database and shown at `/admin/logs`, where you can filter it and download it as CSV or JSON. Two plumbing calls that fire on every page (`/api/me/nav` and `/api/security/config`) are left out when they succeed. Visitors are stored as a salted hash, never a raw address.
 
 Cloudflare's free D1 plan allows 100,000 row writes a day across everything, and the log uses some of them on every page. If the site gets busy, upgrade to the Workers Paid plan ($5 a month), and use "Delete activity log rows older than..." on the Logs page now and then.
+
+## Email sign-in (Resend)
+
+People can sign in or sign up with just their email: we send a six-digit code, valid 10 minutes, and typing it in is the proof they own the address. There are no passwords to store or lose.
+
+1. In Resend, make sure the domain `verify.logoless.io` shows **Verified** (Domains page). If not, add the DNS records it lists in Cloudflare (DNS) and press Verify.
+2. Resend > **API Keys** > Create API Key. Permission **Sending access**, domain `verify.logoless.io`.
+3. Add it in Cloudflare as a **Secret** called `RESEND_API_KEY`.
+4. Optional: add a plain variable `RESEND_FROM` to change the sender. The default is `logoless <login@verify.logoless.io>`.
+5. Open `/admin/keys` and run **Email (Resend)**. It checks the key and the domain.
+
+Resend's free plan allows 100 emails a day and 3,000 a month. Past that, upgrade it. Codes are rate limited per network and per address, and a code stops working after 5 wrong tries.

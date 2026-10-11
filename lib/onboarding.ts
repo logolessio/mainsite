@@ -1,4 +1,4 @@
-import type { Role } from './auth'
+import { type Role, sendEmailCode, signInWithCode } from './auth'
 import type { SocialPlatform } from './accounts'
 
 // UI-only stubs for the onboarding flow. Each function is a seam for your backend.
@@ -76,15 +76,17 @@ export async function checkHandleAvailable(handle: string): Promise<boolean> {
   return !RESERVED.has(handle.toLowerCase())
 }
 
-export async function verifyEmailCode(_email: string, code: string): Promise<boolean> {
-  // TODO(backend): POST /api/auth/verify-email { email, code }. Preview accepts any 6 digits.
-  await new Promise((r) => setTimeout(r, 600))
-  return /^\d{6}$/.test(code)
+export async function verifyEmailCode(email: string, code: string): Promise<boolean> {
+  try {
+    await signInWithCode(email, code)
+    return true
+  } catch {
+    return false
+  }
 }
 
-export async function resendEmailCode(_email: string): Promise<void> {
-  // TODO(backend): POST /api/auth/resend-code
-  await new Promise((r) => setTimeout(r, 300))
+export async function resendEmailCode(email: string): Promise<void> {
+  await sendEmailCode(email)
 }
 
 export async function completeOnboarding(_data: OnboardingData): Promise<void> {

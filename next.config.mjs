@@ -54,7 +54,13 @@ const nextConfig = {
     return [{ source: '/@:handle', destination: '/u/:handle' }]
   },
   async redirects() {
-    return [{ source: '/campaigns', destination: '/', permanent: true }]
+    // Sign-in is by emailed code now, so the old password pages go to the login page.
+    return [
+      { source: '/campaigns', destination: '/', permanent: true },
+      { source: '/forgot-password', destination: '/login', permanent: true },
+      { source: '/reset-password', destination: '/login', permanent: true },
+      { source: '/verify-email', destination: '/login', permanent: true },
+    ]
   },
   typescript: {
     ignoreBuildErrors: false,

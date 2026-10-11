@@ -7,9 +7,17 @@ import { limit } from '@/lib/guard'
  * sign-in attempts are rate limited per network. Everything else (callbacks, session, sign-out) goes straight through.
  */
 const STARTS_SIGN_IN = /\/signin\/[a-z]+$/i
+const CHECKS_CODE = /\/callback\/email-code$/i
 
 async function gate(req: Request) {
   const { pathname } = new URL(req.url)
+  if (CHECKS_CODE.test(pathname)) {
+    // Guessing a code: a few tries per network, and each code also dies after 5 wrong tries.
+    await limit(req, { name: 'code-check', max: 15, windowSec: 600 }).catch(() => {
+      throw new Response('Too many attempts. Please wait a few minutes.', { status: 429 })
+    })
+    return null
+  }
   if (!STARTS_SIGN_IN.test(pathname)) return null
   await limit(req, { name: 'signin', max: 20, windowSec: 600 }).catch(() => {
     throw new Response('Too many attempts. Please wait a few minutes.', { status: 429 })

@@ -22,20 +22,15 @@ export async function signInWithProvider(provider: Provider, role?: Role, callba
   return ''
 }
 
-export async function signInWithEmail(_email: string, _password: string): Promise<string> {
-  // TODO(backend): verify credentials
-  return '/dashboard'
+/** Asks for a six-digit code by email. The answer is the same whether or not the address has an account. */
+export async function sendEmailCode(email: string): Promise<void> {
+  await ensureHuman()
+  const res = await fetch('/api/auth/email/start', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email }) })
+  if (!res.ok) throw new Error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? 'We could not send the code. Please try again.')
 }
 
-export async function signUpWithEmail(input: { email: string; password: string; name: string; role: Role }): Promise<string> {
-  // TODO(backend): create user, send verification email
-  return `/verify-email?email=${encodeURIComponent(input.email)}&role=${input.role}`
-}
-
-export async function requestPasswordReset(_email: string): Promise<void> {
-  // TODO(backend): send reset email
-}
-
-export async function resetPassword(_token: string, _password: string): Promise<void> {
-  // TODO(backend): set new password
+/** Signs in with the code. Creates the account the first time. Throws if the code is wrong or has expired. */
+export async function signInWithCode(email: string, code: string): Promise<void> {
+  const r = await signIn('email-code', { email, code, redirect: false })
+  if (!r || r.error || r.ok === false) throw new Error('That code is not right, or it has expired. Check the 6 digits or ask for a new one.')
 }

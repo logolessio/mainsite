@@ -1,4 +1,5 @@
 import NextAuth from 'next-auth'
+import Credentials from 'next-auth/providers/credentials'
 import Discord from 'next-auth/providers/discord'
 import Google from 'next-auth/providers/google'
 
@@ -16,6 +17,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET ? [Google] : []),
     ...(process.env.AUTH_DISCORD_ID && process.env.AUTH_DISCORD_SECRET ? [Discord] : []),
+    // Email sign-in with a six-digit code. The code was emailed to the address, so using it proves they own it.
+    ...(process.env.RESEND_API_KEY || process.env.NODE_ENV !== 'production'
+      ? [
+          Credentials({
+            id: 'email-code',
+            name: 'Email code',
+            credentials: { email: {}, code: {} },
+            async authorize(c) {
+              const email = String(c?.email ?? '').trim().toLowerCase()
+              const code = String(c?.code ?? '').trim()
+              if (!/^\S+@\S+\.\S+$/.test(email) || !/^\d{6}$/.test(code)) return null
+              const { checkCode } = await import('./lib/email-code')
+              return (await checkCode(email, code)) ? { id: email, email, name: email.split('@')[0] } : null
+            },
+          }),
+        ]
+      : []),
   ],
   pages: { signIn: '/login', error: '/login' },
   events: {
