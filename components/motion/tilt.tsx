@@ -1,6 +1,6 @@
 'use client'
 
-import { motion, useMotionTemplate, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { useEffect, useRef } from 'react'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 import { cn } from '@/lib/utils'
@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 const SPRING = { stiffness: 140, damping: 18, mass: 0.6 }
 
 /**
- * 3D tilt with a travelling light glare and a diagonal light sweep on hover.
+ * 3D tilt with a diagonal light sweep on hover. Nothing glows under the cursor.
  * `global` makes it follow the pointer anywhere on the screen (for hero scenes).
  */
 export function Tilt3D({
@@ -35,9 +35,6 @@ export function Tilt3D({
   const sy = useSpring(py, SPRING)
   const rotateY = useTransform(sx, [0, 1], [-max, max])
   const rotateX = useTransform(sy, [0, 1], [max, -max])
-  const gx = useTransform(sx, [0, 1], [0, 100])
-  const gy = useTransform(sy, [0, 1], [0, 100])
-  const glareBg = useMotionTemplate`radial-gradient(420px circle at ${gx}% ${gy}%, rgb(255 255 255 / 0.1), transparent 55%)`
 
   useEffect(() => {
     if (!global || !on) return
@@ -69,7 +66,6 @@ export function Tilt3D({
       {/* The light lives on the outer box, so it covers the whole card, padding included, not just the inner content. */}
       {glare && on && (
         <>
-          <motion.div aria-hidden="true" style={{ background: glareBg }} className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 [.tilt:hover_&]:opacity-100" />
           <div aria-hidden="true" className="sheen-sweep pointer-events-none absolute inset-0 overflow-hidden" />
         </>
       )}

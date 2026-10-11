@@ -1,54 +1,11 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import { useMotionPrefs } from '@/hooks/use-motion-prefs'
-
 /**
- * Soft spotlight that trails the pointer. It is a pre-painted gradient moved with `transform`, so the GPU
- * does the work and nothing is repainted. The loop stops by itself once the light has caught up.
+ * The page's backdrop: a soft vignette, with fine film grain on top. Painted once, nothing follows the cursor.
  */
 export function LightField() {
-  const spot = useRef<HTMLDivElement>(null)
-  const { rich } = useMotionPrefs()
-
-  useEffect(() => {
-    const el = spot.current
-    if (!el || !rich) return
-    let tx = window.innerWidth / 2
-    let ty = window.innerHeight * 0.3
-    let x = tx
-    let y = ty
-    let raf = 0
-
-    const tick = () => {
-      x += (tx - x) * 0.08
-      y += (ty - y) * 0.08
-      el.style.transform = `translate3d(${(x - 450).toFixed(1)}px, ${(y - 450).toFixed(1)}px, 0)`
-      raf = Math.abs(tx - x) + Math.abs(ty - y) > 0.5 ? requestAnimationFrame(tick) : 0
-    }
-    const onMove = (e: PointerEvent) => {
-      tx = e.clientX
-      ty = e.clientY
-      if (!raf) raf = requestAnimationFrame(tick)
-    }
-    tick()
-    window.addEventListener('pointermove', onMove, { passive: true })
-    return () => {
-      cancelAnimationFrame(raf)
-      window.removeEventListener('pointermove', onMove)
-    }
-  }, [rich])
-
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-      <div
-        ref={spot}
-        className="absolute top-0 left-0 size-[900px] will-change-transform"
-        style={{
-          background: 'radial-gradient(closest-side, rgb(255 255 255 / 0.07), transparent)',
-          transform: 'translate3d(30vw, 0, 0)',
-        }}
-      />
       {/* huge, soft vignette: a smooth multi-stop falloff plus a blurred inner shadow so there is no visible edge */}
       <div
         className="absolute inset-0"
