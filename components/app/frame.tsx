@@ -45,6 +45,9 @@ export function AppFrame({ area, items, children }: { area: string; items: AppNa
   const logout = () => signOut({ callbackUrl: '/' })
   const phoneItem = (i: number) => (i >= 4 ? 'hidden' : 'flex')
   const [panelOpen, setPanelOpen] = useState(false)
+  const edge = useRef<HTMLDivElement>(null)
+  const panel = useRef<HTMLElement>(null)
+  const inside = (el: HTMLElement | null, t: EventTarget | null) => Boolean(el && t instanceof Node && el.contains(t))
 
   return (
     <div className="relative z-10 min-h-dvh">
@@ -114,13 +117,22 @@ export function AppFrame({ area, items, children }: { area: string; items: AppNa
       <AnimatePresence>
         {panelOpen && <motion.div key="scrim" aria-hidden="true" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="pointer-events-none fixed inset-0 z-30 hidden bg-black/45 md:block" />}
       </AnimatePresence>
+      {/* an invisible strip along the screen edge: pushing the cursor all the way left opens the panel */}
+      <div
+        ref={edge}
+        aria-hidden="true"
+        onMouseEnter={() => setPanelOpen(true)}
+        onMouseLeave={(e) => !inside(panel.current, e.relatedTarget) && setPanelOpen(false)}
+        className="fixed top-[84px] bottom-0 left-0 z-[39] hidden w-5 md:block"
+      />
       <motion.aside
+        ref={panel}
         aria-label={`${area} navigation`}
         initial={false}
         animate={{ width: panelOpen ? 264 : 72 }}
         transition={reduced ? { duration: 0 } : SPRING}
         onMouseEnter={() => setPanelOpen(true)}
-        onMouseLeave={() => setPanelOpen(false)}
+        onMouseLeave={(e) => !inside(edge.current, e.relatedTarget) && setPanelOpen(false)}
         onFocusCapture={() => setPanelOpen(true)}
         onBlurCapture={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setPanelOpen(false)
