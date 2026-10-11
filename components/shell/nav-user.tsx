@@ -137,7 +137,7 @@ function ProfileIcon({ onNavigate }: { onNavigate?: () => void }) {
             transition={{ duration: 0.22, ease: EASE_OUT }}
             className="absolute top-full right-0 z-50 w-72 pt-3"
           >
-            <div className="overflow-hidden rounded-[26px] border border-line-strong bg-surface shadow-[0_30px_60px_-20px_rgb(0_0_0/0.9)]">
+            <div className="glass-liquid rounded-[26px] shadow-[0_30px_60px_-20px_rgb(0_0_0/0.9)]">
               <div className="h-20" style={{ background: bannerCss(p.banner, p.bannerKind) }} />
               <div className="px-4 pb-4">
                 <Avatar src={p.avatar} name={p.displayName} size={56} className="-mt-9 border-2 border-surface" />
@@ -216,7 +216,7 @@ function NotificationBell({ onNavigate }: { onNavigate?: () => void }) {
         aria-label={unread ? `Notifications, ${unread} unread` : 'Notifications'}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="glass relative grid size-11 place-items-center"
+        className="glass-liquid grid size-11 place-items-center rounded-full"
       >
         <Bell className="size-[18px]" />
         {unread > 0 && (
@@ -232,7 +232,7 @@ function NotificationBell({ onNavigate }: { onNavigate?: () => void }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6 }}
             transition={{ duration: 0.22, ease: EASE_OUT }}
-            className="absolute top-full right-0 z-50 mt-3 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-[26px] border border-line-strong bg-surface shadow-[0_30px_60px_-20px_rgb(0_0_0/0.9)]"
+            className="absolute top-full right-0 z-50 mt-3 w-[min(22rem,calc(100vw-2rem))] glass-liquid rounded-[26px] shadow-[0_30px_60px_-20px_rgb(0_0_0/0.9)]"
           >
             <div className="flex items-center justify-between border-b border-line px-4 py-3">
               <p className="font-display text-lg">Notifications</p>

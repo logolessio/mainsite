@@ -21,8 +21,8 @@ export function PillLink({
     <TransitionLink
       href={href}
       className={cn(
-        'group inline-flex h-12 items-center gap-2 px-6 text-sm font-medium transition-colors',
-        variant === 'solid' ? 'bg-paper text-ink hover:bg-paper/85' : 'border border-line-strong hover:bg-paper/10',
+        'group inline-flex h-12 items-center gap-2 rounded-full px-6 text-sm font-medium transition-colors',
+        variant === 'solid' ? 'bg-paper text-ink hover:bg-paper/85' : 'glass-liquid hover:brightness-125',
         className,
       )}
     >

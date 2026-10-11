@@ -54,7 +54,7 @@ export function FilterBar({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.45, ease: EASE_OUT }}
-      className="mx-auto mb-10 flex max-w-fit flex-wrap items-center justify-center gap-1 rounded-[22px] border border-line bg-surface/80 p-1 md:mb-14 md:rounded-full"
+      className="mx-auto mb-10 flex max-w-fit flex-wrap items-center justify-center gap-1 glass-liquid rounded-[22px] p-1 md:mb-14 md:rounded-full"
     >
       <div role="group" aria-label="Category" className="flex flex-wrap justify-center gap-0.5">
         {categories.map((c) => (

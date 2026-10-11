@@ -79,7 +79,7 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
       </div>
 
       <div className="mt-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div role="tablist" aria-label="Filter clips" className="inline-flex w-fit flex-wrap rounded-full bg-white/[0.06] p-1">
+        <div role="tablist" aria-label="Filter clips" className="glass-liquid inline-flex w-fit flex-wrap rounded-full p-1">
           {FILTERS.map((f) => (
             <button key={f.id} role="tab" type="button" aria-selected={filter === f.id} onClick={() => setFilter(f.id)} className="relative h-9 rounded-full px-4 text-sm">
               {filter === f.id && <motion.span layoutId="clip-filter" transition={{ duration: 0.3, ease: EASE_OUT }} className="absolute inset-0 rounded-full bg-paper" />}
@@ -90,11 +90,11 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
           ))}
         </div>
         <div className="flex items-center gap-3">
-          <label className="relative block flex-1 md:w-60 md:flex-none">
+          <label className="glass-liquid relative block flex-1 rounded-full md:w-60 md:flex-none">
             <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-mute" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search clips" aria-label="Search clips" className="h-10 w-full rounded-full border border-line-strong bg-[#0a0a0b] pr-4 pl-10 text-sm outline-none placeholder:text-mute focus:border-paper/50" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search clips" aria-label="Search clips" className="h-10 w-full rounded-full bg-transparent pr-4 pl-10 text-sm outline-none placeholder:text-mute" />
           </label>
-          <div className="inline-flex rounded-full bg-white/[0.06] p-1">
+          <div className="glass-liquid inline-flex rounded-full p-1">
             {([['cards', LayoutGrid, 'Cards'], ['table', Rows3, 'Table']] as const).map(([id, Ico, label]) => (
               <button key={id} type="button" aria-label={label} aria-pressed={view === id} onClick={() => setView(id)} className={cn('grid size-8 place-items-center rounded-full transition-colors', view === id ? 'bg-paper text-ink' : 'text-mute hover:text-paper')}>
                 <Ico className="size-4" />

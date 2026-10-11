@@ -95,7 +95,7 @@ export function SiteNav() {
               aria-controls="site-menu"
               aria-label={open ? 'Close menu' : 'Open menu'}
               onClick={() => setOpen((v) => !v)}
-              className="glass relative grid size-11 place-items-center"
+              className="glass-liquid grid size-11 place-items-center rounded-full"
             >
               <MenuGlyph open={open} />
             </button>

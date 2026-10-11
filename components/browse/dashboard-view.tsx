@@ -121,7 +121,7 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
           transition={{ delay: 1 }}
           type="button"
           onClick={() => setTourOpen(true)}
-          className="mt-10 inline-flex h-11 items-center gap-2 border border-line-strong px-5 text-sm transition-colors hover:bg-paper/10 rounded-full"
+          className="glass-liquid mt-10 inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm transition-all hover:brightness-125"
         >
           <Compass aria-hidden="true" className="size-4" />
           Take the tour

@@ -27,17 +27,17 @@ export function FaqTabs() {
   return (
     <div className="mx-auto max-w-3xl text-center">
       <div className="flex flex-col items-center gap-5">
-        <div role="tablist" aria-label="FAQ audience" className="relative inline-flex rounded-2xl border border-line-strong p-1">
+        <div role="tablist" aria-label="FAQ audience" className="glass-liquid inline-flex rounded-full p-1">
           {(['All', ...groups] as Tab[]).map((t) => (
-            <button key={t} role="tab" type="button" aria-selected={tab === t} onClick={() => setTab(t)} className="relative h-11 rounded-xl px-6 text-sm">
-              {tab === t && <motion.span layoutId="faq-pill" transition={{ duration: 0.35, ease: EASE_OUT }} className="absolute inset-0 rounded-xl bg-paper" />}
+            <button key={t} role="tab" type="button" aria-selected={tab === t} onClick={() => setTab(t)} className="relative h-11 rounded-full px-6 text-sm">
+              {tab === t && <motion.span layoutId="faq-pill" transition={{ duration: 0.35, ease: EASE_OUT }} className="absolute inset-0 rounded-full bg-paper" />}
               <span className={cn('relative transition-colors', tab === t ? 'text-ink' : 'text-mute hover:text-paper')}>{t}</span>
             </button>
           ))}
         </div>
-        <label className="relative block w-full max-w-sm">
+        <label className="glass-liquid relative block w-full max-w-sm rounded-full">
           <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-5 size-4 -translate-y-1/2 text-mute" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the questions" aria-label="Search the questions" className="h-12 w-full rounded-full border border-line-strong bg-transparent pr-5 pl-12 text-sm outline-none placeholder:text-mute focus:border-paper/50" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the questions" aria-label="Search the questions" className="h-12 w-full rounded-full bg-transparent pr-5 pl-12 text-sm outline-none placeholder:text-mute" />
         </label>
         <p className="font-mono text-xs text-mute" aria-live="polite">
           {items.length} {items.length === 1 ? 'answer' : 'answers'}

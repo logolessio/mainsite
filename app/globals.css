@@ -195,6 +195,64 @@
   }
 }
 
+/*
+ * Liquid glass, the look of the campaign search bar: a glass surface with a soft light that drifts slowly inside it.
+ * Put `glass-liquid` plus a rounded-* class on any element. The light is a transform-only pseudo-element, so it is cheap.
+ */
+@layer components {
+.glass-liquid {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgb(30 30 33 / 0.82), rgb(14 14 16 / 0.78));
+  border: 1px solid rgb(243 242 238 / 0.16);
+  box-shadow:
+    inset 0 1px 0 rgb(243 242 238 / 0.2),
+    inset 0 -1px 0 rgb(243 242 238 / 0.05),
+    inset 0 0 22px rgb(243 242 238 / 0.04),
+    0 20px 40px -20px rgb(0 0 0 / 0.8);
+}
+.glass-liquid::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: 0;
+  width: 55%;
+  height: 190%;
+  border-radius: 9999px;
+  background: rgb(243 242 238 / 0.2);
+  filter: blur(26px);
+  pointer-events: none;
+  transform: translate(-45%, -50%);
+  animation: glass-drift 9s ease-in-out infinite;
+}
+.glass-liquid::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 20%, rgb(255 255 255 / 0.07) 38%, transparent 52%);
+}
+}
+@keyframes glass-drift {
+  0%,
+  100% {
+    transform: translate(-45%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(125%, -50%) scale(1.25);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .glass-liquid::before {
+    animation: none;
+    transform: translate(35%, -50%);
+  }
+}
+
 /* Liquid glass, used only on the tour card (one blurred layer at a time keeps the page fast). */
 .liquid-glass {
   position: relative;
