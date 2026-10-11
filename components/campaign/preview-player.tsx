@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react'
 import { usePreview } from '@/components/shell/preview-provider'
 import type { Campaign } from '@/lib/campaigns'
 
-const BARS = 36
+const BARS = 64
 // deterministic pseudo-waveform so the bar looks the same on server and client
 const heights = Array.from({ length: BARS }, (_, i) => Math.round(28 + Math.abs(Math.sin(i * 1.7) * 48 + Math.sin(i * 0.6) * 24)))
 
@@ -37,14 +37,14 @@ export function PreviewPlayer({ campaign }: { campaign: Campaign }) {
   }, [playing, progress, duration])
 
   return (
-    <div data-tour="cc-preview" className="flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.05] p-1.5 pr-4">
+    <div data-tour="cc-preview" className="flex items-center gap-4 rounded-full border border-white/10 bg-white/[0.05] p-2.5 pr-5 backdrop-blur">
       <button
         type="button"
         onClick={() => toggle(campaign.id, campaign.previewUrl)}
         aria-label={playing ? `Pause preview of ${campaign.title}` : `Play preview of ${campaign.title}`}
-        className="grid size-10 shrink-0 place-items-center rounded-full bg-paper text-ink transition-transform hover:scale-105 active:scale-95"
+        className="grid size-14 shrink-0 place-items-center rounded-full bg-paper text-ink transition-transform hover:scale-105 active:scale-95"
       >
-        {playing ? <Pause className="size-4 fill-ink" /> : <Play className="size-4 translate-x-px fill-ink" />}
+        {playing ? <Pause className="size-5 fill-ink" /> : <Play className="size-5 translate-x-px fill-ink" />}
       </button>
       <div
         role="slider"
@@ -58,20 +58,20 @@ export function PreviewPlayer({ campaign }: { campaign: Campaign }) {
           const r = e.currentTarget.getBoundingClientRect()
           seek((e.clientX - r.left) / r.width)
         }}
-        className="relative h-8 min-w-0 flex-1 cursor-pointer"
+        className="relative h-12 min-w-0 flex-1 cursor-pointer"
       >
-        <div className="absolute inset-0 flex items-center gap-[3px]">
+        <div className="absolute inset-0 flex items-center gap-[2px]">
           {heights.map((h, i) => (
             <span key={i} style={{ height: `${h}%` }} className="w-full max-w-[4px] rounded-full bg-white/25" />
           ))}
         </div>
-        <div ref={fill} className="absolute inset-0 flex items-center gap-[3px]" style={{ clipPath: 'inset(0 100% 0 0)' }}>
+        <div ref={fill} className="absolute inset-0 flex items-center gap-[2px]" style={{ clipPath: 'inset(0 100% 0 0)' }}>
           {heights.map((h, i) => (
             <span key={i} style={{ height: `${h}%` }} className="w-full max-w-[4px] rounded-full bg-paper" />
           ))}
         </div>
       </div>
-      <span ref={time} className="w-9 shrink-0 text-right font-mono text-[11px] text-mute">
+      <span ref={time} className="w-10 shrink-0 text-right font-mono text-xs text-mute">
         0:00
       </span>
     </div>

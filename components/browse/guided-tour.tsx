@@ -53,7 +53,7 @@ export const CAMPAIGN_STEPS: Step[] = [
   {
     target: '[data-tour="cc-head"] h1',
     title: 'The campaign at a glance',
-    body: 'The name, who it is for and the platforms that count. Everything else lives on this one card.',
+    body: 'The name, who it is for and the platforms that count. Everything else is further down this page.',
     icon: ImageIcon,
     radius: 24,
     pad: 18,
