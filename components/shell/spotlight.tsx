@@ -13,12 +13,9 @@ import { useNavUser } from './nav-user'
 import { useTransitions } from './transition-provider'
 
 type C = { id: string; title: string; creator: string; type: string; cover: string; rate: number }
-type Row = { key: string; label: string; sub: string; group: 'Campaigns' | 'Pages' | 'Go to' | 'Admin'; href: string; cover?: string }
-const HIDDEN = ['/onboarding', '/@', '/u/']
-const APP = ['/dashboard', '/brand', '/admin']
-const CLIPPER_PAGES: [string, string][] = [['Dashboard overview', '/dashboard'], ['My clips', '/dashboard/submissions'], ['Earnings', '/dashboard/earnings'], ['Payouts', '/dashboard/payouts'], ['Profile editor', '/dashboard/profile'], ['Achievements', '/dashboard/achievements'], ['Notifications', '/dashboard/notifications'], ['Linked accounts', '/dashboard/accounts'], ['Settings', '/dashboard/settings']]
-const BRAND_PAGES: [string, string][] = [['Brand overview', '/brand'], ['My campaigns', '/brand/campaigns'], ['Clips on my campaigns', '/brand/submissions'], ['Funding', '/brand/billing'], ['Brand settings', '/brand/settings']]
-const ADMIN_PAGES: [string, string][] = [['Admin overview', '/admin'], ['Launch readiness', '/admin/launch'], ['Push features', '/admin/push'], ['Artist links', '/admin/invites'], ['Campaigns', '/admin/campaigns'], ['Review queue', '/admin/submissions'], ['Payouts', '/admin/payouts'], ['Users', '/admin/users'], ['Site text', '/admin/text'], ['Logs and stats', '/admin/logs'], ['Audit log', '/admin/audit'], ['Email', '/admin/email'], ['Keys and tests', '/admin/keys'], ['Platform settings', '/admin/settings']]
+type Row = { key: string; label: string; sub: string; group: 'Campaigns' | 'Pages'; href: string; cover?: string }
+// The dashboards have their own jump-to box, so this one stays out of them.
+const HIDDEN = ['/dashboard', '/brand', '/admin', '/onboarding', '/@', '/u/']
 const SHORTCUTS: [string, string][] = [
   ['⌘ K  or  /', 'Open search'],
   ['↑  ↓', 'Move through results'],
@@ -42,7 +39,6 @@ export function Spotlight() {
   const [i, setI] = useState(0)
   const [camps, setCamps] = useState<C[] | null>(null)
   const input = useRef<HTMLInputElement>(null)
-  const inApp = APP.some((p) => pathname.startsWith(p))
   const active = on && !HIDDEN.some((p) => pathname.startsWith(p)) && !isInvitePath(pathname)
 
   useEffect(() => {
@@ -93,24 +89,13 @@ export function Spotlight() {
     ]
   }, [user, reels, board, status])
 
-  // Places to jump to inside the signed-in areas. Admins also get every admin page.
-  const goTo = useMemo<Row[]>(() => {
-    if (!user?.signedIn) return []
-    const mk = (group: Row['group']) => ([label, href]: [string, string]): Row => ({ key: `${group}-${href}`, label, sub: href, group, href })
-    return [...CLIPPER_PAGES.map(mk('Go to')), ...(pathname.startsWith('/brand') ? BRAND_PAGES.map(mk('Go to')) : []), ...(user.isAdmin ? ADMIN_PAGES.map(mk('Admin')) : [])]
-  }, [user, pathname])
-
   const rows = useMemo<Row[]>(() => {
     const t = q.trim().toLowerCase()
     const campaigns: Row[] = (camps ?? []).map((c) => ({ key: c.id, label: c.title, sub: `${c.creator} · ${c.type} · $${c.rate.toFixed(2)}/1K`, group: 'Campaigns', href: `/campaign/${c.id}`, cover: c.cover }))
-    const all = [...goTo, ...campaigns, ...pages]
-    const hit = t
-      ? all.filter((r) => `${r.label} ${r.sub}`.toLowerCase().includes(t))
-      : inApp
-        ? [...goTo.filter((r) => r.group === 'Go to').slice(0, 5), ...(pathname.startsWith('/admin') ? goTo.filter((r) => r.group === 'Admin').slice(0, 5) : []), ...campaigns.slice(0, 3)]
-        : [...campaigns.slice(0, 5), ...pages.slice(0, 5)]
-    return hit.slice(0, 10)
-  }, [q, camps, pages, goTo, inApp, pathname])
+    const all = [...campaigns, ...pages]
+    const hit = t ? all.filter((r) => `${r.label} ${r.sub}`.toLowerCase().includes(t)) : [...campaigns.slice(0, 5), ...pages.slice(0, 5)]
+    return hit.slice(0, 9)
+  }, [q, camps, pages])
 
   const go = useCallback((r?: Row) => {
     if (!r) return
@@ -128,19 +113,17 @@ export function Spotlight() {
   let lastGroup = ''
   return (
     <>
-      {!inApp && (
-        <button type="button" onClick={() => setOpen(true)} aria-label="Search" className="glass-liquid fixed bottom-5 left-5 z-[55] hidden h-11 items-center gap-3 rounded-full pr-2 pl-4 text-sm text-mute backdrop-blur-xl transition-colors hover:text-paper lg:flex">
-          <Search className="size-4" /> Search
-          <kbd className="rounded-full bg-white/[0.08] px-2.5 py-1 font-mono text-[11px]">⌘K</kbd>
-        </button>
-      )}
+      <button type="button" onClick={() => setOpen(true)} aria-label="Search" className="glass-liquid fixed bottom-5 left-5 z-[55] hidden h-11 items-center gap-3 rounded-full pr-2 pl-4 text-sm text-mute backdrop-blur-xl transition-colors hover:text-paper lg:flex">
+        <Search className="size-4" /> Search
+        <kbd className="rounded-full bg-white/[0.08] px-2.5 py-1 font-mono text-[11px]">⌘K</kbd>
+      </button>
       <AnimatePresence>
         {open && (
           <motion.div key="s" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="fixed inset-0 z-[130] flex items-start justify-center bg-black/65 px-4 pt-[14vh] backdrop-blur-sm" onMouseDown={() => setOpen(false)}>
             <motion.div role="dialog" aria-label="Search" initial={{ opacity: 0, y: -16, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }} transition={{ duration: 0.25, ease: EASE_OUT }} onMouseDown={(e) => e.stopPropagation()} onKeyDown={onKey} className="w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/15 bg-[#0c0c0f]/95 shadow-[0_50px_110px_-30px_rgb(0_0_0/0.95)] backdrop-blur-xl">
               <div className="flex items-center gap-3 border-b border-line px-5">
                 <Search aria-hidden="true" className="size-5 text-mute" />
-                <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} placeholder={inApp ? 'Search, or jump to a page' : 'Search campaigns, artists and pages'} aria-label="Search" className="h-16 flex-1 bg-transparent text-lg outline-none placeholder:text-mute" />
+                <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search campaigns, artists and pages" aria-label="Search" className="h-16 flex-1 bg-transparent text-lg outline-none placeholder:text-mute" />
                 <button type="button" aria-label="Close" onClick={() => setOpen(false)} className="grid size-8 place-items-center rounded-full text-mute hover:bg-white/10"><X className="size-4" /></button>
               </div>
               <ul role="listbox" className="max-h-[52vh] overflow-y-auto p-2">
