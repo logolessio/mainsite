@@ -21,8 +21,9 @@ export async function createConnectAccount(user: UserRow, country: string, tos: 
   const s = await stripe()
   const embedded = (await payoutMode()) === 'embedded'
   const params = (cardPayments: boolean): Stripe.AccountCreateParams => ({
-    // Embedded: Stripe collects the details in its own forms. Custom: logoless collects them in its own forms.
-    controller: { stripe_dashboard: { type: 'none' }, fees: { payer: 'application' }, losses: { payments: 'application' }, requirement_collection: embedded ? 'stripe' : 'application' },
+    // Embedded: Stripe collects the details in its own forms, so Stripe also carries the losses on these accounts.
+    // Custom: logoless collects them in its own forms, so logoless carries the losses.
+    controller: { stripe_dashboard: { type: 'none' }, fees: { payer: 'application' }, losses: { payments: embedded ? 'stripe' : 'application' }, requirement_collection: embedded ? 'stripe' : 'application' },
     country: c.code,
     email: user.email,
     business_type: 'individual',
