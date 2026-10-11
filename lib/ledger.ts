@@ -1,5 +1,6 @@
 import { type D1Database, db, nowSec, uid } from './db'
 import { HttpError } from './http'
+import { logEvent } from './log'
 import { SITE } from './site'
 
 /**
@@ -60,6 +61,7 @@ export async function fundCampaign(d: D1Database, brandUserId: string, campaignI
     )
     .bind(uid(), brandUserId, amountCents, t, sessionId, campaignId)
     .run()
+  if (res.meta.changes === 1) logEvent({ kind: 'money', name: 'campaign funded', detail: `${campaignId} +$${(amountCents / 100).toFixed(2)} (session ${sessionId})` })
   return res.meta.changes === 1
 }
 
@@ -126,6 +128,7 @@ export async function creditEarning(input: {
       .bind(earningId, camp.brand_user_id, clipperId, camp.title, grossCents, fee, net, input.note ?? null, t, spendId, campaignId, input.submissionId ?? null),
   ])
   if (results[0].meta.changes !== 1) return null
+  logEvent({ kind: 'money', name: 'earning credited', detail: `${campaignId} → ${clipperId}: gross $${(grossCents / 100).toFixed(2)}, fee $${(fee / 100).toFixed(2)}, net $${(net / 100).toFixed(2)}` })
   return { gross: grossCents, fee, net, releasesAt: release }
 }
 

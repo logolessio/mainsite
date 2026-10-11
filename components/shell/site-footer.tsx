@@ -9,7 +9,7 @@ import { FOOTER, LEGAL_LINKS, SITE } from '@/lib/site'
 import { TransitionLink } from './transition-link'
 import { T } from '@/components/shell/copy-provider'
 
-const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin']
+const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin', '/@', '/u/']
 
 export function SiteFooter() {
   const pathname = usePathname()
@@ -21,7 +21,7 @@ export function SiteFooter() {
         <div className="flex flex-col items-center gap-20 text-center">
           <Reveal className="flex flex-col items-center">
             <Logo className="h-16 md:h-20" />
-            <p className="mx-auto mt-8 max-w-xs text-sm leading-relaxed text-mute">
+            <p className="mx-auto mt-8 max-w-xs text-sm leading-snug text-mute">
               <T>Brands, artists and streamers fund a brief. Clippers cut it, post it and are paid for every verified view.</T>
             </p>
             <div className="mt-8 flex items-center justify-center gap-6 text-mute">

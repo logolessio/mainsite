@@ -11,14 +11,39 @@ export class HttpError extends Error {
 export const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } })
 
-/** Wraps a route handler so thrown errors become clean JSON instead of a bare 500. */
+/** Plumbing that fires on every page and would drown the log, so it is left out. Everything else is recorded. */
+const QUIET = new Set(['/api/me/nav', '/api/security/config'])
+
+async function record(args: unknown[], status: number, ms: number, detail?: string) {
+  const req = args[0] instanceof Request ? args[0] : null
+  if (!req) return
+  const path = new URL(req.url).pathname
+  if ((QUIET.has(path) && status < 400) || status === 429) return // rate limits are logged where they happen
+  try {
+    const [{ logEvent }, { getSession }] = await Promise.all([import('./log'), import('./session')])
+    const session = await getSession().catch(() => null)
+    const kind = status >= 500 ? 'error' : status === 401 || status === 403 || status === 429 ? 'security' : 'api'
+    logEvent({ kind, name: `${req.method} ${path}`, path, status, ms, actor: session?.user?.email?.toLowerCase() ?? null, detail, req })
+  } catch {
+    /* logging must never break a request */
+  }
+}
+
+/** Wraps a route handler so thrown errors become clean JSON instead of a bare 500, and every call is logged. */
 export function route<A extends unknown[]>(fn: (...args: A) => Promise<Response>) {
   return async (...args: A): Promise<Response> => {
+    const t0 = Date.now()
     try {
-      return await fn(...args)
+      const res = await fn(...args)
+      void record(args, res.status, Date.now() - t0)
+      return res
     } catch (e) {
-      if (e instanceof HttpError) return json({ error: e.message }, e.status)
+      if (e instanceof HttpError) {
+        void record(args, e.status, Date.now() - t0, e.message)
+        return json({ error: e.message }, e.status)
+      }
       console.error('route error', e instanceof Error ? e.message : e)
+      void record(args, 500, Date.now() - t0, e instanceof Error ? `${e.name}: ${e.message}` : 'unknown error')
       return json({ error: 'Something went wrong. Please try again.' }, 500)
     }
   }

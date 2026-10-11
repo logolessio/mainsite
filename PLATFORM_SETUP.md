@@ -12,7 +12,7 @@ Everything below is a one-off. Nothing here is pushed to GitHub: keys live in Cl
    npx wrangler d1 migrations apply DB --remote
    ```
 
-   This runs `0001` to `0005`. `0003` also adds the 10 sample campaigns, marked "sample" in the admin list. Delete them from `/admin/campaigns` when you have real ones.
+   This runs every migration not yet applied (`0006` and `0007` are the newest: profile styles and the activity log). `0003` also adds the 10 sample campaigns, marked "sample" in the admin list. Delete them from `/admin/campaigns` when you have real ones.
 
 ## 2. Secrets (Cloudflare > Workers & Pages > mainsite > Settings > Variables and Secrets, type **Secret**)
 
@@ -24,6 +24,7 @@ Everything below is a one-off. Nothing here is pushed to GitHub: keys live in Cl
 | `STRIPE_SECRET_KEY` | start with a **test** key (`sk_test_...`) |
 | `STRIPE_WEBHOOK_SECRET` | from the Stripe webhook endpoint (`whsec_...`) |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile widget (step 3) |
+| `DISCORD_BOT_TOKEN` | Optional. Switches on "Import from Discord" on profiles (see below) |
 
 You can check which are set, and test them, at `/admin/keys`. Secret values are never shown there.
 
@@ -52,3 +53,17 @@ Artist requests it (`/brand/campaigns/new`) > you accept it in `/admin/campaigns
 ## How clips are paid
 
 `/admin/submissions`: open the clip, check the views on the platform, type the verified number, press Approve and pay. The clipper gets 90%, the 10% fee goes to the "Site fees" pill. Raising the number later pays only the difference. There is no automatic view checking yet, so this step is manual.
+
+## Import from Discord (optional)
+
+Discord only lets a bot read someone's picture, banner, colour and name from their user ID. It does not let any app read the "About me" text or the connections, so those are added by hand.
+
+1. Go to discord.com/developers/applications and click **New Application**. Call it logoless.
+2. Open the **Bot** tab, press **Reset Token** and copy the token.
+3. Add it in Cloudflare as a **Secret** called `DISCORD_BOT_TOKEN`. The bot does not need to join any server and needs no permissions.
+
+## Activity log
+
+Every request, page view, sign-in, security event and money movement is written to the database and shown at `/admin/logs`, where you can filter it and download it as CSV or JSON. Two plumbing calls that fire on every page (`/api/me/nav` and `/api/security/config`) are left out when they succeed. Visitors are stored as a salted hash, never a raw address.
+
+Cloudflare's free D1 plan allows 100,000 row writes a day across everything, and the log uses some of them on every page. If the site gets busy, upgrade to the Workers Paid plan ($5 a month), and use "Delete activity log rows older than..." on the Logs page now and then.

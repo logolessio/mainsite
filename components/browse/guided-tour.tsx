@@ -139,9 +139,11 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
   // Smoothed values, written straight to the DOM every frame so nothing re-renders mid-glide.
   const view = useRef({ x: 0, y: 0, w: 0, h: 0, r: 0, cx: 0, cy: 0, init: false })
   const scrollAnim = useRef(0)
-  // The spotlight only follows a target once the page has finished scrolling to it. Moving both at the same time
-  // made the spotlight chase a moving target and overshoot, so each step now goes: close, scroll, open.
-  const settled = useRef(true)
+  // While the page scrolls to a new target, the spotlight glides to where that target WILL be when the scroll ends
+  // (a fixed point), instead of chasing the moving element. Chasing a moving target is what made it overshoot.
+  const finalRect = useRef<{ x: number; y: number; w: number; h: number } | null>(null)
+  // Spotlight and page share one clock while scrolling, so they arrive together.
+  const sync = useRef({ p: 0, start: { x: 0, y: 0, w: 0, h: 0 } })
 
   // Lock the page while the tour is open. Programmatic scrolling still works.
   useEffect(() => {
@@ -188,24 +190,31 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
     const from = window.scrollY
     const delta = desired - from
     if (Math.abs(delta) < 3) {
-      settled.current = true
+      finalRect.current = null
       return
     }
     if (reduced) {
       window.scrollTo(0, desired)
-      settled.current = true
+      finalRect.current = null
       return
     }
-    settled.current = false
-    const duration = clamp(420 + Math.abs(delta) * 0.25, 480, 850)
+    if (el) {
+      const r = el.getBoundingClientRect()
+      const shift = from - desired // how far the element will move on screen once scrolling ends
+      finalRect.current = { x: r.left - pad, y: r.top + shift - pad, w: r.width + pad * 2, h: r.height + pad * 2 }
+      const v0 = view.current
+      sync.current = { p: 0, start: v0.init ? { x: v0.x, y: v0.y, w: v0.w, h: v0.h } : { x: window.innerWidth / 2, y: window.innerHeight / 2, w: 0, h: 0 } }
+    }
+    const duration = clamp(520 + Math.abs(delta) * 0.3, 600, 1000)
     const t0 = performance.now()
     const tick = (now: number) => {
       const p = clamp((now - t0) / duration, 0, 1)
+      sync.current.p = ease(p)
       window.scrollTo(0, from + delta * ease(p))
       if (p < 1) scrollAnim.current = requestAnimationFrame(tick)
       else {
         window.scrollTo(0, desired) // land exactly on the spot
-        settled.current = true
+        finalRect.current = null
       }
     }
     scrollAnim.current = requestAnimationFrame(tick)
@@ -226,17 +235,22 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
       const vh = window.innerHeight
       const s = stepRef.current
       const el = s.target ? document.querySelector(s.target) : null
-      const follow = settled.current
 
       let tx = vw / 2
       let ty = vh / 2
       let tw = 0
       let th = 0
       let tr = 0
-      if (!follow && v.init) {
-        // page is still scrolling: let the spotlight close up where it is
-        tx = v.x + v.w / 2
-        ty = v.y + v.h / 2
+      let locked = false
+      if (finalRect.current && el) {
+        const f = finalRect.current
+        const { p, start } = sync.current
+        tx = start.x + (f.x - start.x) * p
+        ty = start.y + (f.y - start.y) * p
+        tw = start.w + (f.w - start.w) * p
+        th = start.h + (f.h - start.h) * p
+        tr = s.radius ?? 8
+        locked = true
       } else if (el) {
         const r = el.getBoundingClientRect()
         const pad = s.pad ?? 8
@@ -250,7 +264,7 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
         Object.assign(v, { x: vw / 2, y: vh / 2, w: 0, h: 0, r: 0, cx: vw / 2, cy: vh / 2, init: true })
       }
 
-      const a = reduced ? 1 : 1 - Math.exp(-dt * 7.5)
+      const a = reduced || locked ? 1 : 1 - Math.exp(-dt * 7.5)
       v.x += (tx - v.x) * a
       v.y += (ty - v.y) * a
       v.w += (tw - v.w) * a
@@ -273,7 +287,7 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
         st.borderRadius = `${rr}px`
         st.opacity = hasHole ? '1' : '0'
       }
-      if (card.current && follow) {
+      if (card.current) {
         const cw = card.current.offsetWidth
         const ch = card.current.offsetHeight
         const gap = 22

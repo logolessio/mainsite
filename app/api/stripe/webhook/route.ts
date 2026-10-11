@@ -1,6 +1,7 @@
 import type Stripe from 'stripe'
 import { db, nowSec, uid } from '@/lib/db'
 import { HttpError, json, route } from '@/lib/http'
+import { logEvent } from '@/lib/log'
 import { notify, notifyAdmins } from '@/lib/notify'
 import { creditTopup, debitRefund, fundCampaign, reverseWithdrawal } from '@/lib/ledger'
 import { Stripe as StripeLib, stripe, webhookSecret } from '@/lib/stripe'
@@ -137,6 +138,7 @@ export const POST = route(async (req: Request) => {
       break
   }
 
+  logEvent({ kind: 'money', name: `stripe ${event.type}`, detail: `${event.id}${event.livemode ? ' (live)' : ' (test)'}` })
   await d.prepare('INSERT OR IGNORE INTO stripe_events (id, type, received_at) VALUES (?1, ?2, ?3)').bind(event.id, event.type, nowSec()).run()
   return json({ received: true })
 })

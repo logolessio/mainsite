@@ -29,7 +29,7 @@ export function Chapter({
           </Layer>
           <Layer z={20}>
             <Reveal delay={0.25}>
-              <p className="mx-auto mt-10 max-w-md text-pretty text-lg leading-relaxed text-mute md:text-xl">{body}</p>
+              <p className="mx-auto mt-10 max-w-md text-pretty text-lg leading-snug text-mute md:text-xl">{body}</p>
             </Reveal>
           </Layer>
           {children && <Reveal delay={0.4} className="mt-14 flex w-full justify-center">{children}</Reveal>}

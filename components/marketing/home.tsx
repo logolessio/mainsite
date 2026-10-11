@@ -95,7 +95,7 @@ function Hero() {
             </Layer>
             <Layer z={30}>
               <Reveal delay={0.8}>
-                <p className="mx-auto mt-12 max-w-md text-pretty text-lg leading-relaxed text-mute md:text-xl">
+                <p className="mx-auto mt-12 max-w-md text-pretty text-lg leading-snug text-mute md:text-xl">
                   Brands, artists and streamers fund a brief. You cut the clips. You are paid for every thousand views that are real.
                 </p>
               </Reveal>

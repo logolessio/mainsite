@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { Icon, type IconName } from '@/components/icons'
 import { EASE_OUT } from '@/lib/layout'
+import { CountUp } from './count-up'
 import { cn } from '@/lib/utils'
 
 export function PageHeader({
@@ -56,10 +57,11 @@ export function StatCard({ label, value, note }: { label: string; value: string;
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: EASE_OUT }}
-      className="rounded-[24px] border border-line bg-surface/80 p-5"
+      data-spot
+      className="spot relative rounded-[24px] border border-line bg-surface/80 p-5"
     >
       <p className="font-mono text-xs text-mute">{label}</p>
-      <p className="mt-3 font-display text-5xl leading-none">{value}</p>
+      <p className="mt-3 font-display text-5xl leading-none"><CountUp value={value} /></p>
       {note && <p className="mt-2 text-xs text-mute">{note}</p>}
     </motion.div>
   )

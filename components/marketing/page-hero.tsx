@@ -39,7 +39,7 @@ export function PageHero({
           {lede && (
             <Layer z={25}>
               <Reveal delay={0.5}>
-                <p className="mx-auto mt-10 max-w-xl text-pretty text-lg leading-relaxed text-mute md:text-xl"><T>{lede}</T></p>
+                <p className="mx-auto mt-10 max-w-xl text-pretty text-lg leading-snug text-mute md:text-xl"><T>{lede}</T></p>
               </Reveal>
             </Layer>
           )}

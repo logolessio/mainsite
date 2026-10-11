@@ -22,12 +22,12 @@ export function FeatureGrid({ features, cols = 3 }: { features: Feature[]; cols?
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '0px 0px -10% 0px' }}
           transition={{ duration: 0.8, delay: (i % 3) * 0.1, ease: EASE_OUT }}
-          className="group bg-ink transition-colors hover:bg-surface"
+          data-spot className="spot group relative bg-ink transition-colors hover:bg-surface"
         >
           <Tilt3D max={5} className="h-full p-10 text-center md:p-16">
           <Icon name={f.icon} aria-hidden="true" className="mx-auto size-6 text-mute transition-colors group-hover:text-paper" />
-          <h3 className="mt-10 font-display text-3xl md:text-4xl"><T>{f.title}</T></h3>
-          <p className="mx-auto mt-4 max-w-xs text-pretty leading-relaxed text-mute"><T>{f.body}</T></p>
+          <h3 className="mt-7 font-display text-3xl md:text-4xl"><T>{f.title}</T></h3>
+          <p className="mx-auto mt-3 max-w-xs text-pretty leading-snug text-mute"><T>{f.body}</T></p>
           </Tilt3D>
         </motion.li>
       ))}
@@ -99,7 +99,7 @@ export function Split({
       <Reveal y={20}>
         <h3 className="font-display text-4xl leading-[0.95] md:text-6xl"><T>{label}</T></h3>
       </Reveal>
-      <Reveal delay={0.15} y={20} className="mt-8 text-pretty text-lg leading-relaxed text-mute">
+      <Reveal delay={0.15} y={20} className="mt-8 text-pretty text-lg leading-snug text-mute">
         {children}
       </Reveal>
     </div>

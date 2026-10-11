@@ -11,9 +11,10 @@ import { cn } from '@/lib/utils'
 import { TransitionLink } from './transition-link'
 import { T } from './copy-provider'
 import { NavUserActions, useNavUser } from './nav-user'
+import { SiteMenu } from './site-menu'
 import { useTransitions } from './transition-provider'
 
-const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin']
+const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin', '/@', '/u/']
 export const TOUR_EVENT = 'logoless:tour'
 
 
@@ -102,92 +103,7 @@ export function SiteNav() {
         </nav>
       </header>
 
-      <AnimatePresence>
-        {open && (
-          <>
-            <motion.div
-              key="scrim"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setOpen(false)}
-              className="fixed inset-0 z-40 bg-ink/75"
-            />
-            <motion.aside
-              key="panel"
-              id="site-menu"
-              aria-label="Menu"
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%', transition: { duration: 0.3, ease: [0.4, 0, 1, 1] } }}
-              transition={{ duration: 0.55, ease: EASE_OUT }}
-              className="fixed inset-y-0 right-0 z-40 flex w-full max-w-[460px] flex-col overflow-y-auto border-l border-line bg-surface px-8 pt-28 pb-8"
-            >
-              <motion.ul
-                initial="hidden"
-                animate="show"
-                variants={{ show: { transition: { staggerChildren: 0.06, delayChildren: 0.18 } } }}
-                className="flex flex-col"
-              >
-                {links.map((link, i) => (
-                  <motion.li
-                    key={link.href}
-                    variants={{
-                      hidden: { opacity: 0, y: 28 },
-                      show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE_OUT } },
-                    }}
-                    className="border-b border-line"
-                  >
-                    <TransitionLink
-                      href={link.href}
-                      onClick={() => setOpen(false)}
-                      aria-current={pathname === link.href ? 'page' : undefined}
-                      className="group flex items-baseline justify-between py-3"
-                    >
-                      <span className="font-display text-4xl md:text-5xl transition-transform duration-300 group-hover:translate-x-2">
-                        <T>{link.label}</T>
-                      </span>
-                      <span className="font-mono text-xs text-mute">0{i + 1}</span>
-                    </TransitionLink>
-                  </motion.li>
-                ))}
-                <motion.li
-                  variants={{
-                    hidden: { opacity: 0, y: 28 },
-                    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE_OUT } },
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={startTour}
-                    className="group flex w-full items-baseline justify-between py-4 text-left"
-                  >
-                    <span className="font-display text-4xl md:text-5xl text-mute transition-all duration-300 group-hover:translate-x-2 group-hover:text-paper">
-                      Take the tour
-                    </span>
-                    <span className="font-mono text-xs text-mute">0{links.length + 1}</span>
-                  </button>
-                </motion.li>
-              </motion.ul>
-
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1, transition: { delay: 0.5 } }}
-                className="mt-auto flex items-end justify-between gap-4"
-              >
-                <p className="max-w-[22ch] text-sm leading-relaxed text-mute">
-                  Clip campaigns. Post them. Get paid for every thousand views.
-                </p>
-                <div className="flex items-center gap-4 text-mute">
-                  <BrandIcon name="tiktok" />
-                  <BrandIcon name="youtube" />
-                  <BrandIcon name="discord" />
-                </div>
-              </motion.div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
+      <SiteMenu open={open} onClose={() => setOpen(false)} onTour={startTour} />
     </>
   )
 }

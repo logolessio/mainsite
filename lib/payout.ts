@@ -1,5 +1,6 @@
 import { db, nowSec } from './db'
 import { HttpError } from './http'
+import { logEvent } from './log'
 import { markPayoutSent, reverseWithdrawal } from './ledger'
 import { notify } from './notify'
 import { assessRequest } from './risk'
@@ -62,10 +63,12 @@ export async function sendPayout(payoutId: string): Promise<{ ok: true } | { ok:
       { idempotencyKey: `payout_${payoutId}` },
     )
     await markPayoutSent(payoutId, transfer.id)
+    logEvent({ kind: 'money', name: 'payout sent', detail: `${payoutId} $${(p.amount_cents / 100).toFixed(2)} → ${transfer.id}` })
     await notify(p.user_id, { kind: 'payout', title: `Payout sent: $${(p.amount_cents / 100).toFixed(2)}`, body: 'It is on its way to your Stripe account.', href: '/dashboard/payouts', dedupe: `payout-sent:${payoutId}` })
     return { ok: true }
   } catch (e) {
     const reason = e instanceof Error ? e.message : 'Transfer failed'
+    logEvent({ kind: 'money', name: 'payout failed', detail: `${payoutId}: ${reason.slice(0, 200)}` })
     await reverseWithdrawal(payoutId, 'failed', reason)
     await notify(p.user_id, { kind: 'payout', title: 'Payout failed', body: 'Your balance has not changed. Please try again later.', href: '/dashboard/payouts', dedupe: `payout-failed:${payoutId}` })
     return { ok: false, error: 'Stripe could not send it. The money went back to the clipper’s balance.' }

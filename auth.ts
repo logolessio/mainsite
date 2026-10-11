@@ -18,6 +18,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     ...(process.env.AUTH_DISCORD_ID && process.env.AUTH_DISCORD_SECRET ? [Discord] : []),
   ],
   pages: { signIn: '/login', error: '/login' },
+  events: {
+    async signIn({ user, account, isNewUser }) {
+      const { logEvent } = await import('./lib/log')
+      logEvent({ kind: 'auth', name: 'signin', actor: user.email?.toLowerCase() ?? null, detail: `${account?.provider ?? 'unknown'}${isNewUser ? ' (new account)' : ''}` })
+    },
+    async signOut(message) {
+      const { logEvent } = await import('./lib/log')
+      const email = 'token' in message ? (message.token?.email as string | undefined) : undefined
+      logEvent({ kind: 'auth', name: 'signout', actor: email?.toLowerCase() ?? null })
+    },
+  },
   // Two weeks, not a month: a stolen session cookie stops working sooner.
   session: { strategy: 'jwt', maxAge: 14 * 24 * 60 * 60 },
   useSecureCookies: process.env.NODE_ENV === 'production',

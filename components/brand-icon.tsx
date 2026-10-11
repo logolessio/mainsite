@@ -10,7 +10,7 @@ export type BrandName =
   | 'twitch'
   | 'x'
 
-export function BrandIcon({ name, className }: { name: BrandName; className?: string }) {
+export function BrandIcon({ name, className }: { name: BrandName | (string & {}); className?: string }) {
   const url = `url(/brands/${name}.svg)`
   return (
     <span

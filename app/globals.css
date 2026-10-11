@@ -322,3 +322,215 @@
     animation: none !important;
   }
 }
+
+/* ---------- Profile display-name effects (colours come from --na and --nb) ---------- */
+.nx-gradient {
+  background-image: linear-gradient(90deg, var(--na), var(--nb), var(--na));
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: nx-slide 6s linear infinite;
+}
+.nx-neon {
+  color: #fff;
+  text-shadow: 0 0 3px #fff, 0 0 8px var(--na), 0 0 18px var(--na), 0 0 40px var(--nb);
+  animation: nx-flicker 4.5s infinite;
+}
+.nx-toon {
+  color: var(--na);
+  -webkit-text-stroke: 1.6px #050505;
+  paint-order: stroke fill;
+  text-shadow: 2px 3px 0 #050505, 4px 6px 0 var(--nb);
+}
+.nx-pop {
+  color: #fff;
+  text-shadow: 2px 2px 0 var(--na), 4px 4px 0 var(--nb);
+}
+.nx-glow {
+  color: #fff;
+  text-shadow: 0 0 12px var(--na), 0 0 30px var(--nb);
+  animation: nx-pulse 3.4s ease-in-out infinite;
+}
+@keyframes nx-slide {
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes nx-pulse {
+  50% {
+    text-shadow: 0 0 6px var(--na), 0 0 16px var(--nb);
+  }
+}
+@keyframes nx-flicker {
+  0%, 18%, 22%, 60%, 64%, 100% {
+    opacity: 1;
+  }
+  20%, 62% {
+    opacity: 0.72;
+  }
+}
+
+/* ---------- Profile card particles ---------- */
+.fx {
+  position: absolute;
+  left: var(--x);
+  top: 0;
+  width: var(--s);
+  height: var(--s);
+  opacity: 0;
+  pointer-events: none;
+  animation-delay: var(--d);
+  animation-duration: var(--t);
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+.fx-sparkle {
+  top: var(--y);
+  background: radial-gradient(circle, #fff, transparent 70%);
+  border-radius: 9999px;
+  animation-name: fx-twinkle;
+  animation-timing-function: ease-in-out;
+}
+.fx-stars {
+  top: var(--y);
+  background: #fff;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  animation-name: fx-twinkle;
+  animation-timing-function: ease-in-out;
+}
+.fx-snow {
+  background: #fff;
+  border-radius: 9999px;
+  animation-name: fx-fall;
+}
+.fx-embers {
+  top: auto;
+  bottom: 0;
+  background: radial-gradient(circle, #ffd27a, #ff6a2a 60%, transparent 70%);
+  border-radius: 9999px;
+  animation-name: fx-rise;
+}
+.fx-rain {
+  width: 1.5px;
+  height: calc(var(--s) * 6);
+  background: linear-gradient(to bottom, transparent, rgb(190 215 255 / 0.7));
+  animation-name: fx-fall;
+  animation-duration: calc(var(--t) * 0.35);
+}
+@keyframes fx-twinkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.3) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(45deg);
+  }
+}
+@keyframes fx-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -10%, 0);
+  }
+  10% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--dx, 18px), 560px, 0);
+  }
+}
+@keyframes fx-rise {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--dx, 24px), -520px, 0) scale(0.3);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx,
+  .nx-gradient,
+  .nx-neon,
+  .nx-glow {
+    animation: none !important;
+  }
+}
+
+@keyframes banner-sheen {
+  0% {
+    left: -40%;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  35%, 100% {
+    left: 120%;
+    opacity: 0;
+  }
+}
+
+/* ---------- Motion extras ---------- */
+/* A pool of light under the cursor, drawn on the card edge itself. Needs data-spot on the card. */
+.spot {
+  isolation: isolate;
+}
+.spot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgb(255 255 255 / 0.11), transparent 70%);
+  transition: opacity 0.35s ease;
+}
+.spot:hover::before {
+  opacity: 1;
+}
+
+/* Links get an underline that draws in from the left. */
+.link-u {
+  background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+  transition: background-size 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.link-u:hover,
+.link-u:focus-visible {
+  background-size: 100% 1px;
+}
+
+/* Table rows slide in one after another. */
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+tbody tr {
+  animation: row-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+tbody tr:nth-child(2) { animation-delay: 0.04s; }
+tbody tr:nth-child(3) { animation-delay: 0.08s; }
+tbody tr:nth-child(4) { animation-delay: 0.12s; }
+tbody tr:nth-child(5) { animation-delay: 0.16s; }
+tbody tr:nth-child(6) { animation-delay: 0.2s; }
+tbody tr:nth-child(n + 7) { animation-delay: 0.24s; }
+
+@media (prefers-reduced-motion: reduce) {
+  tbody tr {
+    animation: none;
+  }
+}

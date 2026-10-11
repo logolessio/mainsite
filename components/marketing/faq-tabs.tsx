@@ -72,7 +72,7 @@ export function FaqTabs() {
                       transition={{ duration: 0.4, ease: EASE_OUT }}
                       className="overflow-hidden"
                     >
-                      <p className="mx-auto max-w-xl pb-10 text-pretty leading-relaxed text-mute"><T>{item.a}</T></p>
+                      <p className="mx-auto max-w-xl pb-10 text-pretty leading-snug text-mute"><T>{item.a}</T></p>
                     </motion.div>
                   )}
                 </AnimatePresence>

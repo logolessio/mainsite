@@ -27,6 +27,10 @@ Money moves through this site, so every route that changes something follows the
 | 19 | Disable debug | No source maps, no `X-Powered-By`, visitors see generic error text, details go only to server logs. |
 | 20 | (not visible in the video) | Covered instead: every admin action and every text change goes into a hash-chained log that shows tampering (`/admin/audit`), and D1 Time Travel can restore the database to any minute in the last 7 to 30 days (depends on your Cloudflare plan). |
 
+## Everything is logged
+
+The activity log (`/admin/logs`) records requests, page views, sign-ins, refused requests, rate-limit hits, errors, money movements and admin actions. It is separate from the tamper-evident audit log, which only holds admin actions and text changes. Exports are themselves written to the audit log.
+
 ## Account checks for VPN / proxy / data-centre networks
 
 Cloudflare tells us which network owns each visitor's address. Networks that belong to VPNs, proxies, Tor and cloud hosts are flagged at sign-up and again when someone withdraws. A flag never blocks anyone. It switches on extra checks: every withdrawal waits for an admin, earnings take twice as long to clear, and the account is marked in `/admin/users`. This is a heuristic based on the network's name, not proof. A paid IP-reputation service would make it sharper.

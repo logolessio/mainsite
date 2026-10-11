@@ -1,11 +1,12 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Loader2, Pencil, RotateCcw, X } from 'lucide-react'
+import { Loader2, RotateCcw, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { copyKey, norm } from '@/lib/copy-key'
 import { seenCopy, useCopy } from '@/components/shell/copy-provider'
+import { ToolsMenu } from './tools-menu'
 import { cn } from '@/lib/utils'
 
 type Target = { key: string; original: string; current: string }
@@ -108,15 +109,7 @@ export function TextEditor() {
   return (
     <div data-text-editor>
       <style>{`[data-copy-key]{outline:1px dashed rgb(255 77 77 / .7);outline-offset:3px;cursor:text;border-radius:4px}[data-copy-key]:hover{outline:2px solid #ff4d4d;background:rgb(255 77 77 / .08)}`}</style>
-      <button
-        type="button"
-        onClick={() => setEditing(!editing)}
-        aria-pressed={editing}
-        className={cn('fixed bottom-4 left-4 z-[70] inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm shadow-lg', editing ? 'border-signal bg-signal text-paper' : 'border-line-strong bg-surface text-paper hover:bg-raised')}
-      >
-        <Pencil className="size-4" />
-        {editing ? 'Editing text: click any text' : 'Edit text'}
-      </button>
+      <ToolsMenu />
 
       <AnimatePresence>
         {target && (

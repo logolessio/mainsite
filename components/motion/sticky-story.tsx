@@ -36,7 +36,7 @@ export function StickyStory({ eyebrow, title, steps }: { eyebrow: string; title:
             <Tilt3D max={3} glare={false}>
               <p className="font-display text-8xl leading-none text-paper/15 md:text-[11rem]">{String(i + 1).padStart(2, '0')}</p>
               <h3 className="-mt-6 font-display text-4xl md:-mt-12 md:text-6xl"><T>{s.title}</T></h3>
-              <p className="mx-auto mt-6 max-w-lg text-pretty text-lg leading-relaxed text-mute"><T>{s.body}</T></p>
+              <p className="mx-auto mt-6 max-w-lg text-pretty text-lg leading-snug text-mute"><T>{s.body}</T></p>
               {s.detail && (
                 <ul className="mt-8 flex flex-col items-center gap-2 text-sm text-paper/80">
                   {s.detail.map((d) => (

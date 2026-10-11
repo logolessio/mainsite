@@ -62,16 +62,17 @@ export function Tilt3D({
   }
 
   return (
-    <div ref={ref} onPointerMove={local} onPointerLeave={reset} style={{ perspective }} className={cn('tilt', className)}>
+    <div ref={ref} onPointerMove={local} onPointerLeave={reset} style={{ perspective }} className={cn('tilt relative', className)}>
       <motion.div style={on ? { rotateX, rotateY, transformStyle: 'preserve-3d' } : undefined} className="relative">
         {children}
-        {glare && on && (
-          <>
-            <motion.div aria-hidden="true" style={{ background: glareBg }} className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 [.tilt:hover_&]:opacity-100" />
-            <div aria-hidden="true" className="sheen-sweep pointer-events-none absolute inset-0 overflow-hidden" />
-          </>
-        )}
       </motion.div>
+      {/* The light lives on the outer box, so it covers the whole card, padding included, not just the inner content. */}
+      {glare && on && (
+        <>
+          <motion.div aria-hidden="true" style={{ background: glareBg }} className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 [.tilt:hover_&]:opacity-100" />
+          <div aria-hidden="true" className="sheen-sweep pointer-events-none absolute inset-0 overflow-hidden" />
+        </>
+      )}
     </div>
   )
 }

@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { connection } from 'next/server'
-import { ProfileScreen, type ProfileLinkOut } from '@/components/profile/profile-screen'
+import { ProfileCard, type ProfileLinkOut } from '@/components/profile/profile-card'
+import { Logo } from '@/components/logo'
+import { TransitionLink } from '@/components/shell/transition-link'
 import { db } from '@/lib/db'
 import { externalHref, profileByHandle, profileStats } from '@/lib/profile'
-import { LINK_PLATFORMS } from '@/lib/profile-style'
+import { LINK_PLATFORMS, WARN_PLATFORMS } from '@/lib/profile-style'
 import { getSession } from '@/lib/session'
-import { CONTAINER } from '@/lib/layout'
 
 type Props = { params: Promise<{ handle: string }> }
 
@@ -23,6 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
+/** A profile page is just the card, floating over the dots, with the logo in the corner. No menus, no footer. */
 export default async function ProfilePage({ params }: Props) {
   await connection()
   const handle = clean((await params).handle)
@@ -50,15 +52,17 @@ export default async function ProfilePage({ params }: Props) {
   for (const l of p.view.links) {
     const meta = LINK_PLATFORMS.find((m) => m.id === l.platform)
     if (!meta) continue
-    // Discord invites are the most common scam link, so they get the same warning page as websites.
-    const href = l.platform === 'discord' ? await externalHref(l.url) : l.url
+    // Websites, Discord invites and link hubs are the usual scam routes, so they open the warning page first.
+    const href = WARN_PLATFORMS.includes(l.platform) ? await externalHref(l.url) : l.url
     links.push({ platform: l.platform, href, label: meta.label })
   }
-  const website = p.view.website ? { href: await externalHref(p.view.website), host: new URL(p.view.website).hostname.replace(/^www\./, '') } : null
 
   return (
-    <main className={`${CONTAINER} max-w-5xl pt-24 pb-32 md:pt-28`}>
-      <ProfileScreen view={p.view} stats={stats} links={links} website={website} isOwner={isOwner} />
+    <main className="relative grid min-h-dvh place-items-center px-4 py-24">
+      <TransitionLink href="/" aria-label="logoless home" className="fixed top-5 left-5 z-50 block">
+        <Logo />
+      </TransitionLink>
+      <ProfileCard view={p.view} stats={stats} links={links} isOwner={isOwner} />
     </main>
   )
 }

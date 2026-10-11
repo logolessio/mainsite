@@ -47,6 +47,12 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
   const { tx, overrides } = useCopy()
   const [hero, setHero] = useState<{ kind: 'logo' } | { kind: 'text'; text: string } | null>(null)
   const count = campaigns.length
+  const [shuffle, setShuffle] = useState(0)
+  useEffect(() => {
+    const on = () => setShuffle((n) => n + 1)
+    window.addEventListener('logoless:hero-shuffle', on)
+    return () => window.removeEventListener('logoless:hero-shuffle', on)
+  }, [])
   useEffect(() => {
     const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)]
     const variants = (overrides[HERO_VARIANTS_KEY] ?? HERO_VARIANTS_DEFAULT.join('\n')).split('\n').map((v) => v.trim()).filter(Boolean)
@@ -56,7 +62,7 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
     else if (r < 0.8) setHero({ kind: 'text', text: variants.length ? pick(variants) : 'views have value' })
     else setHero({ kind: 'text', text: pick(greetings) })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [shuffle])
 
   useEffect(() => {
     const open = () => setTourOpen(true)
@@ -86,13 +92,13 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
                 delay={0.1}
                 stagger={0.12}
                 text={hero.text}
-                className={`mx-auto font-display leading-[0.95] ${
+                className={`mx-auto font-display ${
                   hero.text.length > 24
                     ? 'max-w-[16ch] text-[11vw] md:text-[6.4vw] xl:text-[100px]'
                     : hero.text.length > 14
                       ? 'max-w-[12ch] text-[13vw] md:text-[7.6vw] xl:text-[118px]'
                       : 'max-w-[10ch] text-[15vw] md:text-[8.5vw] xl:text-[132px]'
-                }`}
+                } leading-[0.92]`}
               />
             </Layer>
           )}

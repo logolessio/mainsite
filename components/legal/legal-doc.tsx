@@ -66,7 +66,7 @@ export function LegalDocView({ doc }: { doc: LegalDoc }) {
               <section id={slug(s.h)} className="scroll-mt-28 border-t border-line py-16 first:border-t-0 first:pt-0">
                 <p className="font-mono text-xs text-mute">{String(i + 1).padStart(2, '0')}</p>
                 <h2 className="mt-3 font-display text-4xl md:text-5xl">{s.h}</h2>
-                <div className="mt-8 space-y-5 leading-relaxed text-paper/75">
+                <div className="mt-8 space-y-5 leading-snug text-paper/75">
                   {s.p.map((t) => (
                     <p key={t}>{t}</p>
                   ))}

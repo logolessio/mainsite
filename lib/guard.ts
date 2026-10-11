@@ -42,10 +42,13 @@ export async function protect(req: Request, o: Opts) {
 
 export async function limit(req: Request, o: Opts) {
   const ip = await ipHash(req)
-  if ((await hit(`${o.name}:ip:${ip}`, o.windowSec)) > o.max) throw new HttpError(429, 'Too many attempts. Please wait a moment and try again.')
-  if (o.userId && (await hit(`${o.name}:u:${o.userId}`, o.windowSec)) > o.max) {
-    throw new HttpError(429, 'Too many attempts. Please wait a moment and try again.')
+  const blocked = async (who: string) => {
+    const { logEvent } = await import('./log')
+    logEvent({ kind: 'security', name: 'ratelimit', path: new URL(req.url).pathname, status: 429, detail: `${o.name} (${who}) over ${o.max} per ${o.windowSec}s`, req })
+    return new HttpError(429, 'Too many attempts. Please wait a moment and try again.')
   }
+  if ((await hit(`${o.name}:ip:${ip}`, o.windowSec)) > o.max) throw await blocked('network')
+  if (o.userId && (await hit(`${o.name}:u:${o.userId}`, o.windowSec)) > o.max) throw await blocked('account')
 }
 
 /** Housekeeping: drop counters that expired long ago. Cheap to call occasionally. */

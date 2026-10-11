@@ -16,6 +16,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
         { label: 'Payouts', href: '/admin/payouts', icon: 'Banknote' },
         { label: 'Users', href: '/admin/users', icon: 'Users' },
         { label: 'Site text', href: '/admin/text', icon: 'FileCheck2' },
+        { label: 'Logs and stats', href: '/admin/logs', icon: 'BarChart3' },
         { label: 'Audit log', href: '/admin/audit', icon: 'ScrollText' },
         { label: 'Keys and tests', href: '/admin/keys', icon: 'ShieldCheck' },
         { label: 'Settings', href: '/admin/settings', icon: 'Settings' },

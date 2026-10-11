@@ -41,8 +41,8 @@ export function Words({ id, sweep = false, text, className, delay = 0, stagger =
       {words.map((w, i) => (
         <span key={i} aria-hidden="true" className="inline-block overflow-hidden pb-[0.16em] -mb-[0.16em] align-bottom">
           <motion.span
-            variants={{ hidden: { y: '110%', rotate: 3 }, show: { y: '0%', rotate: 0 } }}
-            transition={{ duration: 1, ease: EASE_OUT }}
+            variants={{ hidden: { y: '115%', rotate: 5, skewX: -6 }, show: { y: '0%', rotate: 0, skewX: 0 } }}
+            transition={{ duration: 1.1, ease: EASE_OUT }}
             className={cn(cn('inline-block origin-bottom-left', sweep && 'sweep'))}
           >
             {w}

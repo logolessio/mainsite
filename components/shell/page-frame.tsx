@@ -9,8 +9,8 @@ export function PageFrame({ children }: { children: React.ReactNode }) {
 
   return (
     <motion.div
-      animate={exiting ? { opacity: 0 } : { opacity: 1 }}
-      transition={exiting ? { duration: 0.17, ease: [0.4, 0, 0.2, 1] } : { duration: 0 }}
+      animate={exiting ? { opacity: 0, y: -10 } : { opacity: 1, y: 0 }}
+      transition={exiting ? { duration: 0.2, ease: [0.4, 0, 0.2, 1] } : { duration: 0 }}
       className="relative z-10 min-h-dvh"
     >
       {children}

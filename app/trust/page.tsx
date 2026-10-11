@@ -38,7 +38,7 @@ export default function Page() {
         />
       </Section>
       <Section className="py-16 md:py-28">
-        <p className="max-w-2xl text-lg leading-relaxed text-mute">
+        <p className="max-w-2xl text-lg leading-snug text-mute">
           If you think a decision on your clip is wrong, you can appeal from the submission page. To report abuse or
           botting, contact{' '}
           <a href="mailto:abuse@logoless.com" className="text-paper underline underline-offset-4">

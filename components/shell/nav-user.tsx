@@ -24,7 +24,7 @@ export type NavUser =
         bio: string
         avatar: string | null
         banner: string
-        bannerKind: 'preset' | 'image'
+        bannerKind: 'preset' | 'image' | 'color'
         accent: string
         badges: string[]
       }
@@ -68,8 +68,8 @@ export function NavUserProvider({ children }: { children: React.ReactNode }) {
   return <NavUserContext.Provider value={value}>{children}</NavUserContext.Provider>
 }
 
-const bannerCss = (b: string, kind: 'preset' | 'image') =>
-  kind === 'image' ? `center/cover url(${b})` : (BANNER_PRESETS.find((p) => p.id === b)?.css ?? BANNER_PRESETS[0].css)
+const bannerCss = (b: string, kind: 'preset' | 'image' | 'color') =>
+  kind === 'image' ? `center/cover url(${b})` : kind === 'color' ? b : (BANNER_PRESETS.find((p) => p.id === b)?.css ?? BANNER_PRESETS[0].css)
 
 export function Avatar({ src, name, size = 40, className }: { src: string | null; name: string; size?: number; className?: string }) {
   const [failed, setFailed] = useState(false)

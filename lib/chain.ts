@@ -1,6 +1,7 @@
 import { sha256Hex } from './crypto'
 import { db, nowSec } from './db'
 import { HttpError } from './http'
+import { logEvent } from './log'
 
 /**
  * Tamper-evident logs. Every row stores the hash of the row before it, so editing or deleting an old row breaks
@@ -26,6 +27,7 @@ export async function audit(actor: Actor, action: string, target?: string | null
         )
         .bind(actor.id, actor.email, action, target ?? null, detail ? detail.slice(0, 1000) : null, ipHash ?? null, t, prev, hash)
         .run()
+      logEvent({ kind: 'admin', name: action, actor: actor.email, detail: [target, detail].filter(Boolean).join(' · ') })
       return
     } catch (e) {
       if (!isConflict(e)) throw e

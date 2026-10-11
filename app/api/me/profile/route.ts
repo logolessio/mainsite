@@ -1,6 +1,6 @@
 import { bump, evaluateBadges } from '@/lib/badges'
 import { audit } from '@/lib/chain'
-import { db } from '@/lib/db'
+import { db, setting } from '@/lib/db'
 import { protect } from '@/lib/guard'
 import { body, json, route } from '@/lib/http'
 import { ensureProfile, saveProfile, toView, type ProfileInput } from '@/lib/profile'
@@ -11,7 +11,7 @@ export const GET = route(async () => {
   const row = await ensureProfile(user)
   const d = await db()
   const unlocked = (await d.prepare('SELECT badge_id FROM badges_unlocked WHERE user_id = ?1').bind(user.id).all<{ badge_id: string }>()).results.map((r) => r.badge_id)
-  return json({ profile: toView(row, user.role === 'admin'), unlocked })
+  return json({ profile: toView(row, user.role === 'admin'), unlocked, discordImport: Boolean(await setting('DISCORD_BOT_TOKEN')) })
 })
 
 export const PUT = route(async (req: Request) => {

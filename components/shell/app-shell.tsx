@@ -9,6 +9,8 @@ import { TransitionProvider } from './transition-provider'
 import { RidgeField } from './ridge-field'
 import { LightField } from './light-field'
 import { NavUserProvider } from './nav-user'
+import { Ambient } from './ambient'
+import { Tracker } from './tracker'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -16,6 +18,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <TransitionProvider>
         <PreviewProvider>
         <NavUserProvider>
+        <Tracker />
+        <Ambient />
         <RidgeField />
         <LightField />
         <SiteNav />

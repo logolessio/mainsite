@@ -4,6 +4,12 @@ import { hmacHex, safeEqual } from './crypto'
 import { setting } from './db'
 import {
   BANNER_PRESET_IDS,
+  CARD_EFFECT_IDS,
+  MAX_LINKS,
+  NAME_EFFECT_IDS,
+  WARN_PLATFORMS,
+  type CardEffect,
+  type NameEffect,
   DEFAULT_SHOW,
   FONT_IDS,
   HANDLE_RE,
@@ -25,10 +31,14 @@ type ProfileRow = {
   bio: string
   country: string | null
   avatar_key: string | null
-  banner_kind: 'preset' | 'image'
+  banner_kind: 'preset' | 'image' | 'color'
   banner_value: string
   dot_color: string
   accent: string
+  accent2: string
+  name_effect: string
+  pronouns: string
+  card_effect: string
   font: string
   links_json: string
   website: string | null
@@ -50,8 +60,9 @@ const parse = <T>(s: string | null | undefined, fallback: T): T => {
 const clean = (s: string) => s.replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim()
 const COLOR = /^#[0-9a-f]{6}$/i
 
-export function toView(row: ProfileRow, isStaff: boolean): ProfileView {
+export function toView(row: ProfileRow, isStaff: boolean, online = false): ProfileView {
   const show = { ...DEFAULT_SHOW, ...parse<Partial<ShowMap>>(row.show_json, {}) }
+  const links = parse<ProfileLink[]>(row.links_json, [])
   return {
     handle: row.handle,
     displayName: row.display_name,
@@ -61,9 +72,14 @@ export function toView(row: ProfileRow, isStaff: boolean): ProfileView {
     banner: row.banner_kind === 'image' ? `/api/img/${row.banner_value}` : row.banner_value,
     dotColor: row.dot_color,
     accent: row.accent,
+    accent2: row.accent2,
     font: (FONT_IDS.includes(row.font) ? row.font : 'geist') as FontId,
-    links: parse<ProfileLink[]>(row.links_json, []),
-    website: row.website,
+    nameEffect: (NAME_EFFECT_IDS.includes(row.name_effect) ? row.name_effect : 'solid') as NameEffect,
+    cardEffect: (CARD_EFFECT_IDS.includes(row.card_effect) ? row.card_effect : 'none') as CardEffect,
+    pronouns: row.pronouns,
+    online: online && show.status,
+    links,
+    website: links.find((l) => l.platform === 'website')?.url ?? row.website,
     badges: parse<string[]>(row.badges_json, []),
     show,
     joinedAt: row.created_at,
@@ -111,12 +127,13 @@ export async function profileByHandle(handle: string) {
   const d = await db()
   const row = await d
     .prepare(
-      `SELECT p.*, u.role AS role, u.status AS status FROM profiles p JOIN users u ON u.id = p.user_id WHERE p.handle = ?1`,
+      `SELECT p.*, u.role AS role, u.status AS status, u.last_seen_at AS last_seen FROM profiles p JOIN users u ON u.id = p.user_id WHERE p.handle = ?1`,
     )
     .bind(handle.toLowerCase())
-    .first<ProfileRow & { role: string; status: string }>()
+    .first<ProfileRow & { role: string; status: string; last_seen: number | null }>()
   if (!row || row.status === 'banned') return null
-  return { row, view: toView(row, row.role === 'admin'), userId: row.user_id, suspended: row.status === 'suspended' }
+  const online = Boolean(row.last_seen && row.last_seen > nowSec() - 300)
+  return { row, view: toView(row, row.role === 'admin', online), userId: row.user_id, suspended: row.status === 'suspended' }
 }
 
 export async function profileStats(userId: string): Promise<ProfileStats> {
@@ -145,18 +162,19 @@ export function validHandle(raw: string, isAdmin: boolean) {
 
 const hostMatches = (host: string, allowed: readonly string[]) => allowed.some((a) => host === a || host.endsWith(`.${a}`))
 
-/** Only https links, no logins in the address, and each platform must point at its own domain. */
+/** Only https links, no logins in the address, and each platform must point at its own domain ("website" may be any site). */
 export function cleanLinks(input: unknown): ProfileLink[] {
   if (!Array.isArray(input)) return []
   const out: ProfileLink[] = []
   const seen = new Set<string>()
-  for (const item of input.slice(0, 9)) {
+  for (const item of input.slice(0, MAX_LINKS)) {
     const platform = (item as { platform?: string })?.platform
     const url = String((item as { url?: string })?.url ?? '').trim()
     const meta = LINK_PLATFORMS.find((p) => p.id === platform)
     if (!meta || !url) continue
     const u = safeUrl(url)
-    if (!u || !hostMatches(u.hostname, meta.hosts)) throw new HttpError(400, `That does not look like a ${meta.label} link.`)
+    if (!u) throw new HttpError(400, `Use a full https:// address for ${meta.label}.`)
+    if (meta.hosts.length && !hostMatches(u.hostname, meta.hosts)) throw new HttpError(400, `That does not look like a ${meta.label} link.`)
     if (seen.has(meta.id)) continue
     seen.add(meta.id)
     out.push({ platform: meta.id, url: u.toString().slice(0, 200) })
@@ -183,11 +201,15 @@ export type ProfileInput = {
   displayName?: string
   bio?: string
   avatar?: string | null // upload id, or null to go back to your sign-in picture
-  bannerKind?: 'preset' | 'image'
+  bannerKind?: 'preset' | 'image' | 'color'
   banner?: string
   dotColor?: string
   accent?: string
+  accent2?: string
   font?: string
+  nameEffect?: string
+  cardEffect?: string
+  pronouns?: string
   links?: unknown
   website?: string | null
   show?: Partial<ShowMap>
@@ -212,7 +234,7 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
     next.display_name = n
   }
   if (input.bio !== undefined) {
-    const b = clean(input.bio).slice(0, 280)
+    const b = input.bio.replace(/\r/g, '').replace(/[\u0000-\u0009\u000b-\u001f\u007f<>]/g, '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, 400)
     if (b !== cur.bio) changed.push('bio')
     next.bio = b
   }
@@ -227,6 +249,9 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
   if (input.bannerKind !== undefined && input.banner !== undefined) {
     if (input.bannerKind === 'preset') {
       if (!BANNER_PRESET_IDS.includes(input.banner)) throw new HttpError(400, 'Unknown banner.')
+    } else if (input.bannerKind === 'color') {
+      if (!COLOR.test(input.banner)) throw new HttpError(400, 'Pick a valid banner colour.')
+      input.banner = input.banner.toLowerCase()
     } else {
       const own = await d
         .prepare("SELECT id FROM uploads WHERE id = ?1 AND user_id = ?2 AND kind = 'banner'")
@@ -248,6 +273,20 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
     if (input.accent.toLowerCase() !== cur.accent.toLowerCase()) changed.push('accent')
     next.accent = input.accent.toLowerCase()
   }
+  if (input.accent2 !== undefined) {
+    if (!COLOR.test(input.accent2)) throw new HttpError(400, 'Pick a valid colour.')
+    next.accent2 = input.accent2.toLowerCase()
+  }
+  if (input.nameEffect !== undefined) {
+    if (!NAME_EFFECT_IDS.includes(input.nameEffect)) throw new HttpError(400, 'Unknown name style.')
+    if (input.nameEffect !== cur.name_effect) changed.push('font')
+    next.name_effect = input.nameEffect
+  }
+  if (input.cardEffect !== undefined) {
+    if (!CARD_EFFECT_IDS.includes(input.cardEffect)) throw new HttpError(400, 'Unknown effect.')
+    next.card_effect = input.cardEffect
+  }
+  if (input.pronouns !== undefined) next.pronouns = clean(input.pronouns).slice(0, 30)
   if (input.font !== undefined) {
     if (!FONT_IDS.includes(input.font)) throw new HttpError(400, 'Unknown font.')
     if (input.font !== cur.font) changed.push('font')
@@ -258,7 +297,7 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
     if (JSON.stringify(links) !== cur.links_json) changed.push('links')
     next.links_json = JSON.stringify(links)
   }
-  if (input.website !== undefined) {
+  if (input.website !== undefined && input.links === undefined) {
     const w = (input.website ?? '').trim()
     if (!w) next.website = null
     else {
@@ -297,7 +336,7 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
     await d
       .prepare(
         `UPDATE profiles SET handle=?2, display_name=?3, bio=?4, country=?5, banner_kind=?6, banner_value=?7, dot_color=?8,
-           accent=?9, font=?10, links_json=?11, website=?12, show_json=?13, badges_json=?14, updated_at=?15, avatar_key=?16 WHERE user_id=?1`,
+           accent=?9, font=?10, links_json=?11, website=?12, show_json=?13, badges_json=?14, updated_at=?15, avatar_key=?16, accent2=?17, name_effect=?18, card_effect=?19, pronouns=?20 WHERE user_id=?1`,
       )
       .bind(
         user.id,
@@ -316,6 +355,10 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
         next.badges_json,
         nowSec(),
         next.avatar_key,
+        next.accent2,
+        next.name_effect,
+        next.card_effect,
+        next.pronouns,
       )
       .run()
   } catch (e) {
