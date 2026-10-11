@@ -20,7 +20,7 @@ export const POST = route(async (req: Request) => {
   const member = await d.prepare('SELECT 1 AS x FROM users WHERE email = ?1').bind(email).first()
   if (member) {
     try {
-      await sendEmail({ to: email, ...codeEmail(await issueCode(email, 'reset'), 'reset') })
+      await sendEmail({ to: email, ...codeEmail(await issueCode(email, 'reset'), 'reset'), template: 'password reset code' })
     } catch (e) {
       if (!(e instanceof HttpError && e.status === 429)) throw e
     }

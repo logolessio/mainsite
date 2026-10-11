@@ -1,5 +1,6 @@
 import { setting } from './db'
 import { HttpError } from './http'
+import { logEvent } from './log'
 
 /** True when emails can be sent: a Resend key is set, or we are running locally (where the code is printed instead). */
 export async function emailEnabled() {
@@ -9,12 +10,15 @@ export async function emailEnabled() {
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string)
 
 /** Sends one email through Resend. Locally, with no key, it prints the message to the server log instead. */
-export async function sendEmail(o: { to: string; subject: string; html: string; text: string }) {
+export async function sendEmail(o: { to: string; subject: string; html: string; text: string; template?: string }): Promise<{ id: string | null }> {
   const key = await setting('RESEND_API_KEY')
+  const label = o.template ?? 'email'
+  const who = o.to.replace(/^(.).*(@.*)$/, '$1***$2') // addresses are masked in the log
   if (!key) {
     if (process.env.NODE_ENV === 'production') throw new HttpError(503, 'Email is not set up yet.')
     console.log(`[email, local only] to ${o.to}: ${o.subject}\n${o.text}`)
-    return
+    logEvent({ kind: 'api', name: 'email sent', detail: `${label}|${who}|local` })
+    return { id: 'local' }
   }
   const from = (await setting('RESEND_FROM')) ?? 'logoless <login@verify.logoless.io>'
   const res = await fetch('https://api.resend.com/emails', {
@@ -25,8 +29,12 @@ export async function sendEmail(o: { to: string; subject: string; html: string; 
   if (!res.ok) {
     const detail = (await res.text().catch(() => '')).slice(0, 300)
     console.error('resend failed', res.status, detail)
+    logEvent({ kind: 'error', name: 'email failed', status: res.status, detail: `${label}|${who}|${detail.slice(0, 200)}` })
     throw new HttpError(502, 'We could not send the email. Please try again in a minute.')
   }
+  const id = ((await res.json().catch(() => ({}))) as { id?: string }).id ?? null
+  logEvent({ kind: 'api', name: 'email sent', detail: `${label}|${who}|${id ?? ''}` })
+  return { id }
 }
 
 const shell = (title: string, intro: string, big: string, foot: string) => `<!doctype html><html><body style="margin:0;background:#000;padding:32px 16px;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
@@ -44,14 +52,15 @@ const codeBlock = (code: string) =>
   `<p style="margin:0;font-size:40px;font-weight:600;letter-spacing:.18em;font-family:ui-monospace,Menlo,monospace;color:#fff">${esc(`${code.slice(0, 3)} ${code.slice(3)}`)}</p>`
 
 /** The "confirm your email" code, or the "reset your password" code. The code is digits only, so nothing a person typed ever reaches the HTML. */
-export function codeEmail(code: string, kind: 'signup' | 'reset') {
+export function codeEmail(code: string, kind: 'signup' | 'reset', test = false) {
   const title = kind === 'signup' ? 'Confirm your email' : 'Reset your password'
   const intro = kind === 'signup' ? 'Enter this code on the page you came from to finish creating your account.' : 'Enter this code, then choose a new password.'
   const foot = kind === 'signup' ? 'It works for 10 minutes. If you did not sign up, ignore this email and nothing will be created.' : 'It works for 10 minutes. If you did not ask to reset your password, ignore this email: your password has not changed.'
+  const tag = test ? '[TEST] ' : ''
   return {
-    subject: kind === 'signup' ? `Confirm your logoless email: ${code}` : `Reset your logoless password: ${code}`,
-    text: `${title}\n\nYour code is ${code}.\n\n${foot}\n\nlogoless`,
-    html: shell(title, intro, codeBlock(code), foot),
+    subject: `${tag}${kind === 'signup' ? `Confirm your logoless email: ${code}` : `Reset your logoless password: ${code}`}`,
+    text: `${test ? 'THIS IS A TEST from the admin panel.\n\n' : ''}${title}\n\nYour code is ${code}.\n\n${foot}\n\nlogoless`,
+    html: shell(test ? `${title} (test)` : title, test ? 'This is a test sent from the admin panel. Nothing was created.' : intro, codeBlock(code), foot),
   }
 }
 

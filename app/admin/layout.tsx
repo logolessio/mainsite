@@ -18,6 +18,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
         { label: 'Site text', href: '/admin/text', icon: 'FileCheck2' },
         { label: 'Logs and stats', href: '/admin/logs', icon: 'BarChart3' },
         { label: 'Audit log', href: '/admin/audit', icon: 'ScrollText' },
+        { label: 'Email', href: '/admin/email', icon: 'Mail' },
         { label: 'Keys and tests', href: '/admin/keys', icon: 'ShieldCheck' },
         { label: 'Settings', href: '/admin/settings', icon: 'Settings' },
       ]}

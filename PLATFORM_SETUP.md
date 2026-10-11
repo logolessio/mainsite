@@ -78,7 +78,7 @@ People can sign up with an email and a password. We email a six-digit code (vali
 3. Add it in Cloudflare as a **Secret** called `RESEND_API_KEY`.
 4. Optional: add a plain variable `RESEND_FROM` to change the sender. The default is `logoless <login@verify.logoless.io>`.
 5. Optional but wise: add a secret `PASSWORD_PEPPER` (a long random string). It is mixed into every password before hashing. **Never change it afterwards**, or every password stops matching. If you skip it, `AUTH_SECRET` is used, so then never change that either.
-6. Open `/admin/keys` and run **Email (Resend)**. It checks the key and the domain.
+6. Open `/admin/email` in the admin area. It sends a test of every email we send (sign-up code, password reset, already-a-member, plain), runs a full code round trip to your inbox, and lists recent sends with a "Check delivery" button. `/admin/keys` also has an **Email (Resend)** test for the key and domain.
 
 How passwords are kept safe: they are salted and run through PBKDF2 (100,000 rounds, the most Cloudflare allows) with the pepper, and only that result is stored. New passwords must be 10+ characters, not common, not contain the email name, and not appear in a known data breach (checked with Have I Been Pwned without sending the password: only the first 5 characters of its fingerprint leave). Logins are limited to 10 tries per address every 15 minutes and 20 per network.
 
