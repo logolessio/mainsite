@@ -41,7 +41,7 @@ export function StickyStory({ eyebrow, title, steps }: { eyebrow: string; title:
                 <ul className="mt-8 flex flex-col items-center gap-2 text-sm text-paper/80">
                   {s.detail.map((d) => (
                     <li key={d} className="flex items-center gap-3">
-                      <span aria-hidden="true" className="size-1 shrink-0 bg-signal" />
+                      <span aria-hidden="true" className="size-1 shrink-0 bg-paper" />
                       <T>{d}</T>
                     </li>
                   ))}

@@ -21,7 +21,7 @@ export const SITE = {
   },
   // Business rules shown in copy. Keep in sync with the backend.
   platformFeePct: 10, // TODO: confirm
-  minPayoutUsd: 20, // TODO: confirm
+  minPayoutUsd: 10,
   minTopUpUsd: 100, // TODO: confirm
   maxTopUpUsd: 10000, // per top-up; raise once you trust the flow
   holdDays: 3, // how long earnings stay pending before they can be withdrawn

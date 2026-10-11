@@ -39,7 +39,7 @@ export function SplitBeat({ n, label, title, children, list, flip }: { n: string
               {list.map((l, i) => (
                 <Reveal key={l} delay={0.3 + i * 0.07} y={12} blur={false}>
                   <li className="flex items-center gap-3 border-t border-line pt-3 text-paper/85">
-                    <Check aria-hidden="true" className="size-4 shrink-0 text-signal" />
+                    <Check aria-hidden="true" className="size-4 shrink-0 text-paper" />
                     <T>{l}</T>
                   </li>
                 </Reveal>
@@ -58,8 +58,8 @@ export function StatRow({ stats }: { stats: { value: string; label: string; note
     <section className={cn(CONTAINER, 'py-16 md:py-28')}>
       <ul className={cn('grid gap-px overflow-hidden rounded-3xl bg-line', stats.length === 4 ? 'md:grid-cols-4' : stats.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3')}>
         {stats.map((s, i) => (
-          <motion.li key={s.label} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '0px 0px -10% 0px' }} transition={{ duration: 0.8, delay: i * 0.1, ease: EASE_OUT }} className="group bg-ink px-6 py-14 text-center transition-colors hover:bg-surface md:py-20">
-            <Tilt3D max={5} className="flex flex-col items-center">
+          <motion.li key={s.label} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '0px 0px -10% 0px' }} transition={{ duration: 0.8, delay: i * 0.1, ease: EASE_OUT }} className="group bg-ink text-center transition-colors hover:bg-surface">
+            <Tilt3D max={5} className="flex h-full flex-col items-center px-6 py-14 md:py-20">
               <p className="font-display text-7xl leading-none md:text-[8rem]"><CountUp value={s.value} /></p>
               <p className="mt-5 font-mono text-xs tracking-widest text-mute uppercase"><T>{s.label}</T></p>
               {s.note && <p className="mt-3 max-w-[22ch] text-sm leading-snug text-mute/80"><T>{s.note}</T></p>}
@@ -82,7 +82,7 @@ export function Ticker({ words }: { words: string[] }) {
               <span style={outline ? OUTLINE : undefined} className={cn('font-display whitespace-nowrap text-6xl leading-none md:text-8xl', outline ? 'text-transparent' : 'text-paper')}>
                 {w}
               </span>
-              <span className="size-2.5 shrink-0 bg-signal" />
+              <span className="size-2.5 shrink-0 bg-paper" />
             </span>
           ))}
         </div>
@@ -156,7 +156,7 @@ export function HorizontalStory({ eyebrow, title, steps }: { eyebrow: string; ti
                     <ul className="mt-5 grid gap-1.5 text-sm text-paper/80">
                       {s.detail.map((d) => (
                         <li key={d} className="flex items-center gap-2.5">
-                          <span aria-hidden="true" className="size-1 shrink-0 bg-signal" />
+                          <span aria-hidden="true" className="size-1 shrink-0 bg-paper" />
                           <T>{d}</T>
                         </li>
                       ))}
@@ -188,7 +188,7 @@ export function Compare({ left, right }: { left: { title: string; items: string[
             <ul className="mt-10 grid">
               {c.items.map((it, i) => (
                 <motion.li key={it} initial={{ opacity: 0, x: k ? 18 : -18 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.15 + i * 0.07, ease: EASE_OUT }} className="flex items-start gap-4 border-t border-line py-4 text-lg text-paper/85 transition-colors hover:text-paper">
-                  <span className="mt-2 size-1.5 shrink-0 bg-signal" aria-hidden="true" />
+                  <span className="mt-2 size-1.5 shrink-0 bg-paper" aria-hidden="true" />
                   <T>{it}</T>
                 </motion.li>
               ))}
@@ -253,7 +253,7 @@ export function Timeline({ eyebrow, title, items }: { eyebrow: string; title: st
           return (
             <li key={it.title} className="relative grid pb-16 pl-12 last:pb-0 md:grid-cols-2 md:pb-24 md:pl-0">
               <span aria-hidden="true" className="absolute top-2 left-0 grid size-6 place-items-center rounded-full border border-line-strong bg-ink md:left-1/2 md:-translate-x-1/2">
-                <span className="size-2 rounded-full bg-signal" />
+                <span className="size-2 rounded-full bg-paper" />
               </span>
               <motion.div initial={{ opacity: 0, x: left ? -34 : 34, y: 14 }} whileInView={{ opacity: 1, x: 0, y: 0 }} viewport={{ once: true, margin: '0px 0px -15% 0px' }} transition={{ duration: 0.9, ease: EASE_OUT }} className={cn(left ? 'md:col-start-1 md:pr-20 md:text-right' : 'md:col-start-2 md:pl-20')}>
                 {it.tag && <p className="font-mono text-xs tracking-widest text-mute uppercase"><T>{it.tag}</T></p>}

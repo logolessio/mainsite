@@ -220,7 +220,7 @@ function NotificationBell({ onNavigate }: { onNavigate?: () => void }) {
       >
         <Bell className="size-[18px]" />
         {unread > 0 && (
-          <span className="absolute -top-1 -right-1 grid min-w-5 place-items-center rounded-full bg-signal px-1 text-[10px] font-semibold leading-5 text-paper">
+          <span className="absolute -top-1 -right-1 grid min-w-5 place-items-center rounded-full bg-paper px-1 text-[10px] font-semibold leading-5 text-ink">
             {unread > 9 ? '9+' : unread}
           </span>
         )}
@@ -248,7 +248,7 @@ function NotificationBell({ onNavigate }: { onNavigate?: () => void }) {
               {items?.map((n) => {
                 const inner = (
                   <>
-                    <span className={cn('mt-1.5 size-2 shrink-0 rounded-full', n.read_at ? 'bg-transparent' : 'bg-signal')} />
+                    <span className={cn('mt-1.5 size-2 shrink-0 rounded-full', n.read_at ? 'bg-transparent' : 'bg-paper')} />
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm">{n.title}</span>
                       {n.body && <span className="mt-0.5 block text-xs text-mute">{n.body}</span>}

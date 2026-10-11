@@ -149,7 +149,7 @@ export function ToolsMenu() {
                   <button key={href} type="button" onClick={() => go(href)} className="relative flex flex-col items-center gap-1 rounded-xl border border-line px-1 py-2.5 text-[11px] transition-colors hover:bg-paper/10">
                     <Icon className="size-4" />
                     {label}
-                    {n > 0 && <span className="absolute top-1 right-1 grid min-w-4 place-items-center rounded-full bg-signal px-1 text-[9px] leading-4 font-semibold">{n}</span>}
+                    {n > 0 && <span className="absolute top-1 right-1 grid min-w-4 place-items-center rounded-full bg-paper px-1 text-[9px] leading-4 font-semibold text-ink">{n}</span>}
                   </button>
                 ))}
               </div>
@@ -173,7 +173,7 @@ export function ToolsMenu() {
                     <li key={k}>
                       <button type="button" disabled={!pulse} onClick={() => flip(k, !on)} className={cn('flex w-full items-center justify-between rounded-xl border px-3 py-2 text-xs transition-colors', on ? 'border-signal/60 bg-signal/10 text-signal' : 'border-line hover:bg-paper/10')}>
                         {label}
-                        <span className={cn('relative h-5 w-9 rounded-full', on ? 'bg-signal' : 'bg-line-strong')}>
+                        <span className={cn('relative h-5 w-9 rounded-full', on ? 'bg-paper' : 'bg-line-strong')}>
                           <span className={cn('absolute top-0.5 size-4 rounded-full bg-paper transition-all', on ? 'left-[18px]' : 'left-0.5')} />
                         </span>
                       </button>
@@ -219,7 +219,7 @@ export function ToolsMenu() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-label="Admin tools"
-        className={cn('inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm shadow-lg transition-colors', editing ? 'border-signal bg-signal text-paper' : 'border-line-strong bg-surface text-paper hover:bg-raised')}
+        className={cn('inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm shadow-lg transition-colors', editing ? 'border-paper bg-paper text-ink' : 'border-line-strong bg-surface text-paper hover:bg-raised')}
       >
         {open ? <X className="size-4" /> : <Wrench className="size-4" />}
         {editing ? 'Editing text' : 'Tools'}

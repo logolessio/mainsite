@@ -99,7 +99,7 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
                             {l.label}
                           </span>
                         </span>
-                        {active && <span aria-hidden="true" className="size-2 rounded-full bg-signal" />}
+                        {active && <span aria-hidden="true" className="size-2 rounded-full bg-paper" />}
                         <span className="ml-auto hidden items-center gap-2 text-sm text-mute opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 md:flex [&]:-translate-x-3">
                           {NOTES[l.href] ?? ''}
                           <ArrowUpRight className="size-4" />

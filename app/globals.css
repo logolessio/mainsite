@@ -113,8 +113,8 @@
     -webkit-font-smoothing: antialiased;
   }
   ::selection {
-    background: var(--signal);
-    color: var(--paper);
+    background: var(--paper);
+    color: var(--ink);
   }
   :focus-visible {
     outline: 1px solid var(--paper);

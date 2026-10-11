@@ -144,7 +144,7 @@ function Rules({ title, items, kind }: { title: string; items: string[]; kind: '
       <ul className="mt-3 flex flex-col gap-2">
         {items.map((item) => (
           <li key={item} className="flex gap-2 text-xs leading-snug text-paper/85">
-            <Icon aria-hidden="true" className={kind === 'do' ? 'mt-0.5 size-3 shrink-0' : 'mt-0.5 size-3 shrink-0 text-signal'} />
+            <Icon aria-hidden="true" className={kind === 'do' ? 'mt-0.5 size-3 shrink-0' : 'mt-0.5 size-3 shrink-0 text-mute'} />
             {item}
           </li>
         ))}

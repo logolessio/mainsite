@@ -12,5 +12,5 @@ export function Ambient() {
   const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 28, mass: 0.4 })
   const showProgress = !QUIET.some((p) => pathname.startsWith(p))
   if (!showProgress) return null
-  return <motion.div aria-hidden="true" style={{ scaleX: progress }} className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[2px] origin-left bg-signal" />
+  return <motion.div aria-hidden="true" style={{ scaleX: progress }} className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[2px] origin-left bg-paper" />
 }

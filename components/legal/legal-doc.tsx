@@ -91,7 +91,7 @@ export function LegalDocView({ doc }: { doc: LegalDoc }) {
 
   return (
     <main>
-      <motion.div style={{ scaleX }} className="fixed inset-x-0 top-0 z-[60] h-px origin-left bg-signal" />
+      <motion.div style={{ scaleX }} className="fixed inset-x-0 top-0 z-[60] h-px origin-left bg-paper" />
       <header className={cn(CONTAINER, 'flex flex-col items-center pt-44 pb-16 text-center md:pt-60 md:pb-24')}>
         <Reveal y={10}>
           <p className="font-mono text-xs tracking-widest text-mute uppercase">Legal · Updated {SITE.legalUpdated}</p>

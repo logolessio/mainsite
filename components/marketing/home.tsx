@@ -163,7 +163,7 @@ function PayoutCard() {
         {['Identity verified by Stripe', `Withdraw from $${SITE.minPayoutUsd}`, 'Funds arrive in your local currency'].map(
           (t) => (
             <li key={t} className="flex items-center gap-3 text-paper/85">
-              <Check aria-hidden="true" className="size-4 text-signal" />
+              <Check aria-hidden="true" className="size-4 text-paper" />
               {t}
             </li>
           ),
