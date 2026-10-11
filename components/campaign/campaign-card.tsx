@@ -33,7 +33,7 @@ function daysLeft(s: string) {
 }
 
 /** The whole campaign page: a big hero, the numbers, the brief next to an earnings calculator, the rules, how you get paid, and the form. */
-export function CampaignCard({ campaign, others = [] }: { campaign: Campaign; others?: Campaign[] }) {
+export function CampaignCard({ campaign, others = [], poolLeftCents = null }: { campaign: Campaign; others?: Campaign[]; poolLeftCents?: number | null }) {
   const { morph } = useTransitions()
   const [left, setLeft] = useState<number | null>(null)
   const [copied, setCopied] = useState(false)
@@ -138,6 +138,7 @@ export function CampaignCard({ campaign, others = [] }: { campaign: Campaign; ot
             <Stat icon={Wallet} label="Total budget" value={usd(campaign.budget)} sub="the pool clippers are paid from" />
             <Stat icon={Clock} label="Deadline" value={campaign.endsOn || 'Open'} sub={left === null ? 'No end date set' : left === 0 ? 'Ends today' : `${left} day${left === 1 ? '' : 's'} to go`} />
           </div>
+          {poolLeftCents !== null && <PoolMeter leftCents={poolLeftCents} budget={campaign.budget} />}
         </Reveal>
 
         {/* ---------------- brief + calculator ---------------- */}
@@ -307,6 +308,25 @@ function Rules({ title, items, kind }: { title: string; items: string[]; kind: '
           </li>
         ))}
       </ul>
+    </div>
+  )
+}
+
+/** How much of the pool is still unpaid. Real money from the ledger, so it only shows for campaigns that have been funded. */
+function PoolMeter({ leftCents, budget }: { leftCents: number; budget: number }) {
+  const pct = Math.max(0, Math.min(100, Math.round((leftCents / 100 / Math.max(1, budget)) * 100)))
+  const low = pct <= 15
+  return (
+    <div className="mt-4 rounded-3xl border border-white/10 bg-white/[0.04] p-5 md:p-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-sm text-mute">
+          <span className={cn('font-display text-2xl', low && 'text-paper')}>{usd(Math.max(0, leftCents / 100))}</span> still up for grabs
+        </p>
+        <p className="font-mono text-xs text-mute">{low ? (pct === 0 ? 'Pool is empty' : 'Almost gone') : `${pct}% of the pool left`}</p>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-label="Pool remaining" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
+        <motion.div initial={{ width: 0 }} whileInView={{ width: `${pct}%` }} viewport={{ once: true }} transition={{ duration: 1.1, ease: EASE_OUT }} className="h-full rounded-full bg-paper" />
+      </div>
     </div>
   )
 }
