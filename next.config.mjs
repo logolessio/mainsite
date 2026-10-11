@@ -13,13 +13,13 @@ const isProd = process.env.NODE_ENV === 'production'
 // everything else is restricted to this site plus the few services we actually use (Cloudflare Turnstile).
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://connect-js.stripe.com https://js.stripe.com",
+  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.googleusercontent.com https://cdn.discordapp.com https://*.stripe.com",
+  "img-src 'self' data: blob: https://*.googleusercontent.com https://cdn.discordapp.com",
   "media-src 'self' blob:",
   "font-src 'self' data:",
-  "connect-src 'self' https://challenges.cloudflare.com https://api.stripe.com https://*.stripe.com",
-  'frame-src https://challenges.cloudflare.com https://connect-js.stripe.com https://js.stripe.com https://*.stripe.com',
+  "connect-src 'self' https://challenges.cloudflare.com https://api.stripe.com",
+  'frame-src https://challenges.cloudflare.com',
   "frame-ancestors 'self'",
   "form-action 'self' https://accounts.google.com https://discord.com",
   "base-uri 'self'",

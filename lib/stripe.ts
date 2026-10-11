@@ -1,5 +1,5 @@
 import Stripe from 'stripe'
-import { db, setting } from './db'
+import { setting } from './db'
 import { HttpError } from './http'
 
 /** A Stripe client that works on Cloudflare Workers (fetch based, no Node sockets). */
@@ -24,21 +24,4 @@ export { Stripe }
 /** True for Stripe test mode keys, so the UI can show a "test mode" notice. */
 export async function isTestMode() {
   return ((await setting('STRIPE_SECRET_KEY')) ?? '').startsWith('sk_test_')
-}
-
-/** The clipper's Stripe Connect account. Created the first time they start setting up payouts. */
-export async function ensureConnectAccount(s: Stripe, user: { id: string; email: string; stripe_account_id: string | null }) {
-  if (user.stripe_account_id) return user.stripe_account_id
-  const a = await s.accounts.create({
-    // No Stripe-hosted dashboard: clippers manage everything inside logoless. Because of that, logoless is the one
-    // Stripe bills for the account's fees and covers any losses, and Stripe still collects and checks identity details.
-    controller: { stripe_dashboard: { type: 'none' }, fees: { payer: 'application' }, losses: { payments: 'application' }, requirement_collection: 'stripe' },
-    email: user.email,
-    capabilities: { transfers: { requested: true } },
-    business_type: 'individual',
-    metadata: { user_id: user.id },
-  })
-  const d = await db()
-  await d.prepare('UPDATE users SET stripe_account_id = ?2 WHERE id = ?1').bind(user.id, a.id).run()
-  return a.id
 }

@@ -28,12 +28,14 @@ one-time steps that need your accounts. Do them in TEST mode first.
    (Or in a terminal: `npx wrangler d1 migrations apply DB --remote`.)
 4. Worker project > Settings > Variables and secrets: add `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` and `STRIPE_CONNECT_WEBHOOK_SECRET` as **Secrets**.
 
-## 2b. Setup form on our own site (embedded onboarding)
-Clippers fill in their ID and bank details in a form shown inside logoless, styled to match the site, instead of being sent to stripe.com.
+## 2b. Payout setup on our own site (no Stripe screens)
+Clippers set up payouts in logoless's own forms. Nothing is embedded and nobody is sent to stripe.com: logoless sends the details to Stripe by API and Stripe does the identity checks and holds the data. Bank numbers are swapped for a one-time token in the browser, so logoless never sees them; ID photos pass through to Stripe and are not stored.
 1. Stripe > Developers > API keys > copy the **Publishable key** (`pk_test_...`). It is meant to be public.
 2. Cloudflare > Worker > Variables and secrets: add `STRIPE_PUBLISHABLE_KEY` (a normal variable is fine).
-3. Without that variable the Payouts page quietly falls back to Stripe's own hosted page, so nothing breaks.
-The look is set in `components/app/connect-onboarding.tsx` (the `appearance` block).
+3. In the Connect wizard choose: buyers purchase from you, payouts split between sellers, **build your own** onboarding, **build your own** account management.
+4. Because logoless collects the details, logoless is the one Stripe bills for the account's fees and the one that covers any losses (the account is created with those settings). Stripe charges the platform a small monthly fee per active clipper account plus a fee per payout; check Stripe's Connect pricing for your country.
+5. Countries offered are listed in `lib/connect-fields.ts`. Each needs its own bank fields; add more there. Payouts to a country outside the UK/EEA use Stripe's "recipient" agreement.
+6. Test in the sandbox: Payouts page > pick United States > use Stripe's test values (date of birth `01/01/1901`, SSN last 4 `0000`, address `address_full_match`, routing `110000000`, account `000123456789`).
 
 ## 3. Going live
 Repeat steps 1.4 to 1.5 and 2.4 with your **live** keys only after test mode works end to end,

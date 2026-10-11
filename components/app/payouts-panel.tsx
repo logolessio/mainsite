@@ -1,10 +1,10 @@
 'use client'
 
-import { Landmark, Loader2, ShieldCheck } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Input } from '@/components/ui/fields'
-import { ConnectManage, ConnectOnboarding } from '@/components/app/connect-embed'
-import { cents, type Finance, getConnectStatus, getFinance, startConnect, withdraw } from '@/lib/stripe-client'
+import { PayoutAccount } from '@/components/app/payout-account'
+import { cents, type Finance, getFinance, withdraw } from '@/lib/stripe-client'
 import { SITE } from '@/lib/site'
 import { Badge, DataTable, EmptyState } from './table'
 import { ActionButton, Card, StatCard } from './ui'
@@ -16,8 +16,7 @@ export function PayoutsPanel() {
   const [fin, setFin] = useState<Finance | null>(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
-  const [embedded, setEmbedded] = useState(false)
-  const [busy, setBusy] = useState<'connect' | 'withdraw' | null>(null)
+  const [busy, setBusy] = useState<'withdraw' | null>(null)
   const [amount, setAmount] = useState('')
 
   const load = useCallback(async () => {
@@ -30,41 +29,13 @@ export function PayoutsPanel() {
   }, [])
 
   useEffect(() => {
-    // coming back from Stripe onboarding: ask Stripe for the latest state first, then reload
-    const returning = new URLSearchParams(window.location.search).get('stripe') === 'return'
-    ;(async () => {
-      if (returning) {
-        await getConnectStatus().catch(() => null)
-        window.history.replaceState(null, '', window.location.pathname)
-      }
-      await load()
-    })()
+    void load()
   }, [load])
 
   const state = fin?.connect.status ?? 'not_connected'
   const available = fin?.balances.available ?? 0
   const minCents = SITE.minPayoutUsd * 100
 
-  // Opens the setup form inside logoless. If that is not available, falls back to Stripe's own page.
-  const connect = () => {
-    setError('')
-    setEmbedded(true)
-  }
-  const hosted = async () => {
-    setEmbedded(false)
-    setBusy('connect')
-    try {
-      await startConnect('/dashboard/payouts')
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not open Stripe.')
-      setBusy(null)
-    }
-  }
-  const finished = async () => {
-    setEmbedded(false)
-    await getConnectStatus().catch(() => null)
-    await load()
-  }
   const doWithdraw = async () => {
     setBusy('withdraw')
     setError('')
@@ -72,7 +43,7 @@ export function PayoutsPanel() {
     try {
       const n = amount.trim() ? Number(amount) : undefined
       const r = await withdraw(n)
-      setNotice(`${cents(r.amount)} is on its way to your Stripe account. Stripe pays it to your bank on its normal schedule.`)
+      setNotice(`${cents(r.amount)} is on its way. It reaches your bank within a few working days.`)
       setAmount('')
       await load()
     } catch (e) {
@@ -103,44 +74,13 @@ export function PayoutsPanel() {
         <StatCard label="Withdrawn" value={fin ? cents(fin.balances.withdrawn) : '…'} />
       </div>
 
-      <Card title="Stripe account" action={<Badge tone={state === 'ready' ? 'good' : 'warn'}>{state === 'ready' ? 'Connected' : state === 'incomplete' ? 'Action needed' : 'Not connected'}</Badge>}>
-        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div className="flex gap-4">
-            <span className="grid size-12 shrink-0 place-items-center rounded-full border border-line-strong">
-              <Landmark aria-hidden="true" className="size-5" />
-            </span>
-            <div>
-              <p className="font-medium">Bank payouts via Stripe</p>
-              <p className="mt-1 max-w-md text-sm text-mute">
-                {state === 'ready'
-                  ? 'Your account is verified. Stripe sends your withdrawals to the bank you added.'
-                  : state === 'incomplete'
-                    ? 'Stripe still needs a few details before it can pay you. Finish setup to continue.'
-                    : 'Stripe verifies your identity and holds your bank details. We never see your full account number.'}
-              </p>
-              <p className="mt-3 flex items-center gap-2 text-xs text-mute">
-                <ShieldCheck aria-hidden="true" className="size-4" />
-                Takes about five minutes
-              </p>
-            </div>
-          </div>
-          {state === 'ready' ? null : (
-            <ActionButton onClick={connect} disabled={busy !== null} className="shrink-0">
-              {busy === 'connect' && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
-              {state === 'incomplete' ? 'Finish setup' : 'Connect with Stripe'}
-            </ActionButton>
-          )}
-        </div>
-      </Card>
-
-      {embedded && <ConnectOnboarding onDone={finished} onUnavailable={hosted} />}
-      {state !== 'not_connected' && !embedded && <ConnectManage />}
+      <PayoutAccount onChanged={load} />
 
       <Card title="Withdraw">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="max-w-md text-sm text-mute">
             {state !== 'ready'
-              ? 'Connect Stripe first.'
+              ? 'Set up your payouts above first.'
               : available < minCents
                 ? `You can withdraw once your available balance reaches $${SITE.minPayoutUsd}.`
                 : `You have ${cents(available)} available. Leave the box empty to withdraw all of it.`}

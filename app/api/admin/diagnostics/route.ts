@@ -34,7 +34,12 @@ export const POST = route(async (req: Request) => {
       try {
         const s = await stripe()
         const list = await s.accounts.list({ limit: 3 })
-        out.lines = [`Connect is enabled. ${list.data.length} connected account${list.data.length === 1 ? '' : 's'} found (showing up to 3).`]
+        const pk = await setting('STRIPE_PUBLISHABLE_KEY')
+        out.ok = Boolean(pk)
+        out.lines = [
+          `Connect is enabled. ${list.data.length} connected account${list.data.length === 1 ? '' : 's'} found (showing up to 3).`,
+          pk ? 'Publishable key is set: bank details are swapped for a token in the browser.' : 'STRIPE_PUBLISHABLE_KEY is missing: clippers cannot add a bank account until it is set.',
+        ]
       } catch (e) {
         return json({ ...out, ok: false, lines: [e instanceof Error ? e.message.slice(0, 200) : 'Connect is not enabled on this Stripe account.'] })
       }
