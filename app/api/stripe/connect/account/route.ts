@@ -7,7 +7,7 @@ import { requireUser } from '@/lib/user'
 /** Step one: the clipper picks their country and accepts Stripe's payout terms. Creates their Stripe account. */
 export const POST = route(async (req: Request) => {
   const user = await requireUser()
-  await protect(req, { name: 'connect-create', max: 20, windowSec: 3600, userId: user.id })
+  await protect(req, { name: 'connect-create', max: 120, windowSec: 3600, userId: user.id })
   const { country, accepted } = await body<{ country?: string; accepted?: boolean }>(req)
   if (accepted !== true) throw new HttpError(400, 'Please accept the payment terms to continue.')
   if (user.stripe_account_id) return json(await connectStatus(user))
