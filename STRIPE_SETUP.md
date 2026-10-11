@@ -17,7 +17,7 @@ one-time steps that need your accounts. Do them in TEST mode first.
    - Add a second endpoint with the same URL for **Connected accounts** with the event `account.updated`
      (or one endpoint listening to both, if your dashboard offers it).
    - Copy each endpoint's **Signing secret** (`whsec_...`). If you create two endpoints you get two secrets;
-     tell me and I will make the webhook accept both.
+     the webhook accepts both: put the first in `STRIPE_WEBHOOK_SECRET` and the Connect one in `STRIPE_CONNECT_WEBHOOK_SECRET`.
 6. To test withdrawals, add balance to the platform with card `4000 0000 0000 0077`
    (Stripe test card that goes straight to available balance).
 
@@ -26,7 +26,7 @@ one-time steps that need your accounts. Do them in TEST mode first.
 2. Put that id in `wrangler.jsonc` (replace the zeros) and commit.
 3. Create the tables: open the database > Console, paste the contents of `migrations/0001_init.sql`, run it.
    (Or in a terminal: `npx wrangler d1 migrations apply DB --remote`.)
-4. Worker project > Settings > Variables and secrets: add `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` as **Secrets**.
+4. Worker project > Settings > Variables and secrets: add `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` and `STRIPE_CONNECT_WEBHOOK_SECRET` as **Secrets**.
 
 ## 3. Going live
 Repeat steps 1.4 to 1.5 and 2.4 with your **live** keys only after test mode works end to end,

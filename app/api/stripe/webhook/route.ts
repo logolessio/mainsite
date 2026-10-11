@@ -4,7 +4,7 @@ import { HttpError, json, route } from '@/lib/http'
 import { logEvent } from '@/lib/log'
 import { notify, notifyAdmins } from '@/lib/notify'
 import { creditTopup, debitRefund, fundCampaign, reverseWithdrawal } from '@/lib/ledger'
-import { Stripe as StripeLib, stripe, webhookSecret } from '@/lib/stripe'
+import { Stripe as StripeLib, stripe, webhookSecrets } from '@/lib/stripe'
 
 /**
  * Stripe calls this URL when something happens (payment paid, refund, account ready...).
@@ -22,12 +22,16 @@ export const POST = route(async (req: Request) => {
   if (!signature) throw new HttpError(400, 'Missing signature.')
 
   const s = await stripe()
-  let event: Stripe.Event
-  try {
-    event = await s.webhooks.constructEventAsync(raw, signature, await webhookSecret(), undefined, StripeLib.createSubtleCryptoProvider())
-  } catch {
-    throw new HttpError(400, 'Invalid signature.')
+  let event: Stripe.Event | null = null
+  for (const secret of await webhookSecrets()) {
+    try {
+      event = await s.webhooks.constructEventAsync(raw, signature, secret, undefined, StripeLib.createSubtleCryptoProvider())
+      break
+    } catch {
+      /* wrong secret for this endpoint: try the next one */
+    }
   }
+  if (!event) throw new HttpError(400, 'Invalid signature.')
 
   const d = await db()
   const seen = await d.prepare('SELECT 1 AS x FROM stripe_events WHERE id = ?1').bind(event.id).first()

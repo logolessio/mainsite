@@ -42,12 +42,15 @@ export const POST = route(async (req: Request) => {
     }
     case 'webhook': {
       out.title = 'Stripe webhook'
-      const has = Boolean(await setting('STRIPE_WEBHOOK_SECRET'))
+      const main = Boolean(await setting('STRIPE_WEBHOOK_SECRET'))
+      const connect = Boolean(await setting('STRIPE_CONNECT_WEBHOOK_SECRET'))
+      const has = main
       const last = await d.prepare('SELECT type, received_at FROM stripe_events ORDER BY received_at DESC LIMIT 1').first<{ type: string; received_at: number }>()
       const total = await d.prepare('SELECT COUNT(*) AS n FROM stripe_events').first<{ n: number }>()
       out.ok = has && Boolean(last)
       out.lines = [
         has ? 'Signing secret is set.' : 'Signing secret is NOT set: Stripe events will be rejected.',
+        connect ? 'Connect signing secret is set (clipper account updates).' : 'No Connect signing secret yet: clipper account updates will be rejected until STRIPE_CONNECT_WEBHOOK_SECRET is added.',
         last ? `Last event: ${last.type}, ${new Date(last.received_at * 1000).toLocaleString('en-US')}. ${total?.n ?? 0} received in total.` : 'No event has arrived yet. In Stripe, send a test event to /api/stripe/webhook to prove it works.',
       ]
       break

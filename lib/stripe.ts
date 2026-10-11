@@ -9,10 +9,14 @@ export async function stripe() {
   return new Stripe(key, { httpClient: Stripe.createFetchHttpClient() })
 }
 
-export async function webhookSecret() {
-  const s = await setting('STRIPE_WEBHOOK_SECRET')
-  if (!s) throw new HttpError(503, 'Webhook secret is not set up yet.')
-  return s
+/**
+ * Stripe gives each webhook endpoint its own signing secret. Events about your own account and events about
+ * connected (clipper) accounts need separate endpoints, so we accept up to two secrets.
+ */
+export async function webhookSecrets() {
+  const list = [await setting('STRIPE_WEBHOOK_SECRET'), await setting('STRIPE_CONNECT_WEBHOOK_SECRET')].filter((x): x is string => Boolean(x))
+  if (!list.length) throw new HttpError(503, 'Webhook secret is not set up yet.')
+  return list
 }
 
 export { Stripe }
