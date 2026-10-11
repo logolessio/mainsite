@@ -13,6 +13,7 @@ import { TransitionLink } from './transition-link'
 import { T } from './copy-provider'
 import { NavUserActions, useNavUser } from './nav-user'
 import { SiteMenu } from './site-menu'
+import { useFeature } from './features-provider'
 import { useTransitions } from './transition-provider'
 
 const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin', '/@', '/u/']
@@ -24,7 +25,8 @@ export function SiteNav() {
   const [open, setOpen] = useState(false)
   const { navigate } = useTransitions()
   const { user } = useNavUser()
-  const links = [...NAV_LINKS, user?.signedIn ? { label: 'Dashboard', href: '/dashboard' } : { label: 'Log in', href: '/login' }]
+  const board = useFeature('leaderboard')
+  const links = [...NAV_LINKS, ...(board ? [{ label: 'Leaderboard', href: '/leaderboard' }] : []), user?.signedIn ? { label: 'Dashboard', href: '/dashboard' } : { label: 'Log in', href: '/login' }]
   const toggleRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {

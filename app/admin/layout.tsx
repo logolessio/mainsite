@@ -12,6 +12,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
       items={[
         { label: 'Overview', href: '/admin', icon: 'LayoutDashboard', exact: true },
         { label: 'Launch readiness', href: '/admin/launch', icon: 'Rocket' },
+        { label: 'Push features', href: '/admin/push', icon: 'Sparkles' },
         { label: 'Artist links', href: '/admin/invites', icon: 'Link2' },
         { label: 'Campaigns', href: '/admin/campaigns', icon: 'Megaphone' },
         { label: 'Review queue', href: '/admin/submissions', icon: 'Clapperboard' },

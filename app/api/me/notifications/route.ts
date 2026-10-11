@@ -5,17 +5,21 @@ import { requireUser } from '@/lib/user'
 
 type Row = { id: string; kind: string; title: string; body: string; href: string | null; read_at: number | null; created_at: number }
 
-/** The signed-in person's own notifications, newest first. */
-export const GET = route(async () => {
+/** The signed-in person's own notifications, newest first. `?since=<seconds>` returns only newer ones, `?limit=1` just the latest. */
+export const GET = route(async (req: Request) => {
   const user = await requireUser()
   const d = await db()
+  const url = new URL(req.url)
+  const since = Number(url.searchParams.get('since') ?? 0)
+  const limit = Math.min(80, Math.max(1, Number(url.searchParams.get('limit') ?? 80) || 80))
   const items = (
     await d
-      .prepare('SELECT id, kind, title, body, href, read_at, created_at FROM notifications WHERE user_id = ?1 ORDER BY created_at DESC LIMIT 80')
-      .bind(user.id)
+      .prepare('SELECT id, kind, title, body, href, read_at, created_at FROM notifications WHERE user_id = ?1 AND created_at > ?2 ORDER BY created_at DESC LIMIT ?3')
+      .bind(user.id, Number.isFinite(since) ? since : 0, limit)
       .all<Row>()
   ).results
-  return json({ items })
+  const unread = await d.prepare('SELECT COUNT(*) AS n FROM notifications WHERE user_id = ?1 AND read_at IS NULL').bind(user.id).first<{ n: number }>()
+  return json({ items, unread: unread?.n ?? 0 })
 })
 
 /** Marks notifications as read: one id, or everything. */

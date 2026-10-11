@@ -45,7 +45,7 @@ function dayLabel(t: number) {
 }
 
 /** A badge notification shows the badge itself, drawn properly, instead of a plain icon. */
-function Tile({ n }: { n: Note }) {
+export function NoteTile({ n }: { n: Note }) {
   const k = kindOf(n.kind)
   const b = n.kind === 'badge' ? BADGES.find((x) => n.title.includes(x.name)) : null
   if (b) return <span className="grid size-11 shrink-0 place-items-center"><BadgeArt badge={b} size={44} animated={false} /></span>
@@ -107,7 +107,7 @@ export function NotificationFeed({ notes, setNotes, onOpen, compact = false }: {
                 const i = row++
                 const inner = (
                   <>
-                    <Tile n={n} />
+                    <NoteTile n={n} />
                     <span className="min-w-0 flex-1 text-left">
                       <span className="flex items-baseline justify-between gap-3">
                         <span className={cn('truncate text-[14px] leading-snug', n.read_at ? 'text-paper/75' : 'font-medium text-paper')}>{n.title}</span>

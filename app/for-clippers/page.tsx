@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 
 import { CtaBand, FeatureGrid, SectionTitle } from '@/components/marketing/blocks'
 import { HorizontalStory, Principles, SplitBeat, StatRow, Ticker } from '@/components/marketing/layouts'
+import { ClipperCalculator } from '@/components/marketing/calculators'
 import { SITE } from '@/lib/site'
 import { PageHero, Section } from '@/components/marketing/page-hero'
 import { PillLink } from '@/components/motion/cta'
@@ -72,6 +73,7 @@ export default function Page() {
           { title: 'Which platforms work?', body: 'TikTok, YouTube (Shorts and long-form) and Instagram Reels. Each campaign lists the platforms it accepts.' },
         ]}
       />
+      <ClipperCalculator />
       <Ticker words={['Cut it', 'Post it', 'Earn from it']} />
       <Reveal>
         <CtaBand title="Find your first campaign" href="/" label="Browse campaigns" secondaryHref="/onboarding?role=clipper" secondaryLabel="Create account" />

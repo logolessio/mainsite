@@ -517,3 +517,15 @@ tbody tr:nth-child(n + 7) { animation-delay: 0.24s; }
 @media (prefers-reduced-motion: reduce) {
   .b-spin, .b-spin-slow, .b-flip, .b-flicker, .b-blink, .b-twinkle, .b-pulse, .b-hue, .b-shine, .b-float { animation: none; }
 }
+
+/* ---------- calm mode (a visitor's own switch): no floating, no particles, no looping animation ---------- */
+html.calm canvas {
+  display: none !important;
+}
+html.calm *,
+html.calm *::before,
+html.calm *::after {
+  animation-duration: 0.001s !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+}

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { BrandCalculator } from '@/components/marketing/calculators'
 
 import { CtaBand, FeatureGrid, SectionTitle } from '@/components/marketing/blocks'
 import { SplitBeat, StatRow, Ticker, Timeline } from '@/components/marketing/layouts'
@@ -90,6 +91,7 @@ export default function Page() {
           { tag: 'Step 4', title: 'Pay for what is real', body: 'Clips are checked, views are verified and only then does money move.' },
         ]}
       />
+      <BrandCalculator />
       <CtaBand title="Launch your first campaign" href="/onboarding?role=brand" label="Get started" secondaryHref="/how-it-works" secondaryLabel="How it works" />
     </main>
   )
