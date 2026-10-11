@@ -14,17 +14,26 @@ export async function createConnectAccount(user: UserRow, country: string, tos: 
   const c = countryOf(country)
   if (!c) throw new HttpError(400, 'Payouts are not available in that country yet.')
   const s = await stripe()
-  const account = await s.accounts.create({
+  const params = (cardPayments: boolean): Stripe.AccountCreateParams => ({
     controller: { stripe_dashboard: { type: 'none' }, fees: { payer: 'application' }, losses: { payments: 'application' }, requirement_collection: 'application' },
     country: c.code,
     email: user.email,
     business_type: 'individual',
     business_profile: { mcc: '7311', url: 'https://logoless.io', product_description: 'Creates and posts short video clips for advertisers on logoless.' },
-    capabilities: { transfers: { requested: true } },
+    // Stripe will not let some countries (the US so far) receive transfers without also having the card capability.
+    capabilities: { transfers: { requested: true }, ...(cardPayments ? { card_payments: { requested: true } } : {}) },
     tos_acceptance: { date: Math.floor(Date.now() / 1000), ip: tos.ip, user_agent: tos.userAgent.slice(0, 200) },
     settings: { payouts: { schedule: { interval: 'daily' } } },
     metadata: { user_id: user.id },
   })
+  let account
+  try {
+    account = await s.accounts.create(params(c.code === 'US'))
+  } catch (e) {
+    // If another country turns out to need it too, try once more with it switched on.
+    if (!(e instanceof Error) || !/card_payments/.test(e.message) || c.code === 'US') throw e
+    account = await s.accounts.create(params(true))
+  }
   const d = await db()
   await d.prepare('UPDATE users SET stripe_account_id = ?2 WHERE id = ?1').bind(user.id, account.id).run()
   return account.id
