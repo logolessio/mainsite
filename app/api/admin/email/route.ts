@@ -1,7 +1,8 @@
 import { z } from 'zod'
 import { audit } from '@/lib/chain'
 import { db, setting } from '@/lib/db'
-import { alreadyMemberEmail, codeEmail, emailEnabled, sendEmail } from '@/lib/email'
+import { alreadyMemberEmail, codeEmail, emailEnabled, plainTestEmail, sendEmail } from '@/lib/email'
+import { requestMeta } from '@/lib/log'
 import { checkCode, issueCode } from '@/lib/email-code'
 import { ipHash, protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
@@ -13,12 +14,6 @@ const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('code-check'), code: z.string().regex(/^\d{6}$/) }),
   z.object({ action: z.literal('status'), id: z.string().regex(/^[0-9a-f-]{20,40}$/i) }),
 ])
-
-const plain = () => ({
-  subject: '[TEST] logoless email delivery',
-  text: 'This is a test from the logoless admin panel. If you can read this, sending works.\n\nlogoless',
-  html: '<p style="font-family:sans-serif">This is a <strong>test</strong> from the logoless admin panel. If you can read this, sending works.</p>',
-})
 
 /** Admin email tools. Test messages are labelled [TEST], carry no usable code, and go to the admin's own address unless another is typed. */
 export const POST = route(async (req: Request) => {
@@ -43,11 +38,12 @@ export const POST = route(async (req: Request) => {
 
   if (a.action === 'send') {
     const to = a.to ?? admin.email
+    const meta = await requestMeta(req)
     const mail =
-      a.template === 'signup' ? { ...codeEmail('123456', 'signup', true), template: 'TEST sign-up code' }
-      : a.template === 'reset' ? { ...codeEmail('123456', 'reset', true), template: 'TEST password reset code' }
-      : a.template === 'already' ? { ...alreadyMemberEmail(), subject: '[TEST] You already have a logoless account', template: 'TEST already a member' }
-      : { ...plain(), template: 'TEST delivery' }
+      a.template === 'signup' ? { ...codeEmail('123456', 'signup', true, meta), template: 'TEST sign-up code' }
+      : a.template === 'reset' ? { ...codeEmail('123456', 'reset', true, meta), template: 'TEST password reset code' }
+      : a.template === 'already' ? { ...alreadyMemberEmail(true, meta), template: 'TEST already a member' }
+      : { ...plainTestEmail(), template: 'TEST delivery' }
     const { id } = await sendEmail({ to, ...mail })
     await audit(actor, 'email.test', a.template, `to ${to.replace(/^(.).*(@.*)$/, '$1***$2')}`, await ipHash(req))
     return json({ ok: true, id, to })
@@ -56,7 +52,7 @@ export const POST = route(async (req: Request) => {
   if (a.action === 'code-start') {
     // The full round trip: a real code is stored (hashed), emailed, then checked, without creating any account.
     const code = await issueCode(admin.email, 'test')
-    const { id } = await sendEmail({ to: admin.email, ...codeEmail(code, 'signup', true), template: 'TEST code round-trip' })
+    const { id } = await sendEmail({ to: admin.email, ...codeEmail(code, 'signup', true, await requestMeta(req)), template: 'TEST code round-trip' })
     return json({ ok: true, id, to: admin.email })
   }
 

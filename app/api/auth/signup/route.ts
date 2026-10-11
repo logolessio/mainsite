@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { alreadyMemberEmail, codeEmail, emailEnabled, sendEmail } from '@/lib/email'
 import { issueCode } from '@/lib/email-code'
 import { hit, limit } from '@/lib/guard'
+import { requestMeta } from '@/lib/log'
 import { hasHuman } from '@/lib/human'
 import { assertSameOrigin, body, HttpError, json, route } from '@/lib/http'
 import { hashPassword, passwordProblem } from '@/lib/password'
@@ -36,10 +37,11 @@ export const POST = route(async (req: Request) => {
   const d = await db()
   const has = await d.prepare('SELECT 1 AS x FROM credentials WHERE email = ?1').bind(email).first()
   try {
-    if (has) await sendEmail({ to: email, ...alreadyMemberEmail(), template: 'already a member' })
+    const meta = await requestMeta(req)
+    if (has) await sendEmail({ to: email, ...alreadyMemberEmail(false, meta), template: 'already a member' })
     else {
       const code = await issueCode(email, 'signup', JSON.stringify({ hash: await hashPassword(password), name: name ?? '' }))
-      await sendEmail({ to: email, ...codeEmail(code, 'signup'), template: 'sign-up code' })
+      await sendEmail({ to: email, ...codeEmail(code, 'signup', false, meta), template: 'sign-up code' })
     }
   } catch (e) {
     // A 429 here means a code was sent a moment ago and is still valid. Saying nothing keeps accounts private.

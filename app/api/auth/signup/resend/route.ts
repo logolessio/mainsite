@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { codeEmail, emailEnabled, sendEmail } from '@/lib/email'
 import { issueCode } from '@/lib/email-code'
 import { hit, limit } from '@/lib/guard'
+import { requestMeta } from '@/lib/log'
 import { assertSameOrigin, body, HttpError, json, route } from '@/lib/http'
 
 /** Sends the confirmation code again for a sign-up that is waiting. Does nothing (and says nothing) otherwise. */
@@ -18,7 +19,7 @@ export const POST = route(async (req: Request) => {
   const pending = await d.prepare("SELECT 1 AS x FROM email_codes WHERE email = ?1 AND purpose = 'signup'").bind(email).first()
   if (!pending) return json({ ok: true })
   try {
-    await sendEmail({ to: email, ...codeEmail(await issueCode(email, 'signup'), 'signup'), template: 'sign-up code (resend)' })
+    await sendEmail({ to: email, ...codeEmail(await issueCode(email, 'signup'), 'signup', false, await requestMeta(req)), template: 'sign-up code (resend)' })
   } catch (e) {
     if (!(e instanceof HttpError && e.status === 429)) throw e
   }

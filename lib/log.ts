@@ -84,3 +84,27 @@ export function logEvent(e: LogInput) {
     /* local dev: the promise simply runs on its own */
   }
 }
+
+/** "United Kingdom" and "Chrome on macOS" for a request, shown in security emails so people can spot something unfamiliar. */
+export async function requestMeta(req: Request): Promise<{ place: string | null; device: string | null }> {
+  let code: string | null = null
+  try {
+    const cf = (await getCloudflareContext({ async: true })).cf as Record<string, unknown> | undefined
+    code = typeof cf?.country === 'string' ? cf.country : null
+  } catch {
+    /* local */
+  }
+  code ??= req.headers.get('cf-ipcountry')
+  let place: string | null = null
+  if (code && /^[A-Z]{2}$/.test(code) && code !== 'XX' && code !== 'T1') {
+    try {
+      place = new Intl.DisplayNames(['en'], { type: 'region' }).of(code) ?? code
+    } catch {
+      place = code
+    }
+  }
+  const ua = classifyUa(req.headers.get('user-agent'))
+  const [browser, os, kind] = ua.split(' · ')
+  const device = ua === 'bot' || ua === 'unknown' ? null : `${browser} on ${os}${kind === 'mobile' ? ' (phone)' : ''}`
+  return { place, device }
+}

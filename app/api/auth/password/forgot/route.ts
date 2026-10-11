@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { codeEmail, emailEnabled, sendEmail } from '@/lib/email'
 import { issueCode } from '@/lib/email-code'
 import { hit, limit } from '@/lib/guard'
+import { requestMeta } from '@/lib/log'
 import { hasHuman } from '@/lib/human'
 import { assertSameOrigin, body, HttpError, json, route } from '@/lib/http'
 
@@ -20,7 +21,7 @@ export const POST = route(async (req: Request) => {
   const member = await d.prepare('SELECT 1 AS x FROM users WHERE email = ?1').bind(email).first()
   if (member) {
     try {
-      await sendEmail({ to: email, ...codeEmail(await issueCode(email, 'reset'), 'reset'), template: 'password reset code' })
+      await sendEmail({ to: email, ...codeEmail(await issueCode(email, 'reset'), 'reset', false, await requestMeta(req)), template: 'password reset code' })
     } catch (e) {
       if (!(e instanceof HttpError && e.status === 429)) throw e
     }
