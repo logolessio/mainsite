@@ -30,6 +30,7 @@ export function Spotlight() {
   const pathname = usePathname()
   const { navigate } = useTransitions()
   const { user } = useNavUser()
+  const admin = Boolean(user?.signedIn && user.isAdmin) // admins have the Tools button in the same corner
   const reels = useFeature('reels')
   const board = useFeature('leaderboard')
   const status = useFeature('status-page')
@@ -113,7 +114,7 @@ export function Spotlight() {
   let lastGroup = ''
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} aria-label="Search" className="glass-liquid fixed bottom-5 left-5 z-[55] hidden h-11 items-center gap-3 rounded-full pr-2 pl-4 text-sm text-mute backdrop-blur-xl transition-colors hover:text-paper lg:flex">
+      <button type="button" onClick={() => setOpen(true)} aria-label="Search" className={cn('glass-liquid fixed z-[55] hidden h-11 items-center gap-3 rounded-full pr-2 pl-4 text-sm text-mute backdrop-blur-xl transition-colors hover:text-paper lg:flex', admin ? 'bottom-3.5 left-28' : 'bottom-5 left-5')}>
         <Search className="size-4" /> Search
         <kbd className="rounded-full bg-white/[0.08] px-2.5 py-1 font-mono text-[11px]">⌘K</kbd>
       </button>
