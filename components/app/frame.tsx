@@ -12,18 +12,20 @@ import { NotificationBell } from '@/components/shell/notifications'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { useTransitions } from '@/components/shell/transition-provider'
 import { EASE_OUT } from '@/lib/layout'
+import { DashShell } from './dash-shell'
+import type { AppNavItem } from './nav-types'
+import { isActive } from './nav-types'
+import { Palette } from './palette'
+import { useFeature } from '@/components/shell/features-provider'
 import { cn } from '@/lib/utils'
 
-export type AppNavItem = { label: string; href: string; icon: IconName; exact?: boolean }
-
 const SPRING = { type: 'spring' as const, stiffness: 420, damping: 34, mass: 0.8 }
-const isActive = (pathname: string, it: AppNavItem) => (it.exact ? pathname === it.href : pathname === it.href || pathname.startsWith(`${it.href}/`))
 
 /**
  * The shell around every working area (clipper, brand, admin): a quiet top bar, the page, and a floating
  * liquid-glass pill along the bottom that holds the navigation. ⌘K opens a jump-to box.
  */
-export function AppFrame({ area, items, children }: { area: string; items: AppNavItem[]; children: React.ReactNode }) {
+function LegacyFrame({ area, items, children }: { area: string; items: AppNavItem[]; children: React.ReactNode }) {
   const pathname = usePathname()
   const { user } = useNavUser()
   const showAdmin = Boolean(user?.signedIn && user.isAdmin) && area !== 'Admin'
@@ -222,88 +224,10 @@ export function AppFrame({ area, items, children }: { area: string; items: AppNa
   )
 }
 
-/** ⌘K: type to filter, arrows to move, Enter to go. */
-function Palette({ open, onClose, items, area, onLogout }: { open: boolean; onClose: () => void; items: AppNavItem[]; area: string; onLogout: () => void }) {
-  const { navigate } = useTransitions()
-  const [q, setQ] = useState('')
-  const [i, setI] = useState(0)
-  const input = useRef<HTMLInputElement>(null)
+export type { AppNavItem } from './nav-types'
 
-  const rows = useMemo(() => {
-    const all = [
-      ...items.map((it) => ({ key: it.href, label: it.label, icon: it.icon as IconName | null, hint: area, run: () => navigate(it.href) })),
-      { key: 'site', label: 'Back to the site', icon: null as IconName | null, hint: 'Go', run: () => navigate('/') },
-      { key: 'out', label: 'Log out', icon: null as IconName | null, hint: 'Account', run: onLogout },
-    ]
-    const t = q.trim().toLowerCase()
-    return t ? all.filter((r) => r.label.toLowerCase().includes(t)) : all
-  }, [items, q, area, navigate, onLogout])
-
-  useEffect(() => {
-    if (open) {
-      setQ('')
-      setI(0)
-      window.setTimeout(() => input.current?.focus(), 30)
-    }
-  }, [open])
-  useEffect(() => setI(0), [q])
-
-  const go = useCallback(
-    (idx: number) => {
-      const r = rows[idx]
-      if (!r) return
-      onClose()
-      r.run()
-    },
-    [rows, onClose],
-  )
-
-  const onKey = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') onClose()
-    else if (e.key === 'ArrowDown') (e.preventDefault(), setI((n) => Math.min(rows.length - 1, n + 1)))
-    else if (e.key === 'ArrowUp') (e.preventDefault(), setI((n) => Math.max(0, n - 1)))
-    else if (e.key === 'Enter') (e.preventDefault(), go(i))
-  }
-
-  return (
-    <AnimatePresence>
-      {open && (
-        <motion.div key="p" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="fixed inset-0 z-[70] flex items-start justify-center bg-black/55 px-4 pt-[16vh]" onMouseDown={onClose}>
-          <motion.div
-            role="dialog"
-            aria-label="Jump to"
-            initial={{ opacity: 0, y: -14, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.98 }}
-            transition={{ duration: 0.25, ease: EASE_OUT }}
-            onMouseDown={(e) => e.stopPropagation()}
-            onKeyDown={onKey}
-            className="glass-liquid w-full max-w-lg rounded-[2rem] backdrop-blur-xl shadow-[0_40px_100px_-20px_rgb(0_0_0/0.95)]"
-          >
-            <div className="flex items-center gap-3 border-b border-line px-5">
-              <Search aria-hidden="true" className="size-5 text-mute" />
-              <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Where to?" aria-label="Where to?" className="h-14 flex-1 bg-transparent text-base outline-none placeholder:text-mute" />
-              <button type="button" aria-label="Close" onClick={onClose} className="grid size-8 place-items-center rounded-full text-mute hover:bg-white/10">
-                <X className="size-4" />
-              </button>
-            </div>
-            <ul role="listbox" className="max-h-[50vh] overflow-y-auto p-2">
-              {rows.length === 0 && <li className="px-4 py-8 text-center text-sm text-mute">Nothing matches.</li>}
-              {rows.map((r, idx) => (
-                <li key={r.key} role="option" aria-selected={idx === i}>
-                  <button type="button" onMouseMove={() => setI(idx)} onClick={() => go(idx)} className={cn('relative flex h-12 w-full items-center gap-3 rounded-2xl px-4 text-left text-[15px] transition-colors', idx === i ? 'text-paper' : 'text-mute')}>
-                    {idx === i && <motion.span layoutId="palette-hl" transition={{ duration: 0.18, ease: EASE_OUT }} className="absolute inset-0 rounded-2xl bg-white/[0.1]" />}
-                    <span className="relative grid size-5 place-items-center">{r.icon ? <Icon name={r.icon} aria-hidden="true" className="size-[18px]" /> : <ArrowUpRight className="size-[18px]" />}</span>
-                    <span className="relative flex-1">{r.label}</span>
-                    <span className="relative text-xs text-mute">{r.hint}</span>
-                    {idx === i && <CornerDownLeft aria-hidden="true" className="relative size-4 text-mute" />}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  )
+/** The shell around every working area (clipper, brand, admin). The redesigned shell replaces the floating glass panel once its feature is on. */
+export function AppFrame(props: { area: string; items: AppNavItem[]; children: React.ReactNode }) {
+  const fresh = useFeature('new-dashboard')
+  return fresh ? <DashShell {...props} /> : <LegacyFrame {...props} />
 }

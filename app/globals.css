@@ -592,3 +592,22 @@ html.sharp .glass-liquid::after {
 html.sharp [class*='blur-2xl'] {
   display: none;
 }
+
+/* ---------- the new dashboard ----------
+   Everything inside the working area is square and flat, including menus that open over the page. */
+html.dash-new,
+html.dash-new * {
+  border-radius: 0 !important;
+}
+html.dash-new .glass-liquid,
+html.dash-new .glass {
+  background: rgb(243 242 238 / 0.045);
+  border-color: rgb(243 242 238 / 0.18);
+  box-shadow: none;
+}
+html.dash-new .glass-liquid::before,
+html.dash-new .glass-liquid::after,
+html.dash-new [class*='blur-2xl'],
+html.dash-new [class*='blur-3xl'] {
+  display: none;
+}

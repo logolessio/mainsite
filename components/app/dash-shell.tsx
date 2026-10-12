@@ -1,0 +1,200 @@
+'use client'
+
+import { AnimatePresence, motion } from 'framer-motion'
+import { ArrowUpRight, Ellipsis, LogOut, Search, ShieldCheck, X } from 'lucide-react'
+import { signOut } from 'next-auth/react'
+import { usePathname } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
+import { Icon } from '@/components/icons'
+import { Logo } from '@/components/logo'
+import { useNavUser } from '@/components/shell/nav-user'
+import { NotificationBell } from '@/components/shell/notifications'
+import { TransitionLink } from '@/components/shell/transition-link'
+import { EASE_OUT } from '@/lib/layout'
+import { cn } from '@/lib/utils'
+import { type AppNavItem, isActive } from './nav-types'
+import { Palette } from './palette'
+
+/**
+ * The working area: a solid sidebar with the whole menu in plain view, a slim bar across the top, and the page.
+ * Square, flat and quiet. On phones the sidebar becomes a tab bar along the bottom.
+ */
+export function DashShell({ area, items, children }: { area: string; items: AppNavItem[]; children: React.ReactNode }) {
+  const pathname = usePathname()
+  const { user } = useNavUser()
+  const [palette, setPalette] = useState(false)
+  const [more, setMore] = useState(false)
+  const signedIn = user?.signedIn ? user : null
+  const showAdmin = Boolean(signedIn?.isAdmin) && area !== 'Admin'
+  const current = useMemo(() => [...items].reverse().find((it) => isActive(pathname, it)) ?? items[0], [items, pathname])
+  const logout = () => signOut({ callbackUrl: '/' })
+
+  // everything inside the working area is square, including menus that open over the page
+  useEffect(() => {
+    document.documentElement.classList.add('dash-new')
+    return () => document.documentElement.classList.remove('dash-new')
+  }, [])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setPalette((v) => !v)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+  useEffect(() => setMore(false), [pathname])
+
+  const name = signedIn?.profile.displayName ?? ''
+  const initial = (name || signedIn?.profile.handle || '?').slice(0, 1).toUpperCase()
+  const bottom = items.slice(0, 4)
+
+  return (
+    <div className="dash-new relative z-10 min-h-dvh bg-ink md:pl-[248px]">
+      {/* ---------- sidebar (larger screens) ---------- */}
+      <aside aria-label={`${area} navigation`} className="fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col border-r border-line bg-[#060607] md:flex">
+        <div className="flex h-[72px] shrink-0 items-center border-b border-line px-6">
+          <TransitionLink href="/" aria-label="logoless home">
+            <Logo className="h-9 md:h-9" />
+          </TransitionLink>
+        </div>
+        <p className="px-6 pt-7 pb-3 text-[13px] text-paper/40">{area}</p>
+        <nav className="min-h-0 flex-1 overflow-y-auto px-3 pb-4">
+          <ul className="grid gap-0.5">
+            {items.map((it) => {
+              const active = isActive(pathname, it)
+              return (
+                <li key={it.href}>
+                  <TransitionLink href={it.href} aria-current={active ? 'page' : undefined} className={cn('group relative flex h-9 items-center gap-3 px-3 text-[15px] transition-colors', active ? 'bg-white/[0.06] text-paper' : 'text-paper/55 hover:bg-white/[0.03] hover:text-paper')}>
+                    {active && <motion.span layoutId={`${area}-bar`} transition={{ duration: 0.3, ease: EASE_OUT }} className="absolute inset-y-0 left-0 w-0.5 bg-paper" />}
+                    <Icon name={it.icon} aria-hidden="true" className="size-[18px] shrink-0" />
+                    {it.label}
+                  </TransitionLink>
+                </li>
+              )
+            })}
+          </ul>
+        </nav>
+        <div className="shrink-0 border-t border-line p-3">
+          <button type="button" onClick={() => setPalette(true)} className="flex h-9 w-full items-center gap-3 px-3 text-left text-[15px] text-paper/55 transition-colors hover:bg-white/[0.03] hover:text-paper">
+            <Search aria-hidden="true" className="size-[18px]" />
+            <span className="flex-1">Jump to</span>
+            <kbd className="border border-line px-1.5 py-0.5 font-mono text-[11px] text-paper/45">⌘K</kbd>
+          </button>
+          {showAdmin && (
+            <TransitionLink href="/admin" className="flex h-9 items-center gap-3 px-3 text-[15px] text-paper/55 transition-colors hover:bg-white/[0.03] hover:text-paper">
+              <ShieldCheck aria-hidden="true" className="size-[18px]" /> Admin dashboard
+            </TransitionLink>
+          )}
+          <TransitionLink href="/" className="flex h-9 items-center gap-3 px-3 text-[15px] text-paper/55 transition-colors hover:bg-white/[0.03] hover:text-paper">
+            <ArrowUpRight aria-hidden="true" className="size-[18px]" /> Back to the site
+          </TransitionLink>
+        </div>
+        {signedIn && (
+          <div className="flex shrink-0 items-center gap-3 border-t border-line p-4">
+            <span className="grid size-9 shrink-0 place-items-center overflow-hidden border border-line-strong bg-white/[0.04] text-sm">
+              {signedIn.profile.avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={signedIn.profile.avatar} alt="" className="size-full object-cover" />
+              ) : (
+                initial
+              )}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[15px] leading-tight">{name || 'You'}</span>
+              <span className="block truncate text-[13px] text-paper/45">@{signedIn.profile.handle}</span>
+            </span>
+            <button type="button" onClick={logout} aria-label="Log out" title="Log out" className="grid size-9 shrink-0 place-items-center text-paper/50 transition-colors hover:bg-white/[0.05] hover:text-paper">
+              <LogOut aria-hidden="true" className="size-4" />
+            </button>
+          </div>
+        )}
+      </aside>
+
+      {/* ---------- top bar ---------- */}
+      <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-line bg-ink px-5 md:px-10">
+        <div className="flex items-center gap-4">
+          <TransitionLink href="/" aria-label="logoless home" className="md:hidden">
+            <Logo className="h-8" />
+          </TransitionLink>
+          <p className="hidden items-center gap-2 text-[15px] text-paper/45 md:flex">
+            <span>{area}</span>
+            <span aria-hidden="true">/</span>
+            <span className="text-paper">{current.label}</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => setPalette(true)} aria-label="Jump to" className="grid size-10 place-items-center border border-line text-paper/60 transition-colors hover:text-paper md:hidden">
+            <Search aria-hidden="true" className="size-4" />
+          </button>
+          <NotificationBell />
+        </div>
+      </header>
+
+      <main className="px-5 pt-10 pb-32 md:px-10 md:pt-14 md:pb-24">
+        <div className="mx-auto max-w-[1160px]">{children}</div>
+      </main>
+
+      {/* ---------- tab bar (phones) ---------- */}
+      <nav aria-label={`${area} navigation`} className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-ink md:hidden">
+        {bottom.map((it) => {
+          const active = isActive(pathname, it)
+          return (
+            <TransitionLink key={it.href} href={it.href} aria-current={active ? 'page' : undefined} className={cn('flex h-16 flex-1 flex-col items-center justify-center gap-1 text-[11px] transition-colors', active ? 'text-paper' : 'text-paper/45')}>
+              <Icon name={it.icon} aria-hidden="true" className="size-5" />
+              <span className="max-w-full truncate px-1">{it.label}</span>
+            </TransitionLink>
+          )
+        })}
+        <button type="button" aria-label="More" aria-expanded={more} onClick={() => setMore((v) => !v)} className={cn('flex h-16 flex-1 flex-col items-center justify-center gap-1 text-[11px] transition-colors', more ? 'text-paper' : 'text-paper/45')}>
+          <Ellipsis aria-hidden="true" className="size-5" />
+          More
+        </button>
+      </nav>
+
+      <AnimatePresence>
+        {more && (
+          <motion.div key="more" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-50 flex flex-col bg-ink md:hidden">
+            <div className="flex h-[72px] shrink-0 items-center justify-between border-b border-line px-5">
+              <p className="text-[15px] text-paper/45">{area}</p>
+              <button type="button" aria-label="Close" onClick={() => setMore(false)} className="grid size-10 place-items-center border border-line text-paper/70">
+                <X aria-hidden="true" className="size-4" />
+              </button>
+            </div>
+            <ul className="flex-1 overflow-y-auto px-5 py-4">
+              {items.map((it) => (
+                <li key={it.href} className="border-b border-line">
+                  <TransitionLink href={it.href} onClick={() => setMore(false)} className={cn('flex h-14 items-center gap-4 text-lg', isActive(pathname, it) ? 'text-paper' : 'text-paper/60')}>
+                    <Icon name={it.icon} aria-hidden="true" className="size-5" />
+                    {it.label}
+                  </TransitionLink>
+                </li>
+              ))}
+              {showAdmin && (
+                <li className="border-b border-line">
+                  <TransitionLink href="/admin" onClick={() => setMore(false)} className="flex h-14 items-center gap-4 text-lg text-paper/60">
+                    <ShieldCheck aria-hidden="true" className="size-5" /> Admin dashboard
+                  </TransitionLink>
+                </li>
+              )}
+              <li className="border-b border-line">
+                <TransitionLink href="/" onClick={() => setMore(false)} className="flex h-14 items-center gap-4 text-lg text-paper/60">
+                  <ArrowUpRight aria-hidden="true" className="size-5" /> Back to the site
+                </TransitionLink>
+              </li>
+              <li>
+                <button type="button" onClick={logout} className="flex h-14 w-full items-center gap-4 text-left text-lg text-paper/60">
+                  <LogOut aria-hidden="true" className="size-5" /> Log out
+                </button>
+              </li>
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <Palette open={palette} onClose={() => setPalette(false)} items={items} area={area} onLogout={logout} />
+    </div>
+  )
+}

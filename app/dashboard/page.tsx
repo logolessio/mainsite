@@ -1,7 +1,5 @@
 import type { Metadata } from 'next'
-import { ArrowUpRight, Clapperboard, Landmark, Search, UserCheck } from 'lucide-react'
 import { ActionLink } from '@/components/app/action-link'
-import { Bento, Tile } from '@/components/app/bento'
 import { Checklist } from '@/components/app/checklist'
 import { CountUp } from '@/components/app/count-up'
 import { PageHeader } from '@/components/app/ui'
@@ -9,6 +7,7 @@ import { Badge, EmptyState } from '@/components/app/table'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { db } from '@/lib/db'
 import { balances } from '@/lib/ledger'
+import { SITE } from '@/lib/site'
 import { pageUser } from '@/lib/user'
 
 export const metadata: Metadata = { title: 'Dashboard | logoless', robots: { index: false } }
@@ -41,108 +40,72 @@ export default async function Page() {
     <>
       <PageHeader title={`Welcome back, ${first}`} sub="Your balance, your clips and anything that needs doing." actions={<ActionLink href="/">Find a campaign</ActionLink>} />
 
-      <Bento>
-        {/* the number everyone comes for */}
-        <Tile className="p-7 md:col-span-6 xl:col-span-5 xl:row-span-2">
-          <p className="text-sm text-mute">Available to withdraw</p>
-          <p className="mt-4 font-display text-6xl leading-none font-medium tracking-tight tabular-nums md:text-7xl">
+      {/* the money, as four plain figures */}
+      <section aria-label="Balance" className="grid gap-x-10 gap-y-12 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="border-t border-line-strong pt-5">
+          <p className="text-[15px] text-paper/50">Available to withdraw</p>
+          <p className="mt-6 font-display text-6xl leading-none tracking-[-0.045em] tabular-nums md:text-[4.5rem]">
             <CountUp value={usd(b.available)} />
           </p>
-          <p className="mt-4 text-sm text-mute">{b.available > 0 ? 'Ready when you are.' : 'Earnings land here once your clips are approved.'}</p>
-          <div className="mt-8 flex flex-wrap gap-2">
+          <p className="mt-5 text-[15px] text-paper/50">{b.available > 0 ? 'Ready when you are.' : 'Earnings land here once your clips are approved.'}</p>
+          <div className="mt-6 flex flex-wrap gap-2">
             <ActionLink href="/dashboard/payouts">Withdraw</ActionLink>
             <ActionLink href="/dashboard/earnings" variant="ghost">
               See earnings
             </ActionLink>
           </div>
-          <div className="mt-10 grid grid-cols-2 gap-4 border-t border-line pt-6">
-            <div>
-              <p className="text-xs text-mute">Pending</p>
-              <p className="mt-1.5 text-xl font-medium tabular-nums">{usd(b.pending)}</p>
-              <p className="mt-1 text-xs text-mute">Clearing</p>
-            </div>
-            <div>
-              <p className="text-xs text-mute">Total earned</p>
-              <p className="mt-1.5 text-xl font-medium tabular-nums">{usd(b.earned)}</p>
-              <p className="mt-1 text-xs text-mute">All time</p>
-            </div>
+        </div>
+        {[
+          { label: 'Pending', value: usd(b.pending), note: `Clears within ${SITE.holdDays} days` },
+          { label: 'Total earned', value: usd(b.earned), note: 'Everything you have earned so far' },
+          { label: 'Verified views', value: (views?.v ?? 0).toLocaleString(), note: `${clips} ${clips === 1 ? 'clip' : 'clips'} submitted` },
+        ].map((f) => (
+          <div key={f.label} className="border-t border-line pt-5">
+            <p className="text-[15px] text-paper/50">{f.label}</p>
+            <p className="mt-6 font-display text-5xl leading-none tracking-[-0.045em] tabular-nums md:text-6xl">
+              <CountUp value={f.value} />
+            </p>
+            <p className="mt-5 text-[15px] text-paper/50">{f.note}</p>
           </div>
-        </Tile>
+        ))}
+      </section>
 
-        <Tile className="p-6 md:col-span-3 xl:col-span-3">
-          <p className="text-sm text-mute">Verified views</p>
-          <p className="mt-3 font-display text-4xl leading-none font-medium tracking-tight tabular-nums">
-            <CountUp value={(views?.v ?? 0).toLocaleString()} />
-          </p>
-          <p className="mt-3 text-xs text-mute">
-            {clips} {clips === 1 ? 'clip' : 'clips'}
-          </p>
-        </Tile>
-
-        <Tile className="p-6 md:col-span-3 xl:col-span-4">
-          <p className="text-sm text-mute">Get set up</p>
-          <p className="mt-3 font-display text-4xl leading-none font-medium tracking-tight tabular-nums">
-            {done}
-            <span className="text-mute"> / {steps.length}</span>
-          </p>
-          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
-            <div className="h-full rounded-full bg-paper transition-all duration-700" style={{ width: `${(done / steps.length) * 100}%` }} />
-          </div>
-        </Tile>
-
-        <Tile className="p-2 md:col-span-6 xl:col-span-7">
-          <div className="grid gap-1 sm:grid-cols-3">
-            {[
-              { href: '/', icon: Search, label: 'Find a campaign', sub: 'Browse what pays' },
-              { href: '/dashboard/submissions', icon: Clapperboard, label: 'Submit a clip', sub: 'Paste your link' },
-              { href: '/dashboard/profile', icon: UserCheck, label: 'Edit profile', sub: 'Your public page' },
-            ].map((a) => (
-              <TransitionLink key={a.href} href={a.href} className="group flex flex-col gap-6 rounded-2xl p-4 transition-colors hover:bg-white/[0.05]">
-                <span className="flex items-center justify-between">
-                  <a.icon aria-hidden="true" className="size-5 text-mute transition-colors group-hover:text-paper" />
-                  <ArrowUpRight aria-hidden="true" className="size-4 text-mute opacity-0 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" />
-                </span>
-                <span>
-                  <span className="block text-[15px] font-medium">{a.label}</span>
-                  <span className="block text-xs text-mute">{a.sub}</span>
-                </span>
-              </TransitionLink>
-            ))}
-          </div>
-        </Tile>
-
-        <Tile className="md:col-span-6 xl:col-span-7">
-          <div className="flex items-center justify-between px-6 pt-6">
-            <h2 className="text-base font-medium tracking-tight">Recent clips</h2>
-            <TransitionLink href="/dashboard/submissions" className="text-sm text-mute transition-colors hover:text-paper">
+      <div className="mt-20 grid gap-16 xl:grid-cols-12 xl:gap-12">
+        <section aria-label="Recent clips" className="xl:col-span-7">
+          <div className="flex items-end justify-between border-b border-line pb-4">
+            <h2 className="font-display text-3xl tracking-[-0.03em]">Recent clips</h2>
+            <TransitionLink href="/dashboard/submissions" className="text-[15px] text-paper/60 underline underline-offset-4 transition-colors hover:text-paper">
               View all
             </TransitionLink>
           </div>
           {recent.results.length === 0 ? (
             <EmptyState icon="Clapperboard" title="No clips yet" body="Join a campaign, post your clip and submit the link. It will show up here." action={<ActionLink href="/">Browse campaigns</ActionLink>} />
           ) : (
-            <ul className="mt-3 divide-y divide-line/60 pb-2">
+            <ul>
               {recent.results.map((r) => (
-                <li key={r.id} className="flex items-center gap-4 px-6 py-4 transition-colors hover:bg-white/[0.025]">
-                  <span className="min-w-0 flex-1 truncate text-[15px]">{r.title}</span>
+                <li key={r.id} className="flex items-center gap-4 border-b border-line py-5 transition-colors hover:bg-white/[0.02]">
+                  <span className="min-w-0 flex-1 truncate text-lg">{r.title}</span>
                   <Badge tone={r.status === 'approved' ? 'good' : r.status === 'rejected' ? 'bad' : 'warn'}>{r.status}</Badge>
-                  <span className="w-24 text-right text-sm text-mute tabular-nums">{r.views_verified.toLocaleString()} views</span>
+                  <span className="w-28 text-right text-[15px] text-paper/55 tabular-nums">{r.views_verified.toLocaleString()} views</span>
                 </li>
               ))}
             </ul>
           )}
-        </Tile>
+        </section>
 
-        <Tile className="p-6 md:col-span-6 xl:col-span-5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-medium tracking-tight">Next steps</h2>
-            <Landmark aria-hidden="true" className="size-4 text-mute" />
+        <section aria-label="Next steps" className="xl:col-span-5">
+          <div className="flex items-end justify-between border-b border-line pb-4">
+            <h2 className="font-display text-3xl tracking-[-0.03em]">Getting set up</h2>
+            <p className="text-[15px] text-paper/50 tabular-nums">
+              {done} of {steps.length} done
+            </p>
           </div>
-          <div className="mt-2">
-            <Checklist items={steps} />
+          <div className="h-px bg-line">
+            <div className="h-px bg-paper transition-all duration-700" style={{ width: `${(done / steps.length) * 100}%` }} />
           </div>
-        </Tile>
-      </Bento>
+          <Checklist items={steps} />
+        </section>
+      </div>
     </>
   )
 }

@@ -22,7 +22,7 @@ export function Bento({ children, className }: { children: React.ReactNode; clas
 /** One tile. It lifts a little when the pointer is over it. */
 export function Tile({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <motion.div variants={item} whileHover={{ y: -3 }} transition={{ duration: 0.25 }} className={cn('relative overflow-hidden rounded-3xl border border-line bg-[#0a0a0b] transition-colors hover:border-line-strong', className)}>
+    <motion.div variants={item} className={cn('relative overflow-hidden rounded-3xl border border-line bg-[#09090a] transition-colors hover:border-line-strong', className)}>
       {children}
     </motion.div>
   )
