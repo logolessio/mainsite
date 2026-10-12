@@ -1,6 +1,6 @@
 # Your overnight report
 
-_Written overnight, 11 to 12 October 2026. This is the same text that was emailed to emile@logoless.io._
+_Written overnight, 11 to 12 October 2026. Also emailed to emile@logoless.io._
 
 You asked for everything I could do to get the site ready, a dev site with a push button, and a full lowdown. This is it. The short version comes first, the detail after.
 
@@ -130,3 +130,55 @@ A short follow-up. I kept going after the first email went out, so here is what 
 ---
 
 Sent by the logoless site itself. The full text of both emails is saved in the project as LAUNCH_REPORT.md.
+
+
+# Features you can push
+
+_The feature list, emailed on 12 October 2026._
+
+All 14 are switched on at dev.logoless.io and switched off at logoless.io. Open the dev site, press the white "push" pill, tick the ones you want and press "Push to live". Any push can be undone from the History tab. Here is what each one is.
+
+## Safe to push straight away
+
+These work with no data and no setup, so they look right on day one.
+
+- **Calm mode** A footer switch that turns off the heavy motion (floating cards, particles, hero movement) for people who prefer a quieter site or have a slower phone. See it: the footer on any page. A good first push to test the button, since it is easy to spot and easy to undo.
+- **Spotlight search** Press ⌘K (or /) on the public site to search every live campaign and page. ? shows the shortcut list. See it: any public page, bottom-left on a laptop.
+- **Reels: swipe through campaigns** A full-screen, swipeable feed of live campaigns, one at a time, with the track playing, the rate, the pool and a one-tap "Clip this". Arrow keys to move, M for sound. It also adds a "Swipe through campaigns" button on the home page. See it: /reels.
+- **Earnings and budget calculators** On For clippers: slide to see what a clip earns. On For brands: see what a budget buys. See it: /for-clippers and /for-brands.
+- **Watch a clip earn (animated demo)** An animated phone and balance on How it works: a made-up clip is posted, checked, approved, and its views turn into money. Visitors can pick a rate and replay. See it: /how-it-works.
+- **Public status page** A /status page that checks the database, sign-in, payments and email live, linked from the footer. It is all green on the live site right now. See it: /status.
+- **Pool remaining meter** On funded campaign pages: a bar and a number for how much of the pool is still unpaid, straight from the money ledger. Campaigns that have not been funded (like the samples) show nothing. See it: any funded campaign page.
+
+## Push once people have an account
+
+These live inside the clipper dashboard, so they only matter once real clippers are signed in.
+
+- **Saved campaigns page** A "Saved" page in the clipper dashboard listing every campaign they have hearted. See it: /dashboard/saved.
+- **Your recap (story)** A full-screen, story-style look back: earned, views, clips, biggest campaign, best clip and badges, with counting numbers and a progress bar. With no clips yet it shows a friendly "your story starts with one clip" screen. See it: /dashboard/recap.
+- **Live notification toasts** A toast slides in when something happens (payment, approval, badge) without refreshing the page. See it: anywhere signed in.
+- **Badge celebration** Unlock a badge and a full-screen celebration shows the badge with confetti. See it: after unlocking a badge in the dashboard.
+
+## Wait until you have real numbers
+
+Pushing these on day one would show empty or tiny numbers.
+
+- **Live numbers on the home page** A band of real totals (live campaigns, paid out, clips posted). It hides itself until the numbers are worth showing (at least 3 real campaigns, 25 clips and $500 paid out), so pushing it early is harmless, it just will not appear yet. See it: the home page, below the campaigns.
+- **Clipper leaderboard** A podium and ranking of top clippers by verified views, only for people who chose to show their views. It will say "Nobody is on the board yet" until clippers have approved clips and opt in. See it: /leaderboard.
+
+## Push when you have something to say
+
+- **Announcement bar** A glass message pill at the bottom of the public site that you write yourself (launch day, a new feature, planned downtime). Visitors can dismiss it. To use it: push the feature, then write the message under Admin > Push features on logoless.io. Until you write one, nothing shows.
+
+## A suggested order
+
+1. **Calm mode** to test the button, then undo it.
+2. **Spotlight, Reels, calculators, the earn demo and the status page** together, as the launch-day upgrade for visitors.
+3. **Pool meter** as soon as your first real campaign is funded.
+4. **Saved, recap, toasts and badge celebration** when the first clippers sign up.
+5. **Live numbers and the leaderboard** once there is real activity.
+6. **Announcement bar** on launch day with your message.
+
+---
+
+Sent by the logoless site itself. The full text of this and the earlier emails is saved in the project as LAUNCH_REPORT.md.
