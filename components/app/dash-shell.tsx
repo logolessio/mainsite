@@ -29,12 +29,6 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
   const current = useMemo(() => [...items].reverse().find((it) => isActive(pathname, it)) ?? items[0], [items, pathname])
   const logout = () => signOut({ callbackUrl: '/' })
 
-  // everything inside the working area is square, including menus that open over the page
-  useEffect(() => {
-    document.documentElement.classList.add('dash-new')
-    return () => document.documentElement.classList.remove('dash-new')
-  }, [])
-
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -52,7 +46,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
   const bottom = items.slice(0, 4)
 
   return (
-    <div className="dash-new relative z-10 min-h-dvh bg-ink md:pl-[248px]">
+    <div className="relative z-10 min-h-dvh bg-ink md:pl-[248px]">
       {/* ---------- sidebar (larger screens) ---------- */}
       <aside aria-label={`${area} navigation`} className="fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col border-r border-line bg-[#060607] md:flex">
         <div className="flex h-[72px] shrink-0 items-center border-b border-line px-6">
@@ -67,8 +61,8 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
               const active = isActive(pathname, it)
               return (
                 <li key={it.href}>
-                  <TransitionLink href={it.href} aria-current={active ? 'page' : undefined} className={cn('group relative flex h-9 items-center gap-3 px-3 text-[15px] transition-colors', active ? 'bg-white/[0.06] text-paper' : 'text-paper/55 hover:bg-white/[0.03] hover:text-paper')}>
-                    {active && <motion.span layoutId={`${area}-bar`} transition={{ duration: 0.3, ease: EASE_OUT }} className="absolute inset-y-0 left-0 w-0.5 bg-paper" />}
+                  <TransitionLink href={it.href} aria-current={active ? 'page' : undefined} className={cn('group relative flex h-10 items-center gap-3 rounded-xl px-3 text-[15px] transition-colors', active ? 'bg-white/[0.06] text-paper' : 'text-paper/55 hover:bg-white/[0.03] hover:text-paper')}>
+                    {active && <motion.span layoutId={`${area}-bar`} transition={{ duration: 0.3, ease: EASE_OUT }} className="absolute inset-y-2.5 -left-3 w-1 rounded-r-full bg-paper" />}
                     <Icon name={it.icon} aria-hidden="true" className="size-[18px] shrink-0" />
                     {it.label}
                   </TransitionLink>
@@ -78,23 +72,23 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
           </ul>
         </nav>
         <div className="shrink-0 border-t border-line p-3">
-          <button type="button" onClick={() => setPalette(true)} className="flex h-9 w-full items-center gap-3 px-3 text-left text-[15px] text-paper/55 transition-colors hover:bg-white/[0.03] hover:text-paper">
+          <button type="button" onClick={() => setPalette(true)} className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-[15px] text-paper/55 transition-colors hover:bg-white/[0.03] hover:text-paper">
             <Search aria-hidden="true" className="size-[18px]" />
             <span className="flex-1">Jump to</span>
-            <kbd className="border border-line px-1.5 py-0.5 font-mono text-[11px] text-paper/45">⌘K</kbd>
+            <kbd className="rounded-md border border-line px-1.5 py-0.5 font-mono text-[11px] text-paper/45">⌘K</kbd>
           </button>
           {showAdmin && (
-            <TransitionLink href="/admin" className="flex h-9 items-center gap-3 px-3 text-[15px] text-paper/55 transition-colors hover:bg-white/[0.03] hover:text-paper">
+            <TransitionLink href="/admin" className="flex h-10 items-center gap-3 rounded-xl px-3 text-[15px] text-paper/55 transition-colors hover:bg-white/[0.03] hover:text-paper">
               <ShieldCheck aria-hidden="true" className="size-[18px]" /> Admin dashboard
             </TransitionLink>
           )}
-          <TransitionLink href="/" className="flex h-9 items-center gap-3 px-3 text-[15px] text-paper/55 transition-colors hover:bg-white/[0.03] hover:text-paper">
+          <TransitionLink href="/" className="flex h-10 items-center gap-3 rounded-xl px-3 text-[15px] text-paper/55 transition-colors hover:bg-white/[0.03] hover:text-paper">
             <ArrowUpRight aria-hidden="true" className="size-[18px]" /> Back to the site
           </TransitionLink>
         </div>
         {signedIn && (
           <div className="flex shrink-0 items-center gap-3 border-t border-line p-4">
-            <span className="grid size-9 shrink-0 place-items-center overflow-hidden border border-line-strong bg-white/[0.04] text-sm">
+            <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full border border-line-strong bg-white/[0.04] text-sm">
               {signedIn.profile.avatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={signedIn.profile.avatar} alt="" className="size-full object-cover" />
@@ -106,7 +100,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
               <span className="block truncate text-[15px] leading-tight">{name || 'You'}</span>
               <span className="block truncate text-[13px] text-paper/45">@{signedIn.profile.handle}</span>
             </span>
-            <button type="button" onClick={logout} aria-label="Log out" title="Log out" className="grid size-9 shrink-0 place-items-center text-paper/50 transition-colors hover:bg-white/[0.05] hover:text-paper">
+            <button type="button" onClick={logout} aria-label="Log out" title="Log out" className="grid size-9 shrink-0 place-items-center rounded-full text-paper/50 transition-colors hover:bg-white/[0.05] hover:text-paper">
               <LogOut aria-hidden="true" className="size-4" />
             </button>
           </div>
@@ -126,7 +120,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={() => setPalette(true)} aria-label="Jump to" className="grid size-10 place-items-center border border-line text-paper/60 transition-colors hover:text-paper md:hidden">
+          <button type="button" onClick={() => setPalette(true)} aria-label="Jump to" className="grid size-10 place-items-center rounded-full border border-line text-paper/60 transition-colors hover:text-paper md:hidden">
             <Search aria-hidden="true" className="size-4" />
           </button>
           <NotificationBell />
@@ -159,7 +153,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
           <motion.div key="more" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-50 flex flex-col bg-ink md:hidden">
             <div className="flex h-[72px] shrink-0 items-center justify-between border-b border-line px-5">
               <p className="text-[15px] text-paper/45">{area}</p>
-              <button type="button" aria-label="Close" onClick={() => setMore(false)} className="grid size-10 place-items-center border border-line text-paper/70">
+              <button type="button" aria-label="Close" onClick={() => setMore(false)} className="grid size-10 place-items-center rounded-full border border-line text-paper/70">
                 <X aria-hidden="true" className="size-4" />
               </button>
             </div>

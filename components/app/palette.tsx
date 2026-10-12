@@ -65,12 +65,12 @@ export function Palette({ open, onClose, items, area, onLogout }: { open: boolea
             transition={{ duration: 0.25, ease: EASE_OUT }}
             onMouseDown={(e) => e.stopPropagation()}
             onKeyDown={onKey}
-            className="w-full max-w-lg border border-line-strong bg-[#08080a] shadow-[0_40px_100px_-20px_rgb(0_0_0/0.9)]"
+            className="w-full max-w-lg rounded-3xl border border-line-strong bg-[#08080a] shadow-[0_40px_100px_-20px_rgb(0_0_0/0.9)]"
           >
             <div className="flex items-center gap-3 border-b border-line px-5">
               <Search aria-hidden="true" className="size-5 text-mute" />
               <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Where to?" aria-label="Where to?" className="h-14 flex-1 bg-transparent text-base outline-none placeholder:text-mute" />
-              <button type="button" aria-label="Close" onClick={onClose} className="grid size-8 place-items-center text-mute hover:bg-white/10">
+              <button type="button" aria-label="Close" onClick={onClose} className="grid size-8 place-items-center rounded-full text-mute hover:bg-white/10">
                 <X className="size-4" />
               </button>
             </div>
@@ -78,8 +78,8 @@ export function Palette({ open, onClose, items, area, onLogout }: { open: boolea
               {rows.length === 0 && <li className="px-4 py-8 text-center text-sm text-mute">Nothing matches.</li>}
               {rows.map((r, idx) => (
                 <li key={r.key} role="option" aria-selected={idx === i}>
-                  <button type="button" onMouseMove={() => setI(idx)} onClick={() => go(idx)} className={cn('relative flex h-12 w-full items-center gap-3 px-4 text-left text-[15px] transition-colors', idx === i ? 'text-paper' : 'text-mute')}>
-                    {idx === i && <motion.span layoutId="palette-hl" transition={{ duration: 0.18, ease: EASE_OUT }} className="absolute inset-0 bg-white/[0.08]" />}
+                  <button type="button" onMouseMove={() => setI(idx)} onClick={() => go(idx)} className={cn('relative flex h-12 w-full items-center gap-3 rounded-2xl px-4 text-left text-[15px] transition-colors', idx === i ? 'text-paper' : 'text-mute')}>
+                    {idx === i && <motion.span layoutId="palette-hl" transition={{ duration: 0.18, ease: EASE_OUT }} className="absolute inset-0 rounded-2xl bg-white/[0.08]" />}
                     <span className="relative grid size-5 place-items-center">{r.icon ? <Icon name={r.icon} aria-hidden="true" className="size-[18px]" /> : <ArrowUpRight className="size-[18px]" />}</span>
                     <span className="relative flex-1">{r.label}</span>
                     <span className="relative text-xs text-mute">{r.hint}</span>

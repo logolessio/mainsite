@@ -14,6 +14,7 @@ import { SiteFooter } from './site-footer'
 import { PageFrame } from './page-frame'
 import { SiteNav } from './site-nav'
 import { TransitionProvider } from './transition-provider'
+import { GradientField } from './gradient-field'
 import { RidgeField } from './ridge-field'
 import { LightField } from './light-field'
 import { NavUserProvider } from './nav-user'
@@ -36,6 +37,7 @@ export function AppShell({ children, announcement = null }: { children: React.Re
         <LiveToasts />
         <BadgeCelebration />
         <Ambient />
+        <GradientField />
         <RidgeField />
         <LightField />
         <SiteNav />
