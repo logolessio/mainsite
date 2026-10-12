@@ -1,15 +1,18 @@
-// Light mode: a switch that swaps black and white across the site. Kept in the browser, per person.
+// Light mode: white is the default and a switch swaps to black. The choice is kept in the browser, per person.
+import { isInvitePath, RESERVED_SLUGS } from './invite-shared'
+
 const KEY = 'logoless:theme'
 const listeners = new Set<() => void>()
 
-/** Pages that are designed on their own dark canvas keep it: member profiles. */
-export const keepsDark = (pathname: string) => pathname.startsWith('/u/')
+/** Pages that are designed on their own dark canvas keep it: member profiles and artists' private pages. */
+export const keepsDark = (pathname: string) => pathname.startsWith('/u/') || isInvitePath(pathname)
 
+/** White unless this person has chosen dark. */
 export const getLight = () => {
   try {
-    return localStorage.getItem(KEY) === 'light'
+    return localStorage.getItem(KEY) !== 'dark'
   } catch {
-    return false
+    return true
   }
 }
 export const applyTheme = (light: boolean) => document.documentElement.classList.toggle('light', light)
@@ -32,4 +35,4 @@ export const subscribeTheme = (cb: () => void) => {
 }
 
 /** Runs in the page head before anything paints, so a returning visitor never sees a flash of dark. */
-export const THEME_BOOT = `try{if(localStorage.getItem('${KEY}')==='light'&&!location.pathname.startsWith('/u/'))document.documentElement.classList.add('light')}catch(e){}`
+export const THEME_BOOT = `(function(){var p=location.pathname,m=/^\\/([^\\/]+)\\/?$/.exec(p),r=${JSON.stringify([...RESERVED_SLUGS])},dark=p.indexOf('/u/')===0||p.indexOf('/@')===0||(m&&r.indexOf(m[1].toLowerCase())<0),t=null;try{t=localStorage.getItem('${KEY}')}catch(e){}if(t!=='dark'&&!dark)document.documentElement.classList.add('light')})()`

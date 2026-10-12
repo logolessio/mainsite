@@ -11,7 +11,7 @@ import { useFeature } from './features-provider'
 export function ThemeApply() {
   const on = useFeature('light-mode')
   const pathname = usePathname()
-  const light = useSyncExternalStore(subscribeTheme, getLight, () => false)
+  const light = useSyncExternalStore(subscribeTheme, getLight, () => true)
   useEffect(() => {
     applyTheme(on && light && !keepsDark(pathname))
   }, [on, light, pathname])
@@ -21,7 +21,7 @@ export function ThemeApply() {
 /** Swaps black and white. `hero` sits under the big logo on the home page, `footer` is the small one at the bottom. */
 export function ThemeToggle({ variant = 'footer' }: { variant?: 'hero' | 'footer' }) {
   const on = useFeature('light-mode')
-  const light = useSyncExternalStore(subscribeTheme, getLight, () => false)
+  const light = useSyncExternalStore(subscribeTheme, getLight, () => true)
   if (!on) return null
   const Icon = light ? Moon : Sun
   return (
