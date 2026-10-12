@@ -9,7 +9,7 @@ import type { StepProps } from '../types'
 import { StepTitle } from '../ui'
 
 const ROWS: { key: SocialPlatform; label: string; body: string }[] = [
-  { key: 'tiktok', label: 'TikTok', body: 'The account you post Reels from' },
+  { key: 'tiktok', label: 'TikTok', body: 'The account you post clips from' },
   { key: 'youtube', label: 'YouTube', body: 'Your channel for Shorts and long-form' },
   { key: 'instagram', label: 'Instagram', body: 'Where your Reels live' },
 ]

@@ -23,7 +23,7 @@ export default async function Page() {
   ).results.map(toCampaign)
   return (
     <>
-      <PageHeader title="Saved campaigns" sub="Everything you have hearted, still live. Heart a campaign to be told when it changes." actions={<ActionLink href="/">Find more</ActionLink>} />
+      <PageHeader title="Saved campaigns" sub="Campaigns you've hearted that are still live. Heart one to hear when it changes." actions={<ActionLink href="/">Find more</ActionLink>} />
       {rows.length === 0 ? (
         <EmptyState icon="Megaphone" title="Nothing saved yet" body="Open a campaign and press the heart. It will wait for you here." action={<ActionLink href="/">Browse campaigns</ActionLink>} />
       ) : (

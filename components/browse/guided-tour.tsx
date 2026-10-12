@@ -40,7 +40,7 @@ export const HOME_STEPS: Step[] = [
   {
     target: '[data-tour="tile"]',
     title: 'Open any campaign',
-    body: 'Every square is a campaign. Let us open one and walk through everything on its page.',
+    body: "Every square is a campaign. Let's open one and go through everything on its page.",
     icon: LayoutGrid,
     radius: 14,
     pad: 12,

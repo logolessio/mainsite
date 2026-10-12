@@ -6,15 +6,15 @@ import { Panel, StepTitle } from '../ui'
 
 const STEPS = [
   ['Tell us about the campaign', 'Brief, rate per 1,000 views, budget and platforms. Nothing is charged.'],
-  ['We review it and say yes', 'You get a notification the moment we confirm we will launch it.'],
-  ['You pay with Stripe', 'Your budget is held for clippers. Unspent budget stays yours.'],
+  ['We review it and say yes', "You'll get a notification as soon as we've approved it."],
+  ['You pay with Stripe', 'Your budget is set aside for clippers. Anything unspent stays yours.'],
   ['We launch it', 'Clippers can see it and start posting straight away.'],
 ]
 
 export function BillingStep() {
   return (
     <div>
-      <StepTitle title="How your campaign starts" sub="You never pay before we have said yes." />
+      <StepTitle title="How your campaign starts" sub="You never pay before we've said yes." />
       <Panel className="mt-7">
         <ol className="grid gap-4 text-left">
           {STEPS.map(([t, b], i) => (

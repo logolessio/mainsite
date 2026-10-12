@@ -33,8 +33,8 @@ export function Leaderboard({ entries, period }: { entries: Entry[]; period: '30
     <div className="mx-auto max-w-3xl">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE_OUT }} className="text-center">
         <p className="text-xs text-mute">Leaderboard</p>
-        <h1 className="mt-4 font-display text-5xl tracking-tight md:text-7xl">Who is winning.</h1>
-        <p className="mx-auto mt-4 max-w-md text-mute">The clippers bringing in the most verified views. Only people who chose to show their views are listed.</p>
+        <h1 className="mt-4 font-display text-5xl tracking-tight md:text-7xl">Top clippers</h1>
+        <p className="mx-auto mt-4 max-w-md text-mute">The clippers with the most verified views. Only people who've chosen to show their views are listed.</p>
         <div className="mt-7 inline-flex rounded-full bg-white/[0.06] p-1">
           {([['30', 'Last 30 days'], ['all', 'All time']] as const).map(([id, label]) => (
             <TransitionLink key={id} href={id === '30' ? '/leaderboard' : '/leaderboard?p=all'} className={cn('relative inline-flex h-10 items-center rounded-full px-5 text-sm transition-colors', period === id ? 'bg-paper text-ink' : 'text-mute hover:text-paper')}>
@@ -47,8 +47,8 @@ export function Leaderboard({ entries, period }: { entries: Entry[]; period: '30
       {entries.length === 0 ? (
         <div className="mt-16 rounded-[2rem] border border-dashed border-line-strong px-6 py-16 text-center">
           <Crown className="mx-auto size-8 text-mute" />
-          <p className="mt-4 font-display text-2xl">Nobody is on the board yet.</p>
-          <p className="mx-auto mt-2 max-w-sm text-sm text-mute">Get a clip approved, then turn on “Views generated” in your profile privacy settings to claim the top spot.</p>
+          <p className="mt-4 font-display text-2xl">Nobody's on the board yet.</p>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-mute">Get a clip approved, then turn on “Views generated” in your profile privacy settings to show up here.</p>
           <TransitionLink href="/" className="mt-6 inline-flex h-11 items-center rounded-full bg-paper px-6 text-sm font-medium text-ink hover:bg-paper/85">Find a campaign</TransitionLink>
         </div>
       ) : (

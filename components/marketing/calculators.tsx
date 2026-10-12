@@ -16,9 +16,8 @@ export function ClipperCalculator() {
     <Feature id="calculators">
       <section aria-label="Earnings calculator" className="mx-auto mt-24 grid max-w-5xl gap-8 px-5 md:mt-32 lg:grid-cols-[1fr_430px] lg:items-center lg:gap-16">
         <Reveal y={24}>
-          <p className="text-xs text-mute">Try it</p>
           <h2 className="mt-4 font-display text-4xl tracking-tight md:text-6xl">What could a clip earn?</h2>
-          <p className="mt-4 max-w-md text-mute">Campaign rates vary. Pick a rate you see on a campaign and slide to a number of views. This is after our {SITE.platformFeePct}% fee.</p>
+          <p className="mt-4 max-w-md text-mute">Rates differ from campaign to campaign. Pick one, then slide to a number of views. Everything shown is after our {SITE.platformFeePct}% fee.</p>
           <div className="mt-6 flex flex-wrap gap-2">
             {RATES.map((r) => (
               <button key={r} type="button" onClick={() => setRate(r)} aria-pressed={rate === r} className={cn('h-11 rounded-full border px-5 text-sm transition-colors', rate === r ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
@@ -70,7 +69,7 @@ export function BrandCalculator() {
               <p className="text-[11px] text-mute">It buys up to</p>
               <p className="mt-3 font-display text-6xl tabular-nums md:text-7xl">{views.toLocaleString()}</p>
               <p className="mt-1 text-lg text-mute">verified views</p>
-              <p className="mt-6 text-sm leading-relaxed text-mute">You pay the budget and nothing on top. Of what clippers earn, {SITE.platformFeePct}% (about ${fee.toLocaleString()} here) is the logoless fee. Anything you do not spend can be refunded.</p>
+              <p className="mt-6 text-sm leading-relaxed text-mute">You pay your budget and nothing on top. We keep {SITE.platformFeePct}% of what clippers earn (about ${fee.toLocaleString()} here), and anything you don't spend can be refunded.</p>
             </div>
           </div>
         </Reveal>

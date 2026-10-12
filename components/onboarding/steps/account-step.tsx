@@ -88,7 +88,7 @@ export function AccountStep({ data, update, next }: StepProps) {
       <AnimatePresence mode="wait" initial={false}>
         {phase === 'choose' ? (
           <motion.div key="choose" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3, ease: EASE_OUT }}>
-            <StepTitle title="Create your account" sub="Free to join. Takes about two minutes." />
+            <StepTitle title="Create your account" sub="Free to join. It takes about a minute." />
 
             <div role="radiogroup" aria-label="I am a" className="mt-7 grid gap-2 sm:grid-cols-2">
               {ROLES.map((r) => (
@@ -134,7 +134,7 @@ export function AccountStep({ data, update, next }: StepProps) {
               <Field label="Email">
                 <Input required type="email" name="email" autoComplete="email" placeholder="you@example.com" defaultValue={data.email} />
               </Field>
-              <Field label="Password" hint="At least 10 characters. We check it has not been in a data breach.">
+              <Field label="Password" hint="At least 10 characters. We check it hasn't turned up in a data breach.">
                 <span className="relative block">
                   <Input required name="password" type={showPw ? 'text' : 'password'} autoComplete="new-password" minLength={10} className="pr-12" />
                   <button type="button" aria-label={showPw ? 'Hide password' : 'Show password'} onClick={() => setShowPw((v) => !v)} className="absolute inset-y-0 right-0 grid w-12 place-items-center text-mute hover:text-paper">

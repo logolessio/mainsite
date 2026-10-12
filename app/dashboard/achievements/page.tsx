@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: 'Achievements | logoless', robots: { 
 export default function Page() {
   return (
     <>
-      <PageHeader title="Achievements" sub="Unlock badges as you use logoless, then equip up to five on your profile." />
+      <PageHeader title="Achievements" sub="The badges you've earned. Pick up to five to show on your profile." />
       <AchievementsView />
     </>
   )

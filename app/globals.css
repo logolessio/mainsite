@@ -545,28 +545,50 @@ html.light {
 html.light :is(img:not([data-logo]), video, iframe, [data-keep]) {
   filter: invert(1) hue-rotate(180deg);
 }
+/* The blurred photo behind Reels keeps its blur next to the colour swap. */
+html.light img[class*='blur-[90px]'] {
+  display: none; /* on white, the tinted wash behind a campaign shows its edges, so the page stays clean instead */
+}
+html.light img[class*='blur-3xl'] {
+  filter: invert(1) hue-rotate(180deg) blur(64px) saturate(1.5);
+}
 
-/* ---------- sharper corners ----------
-   Switched on by the "Sharper corners" feature (a `sharp` class on <html>). It sits outside the Tailwind layers,
-   so it wins over every rounded-* class without touching the components. Circles that hold a person or a dot
-   (avatars, badges, status dots) stay round; anything you can press or type into, and every card, gets small corners. */
-html.sharp {
-  --radius: 0.5rem; /* small, medium, large and extra large all derive from this */
-  --radius-2xl: 0.625rem;
-  --radius-3xl: 0.75rem;
-  --radius-4xl: 0.75rem;
+/* ---------- square corners ----------
+   Switched on by the "Square corners" feature (a `sharp` class on <html>). Every element is square: buttons, cards,
+   inputs, avatars, dots, badges. It sits outside the Tailwind layers and uses !important so it also beats inline styles. */
+html.sharp,
+html.sharp *,
+html.sharp input[type='range']::-webkit-slider-thumb,
+html.sharp input[type='range']::-moz-range-thumb {
+  border-radius: 0 !important;
 }
-html.sharp :is(button, a, input, select, label, summary)[class*='rounded-full']:not([role='switch']),
-html.sharp :is(span, div, p, li)[class*='rounded-full']:is([class*='px-'], [class*='pl-'], [class*='pr-']),
-html.sharp :is(button, input:not([type='checkbox']):not([type='radio']), select):not([class*='rounded-']) {
-  border-radius: 8px;
+
+/* ---------- finishing touches ---------- */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
 }
-html.sharp textarea:not([class*='rounded-']) {
-  border-radius: 10px;
+p,
+li {
+  text-wrap: pretty;
 }
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(243 242 238 / 0.22) transparent;
+}
+
+/* In square mode the glass surfaces go flat: a faint tint and a hairline, no drifting light, no gloss. */
+html.sharp .glass-liquid,
 html.sharp .glass {
-  border-radius: 12px;
+  background: rgb(243 242 238 / 0.045);
+  border-color: rgb(243 242 238 / 0.2);
+  box-shadow: none;
 }
-html.sharp :is([class*='rounded-[2rem]'], [class*='rounded-[28px]'], [class*='rounded-[22px]'], [class*='rounded-[1.75rem]'], [class*='rounded-[26px]'], [class*='rounded-[24px]'], [class*='rounded-[1.5rem]'], [class*='rounded-[36px]'], [class*='rounded-[14px]'], [class*='rounded-[34px]'], [class*='rounded-[40px]'], [class*='rounded-[56px]'], [class*='rounded-[72px]']) {
-  border-radius: 12px;
+html.sharp .glass-liquid::before,
+html.sharp .glass-liquid::after {
+  display: none;
+}
+html.sharp [class*='blur-2xl'] {
+  display: none;
 }

@@ -12,10 +12,10 @@ import { cn } from '@/lib/utils'
 const RATES = [1, 2, 3, 5]
 const TARGET_VIEWS = 48_000
 const STEPS = [
-  { at: 0, title: 'You post the clip', body: 'On your own TikTok, YouTube or Instagram account. Paste the link.' },
-  { at: 0.12, title: 'We check it', body: 'Against the brief, and for bot traffic. A human looks at anything unclear.' },
-  { at: 0.26, title: 'Views are verified', body: 'Only views that pass the checks count. Everything else is ignored.' },
-  { at: 0.9, title: 'Money lands in your balance', body: `Held ${SITE.holdDays} days, then yours to withdraw through Stripe.` },
+  { at: 0, title: 'You post the clip', body: 'On your own TikTok, YouTube or Instagram account. Then you paste the link.' },
+  { at: 0.12, title: 'We check it', body: 'Someone on our team checks it against the brief.' },
+  { at: 0.26, title: 'Views are verified', body: 'We look up the real view count on the platform. Only verified views are paid.' },
+  { at: 0.9, title: 'It reaches your balance', body: `It clears after ${SITE.holdDays} days, then you can withdraw it through Stripe.` },
 ]
 const money = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
@@ -50,9 +50,8 @@ export function EarnDemo() {
     <Feature id="earn-demo">
       <section ref={ref} aria-label="Watch a clip earn" className="mx-auto mt-28 max-w-6xl px-5 md:mt-40">
         <Reveal y={24}>
-          <p className="text-xs text-mute">See it happen</p>
           <h2 className="mt-4 max-w-2xl font-display text-4xl tracking-tight md:text-6xl">Watch a clip earn.</h2>
-          <p className="mt-4 max-w-md text-mute">A made-up clip, real maths. Pick a rate and watch what the loop does with it.</p>
+          <p className="mt-4 max-w-md text-mute">This is an example clip, not a real one. Pick a rate and see how the numbers add up.</p>
         </Reveal>
 
         <div className="mt-12 grid items-center gap-10 lg:grid-cols-[320px_1fr] lg:gap-20">

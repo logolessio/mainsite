@@ -31,8 +31,8 @@ const item = {
 
 const COPY: Record<Mode, { title: string; sub: string }> = {
   login: { title: 'log in', sub: 'Welcome back.' },
-  signup: { title: 'create account', sub: 'Free for clippers. Takes under a minute.' },
-  forgot: { title: 'reset password', sub: 'We will email you a code to choose a new one.' },
+  signup: { title: 'create account', sub: 'Free for clippers. It takes about a minute.' },
+  forgot: { title: 'reset password', sub: "We'll email you a code so you can choose a new one." },
 }
 
 /** How strong a password looks, from length and variety. Only a hint: the server enforces the real rules. */

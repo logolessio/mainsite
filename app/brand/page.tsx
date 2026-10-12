@@ -29,7 +29,7 @@ export default async function Page() {
   ])
   return (
     <>
-      <PageHeader title="Overview" sub="Spend, reach and what is live." actions={<ActionLink href="/brand/campaigns/new">Request a campaign</ActionLink>} />
+      <PageHeader title="Overview" sub="What you've spent, how many views you've got and what's live." actions={<ActionLink href="/brand/campaigns/new">Request a campaign</ActionLink>} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Budget remaining" value={usd(stats?.held ?? 0)} note="Across your campaigns" />
         <StatCard label="Live campaigns" value={String(stats?.live ?? 0)} />

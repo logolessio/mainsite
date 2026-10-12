@@ -17,24 +17,24 @@ export default function Page() {
       <PageHero
         eyebrow="Payouts"
         title="Straight to your bank"
-        lede="logoless uses Stripe for every payment. Brands fund with Stripe, clippers withdraw with Stripe."
+        lede="Brands pay in through Stripe and clippers withdraw through Stripe. We never handle your bank details."
       />
       <section className={`${CONTAINER} pb-24 md:pb-40`}>
         <FeatureGrid
           features={[
-            { title: 'Bank transfers', body: 'Withdraw to a bank account in a supported country, in your local currency.' },
-            { title: 'Verified by Stripe', body: 'Stripe handles identity and bank verification. We never see your full bank details.' },
-            { title: 'Full history', body: 'Every earning, withdrawal and fee is itemised in your dashboard.' },
+            { title: 'Bank transfers', body: 'Withdraw to a bank account in a supported country, in your own currency.' },
+            { title: 'Checked by Stripe', body: 'Stripe handles identity and bank verification. We never see your full bank details.' },
+            { title: 'A full history', body: 'Every earning, withdrawal and fee is listed in your dashboard.' },
           ]}
         />
       </section>
       <Steps
-        title="Getting paid"
+        title="How you get paid"
         steps={[
-          { title: 'Connect Stripe', body: 'From your dashboard, start Stripe onboarding. You confirm your identity and add a bank account on Stripe.' },
-          { title: 'Earn as views verify', body: 'Your balance updates as views pass our checks. Pending views are shown separately until they clear.' },
-          { title: 'Request a withdrawal', body: `Once your available balance reaches $${SITE.minPayoutUsd}, withdraw in one click.` },
-          { title: 'Receive funds', body: 'Stripe sends the transfer to your bank. Timing depends on your country and bank.' },
+          { title: 'Connect Stripe', body: "From your dashboard, start Stripe's setup. You confirm who you are and add a bank account on Stripe's side." },
+          { title: 'Earn as views are verified', body: "Your balance grows as we verify views. Anything still clearing is shown separately." },
+          { title: 'Withdraw', body: `Once your available balance is $${SITE.minPayoutUsd} or more, you can withdraw in a click.` },
+          { title: 'Receive the money', body: 'Stripe sends it to your bank. How long it takes depends on your country and your bank.' },
         ]}
       />
       <StatRow
@@ -47,12 +47,12 @@ export default function Page() {
       <Principles
         title="The small print"
         items={[
-          { title: 'Taxes are yours', body: 'You are responsible for taxes on your earnings. Stripe may collect tax information.' },
-          { title: 'Fraud can be reversed', body: 'Payouts for clips later found to be fraudulent may be reversed.' },
-          { title: 'Read the full terms', body: 'The full rules are in Payments & Payouts, under Legal on this site.' },
+          { title: 'Taxes are yours', body: "You're responsible for tax on what you earn. Stripe may ask you for tax details." },
+          { title: 'Fraud can be reversed', body: "If a clip turns out to be fraudulent after it's been paid, we can take the payout back." },
+          { title: 'The full terms', body: 'The detailed rules are in Payments & Payouts, under Legal.' },
         ]}
       />
-      <CtaBand title="Connect Stripe" href="/onboarding?role=clipper" label="Get started" />
+      <CtaBand title="Set up payouts" href="/onboarding?role=clipper" label="Get started" />
     </main>
   )
 }

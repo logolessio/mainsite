@@ -32,8 +32,8 @@ export function StatusBoard({ initial }: { initial: Health }) {
         <span className={cn('relative inline-flex size-4 rounded-full', h.ok ? 'bg-emerald-400' : 'bg-amber-300')}>
           <span className={cn('absolute inset-0 animate-ping rounded-full', h.ok ? 'bg-emerald-400/60' : 'bg-amber-300/60')} />
         </span>
-        <h1 className="mt-5 font-display text-4xl tracking-tight md:text-5xl">{h.ok ? 'Everything is running.' : 'Something is not right.'}</h1>
-        <p className="mt-3 text-mute">{h.ok ? 'logoless is up. Clips, sign-in and payments are all working.' : 'We know and we are on it. Parts of the site may be slow or unavailable.'}</p>
+        <h1 className="mt-5 font-display text-4xl tracking-tight md:text-5xl">{h.ok ? 'Everything is running.' : "Something's not right."}</h1>
+        <p className="mt-3 text-mute">{h.ok ? 'logoless is up. Clips, sign-in and payments are all working.' : "Something's wrong and we're looking into it. Parts of the site may be slow or unavailable."}</p>
         <p className="mt-6 text-xs text-mute">Checked {new Date(h.at * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' })}</p>
       </motion.div>
       <ul className="mt-6 grid gap-3">

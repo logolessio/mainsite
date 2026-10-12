@@ -8,7 +8,7 @@ import { Chip, Panel, StepTitle, toggleIn } from '../ui'
 export function InterestsStep({ data, update }: StepProps) {
   return (
     <div>
-      <StepTitle title="What do you like to clip?" sub="We will show the campaigns that fit first. Pick as many as you like." />
+      <StepTitle title="What do you like to clip?" sub="We'll show the campaigns that fit first. Pick as many as you like." />
 
       <h2 className="mt-7 text-center text-xs text-mute">Topics</h2>
       <div className="mt-3 flex flex-wrap justify-center gap-2">

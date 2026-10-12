@@ -260,7 +260,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
               <motion.section key={current.id} custom={dir} initial={{ opacity: 0, x: 40 * dir }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 * dir }} transition={{ duration: 0.38, ease: EASE_OUT }} className="max-w-2xl">
                 {current.id === 'hello' && (
                   <>
-                    <Ask sub="This page is yours. In a few minutes you will set up your artist page, choose what to promote, and launch a campaign that pays clippers per view.">{`Hey ${artistName}.`}</Ask>
+                    <Ask sub="This page is yours. In a few minutes you'll set up your artist page, pick what to promote and launch a campaign that pays clippers per view.">{`Hey ${artistName}.`}</Ask>
                     <div className="grid gap-3 sm:grid-cols-3">
                       {[
                         { icon: Users, t: 'Your page', d: 'A public artist profile at logoless.io/@you.' },
@@ -324,7 +324,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                         </div>
                       </Rise>
                       <Rise i={1}>
-                        <BigArea label="Your pitch in a line or two" hint={`${(data.pitch ?? '').length}/400`} value={data.pitch ?? ''} maxLength={400} rows={4} onChange={(e) => set({ pitch: e.target.value })} placeholder="Who you are, what you make, what makes it yours." />
+                        <BigArea label="Your pitch in a line or two" hint={`${(data.pitch ?? '').length}/400`} value={data.pitch ?? ''} maxLength={400} rows={4} onChange={(e) => set({ pitch: e.target.value })} placeholder="Tell us who you are and what you make." />
                       </Rise>
                     </div>
                   </>
@@ -511,7 +511,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
 
                 {current.id === 'rules' && (
                   <>
-                    <Ask sub="No surprises. Here is what happens from the moment you launch.">Here is how it works.</Ask>
+                    <Ask sub="Here's what happens once you launch.">Here is how it works.</Ask>
                     <ol className="grid gap-3">
                       {[
                         ['You fund the campaign', 'Your budget is held in a pool for this campaign. It is only spent on views we verify.'],
@@ -619,7 +619,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                 {current.id === 'done' && (
                   <div className="relative">
                     <Confetti />
-                    <Ask sub={flash === 'paid' || campaign?.status === 'paid' || campaign?.status === 'live' ? 'Payment received. Our team is checking your brief and will launch it shortly. We will tell you the moment it is live.' : campaign ? 'Your campaign is saved and waiting for its funds. You can pay from your dashboard whenever you like.' : 'Your page is ready.'}>{flash === 'paid' ? 'You are in. Payment received.' : 'You are all set.'}</Ask>
+                    <Ask sub={flash === 'paid' || campaign?.status === 'paid' || campaign?.status === 'live' ? 'Payment received. Our team is checking your brief and will launch it shortly. We’ll tell you as soon as it’s live.' : campaign ? 'Your campaign is saved and waiting for its funds. You can pay from your dashboard whenever you like.' : 'Your page is ready.'}>{flash === 'paid' ? 'You are in. Payment received.' : 'You are all set.'}</Ask>
                     <div className="relative z-10 grid gap-3 sm:grid-cols-2">
                       {[
                         { href: '/brand', icon: Megaphone, t: 'Your dashboard', d: 'Campaigns, spend and reach at a glance.' },

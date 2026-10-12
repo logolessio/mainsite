@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: 'Legal | logoless', description: 'Ter
 export default function Page() {
   return (
     <main>
-      <PageHero eyebrow="Legal" title="The fine print" lede="Everything that governs how logoless works, in plain sections." />
+      <PageHero eyebrow="Legal" title="The fine print" lede="The terms and policies that cover how logoless works." />
       <section className={`${CONTAINER} pb-24 md:pb-40`}>
         <ul className="border-b border-line">
           {LEGAL.map((d, i) => (

@@ -21,7 +21,7 @@ const WAYS: [string, string, string][] = [
 export default function Page() {
   return (
     <main>
-      <PageHero eyebrow="Contact" title="Say hello" lede="Write to the right inbox, or send us a message below. A person reads everything." />
+      <PageHero eyebrow="Contact" title="Say hello" lede="Write to the right inbox, or use the form below. A real person reads everything." />
       <section className={`${CONTAINER} pb-24 md:pb-40`}>
         <ul className="border-b border-line">
           {WAYS.map(([k, hint, mail], i) => (
@@ -43,7 +43,7 @@ export default function Page() {
       <section className={`${CONTAINER} border-t border-line py-24 md:py-40`}>
         <div className="grid gap-12 md:grid-cols-12 md:gap-10">
           <div className="md:col-span-5">
-            <Words as="h2" align="left" text="Or send a message" className="max-w-[10ch] font-display text-5xl leading-[0.95] tracking-[-0.04em] md:text-[5rem]" />
+            <Words as="h2" align="left" text="Or use the form" className="max-w-[10ch] font-display text-5xl leading-[0.95] tracking-[-0.04em] md:text-[5rem]" />
             <Reveal delay={0.2} className="mt-8 max-w-sm text-lg leading-relaxed text-paper/60">
               <p><T>We usually reply within two business days.</T></p>
             </Reveal>

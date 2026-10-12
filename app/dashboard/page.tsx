@@ -39,7 +39,7 @@ export default async function Page() {
 
   return (
     <>
-      <PageHeader title={`Welcome back, ${first}`} sub="Your money, your clips and what to do next, all in one place." actions={<ActionLink href="/">Find a campaign</ActionLink>} />
+      <PageHeader title={`Welcome back, ${first}`} sub="Your balance, your clips and anything that needs doing." actions={<ActionLink href="/">Find a campaign</ActionLink>} />
 
       <Bento>
         {/* the number everyone comes for */}
