@@ -46,7 +46,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const blocked = fs.dev && !isAdmin
   const announcement = fs.on.announcement && !blocked ? await getAnnouncement() : null
   return (
-    <html lang="en" suppressHydrationWarning className={`${geist.variable} ${geistMono.variable} bg-ink`}>
+    <html lang="en" suppressHydrationWarning className={`${geist.variable} ${geistMono.variable} bg-ink${fs.on['sharp-corners'] ? ' sharp' : ''}`}>
       {fs.on['light-mode'] && !blocked && (
         <head>
           <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />

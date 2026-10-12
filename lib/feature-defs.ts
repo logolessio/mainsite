@@ -4,7 +4,7 @@ export type FeatureDef = {
   id: string
   name: string
   description: string
-  category: 'Discover' | 'Account' | 'Trust' | 'Launch' | 'Comfort'
+  category: 'Discover' | 'Account' | 'Trust' | 'Launch' | 'Comfort' | 'Design'
   /** Where to see it on the dev site. */
   path: string
 }
@@ -23,6 +23,7 @@ export const FEATURES: FeatureDef[] = [
   { id: 'pool-meter', name: 'Pool remaining meter', category: 'Trust', path: '/campaign/red-room', description: 'On every funded campaign page: a bar and a number showing how much of the pool is still unpaid, straight from the money ledger. Clippers see what is actually left, and it adds a little urgency. Campaigns that have not been funded show nothing.' },
   { id: 'recap', name: 'Your recap (story)', category: 'Account', path: '/dashboard/recap', description: 'A full-screen, story-style look back at what a clipper has done: earnings, views, clips, their biggest campaign, best clip and badges, with counting numbers and a progress bar. Tap or use the arrow keys.' },
   { id: 'saved-campaigns', name: 'Saved campaigns page', category: 'Account', path: '/dashboard/saved', description: 'A page in the clipper dashboard listing every campaign you have hearted, with an easy way back to each one.' },
+  { id: 'sharp-corners', name: 'Sharper corners', category: 'Design', path: '/', description: 'Takes the roundness out of the whole site: pill buttons, search bars, chips, cards and panels all get small crisp corners instead of bubble shapes. Avatars, dots and badges stay round, and so do the phone mockups.' },
   { id: 'light-mode', name: 'Light mode', category: 'Comfort', path: '/', description: 'A button under the big logo on the home page (and in the footer) that swaps black and white across the whole site, and remembers the choice. Photos, covers and badges keep their own colours, and member profiles stay dark.' },
   { id: 'calm-mode', name: 'Calm mode', category: 'Comfort', path: '/', description: 'A footer switch that turns off the heavy animation (floating cards, particles, hero motion) for people who prefer a quieter site or have a slower device.' },
 ]
