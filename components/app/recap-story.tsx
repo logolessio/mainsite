@@ -169,7 +169,7 @@ function buildSlides(r: Recap): Slide[] {
   return slides
 }
 
-const Kicker = ({ children }: { children: React.ReactNode }) => <p className="font-mono text-xs tracking-[0.25em] text-mute uppercase">{children}</p>
+const Kicker = ({ children }: { children: React.ReactNode }) => <p className="text-xs text-mute">{children}</p>
 const Big = ({ children, small }: { children: React.ReactNode; small?: boolean }) => <h1 className={cn('mx-auto mt-5 max-w-3xl font-display leading-[1] tracking-tight', small ? 'text-4xl md:text-6xl' : 'text-5xl md:text-7xl')}>{children}</h1>
 const Huge = ({ children }: { children: React.ReactNode }) => <p className="mt-4 font-display text-[18vw] leading-[0.9] tracking-tight md:text-[10rem]">{children}</p>
 const Sub = ({ children }: { children: React.ReactNode }) => <p className="mx-auto mt-5 max-w-md text-lg text-paper/65">{children}</p>

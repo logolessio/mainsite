@@ -16,7 +16,7 @@ export function LiveNumbers({ stats, preview }: { stats: PublicStats; preview?: 
   return (
     <motion.section initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '0px 0px -10% 0px' }} transition={{ duration: 0.8, ease: EASE_OUT }} aria-label="logoless in numbers" className="mx-auto mt-24 max-w-[1200px]">
       <div className="mb-5 flex items-center justify-between">
-        <p className="font-mono text-xs tracking-[0.25em] text-mute uppercase">logoless, right now</p>
+        <p className="text-xs text-mute">logoless, right now</p>
         {preview && <p className="rounded-full border border-amber-300/40 px-3 py-1 text-[11px] text-amber-200">Preview: hidden on logoless.io until the numbers are bigger</p>}
       </div>
       <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-[2rem] border border-line bg-line lg:grid-cols-4">

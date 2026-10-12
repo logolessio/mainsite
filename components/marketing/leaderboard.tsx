@@ -32,7 +32,7 @@ export function Leaderboard({ entries, period }: { entries: Entry[]; period: '30
   return (
     <div className="mx-auto max-w-3xl">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE_OUT }} className="text-center">
-        <p className="font-mono text-xs tracking-[0.25em] text-mute uppercase">Leaderboard</p>
+        <p className="text-xs text-mute">Leaderboard</p>
         <h1 className="mt-4 font-display text-5xl tracking-tight md:text-7xl">Who is winning.</h1>
         <p className="mx-auto mt-4 max-w-md text-mute">The clippers bringing in the most verified views. Only people who chose to show their views are listed.</p>
         <div className="mt-7 inline-flex rounded-full bg-white/[0.06] p-1">

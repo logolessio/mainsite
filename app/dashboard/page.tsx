@@ -11,7 +11,7 @@ import { db } from '@/lib/db'
 import { balances } from '@/lib/ledger'
 import { pageUser } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Dashboard — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Dashboard | logoless', robots: { index: false } }
 
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 

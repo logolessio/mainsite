@@ -134,7 +134,7 @@ export function Spotlight() {
                   const head = r.group !== lastGroup ? ((lastGroup = r.group), true) : false
                   return (
                     <li key={r.key} role="option" aria-selected={idx === i}>
-                      {head && <p className="px-4 pt-3 pb-1 font-mono text-[10px] tracking-[0.2em] text-mute uppercase">{r.group}</p>}
+                      {head && <p className="px-4 pt-3 pb-1 text-[10px] text-mute">{r.group}</p>}
                       <button type="button" onMouseMove={() => setI(idx)} onClick={() => go(r)} className={cn('relative flex h-14 w-full items-center gap-3 rounded-2xl px-3 text-left transition-colors', idx === i ? 'text-paper' : 'text-paper/80')}>
                         {idx === i && <motion.span layoutId="spot-hl" transition={{ duration: 0.16, ease: EASE_OUT }} className="absolute inset-0 rounded-2xl bg-white/[0.09]" />}
                         {r.cover ? (

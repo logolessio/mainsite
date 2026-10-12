@@ -9,7 +9,7 @@ export const generateStaticParams = () => LEGAL.map((d) => ({ slug: d.slug }))
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const doc = getLegal((await params).slug)
-  return doc ? { title: `${doc.title} — logoless`, description: doc.summary } : {}
+  return doc ? { title: `${doc.title} | logoless`, description: doc.summary } : {}
 }
 
 export default async function Page({ params }: Props) {

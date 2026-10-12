@@ -13,7 +13,7 @@ export function ScrollText({ text, className }: { text: string; className?: stri
   const shown = tx(text)
   const words = shown.split(' ')
   return (
-    <p ref={ref} aria-label={shown} className={cn('mx-auto flex flex-wrap justify-center gap-x-[0.28em] text-center', className)}>
+    <p ref={ref} aria-label={shown} className={cn('flex flex-wrap gap-x-[0.28em] text-left', className)}>
       {words.map((w, i) => (
         <Word key={i} progress={scrollYProgress} range={[i / words.length, (i + 1) / words.length]}>
           {w}
@@ -32,7 +32,7 @@ function Word({
   progress: MotionValue<number>
   range: [number, number]
 }) {
-  const opacity = useTransform(progress, range, [0.14, 1])
+  const opacity = useTransform(progress, range, [0.2, 1])
   return (
     <motion.span aria-hidden="true" style={{ opacity }}>
       {children}

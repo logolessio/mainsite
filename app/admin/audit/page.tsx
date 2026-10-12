@@ -6,7 +6,7 @@ import { verifyAudit, verifyContent } from '@/lib/chain'
 import { db } from '@/lib/db'
 import { pageAdmin } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Audit log — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Audit log | logoless', robots: { index: false } }
 
 type A = { id: number; actor_email: string; action: string; target: string | null; detail: string | null; created_at: number }
 type V = { id: number; key: string; old_value: string | null; new_value: string; editor_email: string; reason: string | null; created_at: number; original: string | null }

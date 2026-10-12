@@ -1,60 +1,49 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { Icon, type IconName } from '@/components/icons'
 import { PillLink } from '@/components/motion/cta'
 import { Reveal } from '@/components/motion/reveal'
-import { Tilt3D } from '@/components/motion/tilt'
 import { Words } from '@/components/motion/words'
-import { CONTAINER, EASE_OUT } from '@/lib/layout'
-import { cn } from '@/lib/utils'
 import { T } from '@/components/shell/copy-provider'
+import type { IconName } from '@/components/icons'
+import { CONTAINER } from '@/lib/layout'
+import { cn } from '@/lib/utils'
 
-export type Feature = { icon: IconName; title: string; body: string }
+export type Feature = { icon?: IconName; title: string; body: string }
 
-export function FeatureGrid({ features, cols = 3 }: { features: Feature[]; cols?: 2 | 3 }) {
+/** A list set as rows on hairlines: the point on the left, the explanation on the right. No icons, no boxes. */
+export function FeatureGrid({ features }: { features: Feature[]; cols?: 2 | 3 }) {
   return (
-    <ul className={cn('grid gap-px bg-line', cols === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2')}>
+    <ul className="border-b border-line">
       {features.map((f, i) => (
-        <motion.li
-          key={f.title}
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '0px 0px -10% 0px' }}
-          transition={{ duration: 0.8, delay: (i % 3) * 0.1, ease: EASE_OUT }}
-          className="group relative bg-ink transition-colors hover:bg-surface"
-        >
-          <Tilt3D max={5} className="h-full p-10 text-center md:p-16">
-          <Icon name={f.icon} aria-hidden="true" className="mx-auto size-6 text-mute transition-colors group-hover:text-paper" />
-          <h3 className="mt-7 font-display text-3xl md:text-4xl"><T>{f.title}</T></h3>
-          <p className="mx-auto mt-3 max-w-xs text-pretty leading-snug text-mute"><T>{f.body}</T></p>
-          </Tilt3D>
-        </motion.li>
+        <Reveal key={f.title} delay={Math.min(i, 4) * 0.05} blur={false}>
+          <li className="grid gap-3 border-t border-line py-9 md:grid-cols-12 md:gap-10 md:py-12">
+            <h3 className="font-display text-3xl leading-[1.05] tracking-[-0.03em] md:col-span-5 md:text-[2.6rem]"><T>{f.title}</T></h3>
+            <p className="max-w-lg text-pretty text-lg leading-relaxed text-paper/60 md:col-span-6 md:col-start-7"><T>{f.body}</T></p>
+          </li>
+        </Reveal>
       ))}
     </ul>
   )
 }
 
+/** The heading for a section of a page. */
 export function SectionTitle({
-  eyebrow,
   title,
   className,
 }: {
-  eyebrow: string
+  eyebrow?: string
   title: string
   align?: 'left' | 'right' | 'center'
   className?: string
 }) {
   return (
-    <div className={cn('mb-16 flex flex-col items-center text-center md:mb-24', className)}>
-      <Reveal y={10}>
-        <p className="font-mono text-xs tracking-widest text-mute uppercase"><T>{eyebrow}</T></p>
-      </Reveal>
-      <Words text={title} className="mt-6 max-w-[14ch] font-display text-5xl leading-[0.98] md:text-8xl" />
+    <div className={cn('mb-14 md:mb-20', className)}>
+      <Words as="h2" align="left" text={title} className="max-w-[16ch] font-display text-5xl leading-[0.95] tracking-[-0.04em] md:text-[5.5rem]" />
     </div>
   )
 }
 
+/** The closing call to action: one big line and the buttons under it. */
 export function CtaBand({
   title,
   href,
@@ -70,9 +59,9 @@ export function CtaBand({
 }) {
   return (
     <section className="border-t border-line py-32 md:py-52">
-      <div className={`${CONTAINER} flex flex-col items-center gap-14 text-center`}>
-        <Words text={title} className="max-w-[12ch] font-display text-6xl leading-[0.98] md:text-9xl" />
-        <Reveal delay={0.3} className="flex flex-wrap justify-center gap-3">
+      <div className={cn(CONTAINER)}>
+        <Words as="h2" align="left" text={title} className="max-w-[12ch] font-display text-[clamp(3.4rem,9vw,9.5rem)] leading-[0.9] tracking-[-0.045em]" />
+        <Reveal delay={0.25} className="mt-14 flex flex-wrap items-center gap-3">
           <PillLink href={href}><T>{label}</T></PillLink>
           {secondaryHref && (
             <PillLink href={secondaryHref} variant="ghost">
@@ -85,7 +74,7 @@ export function CtaBand({
   )
 }
 
-/** Centred label over copy. */
+/** A heading with copy beside it. */
 export function Split({
   label,
   children,
@@ -95,11 +84,11 @@ export function Split({
   flip?: boolean
 }) {
   return (
-    <div className="mx-auto flex max-w-2xl flex-col items-center border-t border-line py-20 text-center md:py-28">
-      <Reveal y={20}>
-        <h3 className="font-display text-4xl leading-[0.95] md:text-6xl"><T>{label}</T></h3>
+    <div className="grid gap-6 border-t border-line py-16 md:grid-cols-12 md:gap-10 md:py-24">
+      <Reveal className="md:col-span-5">
+        <h3 className="font-display text-4xl leading-[1] tracking-[-0.035em] md:text-6xl"><T>{label}</T></h3>
       </Reveal>
-      <Reveal delay={0.15} y={20} className="mt-8 text-pretty text-lg leading-snug text-mute">
+      <Reveal delay={0.1} className="text-pretty text-lg leading-relaxed text-paper/60 md:col-span-6 md:col-start-7">
         {children}
       </Reveal>
     </div>

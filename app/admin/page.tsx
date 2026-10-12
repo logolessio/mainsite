@@ -7,7 +7,7 @@ import { money } from '@/lib/format'
 import { counts, funds, health, stripeBalance } from '@/lib/admin-stats'
 import { pageAdmin } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Admin — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Admin | logoless', robots: { index: false } }
 
 export default async function Page() {
   await pageAdmin()

@@ -148,7 +148,7 @@ export function AppFrame({ area, items, children }: { area: string; items: AppNa
         }}
         className="glass-liquid fixed top-[84px] bottom-4 left-3 z-40 hidden flex-col rounded-[2rem] border-paper/30 p-2.5 shadow-[0_0_0_1px_rgb(0_0_0/0.9),0_0_0_2px_rgb(243_242_238/0.07),24px_0_70px_-18px_rgb(0_0_0/0.95)] backdrop-blur-xl backdrop-saturate-150 md:flex"
       >
-        <motion.p animate={{ opacity: panelOpen ? 1 : 0, height: panelOpen ? 36 : 0 }} transition={{ duration: 0.2 }} className="overflow-hidden px-4 pt-3 text-[11px] font-medium tracking-[0.16em] whitespace-nowrap text-mute uppercase">
+        <motion.p animate={{ opacity: panelOpen ? 1 : 0, height: panelOpen ? 36 : 0 }} transition={{ duration: 0.2 }} className="overflow-hidden px-4 pt-3 text-[11px] font-medium whitespace-nowrap text-mute">
           {area}
         </motion.p>
         <nav className="my-auto flex max-h-full flex-col gap-0.5 overflow-x-hidden overflow-y-auto py-2">

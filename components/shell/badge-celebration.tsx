@@ -57,10 +57,10 @@ export function BadgeCelebration() {
           <Confetti count={70} />
           <motion.div initial={{ scale: 0.5, opacity: 0, rotate: -12 }} animate={{ scale: 1, opacity: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 160, damping: 14 }} className="relative z-10 flex max-w-sm flex-col items-center text-center">
             <span aria-hidden="true" className="absolute top-8 size-72 rounded-full blur-3xl" style={{ background: RARITY_STYLE[cur.badge.rarity].glow }} />
-            <p className="relative font-mono text-xs tracking-[0.3em] text-mute uppercase">Badge unlocked</p>
+            <p className="relative text-xs text-mute">Badge unlocked</p>
             <div className="relative mt-5"><BadgeArt badge={cur.badge} size={240} animated /></div>
             <h2 className="relative mt-5 font-display text-4xl">{cur.badge.name}</h2>
-            <p className={cn('relative mt-1 font-mono text-[11px] tracking-[0.22em] uppercase', RARITY_STYLE[cur.badge.rarity].text)}>{RARITY_STYLE[cur.badge.rarity].label} · {cur.badge.points} points</p>
+            <p className={cn('relative mt-1 text-[11px]', RARITY_STYLE[cur.badge.rarity].text)}>{RARITY_STYLE[cur.badge.rarity].label} · {cur.badge.points} points</p>
             <p className="relative mt-3 text-sm text-mute">{cur.badge.how}</p>
             <div className="relative mt-7 flex flex-wrap justify-center gap-3">
               <button type="button" onClick={() => done(true)} className="inline-flex h-12 items-center rounded-full bg-paper px-7 text-[15px] font-medium text-ink transition-all hover:bg-paper/85 active:scale-95">See my achievements</button>

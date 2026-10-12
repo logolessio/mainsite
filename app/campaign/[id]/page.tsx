@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const campaign = await liveCampaign((await params).id)
   if (!campaign) return {}
   return {
-    title: `${campaign.title} by ${campaign.creator} — logoless`,
+    title: `${campaign.title} by ${campaign.creator} | logoless`,
     description: campaign.summary,
     openGraph: { title: `${campaign.title} by ${campaign.creator}`, description: campaign.summary, images: [campaign.cover] },
     twitter: { card: 'summary_large_image', title: `${campaign.title} by ${campaign.creator}`, description: campaign.summary, images: [campaign.cover] },

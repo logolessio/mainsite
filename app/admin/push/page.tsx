@@ -4,7 +4,7 @@ import { PushPanel } from '@/components/dev/push-panel'
 import { AnnouncementEditor } from '@/components/dev/announcement-editor'
 import { pageAdmin } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Push features — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Push features | logoless', robots: { index: false } }
 
 export default async function Page() {
   await pageAdmin()

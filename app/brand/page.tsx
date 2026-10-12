@@ -7,7 +7,7 @@ import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
 import { db } from '@/lib/db'
 import { pageUser } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Brand dashboard — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Brand dashboard | logoless', robots: { index: false } }
 
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 

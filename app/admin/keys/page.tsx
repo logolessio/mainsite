@@ -5,7 +5,7 @@ import { Card, PageHeader } from '@/components/app/ui'
 import { health } from '@/lib/admin-stats'
 import { pageAdmin } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Keys and tests — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Keys and tests | logoless', robots: { index: false } }
 
 const CHECKS = [
   { id: 'stripe', label: 'Stripe connection', hint: 'Asks Stripe for the account balance with the key we hold. Shows live or test mode.' },

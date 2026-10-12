@@ -7,7 +7,7 @@ import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
 import { db } from '@/lib/db'
 import { pageUser } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Campaigns — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Campaigns | logoless', robots: { index: false } }
 
 type Row = {
   id: string

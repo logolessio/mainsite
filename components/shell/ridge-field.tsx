@@ -77,6 +77,8 @@ export function RidgeField() {
       }
       energy *= 0.96
       boost *= 0.95
+      // the landscape belongs to the top of a page: it recedes as you read so text always sits on a calm background
+      const fade = Math.max(0.16, 1 - window.scrollY / (h * 0.85))
 
       ctx.fillStyle = '#000'
       ctx.fillRect(0, 0, w, h)
@@ -125,7 +127,7 @@ export function RidgeField() {
           if (boost > 0.01) hgt += scale * boost * 26 * env * Math.sin(u * 30 - t * 8)
 
           // flat, even tone: only the position moves, nothing brightens
-          ctx.globalAlpha = rowAlpha
+          ctx.globalAlpha = rowAlpha * fade
           const s2 = size * (1 + glow * 0.3)
           ctx.drawImage(sprite, x - s2 / 2, y0 - hgt - s2 / 2, s2, s2)
         }

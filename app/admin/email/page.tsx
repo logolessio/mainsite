@@ -9,7 +9,7 @@ import { when } from '@/lib/format'
 import { pageAdmin } from '@/lib/user'
 import { cn } from '@/lib/utils'
 
-export const metadata: Metadata = { title: 'Email — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Email | logoless', robots: { index: false } }
 
 type Row = { ts: number; name: string; status: number | null; detail: string | null }
 

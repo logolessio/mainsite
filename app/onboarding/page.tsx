@@ -4,7 +4,7 @@ import { getSession } from '@/lib/session'
 import { OnboardingFlow } from '@/components/onboarding/onboarding-flow'
 
 export const metadata: Metadata = {
-  title: 'Get started — logoless',
+  title: 'Get started | logoless',
   description: 'Create your account, link your socials, set up your profile and get paid, all in one guided flow.',
 }
 

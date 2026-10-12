@@ -8,7 +8,7 @@ import { publicStats, worthShowing } from '@/lib/public-stats'
 import { CONTAINER } from '@/lib/layout'
 
 export const metadata: Metadata = {
-  title: 'logoless — views have value',
+  title: 'logoless | views have value',
   description: 'Browse live clip campaigns and get paid for every thousand views.',
 }
 

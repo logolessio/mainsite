@@ -6,13 +6,13 @@ import { EASE_OUT } from '@/lib/layout'
 type Props = HTMLMotionProps<'div'> & { delay?: number; x?: number; y?: number; blur?: boolean }
 
 /** Fades and slides content in once it scrolls into view. */
-export function Reveal({ delay = 0, x = 0, y = 28, blur = true, children, ...rest }: Props) {
+export function Reveal({ delay = 0, x = 0, y = 18, blur = false, children, ...rest }: Props) {
   return (
     <motion.div
       initial={blur ? { opacity: 0, x, y, scale: 0.985, filter: 'blur(8px)' } : { opacity: 0, x, y }}
       whileInView={blur ? { opacity: 1, x: 0, y: 0, scale: 1, filter: 'blur(0px)' } : { opacity: 1, x: 0, y: 0 }}
       viewport={{ once: true, margin: '0px 0px -12% 0px' }}
-      transition={{ duration: 0.9, delay, ease: EASE_OUT }}
+      transition={{ duration: 0.8, delay, ease: EASE_OUT }}
       {...rest}
     >
       {children}

@@ -6,7 +6,7 @@ import { Card, PageHeader } from '@/components/app/ui'
 import { db, nowSec } from '@/lib/db'
 import { pageAdmin } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Users — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Users | logoless', robots: { index: false } }
 
 type Row = {
   id: string

@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/app/ui'
 import { db } from '@/lib/db'
 import { pageUser } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'My clips — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'My clips | logoless', robots: { index: false } }
 
 export default async function Page() {
   const user = await pageUser()

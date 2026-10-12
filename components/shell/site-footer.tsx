@@ -20,37 +20,33 @@ export function SiteFooter() {
 
   return (
     <footer className="relative z-10 border-t border-line bg-ink [contain-intrinsic-size:auto_600px] [content-visibility:auto]">
-      <div className={`${CONTAINER} py-24 md:py-36`}>
-        <div className="flex flex-col items-center gap-20 text-center">
-          <Reveal className="flex flex-col items-center">
-            <Logo className="h-16 md:h-20" />
-            <p className="mx-auto mt-8 max-w-xs text-sm leading-snug text-mute">
+      <div className={`${CONTAINER} py-20 md:py-28`}>
+        <div className="grid gap-16 md:grid-cols-12 md:gap-10">
+          <Reveal className="md:col-span-4">
+            <Logo className="h-12 md:h-14" />
+            <p className="mt-8 max-w-xs text-[15px] leading-relaxed text-paper/50">
               <T>Brands, artists and streamers fund a brief. Clippers cut it, post it and are paid for every verified view.</T>
             </p>
-            <div className="mt-8 flex items-center justify-center gap-6 text-mute">
-              <a href={SITE.social.discord} aria-label="Discord" className="transition-colors hover:text-paper">
-                <BrandIcon name="discord" className="size-5" />
-              </a>
-              <a href={SITE.social.x} aria-label="X" className="transition-colors hover:text-paper">
-                <BrandIcon name="x" className="size-5" />
-              </a>
-              <a href={SITE.social.tiktok} aria-label="TikTok" className="transition-colors hover:text-paper">
-                <BrandIcon name="tiktok" className="size-5" />
-              </a>
-              <a href={SITE.social.instagram} aria-label="Instagram" className="transition-colors hover:text-paper">
-                <BrandIcon name="instagram" className="size-5" />
-              </a>
-              <a href={SITE.social.youtube} aria-label="YouTube" className="transition-colors hover:text-paper">
-                <BrandIcon name="youtube" className="size-5" />
-              </a>
+            <div className="mt-8 flex items-center gap-5 text-paper/50">
+              {([
+                ['discord', 'Discord', SITE.social.discord],
+                ['x', 'X', SITE.social.x],
+                ['tiktok', 'TikTok', SITE.social.tiktok],
+                ['instagram', 'Instagram', SITE.social.instagram],
+                ['youtube', 'YouTube', SITE.social.youtube],
+              ] as const).map(([name, label, href]) => (
+                <a key={name} href={href} aria-label={label} className="transition-colors hover:text-paper">
+                  <BrandIcon name={name} className="size-5" />
+                </a>
+              ))}
             </div>
           </Reveal>
 
-          <div className="grid w-full grid-cols-2 gap-14 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-14 sm:grid-cols-4 md:col-span-8">
             {Object.entries(FOOTER).map(([group, links], i) => (
-              <Reveal key={group} delay={0.08 * (i + 1)}>
-                <h3 className="font-mono text-xs text-mute"><T>{group}</T></h3>
-                <ul className="mt-5 flex flex-col gap-3 text-sm">
+              <Reveal key={group} delay={0.06 * (i + 1)}>
+                <h3 className="text-[15px] text-paper/40"><T>{group}</T></h3>
+                <ul className="mt-5 flex flex-col gap-3 text-[15px]">
                   {links.map((l) => (
                     <li key={l.href}>
                       <TransitionLink href={l.href} className="text-paper/85 transition-colors hover:text-paper">
@@ -61,9 +57,9 @@ export function SiteFooter() {
                 </ul>
               </Reveal>
             ))}
-            <Reveal delay={0.4}>
-              <h3 className="font-mono text-xs text-mute">Legal</h3>
-              <ul className="mt-5 flex flex-col gap-3 text-sm">
+            <Reveal delay={0.3}>
+              <h3 className="text-[15px] text-paper/40">Legal</h3>
+              <ul className="mt-5 flex flex-col gap-3 text-[15px]">
                 {LEGAL_LINKS.slice(0, 6).map((l) => (
                   <li key={l.href}>
                     <TransitionLink href={l.href} className="text-paper/85 transition-colors hover:text-paper">
@@ -72,8 +68,8 @@ export function SiteFooter() {
                   </li>
                 ))}
                 <li>
-                  <TransitionLink href="/legal" className="text-mute transition-colors hover:text-paper">
-                    All legal →
+                  <TransitionLink href="/legal" className="text-paper/50 transition-colors hover:text-paper">
+                    All legal
                   </TransitionLink>
                 </li>
               </ul>
@@ -81,30 +77,31 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-24 flex flex-col items-center gap-3 border-t border-line pt-8 text-center text-xs text-mute">
-          <div className="mb-2 flex flex-wrap items-center justify-center gap-3">
+        <div className="mt-20 flex flex-col gap-8 border-t border-line pt-8 md:flex-row md:items-start md:justify-between">
+          <div className="max-w-xl space-y-3 text-[13px] leading-relaxed text-paper/40">
+            <p>
+              © {new Date().getFullYear()} {SITE.company}. All rights reserved.
+            </p>
+            <p>
+              logoless is not affiliated with or endorsed by TikTok, YouTube, Instagram, Discord or Stripe. Payments are processed by Stripe. YouTube content is subject to the{' '}
+              <a className="underline underline-offset-2 hover:text-paper" href="https://www.youtube.com/t/terms">
+                YouTube Terms of Service
+              </a>{' '}
+              and the{' '}
+              <a className="underline underline-offset-2 hover:text-paper" href="https://policies.google.com/privacy">
+                Google Privacy Policy
+              </a>
+              .
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
             <CalmToggle />
             <Feature id="status-page">
-              <TransitionLink href="/status" className="inline-flex h-10 items-center gap-2 rounded-full border border-line-strong px-4 text-sm text-mute transition-colors hover:text-paper">
+              <TransitionLink href="/status" className="inline-flex h-10 items-center gap-2 rounded-full border border-line-strong px-4 text-sm text-paper/60 transition-colors hover:text-paper">
                 <span className="size-2 rounded-full bg-emerald-400" /> System status
               </TransitionLink>
             </Feature>
           </div>
-          <p>
-            © {new Date().getFullYear()} {SITE.company}. All rights reserved.
-          </p>
-          <p className="max-w-xl">
-            logoless is not affiliated with or endorsed by TikTok, YouTube, Instagram, Discord or Stripe. Payments are
-            processed by Stripe. YouTube content is subject to the{' '}
-            <a className="underline underline-offset-2 hover:text-paper" href="https://www.youtube.com/t/terms">
-              YouTube Terms of Service
-            </a>{' '}
-            and the{' '}
-            <a className="underline underline-offset-2 hover:text-paper" href="https://policies.google.com/privacy">
-              Google Privacy Policy
-            </a>
-            .
-          </p>
         </div>
       </div>
     </footer>

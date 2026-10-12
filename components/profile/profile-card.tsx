@@ -145,7 +145,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
             {view.displayName}
           </span>
           {view.isStaff && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-white/10 px-2 py-0.5 text-[11px] font-semibold tracking-wide uppercase" style={{ color: view.accent }}>
+            <span className="inline-flex items-center gap-1 rounded-md bg-white/10 px-2 py-0.5 text-[11px] font-semibold tracking-wide" style={{ color: view.accent }}>
               <ShieldCheck className="size-3" /> Team
             </span>
           )}
@@ -255,7 +255,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <motion.section variants={{ hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE_OUT } } }}>
-      <h2 className="mb-1.5 text-[11px] font-bold tracking-[0.06em] text-paper/85 uppercase">{title}</h2>
+      <h2 className="mb-1.5 text-[11px] font-bold text-paper/85">{title}</h2>
       {children}
     </motion.section>
   )

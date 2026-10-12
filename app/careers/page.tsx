@@ -1,32 +1,34 @@
 import type { Metadata } from 'next'
-import { Principles, Ticker } from '@/components/marketing/layouts'
-import { PageHero, Section } from '@/components/marketing/page-hero'
+import { Principles } from '@/components/marketing/layouts'
+import { PageHero } from '@/components/marketing/page-hero'
 import { PillLink } from '@/components/motion/cta'
-import { SITE } from '@/lib/site'
+import { Reveal } from '@/components/motion/reveal'
 import { T } from '@/components/shell/copy-provider'
+import { CONTAINER } from '@/lib/layout'
+import { SITE } from '@/lib/site'
 
-export const metadata: Metadata = { title: 'Careers — logoless', description: 'Work at logoless.' }
+export const metadata: Metadata = { title: 'Careers | logoless', description: 'Work at logoless.' }
 
 export default function Page() {
   return (
     <main>
       <PageHero eyebrow="Careers" title="Build with us" lede="We are a small team building the fairest way to pay for views." />
-      <Section className="pt-0 md:pt-0">
-        <div className="border border-dashed border-line-strong px-6 py-20 text-center rounded-2xl">
-          <p className="font-display text-4xl"><T>No open roles right now</T></p>
-          <p className="mx-auto mt-3 max-w-md text-mute"><T>
-            We are always glad to hear from great people. Send an introduction and what you would like to work on.
-          </T></p>
-          <div className="mt-8 flex justify-center">
-            <PillLink href={`mailto:${SITE.emails.support}`} variant="ghost">
-              {SITE.emails.support}
-            </PillLink>
+      <section className={`${CONTAINER} pb-24 md:pb-40`}>
+        <Reveal className="grid gap-8 border-t border-line pt-8 md:grid-cols-12 md:gap-10">
+          <p className="font-display text-3xl tracking-[-0.03em] md:col-span-5 md:text-[2.6rem]"><T>No open roles right now</T></p>
+          <div className="md:col-span-6 md:col-start-7">
+            <p className="max-w-lg text-lg leading-relaxed text-paper/60">
+              <T>We are always glad to hear from great people. Send an introduction and what you would like to work on.</T>
+            </p>
+            <div className="mt-8">
+              <PillLink href={`mailto:${SITE.emails.support}`} variant="ghost">
+                {SITE.emails.support}
+              </PillLink>
+            </div>
           </div>
-        </div>
-      </Section>
-      <Ticker words={['Small team', 'Plain words', 'Real views']} />
+        </Reveal>
+      </section>
       <Principles
-        eyebrow="How we work"
         title="What we care about"
         items={[
           { title: 'Real over loud', body: 'We would rather pay for fewer views that are real than more that are not.' },

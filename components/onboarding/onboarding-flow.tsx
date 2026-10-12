@@ -221,7 +221,7 @@ export function OnboardingFlow({ initialRole, sessionUser }: { initialRole?: 'cl
           ))}
         </ol>
         <div className="md:hidden">
-          <p className="mb-2 text-center font-mono text-[11px] tracking-widest text-mute uppercase">
+          <p className="mb-2 text-center text-[11px] text-mute">
             Step {index + 1} of {steps.length} · {step.label}
           </p>
           <div className="h-1 overflow-hidden rounded-full bg-line">

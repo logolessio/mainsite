@@ -19,8 +19,8 @@ const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-mono-face' 
 
 const baseMetadata: Metadata = {
   metadataBase: new URL(SITE.url),
-  title: { default: 'logoless — views have value', template: '%s' },
-  openGraph: { title: 'logoless — views have value', siteName: 'logoless', type: 'website', images: ['/logo.png'] },
+  title: { default: 'logoless | views have value', template: '%s' },
+  openGraph: { title: 'logoless | views have value', siteName: 'logoless', type: 'website', images: ['/logo.png'] },
   twitter: { card: 'summary_large_image' },
   description:
     'Clip campaigns from artists, streamers and brands. Post the clip, get paid for every thousand views.',

@@ -3,7 +3,7 @@ import { Suspense } from 'react'
 import { AuthCard } from '@/components/auth/auth-card'
 
 export const metadata: Metadata = {
-  title: 'Forgot password — logoless',
+  title: 'Forgot password | logoless',
   description: 'Access your logoless account with Discord, Google or email.',
 }
 

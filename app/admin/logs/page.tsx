@@ -9,7 +9,7 @@ import { events, overview, RANGES, sinceFor, type Range } from '@/lib/log-stats'
 import { pageAdmin } from '@/lib/user'
 import { cn } from '@/lib/utils'
 
-export const metadata: Metadata = { title: 'Logs — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Logs | logoless', robots: { index: false } }
 
 const KINDS = ['pageview', 'api', 'auth', 'security', 'error', 'clienterror', 'money', 'admin']
 const TONE: Record<string, 'good' | 'neutral' | 'warn' | 'bad'> = { pageview: 'neutral', api: 'neutral', auth: 'good', security: 'warn', error: 'bad', clienterror: 'bad', money: 'good', admin: 'warn' }

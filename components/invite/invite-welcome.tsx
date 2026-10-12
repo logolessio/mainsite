@@ -65,7 +65,7 @@ export function InviteWelcome({ name, slug, state, email, lockedTo, admin }: Pro
               Admin preview: this is what {name} sees. Admins cannot claim a link.
             </p>
           )}
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 0.8 }} className="mb-5 font-mono text-xs tracking-[0.2em] text-mute uppercase">
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 0.8 }} className="mb-5 text-xs text-mute">
             A private page, made for you
           </motion.p>
           <h1 className="font-display text-[3.2rem] leading-[0.98] font-medium tracking-tight md:text-8xl">

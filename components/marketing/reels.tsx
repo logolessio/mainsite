@@ -154,7 +154,7 @@ function Slide({ c, i, total, on, near, playing, onPlay, refEl }: { c: Campaign;
 
         <div className="w-full max-w-md text-center md:text-left">
           <p className="flex items-center justify-center gap-3 font-mono text-xs text-mute md:justify-start">
-            <span>{String(i + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</span>
+            <span>{i + 1} of {total}</span>
             <span className="h-px w-6 bg-line-strong" />
             <span>{c.type}</span>
           </p>

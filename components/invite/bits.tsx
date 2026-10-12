@@ -43,7 +43,7 @@ const box = 'w-full rounded-2xl border border-line-strong bg-white/[0.035] px-5 
 export function Label({ children, hint }: { children: React.ReactNode; hint?: string }) {
   return (
     <span className="mb-2 flex items-baseline justify-between gap-3">
-      <span className="font-mono text-xs tracking-wide text-mute uppercase">{children}</span>
+      <span className="text-xs tracking-wide text-mute">{children}</span>
       {hint && <span className="shrink-0 text-xs text-mute/80">{hint}</span>}
     </span>
   )

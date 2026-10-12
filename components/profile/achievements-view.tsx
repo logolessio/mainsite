@@ -34,7 +34,7 @@ function Ring({ value, total }: { value: number; total: number }) {
       <div className="absolute inset-0 grid place-items-center text-center">
         <div>
           <p className="font-display text-4xl leading-none tabular-nums">{value}<span className="text-xl text-mute">/{total}</span></p>
-          <p className="mt-1 font-mono text-[10px] tracking-widest text-mute uppercase">unlocked</p>
+          <p className="mt-1 text-[10px] text-mute">unlocked</p>
         </div>
       </div>
     </div>
@@ -112,7 +112,7 @@ export function AchievementsView() {
           <div className="flex items-center gap-6">
             <Ring value={count} total={BADGES.length} />
             <div className="min-w-0">
-              <p className="font-mono text-xs tracking-widest text-mute uppercase">Score</p>
+              <p className="text-xs text-mute">Score</p>
               <p className="font-display text-5xl leading-none tabular-nums">{score}</p>
               <p className="mt-1 text-xs text-mute">of {maxScore} possible</p>
               <ul className="mt-4 grid gap-1.5">
@@ -133,7 +133,7 @@ export function AchievementsView() {
 
           <div>
             <div className="mb-3 flex items-baseline justify-between">
-              <p className="font-mono text-xs tracking-widest text-mute uppercase">On your profile</p>
+              <p className="text-xs text-mute">On your profile</p>
               <p className="font-mono text-xs text-mute tabular-nums">
                 {data.equipped.length}/{MAX_EQUIPPED} {saving && <Loader2 className="ml-1 inline size-3 animate-spin" />}
               </p>
@@ -199,7 +199,7 @@ export function AchievementsView() {
                       <BadgeArt badge={b} size={118} locked={!got} />
                     </span>
                     <span className="relative mt-3 text-[15px] leading-tight font-medium">{b.name}</span>
-                    <span className={cn('relative mt-1 font-mono text-[10px] tracking-[0.18em] uppercase', got ? R.text : 'text-mute')}>{R.label}</span>
+                    <span className={cn('relative mt-1 text-[10px]', got ? R.text : 'text-mute')}>{R.label}</span>
                     <span className="relative mt-2 line-clamp-2 min-h-8 text-xs leading-snug text-mute">{b.how}</span>
                     <span className={cn('relative mt-3 inline-flex h-7 items-center gap-1 rounded-full px-3 text-[11px]', on ? 'bg-paper text-ink' : got ? 'bg-white/[0.07] text-paper' : 'bg-transparent text-mute')}>
                       {on ? <><Check className="size-3" /> On your profile</> : got ? 'Unlocked' : `${b.points} points`}
@@ -240,7 +240,7 @@ export function AchievementsView() {
                   <Tilt3D max={12} glare={false} className="relative mx-auto w-fit">
                     <BadgeArt badge={b} size={230} locked={!got} animated />
                   </Tilt3D>
-                  <p className={cn('relative mt-4 font-mono text-[11px] tracking-[0.22em] uppercase', got ? R.text : 'text-mute')}>{R.label} · {b.points} points</p>
+                  <p className={cn('relative mt-4 text-[11px]', got ? R.text : 'text-mute')}>{R.label} · {b.points} points</p>
                   <h2 className="relative mt-1 font-display text-3xl">{b.name}</h2>
                   <p className="relative mx-auto mt-2 max-w-[18rem] text-sm leading-relaxed text-mute">{b.how}</p>
                   <p className="relative mt-3 text-xs text-mute">{got ? `Unlocked ${when(data.unlocked[b.id])}` : 'Not unlocked yet'}</p>

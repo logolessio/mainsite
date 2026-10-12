@@ -5,7 +5,7 @@ import { HERO_VARIANTS_DEFAULT, HERO_VARIANTS_KEY } from '@/lib/copy-key'
 import { db } from '@/lib/db'
 import { pageAdmin } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Site text — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Site text | logoless', robots: { index: false } }
 
 type Row = { key: string; original: string; page: string; override: string | null }
 

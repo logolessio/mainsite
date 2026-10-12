@@ -5,7 +5,7 @@ import { featureOn } from '@/lib/features'
 import { recapFor } from '@/lib/recap'
 import { pageUser } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Your recap — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Your recap | logoless', robots: { index: false } }
 
 export default async function Page() {
   if (!(await featureOn('recap'))) notFound()

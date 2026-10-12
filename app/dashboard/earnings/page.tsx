@@ -9,7 +9,7 @@ import { db, nowSec } from '@/lib/db'
 import { balances } from '@/lib/ledger'
 import { pageUser } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Earnings — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Earnings | logoless', robots: { index: false } }
 
 type Row = { id: string; kind: string; amount_cents: number; note: string | null; created_at: number; title: string | null }
 

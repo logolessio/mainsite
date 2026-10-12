@@ -388,7 +388,7 @@ export function ProfileEditor() {
                     if (!list.length) return null
                     return (
                       <div key={g} className="mb-5 last:mb-0">
-                        <p className="mb-2 font-mono text-[11px] tracking-widest text-mute uppercase">{g}</p>
+                        <p className="mb-2 text-[11px] text-mute">{g}</p>
                         <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
                           {list.map((p) => {
                             const have = f.links.some((l) => l.platform === p.id)

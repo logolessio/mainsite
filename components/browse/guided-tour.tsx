@@ -386,7 +386,7 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
                   <span className="grid size-11 place-items-center rounded-full bg-white/12 shadow-[inset_0_1px_0_rgb(255_255_255/0.4)]">
                     <step.icon className="size-5" />
                   </span>
-                  <p className="font-mono text-[11px] tracking-widest text-white/60">
+                  <p className="text-[11px] text-white/60">
                     {index + 1} / {steps.length}
                   </p>
                 </div>

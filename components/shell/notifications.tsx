@@ -99,7 +99,7 @@ export function NotificationFeed({ notes, setNotes, onOpen, compact = false }: {
     <div>
       {groups.map((g) => (
         <section key={g.label}>
-          <h3 className="sticky top-0 z-10 bg-gradient-to-b from-[#0d0d10] from-70% to-transparent px-5 pt-4 pb-2 font-mono text-[10px] tracking-[0.2em] text-mute uppercase">{g.label}</h3>
+          <h3 className="sticky top-0 z-10 bg-gradient-to-b from-[#0d0d10] from-70% to-transparent px-5 pt-4 pb-2 text-[10px] text-mute">{g.label}</h3>
           <ul className="px-2">
             <AnimatePresence initial={false}>
               {g.items.map((n) => {

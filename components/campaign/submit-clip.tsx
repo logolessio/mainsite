@@ -88,7 +88,7 @@ export function SubmitClip({ campaign }: { campaign: Campaign }) {
         ) : (
           <motion.form key="form" onSubmit={submit} noValidate initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 id={`${id}-title`} className="font-mono text-xs tracking-[0.2em] text-mute uppercase">
+              <h2 id={`${id}-title`} className="text-xs text-mute">
                 Where did you post it?
               </h2>
               <fieldset className="flex gap-1.5">

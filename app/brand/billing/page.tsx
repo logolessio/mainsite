@@ -7,7 +7,7 @@ import { db } from '@/lib/db'
 import { money } from '@/lib/format'
 import { pageUser } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Funding — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Funding | logoless', robots: { index: false } }
 
 type Row = { id: string; title: string | null; amount_cents: number; status: string; receipt_url: string | null; created_at: number }
 type Camp = { id: string; title: string; status: string; funded: number; spent: number; pool: number }

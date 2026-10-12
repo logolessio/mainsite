@@ -80,7 +80,6 @@ export function LegalDocView({ doc }: { doc: LegalDoc }) {
               className={cn('relative flex items-baseline gap-3 py-2 pl-5 text-sm transition-colors', on ? 'text-paper' : 'text-mute hover:text-paper')}
             >
               {on && <motion.span layoutId="legal-toc" transition={{ duration: 0.3, ease: EASE_OUT }} className="absolute top-1.5 bottom-1.5 left-0 w-px bg-paper" />}
-              <span className="font-mono text-[11px] tabular-nums opacity-60">{String(i + 1).padStart(2, '0')}</span>
               <span className="leading-snug">{s.h}</span>
             </a>
           </li>
@@ -94,7 +93,7 @@ export function LegalDocView({ doc }: { doc: LegalDoc }) {
       <motion.div style={{ scaleX }} className="fixed inset-x-0 top-0 z-[60] h-px origin-left bg-paper" />
       <header className={cn(CONTAINER, 'flex flex-col items-center pt-44 pb-16 text-center md:pt-60 md:pb-24')}>
         <Reveal y={10}>
-          <p className="font-mono text-xs tracking-widest text-mute uppercase">Legal · Updated {SITE.legalUpdated}</p>
+          <p className="text-xs text-mute">Legal · Updated {SITE.legalUpdated}</p>
         </Reveal>
         <Words as="h1" immediate delay={0.1} text={doc.title} className="mt-8 max-w-4xl font-display text-5xl leading-[0.98] md:text-8xl" />
         <Reveal delay={0.4}>
@@ -123,7 +122,7 @@ export function LegalDocView({ doc }: { doc: LegalDoc }) {
             </AnimatePresence>
           </div>
           <div className="hidden border-l border-line lg:block">
-            <p className="mb-3 pl-5 font-mono text-xs tracking-widest text-mute uppercase">On this page</p>
+            <p className="mb-3 pl-5 text-xs text-mute">On this page</p>
             {toc}
             <div className="mt-6 flex flex-col gap-2 pl-5 pt-5 text-sm">
               <button type="button" onClick={() => window.print()} className="inline-flex w-fit items-center gap-2 text-mute transition-colors hover:text-paper">
@@ -143,7 +142,6 @@ export function LegalDocView({ doc }: { doc: LegalDoc }) {
               <Reveal key={s.h} y={22} blur={false}>
                 <section id={id} className="group/sec scroll-mt-28 border-t border-line py-12 first:border-t-0 first:pt-0 md:py-16">
                   <div className="flex items-start gap-5">
-                    <span className="mt-3 font-mono text-xs text-mute tabular-nums">{String(i + 1).padStart(2, '0')}</span>
                     <h2 className="flex-1 font-display text-3xl leading-[1.05] md:text-5xl">{s.h}</h2>
                     <button type="button" onClick={() => copy(id)} aria-label={`Copy link to ${s.h}`} className="mt-2 grid size-9 shrink-0 place-items-center rounded-full text-mute opacity-0 transition-all group-hover/sec:opacity-100 hover:bg-paper/10 hover:text-paper focus-visible:opacity-100">
                       {copied === id ? <Check className="size-4" /> : <Link2 className="size-4" />}

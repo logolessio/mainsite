@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import { CtaBand } from '@/components/marketing/blocks'
-import { Compare, HorizontalStory, Principles, Ticker } from '@/components/marketing/layouts'
 import { EarnDemo } from '@/components/marketing/earn-demo'
+import { Compare, Principles, Steps } from '@/components/marketing/layouts'
 import { PageHero } from '@/components/marketing/page-hero'
 
 export const metadata: Metadata = {
-  title: 'How it works — logoless',
+  title: 'How it works | logoless',
   description: 'From brief to payout: how logoless campaigns work for brands and clippers.',
 }
 
@@ -17,8 +17,7 @@ export default function Page() {
         title="Brief. Clip. Verify. Paid."
         lede="Four moves, one honest loop. Here is what happens between a brand having an idea and a clipper getting paid."
       />
-      <HorizontalStory
-        eyebrow="The loop"
+      <Steps
         title="Start to payout"
         steps={[
           { title: 'A brand funds a brief', body: 'They set a budget, a rate per 1,000 views, the platforms that count and clear rules for what to clip.', detail: ['Budget is held before the campaign goes live', 'Rules are written in plain language'] },
@@ -33,9 +32,7 @@ export default function Page() {
         left={{ title: 'If you are a brand', items: ['Write the brief and the rules', 'Set a budget and a rate per 1,000 views', 'Fund the campaign and go live', 'Watch verified views and spend in real time'] }}
         right={{ title: 'If you are a clipper', items: ['Join a live campaign, no application', 'Cut the clip and post it on your own account', 'Paste the link and let the checks run', 'Withdraw your balance through Stripe'] }}
       />
-      <Ticker words={['Brief', 'Clip', 'Verify', 'Paid']} />
       <Principles
-        eyebrow="Behind the loop"
         title="What keeps it fair"
         items={[
           { title: 'Money is reserved first', body: 'A brand funds the budget before a campaign goes live, so clippers are never promised money that is not there.' },

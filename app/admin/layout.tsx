@@ -2,7 +2,7 @@
 import { AppFrame } from '@/components/app/frame'
 import { requireSession } from '@/lib/session'
 
-export const metadata = { title: 'Admin — logoless', robots: { index: false, follow: false } }
+export const metadata = { title: 'Admin | logoless', robots: { index: false, follow: false } }
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
   await requireSession('admin')

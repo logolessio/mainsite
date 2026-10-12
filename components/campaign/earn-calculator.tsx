@@ -22,8 +22,8 @@ export function EarnCalculator({ rate }: { rate: number }) {
   }, [net])
 
   return (
-    <div className="rounded-[2rem] border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] p-6 md:p-8">
-      <p className="font-mono text-[11px] tracking-[0.2em] text-mute uppercase">What you could earn</p>
+    <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.025] p-6 md:p-8">
+      <p className="text-[11px] text-mute">What you could earn</p>
       <p className="mt-4 font-display text-6xl leading-none tabular-nums md:text-7xl">{money(display)}</p>
       <p className="mt-2 text-sm text-mute">
         for <span className="text-paper">{label(views)} verified views</span> at {money(rate)} per 1,000

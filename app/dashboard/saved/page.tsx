@@ -9,7 +9,7 @@ import { db } from '@/lib/db'
 import { featureOn } from '@/lib/features'
 import { pageUser } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Saved campaigns — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Saved campaigns | logoless', robots: { index: false } }
 
 export default async function Page() {
   if (!(await featureOn('saved-campaigns'))) notFound()

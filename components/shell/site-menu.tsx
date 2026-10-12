@@ -74,7 +74,7 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
 
           <div className="relative mx-auto grid min-h-dvh w-full max-w-[1400px] grid-cols-1 gap-10 px-6 pt-28 pb-10 md:px-12 lg:grid-cols-[1.5fr_1fr] lg:gap-20">
             <nav aria-label="Main" className="flex flex-col justify-center [perspective:900px]">
-              <p className="mb-6 font-mono text-xs tracking-widest text-mute uppercase">Menu</p>
+              <p className="mb-6 text-xs text-mute">Menu</p>
               <ul className="flex flex-col [&:hover_a:not(:hover)]:opacity-30" onPointerLeave={() => setHover(null)}>
                 {links.map((l, i) => {
                   const active = pathname === l.href
@@ -89,7 +89,6 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
                         aria-current={active ? 'page' : undefined}
                         className="group flex items-center gap-4 py-1.5 transition-opacity duration-300 md:gap-8 md:py-2"
                       >
-                        <span className="w-8 font-mono text-xs text-mute tabular-nums">{String(i + 1).padStart(2, '0')}</span>
                         {/* the word rolls up to a second copy on hover */}
                         <span className="relative block overflow-hidden whitespace-nowrap font-display text-[clamp(2rem,min(6vw,7vh),4.6rem)] leading-[1.08]">
                           <span className="block transition-transform duration-500 [transition-timing-function:cubic-bezier(.22,1,.36,1)] group-hover:-translate-y-full group-focus-visible:-translate-y-full">

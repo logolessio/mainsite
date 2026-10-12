@@ -10,7 +10,7 @@ import { type CampaignRow } from '@/lib/campaigns-db'
 import { db } from '@/lib/db'
 import { pageAdmin } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Campaigns — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Campaigns | logoless', robots: { index: false } }
 
 type Row = CampaignRow & { owner: string | null; pool: number; clips: number }
 

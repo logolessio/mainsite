@@ -1,16 +1,16 @@
 import type { Metadata } from 'next'
 import { BrandCalculator } from '@/components/marketing/calculators'
 
-import { CtaBand, FeatureGrid, SectionTitle } from '@/components/marketing/blocks'
-import { SplitBeat, StatRow, Ticker, Timeline } from '@/components/marketing/layouts'
-import { PageHero, Section } from '@/components/marketing/page-hero'
+import { CtaBand, FeatureGrid } from '@/components/marketing/blocks'
+import { Principles, StatRow, Steps } from '@/components/marketing/layouts'
+import { PageHero } from '@/components/marketing/page-hero'
 import { PillLink } from '@/components/motion/cta'
 import { ScrollText } from '@/components/motion/scroll-text'
 import { SITE } from '@/lib/site'
-import { T } from '@/components/shell/copy-provider'
+import { CONTAINER } from '@/lib/layout'
 
 export const metadata: Metadata = {
-  title: 'For brands — logoless',
+  title: 'For brands | logoless',
   description: 'Launch a clipping campaign and pay only for verified views.',
 }
 
@@ -18,7 +18,6 @@ export default function Page() {
   return (
     <main>
       <PageHero
-        align="right"
         eyebrow="For brands, artists and streamers"
         title="Pay for views you can trust"
         lede="Turn one piece of content into hundreds of clips across TikTok, YouTube and Instagram. Set the budget, set the rate, and only pay when views are verified."
@@ -29,27 +28,25 @@ export default function Page() {
         </PillLink>
       </PageHero>
 
-      <Section className="py-16 md:py-28">
+      <section className={`${CONTAINER} pb-24 md:pb-40`}>
         <ScrollText
-          className="max-w-[24ch] font-display text-5xl leading-[0.95] md:text-8xl"
+          className="max-w-[24ch] font-display text-4xl leading-[1] tracking-[-0.04em] md:text-[4.5rem]"
           text="You bring the content. A crowd of editors brings the reach. Nobody is paid until the views are real."
         />
-      </Section>
+      </section>
 
-      <Ticker words={['Briefs', 'Budgets', 'Clips', 'Verified views']} />
-      <Section>
-        <SectionTitle eyebrow="What you get" title="Built for control" align="center" />
+      <section className={`${CONTAINER} pb-24 md:pb-40`}>
         <FeatureGrid
           features={[
-            { icon: 'Rocket', title: 'Live in minutes', body: 'Write the brief, set the rate, fund it and go live. No contracts, no minimum term.' },
-            { icon: 'ShieldCheck', title: 'Fraud checked', body: 'Bot detection and re-checks run on every clip. Likely fraud is rejected and never billed.' },
-            { icon: 'FileCheck2', title: 'Brief compliance', body: 'Clips are checked against your rules before they count. Approve automatically or review by hand.' },
-            { icon: 'BarChart3', title: 'Real analytics', body: 'Views, spend, effective CPM, engagement and top clips per campaign, updated as data arrives.' },
-            { icon: 'Gauge', title: 'Budget control', body: 'Cap spend per campaign, pause at any time and keep whatever you do not use.' },
-            { icon: 'Layers', title: 'Agency ready', body: 'Run several clients from one account, each with their own budget and billing.' },
+            { title: 'Live in minutes', body: 'Write the brief, set the rate, fund it and go live. No contracts, no minimum term.' },
+            { title: 'Fraud checked', body: 'Bot detection and re-checks run on every clip. Likely fraud is rejected and never billed.' },
+            { title: 'Brief compliance', body: 'Clips are checked against your rules before they count. Approve automatically or review by hand.' },
+            { title: 'Real analytics', body: 'Views, spend, effective CPM, engagement and top clips per campaign, updated as data arrives.' },
+            { title: 'Budget control', body: 'Cap spend per campaign, pause at any time and keep whatever you do not use.' },
+            { title: 'Agency ready', body: 'Run several clients from one account, each with their own budget and billing.' },
           ]}
         />
-      </Section>
+      </section>
 
       <StatRow
         stats={[
@@ -58,40 +55,24 @@ export default function Page() {
           { value: `$${SITE.minTopUpUsd}`, label: 'Minimum top-up', note: 'No contract, no minimum term' },
         ]}
       />
-      <SplitBeat n="01" label="Your rate" title="Set your own rate">
-        <p>
-          <T>
-            You decide what 1,000 verified views are worth for your content. Higher rates attract more clippers faster. You can change the rate on a live campaign.
-          </T>
-        </p>
-      </SplitBeat>
-      <SplitBeat n="02" label="Your risk" title="Pay on delivery" flip>
-        <p>
-          <T>
-            Budget is reserved when a campaign launches and released to clippers only as views are verified. Whatever is left when a campaign ends goes back to your balance.
-          </T>
-        </p>
-      </SplitBeat>
-      <SplitBeat n="03" label="Your cost" title="Simple fees">
-        <p>
-          No subscription. A {SITE.platformFeePct}% platform fee applies to payouts.{' '}
-          <a href="/pricing" className="text-paper underline underline-offset-4">
-            See pricing
-          </a>
-          .
-        </p>
-      </SplitBeat>
-      <Timeline
-        eyebrow="Your first campaign"
+      <Steps
         title="Four steps to live"
-        items={[
-          { tag: 'Step 1', title: 'Write the brief', body: 'Say what to clip, which platforms count and what is off limits, in plain language.' },
-          { tag: 'Step 2', title: 'Set rate and budget', body: 'Choose what 1,000 verified views are worth, and how much you want to spend at most.' },
-          { tag: 'Step 3', title: 'Fund and go live', body: 'Add funds through Stripe and launch. Clippers can join straight away.' },
-          { tag: 'Step 4', title: 'Pay for what is real', body: 'Clips are checked, views are verified and only then does money move.' },
+        steps={[
+          { title: 'Write the brief', body: 'Say what to clip, which platforms count and what is off limits, in plain language.' },
+          { title: 'Set rate and budget', body: 'Choose what 1,000 verified views are worth, and how much you want to spend at most. You can change the rate on a live campaign.' },
+          { title: 'Fund and go live', body: 'Add funds through Stripe and launch. Budget is reserved when a campaign launches, and clippers can join straight away.' },
+          { title: 'Pay for what is real', body: 'Clips are checked, views are verified and only then does money move. Whatever is left when a campaign ends goes back to your balance.' },
         ]}
       />
       <BrandCalculator />
+      <Principles
+        title="How the money works"
+        items={[
+          { title: 'You set the rate', body: 'You decide what 1,000 verified views are worth for your content. Higher rates attract more clippers faster.' },
+          { title: 'You pay on delivery', body: 'Budget is released to clippers only as views are verified. The budget you set is the most you will ever spend on views.' },
+          { title: 'Fees are simple', body: `No subscription. A ${SITE.platformFeePct}% platform fee applies to payouts. See pricing for the full picture.` },
+        ]}
+      />
       <CtaBand title="Launch your first campaign" href="/onboarding?role=brand" label="Get started" secondaryHref="/how-it-works" secondaryLabel="How it works" />
     </main>
   )

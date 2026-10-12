@@ -6,7 +6,7 @@ import { db } from '@/lib/db'
 import { money, when } from '@/lib/format'
 import { pageUser } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Clips — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Clips | logoless', robots: { index: false } }
 
 type Row = {
   id: string

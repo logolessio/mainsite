@@ -50,7 +50,7 @@ export function EarnDemo() {
     <Feature id="earn-demo">
       <section ref={ref} aria-label="Watch a clip earn" className="mx-auto mt-28 max-w-6xl px-5 md:mt-40">
         <Reveal y={24}>
-          <p className="font-mono text-xs tracking-[0.25em] text-mute uppercase">See it happen</p>
+          <p className="text-xs text-mute">See it happen</p>
           <h2 className="mt-4 max-w-2xl font-display text-4xl tracking-tight md:text-6xl">Watch a clip earn.</h2>
           <p className="mt-4 max-w-md text-mute">A made-up clip, real maths. Pick a rate and watch what the loop does with it.</p>
         </Reveal>
@@ -101,10 +101,10 @@ export function EarnDemo() {
 
           {/* the money */}
           <div>
-            <div className="rounded-[2rem] border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] p-6 md:p-8">
+            <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.025] p-6 md:p-8">
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
-                  <p className="font-mono text-[11px] tracking-[0.2em] text-mute uppercase">Your balance</p>
+                  <p className="text-[11px] text-mute">Your balance</p>
                   <p className="mt-3 font-display text-6xl leading-none tabular-nums md:text-7xl">{money(net)}</p>
                   <p className="mt-2 text-sm text-mute">{views.toLocaleString()} verified views · ${rate} per 1,000 · after our {SITE.platformFeePct}% fee</p>
                 </div>

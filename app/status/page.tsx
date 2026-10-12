@@ -6,7 +6,7 @@ import { featureOn } from '@/lib/features'
 import { runHealth } from '@/lib/health'
 import { CONTAINER } from '@/lib/layout'
 
-export const metadata: Metadata = { title: 'Status — logoless', description: 'Whether logoless is running right now.' }
+export const metadata: Metadata = { title: 'Status | logoless', description: 'Whether logoless is running right now.' }
 
 export default async function Page() {
   await connection()

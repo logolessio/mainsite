@@ -10,7 +10,7 @@ export function InterestsStep({ data, update }: StepProps) {
     <div>
       <StepTitle title="What do you like to clip?" sub="We will show the campaigns that fit first. Pick as many as you like." />
 
-      <h2 className="mt-7 text-center font-mono text-xs tracking-widest text-mute uppercase">Topics</h2>
+      <h2 className="mt-7 text-center text-xs text-mute">Topics</h2>
       <div className="mt-3 flex flex-wrap justify-center gap-2">
         {NICHES.map((n) => (
           <Chip key={n} on={data.niches.includes(n)} onClick={() => update({ niches: toggleIn(data.niches, n) })}>
@@ -19,7 +19,7 @@ export function InterestsStep({ data, update }: StepProps) {
         ))}
       </div>
 
-      <h2 className="mt-7 text-center font-mono text-xs tracking-widest text-mute uppercase">Your style</h2>
+      <h2 className="mt-7 text-center text-xs text-mute">Your style</h2>
       <div className="mt-3 flex flex-wrap justify-center gap-2">
         {STYLES.map((n) => (
           <Chip key={n} on={data.styles.includes(n)} onClick={() => update({ styles: toggleIn(data.styles, n) })}>

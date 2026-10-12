@@ -6,7 +6,7 @@ import { db, nowSec } from '@/lib/db'
 import { featureOn } from '@/lib/features'
 import { CONTAINER } from '@/lib/layout'
 
-export const metadata: Metadata = { title: 'Leaderboard — logoless', description: 'The clippers bringing in the most verified views.' }
+export const metadata: Metadata = { title: 'Leaderboard | logoless', description: 'The clippers bringing in the most verified views.' }
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ p?: string }> }) {
   await connection()

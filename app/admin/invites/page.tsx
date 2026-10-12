@@ -11,7 +11,7 @@ import { dmText, inviteUrl, STEPS } from '@/lib/invite-shared'
 import type { InviteRow } from '@/lib/invites'
 import { pageAdmin } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Artist links — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Artist links | logoless', robots: { index: false } }
 
 type Row = InviteRow & { owner_email: string | null; owner_handle: string | null; camp_title: string | null; camp_status: string | null }
 const LAST = STEPS.length - 1

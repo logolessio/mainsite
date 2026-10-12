@@ -16,9 +16,9 @@ const clean = (h: string) => decodeURIComponent(h).replace(/^@/, '')
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   await connection()
   const p = await profileByHandle(clean((await params).handle)).catch(() => null)
-  if (!p) return { title: 'Profile not found — logoless', robots: { index: false } }
+  if (!p) return { title: 'Profile not found | logoless', robots: { index: false } }
   return {
-    title: `${p.view.displayName} (@${p.view.handle}) — logoless`,
+    title: `${p.view.displayName} (@${p.view.handle}) | logoless`,
     description: p.view.bio || `${p.view.displayName} on logoless`,
     robots: { index: false }, // member pages are not for search engines to list
   }

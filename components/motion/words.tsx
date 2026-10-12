@@ -18,10 +18,11 @@ type Props = {
   sweep?: boolean
   /** Words to render in the signal colour. */
   accent?: string[]
+  align?: 'center' | 'left'
 }
 
 /** Masked word-by-word rise. Each word slides up from behind its own baseline. */
-export function Words({ id, sweep = false, text, className, delay = 0, stagger = 0.07, immediate, as = 'h2', accent = [] }: Props) {
+export function Words({ id, sweep = false, text, className, delay = 0, stagger = 0.06, immediate, as = 'h2', accent = [], align = 'center' }: Props) {
   const Tag = motion[as] as typeof motion.h2
   const { tx } = useCopy()
   const shown = tx(text)
@@ -36,13 +37,13 @@ export function Words({ id, sweep = false, text, className, delay = 0, stagger =
       initial="hidden"
       {...trigger}
       transition={{ staggerChildren: stagger, delayChildren: delay }}
-      className={cn('flex flex-wrap justify-center gap-x-[0.25em] text-center', className)}
+      className={cn('flex flex-wrap gap-x-[0.25em]', align === 'center' ? 'justify-center text-center' : 'justify-start text-left', className)}
     >
       {words.map((w, i) => (
         <span key={i} aria-hidden="true" className="inline-block overflow-hidden px-[0.08em] pt-[0.12em] pb-[0.32em] -mx-[0.08em] -mt-[0.12em] -mb-[0.32em] align-bottom">
           <motion.span
-            variants={{ hidden: { y: '115%', rotate: 5, skewX: -6 }, show: { y: '0%', rotate: 0, skewX: 0 } }}
-            transition={{ duration: 1.1, ease: EASE_OUT }}
+            variants={{ hidden: { y: '110%' }, show: { y: '0%' } }}
+            transition={{ duration: 1, ease: EASE_OUT }}
             className={cn('inline-block origin-bottom-left px-[0.08em] pt-[0.12em] pb-[0.32em] -mx-[0.08em] -mt-[0.12em] -mb-[0.32em]', sweep && 'sweep')}
           >
             {w}

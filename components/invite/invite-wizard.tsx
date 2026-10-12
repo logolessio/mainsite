@@ -232,7 +232,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
             <nav aria-label="Setup steps" className="glass-liquid sticky top-28 rounded-[2rem] p-3 backdrop-blur-xl">
               {CHAPTERS.map((c) => (
                 <div key={c} className="mb-2 last:mb-0">
-                  <p className="px-3 pt-2 pb-1 text-[11px] font-medium tracking-[0.16em] text-mute uppercase">{c}</p>
+                  <p className="px-3 pt-2 pb-1 text-[11px] font-medium text-mute">{c}</p>
                   {chapterIdx(c).map((s) => {
                     const i = STEPS.findIndex((x) => x.id === s.id)
                     const active = i === step
@@ -253,7 +253,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
 
           {/* ---------- the step ---------- */}
           <main className="min-w-0">
-            <p className="mb-6 font-mono text-xs tracking-wide text-mute uppercase md:hidden">
+            <p className="mb-6 text-xs tracking-wide text-mute md:hidden">
               Step {step + 1} of {STEPS.length} · {current.chapter}
             </p>
             <AnimatePresence mode="wait" initial={false} custom={dir}>
@@ -492,7 +492,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                       </Rise>
                       <Rise i={2}>
                         <motion.div layout className="relative overflow-hidden rounded-[2rem] border border-line-strong bg-white/[0.04] p-6 md:p-8">
-                          <p className="font-mono text-xs tracking-wide text-mute uppercase">Your budget can buy up to</p>
+                          <p className="text-xs tracking-wide text-mute">Your budget can buy up to</p>
                           <p className="mt-2 font-display text-5xl font-medium tabular-nums md:text-7xl">
                             <CountUp key={estimate} value={estimate.toLocaleString('en-US')} />
                           </p>
@@ -556,7 +556,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                             <img src={data.cover ? `/api/img/${data.cover}` : '/covers/01.jpg'} alt="" className="size-full object-cover" />
                           </div>
                           <div className="min-w-0">
-                            <p className="font-mono text-xs tracking-wide text-mute uppercase">{data.projectKind}</p>
+                            <p className="text-xs tracking-wide text-mute">{data.projectKind}</p>
                             <p className="mt-1 truncate font-display text-3xl">{data.projectTitle}</p>
                             <p className="truncate text-mute">by {data.stageName}</p>
                           </div>
@@ -571,7 +571,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                             ['Your page', `@${data.handle}`],
                           ].map(([k, v]) => (
                             <div key={k} className="bg-ink p-5">
-                              <dt className="font-mono text-xs tracking-wide text-mute uppercase">{k}</dt>
+                              <dt className="text-xs tracking-wide text-mute">{k}</dt>
                               <dd className="mt-1 text-lg">{v}</dd>
                             </div>
                           ))}
@@ -587,7 +587,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                     <Ask sub="Your campaign is created. Fund it and our team launches it. Until it is paid and launched, nobody can see it.">{flash === 'cancelled' ? 'No problem. Whenever you are ready.' : 'Fund your campaign.'}</Ask>
                     <Rise i={0}>
                       <div className="rounded-[2rem] border border-line-strong bg-white/[0.04] p-6 md:p-8">
-                        <p className="font-mono text-xs tracking-wide text-mute uppercase">{campaign.title}</p>
+                        <p className="text-xs tracking-wide text-mute">{campaign.title}</p>
                         <p className="mt-2 font-display text-6xl font-medium tabular-nums md:text-7xl">{money(campaign.budgetCents)}</p>
                         <ul className="mt-6 grid gap-3 text-sm text-mute">
                           {[

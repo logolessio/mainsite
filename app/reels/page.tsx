@@ -5,7 +5,7 @@ import { Reels } from '@/components/marketing/reels'
 import { liveCampaigns } from '@/lib/campaigns-db'
 import { featureOn } from '@/lib/features'
 
-export const metadata: Metadata = { title: 'Reels — logoless', description: 'Swipe through live campaigns, hear the track, and clip the one you love.' }
+export const metadata: Metadata = { title: 'Reels | logoless', description: 'Swipe through live campaigns, hear the track, and clip the one you love.' }
 
 export default async function Page() {
   await connection()

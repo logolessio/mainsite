@@ -7,7 +7,7 @@ import { Card, PageHeader } from '@/components/app/ui'
 import { db } from '@/lib/db'
 import { pageAdmin } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Payouts — logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Payouts | logoless', robots: { index: false } }
 
 type Raw = { id: string; amount_cents: number; status: PayoutRow['status'] | 'review'; stripe_transfer_id: string | null; failure: string | null; review_reason: string | null; created_at: number; email: string; risk_level: string }
 

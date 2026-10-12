@@ -1,11 +1,13 @@
 import { Reveal } from '@/components/motion/reveal'
-import { Layer, Tilt3D } from '@/components/motion/tilt'
 import { Words } from '@/components/motion/words'
+import { T } from '@/components/shell/copy-provider'
 import { CONTAINER } from '@/lib/layout'
 import { cn } from '@/lib/utils'
-import { T } from '@/components/shell/copy-provider'
 
-/** Hero for inner pages. Everything is centred and sits in a gently reactive 3D scene. */
+/**
+ * The top of every inner page. One very large headline, left aligned, and underneath it a quiet row:
+ * what this page is on the left, one sentence and the main actions on the right.
+ */
 export function PageHero({
   eyebrow,
   title,
@@ -15,41 +17,30 @@ export function PageHero({
   eyebrow: string
   title: string
   lede?: string
-  /** Kept for backwards compatibility. The layout is always centred. */
+  /** Kept so older pages still compile. Every hero is left aligned now. */
   align?: 'left' | 'right' | 'center'
   children?: React.ReactNode
 }) {
   return (
     <header className={cn(CONTAINER, 'pt-40 pb-24 md:pt-56 md:pb-36')}>
-      <Tilt3D global glare={false} max={4} className="mx-auto max-w-6xl">
-        <div className="flex flex-col items-center text-center">
-          <Reveal y={10}>
-            <p className="font-mono text-xs tracking-widest text-mute uppercase"><T>{eyebrow}</T></p>
-          </Reveal>
-          <Layer z={70}>
-            <Words
-              as="h1"
-              sweep
-              immediate
-              text={title}
-              delay={0.1}
-              className="mt-8 max-w-[14ch] font-display text-[13vw] leading-[0.95] md:text-[7.5vw] xl:text-[112px]"
-            />
-          </Layer>
+      <Words as="h1" align="left" immediate text={title} className="max-w-[15ch] font-display text-[clamp(3.3rem,9.6vw,10.5rem)] leading-[0.9] tracking-[-0.045em]" />
+      <div className="mt-14 grid gap-8 md:mt-24 md:grid-cols-12">
+        <Reveal delay={0.35} className="md:col-span-4">
+          <p className="text-[15px] text-paper/45"><T>{eyebrow}</T></p>
+        </Reveal>
+        <div className="md:col-span-6 md:col-start-6">
           {lede && (
-            <Layer z={25}>
-              <Reveal delay={0.5}>
-                <p className="mx-auto mt-10 max-w-xl text-pretty text-lg leading-snug text-mute md:text-xl"><T>{lede}</T></p>
-              </Reveal>
-            </Layer>
+            <Reveal delay={0.45}>
+              <p className="max-w-lg text-pretty text-xl leading-[1.4] text-paper/70 md:text-2xl"><T>{lede}</T></p>
+            </Reveal>
           )}
           {children && (
-            <Reveal delay={0.65} className="mt-12 flex flex-wrap justify-center gap-3">
+            <Reveal delay={0.6} className="mt-10 flex flex-wrap items-center gap-3">
               {children}
             </Reveal>
           )}
         </div>
-      </Tilt3D>
+      </div>
     </header>
   )
 }
@@ -64,7 +55,7 @@ export function Section({
   id?: string
 }) {
   return (
-    <section id={id} className={cn(CONTAINER, 'py-24 text-center md:py-40', className)}>
+    <section id={id} className={cn(CONTAINER, 'py-24 md:py-40', className)}>
       {children}
     </section>
   )

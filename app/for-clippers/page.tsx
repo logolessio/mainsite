@@ -1,15 +1,14 @@
 import type { Metadata } from 'next'
 
-import { CtaBand, FeatureGrid, SectionTitle } from '@/components/marketing/blocks'
-import { HorizontalStory, Principles, SplitBeat, StatRow, Ticker } from '@/components/marketing/layouts'
+import { CtaBand, FeatureGrid } from '@/components/marketing/blocks'
 import { ClipperCalculator } from '@/components/marketing/calculators'
-import { SITE } from '@/lib/site'
-import { PageHero, Section } from '@/components/marketing/page-hero'
+import { Principles, StatRow, Steps } from '@/components/marketing/layouts'
+import { PageHero } from '@/components/marketing/page-hero'
 import { PillLink } from '@/components/motion/cta'
-import { Reveal } from '@/components/motion/reveal'
+import { SITE } from '@/lib/site'
 
 export const metadata: Metadata = {
-  title: 'For clippers — logoless',
+  title: 'For clippers | logoless',
   description: 'Get paid for every 1,000 verified views your clips earn.',
 }
 
@@ -27,19 +26,18 @@ export default function Page() {
         </PillLink>
       </PageHero>
 
-      <Section>
-        <SectionTitle eyebrow="Why clippers stay" title="Keep what you make" align="right" />
+      <section className="mx-auto w-full max-w-[1400px] px-5 pb-24 md:px-10 md:pb-40">
         <FeatureGrid
           features={[
-            { icon: 'Unlock', title: 'No gatekeeping', body: 'No follower minimum and no application. Join a live campaign and start.' },
-            { icon: 'Clapperboard', title: 'Your account, your clip', body: 'Post on your own channels. You keep your audience and your content.' },
-            { icon: 'Banknote', title: 'Clear rates', body: 'The rate per 1,000 views is on every campaign before you start.' },
-            { icon: 'Link2', title: 'Link once', body: 'Connect TikTok, YouTube and Instagram a single time and submit clips in seconds.' },
-            { icon: 'Sparkles', title: 'Fair checks', body: 'Rejections come with a reason, and honest edits are never penalised.' },
-            { icon: 'Smartphone', title: 'Track from anywhere', body: 'Watch clips move from review to paid on your dashboard.' },
+            { title: 'No gatekeeping', body: 'No follower minimum and no application. Join a live campaign and start.' },
+            { title: 'Your account, your clip', body: 'Post on your own channels. You keep your audience and your content. We only read the view counts so you can be paid for them.' },
+            { title: 'Clear rates', body: 'The rate per 1,000 views is on every campaign before you start, so you always know what a clip could earn.' },
+            { title: 'Link once', body: 'Connect TikTok, YouTube and Instagram a single time and submit clips in seconds.' },
+            { title: 'Fair checks', body: 'Rejections come with a reason, and honest edits are never penalised.' },
+            { title: 'Track from anywhere', body: 'Watch clips move from review to paid on your dashboard.' },
           ]}
         />
-      </Section>
+      </section>
 
       <StatRow
         stats={[
@@ -48,14 +46,7 @@ export default function Page() {
           { value: `$${SITE.minPayoutUsd}`, label: 'Minimum payout', note: 'Withdraw through Stripe' },
         ]}
       />
-      <SplitBeat n="01" label="Your account" title="Post on your own channels" list={['Keep your audience', 'Keep your content', 'Link TikTok, YouTube and Instagram once']}>
-        <p>Your clip lives on your account, not ours. We only read the view counts so that you can be paid for them.</p>
-      </SplitBeat>
-      <SplitBeat n="02" label="Your rate" title="Know before you start" flip>
-        <p>The rate per 1,000 views is on every campaign before you join, so you always know what a clip could earn.</p>
-      </SplitBeat>
-      <HorizontalStory
-        eyebrow="Your first clip"
+      <Steps
         title="Zero to paid"
         steps={[
           { title: 'Create your account', body: 'Sign in with Discord, Google or email. It takes less than a minute.' },
@@ -64,8 +55,8 @@ export default function Page() {
           { title: 'Withdraw through Stripe', body: 'Add a payout method once. When your balance passes the minimum, withdraw.' },
         ]}
       />
+      <ClipperCalculator />
       <Principles
-        eyebrow="Good to know"
         title="Straight answers"
         items={[
           { title: 'What if a clip is rejected?', body: 'You will see the reason on the submission, and you can appeal or resubmit a fixed version when the campaign allows it.' },
@@ -73,11 +64,7 @@ export default function Page() {
           { title: 'Which platforms work?', body: 'TikTok, YouTube (Shorts and long-form) and Instagram Reels. Each campaign lists the platforms it accepts.' },
         ]}
       />
-      <ClipperCalculator />
-      <Ticker words={['Cut it', 'Post it', 'Earn from it']} />
-      <Reveal>
-        <CtaBand title="Find your first campaign" href="/" label="Browse campaigns" secondaryHref="/onboarding?role=clipper" secondaryLabel="Create account" />
-      </Reveal>
+      <CtaBand title="Find your first campaign" href="/" label="Browse campaigns" secondaryHref="/onboarding?role=clipper" secondaryLabel="Create account" />
     </main>
   )
 }
