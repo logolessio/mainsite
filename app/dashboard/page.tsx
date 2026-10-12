@@ -44,7 +44,6 @@ export default async function Page() {
       <Bento>
         {/* the number everyone comes for */}
         <Tile className="p-7 md:col-span-6 xl:col-span-5 xl:row-span-2">
-          <div className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-paper/[0.05] blur-3xl" />
           <p className="text-sm text-mute">Available to withdraw</p>
           <p className="mt-4 font-display text-6xl leading-none font-medium tracking-tight tabular-nums md:text-7xl">
             <CountUp value={usd(b.available)} />
