@@ -148,9 +148,9 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.35, ease: EASE_OUT }}
-        className="sticky top-20 z-20 mb-4 md:mb-5"
+        className="sticky top-[76px] z-20 mx-auto mb-3 max-w-3xl md:mb-4"
       >
-        <GlassSearch value={query} onChange={setQuery} resultCount={results.length} className="mx-auto max-w-3xl" />
+        <GlassSearch value={query} onChange={setQuery} resultCount={results.length} />
       </motion.div>
 
       <FilterBar
@@ -171,7 +171,7 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
 
       <section id="campaigns" aria-label="Campaigns" className="scroll-mt-40">
         {results.length > 0 ? (
-          <div className="mx-auto max-w-[1300px] rounded-[56px] border border-white/[0.12] bg-[#0a0a0c]/[0.93] p-4 shadow-[inset_0_1px_0_rgb(255_255_255/0.06)] sm:p-6 md:rounded-[72px] md:p-10">
+          <div className="mx-auto max-w-[1300px] rounded-[40px] border border-white/[0.1] bg-[#0a0a0c]/[0.93] p-4 sm:p-6 md:rounded-[52px] md:p-10">
             <CampaignGrid campaigns={results} />
           </div>
         ) : (

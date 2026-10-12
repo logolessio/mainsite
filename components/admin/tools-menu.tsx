@@ -38,6 +38,8 @@ const ago = (t: number) => {
 export function ToolsMenu() {
   const { editing, setEditing } = useCopy()
   const pathname = usePathname()
+  // inside the working areas the sidebar owns the bottom-left corner, and on phones the tab bar does
+  const corner = /^\/(dashboard|brand|admin)/.test(pathname) ? 'bottom-4 left-4 max-md:bottom-[5rem] md:left-[264px]' : 'bottom-4 left-4'
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [hidden, setHidden] = useState(false) // "view as visitor"
@@ -74,7 +76,7 @@ export function ToolsMenu() {
 
   if (hidden)
     return (
-      <button type="button" onClick={() => setHidden(false)} className="fixed bottom-4 left-4 z-[70] inline-flex h-9 items-center gap-1.5 rounded-full border border-line-strong bg-surface/90 px-3 text-xs text-mute hover:text-paper">
+      <button type="button" onClick={() => setHidden(false)} className={`fixed ${corner} z-[70] inline-flex h-9 items-center gap-1.5 rounded-full border border-line-strong bg-surface/90 px-3 text-xs text-mute hover:text-paper`}>
         <Eye className="size-3.5" /> Back to admin view
       </button>
     )
@@ -113,7 +115,7 @@ export function ToolsMenu() {
   ] as const
 
   return (
-    <div ref={wrap} className="fixed bottom-4 left-4 z-[70]">
+    <div ref={wrap} className={`fixed ${corner} z-[70]`}>
       <AnimatePresence>
         {open && (
           <motion.div

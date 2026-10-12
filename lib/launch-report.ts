@@ -223,6 +223,59 @@ export const FEATURE_LIST: Report = {
   footer: 'Sent by the logoless site itself. The full text of this and the earlier emails is saved in the project as LAUNCH_REPORT.md.',
 }
 
+export const SESSION_TWO: Report = {
+  id: 'session-two-2026-10-12',
+  to: 'emile@logoless.io',
+  subject: 'logoless: everything done since the overnight reports (redesign, white mode, new dashboard, street lab)',
+  preheader: 'What changed, what is already live, what is waiting for your push, and where to see the street experiment.',
+  title: 'Everything since the overnight reports',
+  intro: 'This covers all the work after the first two emails, in the order it happened, with what is live already and what is waiting for your push button.',
+  blocks: [
+    {
+      h: 'What you need to push (dev site > push)',
+      numbered: true,
+      items: [
+        ['White by default (light mode).', 'The whole site is white until a visitor presses Dark mode, which they can do from the home page or the footer. Member profiles, artists\' private pages and /lab stay dark.'],
+        ['New dashboard.', 'The solid sidebar and slim top bar for clippers, brands and admins, with a tab bar on phones. Until you push it, the old floating glass sidebar stays.'],
+        ['Everything else listed below is already live.', 'The dev site and the live site share the same code, so only features with a switch need a push. Checking the 16 or so switches in the push panel is worth five minutes.'],
+      ],
+    },
+    {
+      h: 'Today\'s seven things',
+      items: [
+        ['1. Dashboard.', 'The new sidebar is solid and shows the whole menu. The active page is a solid white pill, the account card sits at the bottom, there is a centred "Search or jump to a page" field in the top bar, and the overview is four large figures, a recent clips list and a setup list.'],
+        ['2. Home page.', 'The menu bar, search bar and filters now sit in one column of the same width. The campaign grid frame is less bulky. The floating search pill no longer appears on the home page, where it duplicated the search bar.'],
+        ['3. Overlaps.', 'Fixed: the Search pill and the Tools button, the announcement bar and the Push button, the Tools button and the dashboard sidebar and phone tab bar, and Reels\' sound button and the Search pill.'],
+        ['4. Names on covers.', 'Every campaign cover on the home grid now has its name and artist over a soft fade at the bottom, with no caption bar.'],
+        ['5. Better covers.', 'Rounder corners, a slightly richer colour grade, and the covers are cropped a touch so the rough white borders baked into some images disappear. The same crop is on the campaign page and the For clippers strip.'],
+        ['6. Street experiment.', 'Open dev.logoless.io/lab. It is a need-for-speed, glitchy, pop-art, halftone, spray-paint mock-up with a glitching headline, speed lines, comic panels using the real covers, a starburst for each rate and a racing ticker. It only exists on the dev site: on logoless.io that address is a 404. Nothing on it is connected to anything.'],
+        ['7. This email.', 'Sent by the site itself, as before.'],
+      ],
+    },
+    {
+      h: 'Earlier today (all live unless noted)',
+      items: [
+        ['Premium redesign.', 'Every inner page was rebuilt: one huge left-aligned headline, hairline rows, no numbered labels, no icon grids, no outline numerals, no tickers or tilting cards.'],
+        ['Honest, human copy.', 'The public copy was rewritten in a plainer voice, and it now says what the product really does: a person on your team reviews every clip and checks the view counts by hand. I removed claims the product does not support yet: automated bot detection, scheduled re-checks, an appeal button, agency workspaces and an analytics suite.'],
+        ['Home headlines.', 'Cut from sixteen slogans to eight plain ones.'],
+        ['Rounded again.', 'You asked for square, then for rounded. The square corners feature is gone and everything is rounded, including the new dashboard.'],
+        ['Dots.', 'The dot landscape is redrawn at your screen\'s real sharpness with crisp dots, depth, swelling peaks and a lean towards the cursor.'],
+        ['Moving gradient.', 'Five black and white clouds drift and morph behind the public pages. It holds still in calm mode.'],
+        ['Cover strip.', 'The For clippers page shows real live campaigns.'],
+      ],
+    },
+    {
+      h: 'Still open from before',
+      items: [
+        'Press the push button once as a test, create the @logoless.io mailboxes, put the real company name and address in lib/site.ts, confirm the footer social handles, and answer whether the Stripe account named EDUNE is the same business as logoless.',
+        'The legal documents were not rewritten. They are formal on purpose and are worth a lawyer\'s eye.',
+        'I checked the look of most pages in a browser, but not on every phone size or every page of the dashboard. Look through the new dashboard on your own screen before pushing it.',
+      ],
+    },
+  ],
+  footer: 'Sent by the logoless site itself. The full text of every report is in the project as LAUNCH_REPORT.md.',
+}
+
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string)
 const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
 
@@ -274,4 +327,4 @@ ${blocks}
 }
 
 /** The reports that can be sent, by id. */
-export const REPORTS: Record<string, Report> = { [OVERNIGHT.id]: OVERNIGHT, [ADDENDUM.id]: ADDENDUM, [FEATURE_LIST.id]: FEATURE_LIST }
+export const REPORTS: Record<string, Report> = { [OVERNIGHT.id]: OVERNIGHT, [ADDENDUM.id]: ADDENDUM, [FEATURE_LIST.id]: FEATURE_LIST, [SESSION_TWO.id]: SESSION_TWO }

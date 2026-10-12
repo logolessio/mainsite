@@ -82,7 +82,7 @@ export function CampaignCard({ campaign, others = [], poolLeftCents = null }: { 
           <div className="mx-auto w-full max-w-[500px] lg:mx-0">
             <div data-tour="cc-cover" data-vt-cover={campaign.id} className="relative aspect-square w-full overflow-hidden rounded-[2rem] shadow-[0_60px_110px_-40px_rgb(0_0_0/0.95)]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={campaign.cover} alt={`${campaign.title} cover art`} fetchPriority="high" className="absolute inset-0 h-full w-full object-cover" />
+              <img src={campaign.cover} alt={`${campaign.title} cover art`} fetchPriority="high" className="absolute inset-0 h-full w-full scale-[1.07] object-cover" />
             </div>
           </div>
 

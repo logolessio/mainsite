@@ -1,6 +1,6 @@
 # Your overnight report
 
-_Written overnight, 11 to 12 October 2026. Also emailed to emile@logoless.io._
+_Overnight, 11 to 12 October 2026. Also emailed._
 
 You asked for everything I could do to get the site ready, a dev site with a push button, and a full lowdown. This is it. The short version comes first, the detail after.
 
@@ -106,7 +106,7 @@ Sent by the logoless site itself, as you asked. A copy of this report is saved i
 
 # Overnight report: addendum
 
-_Follow-up, same night. Also emailed._
+_Follow-up. Also emailed._
 
 A short follow-up. I kept going after the first email went out, so here is what changed since, and one thing to check.
 
@@ -134,7 +134,7 @@ Sent by the logoless site itself. The full text of both emails is saved in the p
 
 # Features you can push
 
-_The feature list, emailed on 12 October 2026._
+_The feature list. Also emailed._
 
 All 14 are switched on at dev.logoless.io and switched off at logoless.io. Open the dev site, press the white "push" pill, tick the ones you want and press "Push to live". Any push can be undone from the History tab. Here is what each one is.
 
@@ -182,3 +182,46 @@ Pushing these on day one would show empty or tiny numbers.
 ---
 
 Sent by the logoless site itself. The full text of this and the earlier emails is saved in the project as LAUNCH_REPORT.md.
+
+
+# Everything since the overnight reports
+
+_Everything after the overnight reports. Also emailed._
+
+This covers all the work after the first two emails, in the order it happened, with what is live already and what is waiting for your push button.
+
+## What you need to push (dev site > push)
+
+1. **White by default (light mode).** The whole site is white until a visitor presses Dark mode, which they can do from the home page or the footer. Member profiles, artists' private pages and /lab stay dark.
+2. **New dashboard.** The solid sidebar and slim top bar for clippers, brands and admins, with a tab bar on phones. Until you push it, the old floating glass sidebar stays.
+3. **Everything else listed below is already live.** The dev site and the live site share the same code, so only features with a switch need a push. Checking the 16 or so switches in the push panel is worth five minutes.
+
+## Today's seven things
+
+- **1. Dashboard.** The new sidebar is solid and shows the whole menu. The active page is a solid white pill, the account card sits at the bottom, there is a centred "Search or jump to a page" field in the top bar, and the overview is four large figures, a recent clips list and a setup list.
+- **2. Home page.** The menu bar, search bar and filters now sit in one column of the same width. The campaign grid frame is less bulky. The floating search pill no longer appears on the home page, where it duplicated the search bar.
+- **3. Overlaps.** Fixed: the Search pill and the Tools button, the announcement bar and the Push button, the Tools button and the dashboard sidebar and phone tab bar, and Reels' sound button and the Search pill.
+- **4. Names on covers.** Every campaign cover on the home grid now has its name and artist over a soft fade at the bottom, with no caption bar.
+- **5. Better covers.** Rounder corners, a slightly richer colour grade, and the covers are cropped a touch so the rough white borders baked into some images disappear. The same crop is on the campaign page and the For clippers strip.
+- **6. Street experiment.** Open dev.logoless.io/lab. It is a need-for-speed, glitchy, pop-art, halftone, spray-paint mock-up with a glitching headline, speed lines, comic panels using the real covers, a starburst for each rate and a racing ticker. It only exists on the dev site: on logoless.io that address is a 404. Nothing on it is connected to anything.
+- **7. This email.** Sent by the site itself, as before.
+
+## Earlier today (all live unless noted)
+
+- **Premium redesign.** Every inner page was rebuilt: one huge left-aligned headline, hairline rows, no numbered labels, no icon grids, no outline numerals, no tickers or tilting cards.
+- **Honest, human copy.** The public copy was rewritten in a plainer voice, and it now says what the product really does: a person on your team reviews every clip and checks the view counts by hand. I removed claims the product does not support yet: automated bot detection, scheduled re-checks, an appeal button, agency workspaces and an analytics suite.
+- **Home headlines.** Cut from sixteen slogans to eight plain ones.
+- **Rounded again.** You asked for square, then for rounded. The square corners feature is gone and everything is rounded, including the new dashboard.
+- **Dots.** The dot landscape is redrawn at your screen's real sharpness with crisp dots, depth, swelling peaks and a lean towards the cursor.
+- **Moving gradient.** Five black and white clouds drift and morph behind the public pages. It holds still in calm mode.
+- **Cover strip.** The For clippers page shows real live campaigns.
+
+## Still open from before
+
+- Press the push button once as a test, create the @logoless.io mailboxes, put the real company name and address in lib/site.ts, confirm the footer social handles, and answer whether the Stripe account named EDUNE is the same business as logoless.
+- The legal documents were not rewritten. They are formal on purpose and are worth a lawyer's eye.
+- I checked the look of most pages in a browser, but not on every phone size or every page of the dashboard. Look through the new dashboard on your own screen before pushing it.
+
+---
+
+Sent by the logoless site itself. The full text of every report is in the project as LAUNCH_REPORT.md.

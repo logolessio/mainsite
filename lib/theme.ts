@@ -5,7 +5,7 @@ const KEY = 'logoless:theme'
 const listeners = new Set<() => void>()
 
 /** Pages that are designed on their own dark canvas keep it: member profiles and artists' private pages. */
-export const keepsDark = (pathname: string) => pathname.startsWith('/u/') || isInvitePath(pathname)
+export const keepsDark = (pathname: string) => pathname.startsWith('/u/') || pathname.startsWith('/lab') || isInvitePath(pathname)
 
 /** White unless this person has chosen dark. */
 export const getLight = () => {
@@ -35,4 +35,4 @@ export const subscribeTheme = (cb: () => void) => {
 }
 
 /** Runs in the page head before anything paints, so a returning visitor never sees a flash of dark. */
-export const THEME_BOOT = `(function(){var p=location.pathname,m=/^\\/([^\\/]+)\\/?$/.exec(p),r=${JSON.stringify([...RESERVED_SLUGS])},dark=p.indexOf('/u/')===0||p.indexOf('/@')===0||(m&&r.indexOf(m[1].toLowerCase())<0),t=null;try{t=localStorage.getItem('${KEY}')}catch(e){}if(t!=='dark'&&!dark)document.documentElement.classList.add('light')})()`
+export const THEME_BOOT = `(function(){var p=location.pathname,m=/^\\/([^\\/]+)\\/?$/.exec(p),r=${JSON.stringify([...RESERVED_SLUGS])},dark=p.indexOf('/u/')===0||p.indexOf('/lab')===0||p.indexOf('/@')===0||(m&&r.indexOf(m[1].toLowerCase())<0),t=null;try{t=localStorage.getItem('${KEY}')}catch(e){}if(t!=='dark'&&!dark)document.documentElement.classList.add('light')})()`

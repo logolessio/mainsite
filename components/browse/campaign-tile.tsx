@@ -51,7 +51,7 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
       animate={canHover ? 'rest' : 'hover'}
       whileHover="hover"
       style={tilt ? { rotateX, rotateY, transformPerspective: 700 } : undefined}
-      className="relative aspect-square w-full overflow-hidden rounded-[8px] bg-surface shadow-[0_14px_26px_-14px_rgb(0_0_0/0.9)] transition-shadow duration-300 hover:shadow-[0_34px_50px_-18px_rgb(0_0_0/0.95),0_0_0_1px_rgb(255_255_255/0.12)]"
+      className="relative aspect-square w-full overflow-hidden rounded-[22px] bg-surface shadow-[0_14px_26px_-14px_rgb(0_0_0/0.9)] transition-shadow duration-300 hover:shadow-[0_34px_50px_-18px_rgb(0_0_0/0.95)]"
     >
       <button
         type="button"
@@ -60,7 +60,7 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
           expand(campaign)
         }}
         aria-label={`${campaign.title} by ${campaign.creator}. ${usd(campaign.ratePer1k, 2)} per 1,000 views. Open campaign.`}
-        className="absolute inset-0 block rounded-[8px] text-left outline-none focus-visible:ring-2 focus-visible:ring-paper"
+        className="absolute inset-0 block rounded-[22px] text-left outline-none focus-visible:ring-2 focus-visible:ring-paper"
       >
         <motion.img
           src={campaign.cover}
@@ -69,8 +69,16 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
           variants={{ rest: { scale: 1.12 }, hover: { scale: 1.18 } }}
           style={tilt ? { x: imgX, y: imgY } : undefined}
           transition={{ duration: 0.6, ease: EASE_OUT }}
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover contrast-[1.05] saturate-[1.08]"
         />
+
+        {/* a soft fade at the bottom and the name sitting on it: that is all the text there is */}
+        <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[58%] bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+        <span className="pointer-events-none absolute inset-x-0 bottom-0 p-4 md:p-5">
+          <span className="block truncate font-display text-[1.4rem] leading-none tracking-[-0.03em] text-white md:text-[1.65rem]">{campaign.title}</span>
+          <span className="mt-1.5 block truncate text-[12px] text-white/70 md:text-[13px]">{campaign.creator}</span>
+        </span>
+        <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[22px] ring-1 ring-inset ring-white/10" />
 
         {tilt && (
           <motion.span

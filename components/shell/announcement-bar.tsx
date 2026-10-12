@@ -26,7 +26,7 @@ export function AnnouncementBar({ text, href }: { text: string; href: string }) 
   const inner = <span className="min-w-0 truncate">{text}</span>
   const cls = 'flex min-w-0 items-center gap-2 pl-5 text-sm hover:text-paper'
   return (
-    <div role="region" aria-label="Announcement" className="pointer-events-none fixed inset-x-0 bottom-5 z-[65] flex justify-center px-4">
+    <div role="region" aria-label="Announcement" className="pointer-events-none fixed inset-x-0 bottom-[5.25rem] z-[65] flex justify-center px-4 lg:bottom-5">
       <div className="glass-liquid pointer-events-auto flex h-12 max-w-[min(38rem,100%)] items-center gap-1 rounded-full pr-2 backdrop-blur-xl">
         {href ? (
           href.startsWith('/') ? (

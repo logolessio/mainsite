@@ -24,7 +24,7 @@ export function CoverStrip({ campaigns, heading = 'Live right now' }: { campaign
               <TransitionLink href={`/campaign/${c.id}`} className="group block">
                 <span className="relative block aspect-square overflow-hidden rounded-3xl bg-surface">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={c.cover} alt="" loading="lazy" className="size-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+                  <img src={c.cover} alt="" loading="lazy" className="size-full scale-[1.07] object-cover transition-transform duration-700 group-hover:scale-[1.12]" />
                 </span>
                 <span className="mt-4 block text-lg leading-tight tracking-[-0.01em]">{c.title}</span>
                 <span className="mt-1 block text-[15px] text-paper/50">

@@ -41,6 +41,7 @@ export function Spotlight() {
   const [camps, setCamps] = useState<C[] | null>(null)
   const input = useRef<HTMLInputElement>(null)
   const active = on && !HIDDEN.some((p) => pathname.startsWith(p)) && !isInvitePath(pathname)
+  const showPill = pathname !== '/' && !pathname.startsWith('/reels')
 
   useEffect(() => {
     if (!active) return
@@ -114,10 +115,10 @@ export function Spotlight() {
   let lastGroup = ''
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} aria-label="Search" className={cn('glass-liquid fixed z-[55] hidden h-11 items-center gap-3 rounded-full pr-2 pl-4 text-sm text-mute backdrop-blur-xl transition-colors hover:text-paper lg:flex', admin ? 'bottom-3.5 left-28' : 'bottom-5 left-5')}>
-        <Search className="size-4" /> Search
-        <kbd className="rounded-full bg-white/[0.08] px-2.5 py-1 font-mono text-[11px]">⌘K</kbd>
-      </button>
+      {showPill && <button type="button" onClick={() => setOpen(true)} aria-label="Search" className={cn('glass-liquid fixed z-[55] hidden h-11 items-center gap-3 rounded-full pr-2 pl-4 text-sm text-mute backdrop-blur-xl transition-colors hover:text-paper lg:flex', admin ? 'bottom-3.5 left-28' : 'bottom-5 left-5')}>
+          <Search className="size-4" /> Search
+          <kbd className="rounded-full bg-white/[0.08] px-2.5 py-1 font-mono text-[11px]">⌘K</kbd>
+        </button>}
       <AnimatePresence>
         {open && (
           <motion.div key="s" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="fixed inset-0 z-[130] flex items-start justify-center bg-black/65 px-4 pt-[14vh] backdrop-blur-sm" onMouseDown={() => setOpen(false)}>
