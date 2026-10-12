@@ -534,3 +534,14 @@ html.calm *::after {
   from { transform: scaleY(0.25); }
   to { transform: scaleY(1); }
 }
+
+/* ---------- light mode ----------
+   Swaps black and white by inverting the whole page, then putting photos, video, badges and embeds back
+   to their own colours. Logos are left inverted on purpose, so the white wordmark turns black. The dot
+   landscape is a canvas, so it simply swaps too. */
+html.light {
+  filter: invert(1) hue-rotate(180deg);
+}
+html.light :is(img:not([data-logo]), video, iframe, [data-keep]) {
+  filter: invert(1) hue-rotate(180deg);
+}

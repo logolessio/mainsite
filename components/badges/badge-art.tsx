@@ -344,7 +344,7 @@ export function BadgeArt({ badge, size = 88, locked = false, animated, className
 
   return (
     <span className={cn('relative inline-block shrink-0 select-none', r === 'legendary' && !flat && 'b-float', className)} style={{ width: size, height: size }}>
-      <svg viewBox="0 0 120 120" width={size} height={size} aria-hidden="true" className="block overflow-visible">
+      <svg data-keep viewBox="0 0 120 120" width={size} height={size} aria-hidden="true" className="block overflow-visible">
         <defs>
           <linearGradient id={`${uid}m`} x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stopColor={metal[0]} />

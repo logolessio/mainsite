@@ -5,6 +5,7 @@ import { useSyncExternalStore } from 'react'
 import { getCalm, subscribeCalm } from '@/lib/calm'
 import { useFeature } from './features-provider'
 import { CalmApply } from './calm-toggle'
+import { ThemeApply } from './theme-toggle'
 import { LiveToasts } from './live-toasts'
 import { Spotlight } from './spotlight'
 import { BadgeCelebration } from './badge-celebration'
@@ -30,6 +31,7 @@ export function AppShell({ children, announcement = null }: { children: React.Re
         <NavUserProvider>
         <Tracker />
         <CalmApply />
+        <ThemeApply />
         <Spotlight />
         <LiveToasts />
         <BadgeCelebration />

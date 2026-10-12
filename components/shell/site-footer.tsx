@@ -10,6 +10,7 @@ import { FOOTER, LEGAL_LINKS, SITE } from '@/lib/site'
 import { TransitionLink } from './transition-link'
 import { T } from '@/components/shell/copy-provider'
 import { CalmToggle } from './calm-toggle'
+import { ThemeToggle } from './theme-toggle'
 import { Feature } from './features-provider'
 
 const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin', '/@', '/u/']
@@ -95,6 +96,7 @@ export function SiteFooter() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            <ThemeToggle />
             <CalmToggle />
             <Feature id="status-page">
               <TransitionLink href="/status" className="inline-flex h-10 items-center gap-2 rounded-full border border-line-strong px-4 text-sm text-paper/60 transition-colors hover:text-paper">

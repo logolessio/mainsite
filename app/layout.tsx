@@ -9,6 +9,7 @@ import { CopyProvider } from '@/components/shell/copy-provider'
 import { FeaturesProvider } from '@/components/shell/features-provider'
 import { getAnnouncement } from '@/lib/announcement'
 import { featureState } from '@/lib/features'
+import { THEME_BOOT } from '@/lib/theme'
 import { getOverrides } from '@/lib/copy'
 import { getSession } from '@/lib/session'
 import { SITE } from '@/lib/site'
@@ -45,7 +46,12 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const blocked = fs.dev && !isAdmin
   const announcement = fs.on.announcement && !blocked ? await getAnnouncement() : null
   return (
-    <html lang="en" className={`${geist.variable} ${geistMono.variable} bg-ink`}>
+    <html lang="en" suppressHydrationWarning className={`${geist.variable} ${geistMono.variable} bg-ink`}>
+      {fs.on['light-mode'] && !blocked && (
+        <head>
+          <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+        </head>
+      )}
       <body className="antialiased">
         <FeaturesProvider dev={fs.dev} on={fs.on}>
           <CopyProvider overrides={overrides} isAdmin={isAdmin}>

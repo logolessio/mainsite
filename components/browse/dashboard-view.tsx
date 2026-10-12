@@ -9,6 +9,7 @@ import { Layer, Tilt3D } from '@/components/motion/tilt'
 import { Words } from '@/components/motion/words'
 import { useCopy } from '@/components/shell/copy-provider'
 import { Feature } from '@/components/shell/features-provider'
+import { ThemeToggle } from '@/components/shell/theme-toggle'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { HERO_VARIANTS_DEFAULT, HERO_VARIANTS_KEY } from '@/lib/copy-key'
 import { EASE_OUT } from '@/lib/layout'
@@ -112,7 +113,7 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
               className="relative mx-auto aspect-[1100/577] w-[min(480px,74vw)]"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-lg.png" alt="" width={1100} height={577} className="absolute inset-0 block size-full select-none" draggable={false} />
+              <img data-logo src="/logo-lg.png" alt="" width={1100} height={577} className="absolute inset-0 block size-full select-none" draggable={false} />
               <span aria-hidden="true" className="logo-sweep absolute inset-0" />
             </motion.div>
           )}
@@ -137,6 +138,9 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
               </TransitionLink>
             </motion.div>
           </Feature>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}>
+            <ThemeToggle variant="hero" />
+          </motion.div>
         </div>
       </section>
 
