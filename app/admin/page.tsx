@@ -6,18 +6,20 @@ import { Pill } from '@/components/admin/ui'
 import { money } from '@/lib/format'
 import { SITE } from '@/lib/site'
 import { counts, funds, health, paypalStatus } from '@/lib/admin-stats'
+import { newInquiryCount } from '@/lib/inquiries'
 import { pageAdmin } from '@/lib/user'
 
 export const metadata: Metadata = { title: 'Admin | logoless', robots: { index: false } }
 
 export default async function Page() {
   await pageAdmin()
-  const [f, c, h, sb] = await Promise.all([funds(), counts(), health(), paypalStatus()])
+  const [f, c, h, sb, inbox] = await Promise.all([funds(), counts(), health(), paypalStatus(), newInquiryCount()])
   const todo = [
     { label: 'Campaign requests', n: c.requests, href: '/admin/campaigns' },
     { label: 'Paid, ready to launch', n: c.readyToLaunch, href: '/admin/campaigns' },
     { label: 'Clips to review', n: c.pendingClips, href: '/admin/submissions' },
     { label: 'Withdrawals to check', n: c.payoutsInReview, href: '/admin/payouts' },
+    { label: 'New messages and reports', n: inbox, href: '/admin/inbox' },
     { label: 'Flagged accounts', n: c.flagged, href: '/admin/users?risk=1' },
   ]
   const attention = h.filter((x) => x.state !== 'ok')

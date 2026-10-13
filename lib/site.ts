@@ -64,5 +64,6 @@ export const FOOTER = {
     { label: 'Case studies', href: '/case-studies' },
     { label: 'Questions', href: '/faq' },
     { label: 'Contact', href: '/contact' },
+    { label: 'Report', href: '/report' },
   ],
 }

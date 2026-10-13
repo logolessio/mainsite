@@ -117,6 +117,10 @@ export function CampaignSheet({ campaign, onClose, poolLeftCents = null, inline 
         <Link href="/legal/campaign-rules" onClick={onClose} className="text-white/80 underline underline-offset-4">
           Campaign rules
         </Link>
+        {' · '}
+        <Link href={`/report?about=campaign&ref=${encodeURIComponent(`${campaign.title} by ${campaign.creator}`)}`} onClick={onClose} className="text-white/80 underline underline-offset-4">
+          Report
+        </Link>
       </p>
     </div>
   )

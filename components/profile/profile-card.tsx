@@ -11,7 +11,6 @@ import { BADGE_BY_ID } from '@/lib/badges-defs'
 import { EASE_OUT } from '@/lib/layout'
 import { FONT_SCALE, PROFILE_FONT_CLASS } from '@/lib/profile-fonts'
 import { BANNER_PRESETS, type ProfileView } from '@/lib/profile-style'
-import { SITE } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import { CardEffectLayer } from './card-effect'
 import { ProfileTheme } from './profile-theme'
@@ -225,7 +224,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
       )}
       {!preview && !isOwner && (
         <a
-          href={`mailto:${SITE.emails.abuse}?subject=${encodeURIComponent(`Report profile @${view.handle}`)}`}
+          href={`/report?about=profile&ref=${encodeURIComponent(`@${view.handle}`)}`}
           className="mt-8 inline-flex items-center gap-1.5 text-xs text-mute transition-colors hover:text-paper"
         >
           <Flag className="size-3" /> Report this profile

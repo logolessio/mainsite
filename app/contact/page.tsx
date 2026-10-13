@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { ArrowUpRight } from 'lucide-react'
-import { ContactForm } from '@/components/marketing/contact-form'
+import { InquiryForm } from '@/components/marketing/inquiry-form'
 import { Breadcrumbs } from '@/components/marketing/breadcrumbs'
 import { PageHero } from '@/components/marketing/page-hero'
 import { Reveal } from '@/components/motion/reveal'
@@ -9,20 +9,34 @@ import { T } from '@/components/shell/copy-provider'
 import { CONTAINER } from '@/lib/layout'
 import { SITE } from '@/lib/site'
 
-export const metadata: Metadata = { title: 'Contact | logoless', description: 'Write to the right inbox or use the form. A real person reads everything.', alternates: { canonical: '/contact' } }
+export const metadata: Metadata = { title: 'Contact | logoless', description: 'Send us a message here on the site, or email the right inbox. A real person reads everything.', alternates: { canonical: '/contact' } }
 
 const WAYS: [string, string, string][] = [
   ['Support', 'Accounts, campaigns and payouts', SITE.emails.support],
   ['Legal and privacy', 'Terms, your data and copyright', SITE.emails.legal],
-  ['Report abuse', 'Botting, fraud or a problem', SITE.emails.abuse],
+  ['Report abuse', 'Botting, fraud or a problem. Or use the report page', SITE.emails.abuse],
 ]
 
 export default function Page() {
   return (
     <main>
       <Breadcrumbs trail={[{ name: 'Contact' }]} />
-      <PageHero eyebrow="Contact" title="Say hello" lede="Write to the right inbox, or use the form below. A real person reads everything." />
-      <section className={`${CONTAINER} pb-24 md:pb-40`}>
+      <PageHero eyebrow="Contact" title="Say hello" lede="Send us a message right here on the site, or email the right inbox. A real person reads everything." />
+      <section className={`${CONTAINER} pb-24 md:pb-32`}>
+        <div className="grid gap-12 md:grid-cols-12 md:gap-10">
+          <div className="md:col-span-5">
+            <Words as="h2" align="left" text="Send it here" className="max-w-[10ch] font-display text-5xl leading-[0.95] tracking-[-0.04em] md:text-[5rem]" />
+            <Reveal delay={0.2} className="mt-8 max-w-sm text-lg leading-relaxed text-paper/60">
+              <p><T>Pick a topic or write your own. It goes to the team inside the site, and our reply shows up on your conversation page. We usually answer within two business days.</T></p>
+            </Reveal>
+          </div>
+          <Reveal delay={0.1} className="md:col-span-6 md:col-start-7">
+            <InquiryForm kind="contact" />
+          </Reveal>
+        </div>
+      </section>
+      <section className={`${CONTAINER} border-t border-line py-20 md:py-28`}>
+        <p className="mb-8 font-display text-3xl tracking-[-0.03em] md:text-5xl"><T>Or email us</T></p>
         <ul className="border-b border-line">
           {WAYS.map(([k, hint, mail], i) => (
             <Reveal key={k} delay={Math.min(i, 4) * 0.05}>
@@ -39,19 +53,6 @@ export default function Page() {
             </Reveal>
           ))}
         </ul>
-      </section>
-      <section className={`${CONTAINER} border-t border-line py-24 md:py-40`}>
-        <div className="grid gap-12 md:grid-cols-12 md:gap-10">
-          <div className="md:col-span-5">
-            <Words as="h2" align="left" text="Or use the form" className="max-w-[10ch] font-display text-5xl leading-[0.95] tracking-[-0.04em] md:text-[5rem]" />
-            <Reveal delay={0.2} className="mt-8 max-w-sm text-lg leading-relaxed text-paper/60">
-              <p><T>We usually reply within two business days.</T></p>
-            </Reveal>
-          </div>
-          <Reveal delay={0.1} className="md:col-span-6 md:col-start-7">
-            <ContactForm />
-          </Reveal>
-        </div>
       </section>
     </main>
   )
