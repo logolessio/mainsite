@@ -580,19 +580,20 @@ html.text-large {
   font-size: 112.5%;
 }
 
-/* ---------- the wait in onboarding: drops going round a ring ---------- */
-@keyframes orb-spin {
-  to { transform: rotate(360deg); }
-}
+/* ---------- the wait in onboarding: white liquid rising over the screen ---------- */
 @keyframes orb-fill {
   from { stroke-dashoffset: var(--c); }
   to { stroke-dashoffset: 0; }
 }
-@keyframes orb-ripple {
-  0% { transform: scale(0.88); opacity: 0.8; }
-  100% { transform: scale(1.2); opacity: 0; }
+@keyframes liquid-wave {
+  to { transform: translateX(-50%); }
 }
-.orb-spin { animation: orb-spin 8s linear infinite; }
-.orb-spin-rev { animation: orb-spin 12s linear infinite reverse; }
+@keyframes liquid-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(8vw, 6vh, 0) scale(1.15); }
+}
 .orb-fill { animation: orb-fill 5.2s cubic-bezier(0.5, 0, 0.2, 1) forwards; }
-.orb-ripple { animation: orb-ripple 3.2s ease-out infinite; }
+.liquid-wave-a { animation: liquid-wave 4.6s linear infinite; }
+.liquid-wave-b { animation: liquid-wave 7.4s linear infinite reverse; }
+.liquid-drift-a { animation: liquid-drift 9s ease-in-out infinite; }
+.liquid-drift-b { animation: liquid-drift 11s ease-in-out infinite reverse; }

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BrandIcon } from '@/components/brand-icon'
-import { useMounted } from '@/hooks/use-motion-prefs'
+import { useMotionPrefs, useMounted } from '@/hooks/use-motion-prefs'
 import { type Provider, type Role, signInWithProvider, signUpWithEmail } from '@/lib/auth'
 import { uploadImage } from '@/lib/image-client'
 import { checkHandleAvailable, resendEmailCode, verifyEmailCode } from '@/lib/onboarding'
@@ -204,65 +204,38 @@ function ProfilePill({ data, onAvatar, onBanner, busy }: { data: Data; onAvatar?
   )
 }
 
-/** One water drop with its tail trailing behind it: a head of radius r at the origin and a point three radii back. */
-function Drop({ r, angle, orbit, flip }: { r: number; angle: number; orbit: number; flip?: boolean }) {
-  const d = `M0 ${-3.1 * r} C${0.55 * r} ${-1.7 * r} ${r} ${-0.8 * r} ${r} 0A${r} ${r} 0 1 1 ${-r} 0C${-r} ${-0.8 * r} ${-0.55 * r} ${-1.7 * r} 0 ${-3.1 * r}Z`
+/**
+ * White liquid that rises up the whole screen while a profile is made, over the length of the wait. Two waves ride its surface
+ * and a soft light drifts inside it. The text above it flips to dark where it is over the liquid (a blend), so it always reads.
+ */
+function LiquidFill() {
+  const wave = 'M0 60C200 0 400 120 600 60S1000 0 1200 60 1600 120 1800 60 2200 0 2400 60V120H0Z'
   return (
-    <g transform={`rotate(${angle} 200 200) translate(${200 + orbit} 200)${flip ? ' scale(1 -1)' : ''}`}>
-      <path d={d} fill="url(#orb-drop)" />
-      <circle cx={-0.36 * r} cy={-0.3 * r} r={0.3 * r} fill="#fff" opacity=".85" />
-    </g>
+    <motion.div aria-hidden="true" initial={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 1.1, ease: 'easeOut' } }} className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      <motion.div initial={{ y: '102%' }} animate={{ y: '-6%' }} transition={{ duration: SETTLE_MS / 1000, ease: [0.42, 0.05, 0.3, 1] }} className="absolute inset-x-0 top-0 h-[112%]">
+        <svg viewBox="0 0 2400 120" preserveAspectRatio="none" className="liquid-wave-b absolute -top-[10.5vh] left-0 h-[11vh] w-[200%] text-white/55">
+          <path d={wave} fill="currentColor" />
+        </svg>
+        <svg viewBox="0 0 2400 120" preserveAspectRatio="none" className="liquid-wave-a absolute -top-[8.5vh] left-0 h-[9vh] w-[200%] text-white">
+          <path d={wave} fill="currentColor" />
+        </svg>
+        <div className="absolute inset-0 overflow-hidden bg-[linear-gradient(180deg,#ffffff_0%,#f6f8ff_45%,#e3eaff_100%)]">
+          <span className="liquid-drift-a absolute -top-[10%] -left-[10%] size-[70vmax] rounded-full bg-[radial-gradient(closest-side,rgb(255_255_255),transparent)]" />
+          <span className="liquid-drift-b absolute -right-[15%] bottom-[-20%] size-[60vmax] rounded-full bg-[radial-gradient(closest-side,rgb(196_214_255/0.8),transparent)]" />
+        </div>
+      </motion.div>
+    </motion.div>
   )
 }
 
-/**
- * The wait while a profile is made: the line sits in a circle, a thin arc fills round it over the five seconds, and water drops
- * go round and round, big ones on the outside one way and small ones on the inside the other. Ripples spread from the middle.
- */
+/** The line sits in a circle while the wait runs; a thin arc fills round it over the five seconds. */
 function SettleOrb({ line, note }: { line: string; note: string }) {
   const C = 2 * Math.PI * 190
   return (
     <div role="status" aria-live="polite" className="relative mx-auto grid aspect-square w-[min(78vw,25rem)] place-items-center">
-      <span aria-hidden="true" className="orb-ripple absolute inset-[16%] rounded-full border border-paper/25" />
-      <span aria-hidden="true" className="orb-ripple absolute inset-[16%] rounded-full border border-paper/20 [animation-delay:1.6s]" />
       <svg aria-hidden="true" viewBox="0 0 400 400" className="absolute inset-0 -rotate-90">
-        <defs>
-          <linearGradient id="orb-arc" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#ffffff" />
-            <stop offset="1" stopColor="#7cc4ff" />
-          </linearGradient>
-        </defs>
-        <circle cx="200" cy="200" r="190" fill="none" stroke="currentColor" strokeOpacity=".12" strokeWidth="2" />
-        <circle cx="200" cy="200" r="190" fill="none" stroke="url(#orb-arc)" strokeWidth="3" strokeLinecap="round" strokeDasharray={C} className="orb-fill" style={{ ['--c' as string]: C, animationDuration: `${SETTLE_MS}ms` }} />
-      </svg>
-      <svg aria-hidden="true" viewBox="0 0 400 400" className="orb-spin absolute inset-0">
-        <defs>
-          <linearGradient id="orb-drop" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#eef8ff" />
-            <stop offset="1" stopColor="#74bdf7" />
-          </linearGradient>
-        </defs>
-        {[
-          [0, 7],
-          [50, 5],
-          [105, 8],
-          [160, 5],
-          [215, 6],
-          [265, 9],
-          [315, 5],
-        ].map(([a, r]) => (
-          <Drop key={a} angle={a} r={r} orbit={190} />
-        ))}
-      </svg>
-      <svg aria-hidden="true" viewBox="0 0 400 400" className="orb-spin-rev absolute inset-0">
-        {[
-          [20, 4.5],
-          [110, 3.5],
-          [200, 5],
-          [290, 3.5],
-        ].map(([a, r]) => (
-          <Drop key={a} angle={a} r={r} orbit={158} flip />
-        ))}
+        <circle cx="200" cy="200" r="190" fill="none" stroke="currentColor" strokeOpacity=".2" strokeWidth="2" />
+        <circle cx="200" cy="200" r="190" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeDasharray={C} className="orb-fill" style={{ ['--c' as string]: C, animationDuration: `${SETTLE_MS}ms` }} />
       </svg>
       <div className="relative px-[19%] text-center">
         <h1 className="font-display text-[clamp(1.7rem,4.4vw,2.5rem)] leading-[1.08]">{line}</h1>
@@ -343,6 +316,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
   const sessionUser = preview ? null : realUser
   const router = useRouter()
   const mounted = useMounted()
+  const { reduced } = useMotionPrefs()
   const [id, setId] = useState<Id>('welcome')
   const [trail, setTrail] = useState<Id[]>([])
   const [ready, setReady] = useState(false) // the line has finished typing
@@ -602,6 +576,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
   // Portalled to the body: a page transition on an ancestor would otherwise become the "screen" this fixed layer is centred in.
   return createPortal(
     <main className="fixed inset-0 z-[60] overflow-y-auto text-center">
+      <AnimatePresence>{id === 'saving' && !reduced && <LiquidFill key="liquid" />}</AnimatePresence>
       <div aria-hidden="true" className="fixed top-0 left-0 z-[70] h-[2px] bg-paper transition-[width] duration-700 ease-out" style={{ width: `${progress * 100}%` }} />
       {preview && (
         <div className="fixed top-4 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-3 rounded-full border border-line-strong bg-ink/90 py-1.5 pr-1.5 pl-4 text-[13px] text-mute backdrop-blur">
@@ -613,7 +588,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       )}
 
       {/* The line always starts at the same height, so nothing moves while it is typed. */}
-      <div className="mx-auto w-full max-w-2xl px-6 pt-[20vh] pb-28">
+      <div className="mx-auto w-full max-w-2xl px-6 pt-[20vh] pb-28 mix-blend-difference">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.16 }}>
             {id === 'saving' ? (

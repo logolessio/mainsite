@@ -52,14 +52,14 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
             initial={{ x: '100%' }}
             animate={{ x: 0, transition: { duration: 0.5, ease: [0.32, 0.72, 0, 1] } }}
             exit={{ x: '100%', transition: { duration: 0.35, ease: [0.32, 0.72, 0, 1] } }}
-            className="no-scrollbar fixed top-0 right-0 bottom-0 z-[45] flex w-[min(26rem,100vw)] flex-col overflow-y-auto border-l border-line bg-ink px-8 pt-24 pb-8 text-paper"
+            className="no-scrollbar fixed top-0 right-0 bottom-0 z-[45] flex transform-gpu will-change-transform w-[min(26rem,100vw)] flex-col overflow-y-auto border-l border-line bg-ink px-8 pt-24 pb-8 text-paper"
           >
             <nav aria-label="Main">
               <ul className="[&:hover>li:not(:hover)]:opacity-35">
                 {NAV_LINKS.map((l, i) => {
                   const active = pathname === l.href
                   return (
-                    <motion.li key={l.href} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0, transition: { duration: 0.45, delay: 0.12 + i * 0.045, ease: [0.32, 0.72, 0, 1] } }} className="transition-opacity duration-300">
+                    <li key={l.href} className="transition-opacity duration-300">
                       <TransitionLink
                         ref={i === 0 ? first : undefined}
                         href={l.href}
@@ -70,7 +70,7 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
                         <T>{l.label}</T>
                         <span aria-hidden="true" className={cn('size-2 rounded-full bg-paper transition-transform duration-300', active ? 'scale-100' : 'scale-0')} />
                       </TransitionLink>
-                    </motion.li>
+                    </li>
                   )
                 })}
               </ul>
@@ -79,12 +79,12 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
             <div className="mt-7">
               <p className="mb-2 text-[12px] text-mute/70">More</p>
               <ul className="grid grid-cols-2 gap-x-4 [&:hover>li:not(:hover)]:opacity-40">
-                {more.map((l, i) => (
-                  <motion.li key={l.href} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0, transition: { duration: 0.4, delay: 0.4 + i * 0.04, ease: [0.32, 0.72, 0, 1] } }} className="transition-opacity duration-300">
+                {more.map((l) => (
+                  <li key={l.href} className="transition-opacity duration-300">
                     <TransitionLink href={l.href} onClick={onClose} aria-current={pathname === l.href ? 'page' : undefined} className="block py-1.5 text-[17px] text-paper/80 transition-colors hover:text-paper">
                       {l.label}
                     </TransitionLink>
-                  </motion.li>
+                  </li>
                 ))}
               </ul>
             </div>

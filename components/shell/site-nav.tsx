@@ -99,7 +99,7 @@ export function SiteNav() {
               aria-controls="site-menu"
               aria-label={open ? 'Close menu' : 'Open menu'}
               onClick={() => setOpen((v) => !v)}
-              className="grid size-11 place-items-center rounded-full bg-paper/[0.08] backdrop-blur transition-colors hover:bg-paper/[0.14]"
+              className="grid size-11 place-items-center rounded-full bg-[#1a1a1d] transition-colors hover:bg-[#242428]"
             >
               <MenuGlyph open={open} />
             </button>
