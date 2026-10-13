@@ -60,7 +60,7 @@ export function SiteNav() {
       <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
         <div
           aria-hidden="true"
-          className="absolute inset-0 h-28 bg-gradient-to-b from-ink from-40% via-ink/85 to-transparent"
+          className={cn('absolute inset-0 h-28 bg-gradient-to-b from-ink from-40% via-ink/85 to-transparent transition-opacity duration-300', open && 'opacity-0')}
         />
         <nav aria-label="Main" className="relative flex h-20 w-full items-center justify-between px-4 md:px-6">
           <TransitionLink
@@ -113,12 +113,13 @@ export function SiteNav() {
 }
 
 function MenuGlyph({ open }: { open: boolean }) {
-  const t = { type: 'spring' as const, stiffness: 500, damping: 32 }
-  // two bars, the top one shorter: they cross into an X
+  const t = { type: 'spring' as const, stiffness: 500, damping: 34 }
+  // three lines that cross into an X
   return (
-    <span aria-hidden="true" className="relative block h-3 w-[18px]">
-      <motion.span animate={open ? { top: 5, rotate: 45, width: 18 } : { top: 1, rotate: 0, width: 12 }} transition={t} className="absolute right-0 block h-[1.5px] rounded-full bg-paper" />
-      <motion.span animate={open ? { top: 5, rotate: -45 } : { top: 8, rotate: 0 }} transition={t} className="absolute right-0 block h-[1.5px] w-[18px] rounded-full bg-paper" />
+    <span aria-hidden="true" className="relative block h-[14px] w-5">
+      <motion.span animate={open ? { top: 6, rotate: 45 } : { top: 0, rotate: 0 }} transition={t} className="absolute left-0 block h-[1.5px] w-5 rounded-full bg-paper" />
+      <motion.span animate={open ? { opacity: 0, scaleX: 0.2 } : { opacity: 1, scaleX: 1 }} transition={{ duration: 0.18 }} className="absolute top-[6px] left-0 block h-[1.5px] w-5 rounded-full bg-paper" />
+      <motion.span animate={open ? { top: 6, rotate: -45 } : { top: 12, rotate: 0 }} transition={t} className="absolute left-0 block h-[1.5px] w-5 rounded-full bg-paper" />
     </span>
   )
 }
