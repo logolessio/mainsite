@@ -190,7 +190,8 @@ export function ProfileEditor() {
       <ProfileTheme dot={f.dotColor} />
       <div className="min-w-0">
         {/* ---------- the tab bar ---------- */}
-        <div role="tablist" aria-label="Profile sections" className="glass-liquid sticky top-[84px] z-20 mx-auto mb-6 flex w-fit max-w-full justify-center gap-1 overflow-x-auto rounded-full p-1.5 [scrollbar-width:none]">
+        <div className="glass-liquid sticky top-[84px] z-20 mx-auto mb-6 w-fit max-w-full rounded-full">
+        <div role="tablist" aria-label="Profile sections" className="no-scrollbar flex justify-center gap-1 overflow-x-auto overflow-y-hidden p-1.5">
           {tabs.map((t) => {
             const on = tab === t.id
             return (
@@ -202,6 +203,7 @@ export function ProfileEditor() {
               </button>
             )
           })}
+        </div>
         </div>
 
         <AnimatePresence mode="wait" initial={false}>

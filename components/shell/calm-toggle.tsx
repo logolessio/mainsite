@@ -20,6 +20,12 @@ export function CalmApply() {
  */
 export function AutoCalm() {
   const [told, setTold] = useState(false)
+  // an admin's preview: show the pop-up without changing anything
+  useEffect(() => {
+    const show = () => setTold(true)
+    window.addEventListener('logoless:preview-calm', show)
+    return () => window.removeEventListener('logoless:preview-calm', show)
+  }, [])
   useEffect(() => {
     if (hasCalmChoice()) return
     let frames = 0

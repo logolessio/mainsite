@@ -11,7 +11,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
       area="Admin"
       items={[
         { label: 'Overview', href: '/admin', icon: 'LayoutDashboard', exact: true },
-        { label: 'Launch', href: '/admin/launch', icon: 'Rocket', match: ['/admin/push'] },
+        { label: 'Launch', href: '/admin/launch', icon: 'Rocket', match: ['/admin/push', '/admin/previews'] },
         { label: 'Campaigns', href: '/admin/campaigns', icon: 'Megaphone', match: ['/admin/invites'] },
         { label: 'Clips', href: '/admin/submissions', icon: 'Clapperboard' },
         { label: 'Payouts', href: '/admin/payouts', icon: 'Banknote' },

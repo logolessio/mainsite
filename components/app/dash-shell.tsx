@@ -55,7 +55,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
           </TransitionLink>
         </div>
         <p className="px-6 pt-7 pb-3 text-[13px] text-paper/40">{area}</p>
-        <nav className="min-h-0 flex-1 overflow-y-auto px-3 pb-4">
+        <nav className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-3 pb-4">
           <ul className="grid gap-0.5">
             {items.map((it) => {
               const active = isActive(pathname, it)
@@ -158,7 +158,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
                 <X aria-hidden="true" className="size-4" />
               </button>
             </div>
-            <ul className="flex-1 overflow-y-auto px-5 py-4">
+            <ul className="no-scrollbar flex-1 overflow-y-auto px-5 py-4">
               {items.map((it) => (
                 <li key={it.href} className="border-b border-line">
                   <TransitionLink href={it.href} onClick={() => setMore(false)} className={cn('flex h-14 items-center gap-4 text-lg', isActive(pathname, it) ? 'text-paper' : 'text-paper/60')}>

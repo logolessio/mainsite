@@ -51,6 +51,17 @@ export function LiveToasts() {
     }
   }, [on, signedIn, check])
 
+  // an admin's preview: drop a made-up notification, whatever page this is
+  useEffect(() => {
+    const onPreview = () => {
+      const now = Math.floor(Date.now() / 1000)
+      const n: Note = { id: `preview-${now}-${Math.random().toString(36).slice(2, 6)}`, kind: 'submission', title: 'Your clip was approved', body: 'This is a preview of how a notification arrives.', href: null, read_at: null, created_at: now }
+      setToasts((cur) => [n, ...cur].slice(0, 3))
+    }
+    window.addEventListener('logoless:preview-toast', onPreview)
+    return () => window.removeEventListener('logoless:preview-toast', onPreview)
+  }, [])
+
   useEffect(() => {
     if (!toasts.length) return
     const t = window.setTimeout(() => setToasts((cur) => cur.slice(0, -1)), 7000)
@@ -59,9 +70,10 @@ export function LiveToasts() {
 
   const dismiss = (id: string, read = false) => {
     setToasts((cur) => cur.filter((n) => n.id !== id))
-    if (read) fetch('/api/me/notifications', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id }) }).catch(() => {})
+    if (read && !id.startsWith('preview-')) fetch('/api/me/notifications', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id }) }).catch(() => {})
   }
-  if (!on || !signedIn || pathname.startsWith('/admin')) return null
+  const previewing = toasts.some((n) => n.id.startsWith('preview-'))
+  if (!previewing && (!on || !signedIn || pathname.startsWith('/admin'))) return null
 
   return (
     <div className="pointer-events-none fixed inset-x-0 top-3 z-[120] flex flex-col items-center gap-2 px-3">

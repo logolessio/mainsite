@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { useMounted } from '@/hooks/use-motion-prefs'
 import { BrandIcon } from '@/components/brand-icon'
 import { useTheme } from '@/components/shell/theme-toggle'
 import { type Provider, type Role, signInWithProvider, signUpWithEmail } from '@/lib/auth'
@@ -66,7 +68,12 @@ function Typed({ text, onDone, speed = 30 }: { text: string; onDone?: () => void
 const pill = 'inline-flex h-14 items-center justify-center gap-3 rounded-full border border-line-strong px-8 text-[17px] transition-colors hover:border-paper hover:bg-paper/[0.06] disabled:opacity-40'
 const primary = 'inline-flex h-14 items-center justify-center rounded-full bg-paper px-10 text-[17px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40'
 
-export function OnboardingFlow({ sessionUser, initialRole }: { sessionUser: { name: string; email: string } | null; initialRole?: Role }) {
+/**
+ * `preview` is an admin's dry run: it starts as a stranger would (signed out), every question works, and nothing is sent to the
+ * server or saved. Sign-in is pretended, uploads stay in the browser, and the end of the flow shows two buttons instead of redirecting.
+ */
+export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = false }: { sessionUser: { name: string; email: string } | null; initialRole?: Role; preview?: boolean }) {
+  const sessionUser = preview ? null : realUser
   const router = useRouter()
   const theme = useTheme()
   const [id, setId] = useState<Id>('welcome')
@@ -81,6 +88,14 @@ export function OnboardingFlow({ sessionUser, initialRole }: { sessionUser: { na
   const file = useRef<HTMLInputElement>(null)
   const brand = data.role === 'brand'
   const prevId = trail[trail.length - 1]
+  // a preview may change the colour while the admin tries that step; put it back when they leave
+  const startedAs = useRef(theme.light ? 'light' : 'dark')
+  useEffect(() => {
+    if (!preview) return
+    const was = startedAs.current as 'light' | 'dark'
+    return () => theme.set(was)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preview])
   const canBack = Boolean(prevId) && !(signedIn && (['role', 'method', 'email', 'password', 'code'] as Id[]).includes(prevId))
 
   const go = (next: Id) => {
@@ -149,10 +164,11 @@ export function OnboardingFlow({ sessionUser, initialRole }: { sessionUser: { na
     const h = text.trim().toLowerCase()
     if (!h) return setHandleState('idle')
     if (!HANDLE_RE.test(h)) return setHandleState('invalid')
+    if (preview) return setHandleState('ok')
     setHandleState('checking')
     const t = window.setTimeout(async () => setHandleState((await checkHandleAvailable(h)) ? 'ok' : 'taken'), 350)
     return () => window.clearTimeout(t)
-  }, [text, id])
+  }, [text, id, preview])
 
   const choose = (role: Role) => {
     patch({ role })
@@ -160,6 +176,12 @@ export function OnboardingFlow({ sessionUser, initialRole }: { sessionUser: { na
   }
 
   const provider = async (p: Provider) => {
+    if (preview) {
+      // pretend the sign-in worked
+      setSignedIn(true)
+      patch({ email: 'preview@logoless.test', name: data.name || 'Preview Person' })
+      return go(afterAuth(data.role))
+    }
     setBusy(true)
     setError('')
     try {
@@ -180,6 +202,7 @@ export function OnboardingFlow({ sessionUser, initialRole }: { sessionUser: { na
     }
     if (id === 'password') {
       if (v.length < 10) return setError('Use at least 10 characters.')
+      if (preview) return go('code')
       setBusy(true)
       try {
         await signUpWithEmail({ email: data.email, password: text, name: '' })
@@ -192,6 +215,10 @@ export function OnboardingFlow({ sessionUser, initialRole }: { sessionUser: { na
       return
     }
     if (id === 'code') {
+      if (preview) {
+        setSignedIn(true)
+        return go(afterAuth(data.role))
+      }
       setBusy(true)
       const ok = await verifyEmailCode(data.email, v)
       setBusy(false)
@@ -201,7 +228,7 @@ export function OnboardingFlow({ sessionUser, initialRole }: { sessionUser: { na
     }
     if (id === 'paypal') {
       if (v && !EMAIL_RE.test(v)) return setError('That does not look like a PayPal email.')
-      if (v) {
+      if (v && !preview) {
         setBusy(true)
         const res = await fetch('/api/me/paypal', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: v }) }).catch(() => null)
         setBusy(false)
@@ -230,6 +257,12 @@ export function OnboardingFlow({ sessionUser, initialRole }: { sessionUser: { na
 
   const pick = async (kind: 'avatar' | 'banner', f?: File | null) => {
     if (!f || !f.type.startsWith('image/')) return
+    if (preview) {
+      // stays in the browser: nothing is uploaded
+      if (kind === 'avatar') patch({ avatarKey: 'preview', avatarUrl: URL.createObjectURL(f) })
+      else patch({ bannerKey: 'preview' })
+      return go(kind === 'avatar' ? 'banner' : 'bio')
+    }
     setBusy(true)
     setError('')
     try {
@@ -246,6 +279,11 @@ export function OnboardingFlow({ sessionUser, initialRole }: { sessionUser: { na
 
   const save = async () => {
     go('saving')
+    if (preview) {
+      await new Promise((r) => setTimeout(r, 900))
+      setReady(false)
+      return setId('done')
+    }
     const linked: Record<string, string> = {}
     for (const k of ['tiktok', 'youtube', 'instagram'] as const) if (data.linked[k].trim()) linked[k] = data.linked[k].trim()
     const res = await fetch('/api/me/onboarding', {
@@ -266,18 +304,29 @@ export function OnboardingFlow({ sessionUser, initialRole }: { sessionUser: { na
   }
 
   useEffect(() => {
-    if (id === 'done' && ready) {
+    if (id === 'done' && ready && !preview) {
       const t = window.setTimeout(() => router.push(brand ? '/brand' : '/dashboard'), 1600)
       return () => window.clearTimeout(t)
     }
-  }, [id, ready, brand, router])
+  }, [id, ready, brand, router, preview])
 
   // The control under the line: only shown once the line has finished typing.
   const textStep = (['email', 'password', 'code', 'paypal', 'name', 'handle', 'bio'] as Id[]).includes(id)
   const placeholder: Partial<Record<Id, string>> = { email: 'you@example.com', password: 'At least 10 characters', code: '6 digits', paypal: 'you@example.com', name: brand ? 'Your name or brand' : 'Your name', handle: 'username', bio: 'A line or two about you' }
 
-  return (
+  const mounted = useMounted()
+  // Portalled to the body: a page transition on an ancestor would otherwise become the "screen" this fixed layer is centred in.
+  if (!mounted) return null
+  return createPortal(
     <main className="fixed inset-0 z-[60] grid place-items-center overflow-y-auto px-6 py-16 text-center">
+      {preview && (
+        <div className="fixed top-4 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-3 rounded-full border border-line-strong bg-ink/90 py-1.5 pr-1.5 pl-4 text-[13px] text-mute backdrop-blur">
+          Preview. Nothing here is saved.
+          <Link href="/admin/previews" className="inline-flex h-8 items-center rounded-full bg-paper px-4 text-ink">
+            Exit
+          </Link>
+        </div>
+      )}
       <div className="w-full max-w-2xl">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
@@ -444,10 +493,20 @@ export function OnboardingFlow({ sessionUser, initialRole }: { sessionUser: { na
                 </div>
               )}
 
-              {id === 'done' && (
+              {id === 'done' && !preview && (
                 <Link href={brand ? '/brand' : '/dashboard'} className={primary}>
                   Go to your dashboard
                 </Link>
+              )}
+              {id === 'done' && preview && (
+                <div className="flex flex-wrap justify-center gap-3">
+                  <button type="button" className={pill} onClick={() => window.location.reload()}>
+                    Run it again
+                  </button>
+                  <Link href="/admin/previews" className={primary}>
+                    Back to previews
+                  </Link>
+                </div>
               )}
             </div>
           </motion.div>
@@ -472,6 +531,7 @@ export function OnboardingFlow({ sessionUser, initialRole }: { sessionUser: { na
           Back
         </button>
       )}
-    </main>
+    </main>,
+    document.body,
   )
 }

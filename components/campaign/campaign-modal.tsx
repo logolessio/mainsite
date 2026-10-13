@@ -31,6 +31,7 @@ export function CampaignModalProvider({ children }: { children: React.ReactNode 
     if (!campaign) return
     const prev = document.documentElement.style.overflow
     document.documentElement.style.overflow = 'hidden'
+    document.documentElement.dataset.modal = '1' // the dots behind it stop moving while it is open
     const t = window.setTimeout(() => panel.current?.focus(), 30)
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') return close()
@@ -47,6 +48,7 @@ export function CampaignModalProvider({ children }: { children: React.ReactNode 
       window.clearTimeout(t)
       window.removeEventListener('keydown', onKey)
       document.documentElement.style.overflow = prev
+      delete document.documentElement.dataset.modal
     }
   }, [campaign, close])
 
@@ -58,7 +60,7 @@ export function CampaignModalProvider({ children }: { children: React.ReactNode 
         createPortal(
           <AnimatePresence>
             {campaign && (
-              <motion.div key="overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-[140] grid place-items-center bg-black/55 p-3 md:p-6" onMouseDown={close}>
+              <motion.div key="overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-[140] flex items-center justify-center bg-black/55 p-3 md:p-6" onMouseDown={close}>
                 <motion.div
                   ref={panel}
                   role="dialog"

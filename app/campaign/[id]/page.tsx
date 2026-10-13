@@ -6,9 +6,10 @@ import { Breadcrumbs, Related } from '@/components/marketing/breadcrumbs'
 import { liveCampaign } from '@/lib/campaigns-db'
 import { db } from '@/lib/db'
 import { featureOn } from '@/lib/features'
+import { getSession } from '@/lib/session'
 import { SITE } from '@/lib/site'
 
-type Props = { params: Promise<{ id: string }> }
+type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ preview?: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   await connection()
@@ -24,8 +25,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function CampaignPage({ params }: Props) {
+export default async function CampaignPage({ params, searchParams }: Props) {
   await connection()
+  // an admin's dry run of the submit flow: ?preview=approved, declined or review. Nothing is sent.
+  const asked = (await searchParams).preview
+  const dry = asked === 'approved' || asked === 'declined' || asked === 'review' ? ((await getSession())?.user?.role === 'admin' ? asked : undefined) : undefined
   const campaign = await liveCampaign((await params).id)
   if (!campaign) notFound()
   // How much of the pool is left, from the real ledger. Only for funded campaigns, and only once the feature is pushed.
@@ -43,7 +47,7 @@ export default async function CampaignPage({ params }: Props) {
         {campaign.title} by {campaign.creator}
       </h1>
       <div className="px-4 pt-8 pb-16 md:pt-12">
-        <CampaignSheet campaign={campaign} poolLeftCents={poolLeftCents} inline />
+        <CampaignSheet campaign={campaign} poolLeftCents={poolLeftCents} preview={dry} inline />
       </div>
       <Related links={[{ href: '/', label: 'All campaigns' }, { href: '/for-clippers', label: 'How creators earn' }, { href: '/faq', label: 'Questions' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />

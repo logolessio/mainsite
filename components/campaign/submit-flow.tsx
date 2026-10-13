@@ -38,10 +38,21 @@ function embedUrl(platform: Platform, raw: string): string | null {
   }
 }
 
+const mockResult = (o: 'approved' | 'declined' | 'review'): Result => ({
+  id: 'preview',
+  status: o,
+  reason: o === 'declined' ? 'The link did not lead to a video. This is a preview, nothing was sent.' : null,
+  checks: [
+    { id: 'link', label: 'The link opens a video', state: o === 'declined' ? 'fail' : 'pass' },
+    { id: 'owner', label: 'Posted on your own account', state: o === 'review' ? 'unknown' : 'pass', note: o === 'review' ? 'A person will confirm this.' : undefined },
+    { id: 'sound', label: 'Uses the campaign sound', state: 'unknown', note: 'Sound is confirmed by a person.' },
+  ],
+})
+
 const STEPS: Step[] = ['platform', 'confirm', 'link', 'preview', 'checking']
 
 /** Picking a platform, confirming the campaign, pasting the link, watching it play, and following the check to the end. */
-export function SubmitFlow({ campaign, onBack, onClose }: { campaign: Campaign; onBack: () => void; onClose?: () => void }) {
+export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: Campaign; onBack: () => void; onClose?: () => void; preview?: 'approved' | 'declined' | 'review' }) {
   const [step, setStep] = useState<Step>(campaign.platforms.length === 1 ? 'confirm' : 'platform')
   const [platform, setPlatform] = useState<Platform>(campaign.platforms[0])
   const [url, setUrl] = useState('')
@@ -77,6 +88,14 @@ export function SubmitFlow({ campaign, onBack, onClose }: { campaign: Campaign; 
     setStep('checking')
     setPhase(1)
     const started = Date.now()
+    if (preview) {
+      // an admin's dry run: nothing is sent, the check just plays out the way they picked
+      await new Promise((r) => setTimeout(r, 1800))
+      setResult(mockResult(preview))
+      setPhase(2)
+      setBusy(false)
+      return
+    }
     try {
       const res = await fetch(`/api/campaigns/${campaign.id}/submit`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ platform, url: url.trim() }) })
       const j = (await res.json().catch(() => ({}))) as Partial<Result> & { error?: string }
@@ -105,6 +124,11 @@ export function SubmitFlow({ campaign, onBack, onClose }: { campaign: Campaign; 
   const askForReview = async () => {
     if (!result) return
     setAsked('busy')
+    if (preview) {
+      await new Promise((r) => setTimeout(r, 600))
+      setResult({ ...result, status: 'review' })
+      return setAsked('done')
+    }
     const res = await fetch(`/api/me/submissions/${result.id}/review`, { method: 'POST' }).catch(() => null)
     if (res?.ok) {
       setResult({ ...result, status: 'review' })
@@ -113,7 +137,7 @@ export function SubmitFlow({ campaign, onBack, onClose }: { campaign: Campaign; 
   }
 
   return (
-    <div className="flex min-h-[26rem] flex-col">
+    <div className="flex min-w-0 flex-col">
       <div className="flex items-center justify-between">
         {step !== 'checking' || phase < 2 ? (
           <button type="button" onClick={back} disabled={step === 'checking'} className="inline-flex items-center gap-2 text-[15px] text-white/60 transition-colors hover:text-white disabled:opacity-0">
@@ -137,7 +161,7 @@ export function SubmitFlow({ campaign, onBack, onClose }: { campaign: Campaign; 
       </div>
 
       <AnimatePresence mode="wait" initial={false}>
-        <motion.div key={step} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25, ease: EASE_OUT }} className="mt-10 flex flex-1 flex-col items-center text-center">
+        <motion.div key={step} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25, ease: EASE_OUT }} className="mt-6 flex flex-1 flex-col items-center justify-center text-center">
           {step === 'platform' && (
             <>
               <h2 className="font-display text-3xl md:text-4xl">Where did you post it?</h2>
@@ -221,8 +245,8 @@ export function SubmitFlow({ campaign, onBack, onClose }: { campaign: Campaign; 
           {step === 'preview' && (
             <>
               <h2 className="font-display text-3xl md:text-4xl">Is this the one?</h2>
-              <div className="mt-6 grid w-full gap-6 sm:grid-cols-[minmax(0,15rem)_1fr] sm:text-left">
-                <div className="mx-auto w-full max-w-[15rem] overflow-hidden rounded-3xl border border-white/15 bg-black">
+              <div className="mt-6 grid w-full gap-6 sm:grid-cols-[minmax(0,11rem)_1fr] sm:text-left">
+                <div className="mx-auto w-full max-w-[11rem] overflow-hidden rounded-3xl border border-white/15 bg-black">
                   {embed ? (
                     <iframe src={embed} title={`Your ${PLATFORM_LABEL[platform]} post`} loading="lazy" referrerPolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-popups allow-presentation" allow="encrypted-media; picture-in-picture" className="aspect-[9/16] w-full" />
                   ) : (
@@ -264,7 +288,7 @@ export function SubmitFlow({ campaign, onBack, onClose }: { campaign: Campaign; 
           {step === 'checking' && (
             <>
               <h2 className="font-display text-3xl md:text-4xl">{phase < 2 ? 'Checking your clip' : result?.status === 'approved' ? 'Success' : result?.status === 'declined' ? 'We couldn’t approve it' : 'Waiting for a person'}</h2>
-              <ol className="relative mt-12 flex w-full max-w-sm items-start justify-between" aria-label="Progress">
+              <ol className="relative mt-8 flex w-full max-w-sm items-start justify-between" aria-label="Progress">
                 <span aria-hidden="true" className="absolute top-[15px] right-4 left-4 border-t-2 border-dashed border-white/25" />
                 <motion.span aria-hidden="true" className="absolute top-[15px] left-4 border-t-2 border-dashed border-white" initial={{ width: '0%' }} animate={{ width: phase === 0 ? '0%' : phase === 1 ? 'calc(50% - 1rem)' : 'calc(100% - 2rem)' }} transition={{ duration: 0.8, ease: EASE_OUT }} />
                 {[
@@ -282,7 +306,7 @@ export function SubmitFlow({ campaign, onBack, onClose }: { campaign: Campaign; 
               </ol>
 
               {phase === 2 && result && (
-                <div className="mt-10 w-full max-w-sm">
+                <div className="mt-7 w-full max-w-sm">
                   <ul className="grid gap-2 text-left text-[14px]">
                     {result.checks.map((c) => (
                       <li key={c.id} className="flex items-start gap-3">
@@ -294,12 +318,12 @@ export function SubmitFlow({ campaign, onBack, onClose }: { campaign: Campaign; 
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-6 text-[15px] leading-relaxed text-white/70">
+                  <p className="mt-4 text-[14px] leading-relaxed text-white/70">
                     {result.status === 'approved' && 'Your clip is approved. Our team confirms the views before you are paid. You can follow it in your dashboard.'}
                     {result.status === 'review' && 'Your clip is pending. A person on our team will look at it soon. You can see where it is in your dashboard.'}
                     {result.status === 'declined' && (result.reason ?? 'The link did not lead to a video.')}
                   </p>
-                  <div className="mt-6 grid gap-3">
+                  <div className="mt-4 grid gap-2.5">
                     <Link href="/dashboard/submissions" className="inline-flex h-12 items-center justify-center rounded-full bg-white text-[15px] font-medium text-black hover:bg-white/85">
                       See it in Clips
                     </Link>

@@ -20,7 +20,7 @@ const GROUPS: Record<string, { label: string; items: Item[] }> = {
   },
   settings: { label: 'Settings', items: [{ id: 'settings', label: 'Settings', href: '/dashboard/settings' }, { id: 'notifications', label: 'Notifications', href: '/dashboard/notifications' }] },
   account: { label: 'Account', items: [{ id: 'billing', label: 'Funding', href: '/brand/billing' }, { id: 'settings', label: 'Settings', href: '/brand/settings' }] },
-  launch: { label: 'Launch', items: [{ id: 'launch', label: 'Readiness', href: '/admin/launch' }, { id: 'push', label: 'Push features', href: '/admin/push' }] },
+  launch: { label: 'Launch', items: [{ id: 'launch', label: 'Readiness', href: '/admin/launch' }, { id: 'push', label: 'Push features', href: '/admin/push' }, { id: 'previews', label: 'Previews', href: '/admin/previews' }] },
   campaigns: { label: 'Campaigns', items: [{ id: 'campaigns', label: 'Campaigns', href: '/admin/campaigns' }, { id: 'invites', label: 'Artist links', href: '/admin/invites' }] },
   content: { label: 'Content', items: [{ id: 'text', label: 'Site text', href: '/admin/text' }, { id: 'email', label: 'Email', href: '/admin/email' }] },
   system: {
