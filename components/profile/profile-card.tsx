@@ -83,17 +83,17 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
     >
       <CardEffectLayer effect={view.cardEffect} intensity={view.effectIntensity} speed={view.effectSpeed} colors={[view.accent, view.accent2]} />
 
-      {/* banner */}
-      <div className="relative h-[136px] overflow-hidden" style={bannerStyle(view.bannerKind, view.banner)}>
+      {/* banner, 16 by 9 like the picture it was made from, with the avatar over its bottom edge */}
+      <div className="relative">
+      <div className="relative aspect-video overflow-hidden" style={bannerStyle(view.bannerKind, view.banner)}>
         <span aria-hidden="true" className="absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/15 to-transparent [animation:banner-sheen_7s_ease-in-out_1.2s_infinite]" />
       </div>
-
-      {/* avatar, over the banner edge */}
       <motion.div
         initial={{ scale: 0.4, opacity: 0, rotate: -14 }}
         animate={{ scale: 1, opacity: 1, rotate: 0 }}
         transition={{ type: 'spring', stiffness: 220, damping: 16, delay: 0.25 }}
-        className="absolute top-[88px] left-4 z-20"
+        style={{ top: 'calc(100% - 48px)' }}
+        className="absolute left-4 z-20"
       >
         <div className="relative size-[96px] rounded-full ring-[7px] ring-[var(--card)]" style={{ boxShadow: `0 0 0 7px var(--card), 0 0 40px -6px ${view.accent}` }}>
           <div className="size-full overflow-hidden rounded-full bg-raised">
@@ -114,6 +114,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
           )}
         </div>
       </motion.div>
+      </div>
 
       <div className="relative z-20 px-4 pt-[62px] pb-4">
         <h1 className="flex flex-wrap items-center gap-x-2.5 gap-y-1 leading-tight">

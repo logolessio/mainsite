@@ -27,7 +27,7 @@ export async function prepareImage(file: File, w: number, h: number): Promise<st
 }
 
 export type UploadKind = 'avatar' | 'banner' | 'cover'
-const SIZES: Record<UploadKind, [number, number]> = { avatar: [512, 512], banner: [1600, 600], cover: [900, 900] }
+const SIZES: Record<UploadKind, [number, number]> = { avatar: [512, 512], banner: [1600, 900], cover: [900, 900] }
 
 export async function uploadImage(kind: UploadKind, file: File): Promise<string> {
   const data = await prepareImage(file, ...SIZES[kind])

@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowRight, Banknote, Check, CircleDollarSign, Clapperboard, Compass, Copy, ImagePlus, LayoutDashboard, Loader2, Megaphone, Plus, UserRound, X } from 'lucide-react'
+import { ArrowRight, Banknote, Check, CircleDollarSign, Clapperboard, Compass, Copy, ImagePlus, LayoutDashboard, Loader2, Mail, Megaphone, Plus, UserRound, X } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
@@ -44,12 +44,16 @@ const wait = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms))
  * Types a line out one letter at a time. The letters that are still to come are already on the page (invisible), so the line
  * takes its final shape from the first letter and nothing below it ever moves. Reduced motion shows it at once.
  */
-function Typed({ text, onDone, speed = 28 }: { text: string; onDone?: () => void; speed?: number }) {
+function Typed({ text, onDone, onReady, speed = 24 }: { text: string; onDone?: () => void; onReady?: () => void; speed?: number }) {
   const [n, setN] = useState(0)
   const done = useRef(onDone)
   done.current = onDone
+  const early = useRef(onReady)
+  early.current = onReady
+  const fired = useRef(false)
   useEffect(() => {
     setN(0)
+    fired.current = false
     if (typeof window !== 'undefined' && (window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('calm'))) {
       setN(text.length)
       return
@@ -63,6 +67,11 @@ function Typed({ text, onDone, speed = 28 }: { text: string; onDone?: () => void
     return () => window.clearInterval(id)
   }, [text, speed])
   useEffect(() => {
+    // the answer box can appear while the last words are still being typed, so nobody waits for the cursor
+    if (!fired.current && text.length && n >= Math.ceil(text.length * 0.6)) {
+      fired.current = true
+      early.current?.()
+    }
     if (n >= text.length && text.length) done.current?.()
   }, [n, text])
   return (
@@ -149,9 +158,9 @@ function AnswerField({ id, value, onChange, st, msg, prefix, ...rest }: { id: st
 /** Choices as big words side by side. Pointing at one makes it grow and the others step back. */
 function SplitChoice({ options }: { options: { label: string; hint: string; onClick: () => void }[] }) {
   return (
-    <div className="flex w-full max-w-xl divide-x divide-line-strong [&:hover>button:not(:hover)]:opacity-35 [&:focus-within>button:not(:focus-visible)]:opacity-60">
+    <div className="flex w-full max-w-xl divide-x divide-line-strong [&:hover>button:not(:hover)]:opacity-35">
       {options.map((o) => (
-        <button key={o.label} type="button" onClick={o.onClick} className="group flex flex-1 flex-col items-center px-4 py-6 text-center outline-none transition-[flex-grow,opacity] duration-500 hover:flex-[1.35] focus-visible:flex-[1.35]">
+        <button key={o.label} type="button" onClick={o.onClick} className="group flex flex-1 flex-col items-center px-4 py-6 text-center outline-none transition-[transform,opacity] duration-300 hover:scale-[1.04] focus-visible:scale-[1.04]">
           <span className="font-display text-[clamp(1.8rem,5vw,3rem)] leading-none">{o.label}</span>
           <span className="mt-3 max-w-[11rem] text-sm leading-snug text-mute">{o.hint}</span>
           <ArrowRight aria-hidden="true" className="mt-4 size-5 -translate-x-2 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100" />
@@ -179,7 +188,7 @@ function ProfilePill({ data, onAvatar, onBanner, busy }: { data: Data; onAvatar?
           </span>
         )}
       </button>
-      <button type="button" disabled={!editable} onClick={onBanner} aria-label="Banner" className={cn('relative grid h-24 min-w-0 flex-1 place-items-center overflow-hidden rounded-[1.4rem] outline-none', data.bannerUrl ? 'bg-raised' : 'border border-dashed border-line-strong text-mute', editable && 'transition-colors hover:border-paper hover:text-paper focus-visible:ring-2 focus-visible:ring-paper/60')}>
+      <button type="button" disabled={!editable} onClick={onBanner} aria-label="Banner" className={cn('relative grid aspect-video min-w-0 flex-1 place-items-center overflow-hidden rounded-[1.4rem] outline-none', data.bannerUrl ? 'bg-raised' : 'border border-dashed border-line-strong text-mute', editable && 'transition-colors hover:border-paper hover:text-paper focus-visible:ring-2 focus-visible:ring-paper/60')}>
         {data.bannerUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={data.bannerUrl} alt="Your banner" className="size-full object-cover" />
@@ -311,6 +320,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
   const [uploading, setUploading] = useState<'avatar' | 'banner' | null>(null)
   const [tick, setTick] = useState(0) // which reassuring line to show while things are set up
   const [copied, setCopied] = useState(false)
+  const [picking, setPicking] = useState<string | null>(null) // which sign-in card was pressed
   const [data, setData] = useState<Data>({ role: initialRole ?? null, email: sessionUser?.email ?? '', paypal: '', name: sessionUser?.name ?? '', handle: '', avatarKey: null, avatarUrl: null, bannerKey: null, bannerUrl: null })
   const [signedIn, setSignedIn] = useState(Boolean(sessionUser))
   const avatarInput = useRef<HTMLInputElement>(null)
@@ -403,7 +413,6 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
     if (id === 'email') return EMAIL_RE.test(v) ? { ok: true, msg: 'Looks good' } : { ok: false, msg: 'That does not look like an email address' }
     if (id === 'password') return v.length < 10 ? { ok: false, msg: `${10 - v.length} more ${10 - v.length === 1 ? 'character' : 'characters'}` } : { ok: true, msg: v.length >= 14 ? 'Strong' : 'Good' }
     if (id === 'paypal') return EMAIL_RE.test(v) ? { ok: true, msg: 'Earnings will be sent here' } : { ok: false, msg: 'That does not look like a PayPal email' }
-    if (id === 'name') return v.length < 2 ? { ok: false, msg: 'A little longer, please' } : { ok: true, msg: 'Nice to meet you' }
     if (id === 'handle') {
       const h = v.toLowerCase()
       if (!HANDLE_RE.test(h)) return { ok: false, msg: 'Use 3 to 20 letters, numbers or underscores' }
@@ -415,6 +424,8 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
   const textStep = (['email', 'password', 'code', 'paypal', 'name', 'handle'] as Id[]).includes(id)
   const verdict = useVerdict(text, textStep && id !== 'code', judge)
   const shown = forced ?? (id === 'code' ? { st: 'idle' as St, msg: '' } : verdict)
+  // the name just needs a couple of letters: no spinner, no tick
+  const canContinue = id === 'name' ? text.trim().length >= 2 : shown.st === 'ok'
 
   const choose = (role: Role) => {
     patch({ role })
@@ -485,7 +496,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       return go('name')
     }
     if (id === 'name') {
-      if (shown.st !== 'ok') return
+      if (!canContinue) return
       patch({ name: v })
       return go('handle', v.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20))
     }
@@ -583,12 +594,12 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       {/* The line always starts at the same height, so nothing moves while it is typed. */}
       <div className="mx-auto w-full max-w-2xl px-6 pt-[20vh] pb-28">
         <AnimatePresence mode="wait" initial={false}>
-          <motion.div key={id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+          <motion.div key={id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.16 }}>
             <Typed
               text={line}
+              onReady={() => setReady(true)}
               onDone={() => {
-                setReady(true)
-                if (id === 'welcome') window.setTimeout(() => go(data.role ? (signedIn ? afterAuth(data.role) : 'method') : 'role'), 700)
+                if (id === 'welcome') window.setTimeout(() => go(data.role ? (signedIn ? afterAuth(data.role) : 'method') : 'role'), 500)
               }}
             />
             <p className={cn('mt-3 min-h-[1.5rem] text-[16px] text-mute transition-opacity duration-500', ready && hint[id] ? 'opacity-100' : 'opacity-0')}>{hint[id] ?? ''}</p>
@@ -605,22 +616,48 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
 
               {id === 'method' && (
                 <>
-                  <ul className="w-full max-w-sm divide-y divide-line-strong border-y border-line-strong text-left">
+                  <div className="grid w-full max-w-md gap-3">
                     {([
-                      { label: 'Continue with Google', icon: <BrandIcon name="google" className="size-5" />, onClick: () => provider('google') },
-                      { label: 'Continue with Discord', icon: <BrandIcon name="discord" className="size-5" />, onClick: () => provider('discord') },
-                      { label: 'Use your email', icon: <span className="grid size-5 place-items-center text-lg leading-none">@</span>, onClick: () => go('email') },
-                    ]).map((m) => (
-                      <li key={m.label}>
-                        <button type="button" disabled={busy} onClick={m.onClick} className="group flex h-16 w-full items-center gap-4 px-2 text-[17px] outline-none transition-colors hover:bg-paper/[0.05] focus-visible:bg-paper/[0.05] disabled:opacity-40">
-                          {m.icon}
-                          <span className="flex-1 text-left">{m.label}</span>
-                          <ArrowRight aria-hidden="true" className="size-5 -translate-x-2 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100" />
+                      { key: 'google', title: 'Continue with Google', sub: 'One tap, no password to remember', icon: <BrandIcon name="google" className="size-6" />, run: () => provider('google') },
+                      { key: 'discord', title: 'Continue with Discord', sub: 'Use the account you already have', icon: <BrandIcon name="discord" className="size-6" />, run: () => provider('discord') },
+                      { key: 'email', title: 'Use your email', sub: 'We send a code to check it is you', icon: <Mail className="size-6" />, run: () => go('email') },
+                    ]).map((m) => {
+                      const mine = busy && picking === m.key
+                      return (
+                        <button
+                          key={m.key}
+                          type="button"
+                          disabled={busy}
+                          onClick={() => {
+                            setPicking(m.key)
+                            void m.run()
+                          }}
+                          className={cn('group flex w-full items-center gap-4 rounded-[1.7rem] border border-line-strong p-3.5 pr-5 text-left outline-none transition-[transform,border-color,background-color,opacity] duration-300 hover:-translate-y-0.5 hover:border-paper/70 hover:bg-paper/[0.05] focus-visible:ring-2 focus-visible:ring-paper/60 active:translate-y-0 active:scale-[0.99]', busy && !mine && 'opacity-35')}
+                        >
+                          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-paper text-ink">{m.icon}</span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-[17px] font-medium leading-tight">{mine ? `Opening ${m.key === 'google' ? 'Google' : 'Discord'}` : m.title}</span>
+                            <span className="mt-0.5 block text-sm text-mute">{m.sub}</span>
+                          </span>
+                          <span className="grid size-9 shrink-0 place-items-center rounded-full border border-line-strong transition-colors duration-300 group-hover:border-paper group-hover:bg-paper group-hover:text-ink">
+                            {mine ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
+                          </span>
                         </button>
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="mt-8 max-w-sm text-sm leading-relaxed text-mute">
+                      )
+                    })}
+                  </div>
+                  {error && (
+                    <p role="alert" className="mt-5 text-sm text-red-500">
+                      {error}
+                    </p>
+                  )}
+                  <p className="mt-8 text-[15px] text-mute">
+                    Already have an account?{' '}
+                    <Link href="/login" className="text-paper underline underline-offset-4">
+                      Log in
+                    </Link>
+                  </p>
+                  <p className="mt-3 max-w-sm text-xs leading-relaxed text-mute/80">
                     By continuing you agree to the{' '}
                     <Link href="/legal/terms" className="underline underline-offset-4 hover:text-paper">
                       Terms
@@ -628,10 +665,6 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                     and{' '}
                     <Link href="/legal/privacy" className="underline underline-offset-4 hover:text-paper">
                       Privacy Policy
-                    </Link>
-                    . Already have an account?{' '}
-                    <Link href="/login" className="underline underline-offset-4 hover:text-paper">
-                      Log in
                     </Link>
                     .
                   </p>
@@ -654,8 +687,8 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                     key={id}
                     value={text}
                     onChange={(v) => (setText(id === 'code' ? v.replace(/\D/g, '').slice(0, 6) : v), setError(''), setForced(null))}
-                    st={shown.st}
-                    msg={shown.msg}
+                    st={id === 'name' ? 'idle' : shown.st}
+                    msg={id === 'name' ? '' : shown.msg}
                     prefix={id === 'handle' ? '@' : undefined}
                     type={id === 'password' ? 'password' : id === 'email' || id === 'paypal' ? 'email' : 'text'}
                     inputMode={id === 'code' ? 'numeric' : undefined}
@@ -667,7 +700,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                   />
                   <div className="mt-7 flex flex-col items-center gap-4">
                     {id !== 'code' && (
-                      <button type="submit" disabled={busy || shown.st !== 'ok'} className={primary}>
+                      <button type="submit" disabled={busy || !canContinue} className={primary}>
                         {busy ? 'One moment' : 'Continue'}
                       </button>
                     )}

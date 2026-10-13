@@ -2,7 +2,7 @@ import { db, nowSec, uid } from './db'
 import { HttpError } from './http'
 
 export const MAX_IMAGE_BYTES = 450 * 1024
-export const IMAGE_LIMITS = { avatar: { w: 512, h: 512 }, banner: { w: 1600, h: 600 }, cover: { w: 900, h: 900 } } as const
+export const IMAGE_LIMITS = { avatar: { w: 512, h: 512 }, banner: { w: 1600, h: 900 }, cover: { w: 900, h: 900 } } as const
 export type ImageKind = keyof typeof IMAGE_LIMITS
 
 /** Reads width/height from the file header itself, so we never trust what the browser says. */

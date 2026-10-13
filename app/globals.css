@@ -519,7 +519,7 @@ tbody tr:nth-child(n + 7) { animation-delay: 0.24s; }
 }
 
 /* ---------- calm mode (a visitor's own switch): no floating, no particles, no looping animation ---------- */
-html.calm canvas {
+html.calm canvas:not([data-bg]) {
   display: none !important;
 }
 html.calm *,
@@ -573,11 +573,6 @@ li {
 .gradient-field {
   background: #000;
 }
-.gf {
-  position: absolute;
-  border-radius: 50%;
-  will-change: transform;
-}
 .gf-grid {
   position: absolute;
   inset: 0;
@@ -586,78 +581,6 @@ li {
   background-position: center top;
   -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 38%, #000 25%, transparent 78%);
   mask-image: radial-gradient(ellipse 80% 70% at 50% 38%, #000 25%, transparent 78%);
-}
-.gf-a {
-  width: 78vmax;
-  height: 58vmax;
-  left: -18vmax;
-  top: -24vmax;
-  background: radial-gradient(closest-side, rgb(255 255 255 / 0.3), rgb(255 255 255 / 0.1) 46%, transparent 74%);
-  animation: gf-a 41s ease-in-out infinite alternate;
-}
-.gf-b {
-  width: 62vmax;
-  height: 74vmax;
-  right: -24vmax;
-  top: 2vh;
-  background: radial-gradient(closest-side, rgb(228 228 228 / 0.24), rgb(190 190 190 / 0.07) 52%, transparent 76%);
-  animation: gf-b 53s ease-in-out infinite alternate;
-}
-.gf-c {
-  width: 86vmax;
-  height: 52vmax;
-  left: 6vmax;
-  bottom: -28vmax;
-  background: radial-gradient(closest-side, rgb(255 255 255 / 0.2), rgb(255 255 255 / 0.06) 55%, transparent 78%);
-  animation: gf-c 47s ease-in-out infinite alternate;
-}
-.gf-d {
-  width: 38vmax;
-  height: 38vmax;
-  left: 36vw;
-  top: 24vh;
-  background: radial-gradient(closest-side, rgb(255 255 255 / 0.2), transparent 72%);
-  animation: gf-d 29s ease-in-out infinite alternate;
-}
-.gf-e {
-  width: 60vmax;
-  height: 44vmax;
-  left: 28vw;
-  top: 44vh;
-  background: radial-gradient(closest-side, rgb(0 0 0 / 0.65), transparent 76%);
-  animation: gf-e 37s ease-in-out infinite alternate;
-}
-@keyframes gf-a {
-  0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1, 1); }
-  35% { transform: translate3d(18vw, 12vh, 0) rotate(24deg) scale(1.25, 0.8); }
-  70% { transform: translate3d(8vw, 30vh, 0) rotate(-16deg) scale(0.85, 1.2); }
-  100% { transform: translate3d(26vw, 6vh, 0) rotate(40deg) scale(1.15, 0.9); }
-}
-@keyframes gf-b {
-  0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1, 1); }
-  40% { transform: translate3d(-22vw, 14vh, 0) rotate(-30deg) scale(0.8, 1.3); }
-  75% { transform: translate3d(-8vw, -8vh, 0) rotate(18deg) scale(1.2, 0.85); }
-  100% { transform: translate3d(-30vw, 20vh, 0) rotate(-45deg) scale(0.95, 1.15); }
-}
-@keyframes gf-c {
-  0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1, 1); }
-  45% { transform: translate3d(22vw, -14vh, 0) rotate(-22deg) scale(1.2, 0.85); }
-  100% { transform: translate3d(-12vw, -24vh, 0) rotate(28deg) scale(0.85, 1.25); }
-}
-@keyframes gf-d {
-  0% { transform: translate3d(0, 0, 0) scale(1, 1); }
-  50% { transform: translate3d(-24vw, 18vh, 0) scale(1.4, 0.75); }
-  100% { transform: translate3d(20vw, -14vh, 0) scale(0.8, 1.35); }
-}
-@keyframes gf-e {
-  0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1, 1); }
-  50% { transform: translate3d(-26vw, -16vh, 0) rotate(35deg) scale(1.3, 0.8); }
-  100% { transform: translate3d(22vw, 12vh, 0) rotate(-25deg) scale(0.85, 1.2); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .gf {
-    animation: none;
-  }
 }
 
 /* ---------- black islands on the white page ----------
