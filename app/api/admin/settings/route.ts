@@ -13,7 +13,7 @@ export const POST = route(async (req: Request) => {
   const parsed = schema.safeParse(await body(req, 2048))
   if (!parsed.success) throw new HttpError(400, 'That value is not valid.')
   const { key, value } = parsed.data
-  const isFlag = key.endsWith('_paused') || key === 'bg_dots'
+  const isFlag = key.endsWith('_paused') || key === 'bg_dots' || key.startsWith('design_')
   if (isFlag && value !== '0' && value !== '1') throw new HttpError(400, 'That switch is on or off.')
   await setSetting(key, value)
   await audit({ id: admin.id, email: admin.email }, 'setting.change', key, value, await ipHash(req))

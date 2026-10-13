@@ -16,6 +16,8 @@ export type Campaign = {
   summary: string
   clipThis: string[]
   offLimits: string[]
+  /** How much of the budget is still unspent, 0 to 100. Unfunded campaigns count as full. */
+  budgetLeftPct?: number
 }
 
 export const campaigns: Campaign[] = [

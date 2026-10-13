@@ -7,7 +7,7 @@ import type { SocialPlatform } from '@/lib/accounts'
 import { usernameOf, type ProfileLink } from '@/lib/profile-style'
 import { AddAccountDialog } from './add-account-dialog'
 import { Badge } from './table'
-import { ActionButton, Card } from './ui'
+import { ActionButton, Card, Toggle } from './ui'
 
 const ACCOUNTS: { name: SocialPlatform; label: string; body: string }[] = [
   { name: 'tiktok', label: 'TikTok', body: 'The account you post clips from.' },
@@ -21,11 +21,16 @@ export function AccountsPanel() {
   const [dialog, setDialog] = useState<SocialPlatform | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [shown, setShown] = useState(false) // whether strangers can see these on the public profile
 
   useEffect(() => {
     fetch('/api/me/profile', { cache: 'no-store' })
       .then((r) => r.json())
-      .then((j: { profile?: { links: ProfileLink[] }; error?: string }) => (j.profile ? setLinks(j.profile.links) : setError(j.error ?? 'Could not load.')))
+      .then((j: { profile?: { links: ProfileLink[]; show?: { links?: boolean } }; error?: string }) => {
+        if (!j.profile) return setError(j.error ?? 'Could not load.')
+        setLinks(j.profile.links)
+        setShown(Boolean(j.profile.show?.links))
+      })
       .catch(() => setError('Could not load your accounts.'))
   }, [])
 
@@ -37,6 +42,15 @@ export function AccountsPanel() {
     setBusy(false)
     if (!res?.ok || !j.profile) return setError(j.error ?? 'Could not save that.')
     setLinks(j.profile.links)
+  }
+
+  const setVisible = async (next: boolean) => {
+    setShown(next)
+    const res = await fetch('/api/me/profile', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ show: { links: next } }) }).catch(() => null)
+    if (!res?.ok) {
+      setShown(!next)
+      setError('Could not save that.')
+    }
   }
 
   if (!links) return <p className="text-mute">{error || 'Loading…'}</p>
@@ -55,7 +69,7 @@ export function AccountsPanel() {
                   <span className="block font-medium">{a.label}</span>
                   <span className="block truncate text-sm text-mute">{l ? `@${usernameOf(a.name, l.url).replace(/^https?:\/\/[^/]+\/@?/, '')}` : a.body}</span>
                 </span>
-                {l && <Badge tone="good"><Check className="mr-1 size-3" />On your profile</Badge>}
+                {l && <Badge tone="good"><Check className="mr-1 size-3" />Linked</Badge>}
                 {l ? (
                   <ActionButton variant="ghost" disabled={busy} onClick={() => save(links.filter((x) => x.platform !== a.name))}>
                     {busy && <Loader2 className="size-4 animate-spin" />} Remove
@@ -68,9 +82,15 @@ export function AccountsPanel() {
           })}
         </ul>
         {error && <p role="alert" className="mt-4 text-sm text-signal">{error}</p>}
+        <div className="mt-5 flex items-center justify-between gap-4 border-t border-line pt-5">
+          <div>
+            <p className="text-[15px]">Show these on my public profile</p>
+            <p className="text-sm text-mute">Off by default. Only the accounts above are ever shown.</p>
+          </div>
+          <Toggle label="Show clipping accounts on my public profile" checked={shown} onChange={setVisible} />
+        </div>
         <p className="mt-5 border-t border-line pt-4 text-xs leading-relaxed text-mute">
-          These are the accounts you post from. They show on your profile, and our team checks every submitted clip against them, so only submit clips you posted yourself. Anything else (Spotify, Twitch, your website) lives under Links on your profile.
-        </p>
+          These are the accounts you post from. Our team checks every submitted clip against them, so only submit clips you posted yourself. You choose above whether the public can see them.</p>
       </Card>
       <AddAccountDialog
         platform={dialog}

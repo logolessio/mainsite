@@ -59,7 +59,19 @@ export async function liveCampaigns(): Promise<Campaign[]> {
   try {
     const d = await db()
     const rows = (await d.prepare("SELECT * FROM campaigns WHERE status = 'live' ORDER BY launched_at DESC, created_at DESC").all<CampaignRow>()).results
-    return rows.map(toCampaign)
+    // what is left of each funded pool, straight from the ledger
+    const pools = new Map<string, number>()
+    try {
+      const sums = (await d.prepare("SELECT campaign_id, COALESCE(SUM(amount_cents), 0) AS pool FROM ledger WHERE account = 'campaign' AND campaign_id IS NOT NULL GROUP BY campaign_id").all<{ campaign_id: string; pool: number }>()).results
+      for (const r of sums) pools.set(r.campaign_id, r.pool)
+    } catch {
+      /* no ledger yet: every campaign shows as full */
+    }
+    return rows.map((r) => {
+      const c = toCampaign(r)
+      const pool = pools.get(r.id)
+      return pool === undefined || r.budget_cents <= 0 ? c : { ...c, budgetLeftPct: Math.max(0, Math.min(100, Math.round((pool / r.budget_cents) * 100))) }
+    })
   } catch (e) {
     console.error('liveCampaigns failed', e instanceof Error ? e.message : e)
     return []

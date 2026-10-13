@@ -5,8 +5,8 @@ import { ProfileCard, type ProfileLinkOut } from '@/components/profile/profile-c
 import { Logo } from '@/components/logo'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { db } from '@/lib/db'
-import { externalHref, profileByHandle, profileStats } from '@/lib/profile'
-import { LINK_PLATFORMS, WARN_PLATFORMS } from '@/lib/profile-style'
+import { profileByHandle, profileStats } from '@/lib/profile'
+import { CLIPPING_PLATFORMS, LINK_PLATFORMS } from '@/lib/profile-style'
 import { getSession } from '@/lib/session'
 
 type Props = { params: Promise<{ handle: string }> }
@@ -49,12 +49,11 @@ export default async function ProfilePage({ params }: Props) {
   }
 
   const links: ProfileLinkOut[] = []
+  // Only the accounts a member clips from, and only when they chose to show them.
   for (const l of p.view.links) {
     const meta = LINK_PLATFORMS.find((m) => m.id === l.platform)
-    if (!meta) continue
-    // Websites, Discord invites and link hubs are the usual scam routes, so they open the warning page first.
-    const href = WARN_PLATFORMS.includes(l.platform) ? await externalHref(l.url) : l.url
-    links.push({ platform: l.platform, href, label: meta.label })
+    if (!meta || !CLIPPING_PLATFORMS.includes(l.platform)) continue
+    links.push({ platform: l.platform, href: l.url, label: meta.label })
   }
 
   return (

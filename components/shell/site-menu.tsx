@@ -1,204 +1,135 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowUpRight, Compass, LogOut, ShieldCheck, Trophy, UserRound, LayoutDashboard } from 'lucide-react'
+import { Compass, LayoutDashboard, LogOut, ShieldCheck, Trophy, UserRound } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
-import { BrandIcon } from '@/components/brand-icon'
+import { useEffect, useRef } from 'react'
 import { Avatar, useNavUser } from './nav-user'
 import { T } from './copy-provider'
 import { TransitionLink } from './transition-link'
-import { LEGAL_LINKS, NAV_LINKS, SITE } from '@/lib/site'
-import { EASE_OUT } from '@/lib/layout'
+import { LEGAL_LINKS, NAV_LINKS } from '@/lib/site'
 import { cn } from '@/lib/utils'
 
-const NOTES: Record<string, string> = {
-  '/': 'Browse every live campaign',
-  '/for-brands': 'Launch a campaign',
-  '/for-clippers': 'Get paid for your clips',
-  '/pricing': 'One simple fee',
-  '/about': 'Who we are',
-  '/faq': 'Quick answers',
-}
-
-/** A full-screen menu that opens as a circle growing out of the menu button. */
+/**
+ * A small card that drops from the menu button: the pages, then you. No full-screen takeover, no giant type. It closes when
+ * you pick something, press Escape or click anywhere else.
+ */
 export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: () => void; onTour: () => void }) {
   const pathname = usePathname()
   const { user } = useNavUser()
-  const [hover, setHover] = useState<string | null>(null)
   const first = useRef<HTMLAnchorElement>(null)
 
   useEffect(() => {
     if (!open) return
-    const t = window.setTimeout(() => first.current?.focus({ preventScroll: true }), 400)
-    return () => window.clearTimeout(t)
-  }, [open])
-
-  const links = [...NAV_LINKS, ...(user?.signedIn ? [] : [{ label: 'Log in', href: '/login' }])]
-  const reveal = (i: number) => ({
-    initial: { opacity: 0, y: 40, rotateX: -40 },
-    animate: { opacity: 1, y: 0, rotateX: 0, transition: { duration: 0.8, ease: EASE_OUT, delay: 0.22 + i * 0.055 } },
-    exit: { opacity: 0, y: -16, transition: { duration: 0.2 } },
-  })
+    const t = window.setTimeout(() => first.current?.focus({ preventScroll: true }), 120)
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.clearTimeout(t)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [open, onClose])
 
   return (
     <AnimatePresence>
       {open && (
-        <motion.div
-          key="menu"
-          id="site-menu"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Menu"
-          initial={{ clipPath: 'circle(0px at calc(100% - 44px) 44px)' }}
-          animate={{ clipPath: 'circle(150% at calc(100% - 44px) 44px)', transition: { duration: 0.85, ease: [0.76, 0, 0.24, 1] } }}
-          exit={{ clipPath: 'circle(0px at calc(100% - 44px) 44px)', transition: { duration: 0.55, ease: [0.76, 0, 0.24, 1] } }}
-          className="fixed inset-0 z-40 overflow-y-auto bg-[#060607]"
-        >
-          {/* slow drifting light behind everything */}
+        <>
+          <div aria-hidden="true" className="fixed inset-0 z-40" onMouseDown={onClose} />
           <motion.div
-            aria-hidden="true"
-            animate={{ x: [0, 80, -40, 0], y: [0, -50, 60, 0] }}
-            transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-            className="pointer-events-none absolute -top-40 -left-32 size-[620px] rounded-full bg-[radial-gradient(closest-side,rgb(255_255_255/0.10),transparent)]"
-          />
-          <motion.div
-            aria-hidden="true"
-            animate={{ x: [0, -90, 50, 0], y: [0, 70, -40, 0] }}
-            transition={{ duration: 28, repeat: Infinity, ease: 'easeInOut' }}
-            className="pointer-events-none absolute -right-40 bottom-0 size-[700px] rounded-full bg-[radial-gradient(closest-side,rgb(255_77_77/0.10),transparent)]"
-          />
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 [background-image:radial-gradient(rgb(255_255_255/0.07)_1px,transparent_1.2px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
-
-          <div className="relative mx-auto grid min-h-dvh w-full max-w-[1400px] grid-cols-1 gap-10 px-6 pt-28 pb-10 md:px-12 lg:grid-cols-[1.5fr_1fr] lg:gap-20">
-            <nav aria-label="Main" className="flex flex-col justify-center [perspective:900px]">
-              <p className="mb-6 text-xs text-mute">Menu</p>
-              <ul className="flex flex-col [&:hover_a:not(:hover)]:opacity-30" onPointerLeave={() => setHover(null)}>
-                {links.map((l, i) => {
+            key="menu"
+            id="site-menu"
+            role="dialog"
+            aria-label="Menu"
+            initial={{ opacity: 0, scale: 0.94, y: -8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: -6, transition: { duration: 0.14 } }}
+            transition={{ type: 'spring', stiffness: 520, damping: 34 }}
+            style={{ transformOrigin: 'top right' }}
+            className="island fixed top-[68px] right-3 z-[55] w-[min(17.5rem,calc(100vw-1.5rem))] rounded-[26px] border border-white/10 bg-[#0b0b0d] p-2 text-white shadow-[0_24px_60px_-18px_rgb(0_0_0/0.6)] md:right-6"
+          >
+            <nav aria-label="Main">
+              <ul>
+                {NAV_LINKS.map((l, i) => {
                   const active = pathname === l.href
                   return (
-                    <motion.li key={l.href} {...reveal(i)} className="border-b border-white/[0.07] first:border-t">
+                    <li key={l.href}>
                       <TransitionLink
                         ref={i === 0 ? first : undefined}
                         href={l.href}
                         onClick={onClose}
-                        onPointerEnter={() => setHover(l.href)}
-                        onFocus={() => setHover(l.href)}
                         aria-current={active ? 'page' : undefined}
-                        className="group flex items-center gap-4 py-1.5 transition-opacity duration-300 md:gap-8 md:py-2"
+                        className={cn('flex h-11 items-center justify-between rounded-2xl px-4 text-[15px] transition-colors hover:bg-white/10', active ? 'text-white' : 'text-white/75 hover:text-white')}
                       >
-                        {/* the word rolls up to a second copy on hover */}
-                        <span className="relative block overflow-hidden whitespace-nowrap font-display text-[clamp(2rem,min(6vw,7vh),4.6rem)] leading-[1.08]">
-                          <span className="block transition-transform duration-500 [transition-timing-function:cubic-bezier(.22,1,.36,1)] group-hover:-translate-y-full group-focus-visible:-translate-y-full">
-                            <T>{l.label}</T>
-                          </span>
-                          <span aria-hidden="true" className="absolute inset-0 block translate-y-full text-paper transition-transform duration-500 [transition-timing-function:cubic-bezier(.22,1,.36,1)] group-hover:translate-y-0 group-focus-visible:translate-y-0">
-                            {l.label}
-                          </span>
-                        </span>
-                        {active && <span aria-hidden="true" className="size-2 rounded-full bg-paper" />}
-                        <span className="ml-auto hidden items-center gap-2 text-sm text-mute opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 md:flex [&]:-translate-x-3">
-                          {NOTES[l.href] ?? ''}
-                          <ArrowUpRight className="size-4" />
-                        </span>
+                        <T>{l.label}</T>
+                        {active && <span aria-hidden="true" className="size-1.5 rounded-full bg-white" />}
                       </TransitionLink>
-                    </motion.li>
+                    </li>
                   )
                 })}
-                <motion.li {...reveal(links.length)} className="border-b border-white/[0.07]">
-                  <button type="button" onClick={onTour} className="group flex w-full items-center gap-4 py-2 text-left md:gap-8 md:py-3">
-                    <span className="w-8 font-mono text-xs text-mute">
-                      <Compass className="size-4" />
-                    </span>
-                    <span className="font-display text-[clamp(1.4rem,min(3vw,4vh),2.2rem)] text-mute transition-colors group-hover:text-paper">Take the tour</span>
-                  </button>
-                </motion.li>
               </ul>
             </nav>
 
-            <motion.aside
-              {...reveal(2)}
-              aria-label="Account"
-              className="flex flex-col justify-between gap-10 lg:py-16"
-            >
-              <div className="rounded-[34px] border border-white/10 bg-white/[0.035] p-6 shadow-[inset_0_1px_0_rgb(255_255_255/0.08)] backdrop-blur-sm">
-                {user?.signedIn ? (
-                  <>
-                    <div className="flex items-center gap-4">
-                      <Avatar src={user.profile.avatar} name={user.profile.displayName} size={60} />
-                      <div className="min-w-0">
-                        <p className="truncate font-display text-2xl leading-tight">{user.profile.displayName}</p>
-                        <p className="font-mono text-xs text-mute">@{user.profile.handle}</p>
-                      </div>
-                    </div>
-                    <div className="mt-6 grid gap-2">
-                      <MenuLink href="/dashboard" icon={<LayoutDashboard className="size-4" />} onClick={onClose} primary>Dashboard</MenuLink>
-                      <MenuLink href={`/@${user.profile.handle}`} icon={<UserRound className="size-4" />} onClick={onClose}>My profile</MenuLink>
-                      <MenuLink href="/dashboard/achievements" icon={<Trophy className="size-4" />} onClick={onClose}>Achievements</MenuLink>
-                      {user.isAdmin && <MenuLink href="/admin" icon={<ShieldCheck className="size-4" />} onClick={onClose}>Admin</MenuLink>}
-                      <button
-                        type="button"
-                        onClick={() => signOut({ callbackUrl: '/' })}
-                        className="flex h-11 items-center gap-3 rounded-full px-4 text-sm text-mute transition-colors hover:text-paper"
-                      >
-                        <LogOut className="size-4" /> Log out
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p className="font-display text-3xl leading-tight">Views have value.</p>
-                    <p className="mt-2 text-sm text-mute">Clip a campaign, post it, get paid for every thousand views.</p>
-                    <div className="mt-6 grid gap-2">
-                      <MenuLink href="/onboarding" onClick={onClose} primary>Get started</MenuLink>
-                      <MenuLink href="/login" onClick={onClose}>Log in</MenuLink>
-                    </div>
-                  </>
-                )}
-              </div>
+            <div className="mx-2 my-2 h-px bg-white/10" />
 
+            {user?.signedIn ? (
               <div>
-                <div className="flex items-center gap-5 text-mute">
-                  {(['discord', 'x', 'tiktok', 'instagram', 'youtube'] as const).map((n) => (
-                    <a key={n} href={SITE.social[n]} aria-label={n} className="transition-all hover:-translate-y-0.5 hover:text-paper">
-                      <BrandIcon name={n} className="size-5" />
-                    </a>
-                  ))}
-                </div>
-                <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-mute">
-                  {LEGAL_LINKS.slice(0, 4).map((l) => (
-                    <li key={l.href}>
-                      <TransitionLink href={l.href} onClick={onClose} className="transition-colors hover:text-paper">{l.label}</TransitionLink>
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-4 text-xs text-mute/70">© {new Date().getFullYear()} {SITE.name}</p>
+                <TransitionLink href={`/@${user.profile.handle}`} onClick={onClose} className="flex items-center gap-3 rounded-2xl px-2 py-2 transition-colors hover:bg-white/10">
+                  <Avatar src={user.profile.avatar} name={user.profile.displayName} size={36} />
+                  <span className="min-w-0">
+                    <span className="block truncate text-[15px] leading-tight">{user.profile.displayName}</span>
+                    <span className="block truncate text-[12px] text-white/50">@{user.profile.handle}</span>
+                  </span>
+                </TransitionLink>
+                <Row href="/dashboard" icon={<LayoutDashboard className="size-4" />} onClick={onClose}>Dashboard</Row>
+                <Row href={`/@${user.profile.handle}`} icon={<UserRound className="size-4" />} onClick={onClose}>Profile</Row>
+                <Row href="/dashboard/achievements" icon={<Trophy className="size-4" />} onClick={onClose}>Achievements</Row>
+                {user.isAdmin && <Row href="/admin" icon={<ShieldCheck className="size-4" />} onClick={onClose}>Admin</Row>}
               </div>
-            </motion.aside>
-          </div>
-          <span className="sr-only">{hover}</span>
-        </motion.div>
+            ) : (
+              <div className="grid gap-1.5 p-1">
+                <TransitionLink href="/onboarding" onClick={onClose} className="inline-flex h-11 items-center justify-center rounded-full bg-white text-[15px] font-medium text-black transition-colors hover:bg-white/85">
+                  Get started
+                </TransitionLink>
+                <TransitionLink href="/login" onClick={onClose} className="inline-flex h-10 items-center justify-center rounded-full text-[15px] text-white/75 transition-colors hover:bg-white/10 hover:text-white">
+                  Log in
+                </TransitionLink>
+              </div>
+            )}
+
+            <div className="mx-2 my-2 h-px bg-white/10" />
+
+            <div className="flex items-center justify-between px-1">
+              <button type="button" onClick={onTour} className="inline-flex h-9 items-center gap-2 rounded-full px-3 text-[13px] text-white/60 transition-colors hover:bg-white/10 hover:text-white">
+                <Compass className="size-3.5" /> Take the tour
+              </button>
+              {user?.signedIn && (
+                <button type="button" onClick={() => signOut({ callbackUrl: '/' })} className="inline-flex h-9 items-center gap-2 rounded-full px-3 text-[13px] text-white/60 transition-colors hover:bg-white/10 hover:text-white">
+                  <LogOut className="size-3.5" /> Log out
+                </button>
+              )}
+            </div>
+            <ul className="flex flex-wrap gap-x-3 gap-y-1 px-4 pt-1 pb-2 text-[11px] text-white/40">
+              {LEGAL_LINKS.slice(0, 3).map((l) => (
+                <li key={l.href}>
+                  <TransitionLink href={l.href} onClick={onClose} className="transition-colors hover:text-white">
+                    {l.label}
+                  </TransitionLink>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        </>
       )}
     </AnimatePresence>
   )
 }
 
-function MenuLink({ href, children, icon, onClick, primary }: { href: string; children: React.ReactNode; icon?: React.ReactNode; onClick: () => void; primary?: boolean }) {
+function Row({ href, children, icon, onClick }: { href: string; children: React.ReactNode; icon: React.ReactNode; onClick: () => void }) {
   return (
-    <TransitionLink
-      href={href}
-      onClick={onClick}
-      className={cn(
-        'group flex h-12 items-center justify-between rounded-full px-5 text-sm transition-all',
-        primary ? 'bg-paper font-medium text-ink hover:bg-paper/85' : 'border border-white/12 hover:bg-white/8',
-      )}
-    >
-      <span className="flex items-center gap-3">
-        {icon}
-        {children}
-      </span>
-      <ArrowUpRight className="size-4 opacity-60 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+    <TransitionLink href={href} onClick={onClick} className="flex h-10 items-center gap-3 rounded-2xl px-4 text-[14px] text-white/75 transition-colors hover:bg-white/10 hover:text-white">
+      <span className="text-white/50">{icon}</span>
+      {children}
     </TransitionLink>
   )
 }

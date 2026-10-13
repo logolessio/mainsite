@@ -17,12 +17,8 @@ import {
   CARD_EFFECTS,
   DOT_SWATCHES,
   FONT_OPTIONS,
-  LINK_GROUPS,
-  buildLink,
+  CLIPPING_PLATFORMS,
   LINK_PLATFORMS,
-  USERNAME_LINKS,
-  usernameOf,
-  MAX_LINKS,
   NAME_EFFECTS,
   SHOW_OPTIONS,
   type ProfileLink,
@@ -53,11 +49,9 @@ export function ProfileEditor() {
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState<'avatar' | 'banner' | 'discord' | null>(null)
   const [pendingAvatar, setPendingAvatar] = useState<string | null | undefined>(undefined)
-  const [editing, setEditing] = useState<string | null>(null) // platform being edited
   const [discordId, setDiscordId] = useState('')
   const [tab, setTab] = useState<TabId>('profile')
   const [discordOpen, setDiscordOpen] = useState(false)
-  const [q, setQ] = useState('')
   const avatarInput = useRef<HTMLInputElement>(null)
   const bannerInput = useRef<HTMLInputElement>(null)
 
@@ -161,12 +155,9 @@ export function ProfileEditor() {
     }
   }
 
-  const upsertLink = (l: ProfileLink) => setF((c) => (c ? { ...c, links: [...c.links.filter((x) => x.platform !== l.platform), l] } : c))
-  const removeLink = (platform: string) => setF((c) => (c ? { ...c, links: c.links.filter((x) => x.platform !== platform) } : c))
-
   if (!f || !loaded) return <p className="text-mute">{error || 'Loading your profile…'}</p>
 
-  const previewLinks = f.links.map((l) => ({ platform: l.platform, href: l.url, label: meta(l.platform)?.label ?? l.platform }))
+  const previewLinks = f.links.filter((l) => CLIPPING_PLATFORMS.includes(l.platform)).map((l) => ({ platform: l.platform, href: l.url, label: meta(l.platform)?.label ?? l.platform }))
   const nameVars = { ['--na' as string]: f.accent, ['--nb' as string]: f.accent2 }
   const dirty = pendingAvatar !== undefined || JSON.stringify(f) !== JSON.stringify(loaded.profile)
   const discard = () => {
@@ -175,12 +166,10 @@ export function ProfileEditor() {
     setError('')
     setNote('')
   }
-  const matches = (p: (typeof LINK_PLATFORMS)[number]) => !q.trim() || p.label.toLowerCase().includes(q.trim().toLowerCase())
   const tabs: { id: TabId; label: string; icon: LucideIcon; badge?: number }[] = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'style', label: 'Style', icon: Palette },
     { id: 'effects', label: 'Effects', icon: Sparkles },
-    { id: 'links', label: 'Links', icon: Link2, badge: f.links.length },
     { id: 'privacy', label: 'Privacy', icon: Eye },
     { id: 'preview', label: 'Preview', icon: Eye },
   ]
@@ -357,60 +346,6 @@ export function ProfileEditor() {
               </div>
             )}
 
-            {/* ================= LINKS ================= */}
-            {tab === 'links' && (
-              <div className="grid gap-7">
-                <Group title="On your profile" hint={`${f.links.length} of ${MAX_LINKS}`}>
-                  {f.links.length === 0 ? (
-                    <p className="rounded-2xl border border-dashed border-line-strong px-4 py-6 text-center text-sm text-mute">Nothing yet. Pick a platform below and type your username.</p>
-                  ) : (
-                    <ul className="flex flex-wrap gap-2">
-                      <AnimatePresence initial={false}>
-                        {f.links.map((l) => (
-                          <motion.li key={l.platform} layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} className="group/l relative">
-                            <button type="button" onClick={() => setEditing(l.platform)} aria-label={`Edit ${meta(l.platform)?.label}`} title={`${meta(l.platform)?.label}: ${usernameOf(l.platform, l.url)}`} className="grid size-14 place-items-center rounded-2xl border border-line-strong bg-white/[0.05] transition-all hover:-translate-y-0.5 hover:bg-white/[0.12]">
-                              {l.platform === 'website' ? <Globe className="size-6" /> : <BrandIcon name={l.platform} className="size-6" />}
-                            </button>
-                            <button type="button" onClick={() => removeLink(l.platform)} aria-label={`Remove ${meta(l.platform)?.label}`} className="absolute -top-1.5 -right-1.5 hidden size-6 place-items-center rounded-full bg-signal text-ink group-hover/l:grid group-focus-within/l:grid">
-                              <X className="size-3.5" />
-                            </button>
-                          </motion.li>
-                        ))}
-                      </AnimatePresence>
-                    </ul>
-                  )}
-                </Group>
-                <Group title="Add a platform" hint="Just your username">
-                  <label className="mb-4 flex h-11 items-center gap-2 rounded-full border border-line-strong bg-ink/60 px-4 focus-within:border-paper/60">
-                    <Search className="size-4 text-mute" />
-                    <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search TikTok, Spotify, Twitch…" aria-label="Search platforms" className="h-full flex-1 bg-transparent text-sm outline-none placeholder:text-mute" />
-                  </label>
-                  {LINK_GROUPS.map((g) => {
-                    const list = LINK_PLATFORMS.filter((p) => p.group === g && matches(p))
-                    if (!list.length) return null
-                    return (
-                      <div key={g} className="mb-5 last:mb-0">
-                        <p className="mb-2 text-[11px] text-mute">{g}</p>
-                        <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
-                          {list.map((p) => {
-                            const have = f.links.some((l) => l.platform === p.id)
-                            return (
-                              <button key={p.id} type="button" onClick={() => setEditing(p.id)} disabled={!have && f.links.length >= MAX_LINKS} title={p.label} className={cn('group relative flex flex-col items-center gap-1.5 rounded-xl border px-1 py-3 text-[11px] leading-tight transition-all hover:-translate-y-0.5 hover:bg-paper/10 disabled:opacity-35', have ? 'border-paper/50 bg-paper/[0.07]' : 'border-line text-mute hover:text-paper')}>
-                                {p.id === 'website' ? <Globe className="size-5" /> : <BrandIcon name={p.id} className="size-5" />}
-                                <span className="max-w-full truncate">{p.label}</span>
-                                {have && <Check className="absolute top-1 right-1 size-3 text-paper" />}
-                              </button>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </Group>
-                <p className="text-xs leading-snug text-mute">Each one shows on your profile as a small icon button. Visitors are told these are not official logoless links, and websites and invites open a warning page first.</p>
-              </div>
-            )}
-
             {/* ================= PRIVACY ================= */}
             {tab === 'privacy' && <Visibility show={f.show} onChange={(show) => set('show', show)} />}
 
@@ -449,24 +384,11 @@ export function ProfileEditor() {
         <PreviewPane f={f} previewLinks={previewLinks} />
       </div>
 
-      <LinkDialog
-        platform={editing}
-        current={f.links.find((l) => l.platform === editing)?.url ?? ''}
-        onClose={() => setEditing(null)}
-        onSave={(l) => {
-          upsertLink(l)
-          setEditing(null)
-        }}
-        onRemove={(p) => {
-          removeLink(p)
-          setEditing(null)
-        }}
-      />
     </div>
   )
 }
 
-type TabId = 'profile' | 'style' | 'effects' | 'links' | 'privacy' | 'preview'
+type TabId = 'profile' | 'style' | 'effects' | 'privacy' | 'preview'
 
 const EFFECT_GROUPS: { title: string; ids: string[] }[] = [
   { title: 'Weather', ids: ['snow', 'rain', 'lightning', 'smoke'] },
@@ -507,111 +429,6 @@ function PreviewPane({ f, previewLinks }: { f: ProfileView; previewLinks: { plat
         </div>
       </div>
     </div>
-  )
-}
-
-function Modal({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
-  return (
-    <AnimatePresence>
-      {open && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[90] grid place-items-center bg-black/70 px-4 backdrop-blur-sm" onClick={onClose}>
-          <motion.div
-            role="dialog"
-            aria-modal="true"
-            aria-label={title}
-            initial={{ opacity: 0, y: 24, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.35, ease: EASE_OUT } }}
-            exit={{ opacity: 0, y: 12, scale: 0.97, transition: { duration: 0.18 } }}
-            onClick={(e) => e.stopPropagation()}
-            className="max-h-[88dvh] w-full max-w-lg overflow-y-auto rounded-[26px] border border-line-strong bg-surface p-5"
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-2xl">{title}</h2>
-              <button type="button" aria-label="Close" onClick={onClose} className="grid size-9 place-items-center rounded-full hover:bg-paper/10">
-                <X className="size-4" />
-              </button>
-            </div>
-            {children}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  )
-}
-
-function LinkDialog({ platform, current, onClose, onSave, onRemove }: { platform: string | null; current: string; onClose: () => void; onSave: (l: ProfileLink) => void; onRemove: (p: string) => void }) {
-  const [url, setUrl] = useState('')
-  const [err, setErr] = useState('')
-  useEffect(() => {
-    setUrl(platform ? usernameOf(platform, current) : current)
-    setErr('')
-  }, [platform, current])
-  const m = platform ? meta(platform) : null
-
-  const submit = () => {
-    if (!m) return
-    const r = buildLink(m.id, url)
-    if ('error' in r) return setErr(r.error)
-    onSave({ platform: m.id as ProfileLink['platform'], url: r.url })
-  }
-  const spec = m ? USERNAME_LINKS[m.id] : undefined
-  const built = m && url.trim() ? buildLink(m.id, url) : null
-
-  return (
-    <Modal open={Boolean(m)} onClose={onClose} title={m ? `${current ? 'Edit' : 'Add'} ${m.label}` : ''}>
-      {m && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            submit()
-          }}
-          className="grid gap-4"
-        >
-          <div className="flex items-center gap-3">
-            <span className="grid size-12 place-items-center rounded-xl bg-white/[0.07]">{m.id === 'website' ? <Globe className="size-6" /> : <BrandIcon name={m.id} className="size-6" />}</span>
-            <p className="text-sm text-mute">{m.id === 'website' ? 'Visitors see a warning page before your site opens.' : spec ? `Just type your ${m.label} username. We build the link for you.` : `Paste the link to your ${m.label}.`}</p>
-          </div>
-          <Field label={spec ? 'Username' : 'Link'}>
-            <div className="flex items-stretch">
-              {spec && <span className="grid shrink-0 place-items-center rounded-l-[inherit] border border-r-0 border-line-strong bg-white/[0.04] px-3 font-mono text-xs text-mute select-none">{spec.label}</span>}
-              <Input
-                autoFocus
-                value={url}
-                onChange={(e) => {
-                  setUrl(e.target.value)
-                  setErr('')
-                }}
-                placeholder={spec ? 'yourname' : m.placeholder}
-                inputMode={spec ? 'text' : 'url'}
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                aria-invalid={Boolean(err)}
-                className="min-w-0 flex-1"
-              />
-            </div>
-          </Field>
-          {built && 'url' in built && !err && <p className="-mt-2 truncate text-xs text-mute">Opens <span className="text-paper/80">{built.url.replace(/^https:\/\//, '')}</span></p>}
-          {spec && !err && !built && <p className="-mt-2 text-xs text-mute">Already have the full link? Paste it instead, that works too.</p>}
-          {err && <p role="alert" className="text-sm text-signal">{err}</p>}
-          <div className="flex flex-wrap items-center gap-2">
-            <ActionButton type="submit" className="rounded-full">{current ? 'Save link' : 'Add link'}</ActionButton>
-            {current && (
-              <button type="button" onClick={() => onRemove(m.id)} className="inline-flex h-10 items-center gap-1.5 rounded-full border border-signal/50 px-4 text-sm text-signal hover:bg-signal/10">
-                <Trash2 className="size-3.5" /> Remove
-              </button>
-            )}
-            <button type="button" onClick={onClose} className="text-sm text-mute hover:text-paper">Cancel</button>
-          </div>
-        </form>
-      )}
-    </Modal>
   )
 }
 

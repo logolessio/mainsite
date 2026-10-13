@@ -73,7 +73,7 @@ async function facts(userId: string): Promise<Facts> {
            (SELECT COUNT(*) FROM users WHERE created_at <= (SELECT created_at FROM users WHERE id = ?1)) AS rank,
            (SELECT COUNT(*) FROM badges_unlocked WHERE user_id = ?1 AND badge_id != 'completionist') AS badges,
            (SELECT CASE WHEN LENGTH(bio) > 0 THEN 1 ELSE 0 END FROM profiles WHERE user_id = ?1) AS hasBio,
-           (SELECT CASE WHEN links_json != '[]' OR website IS NOT NULL THEN 1 ELSE 0 END FROM profiles WHERE user_id = ?1) AS hasLink,
+           (SELECT CASE WHEN links_json != '[]' THEN 1 ELSE 0 END FROM profiles WHERE user_id = ?1) AS hasLink,
            (SELECT json_array_length(badges_json) FROM profiles WHERE user_id = ?1) AS equipped`,
       )
       .bind(userId)

@@ -20,7 +20,7 @@ export const BADGES: BadgeDef[] = [
   { id: 'accent', name: 'Signature', how: 'Choose an accent colour', points: 5, icon: 'Droplet', rarity: 'common' },
   { id: 'typeface', name: 'Typeset', how: 'Change your profile font', points: 5, icon: 'Type', rarity: 'common' },
   { id: 'bio', name: 'In your words', how: 'Write a bio', points: 5, icon: 'PenLine', rarity: 'common' },
-  { id: 'linked', name: 'Connected', how: 'Add a social link to your profile', points: 5, icon: 'Link2', rarity: 'common' },
+  { id: 'linked', name: 'Connected', how: 'Link a clipping account', points: 5, icon: 'Link2', rarity: 'common' },
   { id: 'collector', name: 'Collector', how: 'Favourite 5 campaigns', points: 6, icon: 'Heart', rarity: 'common' },
   { id: 'showcase', name: 'Showcase', how: 'Equip 5 badges on your profile', points: 7, icon: 'Star', rarity: 'rare' },
   { id: 'week', name: 'Settled in', how: 'Be a member for 7 days', points: 5, icon: 'Calendar', rarity: 'common' },

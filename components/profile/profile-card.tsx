@@ -1,7 +1,7 @@
 'use client'
 
 import { animate, motion, useInView } from 'framer-motion'
-import { CalendarDays, Flag, Globe, Pencil, ShieldCheck } from 'lucide-react'
+import { CalendarDays, Flag, Pencil, ShieldCheck } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { BadgeStar } from '@/components/badges/badge-star'
 import { BrandIcon } from '@/components/brand-icon'
@@ -115,27 +115,6 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
         </div>
       </motion.div>
 
-      {/* badges, on the right like Discord */}
-      {badges.length > 0 && (
-        <motion.ul
-          initial="hidden"
-          animate="show"
-          variants={{ show: { transition: { staggerChildren: 0.07, delayChildren: 0.55 } } }}
-          className="absolute top-[146px] right-3 z-20 flex max-w-[55%] flex-wrap justify-end gap-1 rounded-lg bg-black/45 px-1.5 py-1"
-        >
-          {badges.map((b) => (
-            <motion.li
-              key={b.id}
-              variants={{ hidden: { scale: 0, rotate: -90 }, show: { scale: 1, rotate: 0, transition: { type: 'spring', stiffness: 300, damping: 14 } } }}
-              whileHover={{ scale: 1.3, rotate: 8 }}
-              title={`${b.name}: ${b.how}`}
-            >
-              <BadgeStar badge={b} size={28} />
-            </motion.li>
-          ))}
-        </motion.ul>
-      )}
-
       <div className="relative z-20 px-4 pt-[62px] pb-4">
         <h1 className="flex flex-wrap items-center gap-x-2.5 gap-y-1 leading-tight">
           <span
@@ -144,6 +123,15 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
           >
             {view.displayName}
           </span>
+          {badges.length > 0 && (
+            <span className="inline-flex items-center gap-1" aria-label="Badges">
+              {badges.map((b) => (
+                <span key={b.id} title={`${b.name}: ${b.how}`} className="inline-flex">
+                  <BadgeStar badge={b} size={20} />
+                </span>
+              ))}
+            </span>
+          )}
           {view.isStaff && (
             <span className="inline-flex items-center gap-1 rounded-md bg-white/10 px-2 py-0.5 text-[11px] font-semibold tracking-wide" style={{ color: view.accent }}>
               <ShieldCheck className="size-3" /> Team
@@ -191,7 +179,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
           )}
 
           {showLinks && (
-            <Section title="Connections">
+            <Section title="Clipping accounts">
               <ul className="flex flex-wrap gap-2">
                 {links.map((l) => (
                   <li key={l.platform}>
@@ -204,17 +192,11 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
                       className="group relative grid size-11 place-items-center overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.06] transition-all duration-200 hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.14] active:scale-95"
                     >
                       <span aria-hidden="true" className="absolute inset-y-0 -left-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-[220%]" />
-                      {l.platform === 'website' ? <Globe className="relative size-5" /> : <BrandIcon name={l.platform} className="relative size-5" />}
+                      <BrandIcon name={l.platform} className="relative size-5" />
                     </a>
                   </li>
                 ))}
               </ul>
-              <p className="mt-2.5 text-[11px] leading-snug text-paper/40">
-                Added by this member, not official {SITE.name} links.{' '}
-                <TransitionLink href="/legal/external-links" className="underline underline-offset-2 hover:text-paper">
-                  Learn more
-                </TransitionLink>
-              </p>
             </Section>
           )}
 

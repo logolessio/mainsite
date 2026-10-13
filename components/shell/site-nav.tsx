@@ -99,7 +99,7 @@ export function SiteNav() {
               aria-controls="site-menu"
               aria-label={open ? 'Close menu' : 'Open menu'}
               onClick={() => setOpen((v) => !v)}
-              className="glass-liquid grid size-11 place-items-center rounded-full"
+              className="grid size-11 place-items-center rounded-full bg-paper/[0.08] backdrop-blur transition-colors hover:bg-paper/[0.14]"
             >
               <MenuGlyph open={open} />
             </button>
@@ -113,24 +113,12 @@ export function SiteNav() {
 }
 
 function MenuGlyph({ open }: { open: boolean }) {
-  const t = { duration: 0.35, ease: EASE_OUT }
+  const t = { type: 'spring' as const, stiffness: 500, damping: 32 }
+  // two bars, the top one shorter: they cross into an X
   return (
-    <span aria-hidden="true" className="relative block h-3 w-4">
-      <motion.span
-        animate={open ? { top: 5, rotate: 45 } : { top: 0, rotate: 0 }}
-        transition={t}
-        className="absolute left-0 block h-px w-4 bg-paper"
-      />
-      <motion.span
-        animate={open ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
-        transition={t}
-        className="absolute top-[5px] left-0 block h-px w-4 origin-right bg-paper"
-      />
-      <motion.span
-        animate={open ? { top: 5, rotate: -45 } : { top: 10, rotate: 0 }}
-        transition={t}
-        className="absolute left-0 block h-px w-4 bg-paper"
-      />
+    <span aria-hidden="true" className="relative block h-3 w-[18px]">
+      <motion.span animate={open ? { top: 5, rotate: 45, width: 18 } : { top: 1, rotate: 0, width: 12 }} transition={t} className="absolute right-0 block h-[1.5px] rounded-full bg-paper" />
+      <motion.span animate={open ? { top: 5, rotate: -45 } : { top: 8, rotate: 0 }} transition={t} className="absolute right-0 block h-[1.5px] w-[18px] rounded-full bg-paper" />
     </span>
   )
 }

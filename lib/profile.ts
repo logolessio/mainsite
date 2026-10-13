@@ -5,6 +5,7 @@ import { setting } from './db'
 import {
   BANNER_PRESET_IDS,
   CARD_EFFECT_IDS,
+  CLIPPING_PLATFORMS,
   MAX_LINKS,
   NAME_EFFECT_IDS,
   WARN_PLATFORMS,
@@ -175,7 +176,7 @@ export function cleanLinks(input: unknown): ProfileLink[] {
     const platform = (item as { platform?: string })?.platform
     const url = String((item as { url?: string })?.url ?? '').trim()
     const meta = LINK_PLATFORMS.find((p) => p.id === platform)
-    if (!meta || !url) continue
+    if (!meta || !url || !CLIPPING_PLATFORMS.includes(meta.id)) continue
     const u = safeUrl(url)
     if (!u) throw new HttpError(400, `Use a full https:// address for ${meta.label}.`)
     if (meta.hosts.length && !hostMatches(u.hostname, meta.hosts)) throw new HttpError(400, `That does not look like a ${meta.label} link.`)

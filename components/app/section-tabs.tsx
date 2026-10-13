@@ -30,6 +30,7 @@ const GROUPS: Record<string, { label: string; items: Item[] }> = {
       { id: 'audit', label: 'Audit', href: '/admin/audit' },
       { id: 'keys', label: 'Keys', href: '/admin/keys' },
       { id: 'settings', label: 'Settings', href: '/admin/settings' },
+      { id: 'design', label: 'Design', href: '/admin/design' },
     ],
   },
 }

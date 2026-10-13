@@ -6,6 +6,7 @@ import { DevBar } from '@/components/dev/dev-bar'
 import { DevGate } from '@/components/dev/dev-gate'
 import { AppShell } from '@/components/shell/app-shell'
 import { CopyProvider } from '@/components/shell/copy-provider'
+import { DesignProvider } from '@/components/shell/design-provider'
 import { FeaturesProvider } from '@/components/shell/features-provider'
 import { getAnnouncement } from '@/lib/announcement'
 import { featureState } from '@/lib/features'
@@ -51,7 +52,7 @@ const SITE_LD = {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   // Site text can be edited by the owner, so every page is built per request with the current wording.
   await connection()
-  const [overrides, session, fs, dots] = await Promise.all([getOverrides(), getSession(), featureState(), getSetting('bg_dots')])
+  const [overrides, session, fs, dots, fx, border] = await Promise.all([getOverrides(), getSession(), featureState(), getSetting('bg_dots'), getSetting('design_cover_effects'), getSetting('design_cover_border')])
   const isAdmin = session?.user?.role === 'admin'
   // The dev site is for admins only: everyone else gets a sign-in screen and nothing from behind it.
   const blocked = fs.dev && !isAdmin
@@ -64,11 +65,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       </head>
       <body className="antialiased">
         <FeaturesProvider dev={fs.dev} on={fs.on}>
+          <DesignProvider value={{ coverEffects: fx === '1', coverBorder: border === '1' }}>
           <CopyProvider overrides={overrides} isAdmin={isAdmin}>
             <AppShell announcement={announcement} dots={dots === '1'}>{blocked ? <DevGate email={session?.user?.email ?? null} /> : children}</AppShell>
             {isAdmin && <TextEditor />}
             {fs.dev && isAdmin && <DevBar />}
           </CopyProvider>
+          </DesignProvider>
         </FeaturesProvider>
       </body>
     </html>

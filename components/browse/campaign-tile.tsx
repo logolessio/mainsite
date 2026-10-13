@@ -4,6 +4,7 @@ import { motion, useMotionTemplate, useMotionValue, useSpring, useTransform } fr
 import { Pause, Play } from 'lucide-react'
 import { usePreview } from '@/components/shell/preview-provider'
 import { useCampaignModal } from '@/components/campaign/campaign-modal'
+import { useDesign } from '@/components/shell/design-provider'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 import { type Campaign, usd } from '@/lib/campaigns'
 import { EASE_OUT } from '@/lib/layout'
@@ -16,7 +17,9 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
   const { playingId, toggle } = usePreview()
   const playing = playingId === campaign.id
   const { rich, canHover } = useMotionPrefs()
-  const tilt = rich && canHover
+  const { coverEffects, coverBorder } = useDesign()
+  const tilt = coverEffects && rich && canHover
+  const left = Math.max(0, Math.min(100, campaign.budgetLeftPct ?? 100))
 
   const px = useMotionValue(0.5)
   const py = useMotionValue(0.5)
@@ -51,7 +54,7 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
       animate={canHover ? 'rest' : 'hover'}
       whileHover="hover"
       style={tilt ? { rotateX, rotateY, transformPerspective: 700 } : undefined}
-      className="relative aspect-square w-full overflow-hidden rounded-[22px] bg-surface shadow-[0_14px_26px_-14px_rgb(0_0_0/0.9)] transition-shadow duration-300 hover:shadow-[0_34px_50px_-18px_rgb(0_0_0/0.95)]"
+      className={cn('group/tile relative aspect-square w-full overflow-hidden rounded-[22px] bg-surface', coverEffects && 'shadow-[0_14px_26px_-14px_rgb(0_0_0/0.9)] transition-shadow duration-300 hover:shadow-[0_34px_50px_-18px_rgb(0_0_0/0.95)]')}
     >
       <button
         type="button"
@@ -62,23 +65,33 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
         aria-label={`${campaign.title} by ${campaign.creator}. ${usd(campaign.ratePer1k, 2)} per 1,000 views. Open campaign.`}
         className="absolute inset-0 block rounded-[22px] text-left outline-none focus-visible:ring-2 focus-visible:ring-paper"
       >
-        <motion.img
-          src={campaign.cover}
-          alt=""
-          loading={priority ? 'eager' : 'lazy'}
-          variants={{ rest: { scale: 1.12 }, hover: { scale: 1.18 } }}
-          style={tilt ? { x: imgX, y: imgY } : undefined}
-          transition={{ duration: 0.6, ease: EASE_OUT }}
-          className="absolute inset-0 h-full w-full object-cover contrast-[1.05] saturate-[1.08]"
-        />
+        {coverEffects ? (
+          <motion.img
+            src={campaign.cover}
+            alt=""
+            loading={priority ? 'eager' : 'lazy'}
+            variants={{ rest: { scale: 1.12 }, hover: { scale: 1.18 } }}
+            style={tilt ? { x: imgX, y: imgY } : undefined}
+            transition={{ duration: 0.6, ease: EASE_OUT }}
+            className="absolute inset-0 h-full w-full object-cover contrast-[1.05] saturate-[1.08]"
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={campaign.cover} alt="" loading={priority ? 'eager' : 'lazy'} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover/tile:scale-105" />
+        )}
 
         {/* a soft fade at the bottom and the name sitting on it: that is all the text there is */}
         <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[58%] bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
-        <span className="pointer-events-none absolute inset-x-0 bottom-0 p-4 md:p-5">
+        <span className="pointer-events-none absolute inset-x-0 bottom-0 p-4 pb-5 md:p-5 md:pb-6">
           <span className="block truncate font-display text-[1.4rem] leading-none tracking-[-0.03em] text-white md:text-[1.65rem]">{campaign.title}</span>
           <span className="mt-1.5 block truncate text-[12px] text-white/70 md:text-[13px]">{campaign.creator}</span>
         </span>
-        <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[22px] ring-1 ring-inset ring-white/10" />
+        {coverBorder && <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[22px] ring-1 ring-inset ring-white/10" />}
+
+        {/* how much of the budget is still there */}
+        <span role="img" aria-label={`${left}% of the budget left`} title={`${left}% of the budget left`} className="pointer-events-none absolute inset-x-0 bottom-0 h-1.5 bg-white/20">
+          <span style={{ width: `${left}%` }} className="block h-full bg-white" />
+        </span>
 
         {tilt && (
           <motion.span

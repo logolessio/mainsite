@@ -23,11 +23,6 @@ export default async function Page() {
             <Switch k="submissions_paused" label="Pause new clip submissions" hint="Clippers cannot submit new links while this is on." on={s.submissions_paused === '1'} danger />
           </ul>
         </Card>
-        <Card title="Appearance">
-          <ul className="divide-y divide-line">
-            <Switch k="bg_dots" label="Dot landscape background" hint="The rolling field of dots behind the site. Off by default, with the moving gradient and faint grid instead." on={s.bg_dots === '1'} />
-          </ul>
-        </Card>
         <Card title="Spending limits">
           <ul className="divide-y divide-line">
             <NumberSetting k="daily_payout_cap_cents" label="Daily payout limit" hint="If more than this has gone out in 24 hours, new withdrawals wait for you." cents={Number(s.daily_payout_cap_cents)} />

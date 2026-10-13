@@ -204,6 +204,8 @@ export function usernameOf(platform: string, url: string): string {
   }
   return url
 }
+/** The only accounts a profile can show: the ones a member clips from. */
+export const CLIPPING_PLATFORMS: string[] = ['tiktok', 'youtube', 'instagram']
 export const LINK_GROUPS = ['Social', 'Music', 'Gaming', 'Support', 'Other'] as const
 /** Links that open the "you are leaving logoless" page first, because they are the ones scammers use. */
 export const WARN_PLATFORMS = ['website', 'discord', 'linktree', 'telegram', 'whatsapp']
@@ -220,7 +222,7 @@ export const SHOW_OPTIONS = [
   { key: 'campaigns', label: 'Campaigns clipped', hint: 'How many campaigns you have joined', on: false },
   { key: 'joined', label: 'Join date', hint: 'When you created your account', on: true },
   { key: 'country', label: 'Country', hint: 'Shown as a country code', on: false },
-  { key: 'links', label: 'Connections', hint: 'The links you add', on: true },
+  { key: 'links', label: 'Clipping accounts', hint: 'Show the TikTok, YouTube and Instagram accounts you clip from', on: false },
   { key: 'status', label: 'Online status', hint: 'A green dot when you are on logoless', on: true },
 ] as const
 export type ShowKey = (typeof SHOW_OPTIONS)[number]['key']

@@ -29,8 +29,8 @@ export default async function Page() {
   const first = (user.name ?? user.email.split('@')[0]).split(' ')[0]
   const clips = views?.n ?? 0
   const steps = [
-    { label: 'Make your profile yours', body: 'Banner, colours, font and links', href: '/dashboard/profile', done: Boolean(profile && (profile.bio.trim() || profile.links_json !== '[]')) },
-    { label: 'Link a social account', body: 'TikTok, YouTube or Instagram', href: '/dashboard/accounts' },
+    { label: 'Write your bio', body: 'A line or two about you, then pick your colours and font', href: '/dashboard/profile', done: Boolean(profile?.bio.trim()) },
+    { label: 'Link your clipping accounts', body: 'TikTok, YouTube or Instagram. You choose if the public sees them', href: '/dashboard/accounts', done: Boolean(profile && profile.links_json !== '[]') },
     { label: 'Connect payouts', body: 'So you can withdraw your earnings', href: '/dashboard/payouts', done: Boolean(user.connect_ready) },
     { label: 'Join your first campaign', body: 'Pick something you would actually clip', href: '/', done: clips > 0 },
   ]
