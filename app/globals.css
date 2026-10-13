@@ -69,7 +69,7 @@
   --color-ring: var(--ring);
 
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display-face), var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-mono-face), ui-monospace, monospace;
 
   --radius-sm: calc(var(--radius) * 0.6);
@@ -123,10 +123,10 @@
 }
 
 @layer components {
-  /* Geist Light, sentence case: the same face veelscp.com uses for its headline. */
+  /* Inter Tight for headlines, Inter for everything else. Sentence case, tight and calm. */
   .font-display {
-    font-weight: 300;
-    letter-spacing: -0.035em;
+    font-weight: 400;
+    letter-spacing: -0.04em;
   }
   .font-display-thin {
     font-weight: 300;
@@ -649,4 +649,14 @@ li {
   .gf {
     animation: none;
   }
+}
+
+/* ---------- black islands on the white page ----------
+   The page is white, and a few surfaces (the campaign grid, the footer, the sidebar, the campaign pop-up) stay black.
+   An island undoes the page's colour swap for everything inside it, so it looks exactly as it was drawn for dark. */
+html.light .island {
+  filter: invert(1) hue-rotate(180deg);
+}
+html.light .island :is(img, video, iframe, [data-keep]) {
+  filter: none;
 }

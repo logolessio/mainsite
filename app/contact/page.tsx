@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { ArrowUpRight } from 'lucide-react'
 import { ContactForm } from '@/components/marketing/contact-form'
+import { Breadcrumbs } from '@/components/marketing/breadcrumbs'
 import { PageHero } from '@/components/marketing/page-hero'
 import { Reveal } from '@/components/motion/reveal'
 import { Words } from '@/components/motion/words'
@@ -8,19 +9,18 @@ import { T } from '@/components/shell/copy-provider'
 import { CONTAINER } from '@/lib/layout'
 import { SITE } from '@/lib/site'
 
-export const metadata: Metadata = { title: 'Contact | logoless', description: 'Get in touch with the logoless team.' }
+export const metadata: Metadata = { title: 'Contact | logoless', description: 'Write to the right inbox or use the form. A real person reads everything.', alternates: { canonical: '/contact' } }
 
 const WAYS: [string, string, string][] = [
   ['Support', 'Accounts, campaigns and payouts', SITE.emails.support],
-  ['Legal', 'Terms and agreements', SITE.emails.legal],
-  ['Privacy', 'Your data and your rights', SITE.emails.privacy],
-  ['Copyright and abuse', 'Report a problem', SITE.emails.abuse],
-  ['Press', 'Interviews and assets', SITE.emails.press],
+  ['Legal and privacy', 'Terms, your data and copyright', SITE.emails.legal],
+  ['Report abuse', 'Botting, fraud or a problem', SITE.emails.abuse],
 ]
 
 export default function Page() {
   return (
     <main>
+      <Breadcrumbs trail={[{ name: 'Contact' }]} />
       <PageHero eyebrow="Contact" title="Say hello" lede="Write to the right inbox, or use the form below. A real person reads everything." />
       <section className={`${CONTAINER} pb-24 md:pb-40`}>
         <ul className="border-b border-line">

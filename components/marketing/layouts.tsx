@@ -1,6 +1,5 @@
 'use client'
 
-import { CountUp } from '@/components/app/count-up'
 import { Reveal } from '@/components/motion/reveal'
 import { Words } from '@/components/motion/words'
 import { T } from '@/components/shell/copy-provider'
@@ -42,7 +41,7 @@ export function StatRow({ stats }: { stats: { value: string; label: string; note
         {stats.map((s, i) => (
           <Reveal key={s.label} delay={i * 0.08} blur={false}>
             <li className="border-t border-line pt-6">
-              <p className="font-display text-[clamp(4.5rem,9vw,8.5rem)] leading-[0.9] tracking-[-0.05em]"><CountUp value={s.value} /></p>
+              <p className="font-display text-[clamp(4.5rem,9vw,8.5rem)] leading-[0.9] tracking-[-0.05em]">{s.value}</p>
               <p className="mt-6 text-xl"><T>{s.label}</T></p>
               {s.note && <p className="mt-2 max-w-[28ch] text-[15px] leading-snug text-paper/50"><T>{s.note}</T></p>}
             </li>

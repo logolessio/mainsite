@@ -91,7 +91,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
           { key: 'c', header: 'Campaign', render: (r) => r.title ?? 'Balance' },
           { key: 'a', header: 'Amount', render: (r) => money(r.amount_cents), className: 'text-right' },
           { key: 's', header: 'Status', render: (r) => <Badge tone={r.status === 'paid' ? 'good' : r.status === 'disputed' ? 'bad' : 'neutral'}>{r.status}</Badge> },
-          { key: 'r', header: 'Receipt', render: (r) => (r.receipt_url ? <a href={r.receipt_url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">View</a> : '—') },
+          { key: 'r', header: 'Receipt', render: (r) => (r.receipt_url ? <a href={r.receipt_url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">View</a> : '-') },
         ]}
         empty={<EmptyState icon="CreditCard" title="No payments yet" body="Payments appear here once you pay for a campaign." />}
       />

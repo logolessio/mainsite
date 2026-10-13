@@ -41,7 +41,7 @@ export function Spotlight() {
   const [camps, setCamps] = useState<C[] | null>(null)
   const input = useRef<HTMLInputElement>(null)
   const active = on && !HIDDEN.some((p) => pathname.startsWith(p)) && !isInvitePath(pathname)
-  const showPill = pathname !== '/' && !pathname.startsWith('/reels')
+  const showPill = false // the floating Search button is gone; the shortcut (⌘K or /) still works
 
   useEffect(() => {
     if (!active) return

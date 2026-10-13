@@ -29,7 +29,7 @@ export const POST = route(async (req: Request) => {
   const payoutId = await startWithdrawal(user.id, cents)
   if (!payoutId) throw new HttpError(409, 'That is more than your available balance.')
 
-  logEvent({ kind: 'money', name: 'withdrawal requested', actor: user.email, detail: `${payoutId} $${(cents / 100).toFixed(2)}${reason ? ` — held: ${reason}` : ''}`, req })
+  logEvent({ kind: 'money', name: 'withdrawal requested', actor: user.email, detail: `${payoutId} $${(cents / 100).toFixed(2)}${reason ? ` (held: ${reason})` : ''}`, req })
   if (reason) {
     const d = await db()
     await d.prepare("UPDATE payouts SET status = 'review', review_reason = ?2, updated_at = ?3 WHERE id = ?1").bind(payoutId, reason.slice(0, 300), nowSec()).run()

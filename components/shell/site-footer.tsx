@@ -9,8 +9,6 @@ import { CONTAINER } from '@/lib/layout'
 import { FOOTER, LEGAL_LINKS, SITE } from '@/lib/site'
 import { TransitionLink } from './transition-link'
 import { T } from '@/components/shell/copy-provider'
-import { CalmToggle } from './calm-toggle'
-import { ThemeToggle } from './theme-toggle'
 import { Feature } from './features-provider'
 
 const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin', '/@', '/u/']
@@ -61,7 +59,7 @@ export function SiteFooter() {
             <Reveal delay={0.3}>
               <h3 className="text-[15px] text-paper/40">Legal</h3>
               <ul className="mt-5 flex flex-col gap-3 text-[15px]">
-                {LEGAL_LINKS.slice(0, 6).map((l) => (
+                {LEGAL_LINKS.slice(0, 4).map((l) => (
                   <li key={l.href}>
                     <TransitionLink href={l.href} className="text-paper/85 transition-colors hover:text-paper">
                       {l.label}
@@ -96,8 +94,6 @@ export function SiteFooter() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <ThemeToggle />
-            <CalmToggle />
             <Feature id="status-page">
               <TransitionLink href="/status" className="inline-flex h-10 items-center gap-2 rounded-full border border-line-strong px-4 text-sm text-paper/60 transition-colors hover:text-paper">
                 <span className="size-2 rounded-full bg-emerald-400" /> System status

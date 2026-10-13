@@ -125,11 +125,11 @@ function Ready({ status, onChange }: { status: ConnectStatus; onChange: (s: Conn
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <p className="font-mono text-xs text-mute">On its way to your bank</p>
-              <p className="mt-1 font-display text-3xl">{ov.pending.length ? ov.pending.map((b) => money(b.amount, b.currency)).join(' · ') : '—'}</p>
+              <p className="mt-1 font-display text-3xl">{ov.pending.length ? ov.pending.map((b) => money(b.amount, b.currency)).join(' · ') : '-'}</p>
             </div>
             <div>
               <p className="font-mono text-xs text-mute">Waiting for the next payout</p>
-              <p className="mt-1 font-display text-3xl">{ov.available.length ? ov.available.map((b) => money(b.amount, b.currency)).join(' · ') : '—'}</p>
+              <p className="mt-1 font-display text-3xl">{ov.available.length ? ov.available.map((b) => money(b.amount, b.currency)).join(' · ') : '-'}</p>
             </div>
           </div>
           {ov.payouts.length > 0 && (

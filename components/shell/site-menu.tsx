@@ -15,11 +15,10 @@ import { cn } from '@/lib/utils'
 
 const NOTES: Record<string, string> = {
   '/': 'Browse every live campaign',
-  '/welcome': 'Why logoless exists',
-  '/how-it-works': 'From brief to payout',
   '/for-brands': 'Launch a campaign',
-  '/for-clippers': 'Get paid for your edits',
+  '/for-clippers': 'Get paid for your clips',
   '/pricing': 'One simple fee',
+  '/about': 'Who we are',
   '/faq': 'Quick answers',
 }
 

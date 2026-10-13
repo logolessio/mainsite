@@ -42,7 +42,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ s
     budget: Number(x.budget),
     endsOn: x.endsOn || null,
   })
-  if (!parsed.success) throw new HttpError(400, `Please check "${parsed.error.issues[0]?.path.join('.') || 'the form'}" — it is not valid yet.`)
+  if (!parsed.success) throw new HttpError(400, `Please check "${parsed.error.issues[0]?.path.join('.') || 'the form'}": it is not valid yet.`)
   const c = parsed.data
 
   const d = await db()

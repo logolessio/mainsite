@@ -55,7 +55,7 @@ export function Ranked({ title, rows, unit = '', extra }: { title: string; rows:
             <li key={i} className="relative overflow-hidden rounded-lg px-2.5 py-1.5 text-sm">
               <span aria-hidden="true" className="absolute inset-y-0 left-0 bg-paper/[0.08]" style={{ width: `${(Number(r.n ?? 0) / max) * 100}%` }} />
               <span className="relative flex items-baseline justify-between gap-3">
-                <span className="min-w-0 truncate">{String(r.label ?? '—')}</span>
+                <span className="min-w-0 truncate">{String(r.label ?? '-')}</span>
                 <span className="shrink-0 font-mono text-xs text-mute">
                   {extra ? `${extra(r)} · ` : ''}
                   {Number(r.n ?? 0).toLocaleString()}

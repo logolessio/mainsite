@@ -22,9 +22,9 @@ export function PageHero({
   children?: React.ReactNode
 }) {
   return (
-    <header className={cn(CONTAINER, 'pt-40 pb-24 md:pt-56 md:pb-36')}>
-      <Words as="h1" align="left" immediate text={title} className="max-w-[15ch] font-display text-[clamp(3.3rem,9.6vw,10.5rem)] leading-[0.9] tracking-[-0.045em]" />
-      <div className="mt-14 grid gap-8 md:mt-24 md:grid-cols-12">
+    <header className={cn(CONTAINER, 'pt-10 pb-20 md:pt-16 md:pb-28')}>
+      <Words as="h1" align="left" immediate text={title} className="max-w-[16ch] font-display text-[clamp(2.8rem,7.6vw,7rem)] leading-[0.96]" />
+      <div className="mt-10 grid gap-8 md:mt-14 md:grid-cols-12">
         <Reveal delay={0.35} className="md:col-span-4">
           <p className="text-[15px] text-paper/45"><T>{eyebrow}</T></p>
         </Reveal>

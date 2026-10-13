@@ -2,7 +2,6 @@
 
 import { useReducedMotion } from 'framer-motion'
 import { useCallback, useSyncExternalStore } from 'react'
-import { useFeature } from '@/components/shell/features-provider'
 import { getCalm, subscribeCalm } from '@/lib/calm'
 
 function useMedia(query: string, serverValue: boolean) {
@@ -22,9 +21,8 @@ function useMedia(query: string, serverValue: boolean) {
 }
 
 export function useMotionPrefs() {
-  const calmOn = useFeature('calm-mode')
   const calm = useSyncExternalStore(subscribeCalm, getCalm, () => false)
-  const reduced = Boolean(useReducedMotion()) || (calmOn && calm)
+  const reduced = Boolean(useReducedMotion()) || calm
   const wide = useMedia('(min-width: 768px)', true)
   const canHover = useMedia('(hover: hover) and (pointer: fine)', true)
   return { reduced, wide, canHover, rich: wide && !reduced }

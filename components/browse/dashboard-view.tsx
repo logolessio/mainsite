@@ -1,17 +1,11 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Compass, Smartphone } from 'lucide-react'
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { TOUR_EVENT } from '@/components/shell/site-nav'
 import type { Campaign, Platform } from '@/lib/campaigns'
-import { Layer, Tilt3D } from '@/components/motion/tilt'
-import { Words } from '@/components/motion/words'
-import { useCopy } from '@/components/shell/copy-provider'
-import { Feature } from '@/components/shell/features-provider'
-import { ThemeToggle } from '@/components/shell/theme-toggle'
+import { useNavUser } from '@/components/shell/nav-user'
 import { TransitionLink } from '@/components/shell/transition-link'
-import { HERO_VARIANTS_DEFAULT, HERO_VARIANTS_KEY } from '@/lib/copy-key'
 import { EASE_OUT } from '@/lib/layout'
 import { CampaignGrid } from './campaign-grid'
 import { FilterBar, type SortKey } from './filter-bar'
@@ -20,6 +14,8 @@ import { GuidedTour } from './guided-tour'
 
 export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[]; startTour: boolean }) {
   const [query, setQuery] = useState('')
+  const { user } = useNavUser()
+  const signedIn = Boolean(user?.signedIn)
   const [tourOpen, setTourOpen] = useState(startTour)
   const deferred = useDeferredValue(query)
 
@@ -45,28 +41,6 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
       .sort((a, b) => (sort === 'rate' ? b.ratePer1k - a.ratePer1k : sort === 'budget' ? b.budget - a.budget : end(a) - end(b)))
   }, [campaigns, deferred, category, platforms, sort])
 
-  // Each visit the hero shows the big logo, one of many ways of saying "views have value", or one of three greetings.
-  // It is chosen after mount so the server and browser HTML always match.
-  const { tx, overrides } = useCopy()
-  const [hero, setHero] = useState<{ kind: 'logo' } | { kind: 'text'; text: string } | null>(null)
-  const count = campaigns.length
-  const [shuffle, setShuffle] = useState(0)
-  useEffect(() => {
-    const on = () => setShuffle((n) => n + 1)
-    window.addEventListener('logoless:hero-shuffle', on)
-    return () => window.removeEventListener('logoless:hero-shuffle', on)
-  }, [])
-  useEffect(() => {
-    const pick = <T,>(list: T[]) => list[Math.floor(Math.random() * list.length)]
-    const variants = (overrides[HERO_VARIANTS_KEY] ?? HERO_VARIANTS_DEFAULT.join('\n')).split('\n').map((v) => v.trim()).filter(Boolean)
-    const greetings = [tx('welcome to logoless'), tx('browse {n} campaigns').replace('{n}', String(count)), tx('explore our campaigns')]
-    const r = Math.random()
-    if (r < 0.3) setHero({ kind: 'logo' })
-    else if (r < 0.8) setHero({ kind: 'text', text: variants.length ? pick(variants) : 'views have value' })
-    else setHero({ kind: 'text', text: pick(greetings) })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shuffle])
-
   useEffect(() => {
     const open = () => setTourOpen(true)
     window.addEventListener(TOUR_EVENT, open)
@@ -80,68 +54,16 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
 
   return (
     <>
-      <section aria-labelledby="hero-title" className="flex flex-col items-center pt-16 pb-14 text-center md:pt-24 md:pb-16">
-        <h1 className="sr-only" id="hero-title">
-          logoless: views have value
+      <section aria-labelledby="hero-title" className="mx-auto flex max-w-3xl flex-col items-center pt-14 pb-12 text-center md:pt-24 md:pb-16">
+        <h1 id="hero-title" className="font-display text-[clamp(2.6rem,7vw,5.2rem)] leading-[0.98]">
+          Get paid for the clips you cut.
         </h1>
-        <Tilt3D global glare={false} max={hero?.kind === 'logo' ? 0.8 : 5} className="flex min-h-[150px] w-full items-center justify-center md:min-h-[290px]">
-          {hero?.kind === 'text' && (
-            <Layer z={90}>
-              <Words
-                key={hero.text}
-                as="p"
-                sweep
-                immediate
-                delay={0.1}
-                stagger={0.12}
-                text={hero.text}
-                className={`mx-auto font-display ${
-                  hero.text.length > 24
-                    ? 'max-w-[16ch] text-[11vw] md:text-[6.4vw] xl:text-[100px]'
-                    : hero.text.length > 14
-                      ? 'max-w-[12ch] text-[13vw] md:text-[7.6vw] xl:text-[118px]'
-                      : 'max-w-[10ch] text-[15vw] md:text-[8.5vw] xl:text-[132px]'
-                } leading-[0.92]`}
-              />
-            </Layer>
-          )}
-          {hero?.kind === 'logo' && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.94 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.9, ease: EASE_OUT }}
-              className="relative mx-auto aspect-[1100/577] w-[min(480px,74vw)]"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img data-logo src="/logo-lg.png" alt="" width={1100} height={577} className="absolute inset-0 block size-full select-none" draggable={false} />
-              <span aria-hidden="true" className="logo-sweep absolute inset-0" />
-            </motion.div>
-          )}
-        </Tilt3D>
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            type="button"
-            onClick={() => setTourOpen(true)}
-            className="glass-liquid inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm transition-all hover:brightness-125"
-          >
-            <Compass aria-hidden="true" className="size-4" />
-            Take the tour
-          </motion.button>
-          <Feature id="reels">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }}>
-              <TransitionLink href="/reels" className="glass-liquid inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm transition-all hover:brightness-125">
-                <Smartphone aria-hidden="true" className="size-4" />
-                Swipe through campaigns
-              </TransitionLink>
-            </motion.div>
-          </Feature>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}>
-            <ThemeToggle variant="hero" />
-          </motion.div>
-        </div>
+        <p className="mt-6 max-w-md text-lg leading-relaxed text-paper/60">Join a campaign, post your clip, and earn for every 1,000 verified views.</p>
+        {!signedIn && (
+          <TransitionLink href="/onboarding" className="mt-9 inline-flex h-12 items-center rounded-full bg-paper px-8 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85">
+            Get started
+          </TransitionLink>
+        )}
       </section>
 
       <motion.div
@@ -171,7 +93,7 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
 
       <section id="campaigns" aria-label="Campaigns" className="scroll-mt-40">
         {results.length > 0 ? (
-          <div className="mx-auto max-w-[1300px] rounded-[40px] border border-white/[0.1] bg-[#0a0a0c]/[0.93] p-4 sm:p-6 md:rounded-[52px] md:p-10">
+          <div className="island mx-auto max-w-[1300px] rounded-[40px] bg-[#0a0a0c] p-4 sm:p-6 md:rounded-[52px] md:p-10">
             <CampaignGrid campaigns={results} />
           </div>
         ) : (

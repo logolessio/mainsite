@@ -31,9 +31,9 @@ export const campaigns: Campaign[] = [
     budget: 50000,
     endsOn: 'Oct 30',
     summary:
-      'New single out Friday. We want the hook in front of as many people as possible — clip the performance video, the studio session, or use the track under your own edits.',
+      'New single out Friday. We want the hook in front of as many people as possible: clip the performance video, the studio session, or use the track under your own edits.',
     clipThis: [
-      'The chorus drop at 0:42 — it is the moment',
+      'The chorus drop at 0:42 is the moment',
       'Studio session footage from the drive folder',
       'Your own edits using the official audio',
     ],
@@ -75,7 +75,7 @@ export const campaigns: Campaign[] = [
     budget: 24000,
     endsOn: 'Oct 15',
     summary:
-      'Dex streams five nights a week. Find the moments — rage quits, clutch plays, the chat going wild — and cut them tight.',
+      'Dex streams five nights a week. Find the moments (rage quits, clutch plays, the chat going wild) and cut them tight.',
     clipThis: [
       'Clutch plays and fails from any VOD this month',
       'Funny chat interactions with captions',
@@ -191,7 +191,7 @@ export const campaigns: Campaign[] = [
     budget: 45000,
     endsOn: 'Oct 10',
     summary:
-      'Fight night hype. Training camp, face-offs and the walkouts. Build tension — the fight itself is off-limits until after the event.',
+      'Fight night hype. Training camp, face-offs and the walkouts. Build tension. The fight itself is off-limits until after the event.',
     clipThis: ['Training camp footage', 'Press conference face-offs', 'Walkout entrances'],
     offLimits: ['Fight footage before the event airs', 'Betting references', 'Injury close-ups'],
   },

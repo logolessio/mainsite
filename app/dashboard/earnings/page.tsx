@@ -76,7 +76,7 @@ export default async function Page() {
           columns={[
             { key: 'd', header: 'Date', render: (r) => new Date(r.created_at * 1000).toLocaleDateString('en-US', { dateStyle: 'medium' }) },
             { key: 'k', header: 'Type', render: (r) => <Badge tone={KIND[r.kind]?.tone ?? 'neutral'}>{KIND[r.kind]?.label ?? r.kind}</Badge> },
-            { key: 'c', header: 'Campaign', render: (r) => r.title ?? r.note ?? '—' },
+            { key: 'c', header: 'Campaign', render: (r) => r.title ?? r.note ?? '-' },
             { key: 'a', header: 'Amount', render: (r) => <span className={r.amount_cents < 0 ? 'text-mute' : ''}>{usd(r.amount_cents)}</span>, className: 'text-right tabular-nums' },
           ]}
           empty={<EmptyState title="Ledger is empty" body="Approved clips and withdrawals will be listed here." />}

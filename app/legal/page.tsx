@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Breadcrumbs } from '@/components/marketing/breadcrumbs'
 import { PageHero } from '@/components/marketing/page-hero'
 import { Reveal } from '@/components/motion/reveal'
 import { TransitionLink } from '@/components/shell/transition-link'
@@ -11,6 +12,7 @@ export const metadata: Metadata = { title: 'Legal | logoless', description: 'Ter
 export default function Page() {
   return (
     <main>
+      <Breadcrumbs trail={[{ name: 'Legal' }]} />
       <PageHero eyebrow="Legal" title="The fine print" lede="The terms and policies that cover how logoless works." />
       <section className={`${CONTAINER} pb-24 md:pb-40`}>
         <ul className="border-b border-line">

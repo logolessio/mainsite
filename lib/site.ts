@@ -30,11 +30,10 @@ export const SITE = {
 
 export const NAV_LINKS = [
   { label: 'Campaigns', href: '/' },
-  { label: 'Our story', href: '/welcome' },
-  { label: 'How it works', href: '/how-it-works' },
+  { label: 'For creators', href: '/for-clippers' },
   { label: 'For brands', href: '/for-brands' },
-  { label: 'For clippers', href: '/for-clippers' },
   { label: 'Pricing', href: '/pricing' },
+  { label: 'About', href: '/about' },
   { label: 'FAQ', href: '/faq' },
 ]
 
@@ -55,23 +54,15 @@ export const LEGAL_LINKS = [
 
 export const FOOTER = {
   Product: [
-    { label: 'Browse campaigns', href: '/' },
-    { label: 'Our story', href: '/welcome' },
-    { label: 'How it works', href: '/how-it-works' },
-    { label: 'Fraud protection', href: '/trust' },
-    { label: 'Payouts', href: '/payouts' },
-    { label: 'Pricing', href: '/pricing' },
-  ],
-  Audiences: [
+    { label: 'Campaigns', href: '/' },
+    { label: 'For creators', href: '/for-clippers' },
     { label: 'For brands', href: '/for-brands' },
-    { label: 'For clippers', href: '/for-clippers' },
-    { label: 'Create an account', href: '/onboarding' },
-    { label: 'Log in', href: '/login' },
+    { label: 'Pricing', href: '/pricing' },
   ],
   Company: [
     { label: 'About', href: '/about' },
-    { label: 'Careers', href: '/careers' },
+    { label: 'Case studies', href: '/case-studies' },
+    { label: 'Questions', href: '/faq' },
     { label: 'Contact', href: '/contact' },
-    { label: 'FAQ', href: '/faq' },
   ],
 }

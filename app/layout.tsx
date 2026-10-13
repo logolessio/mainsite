@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Geist_Mono, Inter, Inter_Tight } from 'next/font/google'
 import { connection } from 'next/server'
 import { TextEditor } from '@/components/admin/text-editor'
 import { DevBar } from '@/components/dev/dev-bar'
@@ -15,7 +15,8 @@ import { getSession } from '@/lib/session'
 import { SITE } from '@/lib/site'
 import './globals.css'
 
-const geist = Geist({ subsets: ['latin'], weight: ['300', '400', '500', '600'], variable: '--font-body' })
+const inter = Inter({ subsets: ['latin'], variable: '--font-body', display: 'swap' })
+const tight = Inter_Tight({ subsets: ['latin'], weight: ['300', '400', '500', '600'], variable: '--font-display-face', display: 'swap' })
 const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-mono-face' })
 
 const baseMetadata: Metadata = {
@@ -37,6 +38,15 @@ export const viewport: Viewport = {
   colorScheme: 'dark',
 }
 
+/** What search engines are told about the site itself. Page-specific data (breadcrumbs, FAQs) is added on those pages. */
+const SITE_LD = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'Organization', '@id': `${SITE.url}/#org`, name: SITE.name, url: SITE.url, logo: `${SITE.url}/logo.png`, email: SITE.emails.support },
+    { '@type': 'WebSite', '@id': `${SITE.url}/#site`, name: SITE.name, url: SITE.url, publisher: { '@id': `${SITE.url}/#org` } },
+  ],
+}
+
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   // Site text can be edited by the owner, so every page is built per request with the current wording.
   await connection()
@@ -46,12 +56,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const blocked = fs.dev && !isAdmin
   const announcement = fs.on.announcement && !blocked ? await getAnnouncement() : null
   return (
-    <html lang="en" suppressHydrationWarning className={`${geist.variable} ${geistMono.variable} bg-ink`}>
-      {fs.on['light-mode'] && !blocked && (
-        <head>
-          <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
-        </head>
-      )}
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${tight.variable} ${geistMono.variable} bg-ink`}>
+      <head>
+        {!blocked && <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_LD) }} />
+      </head>
       <body className="antialiased">
         <FeaturesProvider dev={fs.dev} on={fs.on}>
           <CopyProvider overrides={overrides} isAdmin={isAdmin}>

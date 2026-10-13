@@ -3,8 +3,7 @@
 import { MotionConfig } from 'framer-motion'
 import { useSyncExternalStore } from 'react'
 import { getCalm, subscribeCalm } from '@/lib/calm'
-import { useFeature } from './features-provider'
-import { CalmApply } from './calm-toggle'
+import { AutoCalm, CalmApply } from './calm-toggle'
 import { ThemeApply } from './theme-toggle'
 import { LiveToasts } from './live-toasts'
 import { Spotlight } from './spotlight'
@@ -18,29 +17,29 @@ import { GradientField } from './gradient-field'
 import { RidgeField } from './ridge-field'
 import { LightField } from './light-field'
 import { NavUserProvider } from './nav-user'
-import { Ambient } from './ambient'
 import { Tracker } from './tracker'
 import { AnnouncementBar } from './announcement-bar'
+import { StickyCta } from './sticky-cta'
 
 export function AppShell({ children, announcement = null }: { children: React.ReactNode; announcement?: { text: string; href: string } | null }) {
-  const calmOn = useFeature('calm-mode')
   const calm = useSyncExternalStore(subscribeCalm, getCalm, () => false)
   return (
-    <MotionConfig reducedMotion={calmOn && calm ? 'always' : 'user'}>
+    <MotionConfig reducedMotion={calm ? 'always' : 'user'}>
       <TransitionProvider>
         <PreviewProvider>
         <NavUserProvider>
         <Tracker />
         <CalmApply />
+        <AutoCalm />
         <ThemeApply />
         <Spotlight />
         <LiveToasts />
         <BadgeCelebration />
-        <Ambient />
         <GradientField />
         <RidgeField />
         <LightField />
         <SiteNav />
+        <StickyCta />
         {announcement && <AnnouncementBar text={announcement.text} href={announcement.href} />}
         <PageFrame>
           {children}

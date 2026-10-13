@@ -5,7 +5,6 @@ import { X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { EASE_OUT } from '@/lib/layout'
-import { useFeature } from './features-provider'
 import { useNavUser } from './nav-user'
 import { NoteTile, type Note } from './notifications'
 import { TransitionLink } from './transition-link'
@@ -14,7 +13,7 @@ const POLL_MS = 45_000
 
 /** Something happened? A glass toast slides in from the top right, with no refresh needed. */
 export function LiveToasts() {
-  const on = useFeature('live-toasts')
+  const on = true
   const { user, setUnread } = useNavUser()
   const signedIn = Boolean(user?.signedIn)
   const pathname = usePathname()
