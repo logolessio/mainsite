@@ -1,7 +1,6 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { EASE_OUT } from '@/lib/layout'
@@ -65,21 +64,34 @@ export function LiveToasts() {
   if (!on || !signedIn || pathname.startsWith('/admin')) return null
 
   return (
-    <div className="pointer-events-none fixed top-[88px] right-4 z-[120] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-3 max-md:top-20">
+    <div className="pointer-events-none fixed inset-x-0 top-3 z-[120] flex flex-col items-center gap-2 px-3">
       <AnimatePresence initial={false}>
         {toasts.map((n) => {
           const body = (
             <>
               <NoteTile n={n} />
               <span className="min-w-0 flex-1 text-left">
-                <span className="block truncate text-sm font-medium">{n.title}</span>
-                {n.body && <span className="mt-0.5 line-clamp-2 block text-xs text-mute">{n.body}</span>}
+                <span className="block truncate text-[15px] font-medium">{n.title}</span>
+                {n.body && <span className="mt-0.5 line-clamp-2 block text-[13px] text-white/60">{n.body}</span>}
               </span>
+              <span className="shrink-0 self-start pt-0.5 text-[12px] text-white/45">now</span>
             </>
           )
-          const cls = 'flex flex-1 items-center gap-3 p-3'
+          const cls = 'flex flex-1 items-start gap-3 px-5 py-4'
           return (
-            <motion.div key={n.id} layout initial={{ opacity: 0, x: 60, scale: 0.94 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: 60, scale: 0.96, transition: { duration: 0.2 } }} transition={{ duration: 0.45, ease: EASE_OUT }} className="glass-liquid pointer-events-auto flex items-center rounded-[1.5rem] pr-2 backdrop-blur-xl">
+            <motion.div
+              key={n.id}
+              layout
+              drag="y"
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0.6, bottom: 0 }}
+              onDragEnd={(_, i) => i.offset.y < -24 && dismiss(n.id)}
+              initial={{ opacity: 0, y: -90, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -90, transition: { duration: 0.25 } }}
+              transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+              className="island pointer-events-auto w-[min(26rem,100%)] rounded-[1.75rem] bg-[#0b0b0d] text-white shadow-[0_18px_50px_-12px_rgb(0_0_0/0.55)]"
+            >
               {n.href ? (
                 <TransitionLink href={n.href} className={cls} onClick={() => dismiss(n.id, true)}>
                   {body}
@@ -89,9 +101,6 @@ export function LiveToasts() {
                   {body}
                 </button>
               )}
-              <button type="button" aria-label="Dismiss" onClick={() => dismiss(n.id)} className="grid size-8 shrink-0 place-items-center rounded-full text-mute hover:bg-white/10 hover:text-paper">
-                <X className="size-4" />
-              </button>
             </motion.div>
           )
         })}

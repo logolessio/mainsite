@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { PurgeDeletions } from '@/components/admin/purge-deletions'
 import { AdminButton } from '@/components/admin/ui'
 import { money, when } from '@/lib/format'
 import { Badge } from '@/components/app/table'
@@ -38,6 +39,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
   const q = (sp.q ?? '').trim().slice(0, 60)
   const t = nowSec()
   const d = await db()
+  const waiting = (await d.prepare("SELECT value FROM settings WHERE key LIKE 'deletion:%'").all<{ value: string }>()).results.map((r) => { try { return (JSON.parse(r.value) as { at: number }).at } catch { return t } })
   const where: string[] = []
   const args: unknown[] = []
   if (q) {
@@ -65,6 +67,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
   return (
     <>
       <PageHeader title="Users" sub="Who is here, who is new, and who needs a closer look." />
+      <PurgeDeletions waiting={waiting.length} due={waiting.filter((a) => a <= t - 30 * 86400).length} />
       <form className="mb-4 flex flex-wrap items-center gap-2" action="/admin/users">
         <input name="q" defaultValue={q} placeholder="Search email, username or name" className="h-10 w-72 rounded-full border border-line-strong bg-ink/80 px-4 text-sm focus:outline-none" />
         {filter && <input type="hidden" name="f" value={filter} />}

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SectionTabs } from '@/components/app/section-tabs'
 import { when } from '@/lib/format'
 import { Badge } from '@/components/app/table'
 import { Card, PageHeader } from '@/components/app/ui'
@@ -28,6 +29,7 @@ export default async function Page() {
 
   return (
     <>
+      <SectionTabs group="system" />
       <PageHeader title="Audit log" sub="Every admin action and every text change. Each row is chained to the one before it, so a deleted or altered row shows up here." />
       <div className="mb-8 grid gap-3 sm:grid-cols-2">
         {[

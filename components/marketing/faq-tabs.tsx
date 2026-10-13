@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { FAQ } from '@/lib/faq'
 import { EASE_OUT } from '@/lib/layout'
+import { GlassTabs } from '@/components/ui/glass-tabs'
 import { cn } from '@/lib/utils'
 import { T } from '@/components/shell/copy-provider'
 
@@ -26,16 +27,9 @@ export function FaqTabs() {
 
   return (
     <div>
-      <div className="flex flex-col gap-5 border-b border-line pb-6 md:flex-row md:items-center md:justify-between">
-        <div role="tablist" aria-label="FAQ audience" className="flex gap-2">
-          {(['All', ...groups] as Tab[]).map((t) => (
-            <button key={t} role="tab" type="button" aria-selected={tab === t} onClick={() => setTab(t)} className="relative h-11 rounded-full px-6 text-[15px]">
-              {tab === t && <motion.span layoutId="faq-pill" transition={{ duration: 0.35, ease: EASE_OUT }} className="absolute inset-0 rounded-full bg-paper" />}
-              <span className={cn('relative transition-colors', tab === t ? 'text-ink' : 'text-paper/55 hover:text-paper')}>{t}</span>
-            </button>
-          ))}
-        </div>
-        <label className="block w-full md:max-w-xs">
+      <div className="flex flex-col items-center gap-5 border-b border-line pb-8">
+        <GlassTabs label="FAQ audience" value={tab} onChange={(t) => setTab(t as Tab)} tabs={(['All', ...groups] as Tab[]).map((t) => ({ id: t, label: t }))}  />
+        <label className="block w-full max-w-md">
           <span className="sr-only">Search the questions</span>
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the questions" className="h-12 w-full rounded-full border border-line-strong bg-transparent px-5 text-[15px] outline-none transition-colors placeholder:text-paper/35 focus:border-paper" />
         </label>

@@ -11,8 +11,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
         { label: 'Overview', href: '/brand', icon: 'LayoutDashboard', exact: true },
         { label: 'Campaigns', href: '/brand/campaigns', icon: 'Megaphone' },
         { label: 'Clips', href: '/brand/submissions', icon: 'Clapperboard' },
-        { label: 'Funding', href: '/brand/billing', icon: 'CreditCard' },
-        { label: 'Settings', href: '/brand/settings', icon: 'Settings' },
+        { label: 'Account', href: '/brand/billing', icon: 'CreditCard', match: ['/brand/settings'] },
       ]}
     >
       {children}

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SectionTabs } from '@/components/app/section-tabs'
 import { FundCampaign } from '@/components/app/fund-campaign'
 import { Badge, DataTable, EmptyState } from '@/components/app/table'
 import { Card, PageHeader, StatCard } from '@/components/app/ui'
@@ -40,6 +41,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
 
   return (
     <>
+      <SectionTabs group="account" />
       <PageHeader title="Funding" sub="Add money to a running campaign, see what is left in each pool, and find every receipt." />
       {q.funded && (
         <p role="status" className="mb-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/[0.05] px-4 py-3 text-sm">

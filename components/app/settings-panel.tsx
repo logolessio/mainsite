@@ -2,9 +2,12 @@
 
 import { Bell, KeyRound, Mail, UserRound } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { Field, Input } from '@/components/ui/fields'
-import { SITE } from '@/lib/site'
+import { GlassTabs } from '@/components/ui/glass-tabs'
+import { useTheme } from '@/components/shell/theme-toggle'
+import { calmWasAutomatic, clearCalmChoice, getCalmChoice, getLargeText, setCalm, setLargeText, subscribeCalm } from '@/lib/calm'
+import { DeleteCard, PayPalCard } from './account-cards'
 import { ActionButton, Card } from './ui'
 
 type Me = { email: string; hasPassword: boolean }
@@ -32,22 +35,13 @@ export function SettingsPanel({ role }: { role: 'clipper' | 'brand' }) {
         </ul>
       </Card>
 
+      <Display />
+
+      {role === 'clipper' && <PayPalCard />}
+
       <PasswordCard me={me} />
 
-      <Card title="Delete your account">
-        <p className="text-sm leading-relaxed text-mute">
-          Deleting your account removes your profile and linked accounts. Any balance owed to you is paid out first, and records we are required to keep (like payment history) are kept. This cannot be undone.
-        </p>
-        <a
-          href={`mailto:${SITE.emails.privacy}?subject=${encodeURIComponent('Delete my logoless account')}${me ? `&body=${encodeURIComponent(`Please delete the logoless account for ${me.email}.`)}` : ''}`}
-          className="mt-4 inline-flex"
-        >
-          <ActionButton variant="danger" type="button">
-            Ask us to delete my account
-          </ActionButton>
-        </a>
-        <p className="mt-3 text-xs text-mute">We confirm it is you, settle anything owed, then delete it within 30 days.</p>
-      </Card>
+      <DeleteCard />
     </div>
   )
 }
@@ -135,6 +129,47 @@ function PasswordCard({ me }: { me: Me | null }) {
           .
         </p>
       </form>
+    </Card>
+  )
+}
+
+/** How the site looks and moves: colour, motion and text size. */
+function Display() {
+  const { light, set } = useTheme()
+  const choice = useSyncExternalStore(subscribeCalm, getCalmChoice, () => 'auto' as const)
+  const large = useSyncExternalStore(subscribeCalm, getLargeText, () => false)
+  const auto = useSyncExternalStore(subscribeCalm, calmWasAutomatic, () => false)
+  return (
+    <Card title="Display">
+      <div className="grid gap-8">
+        <div>
+          <p className="text-[15px]">Colour</p>
+          <p className="mt-1 text-sm text-mute">White with black panels, or black all over.</p>
+          <div className="mt-4">
+            <GlassTabs label="Colour" value={light ? 'light' : 'dark'} onChange={(v) => set(v as 'light' | 'dark')} tabs={[{ id: 'light', label: 'Light' }, { id: 'dark', label: 'Dark' }]} className="mx-0" />
+          </div>
+        </div>
+        <div>
+          <p className="text-[15px]">Calm mode</p>
+          <p className="mt-1 text-sm text-mute">Turns off the moving background and heavy animation. Automatic switches it on only when your device struggles.{auto && choice === 'on' ? ' It was switched on for you.' : ''}</p>
+          <div className="mt-4">
+            <GlassTabs
+              label="Calm mode"
+              value={choice}
+              onChange={(v) => (v === 'auto' ? clearCalmChoice() : setCalm(v === 'on'))}
+              tabs={[{ id: 'auto', label: 'Automatic' }, { id: 'on', label: 'On' }, { id: 'off', label: 'Off' }]}
+              className="mx-0"
+            />
+          </div>
+        </div>
+        <div>
+          <p className="text-[15px]">Text size</p>
+          <p className="mt-1 text-sm text-mute">Makes everything on the site a little bigger.</p>
+          <div className="mt-4">
+            <GlassTabs label="Text size" value={large ? 'large' : 'standard'} onChange={(v) => setLargeText(v === 'large')} tabs={[{ id: 'standard', label: 'Standard' }, { id: 'large', label: 'Large' }]} className="mx-0" />
+          </div>
+        </div>
+      </div>
     </Card>
   )
 }

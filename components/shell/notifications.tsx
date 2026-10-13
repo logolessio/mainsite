@@ -44,26 +44,11 @@ function dayLabel(t: number) {
   return 'Earlier'
 }
 
-/** A badge notification shows the badge itself, drawn properly, instead of a plain icon. */
+/** A badge notification shows the badge itself. Everything else is just text, with a small dot while it is unread. */
 export function NoteTile({ n }: { n: Note }) {
-  const k = kindOf(n.kind)
   const b = n.kind === 'badge' ? BADGES.find((x) => n.title.includes(x.name)) : null
-  if (b) return <span className="grid size-11 shrink-0 place-items-center"><BadgeArt badge={b} size={44} animated={false} /></span>
-  const Icon = k.icon
-  return (
-    <span
-      className="relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-[14px] border"
-      style={{
-        background: `linear-gradient(145deg, hsl(${k.hue} 62% 26%), hsl(${k.hue} 70% 11%))`,
-        borderColor: `hsl(${k.hue} 60% 42% / 0.55)`,
-        boxShadow: `inset 0 1px 0 hsl(${k.hue} 90% 80% / 0.28)`,
-        color: `hsl(${k.hue} 95% 78%)`,
-      }}
-    >
-      <span aria-hidden="true" className="absolute -top-3 -left-3 size-8 rounded-full bg-white/15 blur-md" />
-      <Icon className="relative size-[19px]" strokeWidth={2} />
-    </span>
-  )
+  if (b) return <span className="grid size-10 shrink-0 place-items-center"><BadgeArt badge={b} size={40} animated={false} /></span>
+  return <span aria-hidden="true" className={cn('mt-[7px] size-2 shrink-0 rounded-full', n.read_at ? 'bg-transparent' : 'bg-paper')} />
 }
 
 /** The feed itself, used by the bell and by the full page. */
@@ -103,7 +88,6 @@ export function NotificationFeed({ notes, setNotes, onOpen, compact = false }: {
           <ul className="px-2">
             <AnimatePresence initial={false}>
               {g.items.map((n) => {
-                const k = kindOf(n.kind)
                 const i = row++
                 const inner = (
                   <>
@@ -127,12 +111,6 @@ export function NotificationFeed({ notes, setNotes, onOpen, compact = false }: {
                     exit={{ opacity: 0, x: 40, height: 0, transition: { duration: 0.22 } }}
                     className="relative"
                   >
-                    {!n.read_at && (
-                      <>
-                        <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-2xl" style={{ background: `linear-gradient(90deg, hsl(${k.hue} 80% 55% / 0.14), transparent 55%)` }} />
-                        <span aria-hidden="true" className="absolute top-1/2 -left-0.5 h-8 w-[3px] -translate-y-1/2 rounded-full" style={{ background: `hsl(${k.hue} 90% 65%)` }} />
-                      </>
-                    )}
                     {n.href ? (
                       <TransitionLink href={n.href} className={base} onClick={() => { read(n); onOpen?.() }}>
                         {inner}
@@ -166,10 +144,7 @@ export function NotificationFeed({ notes, setNotes, onOpen, compact = false }: {
 export function EmptyFeed({ unreadOnly }: { unreadOnly?: boolean }) {
   return (
     <div className="grid place-items-center px-6 py-14 text-center">
-      <motion.span initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5, ease: EASE_OUT }} className="grid size-16 place-items-center rounded-3xl border border-line-strong bg-white/[0.04] text-mute">
-        {unreadOnly ? <CheckCheck className="size-7" /> : <BellOff className="size-7" />}
-      </motion.span>
-      <p className="mt-4 font-display text-xl">{unreadOnly ? 'All caught up' : 'Nothing yet'}</p>
+      <p className="font-display text-xl">{unreadOnly ? 'All caught up' : 'Nothing yet'}</p>
       <p className="mt-1 max-w-[16rem] text-sm text-mute">{unreadOnly ? 'You have read everything. Nice.' : 'Payments, clip decisions, new badges and campaign news will show up here.'}</p>
     </div>
   )

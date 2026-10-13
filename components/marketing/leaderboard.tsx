@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Crown, Eye } from 'lucide-react'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { EASE_OUT } from '@/lib/layout'
+import { GlassTabs } from '@/components/ui/glass-tabs'
 import { cn } from '@/lib/utils'
 
 export type Entry = { handle: string; name: string; avatar: string | null; accent: string; views: number; clips: number }
@@ -35,12 +36,8 @@ export function Leaderboard({ entries, period }: { entries: Entry[]; period: '30
         <p className="text-xs text-mute">Leaderboard</p>
         <h1 className="mt-4 font-display text-5xl tracking-tight md:text-7xl">Top clippers</h1>
         <p className="mx-auto mt-4 max-w-md text-mute">The clippers with the most verified views. Only people who've chosen to show their views are listed.</p>
-        <div className="mt-7 inline-flex rounded-full bg-white/[0.06] p-1">
-          {([['30', 'Last 30 days'], ['all', 'All time']] as const).map(([id, label]) => (
-            <TransitionLink key={id} href={id === '30' ? '/leaderboard' : '/leaderboard?p=all'} className={cn('relative inline-flex h-10 items-center rounded-full px-5 text-sm transition-colors', period === id ? 'bg-paper text-ink' : 'text-mute hover:text-paper')}>
-              {label}
-            </TransitionLink>
-          ))}
+        <div className="mt-7">
+          <GlassTabs label="Period" value={period} tabs={[{ id: '30', label: 'Last 30 days', href: '/leaderboard' }, { id: 'all', label: 'All time', href: '/leaderboard?p=all' }]} />
         </div>
       </motion.div>
 

@@ -48,7 +48,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
   return (
     <div className="relative z-10 min-h-dvh bg-ink md:pl-[248px]">
       {/* ---------- sidebar (larger screens) ---------- */}
-      <aside aria-label={`${area} navigation`} className="fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col border-r border-line bg-gradient-to-b from-[#0c0c0e] to-[#050506] md:flex">
+      <aside aria-label={`${area} navigation`} className="island fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col bg-gradient-to-b from-[#0c0c0e] to-[#050506] md:flex">
         <div className="flex h-[72px] shrink-0 items-center border-b border-line px-6">
           <TransitionLink href="/" aria-label="logoless home">
             <Logo className="h-9 md:h-9" />

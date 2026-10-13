@@ -3,7 +3,7 @@
 import { motion, useMotionTemplate, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { Pause, Play } from 'lucide-react'
 import { usePreview } from '@/components/shell/preview-provider'
-import { useTransitions } from '@/components/shell/transition-provider'
+import { useCampaignModal } from '@/components/campaign/campaign-modal'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 import { type Campaign, usd } from '@/lib/campaigns'
 import { EASE_OUT } from '@/lib/layout'
@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 const SPRING = { stiffness: 220, damping: 22, mass: 0.5 }
 
 export function CampaignTile({ campaign, priority }: { campaign: Campaign; priority?: boolean }) {
-  const { expand } = useTransitions()
+  const { open } = useCampaignModal()
   const { playingId, toggle } = usePreview()
   const playing = playingId === campaign.id
   const { rich, canHover } = useMotionPrefs()
@@ -57,7 +57,7 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
         type="button"
         onClick={() => {
           reset()
-          expand(campaign)
+          open(campaign)
         }}
         aria-label={`${campaign.title} by ${campaign.creator}. ${usd(campaign.ratePer1k, 2)} per 1,000 views. Open campaign.`}
         className="absolute inset-0 block rounded-[22px] text-left outline-none focus-visible:ring-2 focus-visible:ring-paper"

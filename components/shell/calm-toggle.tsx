@@ -3,12 +3,13 @@
 import { X } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { getCalm, hasCalmChoice, setCalm } from '@/lib/calm'
+import { getCalm, getLargeText, hasCalmChoice, setCalm } from '@/lib/calm'
 
 /** Applies the saved choice to the page. Renders nothing. */
 export function CalmApply() {
   useEffect(() => {
     document.documentElement.classList.toggle('calm', getCalm())
+    document.documentElement.classList.toggle('text-large', getLargeText())
   }, [])
   return null
 }

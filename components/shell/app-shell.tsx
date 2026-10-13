@@ -20,6 +20,7 @@ import { NavUserProvider } from './nav-user'
 import { Tracker } from './tracker'
 import { AnnouncementBar } from './announcement-bar'
 import { StickyCta } from './sticky-cta'
+import { CampaignModalProvider } from '@/components/campaign/campaign-modal'
 
 export function AppShell({ children, announcement = null }: { children: React.ReactNode; announcement?: { text: string; href: string } | null }) {
   const calm = useSyncExternalStore(subscribeCalm, getCalm, () => false)
@@ -28,6 +29,7 @@ export function AppShell({ children, announcement = null }: { children: React.Re
       <TransitionProvider>
         <PreviewProvider>
         <NavUserProvider>
+        <CampaignModalProvider>
         <Tracker />
         <CalmApply />
         <AutoCalm />
@@ -45,6 +47,7 @@ export function AppShell({ children, announcement = null }: { children: React.Re
           {children}
           <SiteFooter />
         </PageFrame>
+        </CampaignModalProvider>
         </NavUserProvider>
         </PreviewProvider>
       </TransitionProvider>

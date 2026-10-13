@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SectionTabs } from '@/components/app/section-tabs'
 import { AdminButton } from '@/components/admin/ui'
 import { money, when } from '@/lib/format'
 import { CampaignEditor } from '@/components/admin/campaign-editor'
@@ -42,6 +43,7 @@ export default async function Page() {
 
   return (
     <>
+      <SectionTabs group="campaigns" />
       <PageHeader title="Campaigns" sub="Accept a request, wait for the artist to pay, then launch. Nothing goes live until it is paid." actions={<RemoveSamples count={rows.filter((r) => r.admin_note === 'sample').length} />} />
       {groups.length === 0 && <p className="text-mute">No campaigns yet.</p>}
       <div className="grid gap-8">

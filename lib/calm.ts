@@ -45,3 +45,44 @@ export const subscribeCalm = (cb: () => void) => {
     window.removeEventListener('storage', cb)
   }
 }
+
+export type CalmChoice = 'auto' | 'on' | 'off'
+export const getCalmChoice = (): CalmChoice => {
+  try {
+    const v = localStorage.getItem(KEY)
+    return v === null ? 'auto' : v === '1' ? 'on' : 'off'
+  } catch {
+    return 'auto'
+  }
+}
+/** Go back to letting the site decide. */
+export const clearCalmChoice = () => {
+  try {
+    localStorage.removeItem(KEY)
+    localStorage.removeItem(AUTO)
+  } catch {
+    /* nothing to clear */
+  }
+  document.documentElement.classList.remove('calm')
+  listeners.forEach((l) => l())
+}
+
+// Larger text: an accessibility setting that makes every size on the site 12% bigger.
+const TEXT = 'logoless:text'
+export const getLargeText = () => {
+  try {
+    return localStorage.getItem(TEXT) === 'large'
+  } catch {
+    return false
+  }
+}
+export const setLargeText = (on: boolean) => {
+  try {
+    if (on) localStorage.setItem(TEXT, 'large')
+    else localStorage.removeItem(TEXT)
+  } catch {
+    /* private window */
+  }
+  document.documentElement.classList.toggle('text-large', on)
+  listeners.forEach((l) => l())
+}

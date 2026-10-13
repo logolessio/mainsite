@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SectionTabs } from '@/components/app/section-tabs'
 import { NumberSetting, Switch } from '@/components/admin/switches'
 import { Card, PageHeader } from '@/components/app/ui'
 import { allSettings } from '@/lib/settings'
@@ -12,6 +13,7 @@ export default async function Page() {
   const s = await allSettings()
   return (
     <>
+      <SectionTabs group="system" />
       <PageHeader title="Platform settings" sub="Emergency switches and spending limits. Every change is written to the audit log." />
       <div className="grid max-w-3xl gap-6">
         <Card title="Switches">

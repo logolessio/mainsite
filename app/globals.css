@@ -660,3 +660,8 @@ html.light .island {
 html.light .island :is(img, video, iframe, [data-keep]) {
   filter: none;
 }
+
+/* Larger text (Settings > Text size) */
+html.text-large {
+  font-size: 112.5%;
+}

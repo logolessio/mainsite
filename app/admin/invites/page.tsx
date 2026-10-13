@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SectionTabs } from '@/components/app/section-tabs'
 import { AdminButton } from '@/components/admin/ui'
 import { CopyButton } from '@/components/admin/copy-button'
 import { InviteForm } from '@/components/admin/invite-form'
@@ -35,6 +36,7 @@ export default async function Page() {
 
   return (
     <>
+      <SectionTabs group="campaigns" />
       <PageHeader title="Artist links" sub="Make a private page for an artist you have spoken to. They sign in, set up their artist page, launch a campaign and fund it, all from logoless.io/their-name." />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Links sent" value={String(rows.length)} />

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SectionTabs } from '@/components/app/section-tabs'
 import { HeroVariantsEditor, ScanSite, TextRow } from '@/components/admin/text-list'
 import { Card, PageHeader } from '@/components/app/ui'
 import { HERO_VARIANTS_DEFAULT, HERO_VARIANTS_KEY } from '@/lib/copy-key'
@@ -36,6 +37,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
 
   return (
     <>
+      <SectionTabs group="content" />
       <PageHeader title="Site text" sub="Every sentence we know about. You can also click “Edit text” in the corner of any page and click the words themselves." actions={<ScanSite />} />
 
       <Card title="Home page headline" className="mb-8">

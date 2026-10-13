@@ -22,7 +22,6 @@ export const FEATURES: FeatureDef[] = [
   { id: 'pool-meter', name: 'Pool remaining meter', category: 'Trust', path: '/campaign/red-room', description: 'On every funded campaign page: a bar and a number showing how much of the pool is still unpaid, straight from the money ledger. Clippers see what is actually left, and it adds a little urgency. Campaigns that have not been funded show nothing.' },
   { id: 'recap', name: 'Your recap (story)', category: 'Account', path: '/dashboard/recap', description: 'A full-screen, story-style look back at what a clipper has done: earnings, views, clips, their biggest campaign, best clip and badges, with counting numbers and a progress bar. Tap or use the arrow keys.' },
   { id: 'saved-campaigns', name: 'Saved campaigns page', category: 'Account', path: '/dashboard/saved', description: 'A page in the clipper dashboard listing every campaign you have hearted, with an easy way back to each one.' },
-  { id: 'new-dashboard', name: 'New dashboard', category: 'Design', path: '/dashboard', description: 'Replaces the floating glass sidebar with a solid sidebar that shows the whole menu, a slim top bar and a crisp, square layout for clippers, brands and admins. On phones the menu becomes a tab bar along the bottom.' },
 ]
 
 export const FEATURE_BY_ID = Object.fromEntries(FEATURES.map((f) => [f.id, f])) as Record<string, FeatureDef>

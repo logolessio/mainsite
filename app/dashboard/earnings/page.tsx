@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SectionTabs } from '@/components/app/section-tabs'
 import { ActionLink } from '@/components/app/action-link'
 import { Bento, Tile } from '@/components/app/bento'
 import { CountUp } from '@/components/app/count-up'
@@ -42,6 +43,7 @@ export default async function Page() {
 
   return (
     <>
+      <SectionTabs group="earnings" />
       <PageHeader title="Earnings" sub="What your clips have earned, and where every dollar went." actions={<ActionLink href="/dashboard/payouts">Withdraw</ActionLink>} />
       <Bento>
         <Tile className="p-7 md:col-span-6 xl:col-span-6">

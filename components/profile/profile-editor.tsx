@@ -190,7 +190,7 @@ export function ProfileEditor() {
       <ProfileTheme dot={f.dotColor} />
       <div className="min-w-0">
         {/* ---------- the tab bar ---------- */}
-        <div role="tablist" aria-label="Profile sections" className="sticky top-[84px] z-20 -mx-1 mb-5 flex gap-1 overflow-x-auto rounded-full border border-line-strong bg-[#0b0b0d]/90 p-1.5 backdrop-blur-xl [scrollbar-width:none]">
+        <div role="tablist" aria-label="Profile sections" className="glass-liquid sticky top-[84px] z-20 mx-auto mb-6 flex w-fit max-w-full justify-center gap-1 overflow-x-auto rounded-full p-1.5 [scrollbar-width:none]">
           {tabs.map((t) => {
             const on = tab === t.id
             return (

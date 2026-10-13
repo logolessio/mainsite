@@ -18,7 +18,7 @@ export function SiteFooter() {
   if (HIDDEN.some((p) => pathname.startsWith(p)) || isInvitePath(pathname)) return null
 
   return (
-    <footer className="relative z-10 border-t border-line bg-ink [contain-intrinsic-size:auto_600px] [content-visibility:auto]">
+    <footer className="island relative z-10 bg-ink [contain-intrinsic-size:auto_600px] [content-visibility:auto]">
       <div className={`${CONTAINER} py-20 md:py-28`}>
         <div className="grid gap-16 md:grid-cols-12 md:gap-10">
           <Reveal className="md:col-span-4">

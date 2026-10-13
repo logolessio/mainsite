@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SectionTabs } from '@/components/app/section-tabs'
 import { Bars, Ranked } from '@/components/admin/charts'
 import { CleanupLogs } from '@/components/admin/log-tools'
 import { Badge } from '@/components/app/table'
@@ -34,6 +35,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<SP>
 
   return (
     <>
+      <SectionTabs group="system" />
       <PageHeader title="Logs" sub="Every request, page view, sign-in, security event and money movement on the site. Visitors are counted by a salted hash, never a raw address." />
       <div className="mb-6 flex flex-wrap items-center gap-2">
         {(['overview', 'events', 'export'] as const).map((t) => (

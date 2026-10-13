@@ -11,19 +11,13 @@ export default async function Layout({ children }: { children: React.ReactNode }
       area="Admin"
       items={[
         { label: 'Overview', href: '/admin', icon: 'LayoutDashboard', exact: true },
-        { label: 'Launch readiness', href: '/admin/launch', icon: 'Rocket' },
-        { label: 'Push features', href: '/admin/push', icon: 'Sparkles' },
-        { label: 'Artist links', href: '/admin/invites', icon: 'Link2' },
-        { label: 'Campaigns', href: '/admin/campaigns', icon: 'Megaphone' },
-        { label: 'Review queue', href: '/admin/submissions', icon: 'Clapperboard' },
+        { label: 'Launch', href: '/admin/launch', icon: 'Rocket', match: ['/admin/push'] },
+        { label: 'Campaigns', href: '/admin/campaigns', icon: 'Megaphone', match: ['/admin/invites'] },
+        { label: 'Clips', href: '/admin/submissions', icon: 'Clapperboard' },
         { label: 'Payouts', href: '/admin/payouts', icon: 'Banknote' },
         { label: 'Users', href: '/admin/users', icon: 'Users' },
-        { label: 'Site text', href: '/admin/text', icon: 'FileCheck2' },
-        { label: 'Logs and stats', href: '/admin/logs', icon: 'BarChart3' },
-        { label: 'Audit log', href: '/admin/audit', icon: 'ScrollText' },
-        { label: 'Email', href: '/admin/email', icon: 'Mail' },
-        { label: 'Keys and tests', href: '/admin/keys', icon: 'ShieldCheck' },
-        { label: 'Settings', href: '/admin/settings', icon: 'Settings' },
+        { label: 'Content', href: '/admin/text', icon: 'FileCheck2', match: ['/admin/email'] },
+        { label: 'System', href: '/admin/logs', icon: 'BarChart3', match: ['/admin/audit', '/admin/keys', '/admin/settings'] },
       ]}
     >
       {children}
