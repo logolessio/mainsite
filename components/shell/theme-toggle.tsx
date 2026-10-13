@@ -7,7 +7,7 @@ import { applyTheme, getLight, keepsDark, setLight, subscribeTheme } from '@/lib
 /** Keeps the page in step with the saved choice, including after moving to another page. Renders nothing. */
 export function ThemeApply() {
   const pathname = usePathname()
-  const light = useSyncExternalStore(subscribeTheme, getLight, () => true)
+  const light = useSyncExternalStore(subscribeTheme, getLight, () => false)
   useEffect(() => {
     applyTheme(light && !keepsDark(pathname))
   }, [light, pathname])
@@ -15,6 +15,6 @@ export function ThemeApply() {
 }
 
 export function useTheme() {
-  const light = useSyncExternalStore(subscribeTheme, getLight, () => true)
+  const light = useSyncExternalStore(subscribeTheme, getLight, () => false)
   return { light, set: (v: 'light' | 'dark') => setLight(v === 'light') }
 }

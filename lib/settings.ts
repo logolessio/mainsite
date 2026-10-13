@@ -5,6 +5,7 @@ export const SETTING_DEFAULTS = {
   payouts_paused: '0', // 1 = nobody can withdraw
   submissions_paused: '0', // 1 = no new clip submissions
   signups_paused: '0', // 1 = no new accounts
+  bg_dots: '0', // 1 = show the rolling dot landscape behind the site (off by default)
   daily_payout_cap_cents: '500000', // above this much sent in 24 hours, new withdrawals wait for an admin
   review_over_cents: '50000', // single withdrawals above this wait for an admin
 } as const

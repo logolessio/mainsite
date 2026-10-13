@@ -144,9 +144,9 @@ function Display() {
       <div className="grid gap-8">
         <div>
           <p className="text-[15px]">Colour</p>
-          <p className="mt-1 text-sm text-mute">White with black panels, or black all over.</p>
+          <p className="mt-1 text-sm text-mute">Black all over, or white with black panels.</p>
           <div className="mt-4">
-            <GlassTabs label="Colour" value={light ? 'light' : 'dark'} onChange={(v) => set(v as 'light' | 'dark')} tabs={[{ id: 'light', label: 'Light' }, { id: 'dark', label: 'Dark' }]} className="mx-0" />
+            <GlassTabs label="Colour" value={light ? 'light' : 'dark'} onChange={(v) => set(v as 'light' | 'dark')} tabs={[{ id: 'dark', label: 'Dark' }, { id: 'light', label: 'Light' }]} className="mx-0" />
           </div>
         </div>
         <div>

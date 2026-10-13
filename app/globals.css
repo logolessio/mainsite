@@ -578,6 +578,15 @@ li {
   border-radius: 50%;
   will-change: transform;
 }
+.gf-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgb(255 255 255 / 0.06) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 0.06) 1px, transparent 1px);
+  background-size: 72px 72px;
+  background-position: center top;
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 38%, #000 25%, transparent 78%);
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 38%, #000 25%, transparent 78%);
+}
 .gf-a {
   width: 78vmax;
   height: 58vmax;

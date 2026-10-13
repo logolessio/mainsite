@@ -22,7 +22,7 @@ import { AnnouncementBar } from './announcement-bar'
 import { StickyCta } from './sticky-cta'
 import { CampaignModalProvider } from '@/components/campaign/campaign-modal'
 
-export function AppShell({ children, announcement = null }: { children: React.ReactNode; announcement?: { text: string; href: string } | null }) {
+export function AppShell({ children, announcement = null, dots = false }: { children: React.ReactNode; announcement?: { text: string; href: string } | null; dots?: boolean }) {
   const calm = useSyncExternalStore(subscribeCalm, getCalm, () => false)
   return (
     <MotionConfig reducedMotion={calm ? 'always' : 'user'}>
@@ -38,7 +38,7 @@ export function AppShell({ children, announcement = null }: { children: React.Re
         <LiveToasts />
         <BadgeCelebration />
         <GradientField />
-        <RidgeField />
+        {dots && <RidgeField />}
         <LightField />
         <SiteNav />
         <StickyCta />

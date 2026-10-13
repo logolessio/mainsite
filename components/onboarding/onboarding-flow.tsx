@@ -485,7 +485,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
 
               {id === 'theme' && (
                 <div className="flex flex-wrap justify-center gap-3">
-                  {(['light', 'dark'] as const).map((t) => (
+                  {(['dark', 'light'] as const).map((t) => (
                     <button key={t} type="button" aria-pressed={(theme.light ? 'light' : 'dark') === t} onClick={() => theme.set(t)} className={cn(pill, (theme.light ? 'light' : 'dark') === t && 'border-paper bg-paper text-ink hover:bg-paper')}>
                       {t === 'light' ? 'Light' : 'Dark'}
                     </button>

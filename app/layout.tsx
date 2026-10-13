@@ -11,6 +11,7 @@ import { getAnnouncement } from '@/lib/announcement'
 import { featureState } from '@/lib/features'
 import { THEME_BOOT } from '@/lib/theme'
 import { getOverrides } from '@/lib/copy'
+import { getSetting } from '@/lib/settings'
 import { getSession } from '@/lib/session'
 import { SITE } from '@/lib/site'
 import './globals.css'
@@ -50,7 +51,7 @@ const SITE_LD = {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   // Site text can be edited by the owner, so every page is built per request with the current wording.
   await connection()
-  const [overrides, session, fs] = await Promise.all([getOverrides(), getSession(), featureState()])
+  const [overrides, session, fs, dots] = await Promise.all([getOverrides(), getSession(), featureState(), getSetting('bg_dots')])
   const isAdmin = session?.user?.role === 'admin'
   // The dev site is for admins only: everyone else gets a sign-in screen and nothing from behind it.
   const blocked = fs.dev && !isAdmin
@@ -64,7 +65,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body className="antialiased">
         <FeaturesProvider dev={fs.dev} on={fs.on}>
           <CopyProvider overrides={overrides} isAdmin={isAdmin}>
-            <AppShell announcement={announcement}>{blocked ? <DevGate email={session?.user?.email ?? null} /> : children}</AppShell>
+            <AppShell announcement={announcement} dots={dots === '1'}>{blocked ? <DevGate email={session?.user?.email ?? null} /> : children}</AppShell>
             {isAdmin && <TextEditor />}
             {fs.dev && isAdmin && <DevBar />}
           </CopyProvider>
