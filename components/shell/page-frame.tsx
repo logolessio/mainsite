@@ -1,11 +1,14 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { usePathname } from 'next/navigation'
 import { useTransitions } from './transition-provider'
 
 export function PageFrame({ children }: { children: React.ReactNode }) {
   const { phase } = useTransitions()
-  const exiting = phase === 'exiting'
+  const pathname = usePathname()
+  // the dashboards fade only their own page (see DashShell), so the sidebar never blinks
+  const exiting = phase === 'exiting' && !/^\/(dashboard|brand|admin)(\/|$)/.test(pathname)
 
   return (
     <motion.div

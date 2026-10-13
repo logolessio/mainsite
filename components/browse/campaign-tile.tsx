@@ -1,7 +1,8 @@
 'use client'
 
-import { motion, useMotionTemplate, useMotionValue, useSpring, useTransform } from 'framer-motion'
-import { Pause, Play } from 'lucide-react'
+import { motion, useInView, useMotionTemplate, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import { ArrowUpRight, Pause, Play } from 'lucide-react'
+import { useRef } from 'react'
 import { usePreview } from '@/components/shell/preview-provider'
 import { useCampaignModal } from '@/components/campaign/campaign-modal'
 import { useDesign } from '@/components/shell/design-provider'
@@ -20,6 +21,8 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
   const { coverEffects, coverBorder } = useDesign()
   const tilt = coverEffects && rich && canHover
   const left = Math.max(0, Math.min(100, campaign.budgetLeftPct ?? 100))
+  const root = useRef<HTMLDivElement>(null)
+  const seen = useInView(root, { once: true, margin: '0px 0px -10% 0px' }) // the budget bar fills when the cover comes into view
 
   const px = useMotionValue(0.5)
   const py = useMotionValue(0.5)
@@ -42,6 +45,7 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
 
   return (
     <motion.div
+      ref={root}
       onPointerMove={(e) => {
         if (!tilt) return
         const r = e.currentTarget.getBoundingClientRect()
@@ -54,7 +58,7 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
       animate={canHover ? 'rest' : 'hover'}
       whileHover="hover"
       style={tilt ? { rotateX, rotateY, transformPerspective: 700 } : undefined}
-      className={cn('group/tile relative aspect-square w-full overflow-hidden rounded-[22px] bg-surface', coverEffects && 'shadow-[0_14px_26px_-14px_rgb(0_0_0/0.9)] transition-shadow duration-300 hover:shadow-[0_34px_50px_-18px_rgb(0_0_0/0.95)]')}
+      className={cn('group/tile relative aspect-square w-full overflow-hidden rounded-[22px] bg-surface transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-1 active:translate-y-0 active:scale-[0.985]', coverEffects && 'shadow-[0_14px_26px_-14px_rgb(0_0_0/0.9)] transition-shadow duration-300 hover:shadow-[0_34px_50px_-18px_rgb(0_0_0/0.95)]')}
     >
       <button
         type="button"
@@ -77,20 +81,28 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
           />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={campaign.cover} alt="" loading={priority ? 'eager' : 'lazy'} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover/tile:scale-105" />
+          <img src={campaign.cover} alt="" loading={priority ? 'eager' : 'lazy'} className="absolute inset-0 h-full w-full scale-100 object-cover transition-transform duration-[900ms] ease-[cubic-bezier(.22,1,.36,1)] will-change-transform group-hover/tile:scale-[1.08] group-focus-within/tile:scale-[1.08]" />
         )}
 
-        {/* a soft fade at the bottom and the name sitting on it: that is all the text there is */}
-        <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[58%] bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+        {/* a fade at the bottom deepens on hover; the name rises to make room for the rate and a cue to open */}
+        <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[62%] bg-gradient-to-t from-black/85 via-black/25 to-transparent opacity-80 transition-opacity duration-500 group-hover/tile:opacity-100 group-focus-within/tile:opacity-100" />
         <span className="pointer-events-none absolute inset-x-0 bottom-0 p-4 pb-5 md:p-5 md:pb-6">
-          <span className="block truncate font-display text-[1.4rem] leading-none tracking-[-0.03em] text-white md:text-[1.65rem]">{campaign.title}</span>
-          <span className="mt-1.5 block truncate text-[12px] text-white/70 md:text-[13px]">{campaign.creator}</span>
+          <span className="block transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover/tile:-translate-y-6 group-focus-within/tile:-translate-y-6">
+            <span className="block truncate font-display text-[1.4rem] leading-none tracking-[-0.03em] text-white md:text-[1.65rem]">{campaign.title}</span>
+            <span className="mt-1.5 block truncate text-[12px] text-white/70 md:text-[13px]">{campaign.creator}</span>
+          </span>
+          <span className="absolute inset-x-4 bottom-5 flex translate-y-2 items-center justify-between text-[12px] text-white opacity-0 transition-[opacity,transform] duration-500 ease-[cubic-bezier(.22,1,.36,1)] [transition-delay:50ms] group-hover/tile:translate-y-0 group-hover/tile:opacity-100 group-focus-within/tile:translate-y-0 group-focus-within/tile:opacity-100 md:inset-x-5 md:bottom-6 md:text-[13px]">
+            <span className="whitespace-nowrap">{usd(campaign.ratePer1k, 2)} per 1k</span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/15 py-1 pr-2 pl-3 backdrop-blur-sm">
+              Open <ArrowUpRight className="size-3.5" aria-hidden="true" />
+            </span>
+          </span>
         </span>
         {coverBorder && <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[22px] ring-1 ring-inset ring-white/10" />}
 
         {/* how much of the budget is still there */}
-        <span role="img" aria-label={`${left}% of the budget left`} title={`${left}% of the budget left`} className="pointer-events-none absolute inset-x-0 bottom-0 h-1.5 bg-white/20">
-          <span style={{ width: `${left}%` }} className="block h-full bg-white" />
+        <span role="img" aria-label={`${left}% of the budget left`} title={`${left}% of the budget left`} className="pointer-events-none absolute inset-x-0 bottom-0 h-1 bg-white/15 transition-[height] duration-300 group-hover/tile:h-1.5">
+          <span style={{ width: seen ? `${left}%` : '0%' }} className="block h-full rounded-r-full bg-white/90 transition-[width] duration-[1200ms] ease-[cubic-bezier(.22,1,.36,1)] [transition-delay:300ms]" />
         </span>
 
         {tilt && (

@@ -7,25 +7,24 @@ import { CampaignTile } from './campaign-tile'
 
 export function CampaignGrid({ campaigns }: { campaigns: Campaign[] }) {
   return (
-    <motion.ul
-      initial="hidden"
-      animate="show"
-      variants={{ show: { transition: { staggerChildren: 0.05, delayChildren: 0.15 } } }}
-      className="mx-auto grid max-w-[1200px] grid-cols-2 gap-4 [perspective:1400px] sm:grid-cols-3 md:gap-8 lg:grid-cols-4"
-    >
+    <ul className="mx-auto grid max-w-[1200px] grid-cols-2 gap-4 [perspective:1400px] sm:grid-cols-3 md:gap-8 lg:grid-cols-4">
       {campaigns.map((campaign, i) => (
         <motion.li
           key={campaign.id}
           data-tour={i === 0 ? 'tile' : undefined}
           data-campaign={i === 0 ? campaign.id : undefined}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: '0px 0px -8% 0px' }}
+          custom={(i % 4) * 0.07}
           variants={{
-            hidden: { opacity: 0, y: 24, scale: 0.97 },
-            show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.55, ease: EASE_OUT } },
+            hidden: { opacity: 0, y: 28, scale: 0.96 },
+            show: (d: number) => ({ opacity: 1, y: 0, scale: 1, transition: { duration: 0.75, ease: EASE_OUT, delay: d } }),
           }}
         >
           <CampaignTile campaign={campaign} priority={i < 5} />
         </motion.li>
       ))}
-    </motion.ul>
+    </ul>
   )
 }

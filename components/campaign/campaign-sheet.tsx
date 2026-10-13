@@ -132,13 +132,11 @@ export function CampaignSheet({ campaign, onClose, poolLeftCents = null, inline 
       {view === 'submit' && !wide ? (
         <SubmitFlow campaign={campaign} preview={preview} onBack={() => setView('details')} onClose={onClose} />
       ) : (
-        <div className={cn(wide ? 'grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-8' : 'grid gap-5')}>
+        <div className={cn(wide ? 'grid grid-cols-[minmax(0,9fr)_minmax(0,11fr)] gap-8' : 'grid gap-5')}>
           {wide ? (
-            <div className="flex min-w-0 flex-col gap-3">
+            <div className="flex min-w-0 flex-col gap-3 self-start">
               {cover}
-              <div className="mt-auto">
-                <PreviewPlayer campaign={campaign} />
-              </div>
+              <PreviewPlayer campaign={campaign} />
             </div>
           ) : (
             <div className="flex items-start gap-4 pr-10">

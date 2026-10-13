@@ -11,13 +11,21 @@ export default async function Layout({ children }: { children: React.ReactNode }
       area="Admin"
       items={[
         { label: 'Overview', href: '/admin', icon: 'LayoutDashboard', exact: true },
-        { label: 'Launch', href: '/admin/launch', icon: 'Rocket', match: ['/admin/push', '/admin/previews'] },
-        { label: 'Campaigns', href: '/admin/campaigns', icon: 'Megaphone', match: ['/admin/invites'] },
+        { label: 'Campaigns', href: '/admin/campaigns', icon: 'Megaphone' },
+        { label: 'Artist links', href: '/admin/invites', icon: 'Link2' },
         { label: 'Clips', href: '/admin/submissions', icon: 'Clapperboard' },
         { label: 'Payouts', href: '/admin/payouts', icon: 'Banknote' },
         { label: 'Users', href: '/admin/users', icon: 'Users' },
-        { label: 'Content', href: '/admin/text', icon: 'FileCheck2', match: ['/admin/email'] },
-        { label: 'System', href: '/admin/logs', icon: 'BarChart3', match: ['/admin/audit', '/admin/keys', '/admin/settings', '/admin/design'] },
+        { group: 'Launch', label: 'Readiness', href: '/admin/launch', icon: 'Rocket' },
+        { label: 'Push features', href: '/admin/push', icon: 'Unlock' },
+        { label: 'Previews', href: '/admin/previews', icon: 'Eye' },
+        { group: 'Content', label: 'Site text', href: '/admin/text', icon: 'FileCheck2' },
+        { label: 'Email', href: '/admin/email', icon: 'Mail' },
+        { group: 'System', label: 'Logs', href: '/admin/logs', icon: 'BarChart3' },
+        { label: 'Audit', href: '/admin/audit', icon: 'ScrollText' },
+        { label: 'Keys', href: '/admin/keys', icon: 'Lock' },
+        { label: 'Design', href: '/admin/design', icon: 'Sparkles' },
+        { label: 'Settings', href: '/admin/settings', icon: 'Settings' },
       ]}
     >
       {children}

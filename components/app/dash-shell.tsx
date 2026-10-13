@@ -10,7 +10,7 @@ import { Logo } from '@/components/logo'
 import { useNavUser } from '@/components/shell/nav-user'
 import { NotificationBell } from '@/components/shell/notifications'
 import { TransitionLink } from '@/components/shell/transition-link'
-import { EASE_OUT } from '@/lib/layout'
+import { useTransitions } from '@/components/shell/transition-provider'
 import { cn } from '@/lib/utils'
 import { type AppNavItem, isActive } from './nav-types'
 import { Palette } from './palette'
@@ -22,6 +22,7 @@ import { Palette } from './palette'
 export function DashShell({ area, items, children }: { area: string; items: AppNavItem[]; children: React.ReactNode }) {
   const pathname = usePathname()
   const { user } = useNavUser()
+  const { phase } = useTransitions()
   const [palette, setPalette] = useState(false)
   const [more, setMore] = useState(false)
   const signedIn = user?.signedIn ? user : null
@@ -61,6 +62,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
               const active = isActive(pathname, it)
               return (
                 <li key={it.href}>
+                  {it.group && <p className="px-3 pt-5 pb-1.5 text-[12px] text-paper/35">{it.group}</p>}
                   <TransitionLink href={it.href} aria-current={active ? 'page' : undefined} className={cn('group relative flex h-10 items-center gap-3 rounded-xl px-3 text-[15px] transition-colors', active ? 'bg-paper text-ink' : 'text-paper/55 hover:bg-white/[0.06] hover:text-paper')}>
                     <Icon name={it.icon} aria-hidden="true" className="size-[18px] shrink-0" />
                     {it.label}
@@ -129,7 +131,10 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
       </header>
 
       <main className="px-5 pt-10 pb-32 md:px-10 md:pt-14 md:pb-24">
-        <div className="mx-auto max-w-[1160px]">{children}</div>
+        {/* only the page fades between pages: the sidebar and the bars stay exactly where they are */}
+        <motion.div animate={phase === 'exiting' ? { opacity: 0, y: -8 } : { opacity: 1, y: 0 }} transition={phase === 'exiting' ? { duration: 0.18, ease: [0.4, 0, 0.2, 1] } : { duration: 0 }} className="mx-auto max-w-[1160px]">
+          {children}
+        </motion.div>
       </main>
 
       {/* ---------- tab bar (phones) ---------- */}
@@ -161,6 +166,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
             <ul className="no-scrollbar flex-1 overflow-y-auto px-5 py-4">
               {items.map((it) => (
                 <li key={it.href} className="border-b border-line">
+                  {it.group && <p className="pt-5 text-[13px] text-paper/35">{it.group}</p>}
                   <TransitionLink href={it.href} onClick={() => setMore(false)} className={cn('flex h-14 items-center gap-4 text-lg', isActive(pathname, it) ? 'text-paper' : 'text-paper/60')}>
                     <Icon name={it.icon} aria-hidden="true" className="size-5" />
                     {it.label}
