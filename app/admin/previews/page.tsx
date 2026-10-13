@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PreviewActions } from '@/components/admin/preview-actions'
+import { BadgeArt } from '@/components/badges/badge-art'
+import { BADGES } from '@/lib/badges-defs'
 import { SectionTabs } from '@/components/app/section-tabs'
 import { Card, PageHeader } from '@/components/app/ui'
 import { liveCampaigns } from '@/lib/campaigns-db'
@@ -73,6 +75,21 @@ export default async function Page() {
           ) : (
             <p className="text-sm text-mute">There is no live campaign to try this on yet.</p>
           )}
+        </Card>
+
+        <Card title="Badges">
+          <ul className="grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-4 md:grid-cols-6">
+            {BADGES.map((b) => (
+              <li key={b.id} className="flex flex-col items-center gap-2 text-center">
+                <BadgeArt badge={b} size={72} />
+                <span className="flex items-center gap-1.5">
+                  <BadgeArt badge={b} size={20} />
+                  <BadgeArt badge={b} size={20} locked />
+                </span>
+                <span className="text-[12px] leading-tight text-mute">{b.name}</span>
+              </li>
+            ))}
+          </ul>
         </Card>
 
         <Card title="Small pop-ups and pages">

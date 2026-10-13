@@ -1,42 +1,260 @@
 'use client'
 
-import { Award, BadgeCheck, Calendar, CalendarCheck, CircleDollarSign, Clapperboard, Crown, Droplet, Eye, Film, Flame, Gem, Heart, Image as ImageIcon, Layers, Link2, Lock, Medal, Megaphone, Palette, PenLine, Radio, Sparkles, Star, Trophy, Type, type LucideIcon } from 'lucide-react'
+import { useId, type ReactNode } from 'react'
 import type { BadgeDef, Rarity } from '@/lib/badges-defs'
 import { cn } from '@/lib/utils'
 
 /**
- * Badges look like the ones next to a name on Discord: a flat, single-colour shape with one plain symbol. The shape tells
- * the rarity (circle, rounded square, hexagon, seal), the colour and symbol tell which badge it is. No gradients, no shine.
+ * Badges in the spirit of the ones beside a name on Discord: one clear silhouette, one bold symbol, a little depth.
+ * The outline says how rare it is (a bronze ring, a silver hexagon, an amethyst shield, a gold seal), the body colour and the
+ * symbol say which badge it is. Everything is flat vector with soft gradients, so it stays sharp from 18 pixels to 240.
  */
 
-const ICON: Record<string, LucideIcon> = {
-  Clapperboard, Film, Layers, Flame, BadgeCheck, Medal, Eye, Radio, Crown, CircleDollarSign, Gem, Image: ImageIcon, Palette, Droplet, Type, PenLine, Link2, Heart, Star, Calendar, CalendarCheck, Sparkles, Megaphone, Trophy,
-}
-
-/** Each badge has its own hue so they are easy to tell apart at a glance. */
+/** Each badge has its own hue, so a row of them is easy to tell apart at a glance. */
 const HUE: Record<string, number> = {
-  'first-clip': 28, 'clip-10': 190, 'clip-50': 265, 'clip-250': 12,
-  'first-approved': 140, 'approved-25': 168, 'views-1k': 205, 'views-100k': 322, 'views-1m': 46,
-  'first-earn': 44, 'earn-1k': 300, banner: 218, palette: 336, accent: 196, typeface: 252, bio: 20,
-  linked: 152, collector: 350, showcase: 48, week: 96, month: 232, founding: 42, launched: 4, completionist: 282,
+  'first-clip': 24, 'clip-10': 196, 'clip-50': 262, 'clip-250': 8,
+  'first-approved': 146, 'approved-25': 172, 'views-1k': 208, 'views-100k': 322, 'views-1m': 44,
+  'first-earn': 42, 'earn-1k': 292, banner: 220, palette: 338, accent: 190, typeface: 250, bio: 18,
+  linked: 156, collector: 350, showcase: 46, week: 100, month: 234, founding: 40, launched: 2, completionist: 280,
 }
 
-const SHAPE: Record<Rarity, string> = {
-  common: 'M12 1.5a10.5 10.5 0 1 0 0 21 10.5 10.5 0 0 0 0-21Z',
-  rare: 'M8 2h8a6 6 0 0 1 6 6v8a6 6 0 0 1-6 6H8a6 6 0 0 1-6-6V8a6 6 0 0 1 6-6Z',
-  epic: 'M12 1.2 21.6 6.6v10.8L12 22.8 2.4 17.4V6.6Z',
-  legendary: 'm12 1 2.6 2.2 3.4-.4.9 3.3 3.1 1.5-.9 3.3 1.4 3.1-2.6 2.2-.4 3.4-3.4.9L12 23l-2.6-2.2-3.4.4-.9-3.3-3.1-1.5.9-3.3-1.4-3.1 2.6-2.2.4-3.4 3.4-.9Z',
+const RIM: Record<Rarity, [string, string]> = {
+  common: ['#f6c796', '#a2602a'],
+  rare: ['#f6f8fc', '#8c93a8'],
+  epic: ['#dccfff', '#6a46e2'],
+  legendary: ['#fff6c2', '#d58f14'],
+}
+
+/** The outline of each rarity, in a 64 by 64 box. */
+function outline(r: Rarity): string {
+  if (r === 'common') return 'M32 2a30 30 0 1 0 0 60a30 30 0 1 0 0-60Z'
+  if (r === 'rare') return 'M32 1.5 58.8 17v30L32 62.5 5.2 47V17Z'
+  if (r === 'epic') return 'M32 2 58 11.5V32c0 15-11 25.5-26 30C17 57.5 6 47 6 32V11.5Z'
+  // a twelve point seal
+  const pts: string[] = []
+  for (let i = 0; i < 24; i++) {
+    const a = ((i * 15 - 90) * Math.PI) / 180
+    const rad = i % 2 === 0 ? 31 : 27
+    pts.push(`${(32 + rad * Math.cos(a)).toFixed(2)} ${(32 + rad * Math.sin(a)).toFixed(2)}`)
+  }
+  return `M${pts.join('L')}Z`
+}
+const SCALE: Record<Rarity, number> = { common: 0.83, rare: 0.82, epic: 0.8, legendary: 0.8 }
+
+const W = '#fff'
+type G = { ink: string }
+const stroke = { fill: 'none', stroke: W, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+
+/** The symbol for each badge, drawn in a 24 by 24 box with plain shapes. `ink` is the dark tone cut out of the white. */
+const GLYPH: Record<string, (g: G) => ReactNode> = {
+  'first-clip': ({ ink }) => (
+    <g>
+      <rect x="3" y="10" width="18" height="11" rx="2.2" fill={W} />
+      <g transform="rotate(-9 3 9)">
+        <rect x="3" y="4.6" width="18" height="4.6" rx="1.4" fill={W} />
+        <path d="M7.6 4.6 5.8 9.2M12.4 4.6 10.6 9.2M17.2 4.6 15.4 9.2" stroke={ink} strokeWidth="1.5" />
+      </g>
+    </g>
+  ),
+  'clip-10': ({ ink }) => (
+    <g>
+      <rect x="2.5" y="5" width="19" height="14" rx="2.6" fill={W} />
+      {[5, 9.2, 13.4, 17.6].map((x) => (
+        <g key={x}>
+          <rect x={x} y="6.4" width="1.7" height="1.6" rx=".5" fill={ink} />
+          <rect x={x} y="16" width="1.7" height="1.6" rx=".5" fill={ink} />
+        </g>
+      ))}
+      <rect x="6.6" y="9.6" width="10.8" height="4.8" rx="1.2" fill={ink} />
+    </g>
+  ),
+  'clip-50': () => (
+    <g>
+      <path d="M12 2.8 22 8 12 13.2 2 8Z" fill={W} />
+      <path d="M2.8 12.2 12 17l9.2-4.8" {...stroke} strokeWidth="2.4" />
+      <path d="M2.8 16.4 12 21.2l9.2-4.8" {...stroke} strokeWidth="2.4" />
+    </g>
+  ),
+  'clip-250': ({ ink }) => (
+    <g>
+      <path d="M12 2.2c.7 3.4 5.4 5.8 5.4 10.8A5.4 5.4 0 0 1 12 18.6 5.4 5.4 0 0 1 6.6 13c0-2.4 1-4.2 2.5-5.6.2 1.7 1 2.7 2.1 3.3C10.8 8.2 10.7 4.9 12 2.2Z" fill={W} />
+      <path d="M12 21.8a3.3 3.3 0 0 1-3.3-3.3c0-1.3 1-2.4 3.3-4.3 2.3 1.9 3.3 3 3.3 4.3a3.3 3.3 0 0 1-3.3 3.3Z" fill={W} />
+      <path d="M12 19.8a1.5 1.5 0 0 1-1.5-1.5c0-.6.5-1.2 1.5-2 1 .8 1.5 1.4 1.5 2a1.5 1.5 0 0 1-1.5 1.5Z" fill={ink} />
+    </g>
+  ),
+  'first-approved': () => <path d="m5 12.8 4.6 4.6L19.2 7" {...stroke} strokeWidth="3.6" />,
+  'approved-25': ({ ink }) => (
+    <g>
+      <path d="m8 2.5 4 7.2M16 2.5l-4 7.2" {...stroke} strokeWidth="2.6" />
+      <circle cx="12" cy="15" r="6.6" fill={W} />
+      <path d="m12 11.4.9 2.1 2.3.2-1.7 1.5.5 2.3-2-1.2-2 1.2.5-2.3-1.7-1.5 2.3-.2Z" fill={ink} />
+    </g>
+  ),
+  'views-1k': ({ ink }) => (
+    <g>
+      <path d="M1.8 12C4.3 7.2 8 5 12 5s7.7 2.2 10.2 7c-2.5 4.8-6.2 7-10.2 7S4.3 16.8 1.8 12Z" fill={W} />
+      <circle cx="12" cy="12" r="4.2" fill={ink} />
+      <circle cx="13.2" cy="10.8" r="1.4" fill={W} />
+    </g>
+  ),
+  'views-100k': () => (
+    <g>
+      <circle cx="12" cy="12" r="2.6" fill={W} />
+      <path d="M8 8a5.6 5.6 0 0 0 0 8M16 8a5.6 5.6 0 0 1 0 8M5 5a9.8 9.8 0 0 0 0 14M19 5a9.8 9.8 0 0 1 0 14" {...stroke} strokeWidth="2.2" />
+    </g>
+  ),
+  'views-1m': ({ ink }) => (
+    <g>
+      <path d="m3 8 4.6 4.6L12 5l4.4 7.6L21 8l-2 11H5Z" fill={W} stroke={W} strokeWidth="1.6" strokeLinejoin="round" />
+      <rect x="5.6" y="16.6" width="12.8" height="1.8" rx=".9" fill={ink} />
+    </g>
+  ),
+  'first-earn': ({ ink }) => (
+    <g>
+      <circle cx="12" cy="12" r="9.6" fill={W} />
+      <path d="M14.8 8.8c-.4-1.1-1.5-1.6-2.8-1.6-1.6 0-2.8.8-2.8 2.1 0 3 5.8 1.7 5.8 4.8 0 1.4-1.4 2.2-3 2.2-1.5 0-2.7-.7-3.1-1.9M12 5.6v1.6M12 16.8v1.6" fill="none" stroke={ink} strokeWidth="1.8" strokeLinecap="round" />
+    </g>
+  ),
+  'earn-1k': ({ ink }) => (
+    <g>
+      <path d="M6.2 3h11.6l4.2 6L12 21 2 9Z" fill={W} stroke={W} strokeWidth="1" strokeLinejoin="round" />
+      <path d="M2 9h20M8.4 3 6.8 9 12 21 17.2 9 15.6 3" fill="none" stroke={ink} strokeWidth="1.3" strokeLinejoin="round" opacity=".42" />
+    </g>
+  ),
+  banner: ({ ink }) => (
+    <g>
+      <rect x="2.5" y="4.5" width="19" height="15" rx="2.8" fill={W} />
+      <circle cx="16.6" cy="9.4" r="2" fill={ink} />
+      <path d="m4.6 18 4.9-6.4 3.5 4.4 2.4-2.8L19.4 18Z" fill={ink} />
+    </g>
+  ),
+  palette: ({ ink }) => (
+    <g>
+      <path d="M12 2.5C6.5 2.5 2.5 6.5 2.5 11.5S6.5 21.5 11 21.5c1.4 0 2-.9 2-1.9 0-1.4-1.3-1.6-1.3-3 0-1.1.9-1.9 2-1.9h2.6c2.7 0 5.2-2 5.2-5 0-4.1-4.4-7.2-9.5-7.2Z" fill={W} />
+      <circle cx="7.3" cy="10.8" r="1.5" fill={ink} />
+      <circle cx="10.3" cy="7" r="1.5" fill={ink} />
+      <circle cx="15.3" cy="7" r="1.5" fill={ink} />
+      <circle cx="18" cy="10.4" r="1.5" fill={ink} />
+    </g>
+  ),
+  accent: ({ ink }) => (
+    <g>
+      <path d="M12 2.4S5.2 10 5.2 14.8a6.8 6.8 0 0 0 13.6 0C18.8 10 12 2.4 12 2.4Z" fill={W} />
+      <path d="M8.8 15a3.4 3.4 0 0 0 2.6 3.3" fill="none" stroke={ink} strokeWidth="1.7" strokeLinecap="round" opacity=".5" />
+    </g>
+  ),
+  typeface: () => (
+    <g fill={W}>
+      <rect x="3.6" y="4" width="16.8" height="4.2" rx="1.6" />
+      <rect x="9.9" y="4" width="4.2" height="16.6" rx="1.6" />
+    </g>
+  ),
+  bio: ({ ink }) => (
+    <g>
+      <path d="m16.2 3.6 4.2 4.2L8.6 19.6 3.2 20.8l1.2-5.4Z" fill={W} />
+      <path d="m14 5.8 4.2 4.2" stroke={ink} strokeWidth="1.7" strokeLinecap="round" opacity=".5" />
+    </g>
+  ),
+  linked: () => (
+    <g transform="rotate(-45 12 12)" {...stroke} strokeWidth="2.4">
+      <rect x="1.6" y="8.4" width="12.2" height="7.2" rx="3.6" />
+      <rect x="10.2" y="8.4" width="12.2" height="7.2" rx="3.6" />
+    </g>
+  ),
+  collector: () => <path d="M12 21.2S3.4 15.8 3.4 9.8A4.8 4.8 0 0 1 12 7.2a4.8 4.8 0 0 1 8.6 2.6c0 6-8.6 11.4-8.6 11.4Z" fill={W} />,
+  showcase: () => <path d="m12 2 2.9 6.6 7.1.7-5.4 4.7 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2 9.3l7.1-.7Z" fill={W} stroke={W} strokeWidth="1.2" strokeLinejoin="round" />,
+  week: ({ ink }) => (
+    <g>
+      <rect x="3" y="5" width="18" height="16" rx="3.2" fill={W} />
+      <rect x="6.8" y="2.6" width="2.2" height="5" rx="1.1" fill={W} />
+      <rect x="15" y="2.6" width="2.2" height="5" rx="1.1" fill={W} />
+      <path d="M3 10h18" stroke={ink} strokeWidth="1.4" opacity=".4" />
+      <path d="M9.8 12.8h4.6l-2.6 6" fill="none" stroke={ink} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </g>
+  ),
+  month: ({ ink }) => (
+    <g>
+      <rect x="3" y="5" width="18" height="16" rx="3.2" fill={W} />
+      <rect x="6.8" y="2.6" width="2.2" height="5" rx="1.1" fill={W} />
+      <rect x="15" y="2.6" width="2.2" height="5" rx="1.1" fill={W} />
+      <path d="M3 10h18" stroke={ink} strokeWidth="1.4" opacity=".4" />
+      <path d="m8.6 15.2 2.5 2.5 4.5-4.8" fill="none" stroke={ink} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    </g>
+  ),
+  founding: () => (
+    <g fill={W}>
+      <path d="m10.5 3.8 2.2 6.7 6.8 2.2-6.8 2.2-2.2 6.7-2.2-6.7-6.8-2.2 6.8-2.2Z" />
+      <path d="m19 2.4.9 2.7 2.7.9-2.7.9-.9 2.7-.9-2.7-2.7-.9 2.7-.9Z" />
+      <path d="m19.4 15.4.6 1.8 1.8.6-1.8.6-.6 1.8-.6-1.8-1.8-.6 1.8-.6Z" />
+    </g>
+  ),
+  launched: () => (
+    <g>
+      <path d="M3 10v4a1.6 1.6 0 0 0 1.6 1.6H7l5.6 4V4.4L7 8.4H4.6A1.6 1.6 0 0 0 3 10Z" fill={W} />
+      <path d="M16 8.6a5 5 0 0 1 0 6.8M19.2 5.6a9.4 9.4 0 0 1 0 12.8" {...stroke} strokeWidth="2.2" />
+    </g>
+  ),
+  completionist: () => (
+    <g>
+      <path d="M7 3.4h10V10a5 5 0 0 1-10 0Z" fill={W} />
+      <path d="M7 5.6H4.2c0 3 1.4 4.8 3.6 5.2M17 5.6h2.8c0 3-1.4 4.8-3.6 5.2" {...stroke} strokeWidth="2" />
+      <rect x="10.9" y="14.6" width="2.2" height="3.4" fill={W} />
+      <rect x="7.6" y="17.8" width="8.8" height="3" rx="1.2" fill={W} />
+    </g>
+  ),
 }
 
 export function BadgeArt({ badge, size = 40, locked = false, className }: { badge: BadgeDef; size?: number; locked?: boolean; animated?: boolean; className?: string }) {
-  const Icon = ICON[badge.icon] ?? Award
-  const fill = locked ? '#3a3a42' : `hsl(${HUE[badge.id] ?? 210} 62% 52%)`
+  const uid = useId().replace(/:/g, '')
+  const r = badge.rarity
+  const h = HUE[badge.id] ?? 210
+  const rim = locked ? ['#5a5a63', '#33333a'] : RIM[r]
+  const top = locked ? '#43434b' : `hsl(${h} 78% 63%)`
+  const bottom = locked ? '#27272d' : `hsl(${h} 72% 36%)`
+  const ink = locked ? '#1c1c21' : `hsl(${h} 70% 21%)`
+  const glyph = GLYPH[badge.id]
+  const s = SCALE[r]
+  const inner = `translate(32 32) scale(${s}) translate(-32 -32)`
   return (
-    <span className={cn('relative inline-grid shrink-0 place-items-center align-middle', className)} style={{ width: size, height: size }}>
-      <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" className="absolute inset-0">
-        <path d={SHAPE[badge.rarity]} fill={fill} />
+    <span className={cn('relative inline-block shrink-0 align-middle', className)} style={{ width: size, height: size }}>
+      <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true" className="absolute inset-0">
+        <defs>
+          <linearGradient id={`${uid}r`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={rim[0]} />
+            <stop offset="1" stopColor={rim[1]} />
+          </linearGradient>
+          <linearGradient id={`${uid}b`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={top} />
+            <stop offset="1" stopColor={bottom} />
+          </linearGradient>
+          <linearGradient id={`${uid}g`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#fff" stopOpacity={locked ? 0.08 : 0.4} />
+            <stop offset="1" stopColor="#fff" stopOpacity="0" />
+          </linearGradient>
+          <clipPath id={`${uid}c`}>
+            <path d={outline(r)} transform={inner} />
+          </clipPath>
+        </defs>
+        <path d={outline(r)} fill={`url(#${uid}r)`} stroke={rim[1]} strokeWidth="1.2" strokeLinejoin="round" />
+        <path d={outline(r)} transform={inner} fill={`url(#${uid}b)`} />
+        <g clipPath={`url(#${uid}c)`}>
+          <ellipse cx="32" cy="14" rx="26" ry="19" fill={`url(#${uid}g)`} />
+        </g>
+        <path d={outline(r)} transform={inner} fill="none" stroke="#fff" strokeOpacity={locked ? 0.06 : 0.28} strokeWidth="1" strokeLinejoin="round" />
+        {glyph && (
+          <g transform="translate(32 33) scale(1.18) translate(-12 -12)" opacity={locked ? 0.3 : 1}>
+            {glyph({ ink })}
+          </g>
+        )}
+        {r === 'legendary' && !locked && <path d="m52 10 1.2 3.2L56.4 14.4 53.2 15.6 52 18.8 50.8 15.6 47.6 14.4 50.8 13.2Z" fill="#fffbe0" />}
+        {locked && (
+          <g transform="translate(42 42)">
+            <circle cx="9" cy="9" r="9" fill="#0e0e11" stroke="#3a3a42" strokeWidth="1.5" />
+            <rect x="5.2" y="8.8" width="7.6" height="5.6" rx="1.4" fill="#9a9aa4" />
+            <path d="M6.8 8.8V7.2a2.2 2.2 0 0 1 4.4 0v1.6" fill="none" stroke="#9a9aa4" strokeWidth="1.4" strokeLinecap="round" />
+          </g>
+        )}
       </svg>
-      {locked ? <Lock className="relative text-white/55" style={{ width: size * 0.42, height: size * 0.42 }} aria-hidden="true" /> : <Icon className="relative text-white" strokeWidth={2.4} style={{ width: size * 0.5, height: size * 0.5 }} aria-hidden="true" />}
       <span className="sr-only">{badge.name}</span>
     </span>
   )
