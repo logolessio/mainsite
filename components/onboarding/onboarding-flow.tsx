@@ -174,8 +174,8 @@ function SplitChoice({ options }: { options: { label: string; hint: string; onCl
 function ProfilePill({ data, onAvatar, onBanner, busy }: { data: Data; onAvatar?: () => void; onBanner?: () => void; busy?: 'avatar' | 'banner' | null }) {
   const editable = Boolean(onAvatar)
   return (
-    <div className="flex w-full max-w-md items-center gap-3 rounded-[2rem] border border-line-strong p-3">
-      <button type="button" disabled={!editable} onClick={onAvatar} aria-label="Profile picture" className={cn('relative grid size-24 shrink-0 place-items-center overflow-hidden rounded-full outline-none', data.avatarUrl ? 'bg-raised' : 'border border-dashed border-line-strong text-mute', editable && 'transition-colors hover:border-paper hover:text-paper focus-visible:ring-2 focus-visible:ring-paper/60')}>
+    <div className="flex w-fit max-w-full items-center gap-3 rounded-[2rem] border border-line-strong p-3 [--h:clamp(5.5rem,22vw,7.5rem)]">
+      <button type="button" disabled={!editable} onClick={onAvatar} aria-label="Profile picture" className={cn('relative grid size-[var(--h)] shrink-0 place-items-center overflow-hidden rounded-full outline-none', data.avatarUrl ? 'bg-raised' : 'border border-dashed border-line-strong text-mute', editable && 'transition-colors hover:border-paper hover:text-paper focus-visible:ring-2 focus-visible:ring-paper/60')}>
         {data.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={data.avatarUrl} alt="Your profile picture" className="size-full object-cover" />
@@ -188,7 +188,7 @@ function ProfilePill({ data, onAvatar, onBanner, busy }: { data: Data; onAvatar?
           </span>
         )}
       </button>
-      <button type="button" disabled={!editable} onClick={onBanner} aria-label="Banner" className={cn('relative grid aspect-video min-w-0 flex-1 place-items-center overflow-hidden rounded-[1.4rem] outline-none', data.bannerUrl ? 'bg-raised' : 'border border-dashed border-line-strong text-mute', editable && 'transition-colors hover:border-paper hover:text-paper focus-visible:ring-2 focus-visible:ring-paper/60')}>
+      <button type="button" disabled={!editable} onClick={onBanner} aria-label="Banner" className={cn('relative grid h-[var(--h)] shrink-0 aspect-video place-items-center overflow-hidden rounded-[1.4rem] outline-none', data.bannerUrl ? 'bg-raised' : 'border border-dashed border-line-strong text-mute', editable && 'transition-colors hover:border-paper hover:text-paper focus-visible:ring-2 focus-visible:ring-paper/60')}>
         {data.bannerUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={data.bannerUrl} alt="Your banner" className="size-full object-cover" />
