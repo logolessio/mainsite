@@ -62,7 +62,6 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
               const active = isActive(pathname, it)
               return (
                 <li key={it.href}>
-                  {it.group && <p className="px-3 pt-5 pb-1.5 text-[12px] text-paper/35">{it.group}</p>}
                   <TransitionLink href={it.href} aria-current={active ? 'page' : undefined} className={cn('group relative flex h-10 items-center gap-3 rounded-xl px-3 text-[15px] transition-colors', active ? 'bg-paper text-ink' : 'text-paper/55 hover:bg-white/[0.06] hover:text-paper')}>
                     <Icon name={it.icon} aria-hidden="true" className="size-[18px] shrink-0" />
                     {it.label}
@@ -166,7 +165,6 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
             <ul className="no-scrollbar flex-1 overflow-y-auto px-5 py-4">
               {items.map((it) => (
                 <li key={it.href} className="border-b border-line">
-                  {it.group && <p className="pt-5 text-[13px] text-paper/35">{it.group}</p>}
                   <TransitionLink href={it.href} onClick={() => setMore(false)} className={cn('flex h-14 items-center gap-4 text-lg', isActive(pathname, it) ? 'text-paper' : 'text-paper/60')}>
                     <Icon name={it.icon} aria-hidden="true" className="size-5" />
                     {it.label}

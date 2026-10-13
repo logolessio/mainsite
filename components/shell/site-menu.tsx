@@ -8,6 +8,7 @@ import { Avatar, useNavUser } from './nav-user'
 import { T } from './copy-provider'
 import { TransitionLink } from './transition-link'
 import { LEGAL_LINKS, NAV_LINKS } from '@/lib/site'
+import { useFeature } from './features-provider'
 import { cn } from '@/lib/utils'
 
 /**
@@ -18,6 +19,17 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
   const pathname = usePathname()
   const { user } = useNavUser()
   const first = useRef<HTMLAnchorElement>(null)
+  const board = useFeature('leaderboard')
+  const reels = useFeature('reels')
+  const status = useFeature('status-page')
+  // the smaller pages: always there, or there once their feature is switched on
+  const more = [
+    { label: 'Case studies', href: '/case-studies' },
+    { label: 'Contact', href: '/contact' },
+    ...(board ? [{ label: 'Leaderboard', href: '/leaderboard' }] : []),
+    ...(reels ? [{ label: 'Reels', href: '/reels' }] : []),
+    ...(status ? [{ label: 'Status', href: '/status' }] : []),
+  ]
 
   useEffect(() => {
     if (!open) return
@@ -40,7 +52,7 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
             initial={{ x: '100%' }}
             animate={{ x: 0, transition: { duration: 0.5, ease: [0.32, 0.72, 0, 1] } }}
             exit={{ x: '100%', transition: { duration: 0.35, ease: [0.32, 0.72, 0, 1] } }}
-            className="no-scrollbar fixed top-0 right-0 bottom-0 z-[45] flex w-[min(26rem,100vw)] flex-col overflow-y-auto border-l border-line bg-ink px-8 pt-28 pb-8 text-paper"
+            className="no-scrollbar fixed top-0 right-0 bottom-0 z-[45] flex w-[min(26rem,100vw)] flex-col overflow-y-auto border-l border-line bg-ink px-8 pt-24 pb-8 text-paper"
           >
             <nav aria-label="Main">
               <ul className="[&:hover>li:not(:hover)]:opacity-35">
@@ -53,7 +65,7 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
                         href={l.href}
                         onClick={onClose}
                         aria-current={active ? 'page' : undefined}
-                        className="group flex items-center gap-3 py-1.5 font-display text-[2.4rem] leading-[1.1] tracking-[-0.035em]"
+                        className="group flex items-center gap-3 py-1 font-display text-[2.2rem] leading-[1.1] tracking-[-0.035em]"
                       >
                         <T>{l.label}</T>
                         <span aria-hidden="true" className={cn('size-2 rounded-full bg-paper transition-transform duration-300', active ? 'scale-100' : 'scale-0')} />
@@ -64,7 +76,20 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
               </ul>
             </nav>
 
-            <div className="mt-auto pt-12">
+            <div className="mt-7">
+              <p className="mb-2 text-[12px] text-mute/70">More</p>
+              <ul className="grid grid-cols-2 gap-x-4 [&:hover>li:not(:hover)]:opacity-40">
+                {more.map((l, i) => (
+                  <motion.li key={l.href} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0, transition: { duration: 0.4, delay: 0.4 + i * 0.04, ease: [0.32, 0.72, 0, 1] } }} className="transition-opacity duration-300">
+                    <TransitionLink href={l.href} onClick={onClose} aria-current={pathname === l.href ? 'page' : undefined} className="block py-1.5 text-[17px] text-paper/80 transition-colors hover:text-paper">
+                      {l.label}
+                    </TransitionLink>
+                  </motion.li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="mt-auto pt-10">
               {user?.signedIn ? (
                 <>
                   <TransitionLink href="/dashboard" onClick={onClose} className="mb-6 flex items-center gap-3.5">
@@ -102,7 +127,7 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
                 <button type="button" onClick={onTour} className="transition-colors hover:text-paper">
                   Take the tour
                 </button>
-                {LEGAL_LINKS.slice(0, 2).map((l) => (
+                {[LEGAL_LINKS[0], LEGAL_LINKS[1], LEGAL_LINKS[4], LEGAL_LINKS[6]].map((l) => (
                   <TransitionLink key={l.href} href={l.href} onClick={onClose} className="transition-colors hover:text-paper">
                     {l.label}
                   </TransitionLink>
