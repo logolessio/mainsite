@@ -21,6 +21,11 @@ export default async function Page() {
             <Switch k="bg_dots" label="Dot landscape" hint="The rolling field of dots behind the site. Off by default: the moving gradient and faint grid are shown instead." on={s.bg_dots === '1'} />
           </ul>
         </Card>
+        <Card title="Typeface">
+          <ul className="divide-y divide-line">
+            <Switch k="design_font_mono" label="Geist Mono as the main font" hint="Every page set in the monospace face used for addresses. Off: the standard Inter sans." on={s.design_font_mono === '1'} />
+          </ul>
+        </Card>
         <Card title="Campaign covers">
           <ul className="divide-y divide-line">
             <Switch k="design_cover_effects" label="Tilt, shine and zoom" hint="Covers lean towards the cursor, catch a moving highlight and drift inside their frame. Off: one simple zoom on hover." on={s.design_cover_effects === '1'} />

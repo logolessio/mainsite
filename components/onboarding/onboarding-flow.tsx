@@ -7,14 +7,13 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BrandIcon } from '@/components/brand-icon'
-import { useTheme } from '@/components/shell/theme-toggle'
 import { useMounted } from '@/hooks/use-motion-prefs'
 import { type Provider, type Role, signInWithProvider, signUpWithEmail } from '@/lib/auth'
 import { uploadImage } from '@/lib/image-client'
 import { checkHandleAvailable, resendEmailCode, verifyEmailCode } from '@/lib/onboarding'
 import { cn } from '@/lib/utils'
 
-type Id = 'welcome' | 'role' | 'method' | 'email' | 'password' | 'code' | 'paypal' | 'name' | 'handle' | 'pictures' | 'happy' | 'theme' | 'saving' | 'hello' | 'tour' | 'done'
+type Id = 'welcome' | 'role' | 'method' | 'email' | 'password' | 'code' | 'paypal' | 'name' | 'handle' | 'pictures' | 'happy' | 'saving' | 'hello' | 'tour' | 'done'
 
 type Data = {
   role: Role | null
@@ -205,40 +204,75 @@ function ProfilePill({ data, onAvatar, onBanner, busy }: { data: Data; onAvatar?
   )
 }
 
-/** Light or dark, shown as two tiny screens. Picking one changes the page right now. */
-function ThemePick({ light, onPick }: { light: boolean; onPick: (t: 'dark' | 'light') => void }) {
+/** One water drop with its tail trailing behind it: a head of radius r at the origin and a point three radii back. */
+function Drop({ r, angle, orbit, flip }: { r: number; angle: number; orbit: number; flip?: boolean }) {
+  const d = `M0 ${-3.1 * r} C${0.55 * r} ${-1.7 * r} ${r} ${-0.8 * r} ${r} 0A${r} ${r} 0 1 1 ${-r} 0C${-r} ${-0.8 * r} ${-0.55 * r} ${-1.7 * r} 0 ${-3.1 * r}Z`
   return (
-    <div className="flex justify-center gap-5">
-      {(['dark', 'light'] as const).map((t) => {
-        const on = (light ? 'light' : 'dark') === t
-        return (
-          <button key={t} type="button" aria-pressed={on} onClick={() => onPick(t)} className="group flex flex-col items-center gap-3 outline-none">
-            <span data-keep className={cn('relative block h-24 w-36 overflow-hidden rounded-2xl border-2 transition-all duration-300 group-focus-visible:ring-2 group-focus-visible:ring-paper/60', t === 'dark' ? 'bg-[#0b0b0d]' : 'bg-[#f7f7f5]', on ? 'scale-105 border-emerald-500' : 'border-line-strong opacity-70 group-hover:opacity-100')}>
-              <span className={cn('absolute top-3 left-3 h-2 w-14 rounded-full', t === 'dark' ? 'bg-white/80' : 'bg-black/75')} />
-              <span className={cn('absolute top-7 left-3 h-1.5 w-20 rounded-full', t === 'dark' ? 'bg-white/30' : 'bg-black/25')} />
-              <span className={cn('absolute right-3 bottom-3 h-7 w-12 rounded-xl', t === 'dark' ? 'bg-white/90' : 'bg-black/85')} />
-              {on && (
-                <span className="absolute top-2 right-2 grid size-5 place-items-center rounded-full bg-emerald-500 text-white">
-                  <Check className="size-3.5" strokeWidth={3} />
-                </span>
-              )}
-            </span>
-            <span className={cn('text-[15px] transition-colors', on ? 'text-paper' : 'text-mute')}>{t === 'dark' ? 'Dark' : 'Light'}</span>
-          </button>
-        )
-      })}
-    </div>
+    <g transform={`rotate(${angle} 200 200) translate(${200 + orbit} 200)${flip ? ' scale(1 -1)' : ''}`}>
+      <path d={d} fill="url(#orb-drop)" />
+      <circle cx={-0.36 * r} cy={-0.3 * r} r={0.3 * r} fill="#fff" opacity=".85" />
+    </g>
   )
 }
 
-/** A row of dots that rise and fall one after another. */
-function DotWave() {
+/**
+ * The wait while a profile is made: the line sits in a circle, a thin arc fills round it over the five seconds, and water drops
+ * go round and round, big ones on the outside one way and small ones on the inside the other. Ripples spread from the middle.
+ */
+function SettleOrb({ line, note }: { line: string; note: string }) {
+  const C = 2 * Math.PI * 190
   return (
-    <span role="status" aria-label="Loading" className="flex items-end justify-center gap-2.5">
-      {[0, 1, 2, 3, 4].map((i) => (
-        <motion.span key={i} className="block size-3 rounded-full bg-paper" animate={{ y: [0, -16, 0], opacity: [0.35, 1, 0.35] }} transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut', delay: i * 0.12 }} />
-      ))}
-    </span>
+    <div role="status" aria-live="polite" className="relative mx-auto grid aspect-square w-[min(78vw,25rem)] place-items-center">
+      <span aria-hidden="true" className="orb-ripple absolute inset-[16%] rounded-full border border-paper/25" />
+      <span aria-hidden="true" className="orb-ripple absolute inset-[16%] rounded-full border border-paper/20 [animation-delay:1.6s]" />
+      <svg aria-hidden="true" viewBox="0 0 400 400" className="absolute inset-0 -rotate-90">
+        <defs>
+          <linearGradient id="orb-arc" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#ffffff" />
+            <stop offset="1" stopColor="#7cc4ff" />
+          </linearGradient>
+        </defs>
+        <circle cx="200" cy="200" r="190" fill="none" stroke="currentColor" strokeOpacity=".12" strokeWidth="2" />
+        <circle cx="200" cy="200" r="190" fill="none" stroke="url(#orb-arc)" strokeWidth="3" strokeLinecap="round" strokeDasharray={C} className="orb-fill" style={{ ['--c' as string]: C, animationDuration: `${SETTLE_MS}ms` }} />
+      </svg>
+      <svg aria-hidden="true" viewBox="0 0 400 400" className="orb-spin absolute inset-0">
+        <defs>
+          <linearGradient id="orb-drop" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#eef8ff" />
+            <stop offset="1" stopColor="#74bdf7" />
+          </linearGradient>
+        </defs>
+        {[
+          [0, 7],
+          [50, 5],
+          [105, 8],
+          [160, 5],
+          [215, 6],
+          [265, 9],
+          [315, 5],
+        ].map(([a, r]) => (
+          <Drop key={a} angle={a} r={r} orbit={190} />
+        ))}
+      </svg>
+      <svg aria-hidden="true" viewBox="0 0 400 400" className="orb-spin-rev absolute inset-0">
+        {[
+          [20, 4.5],
+          [110, 3.5],
+          [200, 5],
+          [290, 3.5],
+        ].map(([a, r]) => (
+          <Drop key={a} angle={a} r={r} orbit={158} flip />
+        ))}
+      </svg>
+      <div className="relative px-[19%] text-center">
+        <h1 className="font-display text-[clamp(1.7rem,4.4vw,2.5rem)] leading-[1.08]">{line}</h1>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.p key={note} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.25 }} className="mt-3 text-[15px] text-mute">
+            {note}
+          </motion.p>
+        </AnimatePresence>
+      </div>
+    </div>
   )
 }
 
@@ -299,7 +333,7 @@ function MiniDash({ role, onFinish }: { role: Role; onFinish: () => void }) {
   )
 }
 
-const STEP_ORDER: Id[] = ['welcome', 'role', 'method', 'email', 'password', 'code', 'paypal', 'name', 'handle', 'pictures', 'happy', 'theme', 'saving', 'hello', 'tour', 'done']
+const STEP_ORDER: Id[] = ['welcome', 'role', 'method', 'email', 'password', 'code', 'paypal', 'name', 'handle', 'pictures', 'happy', 'saving', 'hello', 'tour', 'done']
 
 /**
  * `preview` is an admin's dry run: it starts as a stranger would (signed out), every question works, and nothing is sent to the
@@ -308,7 +342,6 @@ const STEP_ORDER: Id[] = ['welcome', 'role', 'method', 'email', 'password', 'cod
 export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = false }: { sessionUser: { name: string; email: string } | null; initialRole?: Role; preview?: boolean }) {
   const sessionUser = preview ? null : realUser
   const router = useRouter()
-  const theme = useTheme()
   const mounted = useMounted()
   const [id, setId] = useState<Id>('welcome')
   const [trail, setTrail] = useState<Id[]>([])
@@ -328,15 +361,6 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
   const brand = data.role === 'brand'
   const prevId = trail[trail.length - 1]
   const canBack = Boolean(prevId) && !(signedIn && (['role', 'method', 'email', 'password', 'code'] as Id[]).includes(prevId))
-  // a preview may change the colour while the admin tries that step; put it back when they leave
-  const startedAs = useRef(theme.light ? 'light' : 'dark')
-  useEffect(() => {
-    if (!preview) return
-    const was = startedAs.current as 'light' | 'dark'
-    return () => theme.set(was)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preview])
-
   const go = (next: Id, initialText = '') => {
     setTrail((t) => (id === 'welcome' ? t : [...t, id]))
     setReady(false)
@@ -384,8 +408,6 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
         return 'Make it yours.'
       case 'happy':
         return 'Are you happy with how it looks?'
-      case 'theme':
-        return 'Light or dark?'
       case 'saving':
         return 'Setting things up.'
       case 'hello':
@@ -403,7 +425,6 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
     paypal: 'That is where your earnings go. You can change it later.',
     handle: 'This is your address on logoless. Letters, numbers and underscores.',
     pictures: 'Tap the circle for a photo and the wide part for a banner.',
-    theme: 'You can change it any time in Settings.',
     saving: 'This only takes a moment.',
     hello: 'Your profile page is ready.',
   }
@@ -548,7 +569,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       setTrail((t) => t.slice(0, -1))
       setReady(false)
       setError(failed)
-      return setId('theme')
+      return setId('happy')
     }
     setReady(false)
     setId('hello')
@@ -595,6 +616,10 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       <div className="mx-auto w-full max-w-2xl px-6 pt-[20vh] pb-28">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.16 }}>
+            {id === 'saving' ? (
+              <SettleOrb line={line} note={settling} />
+            ) : (
+              <>
             <Typed
               text={line}
               onReady={() => setReady(true)}
@@ -744,37 +769,12 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                   <div className="mt-8 w-full">
                     <SplitChoice
                       options={[
-                        { label: 'Yes', hint: 'Looks good to me', onClick: () => go('theme') },
+                        { label: 'Yes', hint: 'Looks good to me', onClick: () => void save() },
                         { label: 'Not yet', hint: 'Let me change something', onClick: back },
                       ]}
                     />
                   </div>
                 </>
-              )}
-
-              {id === 'theme' && (
-                <>
-                  <ThemePick light={theme.light} onPick={(t) => theme.set(t)} />
-                  {error && (
-                    <p role="alert" className="mt-6 text-sm text-red-500">
-                      {error}
-                    </p>
-                  )}
-                  <button type="button" onClick={() => void save()} className={cn(primary, 'mt-10')}>
-                    Finish
-                  </button>
-                </>
-              )}
-
-              {id === 'saving' && (
-                <div className="flex flex-col items-center gap-8">
-                  <DotWave />
-                  <AnimatePresence mode="wait" initial={false}>
-                    <motion.p key={settling} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.25 }} className="text-[16px] text-mute">
-                      {settling}
-                    </motion.p>
-                  </AnimatePresence>
-                </div>
               )}
 
               {id === 'hello' && (
@@ -820,10 +820,12 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                 </>
               )}
             </div>
+              </>
+            )}
           </motion.div>
         </AnimatePresence>
 
-        {error && !textStep && id !== 'pictures' && id !== 'theme' && (
+        {error && !textStep && id !== 'pictures' && (
           <p role="alert" className="mt-6 text-sm text-red-500">
             {error}
           </p>

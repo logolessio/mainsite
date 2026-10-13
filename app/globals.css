@@ -535,24 +535,6 @@ html.calm *::after {
   to { transform: scaleY(1); }
 }
 
-/* ---------- light mode ----------
-   Swaps black and white by inverting the whole page, then putting photos, video, badges and embeds back
-   to their own colours. Logos are left inverted on purpose, so the white wordmark turns black. The dot
-   landscape is a canvas, so it simply swaps too. */
-html.light {
-  filter: invert(1) hue-rotate(180deg);
-}
-html.light :is(img:not([data-logo]), video, iframe, [data-keep]) {
-  filter: invert(1) hue-rotate(180deg);
-}
-/* The blurred photo behind Reels keeps its blur next to the colour swap. */
-html.light img[class*='blur-[90px]'] {
-  display: none; /* on white, the tinted wash behind a campaign shows its edges, so the page stays clean instead */
-}
-html.light img[class*='blur-3xl'] {
-  filter: invert(1) hue-rotate(180deg) blur(64px) saturate(1.5);
-}
-
 /* ---------- finishing touches ---------- */
 h1,
 h2,
@@ -583,17 +565,34 @@ li {
   mask-image: radial-gradient(ellipse 80% 70% at 50% 38%, #000 25%, transparent 78%);
 }
 
-/* ---------- black islands on the white page ----------
-   The page is white, and a few surfaces (the campaign grid, the footer, the sidebar, the campaign pop-up) stay black.
-   An island undoes the page's colour swap for everything inside it, so it looks exactly as it was drawn for dark. */
-html.light .island {
-  filter: invert(1) hue-rotate(180deg);
+/* ---------- the typeface option (Admin > Design): Geist Mono as the main font ---------- */
+html[data-font='mono'] {
+  --font-body: var(--font-mono-face);
+  --font-display-face: var(--font-mono-face);
 }
-html.light .island :is(img, video, iframe, [data-keep]) {
-  filter: none;
+html[data-font='mono'] .font-display {
+  font-weight: 500;
+  letter-spacing: -0.045em;
 }
 
 /* Larger text (Settings > Text size) */
 html.text-large {
   font-size: 112.5%;
 }
+
+/* ---------- the wait in onboarding: drops going round a ring ---------- */
+@keyframes orb-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes orb-fill {
+  from { stroke-dashoffset: var(--c); }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes orb-ripple {
+  0% { transform: scale(0.88); opacity: 0.8; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+.orb-spin { animation: orb-spin 8s linear infinite; }
+.orb-spin-rev { animation: orb-spin 12s linear infinite reverse; }
+.orb-fill { animation: orb-fill 5.2s cubic-bezier(0.5, 0, 0.2, 1) forwards; }
+.orb-ripple { animation: orb-ripple 3.2s ease-out infinite; }

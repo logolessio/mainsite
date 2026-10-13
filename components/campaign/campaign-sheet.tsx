@@ -114,7 +114,7 @@ export function CampaignSheet({ campaign, onClose, poolLeftCents = null, inline 
 
       <p className="text-[12.5px] leading-relaxed text-white/45">
         Approved earnings clear after {SITE.holdDays} days. Withdraw from ${SITE.minPayoutUsd}.{' '}
-        <Link href="/legal/campaign-rules" className="text-white/80 underline underline-offset-4">
+        <Link href="/legal/campaign-rules" onClick={onClose} className="text-white/80 underline underline-offset-4">
           Campaign rules
         </Link>
       </p>

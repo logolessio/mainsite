@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { Field, Input } from '@/components/ui/fields'
 import { GlassTabs } from '@/components/ui/glass-tabs'
-import { useTheme } from '@/components/shell/theme-toggle'
 import { calmWasAutomatic, clearCalmChoice, getCalmChoice, getLargeText, setCalm, setLargeText, subscribeCalm } from '@/lib/calm'
 import { DeleteCard, PayPalCard } from './account-cards'
 import { ActionButton, Card } from './ui'
@@ -133,22 +132,14 @@ function PasswordCard({ me }: { me: Me | null }) {
   )
 }
 
-/** How the site looks and moves: colour, motion and text size. */
+/** How the site moves and reads: calm mode and text size. */
 function Display() {
-  const { light, set } = useTheme()
   const choice = useSyncExternalStore(subscribeCalm, getCalmChoice, () => 'auto' as const)
   const large = useSyncExternalStore(subscribeCalm, getLargeText, () => false)
   const auto = useSyncExternalStore(subscribeCalm, calmWasAutomatic, () => false)
   return (
     <Card title="Display">
       <div className="grid gap-8">
-        <div>
-          <p className="text-[15px]">Colour</p>
-          <p className="mt-1 text-sm text-mute">Black all over, or white with black panels.</p>
-          <div className="mt-4">
-            <GlassTabs label="Colour" value={light ? 'light' : 'dark'} onChange={(v) => set(v as 'light' | 'dark')} tabs={[{ id: 'dark', label: 'Dark' }, { id: 'light', label: 'Light' }]} className="mx-0" />
-          </div>
-        </div>
         <div>
           <p className="text-[15px]">Calm mode</p>
           <p className="mt-1 text-sm text-mute">Turns off the moving background and heavy animation. Automatic switches it on only when your device struggles.{auto && choice === 'on' ? ' It was switched on for you.' : ''}</p>

@@ -10,7 +10,6 @@ import { DesignProvider } from '@/components/shell/design-provider'
 import { FeaturesProvider } from '@/components/shell/features-provider'
 import { getAnnouncement } from '@/lib/announcement'
 import { featureState } from '@/lib/features'
-import { THEME_BOOT } from '@/lib/theme'
 import { getOverrides } from '@/lib/copy'
 import { getSetting } from '@/lib/settings'
 import { getSession } from '@/lib/session'
@@ -52,15 +51,14 @@ const SITE_LD = {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   // Site text can be edited by the owner, so every page is built per request with the current wording.
   await connection()
-  const [overrides, session, fs, dots, fx, border] = await Promise.all([getOverrides(), getSession(), featureState(), getSetting('bg_dots'), getSetting('design_cover_effects'), getSetting('design_cover_border')])
+  const [overrides, session, fs, dots, fx, border, mono] = await Promise.all([getOverrides(), getSession(), featureState(), getSetting('bg_dots'), getSetting('design_cover_effects'), getSetting('design_cover_border'), getSetting('design_font_mono')])
   const isAdmin = session?.user?.role === 'admin'
   // The dev site is for admins only: everyone else gets a sign-in screen and nothing from behind it.
   const blocked = fs.dev && !isAdmin
   const announcement = fs.on.announcement && !blocked ? await getAnnouncement() : null
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${tight.variable} ${geistMono.variable} bg-ink`}>
+    <html lang="en" suppressHydrationWarning data-font={mono === '1' ? 'mono' : undefined} className={`${inter.variable} ${tight.variable} ${geistMono.variable} bg-ink`}>
       <head>
-        {!blocked && <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_LD) }} />
       </head>
       <body className="antialiased">

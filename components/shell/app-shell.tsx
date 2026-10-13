@@ -4,7 +4,6 @@ import { MotionConfig } from 'framer-motion'
 import { useSyncExternalStore } from 'react'
 import { getCalm, subscribeCalm } from '@/lib/calm'
 import { AutoCalm, CalmApply } from './calm-toggle'
-import { ThemeApply } from './theme-toggle'
 import { LiveToasts } from './live-toasts'
 import { Spotlight } from './spotlight'
 import { BadgeCelebration } from './badge-celebration'
@@ -33,7 +32,6 @@ export function AppShell({ children, announcement = null, dots = false }: { chil
         <Tracker />
         <CalmApply />
         <AutoCalm />
-        <ThemeApply />
         <Spotlight />
         <LiveToasts />
         <BadgeCelebration />

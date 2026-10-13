@@ -1,6 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
+import { usePathname } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useMounted } from '@/hooks/use-motion-prefs'
@@ -14,6 +15,7 @@ export const useCampaignModal = () => useContext(Ctx)
 /** Opens a campaign as a centred sheet over whatever page you are on. Escape or a click outside closes it. */
 export function CampaignModalProvider({ children }: { children: React.ReactNode }) {
   const mounted = useMounted()
+  const pathname = usePathname()
   const [campaign, setCampaign] = useState<Campaign | null>(null)
   const panel = useRef<HTMLDivElement>(null)
   const returnTo = useRef<HTMLElement | null>(null)
@@ -51,6 +53,11 @@ export function CampaignModalProvider({ children }: { children: React.ReactNode 
       delete document.documentElement.dataset.modal
     }
   }, [campaign, close])
+
+  // following a link out of the sheet (campaign rules, a profile) takes you to that page, so the sheet must not stay behind
+  useEffect(() => {
+    setCampaign(null)
+  }, [pathname])
 
   const value = useMemo(() => ({ open }), [open])
   return (
