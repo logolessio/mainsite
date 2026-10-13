@@ -4,7 +4,7 @@ import { captchaConfigured } from './human'
 import { db, setting } from './db'
 import { getSetting } from './settings'
 import { SITE } from './site'
-import { stripe } from './stripe'
+import { paypalConfig, paypalPing } from './paypal'
 
 /** The newest database migration this code expects. Bump it whenever a migration is added. */
 export const LATEST_MIGRATION = '0010_artist_invites'
@@ -44,7 +44,7 @@ const MANUAL_PREFIX = 'launch:'
 
 type Def = Omit<Item, 'state'> & { state?: State }
 
-/** Computes everything from the real site: secrets, database, Stripe and what the owner has ticked off by hand. */
+/** Computes everything from the real site: secrets, database, PayPal and what the owner has ticked off by hand. */
 export async function readiness(): Promise<Readiness> {
   const d = await db()
   const has = async (n: string) => Boolean(await setting(n))
@@ -59,7 +59,7 @@ export async function readiness(): Promise<Readiness> {
 
   // ---- facts we look up once ----
   const ticks = new Map((await safe(async () => (await d.prepare("SELECT key, value FROM settings WHERE key LIKE 'launch:%'").all<{ key: string; value: string }>()).results, [])).map((r) => [r.key.slice(MANUAL_PREFIX.length), r.value === '1']))
-  const sk = await val('STRIPE_SECRET_KEY')
+  const pp = await paypalConfig()
   const secret = await val('AUTH_SECRET')
   const adminEmails = (await val('ADMIN_EMAILS')).split(',').filter((e) => e.trim()).length
   const host = await safe(async () => (await headers()).get('host') ?? '', '')
@@ -88,13 +88,9 @@ export async function readiness(): Promise<Readiness> {
   const migration = await safe(async () => (await d.prepare('SELECT name FROM d1_migrations ORDER BY id DESC LIMIT 1').first<{ name: string }>())?.name ?? null, null)
   const migrated = migration ? migration.replace(/\.sql$/, '') >= LATEST_MIGRATION : await safe(async () => Boolean(await d.prepare("SELECT 1 AS x FROM sqlite_master WHERE name = 'artist_invites'").first()), false)
   const chain = await safe(() => verifyAudit(), { ok: false, rows: 0 })
-  const connect = await safe(async () => {
-    const s = await stripe()
-    await s.accounts.list({ limit: 1 })
-    return true
-  }, false)
+  const pingOk = pp ? await safe(async () => (await paypalPing(), true), false) : false
   const payoutsPaused = (await getSetting('payouts_paused')) === '1'
-  const live = sk.startsWith('sk_live_') || sk.startsWith('rk_live_')
+  const live = Boolean(pp?.live)
 
   const tick = (id: string) => ticks.get(id) === true
   const manual = (id: string, o: Omit<Def, 'id' | 'manual'>): Def => ({ id, manual: true, state: tick(id) ? 'done' : 'todo', ...o })
@@ -112,16 +108,15 @@ export async function readiness(): Promise<Readiness> {
     { id: 'discord', group: 'Sign-in and accounts', level: 'nice', title: 'Discord login (optional)', why: 'A second way in that clippers like.', state: (await has('AUTH_DISCORD_ID')) && (await has('AUTH_DISCORD_SECRET')) ? 'done' : 'todo', detail: (await has('AUTH_DISCORD_ID')) ? 'Set' : 'Not set' },
 
     // ---------------- payments ----------------
-    { id: 'stripe-key', group: 'Payments and payouts', level: 'blocker', title: 'Stripe is connected', why: 'Artists pay and clippers are paid through it.', state: sk ? 'done' : 'todo', detail: sk ? 'Secret key is set' : 'No key', how: ['Stripe → Developers → API keys.', 'Add STRIPE_SECRET_KEY in Cloudflare as a Secret.'], href: '/admin/keys', hrefLabel: 'Run the Stripe test' },
-    { id: 'stripe-live', group: 'Payments and payouts', level: 'blocker', title: 'Stripe is in LIVE mode', why: 'In test mode no real money moves. Launch with live keys.', state: live ? 'done' : 'todo', detail: sk ? (live ? 'Live key in use' : 'Still a test key') : 'No key', how: ['Finish activating your Stripe account (business details, bank account).', 'Switch the dashboard to Live mode and copy the live secret and publishable keys.', 'Replace STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY, create a LIVE webhook and replace STRIPE_WEBHOOK_SECRET (and the Connect one).', 'Promote the new Cloudflare version.'] },
-    { id: 'stripe-pk', group: 'Payments and payouts', level: 'blocker', title: 'Stripe publishable key is set', why: 'Clippers add their bank details through it.', state: (await has('STRIPE_PUBLISHABLE_KEY')) ? 'done' : 'todo', how: ['Add STRIPE_PUBLISHABLE_KEY (pk_live_…) in Cloudflare as a variable or secret.'] },
-    { id: 'webhook-secret', group: 'Payments and payouts', level: 'blocker', title: 'Stripe webhook secret is set', why: 'Without it, payments are never credited to a campaign.', state: (await has('STRIPE_WEBHOOK_SECRET')) ? 'done' : 'todo', how: ['Stripe → Developers → Webhooks → endpoint https://logoless.io/api/stripe/webhook.', 'Copy its signing secret into STRIPE_WEBHOOK_SECRET.'] },
-    { id: 'webhook-proof', group: 'Payments and payouts', level: 'blocker', title: 'A real Stripe event has arrived', why: 'Proves the webhook URL is reachable and the secret matches.', state: (f.events ?? 0) > 0 ? 'done' : 'todo', detail: `${f.events ?? 0} received so far`, how: ['Fund a test campaign, or in Stripe press "Send test event" on the endpoint.'], href: '/admin/keys', hrefLabel: 'Check the webhook' },
-    { id: 'connect-webhook', group: 'Payments and payouts', level: 'should', title: 'Connect webhook secret is set', why: 'Tells us when a clipper finishes setting up their payout account.', state: (await has('STRIPE_CONNECT_WEBHOOK_SECRET')) ? 'done' : 'warn', how: ['Create a second endpoint with "Listen to events on Connected accounts" for account.updated.', 'Add its secret as STRIPE_CONNECT_WEBHOOK_SECRET.'] },
-    { id: 'connect', group: 'Payments and payouts', level: 'blocker', title: 'Stripe Connect is switched on', why: 'It is how clippers receive money in their own bank.', state: connect ? 'done' : 'todo', detail: connect ? 'Stripe answered' : 'Stripe refused or no key', how: ['Stripe → Connect → Get started, and accept the platform terms.'] },
-    manual('stripe-verified', { group: 'Payments and payouts', level: 'blocker', title: 'Stripe account is fully verified', why: 'Stripe holds payouts until your own business is verified.', how: ['Stripe → Settings → Business → check nothing says "restricted" or "more information needed".', 'Tick this when the dashboard is clean.'] }),
+    { id: 'paypal-key', group: 'Payments and payouts', level: 'blocker', title: 'PayPal is connected', why: 'Brands add funds and clippers are paid through it. All the money is held there.', state: pp ? 'done' : 'todo', detail: pp ? 'Keys are set' : 'No keys', how: ['Open PAYPAL_SETUP.md in the project: it walks through every step.', 'developer.paypal.com → Apps and credentials → create an app on a Business account.', 'Add PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET in Cloudflare as Secrets.'], href: '/admin/keys', hrefLabel: 'Run the PayPal test' },
+    { id: 'paypal-works', group: 'Payments and payouts', level: 'blocker', title: 'PayPal accepts our keys', why: 'A wrong key means nobody can add funds or withdraw.', state: pingOk ? 'done' : 'todo', detail: pingOk ? 'PayPal answered' : pp ? 'PayPal refused the keys' : 'No keys yet', href: '/admin/keys', hrefLabel: 'Run the PayPal test' },
+    { id: 'paypal-live', group: 'Payments and payouts', level: 'blocker', title: 'PayPal is in LIVE mode', why: 'In sandbox mode no real money moves. Launch with live keys.', state: live ? 'done' : 'todo', detail: pp ? (live ? 'Live keys in use' : 'Still sandbox') : 'No keys', how: ['developer.paypal.com → switch the toggle to Live and copy the live Client ID and Secret.', 'Replace PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET, and set PAYPAL_ENV to live (or remove it).', 'Create the webhook again on the live app and replace PAYPAL_WEBHOOK_ID.'] },
+    { id: 'paypal-webhook', group: 'Payments and payouts', level: 'blocker', title: 'PayPal webhook ID is set', why: 'Without it we are never told about refunds, bounced payouts or payments that clear late.', state: (await has('PAYPAL_WEBHOOK_ID')) ? 'done' : 'todo', how: ['PayPal app → Webhooks → add https://logoless.io/api/paypal/webhook with the payment capture and payouts item events.', 'Copy its Webhook ID into PAYPAL_WEBHOOK_ID as a Secret.'] },
+    { id: 'webhook-proof', group: 'Payments and payouts', level: 'blocker', title: 'A real PayPal event has arrived', why: 'Proves the webhook URL is reachable and the ID matches.', state: (f.events ?? 0) > 0 ? 'done' : 'todo', detail: `${f.events ?? 0} received so far`, how: ['Add funds with a small amount, or send a simulated event from the PayPal webhooks page.'], href: '/admin/keys', hrefLabel: 'Check the webhook' },
+    manual('paypal-payouts', { group: 'Payments and payouts', level: 'blocker', title: 'PayPal Payouts is switched on', why: 'It is how clippers are paid. PayPal has to approve it for your business account first.', how: ['PayPal business account → Pay & Get Paid → Payouts (or ask PayPal support to enable Payouts).', 'Tick this once a test payout works.'] }),
+    manual('paypal-funded', { group: 'Payments and payouts', level: 'blocker', title: 'The PayPal account holds enough to pay clippers', why: 'Payouts come out of the PayPal balance. Money brands add arrives there; keep it from running dry.', how: ['Watch the Company funds figure on the admin overview: your PayPal balance should always be at least that much.'] }),
     { id: 'payment-proof', group: 'Payments and payouts', level: 'blocker', title: 'A campaign payment went all the way through', why: 'The money in, pool credited, campaign launched path must work once for real.', state: (f.campaignPayments ?? 0) > 0 ? 'done' : 'todo', detail: `${f.campaignPayments ?? 0} paid campaign payment${f.campaignPayments === 1 ? '' : 's'}`, how: ['Make an artist link for yourself, claim it with a second account and fund a $100 campaign.', 'Confirm it lands in the pool and you can Launch it.'], href: '/admin/invites', hrefLabel: 'Make a test link' },
-    { id: 'payout-proof', group: 'Payments and payouts', level: 'blocker', title: 'A clipper payout was sent', why: 'Proves a clipper can set up, withdraw and be paid.', state: (f.payoutsSent ?? 0) > 0 ? 'done' : 'todo', detail: `${f.payoutsSent ?? 0} sent so far`, how: ['Use a second account as a clipper, submit a clip, approve it with views, and withdraw.', 'Check the money arrived in the connected account.'], href: '/admin/payouts', hrefLabel: 'Open payouts' },
+    { id: 'payout-proof', group: 'Payments and payouts', level: 'blocker', title: 'A clipper payout was sent', why: 'Proves a clipper can set up, withdraw and be paid.', state: (f.payoutsSent ?? 0) > 0 ? 'done' : 'todo', detail: `${f.payoutsSent ?? 0} sent so far`, how: ['Use a second account as a clipper, submit a clip, approve it with views, and withdraw.', 'Check the money arrived in the PayPal account.'], href: '/admin/payouts', hrefLabel: 'Open payouts' },
     { id: 'payouts-on', group: 'Payments and payouts', level: 'blocker', title: 'Payouts are not paused', why: 'The pause switch stops every withdrawal.', state: payoutsPaused ? 'todo' : 'done', detail: payoutsPaused ? 'Paused right now' : 'Running', href: '/admin/settings', hrefLabel: 'Open settings' },
 
     // ---------------- database & safety ----------------
@@ -146,7 +141,7 @@ export async function readiness(): Promise<Readiness> {
     // ---------------- running it ----------------
     { id: 'invites', group: 'Running the business', level: 'should', title: 'First artist link made', why: 'Artist links are how your first campaigns arrive.', state: (f.invites ?? 0) > 0 ? 'done' : 'todo', detail: `${f.invites ?? 0} made, ${f.inviteCampaigns ?? 0} turned into campaigns`, href: '/admin/invites', hrefLabel: 'Make one' },
     manual('views-process', { group: 'Running the business', level: 'blocker', title: 'You know how views get verified each day', why: 'View counts are checked by hand for now. Clippers expect to be paid, so someone has to do it on a schedule.', how: ['Pick a time each day to open the Review queue.', 'Check each clip’s real views on the platform, enter them, and press Approve and pay.', 'Decide who covers it when you are away.'] }),
-    manual('support-plan', { group: 'Running the business', level: 'should', title: 'You have a plan for support and disputes', why: 'Clippers will ask where their money is and artists will ask for refunds.', how: ['Read the refund policy under /legal/refunds and decide who answers support email.', 'Decide what happens on a Stripe dispute (the site flags it, a human decides).'] }),
+    manual('support-plan', { group: 'Running the business', level: 'should', title: 'You have a plan for support and disputes', why: 'Clippers will ask where their money is and artists will ask for refunds.', how: ['Read the refund policy under /legal/refunds and decide who answers support email.', 'Decide what happens on a PayPal dispute (the site flags it, a human decides).'] }),
     manual('first-run', { group: 'Running the business', level: 'blocker', title: 'You ran the whole loop once, end to end', why: 'Artist link → set up → fund → launch → clip → approve → payout. Doing it once finds every sharp edge.', how: ['Use two spare accounts: one artist (via a link), one clipper.', 'Walk through every step above and write down anything that confused you.'] }),
     manual('contact-form', { group: 'Running the business', level: 'should', title: 'A message from the contact form reaches you', why: 'The contact page now emails the first admin address. Make sure it lands in a real inbox and you can reply to it.', how: ['Open /contact in a private window and send yourself a message.', 'Check your inbox and spam folder. Hitting reply should go to the address you typed.'], href: '/contact', hrefLabel: 'Open the contact page' }),
     manual('dev-site', { group: 'Running the business', level: 'nice', title: 'Dev site works (dev.logoless.io)', why: 'This is where new features are tried before they reach the real site. Admins only.', how: ['In Google Cloud Console, add https://dev.logoless.io/api/auth/callback/google as an authorised redirect for the OAuth client.', 'Open dev.logoless.io and sign in with an admin account.', 'Use the push button, or Admin → Push features, to send a feature live. Every push can be undone.'], href: '/admin/push', hrefLabel: 'Open push panel' }),

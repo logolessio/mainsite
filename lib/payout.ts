@@ -5,7 +5,7 @@ import { markPayoutSent, reverseWithdrawal } from './ledger'
 import { notify } from './notify'
 import { assessRequest } from './risk'
 import { getSetting } from './settings'
-import { stripe } from './stripe'
+import { PayPalError, paypalReady, sendPayoutTo } from './paypal'
 import type { UserRow } from './user'
 
 /** Decides whether a withdrawal can go straight out, or waits for an admin. Returns the reason if it must wait. */
@@ -37,40 +37,62 @@ export async function reviewReason(user: UserRow, req: Request, cents: number): 
   return reasons.length ? reasons.join('; ') : null
 }
 
-/** Sends a reserved payout through Stripe. On failure the money goes back on the person's balance. */
-export async function sendPayout(payoutId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+const destKey = (payoutId: string) => `payout-to:${payoutId}`
+
+/** Remembers which PayPal email a payout is going to. It lives in the settings table, next to the payout's own id. */
+export async function setPayoutDestination(payoutId: string, email: string) {
   const d = await db()
-  const p = await d
-    .prepare(
-      `SELECT p.id, p.user_id, p.amount_cents, p.status, u.stripe_account_id, u.connect_ready
-       FROM payouts p JOIN users u ON u.id = p.user_id WHERE p.id = ?1`,
-    )
-    .bind(payoutId)
-    .first<{ id: string; user_id: string; amount_cents: number; status: string; stripe_account_id: string | null; connect_ready: number }>()
+  await d
+    .prepare('INSERT INTO settings (key, value, updated_at) VALUES (?1, ?2, ?3) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at')
+    .bind(destKey(payoutId), email, nowSec())
+    .run()
+}
+
+export async function payoutDestination(payoutId: string) {
+  const d = await db()
+  return (await d.prepare('SELECT value FROM settings WHERE key = ?1').bind(destKey(payoutId)).first<{ value: string }>())?.value ?? null
+}
+
+/**
+ * Sends a reserved payout to the PayPal email chosen for it. If PayPal clearly says no, the money goes back on the person's
+ * balance. If PayPal does not answer at all, the payout is held for an admin instead of being returned, because it may have gone
+ * through and giving the money back could pay twice.
+ */
+export async function sendPayout(payoutId: string): Promise<{ ok: true } | { ok: false; error: string; held?: boolean }> {
+  const d = await db()
+  const p = await d.prepare('SELECT id, user_id, amount_cents, status FROM payouts WHERE id = ?1').bind(payoutId).first<{ id: string; user_id: string; amount_cents: number; status: string }>()
   if (!p) throw new HttpError(404, 'Payout not found.')
   if (p.status !== 'pending' && p.status !== 'review') throw new HttpError(409, 'That payout has already been handled.')
   // Claim it so two admins (or a double click) cannot send it twice.
   const claim = await d.prepare("UPDATE payouts SET status = 'pending', updated_at = ?2 WHERE id = ?1 AND status IN ('pending','review')").bind(payoutId, nowSec()).run()
   if (claim.meta.changes !== 1) throw new HttpError(409, 'That payout has already been handled.')
-  if (!p.stripe_account_id || !p.connect_ready) {
-    await reverseWithdrawal(payoutId, 'failed', 'Stripe account not ready')
-    return { ok: false, error: 'The clipper’s Stripe account is not ready. The money went back to their balance.' }
+  const email = await payoutDestination(payoutId)
+  if (!email) {
+    await reverseWithdrawal(payoutId, 'failed', 'No PayPal email was given')
+    return { ok: false, error: 'There was no PayPal email on this payout. The money went back to the clipper’s balance.' }
+  }
+  if (!(await paypalReady())) {
+    await d.prepare("UPDATE payouts SET status = 'review', review_reason = 'PayPal is not connected yet', updated_at = ?2 WHERE id = ?1").bind(payoutId, nowSec()).run()
+    return { ok: false, held: true, error: 'PayPal is not connected yet, so this payout is waiting.' }
   }
   try {
-    const s = await stripe()
-    const transfer = await s.transfers.create(
-      { amount: p.amount_cents, currency: 'usd', destination: p.stripe_account_id, transfer_group: `payout_${payoutId}`, metadata: { payout_id: payoutId, user_id: p.user_id } },
-      { idempotencyKey: `payout_${payoutId}` },
-    )
-    await markPayoutSent(payoutId, transfer.id)
-    logEvent({ kind: 'money', name: 'payout sent', detail: `${payoutId} $${(p.amount_cents / 100).toFixed(2)} → ${transfer.id}` })
-    await notify(p.user_id, { kind: 'payout', title: `Payout sent: $${(p.amount_cents / 100).toFixed(2)}`, body: 'It is on its way to your Stripe account.', href: '/dashboard/payouts', dedupe: `payout-sent:${payoutId}` })
+    const sent = await sendPayoutTo({ payoutId, email, amountCents: p.amount_cents })
+    await markPayoutSent(payoutId, sent.batchId)
+    logEvent({ kind: 'money', name: 'payout sent', detail: `${payoutId} $${(p.amount_cents / 100).toFixed(2)} → PayPal ${sent.batchId}` })
+    await notify(p.user_id, { kind: 'payout', title: `Payout sent: $${(p.amount_cents / 100).toFixed(2)}`, body: `It is on its way to ${email} on PayPal.`, href: '/dashboard/payouts', dedupe: `payout-sent:${payoutId}` })
     return { ok: true }
   } catch (e) {
-    const reason = e instanceof Error ? e.message : 'Transfer failed'
-    logEvent({ kind: 'money', name: 'payout failed', detail: `${payoutId}: ${reason.slice(0, 200)}` })
-    await reverseWithdrawal(payoutId, 'failed', reason)
-    await notify(p.user_id, { kind: 'payout', title: 'Payout failed', body: 'Your balance has not changed. Please try again later.', href: '/dashboard/payouts', dedupe: `payout-failed:${payoutId}` })
-    return { ok: false, error: 'Stripe could not send it. The money went back to the clipper’s balance.' }
+    const reason = e instanceof Error ? e.message : 'Payout failed'
+    if (e instanceof PayPalError && e.status === 400) {
+      // PayPal said no, clearly: nothing was sent, so the money goes back.
+      logEvent({ kind: 'money', name: 'payout refused', detail: `${payoutId}: ${e.code} ${reason.slice(0, 160)}` })
+      await reverseWithdrawal(payoutId, 'failed', reason)
+      await notify(p.user_id, { kind: 'payout', title: 'Payout failed', body: 'PayPal did not accept it, so your balance has not changed. Check the email and try again.', href: '/dashboard/payouts', dedupe: `payout-failed:${payoutId}` })
+      return { ok: false, error: `PayPal did not accept that: ${reason}` }
+    }
+    // No clear answer: hold it for a person to check in PayPal before anything is returned or resent.
+    logEvent({ kind: 'money', name: 'payout unclear', detail: `${payoutId}: ${reason.slice(0, 160)}` })
+    await d.prepare("UPDATE payouts SET status = 'review', review_reason = ?2, updated_at = ?3 WHERE id = ?1").bind(payoutId, `PayPal did not answer: ${reason.slice(0, 200)}. Check PayPal before sending again.`, nowSec()).run()
+    return { ok: false, held: true, error: 'PayPal did not answer. The payout is being checked and will not be lost.' }
   }
 }

@@ -43,6 +43,7 @@ export function BrandCalculator() {
   const budget = BUDGETS[bi]
   const views = Math.floor((budget / rate) * 1000)
   const fee = (budget * SITE.platformFeePct) / 100
+  const total = budget + fee
   return (
     <Feature id="calculators">
       <section aria-label="Budget calculator" className="mx-auto mt-24 max-w-5xl px-5 md:mt-32">
@@ -69,7 +70,7 @@ export function BrandCalculator() {
               <p className="text-[11px] text-mute">It buys up to</p>
               <p className="mt-3 font-display text-6xl tabular-nums md:text-7xl">{views.toLocaleString()}</p>
               <p className="mt-1 text-lg text-mute">verified views</p>
-              <p className="mt-6 text-sm leading-relaxed text-mute">You pay your budget and nothing on top. We keep {SITE.platformFeePct}% of what clippers earn (about ${fee.toLocaleString()} here), and anything you don't spend can be refunded.</p>
+              <p className="mt-6 text-sm leading-relaxed text-mute">Clippers earn the whole ${budget.toLocaleString()}. We add our {SITE.platformFeePct}% fee on top (${fee.toLocaleString()} here), so you pay ${total.toLocaleString()} in all, and anything you don't spend can be refunded.</p>
             </div>
           </div>
         </Reveal>

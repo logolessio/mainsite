@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 const NOTE: Record<string, string> = {
   database: 'Where campaigns, clips and balances live.',
   signin: 'Logging in with Google, Discord or email.',
-  payments: 'Taking payments and sending payouts through Stripe.',
+  payments: 'Taking payments and sending payouts through PayPal.',
   email: 'Sign-up codes and notifications by email.',
 }
 

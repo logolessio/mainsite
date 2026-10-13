@@ -127,7 +127,7 @@ async function Overview({ since }: { since: number }) {
               ['Badges unlocked', n(b.badges).toLocaleString()],
               ['Notifications sent', n(b.notifications).toLocaleString()],
               ['Paid in', money(n(m.paidIn))],
-              ['Stripe costs', money(n(m.stripeCosts))],
+              ['PayPal costs', money(n(m.paypalCosts))],
               ['Gross to clippers', money(n(m.gross))],
               ['Site fees', money(n(m.fees))],
               ['Clippers earned', money(n(m.earned))],

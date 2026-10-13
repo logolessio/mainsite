@@ -17,7 +17,7 @@ export async function runHealth(): Promise<Health> {
   }
   checks.push({ id: 'database', label: 'Database', ok: dbOk, ms: Date.now() - t0 })
   checks.push({ id: 'signin', label: 'Sign-in', ok: Boolean(await setting('AUTH_SECRET')) })
-  checks.push({ id: 'payments', label: 'Payments', ok: Boolean((await setting('STRIPE_SECRET_KEY')) && (await setting('STRIPE_WEBHOOK_SECRET'))) })
+  checks.push({ id: 'payments', label: 'Payments', ok: Boolean((await setting('PAYPAL_CLIENT_ID')) && (await setting('PAYPAL_CLIENT_SECRET')) && (await setting('PAYPAL_WEBHOOK_ID'))) })
   checks.push({ id: 'email', label: 'Email', ok: Boolean(await setting('RESEND_API_KEY')) })
   return { ok: checks.every((c) => c.ok), checks, at: Math.floor(Date.now() / 1000) }
 }

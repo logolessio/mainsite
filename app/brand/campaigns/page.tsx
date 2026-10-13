@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { ActionLink } from '@/components/app/action-link'
 import { PayCampaignButton } from '@/components/app/pay-campaign-button'
+import { costFor } from '@/lib/ledger-math'
 import { Badge, DataTable, EmptyState } from '@/components/app/table'
 import { PageHeader } from '@/components/app/ui'
 import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
@@ -53,7 +54,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ r
           { key: 'sp', header: 'Spent', render: (r) => usd(r.spent), className: 'text-right' },
           { key: 'v', header: 'Views', render: (r) => r.views.toLocaleString(), className: 'text-right' },
           { key: 'c', header: 'Clips', render: (r) => r.clips, className: 'text-right' },
-          { key: 'a', header: '', render: (r) => (r.status === 'awaiting_payment' ? <PayCampaignButton id={r.id} amount={usd(r.budget_cents)} /> : null), className: 'text-right' },
+          { key: 'a', header: '', render: (r) => (r.status === 'awaiting_payment' ? <PayCampaignButton id={r.id} amount={usd(costFor(r.budget_cents))} /> : null), className: 'text-right' },
         ]}
         empty={<EmptyState icon="Megaphone" title="No campaigns" body="Request a campaign and we will walk you through the rest." action={<ActionLink href="/brand/campaigns/new">Request a campaign</ActionLink>} />}
       />

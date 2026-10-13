@@ -2,26 +2,29 @@
 
 import { Loader2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { Input } from '@/components/ui/fields'
-import { PayoutAccount } from '@/components/app/payout-account'
-import { cents, type Finance, getFinance, withdraw } from '@/lib/stripe-client'
+import { Field, Input } from '@/components/ui/fields'
+import { cents, type Finance, getFinance, withdraw } from '@/lib/finance-client'
 import { SITE } from '@/lib/site'
 import { Badge, DataTable, EmptyState } from './table'
 import { ActionButton, Card, StatCard } from './ui'
 
 const date = (s: number) => new Date(s * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-const LABEL: Record<string, string> = { sent: 'Sent', pending: 'Processing', review: 'Being checked', failed: 'Failed', reversed: 'Reversed' }
+const LABEL: Record<string, string> = { sent: 'Sent', pending: 'Processing', review: 'Being checked', failed: 'Failed', reversed: 'Returned' }
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 export function PayoutsPanel() {
   const [fin, setFin] = useState<Finance | null>(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
-  const [busy, setBusy] = useState<'withdraw' | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [email, setEmail] = useState('')
   const [amount, setAmount] = useState('')
 
   const load = useCallback(async () => {
     try {
-      setFin(await getFinance())
+      const f = await getFinance()
+      setFin(f)
+      setEmail((cur) => cur || f.paypalEmail)
       setError('')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load your payouts.')
@@ -32,31 +35,31 @@ export function PayoutsPanel() {
     void load()
   }, [load])
 
-  const state = fin?.connect.status ?? 'not_connected'
   const available = fin?.balances.available ?? 0
   const minCents = SITE.minPayoutUsd * 100
+  const emailOk = EMAIL_RE.test(email.trim())
+  const can = Boolean(fin?.ready) && available >= minCents && emailOk && !busy
 
   const doWithdraw = async () => {
-    setBusy('withdraw')
+    setBusy(true)
     setError('')
     setNotice('')
     try {
       const n = amount.trim() ? Number(amount) : undefined
-      const r = await withdraw(n)
-      setNotice(`${cents(r.amount)} is on its way. It reaches your bank within a few working days.`)
+      const r = await withdraw(email.trim(), n)
+      setNotice(r.review ? `${cents(r.amount)} is being checked first. It will go to ${email.trim()} as soon as it is cleared.` : `${cents(r.amount)} is on its way to ${email.trim()} on PayPal.`)
       setAmount('')
       await load()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Withdrawal failed.')
     }
-    setBusy(null)
+    setBusy(false)
   }
 
   return (
     <div className="grid gap-6">
-      {fin?.testMode && (
-        <p className="rounded-2xl border border-amber-400/30 bg-amber-400/5 px-4 py-3 text-sm text-amber-200">Stripe test mode. No real money moves.</p>
-      )}
+      {fin?.testMode && <p className="rounded-2xl border border-amber-400/30 bg-amber-400/5 px-4 py-3 text-sm text-amber-200">PayPal sandbox. No real money moves.</p>}
+      {fin && !fin.ready && <p className="rounded-2xl border border-line-strong px-4 py-3 text-sm text-mute">Withdrawals are not open yet. Your earnings are safe and will be here when they are.</p>}
       {notice && (
         <p role="status" className="rounded-2xl border border-line-strong px-4 py-3 text-sm">
           {notice}
@@ -74,36 +77,30 @@ export function PayoutsPanel() {
         <StatCard label="Withdrawn" value={fin ? cents(fin.balances.withdrawn) : '…'} />
       </div>
 
-      <PayoutAccount onChanged={load} />
-
-      <Card title="Withdraw">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div className="max-w-md text-sm text-mute">
-            {state !== 'ready'
-              ? 'Set up your payouts above first.'
-              : available < minCents
-                ? `You can withdraw once your available balance reaches $${SITE.minPayoutUsd}.`
-                : `You have ${cents(available)} available. Leave the box empty to withdraw all of it.`}
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="relative">
-              <span className="pointer-events-none absolute inset-y-0 left-3 grid place-items-center text-mute">$</span>
-              <Input
-                aria-label="Amount to withdraw"
-                inputMode="decimal"
-                value={amount}
-                placeholder="All"
-                disabled={state !== 'ready' || available < minCents}
-                onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))}
-                className="h-10 w-28 pl-7"
-              />
-            </span>
-            <ActionButton onClick={doWithdraw} disabled={busy !== null || state !== 'ready' || available < minCents}>
-              {busy === 'withdraw' && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
+      <Card title="Withdraw to PayPal">
+        <form
+          className="grid gap-5"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (can) void doWithdraw()
+          }}
+        >
+          <Field label="Send it to this PayPal email" hint="Any PayPal email you can sign in to. We remember it for next time.">
+            <Input type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </Field>
+          <div className="flex flex-wrap items-end gap-3">
+            <Field label="Amount" hint={available >= minCents ? `Leave empty to withdraw all ${cents(available)}.` : `You can withdraw once you have $${SITE.minPayoutUsd} available.`}>
+              <span className="relative block">
+                <span className="pointer-events-none absolute inset-y-0 left-3 grid place-items-center text-mute">$</span>
+                <Input aria-label="Amount to withdraw" inputMode="decimal" value={amount} placeholder="All" disabled={available < minCents} onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))} className="w-36 pl-7" />
+              </span>
+            </Field>
+            <ActionButton type="submit" disabled={!can}>
+              {busy && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
               Withdraw
             </ActionButton>
           </div>
-        </div>
+        </form>
       </Card>
 
       <div>

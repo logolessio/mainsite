@@ -42,7 +42,7 @@ export default async function Page() {
       <Principles
         title="Good to know"
         items={[
-          { title: 'It costs nothing', body: `Joining and submitting are free. We keep ${SITE.platformFeePct}% of what a campaign pays you.` },
+          { title: 'It costs nothing', body: 'Joining and submitting are free, and you keep everything a campaign pays you. Brands pay our fee on top.' },
           { title: 'You keep your accounts', body: 'Clips stay on your own channels. We only read the view counts.' },
           { title: 'Rejections have reasons', body: "If we turn a clip down, you'll see why." },
         ]}

@@ -15,7 +15,7 @@ const STEPS = [
   { at: 0, title: 'You post the clip', body: 'On your own TikTok, YouTube or Instagram account. Then you paste the link.' },
   { at: 0.12, title: 'We check it', body: 'Someone on our team checks it against the brief.' },
   { at: 0.26, title: 'Views are verified', body: 'We look up the real view count on the platform. Only verified views are paid.' },
-  { at: 0.9, title: 'It reaches your balance', body: `It clears after ${SITE.holdDays} days, then you can withdraw it through Stripe.` },
+  { at: 0.9, title: 'It reaches your balance', body: `It clears after ${SITE.holdDays} days, then you can withdraw it to your PayPal.` },
 ]
 const money = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
@@ -42,7 +42,7 @@ export function EarnDemo() {
 
   const climb = Math.max(0, Math.min(1, (t - 0.26) / 0.64))
   const views = Math.round(TARGET_VIEWS * (1 - Math.pow(1 - climb, 2.2)))
-  const net = (views / 1000) * rate * (1 - SITE.platformFeePct / 100)
+  const net = (views / 1000) * rate
   const stage = t >= 0.26 ? 'ok' : t >= 0.12 ? 'check' : 'posted'
   const current = STEPS.reduce((n, s, i) => (t >= s.at ? i : n), 0)
 
@@ -105,7 +105,7 @@ export function EarnDemo() {
                 <div>
                   <p className="text-[11px] text-mute">Your balance</p>
                   <p className="mt-3 font-display text-6xl leading-none tabular-nums md:text-7xl">{money(net)}</p>
-                  <p className="mt-2 text-sm text-mute">{views.toLocaleString()} verified views · ${rate} per 1,000 · after our {SITE.platformFeePct}% fee</p>
+                  <p className="mt-2 text-sm text-mute">{views.toLocaleString()} verified views · ${rate} per 1,000 · the full amount, our fee is paid by the brand</p>
                 </div>
                 <button type="button" onClick={play} className="inline-flex h-11 items-center gap-2 rounded-full border border-line-strong px-5 text-sm text-mute transition-colors hover:text-paper">
                   <RotateCcw className="size-4" /> Replay

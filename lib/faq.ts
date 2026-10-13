@@ -6,7 +6,7 @@ export const FAQ: Record<'Clippers' | 'Brands', Faq[]> = {
   Clippers: [
     {
       q: 'How do I get paid?',
-      a: `Each campaign pays a set rate for every 1,000 verified views your approved clips get. Your earnings clear for ${SITE.holdDays} days, then you can withdraw them to your bank through Stripe once your balance is $${SITE.minPayoutUsd} or more.`,
+      a: `Each campaign pays a set rate for every 1,000 verified views your approved clips get. Your earnings clear for ${SITE.holdDays} days, then you can withdraw them to your PayPal once your balance is $${SITE.minPayoutUsd} or more. Pick any PayPal email, press withdraw, and it is sent.`,
     },
     {
       q: 'Do I need a lot of followers?',
@@ -36,7 +36,7 @@ export const FAQ: Record<'Clippers' | 'Brands', Faq[]> = {
     },
     {
       q: 'What does logoless cost?',
-      a: `There's no subscription. We keep ${SITE.platformFeePct}% of what we pay out to clippers. The pricing page has the full breakdown.`,
+      a: `There's no subscription. Clippers keep everything a campaign pays them. Brands pay our ${SITE.platformFeePct}% fee on top of what clippers earn, so a $1,000 budget costs $${(1000 + (1000 * SITE.platformFeePct) / 100).toLocaleString()}. The pricing page has the full breakdown.`,
     },
     {
       q: 'How do you stop fake views?',
@@ -48,7 +48,7 @@ export const FAQ: Record<'Clippers' | 'Brands', Faq[]> = {
     },
     {
       q: 'How do I fund a campaign?',
-      a: "Once we've approved your brief, you pay the budget by card or bank transfer through Stripe and we launch it.",
+      a: `Add money to your balance with PayPal on the funding page. Once we've approved your brief, the campaign budget plus our ${SITE.platformFeePct}% fee comes out of that balance and we launch it.`,
     },
     {
       q: 'Can I get unspent budget back?',

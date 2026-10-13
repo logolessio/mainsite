@@ -82,7 +82,7 @@ export function SiteFooter() {
               © {new Date().getFullYear()} {SITE.company}. All rights reserved.
             </p>
             <p>
-              logoless is not affiliated with or endorsed by TikTok, YouTube, Instagram, Discord or Stripe. Payments are processed by Stripe. YouTube content is subject to the{' '}
+              logoless is not affiliated with or endorsed by TikTok, YouTube, Instagram, Discord or PayPal. Payments are processed by PayPal. YouTube content is subject to the{' '}
               <a className="underline underline-offset-2 hover:text-paper" href="https://www.youtube.com/t/terms">
                 YouTube Terms of Service
               </a>{' '}

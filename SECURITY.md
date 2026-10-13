@@ -20,7 +20,7 @@ Money moves through this site, so every route that changes something follows the
 | 12 | Spend cap | Payment amounts always come from our database, never the browser. A campaign pool can never go below zero (single atomic statement). Daily payout cap, review of large withdrawals, and a one-click pause on all withdrawals (`/admin/settings`). |
 | 13 | Secure file uploads | JPEG, PNG and WebP only, real type read from the file bytes, 450 KB cap, dimension check, re-encoded in the browser first, per-person storage cap, ownership check before an upload can be used. |
 | 14 | CSRF | Every state-changing request must carry an `Origin` or `Sec-Fetch-Site` that proves it came from this site. Cookies are also `SameSite=Lax`. |
-| 15 | CORS | No cross-origin access is granted to any route. Stripe's webhook is verified by its signature instead. |
+| 15 | CORS | No cross-origin access is granted to any route. PayPal's webhook is verified with PayPal's own signature check instead. |
 | 16 | HTTPS | Cloudflare terminates TLS. HSTS for two years including subdomains, and `upgrade-insecure-requests`. |
 | 17 | Security headers | CSP, HSTS, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`. Test them in `/admin/keys`. |
 | 18 | Secure cookies | `HttpOnly`, `Secure`, `SameSite=Lax`, `__Secure-` prefix in production. |

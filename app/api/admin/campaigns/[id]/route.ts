@@ -7,6 +7,7 @@ import { ipHash, protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
 import { notify, notifyFavoriters } from '@/lib/notify'
 import { evaluateBadges } from '@/lib/badges'
+import { costFor } from '@/lib/ledger'
 import { requireAdmin } from '@/lib/user'
 
 const schema = z.discriminatedUnion('action', [
@@ -52,7 +53,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
       if (!c.brand_user_id) throw new HttpError(409, 'This campaign has no owner to bill.')
       await set('awaiting_payment', a.note ?? null)
       if (c.brand_user_id)
-        await notify(c.brand_user_id, { kind: 'campaign', title: `${c.title} is approved`, body: `We are ready to launch it. Pay $${(c.budget_cents / 100).toLocaleString()} to get it live.`, href: '/brand/campaigns', dedupe: `camp-accepted:${id}` })
+        await notify(c.brand_user_id, { kind: 'campaign', title: `${c.title} is approved`, body: `We are ready to launch it. Pay $${(costFor(c.budget_cents) / 100).toLocaleString()} from your balance ($${(c.budget_cents / 100).toLocaleString()} for clippers plus our fee) to get it live.`, href: '/brand/campaigns', dedupe: `camp-accepted:${id}` })
       break
     }
     case 'reject': {
@@ -65,7 +66,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
       // Only a paid campaign can go live: the funds must be in its pool.
       if (c.status !== 'paid') throw new HttpError(409, c.status === 'live' ? 'It is already live.' : 'A campaign can only launch after the artist has paid.')
       const pool = await d.prepare("SELECT COALESCE(SUM(amount_cents),0) AS p FROM ledger WHERE account = 'campaign' AND campaign_id = ?1").bind(id).first<{ p: number }>()
-      if ((pool?.p ?? 0) < c.budget_cents) throw new HttpError(409, 'The campaign pool does not match its budget. Check the payment in Stripe.')
+      if ((pool?.p ?? 0) < costFor(c.budget_cents)) throw new HttpError(409, 'The campaign pool does not match its budget. Check the payment in PayPal.')
       await d.prepare("UPDATE campaigns SET status = 'live', launched_at = ?2, updated_at = ?2 WHERE id = ?1").bind(id, t).run()
       if (c.brand_user_id) {
         await notify(c.brand_user_id, { kind: 'campaign', title: `${c.title} is live`, body: 'Clippers can see it and start posting.', href: `/campaign/${id}`, dedupe: `camp-live:${id}` })

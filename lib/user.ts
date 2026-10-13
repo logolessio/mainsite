@@ -14,10 +14,6 @@ export type UserRow = {
   status: 'active' | 'suspended' | 'banned'
   risk_level: 'low' | 'elevated' | 'high'
   risk_reasons: string | null
-  stripe_customer_id: string | null
-  stripe_account_id: string | null
-  connect_ready: number
-  connect_details_submitted: number
   last_seen_at: number | null
   created_at: number
 }

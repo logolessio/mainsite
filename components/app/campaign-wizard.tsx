@@ -190,7 +190,7 @@ export function CampaignWizard() {
                 </div>
                 <p className="border border-line bg-ink/50 p-4 text-sm text-mute rounded-2xl">
                   At ${rate.toFixed(2)} per 1,000 views, ${budget.toLocaleString()} pays for up to{' '}
-                  <span className="text-paper">{maxViews.toLocaleString()}</span> verified views. A {SITE.platformFeePct}% platform fee applies to payouts.
+                  <span className="text-paper">{maxViews.toLocaleString()}</span> verified views. Clippers earn all of it. Our {SITE.platformFeePct}% fee is added on top, so you pay ${(budget * (1 + SITE.platformFeePct / 100)).toLocaleString()} in all.
                 </p>
               </>
             )}
@@ -215,7 +215,7 @@ export function CampaignWizard() {
                   <dd className="mt-2 grid gap-1.5 text-mute">
                     <span><span className="text-paper">1.</span> You send this request. Nothing is charged yet.</span>
                     <span><span className="text-paper">2.</span> We review it and confirm we will launch it.</span>
-                    <span><span className="text-paper">3.</span> You pay the ${budget.toLocaleString()} budget securely with Stripe.</span>
+                    <span><span className="text-paper">3.</span> You pay ${budget.toLocaleString()} for clippers plus our {SITE.platformFeePct}% fee (${(budget * (1 + SITE.platformFeePct / 100)).toLocaleString()} in all) from your balance, which you fill with PayPal.</span>
                     <span><span className="text-paper">4.</span> We launch your campaign and clippers can start posting.</span>
                   </dd>
                 </div>

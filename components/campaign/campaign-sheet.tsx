@@ -25,7 +25,7 @@ export function CampaignSheet({ campaign, onClose, poolLeftCents = null, inline 
   const { user } = useNavUser()
   const { wide } = useMotionPrefs()
   const signedIn = Boolean(preview) || Boolean(user?.signedIn)
-  const left = poolLeftCents === null ? null : Math.max(0, Math.min(100, Math.round((poolLeftCents / 100 / Math.max(1, campaign.budget)) * 100)))
+  const left = poolLeftCents === null ? null : Math.max(0, Math.min(100, Math.round((poolLeftCents / 100 / Math.max(1, campaign.budget * (1 + SITE.platformFeePct / 100))) * 100)))
   const cap = inline ? 99 : 3
   const root = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)

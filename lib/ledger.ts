@@ -1,6 +1,7 @@
 import { type D1Database, db, nowSec, uid } from './db'
 import { HttpError } from './http'
 import { logEvent } from './log'
+import { costFor, feeFor } from './ledger-math'
 import { SITE } from './site'
 
 /**
@@ -8,7 +9,9 @@ import { SITE } from './site'
  *  - Amounts are integer cents. Balances are always a SUM over the ledger, never a stored number.
  *  - Anything that spends money is a single conditional INSERT ("only if the balance covers it"),
  *    so two requests at once cannot both succeed.
- *  - Writes tied to a Stripe id use a unique (kind, ref) index, so a repeated webhook changes nothing.
+ *  - Writes tied to a PayPal id use a unique (kind, ref) index, so a repeated webhook changes nothing.
+ *  - The platform fee is charged to the brand ON TOP of what a clipper is paid. A clipper always receives the full amount their
+ *    views earned; the campaign's pool pays that amount plus the fee. So $1,000 of payouts costs the brand $1,150 at 15%.
  */
 
 export type Balances = {
@@ -36,33 +39,69 @@ export async function balances(userId: string, at = nowSec()): Promise<Balances>
   return r ?? { brand: 0, available: 0, pending: 0, earned: 0, withdrawn: 0 }
 }
 
-export const feeFor = (grossCents: number) => Math.round((grossCents * SITE.platformFeePct) / 100)
+export { costFor, feeFor }
 
-/** Adds a brand's paid Checkout amount. Safe to call twice for the same session. */
-export async function creditTopup(d: D1Database, userId: string, sessionId: string, amountCents: number) {
+/** Adds money a brand paid through PayPal to their balance. `ref` is the PayPal order id, so a repeat changes nothing. */
+export async function creditTopup(d: D1Database, userId: string, ref: string, amountCents: number) {
   const t = nowSec()
   const res = await d
     .prepare(
       `INSERT OR IGNORE INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at)
-       VALUES (?1, ?2, 'brand', 'topup', ?3, ?4, ?5, 'Balance top-up', ?4)`,
+       VALUES (?1, ?2, 'brand', 'topup', ?3, ?4, ?5, 'Added with PayPal', ?4)`,
     )
-    .bind(uid(), userId, amountCents, t, sessionId)
+    .bind(uid(), userId, amountCents, t, ref)
     .run()
   return res.meta.changes === 1
 }
 
-/** Puts a paid campaign budget into that campaign's pool. Safe to call twice for the same Stripe session. */
-export async function fundCampaign(d: D1Database, brandUserId: string, campaignId: string, sessionId: string, amountCents: number) {
+/**
+ * Moves money from a brand's balance into a campaign's pool: the payout budget plus the platform fee on top. One batch checks the
+ * balance, takes the money, fills the pool and updates the campaign, so a double click or two tabs cannot spend it twice.
+ * `launch` marks a campaign that was waiting for payment as paid; `topup` grows the budget of one that already exists.
+ * Returns what it cost, or null if the balance does not cover it.
+ */
+export async function fundFromBalance(brandUserId: string, campaignId: string, payoutBudgetCents: number, mode: 'launch' | 'topup') {
+  if (!Number.isInteger(payoutBudgetCents) || payoutBudgetCents <= 0) throw new HttpError(400, 'Enter a valid amount.')
+  const d = await db()
   const t = nowSec()
-  const res = await d
-    .prepare(
-      `INSERT OR IGNORE INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at, campaign_id)
-       VALUES (?1, ?2, 'campaign', 'campaign_fund', ?3, ?4, ?5, 'Campaign budget', ?4, ?6)`,
-    )
-    .bind(uid(), brandUserId, amountCents, t, sessionId, campaignId)
-    .run()
-  if (res.meta.changes === 1) logEvent({ kind: 'money', name: 'campaign funded', detail: `${campaignId} +$${(amountCents / 100).toFixed(2)} (session ${sessionId})` })
-  return res.meta.changes === 1
+  const cost = costFor(payoutBudgetCents)
+  const spendId = uid()
+  const poolId = uid()
+  const results = await d.batch([
+    // 1) the brand pays, only if their balance covers it
+    d
+      .prepare(
+        `INSERT INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at, campaign_id)
+         SELECT ?1, ?2, 'brand', 'campaign_spend', -?3, ?4, ?1, 'Put into a campaign', ?4, ?5
+         WHERE (SELECT COALESCE(SUM(amount_cents), 0) FROM ledger WHERE user_id = ?2 AND account = 'brand') >= ?3`,
+      )
+      .bind(spendId, brandUserId, cost, t, campaignId),
+    // 2) the pool is filled, only if (1) happened
+    d
+      .prepare(
+        `INSERT INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at, campaign_id)
+         SELECT ?1, ?2, 'campaign', 'campaign_fund', ?3, ?4, ?5, 'Campaign budget', ?4, ?6
+         WHERE EXISTS (SELECT 1 FROM ledger WHERE id = ?5)`,
+      )
+      .bind(poolId, brandUserId, cost, t, spendId, campaignId),
+    // 3) the campaign moves on, only if (1) happened
+    mode === 'launch'
+      ? d
+          .prepare(
+            `UPDATE campaigns SET status = 'paid', paid_at = ?2, updated_at = ?2
+             WHERE id = ?1 AND brand_user_id = ?3 AND status IN ('awaiting_payment','requested') AND EXISTS (SELECT 1 FROM ledger WHERE id = ?4)`,
+          )
+          .bind(campaignId, t, brandUserId, spendId)
+      : d
+          .prepare(
+            `UPDATE campaigns SET budget_cents = budget_cents + ?2, updated_at = ?3
+             WHERE id = ?1 AND brand_user_id = ?4 AND EXISTS (SELECT 1 FROM ledger WHERE id = ?5)`,
+          )
+          .bind(campaignId, payoutBudgetCents, t, brandUserId, spendId),
+  ])
+  if (results[0].meta.changes !== 1) return null
+  logEvent({ kind: 'money', name: 'campaign funded', detail: `${campaignId}: $${(payoutBudgetCents / 100).toFixed(2)} for clippers + $${((cost - payoutBudgetCents) / 100).toFixed(2)} fee` })
+  return { cost, fee: cost - payoutBudgetCents }
 }
 
 export async function campaignPool(campaignId: string) {
@@ -75,61 +114,61 @@ export async function campaignPool(campaignId: string) {
 }
 
 /**
- * Pays a clipper for verified views out of a campaign's pool. The platform fee is taken out of the clipper's share,
- * so the brand never pays more than the gross amount. Returns null if the pool cannot cover it.
+ * Pays a clipper for verified views out of a campaign's pool. The clipper gets the full `payoutCents`; the platform fee is
+ * charged to the brand on top of it, so the pool pays the payout plus the fee. Returns null if the pool cannot cover both.
  * People with extra checks switched on (for example a VPN at sign-up) wait twice as long for the money to clear.
  */
 export async function creditEarning(input: {
   campaignId: string
   clipperId: string
-  grossCents: number
+  payoutCents: number
   submissionId?: string
   note?: string
 }) {
-  const { campaignId, clipperId, grossCents } = input
-  if (!Number.isInteger(grossCents) || grossCents <= 0) throw new HttpError(400, 'Enter a valid amount.')
+  const { campaignId, clipperId, payoutCents } = input
+  if (!Number.isInteger(payoutCents) || payoutCents <= 0) throw new HttpError(400, 'Enter a valid amount.')
   const d = await db()
   const camp = await d.prepare('SELECT brand_user_id, title FROM campaigns WHERE id = ?1').bind(campaignId).first<{ brand_user_id: string | null; title: string }>()
   if (!camp?.brand_user_id) throw new HttpError(400, 'That campaign has no funded budget.')
   const clipper = await d.prepare('SELECT risk_level, status FROM users WHERE id = ?1').bind(clipperId).first<{ risk_level: string; status: string }>()
   if (!clipper || clipper.status !== 'active') throw new HttpError(400, 'That account cannot be paid right now.')
 
-  const fee = feeFor(grossCents)
-  const net = grossCents - fee
+  const fee = feeFor(payoutCents)
+  const draw = payoutCents + fee // what leaves the pool
   const t = nowSec()
   const spendId = uid()
   const earningId = uid()
   const release = t + SITE.holdDays * (clipper.risk_level === 'low' ? 1 : 2) * 86400
 
   const results = await d.batch([
-    // 1) the campaign pays, only if its pool covers it
+    // 1) the campaign pays the payout and the fee, only if its pool covers both
     d
       .prepare(
         `INSERT INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at, campaign_id)
          SELECT ?1, ?2, 'campaign', 'spend', -?3, ?4, ?1, ?5, ?4, ?6
          WHERE (SELECT COALESCE(SUM(amount_cents), 0) FROM ledger WHERE account = 'campaign' AND campaign_id = ?6) >= ?3`,
       )
-      .bind(spendId, camp.brand_user_id, grossCents, t, camp.title, campaignId),
-    // 2) the clipper is credited, only if (1) happened
+      .bind(spendId, camp.brand_user_id, draw, t, camp.title, campaignId),
+    // 2) the clipper is credited the full payout, only if (1) happened
     d
       .prepare(
         `INSERT INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at, campaign_id)
          SELECT ?1, ?2, 'clipper', 'earning', ?3, ?4, ?5, ?6, ?7, ?8
          WHERE EXISTS (SELECT 1 FROM ledger WHERE id = ?5)`,
       )
-      .bind(earningId, clipperId, net, release, spendId, camp.title, t, campaignId),
-    // 3) audit row, only if (1) happened
+      .bind(earningId, clipperId, payoutCents, release, spendId, camp.title, t, campaignId),
+    // 3) audit row (gross is what the brand paid, net is what the clipper got), only if (1) happened
     d
       .prepare(
         `INSERT INTO earnings (id, brand_user_id, clipper_user_id, campaign, gross_cents, fee_cents, net_cents, note, created_at, campaign_id, submission_id)
          SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?11, ?12
          WHERE EXISTS (SELECT 1 FROM ledger WHERE id = ?10)`,
       )
-      .bind(earningId, camp.brand_user_id, clipperId, camp.title, grossCents, fee, net, input.note ?? null, t, spendId, campaignId, input.submissionId ?? null),
+      .bind(earningId, camp.brand_user_id, clipperId, camp.title, draw, fee, payoutCents, input.note ?? null, t, spendId, campaignId, input.submissionId ?? null),
   ])
   if (results[0].meta.changes !== 1) return null
-  logEvent({ kind: 'money', name: 'earning credited', detail: `${campaignId} → ${clipperId}: gross $${(grossCents / 100).toFixed(2)}, fee $${(fee / 100).toFixed(2)}, net $${(net / 100).toFixed(2)}` })
-  return { gross: grossCents, fee, net, releasesAt: release }
+  logEvent({ kind: 'money', name: 'earning credited', detail: `${campaignId} → ${clipperId}: clipper $${(payoutCents / 100).toFixed(2)}, fee on top $${(fee / 100).toFixed(2)}, brand paid $${(draw / 100).toFixed(2)}` })
+  return { gross: draw, fee, net: payoutCents, releasesAt: release }
 }
 
 /**
@@ -160,6 +199,7 @@ export async function startWithdrawal(userId: string, amountCents: number) {
   return results[0].meta.changes === 1 ? payoutId : null
 }
 
+/** `transferId` is PayPal's payout batch id. It is kept in the column that used to hold the old processor's transfer id. */
 export async function markPayoutSent(payoutId: string, transferId: string) {
   const d = await db()
   await d.prepare("UPDATE payouts SET status='sent', stripe_transfer_id=?2, updated_at=?3 WHERE id=?1").bind(payoutId, transferId, nowSec()).run()

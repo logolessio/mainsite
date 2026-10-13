@@ -31,7 +31,7 @@ export default async function Page() {
         </Card>
         <Card title="Set in the code">
           <p className="text-sm text-mute">
-            Platform fee {SITE.platformFeePct}%, minimum withdrawal ${SITE.minPayoutUsd}, hold period {SITE.holdDays} days (double for accounts with extra checks). These live in <span className="font-mono">lib/site.ts</span> so a change is reviewed before it ships.
+            Platform fee {SITE.platformFeePct}% (charged to brands on top of payouts), minimum withdrawal ${SITE.minPayoutUsd}, hold period {SITE.holdDays} days (double for accounts with extra checks). These live in <span className="font-mono">lib/site.ts</span> so a change is reviewed before it ships.
           </p>
         </Card>
       </div>

@@ -52,7 +52,7 @@ export default async function Page() {
             items={[
               { label: 'Request a campaign', body: 'Brief, rate, budget and platforms', href: '/brand/campaigns/new' },
               { label: 'We review and confirm', body: 'You will get a notification', href: '/brand/campaigns' },
-              { label: 'Pay securely with Stripe', body: 'Your budget is held for clippers', href: '/brand/campaigns' },
+              { label: 'Add funds with PayPal', body: 'Your balance pays for campaigns', href: '/brand/billing' },
               { label: 'We launch it', body: 'Clippers start posting right away', href: '/brand/campaigns' },
             ]}
           />

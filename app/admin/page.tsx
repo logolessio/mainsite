@@ -4,14 +4,15 @@ import { Badge } from '@/components/app/table'
 import { Card, PageHeader, StatCard } from '@/components/app/ui'
 import { Pill } from '@/components/admin/ui'
 import { money } from '@/lib/format'
-import { counts, funds, health, stripeBalance } from '@/lib/admin-stats'
+import { SITE } from '@/lib/site'
+import { counts, funds, health, paypalStatus } from '@/lib/admin-stats'
 import { pageAdmin } from '@/lib/user'
 
 export const metadata: Metadata = { title: 'Admin | logoless', robots: { index: false } }
 
 export default async function Page() {
   await pageAdmin()
-  const [f, c, h, sb] = await Promise.all([funds(), counts(), health(), stripeBalance()])
+  const [f, c, h, sb] = await Promise.all([funds(), counts(), health(), paypalStatus()])
   const todo = [
     { label: 'Campaign requests', n: c.requests, href: '/admin/campaigns' },
     { label: 'Paid, ready to launch', n: c.readyToLaunch, href: '/admin/campaigns' },
@@ -30,18 +31,18 @@ export default async function Page() {
           label="Company funds"
           value={money(f.company)}
           tone="good"
-          note={`Brand money held to pay clippers: ${money(f.heldForCampaigns)} in campaign budgets + ${money(f.owedToClippers)} owed to clippers`}
+          note={`Brand money held: ${money(f.heldForCampaigns)} in campaigns + ${money(f.brandBalances)} in balances, with ${money(f.owedToClippers)} owed to clippers`}
         />
-        <Pill label="Site fees" value={money(f.fees)} note={`The ${10}% we keep. Stripe has charged ${money(f.stripeCosts)} to take payments.`} />
+        <Pill label="Site fees" value={money(f.fees)} note={`The ${SITE.platformFeePct}% charged to brands on top of payouts. PayPal has charged ${money(f.paypalCosts)} to take payments.`} />
       </div>
       <p className="mt-3 px-2 text-xs text-mute">
-        {'error' in sb ? (
-          <>Stripe balance: not connected ({sb.error})</>
-        ) : (
+        {sb.ready ? (
           <>
-            Stripe says it holds {money(sb.available)} available and {money(sb.pending)} pending ({sb.live ? 'live' : 'test'} mode). Paid out to clippers so far: {money(f.paidOut)}.
+            PayPal is connected ({sb.live ? 'live' : 'sandbox'} mode). Paid out to clippers so far: {money(f.paidOut)}.
             {f.inReview > 0 && <> {money(f.inReview)} of withdrawals are waiting for you.</>}
           </>
+        ) : (
+          <>PayPal is not connected yet: add the keys on the Keys page so brands can add funds and clippers can withdraw.</>
         )}
       </p>
 

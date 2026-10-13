@@ -33,7 +33,7 @@ export default function Page() {
       <Principles
         title="Good to know"
         items={[
-          { title: 'Your budget is the ceiling', body: `You will never spend more than you fund. We keep ${SITE.platformFeePct}% of what is paid out to clippers, never on top.` },
+          { title: 'Your budget is the ceiling', body: `The budget you set is what clippers can earn, and you never spend more than you fund. Our ${SITE.platformFeePct}% fee is added on top of that budget and shown before you pay.` },
           { title: 'You can say no', body: "If a clip isn't right, turn it down from your dashboard before it is paid." },
           { title: 'Money back', body: 'If a campaign ends with budget left over, you can ask for it back.' },
         ]}

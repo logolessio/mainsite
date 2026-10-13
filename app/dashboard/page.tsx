@@ -17,7 +17,7 @@ const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFracti
 export default async function Page() {
   const user = await pageUser()
   const d = await db()
-  const [b, views, recent, profile] = await Promise.all([
+  const [b, views, recent, profile, payRow] = await Promise.all([
     balances(user.id),
     d.prepare('SELECT COALESCE(SUM(views_verified), 0) AS v, COUNT(*) AS n FROM submissions WHERE user_id = ?1').bind(user.id).first<{ v: number; n: number }>(),
     d
@@ -25,13 +25,15 @@ export default async function Page() {
       .bind(user.id)
       .all<{ id: string; status: string; views_verified: number; title: string }>(),
     d.prepare("SELECT bio, links_json FROM profiles WHERE user_id = ?1").bind(user.id).first<{ bio: string; links_json: string }>(),
+    d.prepare('SELECT 1 AS x FROM settings WHERE key = ?1').bind(`paypal:${user.id}`).first(),
   ])
+  const payEmail = Boolean(payRow)
   const first = (user.name ?? user.email.split('@')[0]).split(' ')[0]
   const clips = views?.n ?? 0
   const steps = [
     { label: 'Write your bio', body: 'A line or two about you, then pick your colours and font', href: '/dashboard/profile', done: Boolean(profile?.bio.trim()) },
     { label: 'Link your clipping accounts', body: 'TikTok, YouTube or Instagram. You choose if the public sees them', href: '/dashboard/accounts', done: Boolean(profile && profile.links_json !== '[]') },
-    { label: 'Connect payouts', body: 'So you can withdraw your earnings', href: '/dashboard/payouts', done: Boolean(user.connect_ready) },
+    { label: 'Add your PayPal email', body: 'So you can withdraw your earnings', href: '/dashboard/payouts', done: payEmail },
     { label: 'Join your first campaign', body: 'Pick something you would actually clip', href: '/', done: clips > 0 },
   ]
   const done = steps.filter((s) => s.done).length

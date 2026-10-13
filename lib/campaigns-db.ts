@@ -1,6 +1,7 @@
 import type { Campaign, Platform } from './campaigns'
 import { shortDate } from './campaign-input'
 import { db } from './db'
+import { costFor } from './ledger-math'
 
 export type CampaignRow = {
   id: string
@@ -70,7 +71,7 @@ export async function liveCampaigns(): Promise<Campaign[]> {
     return rows.map((r) => {
       const c = toCampaign(r)
       const pool = pools.get(r.id)
-      return pool === undefined || r.budget_cents <= 0 ? c : { ...c, budgetLeftPct: Math.max(0, Math.min(100, Math.round((pool / r.budget_cents) * 100))) }
+      return pool === undefined || r.budget_cents <= 0 ? c : { ...c, budgetLeftPct: Math.max(0, Math.min(100, Math.round((pool / costFor(r.budget_cents)) * 100))) }
     })
   } catch (e) {
     console.error('liveCampaigns failed', e instanceof Error ? e.message : e)

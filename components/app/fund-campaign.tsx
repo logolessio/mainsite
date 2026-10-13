@@ -1,14 +1,17 @@
 'use client'
 
 import { Loader2, Plus } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { SITE } from '@/lib/site'
+import { costFor } from '@/lib/ledger-math'
 import { cn } from '@/lib/utils'
 
 const PRESETS = [50, 100, 250, 500, 1000]
 
-/** Adds money to a running campaign: pick an amount, go to Stripe, come back. The pool grows when Stripe confirms. */
+/** Adds money for clippers to a running campaign from the balance. The 15% fee is charged on top of what you pick. */
 export function FundCampaign({ id, title }: { id: string; title: string }) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState('250')
   const [busy, setBusy] = useState(false)
@@ -20,12 +23,11 @@ export function FundCampaign({ id, title }: { id: string; title: string }) {
     setBusy(true)
     setError('')
     const res = await fetch(`/api/campaigns/${id}/fund`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ amount: n }) }).catch(() => null)
-    const j = (await res?.json().catch(() => ({}))) as { error?: string; url?: string }
-    if (!res?.ok || !j.url) {
-      setBusy(false)
-      return setError(j.error ?? 'Could not open the payment page.')
-    }
-    window.location.href = j.url
+    const j = (await res?.json().catch(() => ({}))) as { error?: string; ok?: boolean }
+    setBusy(false)
+    if (!res?.ok || !j.ok) return setError(j.error ?? 'Could not add the funds.')
+    setOpen(false)
+    router.refresh()
   }
 
   if (!open)
@@ -49,12 +51,13 @@ export function FundCampaign({ id, title }: { id: string; title: string }) {
       </label>
       <div className="flex items-center gap-2">
         <button type="button" disabled={!ok || busy} onClick={go} className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-paper text-sm font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
-          {busy && <Loader2 className="size-4 animate-spin" />} Pay ${ok ? n.toLocaleString() : '…'} with Stripe
+          {busy && <Loader2 className="size-4 animate-spin" />} Add ${ok ? `$${n.toLocaleString()}` : '…'} from balance
         </button>
         <button type="button" onClick={() => setOpen(false)} className="h-10 rounded-full px-3 text-sm text-mute hover:text-paper">
           Cancel
         </button>
       </div>
+      {ok && <p className="text-xs text-mute">${n.toLocaleString()} for clippers + {SITE.platformFeePct}% fee = <span className="text-paper">${(costFor(n * 100) / 100).toLocaleString('en-US', { maximumFractionDigits: 2 })}</span> from your balance.</p>}
       {!ok && amount && <p className="text-xs text-mute">Between $25 and ${SITE.maxTopUpUsd.toLocaleString()}.</p>}
       {error && (
         <p role="alert" className="text-xs text-signal">

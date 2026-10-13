@@ -1,12 +1,15 @@
 import { auditSafe } from '@/lib/chain'
 import { campaignRow } from '@/lib/campaigns-db'
-import { db, nowSec, uid } from '@/lib/db'
 import { protect } from '@/lib/guard'
 import { HttpError, json, route } from '@/lib/http'
-import { stripe } from '@/lib/stripe'
+import { balances, costFor, fundFromBalance } from '@/lib/ledger'
+import { notify, notifyAdmins } from '@/lib/notify'
 import { requireUser } from '@/lib/user'
 
-/** The artist pays for an accepted campaign. The amount comes from our database, never from the browser. */
+/**
+ * The brand pays for an accepted campaign from their balance: the budget for clippers plus our 15% fee on top. The amount comes
+ * from our database, never from the browser. If the balance is short, nothing happens and they are told how much to add.
+ */
 export const POST = route(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
   const user = await requireUser()
   await protect(req, { name: 'campaign-pay', max: 10, windowSec: 3600, userId: user.id })
@@ -15,37 +18,13 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
   if (!c || c.brand_user_id !== user.id) throw new HttpError(404, 'Campaign not found.')
   if (c.status !== 'awaiting_payment') throw new HttpError(409, c.status === 'requested' ? 'We are still reviewing this request.' : 'This campaign does not need a payment.')
 
-  const s = await stripe()
-  const d = await db()
-  const origin = new URL(req.url).origin
-  // A campaign made through an invite sends the artist back to their own link afterwards.
-  const inv = c.invite_id ? await d.prepare('SELECT slug FROM artist_invites WHERE id = ?1').bind(c.invite_id).first<{ slug: string }>() : null
-  const back = inv ? `${origin}/${inv.slug}` : `${origin}/brand/campaigns`
-
-  let customer = user.stripe_customer_id
-  if (!customer) {
-    const created = await s.customers.create({ email: user.email, name: user.name ?? undefined, metadata: { user_id: user.id } })
-    customer = created.id
-    await d.prepare('UPDATE users SET stripe_customer_id = ?2 WHERE id = ?1').bind(user.id, customer).run()
+  const paid = await fundFromBalance(user.id, c.id, c.budget_cents, 'launch')
+  if (!paid) {
+    const need = costFor(c.budget_cents) - (await balances(user.id)).brand
+    throw new HttpError(402, `Your balance is $${(Math.max(0, need) / 100).toFixed(2)} short of the $${(costFor(c.budget_cents) / 100).toFixed(2)} this campaign costs. Add funds first.`)
   }
-
-  const session = await s.checkout.sessions.create({
-    mode: 'payment',
-    customer,
-    client_reference_id: user.id,
-    line_items: [{ quantity: 1, price_data: { currency: 'usd', unit_amount: c.budget_cents, product_data: { name: `logoless campaign: ${c.title}` } } }],
-    payment_intent_data: { description: `logoless campaign ${c.id}`, metadata: { user_id: user.id, kind: 'campaign', campaign_id: c.id } },
-    metadata: { user_id: user.id, kind: 'campaign', campaign_id: c.id },
-    success_url: `${back}?paid=${encodeURIComponent(c.id)}`,
-    cancel_url: `${back}?cancelled=1`,
-  })
-  if (!session.url) throw new HttpError(502, 'Stripe did not return a checkout link.')
-
-  await d
-    .prepare("INSERT INTO topups (id, user_id, session_id, amount_cents, status, created_at, campaign_id) VALUES (?1, ?2, ?3, ?4, 'open', ?5, ?6)")
-    .bind(uid(), user.id, session.id, c.budget_cents, nowSec(), c.id)
-    .run()
-  await d.prepare('UPDATE campaigns SET payment_session_id = ?2, updated_at = ?3 WHERE id = ?1').bind(c.id, session.id, nowSec()).run()
-  await auditSafe({ id: user.id, email: user.email }, 'campaign.checkout', c.id, `$${(c.budget_cents / 100).toFixed(2)}`)
-  return json({ url: session.url })
+  await auditSafe({ id: user.id, email: user.email }, 'campaign.paid', c.id, `$${(paid.cost / 100).toFixed(2)} (fee $${(paid.fee / 100).toFixed(2)})`)
+  await notify(user.id, { kind: 'campaign', title: `${c.title} is paid for`, body: 'We will launch your campaign shortly.', href: '/brand/campaigns', dedupe: `camp-paid:${c.id}` })
+  await notifyAdmins({ title: `Paid: ${c.title} is ready to launch`, body: `$${(paid.cost / 100).toFixed(2)} received.`, href: '/admin/campaigns', dedupe: `camp-paid:${c.id}` })
+  return json({ ok: true, cost: paid.cost })
 })

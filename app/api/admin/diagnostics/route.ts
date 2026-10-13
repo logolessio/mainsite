@@ -4,11 +4,10 @@ import { captchaConfigured } from '@/lib/human'
 import { db, setting } from '@/lib/db'
 import { protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
-import { stripe } from '@/lib/stripe'
+import { listWebhooks, paypalPing } from '@/lib/paypal'
 import { requireAdmin } from '@/lib/user'
-import { stripeBalance } from '@/lib/admin-stats'
 
-const schema = z.object({ check: z.enum(['stripe', 'webhook', 'database', 'ledger', 'chains', 'captcha', 'auth', 'connect', 'email']) })
+const schema = z.object({ check: z.enum(['paypal', 'webhook', 'database', 'ledger', 'chains', 'captcha', 'auth', 'email']) })
 
 type Result = { ok: boolean; title: string; lines: string[] }
 
@@ -22,41 +21,35 @@ export const POST = route(async (req: Request) => {
   const out: Result = { ok: true, title: '', lines: [] }
 
   switch (parsed.data.check) {
-    case 'stripe': {
-      out.title = 'Stripe connection'
-      const b = await stripeBalance()
-      if ('error' in b) return json({ ...out, ok: false, lines: [`Stripe refused: ${b.error}`] })
-      out.lines = [`Connected in ${b.live ? 'LIVE' : 'TEST'} mode.`, `Available: $${(b.available / 100).toFixed(2)}`, `Pending: $${(b.pending / 100).toFixed(2)}`]
-      break
-    }
-    case 'connect': {
-      out.title = 'Stripe Connect (clipper payouts)'
+    case 'paypal': {
+      out.title = 'PayPal connection'
       try {
-        const s = await stripe()
-        const list = await s.accounts.list({ limit: 3 })
-        const pk = await setting('STRIPE_PUBLISHABLE_KEY')
-        out.ok = Boolean(pk)
-        out.lines = [
-          `Connect is enabled. ${list.data.length} connected account${list.data.length === 1 ? '' : 's'} found (showing up to 3).`,
-          pk ? 'Publishable key is set: bank details are swapped for a token in the browser.' : 'STRIPE_PUBLISHABLE_KEY is missing: clippers cannot add a bank account until it is set.',
-        ]
+        const r = await paypalPing()
+        out.lines = [`The keys work. Connected in ${r.live ? 'LIVE' : 'SANDBOX'} mode.`, r.live ? 'Real money moves.' : 'Sandbox: no real money moves. Switch PAYPAL_ENV to live when you are ready.']
       } catch (e) {
-        return json({ ...out, ok: false, lines: [e instanceof Error ? e.message.slice(0, 200) : 'Connect is not enabled on this Stripe account.'] })
+        return json({ ...out, ok: false, lines: [e instanceof Error ? e.message.slice(0, 200) : 'PayPal refused the keys.'] })
       }
       break
     }
     case 'webhook': {
-      out.title = 'Stripe webhook'
-      const main = Boolean(await setting('STRIPE_WEBHOOK_SECRET'))
-      const connect = Boolean(await setting('STRIPE_CONNECT_WEBHOOK_SECRET'))
-      const has = main
-      const last = await d.prepare('SELECT type, received_at FROM stripe_events ORDER BY received_at DESC LIMIT 1').first<{ type: string; received_at: number }>()
+      out.title = 'PayPal webhook'
+      const id = await setting('PAYPAL_WEBHOOK_ID')
+      const last = await d.prepare('SELECT type, received_at FROM stripe_events ORDER BY received_at DESC LIMIT 1').first<{ type: string; received_at: number }>() // this table keeps PayPal event ids now
       const total = await d.prepare('SELECT COUNT(*) AS n FROM stripe_events').first<{ n: number }>()
-      out.ok = has && Boolean(last)
+      let listed: string | null = null
+      try {
+        const hooks = await listWebhooks()
+        const mine = id ? hooks.find((h) => h.id === id) : null
+        listed = mine ? `Webhook found on the PayPal app, pointing at ${mine.url} with ${mine.event_types?.length ?? 0} event types.` : id ? 'That webhook ID is not on this PayPal app. Check PAYPAL_WEBHOOK_ID.' : null
+        out.ok = Boolean(mine)
+      } catch {
+        out.ok = Boolean(id)
+        listed = 'Could not list webhooks (the keys may be wrong or missing).'
+      }
       out.lines = [
-        has ? 'Signing secret is set.' : 'Signing secret is NOT set: Stripe events will be rejected.',
-        connect ? 'Connect signing secret is set (clipper account updates).' : 'No Connect signing secret yet: clipper account updates will be rejected until STRIPE_CONNECT_WEBHOOK_SECRET is added.',
-        last ? `Last event: ${last.type}, ${new Date(last.received_at * 1000).toLocaleString('en-US')}. ${total?.n ?? 0} received in total.` : 'No event has arrived yet. In Stripe, send a test event to /api/stripe/webhook to prove it works.',
+        id ? 'PAYPAL_WEBHOOK_ID is set.' : 'PAYPAL_WEBHOOK_ID is NOT set: refunds and failed payouts will not be noticed.',
+        ...(listed ? [listed] : []),
+        last ? `Last event: ${last.type}, ${new Date(last.received_at * 1000).toLocaleString('en-US')}. ${total?.n ?? 0} received in total.` : 'No event has arrived yet. In the PayPal dashboard, send a simulated event to /api/paypal/webhook to prove it works.',
       ]
       break
     }
@@ -90,9 +83,9 @@ export const POST = route(async (req: Request) => {
       if (r!.negBrands) bad.push(`${r!.negBrands} brand balance(s) below zero`)
       if (r!.earnedNet !== r!.ledgerEarned) bad.push(`earnings table (${r!.earnedNet}) and ledger (${r!.ledgerEarned}) disagree`)
       if (r!.gross !== r!.spent) bad.push(`campaign spend (${r!.spent}) does not equal fee + net paid (${r!.gross})`)
-      if (r!.sentNoTransfer) bad.push(`${r!.sentNoTransfer} payout(s) marked sent without a Stripe transfer`)
+      if (r!.sentNoTransfer) bad.push(`${r!.sentNoTransfer} payout(s) marked sent without a PayPal batch id`)
       out.ok = bad.length === 0
-      out.lines = bad.length ? bad : ['Every pool and balance is at or above zero.', 'Earnings, fees and campaign spending add up exactly.', 'Every sent payout has a Stripe transfer id.']
+      out.lines = bad.length ? bad : ['Every pool and balance is at or above zero.', 'Earnings, fees and campaign spending add up exactly.', 'Every sent payout has a PayPal batch id.']
       break
     }
     case 'chains': {

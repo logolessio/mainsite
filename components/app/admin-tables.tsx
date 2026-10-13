@@ -77,32 +77,26 @@ export function UsersTable() {
   )
 }
 
-export type PayoutRow = { id: string; clipper: string; amount: number; status: 'pending' | 'sent' | 'failed' | 'reversed'; date: string; stripeId: string; note: string }
+export type PayoutRow = { id: string; clipper: string; amount: number; status: 'pending' | 'sent' | 'failed' | 'reversed'; date: string; paypalId: string; to: string; note: string }
 export function PayoutsTable({ rows }: { rows: PayoutRow[] }) {
   return (
     <AdminList
       rows={rows}
-      searchKeys={['clipper', 'stripeId']}
+      searchKeys={['clipper', 'paypalId', 'to']}
       filterLabel="Status"
       filterKey="status"
       filterOptions={['pending', 'sent', 'failed', 'reversed']}
       emptyTitle="No payouts"
-      emptyBody="Withdrawals made through Stripe appear here."
+      emptyBody="Withdrawals sent through PayPal appear here."
       columns={[
         { key: 'c', header: 'Clipper', render: (r) => r.clipper },
         { key: 'a', header: 'Amount', render: (r) => `$${r.amount.toFixed(2)}` },
         { key: 's', header: 'Status', render: (r) => <Badge tone={r.status === 'sent' ? 'good' : r.status === 'pending' ? 'warn' : 'bad'}>{r.status}</Badge> },
+        { key: 'to', header: 'Sent to', render: (r) => <span className="text-xs">{r.to || '-'}</span> },
         {
           key: 'st',
-          header: 'Stripe transfer',
-          render: (r) =>
-            r.stripeId ? (
-              <a href={`https://dashboard.stripe.com/connect/transfers/${r.stripeId}`} target="_blank" rel="noreferrer" className="font-mono text-xs underline underline-offset-4">
-                {r.stripeId}
-              </a>
-            ) : (
-              <span className="text-xs text-mute">{r.note || '-'}</span>
-            ),
+          header: 'PayPal batch',
+          render: (r) => (r.paypalId ? <span className="font-mono text-xs">{r.paypalId}</span> : <span className="text-xs text-mute">{r.note || '-'}</span>),
         },
         { key: 'd', header: 'Date', render: (r) => r.date },
       ]}

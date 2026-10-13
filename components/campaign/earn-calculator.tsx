@@ -8,11 +8,11 @@ const STOPS = [1_000, 5_000, 10_000, 25_000, 50_000, 100_000, 250_000, 500_000, 
 const label = (n: number) => (n >= 1_000_000 ? `${n / 1_000_000}M` : `${n / 1_000}K`)
 const money = (n: number) => `$${n.toLocaleString('en-US', n >= 100 ? { maximumFractionDigits: 0 } : { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
-/** Slide to a number of views and see what lands in your pocket after the platform fee. */
+/** Slide to a number of views and see what lands in your pocket. The platform fee is charged to the brand on top, so it never reduces this. */
 export function EarnCalculator({ rate }: { rate: number }) {
   const [i, setI] = useState(5)
   const views = STOPS[i]
-  const net = (views / 1000) * rate * (1 - SITE.platformFeePct / 100)
+  const net = (views / 1000) * rate
   const shown = useRef(net)
   const [display, setDisplay] = useState(net)
 
@@ -44,12 +44,12 @@ export function EarnCalculator({ rate }: { rate: number }) {
       </div>
       <dl className="mt-6 grid grid-cols-2 gap-3 text-sm">
         <div className="rounded-2xl bg-white/[0.04] px-4 py-3">
-          <dt className="text-xs text-mute">Before the fee</dt>
-          <dd className="mt-0.5 tabular-nums">{money((views / 1000) * rate)}</dd>
+          <dt className="text-xs text-mute">You keep</dt>
+          <dd className="mt-0.5 tabular-nums">{money(net)}</dd>
         </div>
         <div className="rounded-2xl bg-white/[0.04] px-4 py-3">
-          <dt className="text-xs text-mute">logoless fee ({SITE.platformFeePct}%)</dt>
-          <dd className="mt-0.5 tabular-nums">−{money((views / 1000) * rate * (SITE.platformFeePct / 100))}</dd>
+          <dt className="text-xs text-mute">Our fee, paid by the brand</dt>
+          <dd className="mt-0.5 tabular-nums">+{money(net * (SITE.platformFeePct / 100))}</dd>
         </div>
       </dl>
       <p className="mt-4 text-xs leading-relaxed text-mute">

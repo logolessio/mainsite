@@ -9,9 +9,8 @@ import { pageAdmin } from '@/lib/user'
 export const metadata: Metadata = { title: 'Keys and tests | logoless', robots: { index: false } }
 
 const CHECKS = [
-  { id: 'stripe', label: 'Stripe connection', hint: 'Asks Stripe for the account balance with the key we hold. Shows live or test mode.' },
-  { id: 'connect', label: 'Stripe Connect', hint: 'Checks that clipper payouts are enabled on the Stripe account.' },
-  { id: 'webhook', label: 'Stripe webhook', hint: 'Checks the signing secret and when the last event arrived.' },
+  { id: 'paypal', label: 'PayPal connection', hint: 'Asks PayPal for a token with the keys we hold. Shows live or sandbox mode.' },
+  { id: 'webhook', label: 'PayPal webhook', hint: 'Checks the webhook ID is on the PayPal app, and when the last event arrived.' },
   { id: 'database', label: 'Database', hint: 'Reads the database and counts the main tables.' },
   { id: 'ledger', label: 'Money check', hint: 'Looks for negative balances and for earnings, fees and spending that do not add up.' },
   { id: 'chains', label: 'Tamper check on the logs', hint: 'Re-computes the chain on the admin and text logs. Any edit or deletion shows up.' },

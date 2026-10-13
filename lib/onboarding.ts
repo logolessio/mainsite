@@ -24,7 +24,6 @@ export type OnboardingData = {
   notifyCampaigns: boolean
   notifyPayouts: boolean
   // payouts / billing
-  stripeConnected: boolean
   fundAmount: number | null
   // brand
   company: string
@@ -52,7 +51,6 @@ export const DEFAULT_DATA: OnboardingData = {
   styles: [],
   notifyCampaigns: true,
   notifyPayouts: true,
-  stripeConnected: false,
   fundAmount: null,
   company: '',
   website: '',

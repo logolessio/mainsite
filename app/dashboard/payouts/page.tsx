@@ -9,7 +9,7 @@ export default function Page() {
   return (
     <>
       <SectionTabs group="earnings" />
-      <PageHeader title="Payouts" sub="Connect Stripe to withdraw your earnings to your bank." />
+      <PageHeader title="Payouts" sub="Pick a PayPal email and withdraw your earnings." />
       <PayoutsPanel />
     </>
   )

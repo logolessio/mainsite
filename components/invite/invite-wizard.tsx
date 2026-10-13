@@ -6,7 +6,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
 import { Logo } from '@/components/logo'
 import { CountUp } from '@/components/app/count-up'
+import { getFinance, startDeposit } from '@/lib/finance-client'
 import { uploadImage } from '@/lib/image-client'
+import { costFor, feeFor } from '@/lib/ledger-math'
 import { ARTIST_COUNTRIES, BUDGET_PRESETS, CHAPTERS, COUNTRY_NAMES, estimateViews, GENRES, type InviteData, lines, RATE_PRESETS, RELEASE_KINDS, STEPS, type StepId } from '@/lib/invite-shared'
 import { EASE_OUT } from '@/lib/layout'
 import { buildLink, LINK_PLATFORMS, USERNAME_LINKS } from '@/lib/profile-style'
@@ -171,17 +173,39 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
   }
   const back = () => step > 0 && go(step - 1)
 
+  // the balance the artist has to pay from, looked up when the funding step opens
+  const [balance, setBalance] = useState<number | null>(null)
+  useEffect(() => {
+    if (current.id !== 'fund') return
+    getFinance()
+      .then((f) => setBalance(f.balances.brand))
+      .catch(() => setBalance(null))
+  }, [current.id])
+
   const pay = async () => {
     if (!campaign) return
     setBusy(true)
     setError('')
     const res = await fetch(`/api/campaigns/${campaign.id}/pay`, { method: 'POST' }).catch(() => null)
-    const j = (await res?.json().catch(() => ({}))) as { error?: string; url?: string }
-    if (!res?.ok || !j.url) {
+    const j = (await res?.json().catch(() => ({}))) as { error?: string; ok?: boolean }
+    setBusy(false)
+    if (!res?.ok || !j.ok) return setError(j.error ?? 'Could not take the payment. Please try again.')
+    setCampaign({ ...campaign, status: 'paid' })
+    go(idx('done'))
+  }
+
+  const addFunds = async () => {
+    if (!campaign) return
+    setBusy(true)
+    setError('')
+    try {
+      const short = costFor(campaign.budgetCents) - (balance ?? 0)
+      const { url } = await startDeposit(Math.max(10, Math.ceil(short / 100)))
+      window.location.href = url
+    } catch (e) {
       setBusy(false)
-      return setError(j.error ?? 'Could not open the payment page. Please try again.')
+      setError(e instanceof Error ? e.message : 'Could not open PayPal.')
     }
-    window.location.href = j.url
   }
 
   const pick = async (kind: 'avatar' | 'cover', file: File) => {
@@ -498,7 +522,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                           </p>
                           <p className="mt-1 text-lg text-mute">verified views</p>
                           <p className="mt-5 text-sm leading-relaxed text-mute">
-                            {usd(budget || 0)} at {usd(rate || 0)} per 1,000 views. A {SITE.platformFeePct}% platform fee comes out of what clippers earn, not on top of your budget.
+                            {usd(budget || 0)} at {usd(rate || 0)} per 1,000 views. Clippers earn all of it. Our {SITE.platformFeePct}% fee is added on top, so you pay {usd((budget || 0) * (1 + SITE.platformFeePct / 100))} in all.
                           </p>
                         </motion.div>
                       </Rise>
@@ -588,11 +612,14 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                     <Rise i={0}>
                       <div className="rounded-[2rem] border border-line-strong bg-white/[0.04] p-6 md:p-8">
                         <p className="text-xs tracking-wide text-mute">{campaign.title}</p>
-                        <p className="mt-2 font-display text-6xl font-medium tabular-nums md:text-7xl">{money(campaign.budgetCents)}</p>
+                        <p className="mt-2 font-display text-6xl font-medium tabular-nums md:text-7xl">{money(costFor(campaign.budgetCents))}</p>
+                        <p className="mt-2 text-sm text-mute">
+                          {money(campaign.budgetCents)} for clippers + {money(feeFor(campaign.budgetCents))} fee ({SITE.platformFeePct}%, added on top)
+                        </p>
                         <ul className="mt-6 grid gap-3 text-sm text-mute">
                           {[
-                            [CreditCard, 'Pay by card with Stripe. We never see your card details.'],
-                            [ShieldCheck, 'The whole amount goes into this campaign’s pool and is only spent on verified views.'],
+                            [CreditCard, balance === null ? 'Paid from your logoless balance. You add money to it with PayPal.' : `Your balance is ${money(balance)}. ${balance >= costFor(campaign.budgetCents) ? 'It covers this.' : 'Add the rest with PayPal first.'}`],
+                            [ShieldCheck, 'Clippers earn the whole budget, only for verified views. Our fee is on top, never taken from them.'],
                             [Sparkles, 'Our team launches it right after payment, usually within a day.'],
                           ].map(([Ic, t], i) => {
                             const I = Ic as typeof CreditCard
@@ -604,9 +631,15 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                           })}
                         </ul>
                         <div className="mt-8 flex flex-wrap items-center gap-3">
-                          <button type="button" onClick={pay} disabled={busy} className="inline-flex h-14 items-center gap-2 rounded-full bg-paper px-8 text-base font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:opacity-50">
-                            {busy ? <Loader2 className="size-5 animate-spin" /> : <CreditCard className="size-5" />} Pay {money(campaign.budgetCents)} securely
-                          </button>
+                          {balance !== null && balance < costFor(campaign.budgetCents) ? (
+                            <button type="button" onClick={addFunds} disabled={busy} className="inline-flex h-14 items-center gap-2 rounded-full bg-paper px-8 text-base font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:opacity-50">
+                              {busy ? <Loader2 className="size-5 animate-spin" /> : <Wallet className="size-5" />} Add {money(Math.max(1000, Math.ceil((costFor(campaign.budgetCents) - balance) / 100) * 100))} with PayPal
+                            </button>
+                          ) : (
+                            <button type="button" onClick={pay} disabled={busy || balance === null} className="inline-flex h-14 items-center gap-2 rounded-full bg-paper px-8 text-base font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:opacity-50">
+                              {busy ? <Loader2 className="size-5 animate-spin" /> : <CreditCard className="size-5" />} Pay {money(costFor(campaign.budgetCents))} from balance
+                            </button>
+                          )}
                           <button type="button" onClick={() => go(idx('done'))} className="h-14 rounded-full px-6 text-mute transition-colors hover:text-paper">
                             I will do this later
                           </button>

@@ -73,7 +73,7 @@ export async function overview(since: number) {
     one(
       `SELECT
          (SELECT COALESCE(SUM(amount_cents), 0) FROM topups WHERE status = 'paid' AND paid_at >= ?1) AS paidIn,
-         (SELECT COALESCE(SUM(stripe_fee_cents), 0) FROM topups WHERE status = 'paid' AND paid_at >= ?1) AS stripeCosts,
+         (SELECT COALESCE(SUM(stripe_fee_cents), 0) FROM topups WHERE status = 'paid' AND paid_at >= ?1) AS paypalCosts,
          (SELECT COALESCE(SUM(fee_cents), 0) FROM earnings WHERE created_at >= ?1) AS fees,
          (SELECT COALESCE(SUM(gross_cents), 0) FROM earnings WHERE created_at >= ?1) AS gross,
          (SELECT COALESCE(SUM(net_cents), 0) FROM earnings WHERE created_at >= ?1) AS earned,

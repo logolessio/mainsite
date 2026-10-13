@@ -1,0 +1,63 @@
+'use client'
+
+import { Loader2 } from 'lucide-react'
+import { useState } from 'react'
+import { startDeposit } from '@/lib/finance-client'
+import { SITE } from '@/lib/site'
+import { cn } from '@/lib/utils'
+import { ActionButton } from './ui'
+
+const PRESETS = [100, 250, 500, 1000, 2500]
+
+/** A brand adds money to their balance with PayPal. They are sent to PayPal to pay, then land back on the funding page. */
+export function AddFunds({ ready }: { ready: boolean }) {
+  const [amount, setAmount] = useState('250')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const n = Number(amount)
+  const ok = Number.isInteger(n) && n >= 10 && n <= SITE.maxTopUpUsd
+
+  const go = async () => {
+    setBusy(true)
+    setError('')
+    try {
+      const { url } = await startDeposit(n)
+      window.location.href = url
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not open PayPal.')
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="grid gap-5">
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Amount">
+        {PRESETS.map((p) => (
+          <button key={p} type="button" onClick={() => setAmount(String(p))} aria-pressed={n === p} className={cn('h-10 rounded-full border px-5 text-sm transition-colors', n === p ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
+            ${p.toLocaleString()}
+          </button>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="flex h-12 w-44 items-center rounded-full border border-line-strong bg-ink/80 px-5 focus-within:border-paper/60">
+          <span className="text-mute">$</span>
+          <input inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, '').slice(0, 5))} aria-label="Amount in dollars" className="ml-1 h-full w-full bg-transparent outline-none" />
+        </label>
+        <ActionButton disabled={!ok || busy || !ready} onClick={go} className="h-12 px-7">
+          {busy && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
+          Add ${ok ? n.toLocaleString() : '…'} with PayPal
+        </ActionButton>
+      </div>
+      {!ready && <p className="text-sm text-mute">Adding funds is not open yet. It will be here very soon.</p>}
+      {!ok && amount && <p className="text-xs text-mute">Between $10 and ${SITE.maxTopUpUsd.toLocaleString()}.</p>}
+      {error && (
+        <p role="alert" className="text-sm text-signal">
+          {error}
+        </p>
+      )}
+      <p className="text-xs leading-relaxed text-mute">
+        This money sits in your logoless balance. When you launch a campaign, its budget for clippers plus our {SITE.platformFeePct}% fee comes out of it. You pay PayPal once, here, and nothing else.
+      </p>
+    </div>
+  )
+}

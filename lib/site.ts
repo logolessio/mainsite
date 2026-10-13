@@ -20,7 +20,7 @@ export const SITE = {
     youtube: 'https://youtube.com/@logoless',
   },
   // Business rules shown in copy. Keep in sync with the backend.
-  platformFeePct: 10, // TODO: confirm
+  platformFeePct: 15, // charged to the brand ON TOP of what clippers are paid, never taken out of a clipper's earnings
   minPayoutUsd: 10,
   minTopUpUsd: 100, // TODO: confirm
   maxTopUpUsd: 10000, // per top-up; raise once you trust the flow

@@ -4,7 +4,7 @@ import { audit } from '@/lib/chain'
 import { db, nowSec } from '@/lib/db'
 import { ipHash, protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
-import { campaignPool, creditEarning } from '@/lib/ledger'
+import { campaignPool, costFor, creditEarning } from '@/lib/ledger'
 import { notify, notifyFavoriters } from '@/lib/notify'
 import { requireAdmin } from '@/lib/user'
 
@@ -54,14 +54,14 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
     if (views < s.views_verified) throw new HttpError(400, 'Verified views can only go up. Contact support to correct a mistake.')
     const delta = views - s.views_verified
     if (delta > 0) {
-      const gross = Math.floor((delta * camp.rate_cents) / 1000)
+      const gross = Math.floor((delta * camp.rate_cents) / 1000) // what the clipper earns; the fee is charged to the brand on top
       // claim the new view count first (only if nobody else changed it), then pay; undo the claim if payment fails
       const claim = await d.prepare('UPDATE submissions SET views_verified = ?2 WHERE id = ?1 AND views_verified = ?3').bind(id, views, s.views_verified).run()
       if (claim.meta.changes !== 1) throw new HttpError(409, 'This clip was just updated. Refresh and try again.')
       if (gross > 0) {
         let res: Awaited<ReturnType<typeof creditEarning>> = null
         try {
-          res = await creditEarning({ campaignId: camp.id, clipperId: s.user_id, grossCents: gross, submissionId: id, note: `${delta} views` })
+          res = await creditEarning({ campaignId: camp.id, clipperId: s.user_id, payoutCents: gross, submissionId: id, note: `${delta} views` })
         } catch (e) {
           await d.prepare('UPDATE submissions SET views_verified = ?2 WHERE id = ?1').bind(id, s.views_verified).run()
           throw e
@@ -88,7 +88,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
       if (left <= 0) {
         await d.prepare("UPDATE campaigns SET status='ended', updated_at=?2 WHERE id=?1 AND status='live'").bind(camp.id, t).run()
         await notifyFavoriters(camp.id, { title: `${camp.title} has run out of budget`, body: 'It is no longer taking clips.', dedupe: `budget-out:${camp.id}` })
-      } else if (left < camp.budget_cents * 0.2) {
+      } else if (left < costFor(camp.budget_cents) * 0.2) {
         await notifyFavoriters(camp.id, { title: `${camp.title} is almost out of budget`, body: 'Less than 20% is left. Clip it soon.', dedupe: `budget-low:${camp.id}` })
       }
     }
