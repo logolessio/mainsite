@@ -80,6 +80,28 @@ export async function pageUser() {
   return u
 }
 
+export async function requireDev() {
+  const session = await getSession()
+  if (!session?.user?.roles?.includes('dev')) throw new HttpError(403, 'Developers only.')
+  return requireUser()
+}
+
+/** Someone on the team: an admin or a developer. For tools both sides need, like pushing features. */
+export async function requireStaff() {
+  const session = await getSession()
+  const roles = session?.user?.roles ?? []
+  if (!roles.includes('admin') && !roles.includes('dev')) throw new HttpError(403, 'Team only.')
+  return requireUser()
+}
+
+/** For developer pages: anyone without the developer role sees a plain 404. */
+export async function pageDev() {
+  await connection()
+  const session = await getSession()
+  if (!session?.user?.roles?.includes('dev')) notFound()
+  return pageUser()
+}
+
 /** For admin pages: anyone who is not an admin sees a plain 404, so the page does not even confirm it exists. */
 export async function pageAdmin() {
   await connection()

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { audit } from '@/lib/chain'
 import { deletionBlocker, purgeAccount } from '@/lib/account-deletion'
+import { requireAdminSecret } from '@/lib/admin-secret'
 import { db, nowSec } from '@/lib/db'
 import { accountDeletedEmail, emailEnabled, sendEmail } from '@/lib/email'
 import { ipHash, protect } from '@/lib/guard'
@@ -11,6 +12,7 @@ import { requireAdmin } from '@/lib/user'
 const schema = z.object({
   action: z.enum(['suspend', 'ban', 'reinstate', 'flag', 'unflag', 'delete']),
   note: z.string().trim().max(200).optional(),
+  secret: z.string().max(200).optional(),
 })
 
 export const POST = route(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
@@ -28,6 +30,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
 
   if (action === 'delete') {
     // An admin deletes the account for good, right now. The owner is emailed first (their address is wiped by the deletion).
+    await requireAdminSecret(admin.id, parsed.data.secret)
     if (u.email.endsWith('@deleted.invalid')) throw new HttpError(409, 'That account has already been deleted.')
     if (!note || note.length < 3) throw new HttpError(400, 'Add a short reason. The person will see it in the email.')
     const blocked = await deletionBlocker(id)

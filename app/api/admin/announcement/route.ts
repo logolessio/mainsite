@@ -3,7 +3,7 @@ import { audit } from '@/lib/chain'
 import { getAnnouncement, setAnnouncement } from '@/lib/announcement'
 import { protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
-import { requireAdmin } from '@/lib/user'
+import { requireStaff } from '@/lib/user'
 
 const schema = z.object({
   text: z.string().trim().max(140),
@@ -12,13 +12,13 @@ const schema = z.object({
 })
 
 export const GET = route(async () => {
-  await requireAdmin()
+  await requireStaff()
   return json({ announcement: (await getAnnouncement()) ?? { text: '', href: '' } })
 })
 
 /** The text of the bar across the top of the site. Empty text switches it off. */
 export const POST = route(async (req: Request) => {
-  const admin = await requireAdmin()
+  const admin = await requireStaff()
   await protect(req, { name: 'admin-announcement', max: 30, windowSec: 600, userId: admin.id })
   const parsed = schema.safeParse(await body(req, 2048))
   if (!parsed.success) throw new HttpError(400, parsed.error.issues[0]?.message ?? 'That is not valid.')

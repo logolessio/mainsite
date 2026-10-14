@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useCopy } from '@/components/shell/copy-provider'
 import { EASE_OUT } from '@/lib/layout'
+import { askAdminSecret } from './secret-dialog'
 import { cn } from '@/lib/utils'
 
 type Pulse = {
@@ -83,8 +84,10 @@ export function ToolsMenu() {
 
   const flip = async (key: string, on: boolean) => {
     if (on && !window.confirm('Switch this on? It takes effect straight away.')) return
+    const pass = await askAdminSecret('This switch affects every member, so it needs your admin password.')
+    if (!pass) return
     setPulse((p) => (p ? { ...p, settings: { ...p.settings, [key]: on ? '1' : '0' } } : p))
-    const res = await fetch('/api/admin/settings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ key, value: on ? '1' : '0' }) })
+    const res = await fetch('/api/admin/settings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ key, value: on ? '1' : '0', secret: pass }) })
     if (!res.ok) load()
   }
 
@@ -113,7 +116,7 @@ export function ToolsMenu() {
     ['/admin/text', 'Site text', FileText, 0],
     ['/admin/keys', 'Keys', ShieldCheck, 0],
     ['/admin/settings', 'Settings', Settings, 0],
-    ['/admin/design', 'Design', Palette, 0],
+    ['/dev/design', 'Design', Palette, 0],
   ] as const
 
   return (

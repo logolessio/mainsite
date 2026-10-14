@@ -11,7 +11,18 @@ const admins = (process.env.ADMIN_EMAILS ?? '')
 /** True once Google credentials are present. Until then the private pages stay open so the UI can be previewed. */
 export const authConfigured = Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET)
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+/**
+ * One sign-in for logoless.io, dev.logoless.io and admin.logoless.io: on those addresses the session cookie is set for the
+ * whole domain. Anywhere else (a local machine) it stays on the address it was made on.
+ */
+const sharedCookies = (req?: Request) => {
+  const host = (req?.headers.get('host') ?? '').toLowerCase().split(':')[0]
+  if (!(host === 'logoless.io' || host.endsWith('.logoless.io'))) return {}
+  return { cookies: { sessionToken: { name: '__Secure-authjs.session-token', options: { httpOnly: true, sameSite: 'lax' as const, path: '/', secure: true, domain: '.logoless.io' } } } }
+}
+
+export const { handlers, auth, signIn, signOut } = NextAuth((req) => ({
+  ...sharedCookies(req),
   trustHost: true,
   // Google reads AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET, Discord reads AUTH_DISCORD_ID / AUTH_DISCORD_SECRET.
   providers: [
@@ -67,6 +78,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account, isNewUser }) {
       const { logEvent } = await import('./lib/log')
       logEvent({ kind: 'auth', name: 'signin', actor: user.email?.toLowerCase() ?? null, detail: `${account?.provider ?? 'unknown'}${isNewUser ? ' (new account)' : ''}` })
+      // Remember the Discord id, so the logoless bot can message this person later.
+      if (account?.provider === 'discord' && account.providerAccountId && user.email) {
+        try {
+          const { db, nowSec } = await import('./lib/db')
+          const d = await db()
+          await d
+            .prepare("INSERT INTO settings (key, value, updated_at) SELECT 'discord:' || id, ?1, ?3 FROM users WHERE email = ?2 ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at")
+            .bind(account.providerAccountId, user.email.toLowerCase(), nowSec())
+            .run()
+        } catch {
+          /* the id is a convenience; signing in must never fail because of it */
+        }
+      }
     },
     async signOut(message) {
       const { logEvent } = await import('./lib/log')
@@ -85,6 +109,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (account?.provider === 'google') return (profile as { email_verified?: boolean } | undefined)?.email_verified === true
       return true
     },
+    // After signing in, people may be sent back to the dev or admin address, but nowhere else.
+    redirect({ url, baseUrl }) {
+      if (url.startsWith('/')) return `${baseUrl}${url}`
+      try {
+        const u = new URL(url)
+        if (u.origin === baseUrl || /^https:\/\/(admin|dev)\.logoless\.io$/.test(u.origin)) return url
+      } catch {
+        /* not a URL */
+      }
+      return baseUrl
+    },
     // TODO(backend): look the user up in your database here and put their real role (clipper, brand, admin) in the token.
     jwt({ token }) {
       token.role = admins.includes((token.email ?? '').toLowerCase()) ? 'admin' : 'user'
@@ -95,4 +130,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session
     },
   },
-})
+}))

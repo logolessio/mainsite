@@ -4,13 +4,14 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Toggle } from '@/components/app/ui'
 import { cn } from '@/lib/utils'
+import { askAdminSecret } from './secret-dialog'
 
-async function save(key: string, value: string) {
-  const res = await fetch('/api/admin/settings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ key, value }) })
+async function save(key: string, value: string, secret?: string, endpoint = '/api/admin/settings') {
+  const res = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ key, value, ...(secret ? { secret } : {}) }) })
   if (!res.ok) throw new Error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? 'Could not save.')
 }
 
-export function Switch({ k, label, hint, on, danger }: { k: string; label: string; hint: string; on: boolean; danger?: boolean }) {
+export function Switch({ k, label, hint, on, danger, endpoint }: { k: string; label: string; hint: string; on: boolean; danger?: boolean; endpoint?: string }) {
   const router = useRouter()
   const [v, setV] = useState(on)
   const [error, setError] = useState('')
@@ -26,10 +27,13 @@ export function Switch({ k, label, hint, on, danger }: { k: string; label: strin
         checked={v}
         onChange={async (next) => {
           if (next && danger && !window.confirm(`${label}? This takes effect straight away.`)) return
+          // a switch that could stop the company needs the admin password, whichever way it is flipped
+          const pass = danger ? await askAdminSecret(`Switching "${label}" ${next ? 'on' : 'off'} affects every member.`) : undefined
+          if (danger && !pass) return
           setV(next)
           setError('')
           try {
-            await save(k, next ? '1' : '0')
+            await save(k, next ? '1' : '0', pass ?? undefined, endpoint)
             router.refresh()
           } catch (e) {
             setV(!next)
@@ -59,8 +63,10 @@ export function NumberSetting({ k, label, hint, cents }: { k: string; label: str
           onClick={async () => {
             const n = Math.round(Number(v) * 100)
             if (!Number.isInteger(n) || n < 0) return setMsg('Whole dollars please')
+            const pass = await askAdminSecret('Changing a money limit affects every withdrawal.')
+            if (!pass) return
             try {
-              await save(k, String(n))
+              await save(k, String(n), pass)
               setMsg('Saved')
               router.refresh()
             } catch (e) {

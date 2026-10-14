@@ -35,9 +35,19 @@ export async function GET(req: Request) {
   }
 }
 
+/**
+ * The session cookie used to belong to one address; it now belongs to the whole domain (see auth.ts). A person who signed
+ * in before that still has the old one, so signing out also clears it, or they would stay signed in.
+ */
+const OLD_COOKIE = '__Secure-authjs.session-token=; Max-Age=0; Path=/; Secure; HttpOnly; SameSite=Lax'
+
 export async function POST(req: Request) {
   try {
-    return (await gate(req)) ?? handlers.POST(req as never)
+    const blocked = await gate(req)
+    if (blocked) return blocked
+    const res = await handlers.POST(req as never)
+    if (/\/signout$/i.test(new URL(req.url).pathname)) res.headers.append('set-cookie', OLD_COOKIE)
+    return res
   } catch (r) {
     if (r instanceof Response) return r
     throw r

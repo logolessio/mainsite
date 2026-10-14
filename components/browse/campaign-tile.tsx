@@ -8,35 +8,35 @@ import { useCampaignModal } from '@/components/campaign/campaign-modal'
 import { useDesign } from '@/components/shell/design-provider'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 import { type Campaign, usd } from '@/lib/campaigns'
-import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
 
-const SPRING = { stiffness: 220, damping: 22, mass: 0.5 }
+const SPRING = { stiffness: 170, damping: 20, mass: 0.6 }
 
+/**
+ * A campaign cover. The cover leans a few degrees towards the pointer and a band of light sweeps across it on hover.
+ * Only the name and the play button sit on the cover. The cover is cropped in a touch so the thin white edge some album
+ * art has baked in never shows. Zoom, border, budget bar and the rate line can be switched back on from the dev dashboard.
+ */
 export function CampaignTile({ campaign, priority }: { campaign: Campaign; priority?: boolean }) {
   const { open } = useCampaignModal()
   const { playingId, toggle } = usePreview()
   const playing = playingId === campaign.id
   const { rich, canHover } = useMotionPrefs()
-  const { coverEffects, coverBorder } = useDesign()
-  const tilt = coverEffects && rich && canHover
+  const { coverZoom, coverBorder, coverBar, coverInfo } = useDesign()
+  const tilt = rich && canHover
   const left = Math.max(0, Math.min(100, campaign.budgetLeftPct ?? 100))
   const root = useRef<HTMLDivElement>(null)
-  const seen = useInView(root, { once: true, margin: '0px 0px -10% 0px' }) // the budget bar fills when the cover comes into view
+  const seen = useInView(root, { once: true, margin: '0px 0px -10% 0px' })
 
   const px = useMotionValue(0.5)
   const py = useMotionValue(0.5)
   const sx = useSpring(px, SPRING)
   const sy = useSpring(py, SPRING)
-  const rotateY = useTransform(sx, [0, 1], [-12, 12])
-  const rotateX = useTransform(sy, [0, 1], [12, -12])
-  // the cover slides the other way inside the frame, which makes it read as a real object with depth
-  const imgX = useTransform(sx, [0, 1], [9, -9])
-  const imgY = useTransform(sy, [0, 1], [9, -9])
-  const sheenPos = useTransform([sx, sy], ([x, y]: number[]) => ((x + y) / 2) * 100)
-  const sheenStart = useTransform(sheenPos, (v) => v - 22)
-  const sheenEnd = useTransform(sheenPos, (v) => v + 22)
-  const sheen = useMotionTemplate`linear-gradient(115deg, transparent ${sheenStart}%, rgba(243,242,238,0.18) ${sheenPos}%, transparent ${sheenEnd}%)`
+  const rotateY = useTransform(sx, [0, 1], [-7, 7])
+  const rotateX = useTransform(sy, [0, 1], [7, -7])
+  const glareX = useTransform(sx, (v) => v * 100)
+  const glareY = useTransform(sy, (v) => v * 100)
+  const glare = useMotionTemplate`radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,255,255,0.2), transparent 55%)`
 
   const reset = () => {
     px.set(0.5)
@@ -54,11 +54,8 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
       }}
       onPointerLeave={reset}
       data-vt-cover={campaign.id}
-      initial="rest"
-      animate={canHover ? 'rest' : 'hover'}
-      whileHover="hover"
-      style={tilt ? { rotateX, rotateY, transformPerspective: 700 } : undefined}
-      className={cn('group/tile relative aspect-square w-full overflow-hidden rounded-[22px] bg-surface transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-1 active:translate-y-0 active:scale-[0.985]', coverEffects && 'shadow-[0_14px_26px_-14px_rgb(0_0_0/0.9)] transition-shadow duration-300 hover:shadow-[0_34px_50px_-18px_rgb(0_0_0/0.95)]')}
+      style={tilt ? { rotateX, rotateY, transformPerspective: 800 } : undefined}
+      className="group/tile relative aspect-square w-full rounded-[22px] bg-surface shadow-[0_10px_24px_-14px_rgb(0_0_0/0.85)] transition-[box-shadow,translate] duration-500 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-1 hover:shadow-[0_30px_46px_-20px_rgb(0_0_0/0.95)] active:translate-y-0"
     >
       <button
         type="button"
@@ -67,53 +64,39 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
           open(campaign)
         }}
         aria-label={`${campaign.title} by ${campaign.creator}. ${usd(campaign.ratePer1k, 2)} per 1,000 views. Open campaign.`}
-        className="absolute inset-0 block rounded-[22px] text-left outline-none focus-visible:ring-2 focus-visible:ring-paper"
+        className="absolute inset-0 block overflow-hidden rounded-[22px] text-left outline-none focus-visible:ring-2 focus-visible:ring-paper"
       >
-        {coverEffects ? (
-          <motion.img
-            src={campaign.cover}
-            alt=""
-            loading={priority ? 'eager' : 'lazy'}
-            variants={{ rest: { scale: 1.12 }, hover: { scale: 1.18 } }}
-            style={tilt ? { x: imgX, y: imgY } : undefined}
-            transition={{ duration: 0.6, ease: EASE_OUT }}
-            className="absolute inset-0 h-full w-full object-cover contrast-[1.05] saturate-[1.08]"
-          />
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={campaign.cover} alt="" loading={priority ? 'eager' : 'lazy'} className="absolute inset-0 h-full w-full scale-100 object-cover transition-transform duration-[900ms] ease-[cubic-bezier(.22,1,.36,1)] will-change-transform group-hover/tile:scale-[1.08] group-focus-within/tile:scale-[1.08]" />
-        )}
+        {/* a fixed crop just past the edge hides any white border the artwork was exported with */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={campaign.cover}
+          alt=""
+          loading={priority ? 'eager' : 'lazy'}
+          className={cn('absolute inset-0 h-full w-full scale-[1.07] object-cover', coverZoom && 'transition-transform duration-[900ms] ease-[cubic-bezier(.22,1,.36,1)] group-hover/tile:scale-[1.16] group-focus-within/tile:scale-[1.16]')}
+        />
+        <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-        {/* a fade at the bottom deepens on hover; the name rises to make room for the rate and a cue to open */}
-        <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[62%] bg-gradient-to-t from-black/85 via-black/25 to-transparent opacity-80 transition-opacity duration-500 group-hover/tile:opacity-100 group-focus-within/tile:opacity-100" />
-        <span className="pointer-events-none absolute inset-x-0 bottom-0 p-4 pb-5 md:p-5 md:pb-6">
-          <span className="block transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover/tile:-translate-y-6 group-focus-within/tile:-translate-y-6">
+        {/* light: a glare that follows the pointer, and one soft band that sweeps across when the cover is entered */}
+        {tilt && <motion.span aria-hidden="true" style={{ backgroundImage: glare }} className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover/tile:opacity-100" />}
+        <span aria-hidden="true" className="tile-sweep pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 -skew-x-[18deg] bg-gradient-to-r from-transparent via-white/25 to-transparent opacity-0" />
+
+        <span className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4 pr-16 pb-5 md:p-5 md:pr-18 md:pb-6">
+          <span className="min-w-0">
             <span className="block truncate font-display text-[1.4rem] leading-none tracking-[-0.03em] text-white md:text-[1.65rem]">{campaign.title}</span>
-            <span className="mt-1.5 block truncate text-[12px] text-white/70 md:text-[13px]">{campaign.creator}</span>
+            {coverInfo && <span className="mt-1.5 block truncate text-[12px] text-white/70 md:text-[13px]">{campaign.creator} · {usd(campaign.ratePer1k, 2)} per 1k</span>}
           </span>
-          <span className="absolute inset-x-4 bottom-5 flex translate-y-2 items-center justify-between text-[12px] text-white opacity-0 transition-[opacity,transform] duration-500 ease-[cubic-bezier(.22,1,.36,1)] [transition-delay:50ms] group-hover/tile:translate-y-0 group-hover/tile:opacity-100 group-focus-within/tile:translate-y-0 group-focus-within/tile:opacity-100 md:inset-x-5 md:bottom-6 md:text-[13px]">
-            <span className="whitespace-nowrap">{usd(campaign.ratePer1k, 2)} per 1k</span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/15 py-1 pr-2 pl-3 backdrop-blur-sm">
+          {coverInfo && (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/15 py-1 pr-2 pl-3 text-[12px] text-white backdrop-blur-sm">
               Open <ArrowUpRight className="size-3.5" aria-hidden="true" />
             </span>
-          </span>
+          )}
         </span>
         {coverBorder && <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[22px] ring-1 ring-inset ring-white/10" />}
-
-        {/* how much of the budget is still there */}
-        <span role="img" aria-label={`${left}% of the budget left`} title={`${left}% of the budget left`} className="pointer-events-none absolute inset-x-0 bottom-0 h-1 bg-white/15 transition-[height] duration-300 group-hover/tile:h-1.5">
-          <span style={{ width: seen ? `${left}%` : '0%' }} className="block h-full rounded-r-full bg-white/90 transition-[width] duration-[1200ms] ease-[cubic-bezier(.22,1,.36,1)] [transition-delay:300ms]" />
-        </span>
-
-        {tilt && (
-          <motion.span
-            aria-hidden="true"
-            style={{ backgroundImage: sheen }}
-            variants={{ rest: { opacity: 0 }, hover: { opacity: 1 } }}
-            className="pointer-events-none absolute inset-0"
-          />
+        {coverBar && (
+          <span role="img" aria-label={`${left}% of the budget left`} title={`${left}% of the budget left`} className="pointer-events-none absolute inset-x-0 bottom-0 h-1 bg-white/15">
+            <span style={{ width: seen ? `${left}%` : '0%' }} className="block h-full rounded-r-full bg-white/90 transition-[width] duration-[1200ms] ease-[cubic-bezier(.22,1,.36,1)] [transition-delay:300ms]" />
+          </span>
         )}
-
       </button>
 
       <button
@@ -126,8 +109,8 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
           toggle(campaign.id, campaign.previewUrl)
         }}
         className={cn(
-          'absolute top-3 right-3 z-10 grid size-10 place-items-center rounded-full border transition-all duration-200 hover:scale-110 active:scale-95',
-          playing ? 'border-paper bg-paper text-ink' : 'border-white/20 bg-ink/70 text-paper hover:bg-ink/90',
+          'absolute right-3.5 bottom-3.5 z-10 grid size-11 place-items-center rounded-full border backdrop-blur-sm transition-all duration-200 hover:scale-110 active:scale-95 md:right-4 md:bottom-4',
+          playing ? 'border-paper bg-paper text-ink' : 'border-white/25 bg-ink/55 text-paper hover:bg-ink/80',
         )}
       >
         {playing ? <Pause className="size-4 fill-current" /> : <Play className="size-4 translate-x-px fill-current" />}

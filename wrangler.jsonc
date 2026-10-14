@@ -24,10 +24,11 @@
   ],
   // Both of the site's addresses are attached to this worker here. Wrangler treats this list as the complete set, so
   // logoless.io MUST stay in it: leaving it out takes the live site offline. Add new addresses; never remove this one.
-  // The dev site is the same worker and database: on dev.logoless.io every feature is on and only admins get in.
-  // Pushing a feature turns it on for logoless.io (see /admin/push).
+  // The dev site is the same worker and database: on dev.logoless.io every feature is on and only the team gets in.
+  // admin.logoless.io is the admin dashboard, also the same worker. Pushing a feature turns it on for logoless.io (see /dev/features).
   "routes": [
     { "pattern": "logoless.io", "custom_domain": true },
-    { "pattern": "dev.logoless.io", "custom_domain": true }
+    { "pattern": "dev.logoless.io", "custom_domain": true },
+    { "pattern": "admin.logoless.io", "custom_domain": true }
   ]
 }

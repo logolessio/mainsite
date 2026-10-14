@@ -28,7 +28,7 @@ export default async function Page() {
     <>
       <PageHeader title="Admin" sub="Money, people and what needs you right now." actions={
           <div className="flex flex-wrap gap-2">
-            <ActionLink href="/admin/design">Design</ActionLink>
+            <ActionLink href="/admin/people">People</ActionLink>
             <ActionLink href="/admin/campaigns">Campaigns</ActionLink>
           </div>
         } />

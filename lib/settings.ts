@@ -5,9 +5,13 @@ export const SETTING_DEFAULTS = {
   payouts_paused: '0', // 1 = nobody can withdraw
   submissions_paused: '0', // 1 = no new clip submissions
   signups_paused: '0', // 1 = no new accounts
-  design_cover_effects: '0', // 1 = the old tilt, shine and zoom on campaign covers
   design_font_mono: '0', // 1 = Geist Mono is the main typeface everywhere
+  design_cover_zoom: '0', // 1 = campaign covers zoom in on hover
   design_cover_border: '0', // 1 = the thin border around campaign covers
+  design_cover_bar: '0', // 1 = the bar along the bottom of a cover showing how much budget is left
+  design_cover_info: '0', // 1 = payout rate, platforms and budget on the cover (off: only the name and the play button)
+  design_scroll_effects: '0', // 1 = sections fade and slide in as you scroll
+  design_liquid_loader: '0', // 1 = the white liquid fill behind the onboarding loader
   bg_dots: '0', // 1 = show the rolling dot landscape behind the site (off by default)
   daily_payout_cap_cents: '500000', // above this much sent in 24 hours, new withdrawals wait for an admin
   review_over_cents: '50000', // single withdrawals above this wait for an admin

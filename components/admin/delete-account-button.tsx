@@ -10,6 +10,7 @@ export function DeleteAccountButton({ id, email }: { id: string; email: string }
       url={`/api/admin/users/${id}`}
       data={{ action: 'delete' }}
       ask={{ label: 'Reason (they will see it)', required: true }}
+      secret="Deleting an account cannot be undone."
       confirm={`Permanently delete ${email}? This cannot be undone. They are emailed the reason.`}
       onDone={(j) => {
         if ((j as { emailed?: boolean } | null)?.emailed === false) window.alert('The account was deleted, but the email could not be sent. Let them know another way.')

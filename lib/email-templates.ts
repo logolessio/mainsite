@@ -166,6 +166,30 @@ export function accountDeletedEmail(name: string, reason: string, money: string,
   }
 }
 
+/** Sent when the owner gives or changes someone's role. `roles` are the labels now held ("Admin", "Developer"); empty means all were removed. */
+export function roleChangedEmail(name: string, roles: string[], test = false): Mail {
+  const first = name.trim().slice(0, 60) || 'there'
+  const has = roles.length > 0
+  const list = roles.join(' and ')
+  const links = [
+    roles.includes('Admin') ? `<tr><td style="padding:0 0 8px">${button('https://admin.logoless.io', 'Open the admin dashboard')}</td></tr>` : '',
+    roles.includes('Developer') ? `<tr><td>${button('https://dev.logoless.io', 'Open the developer dashboard')}</td></tr>` : '',
+  ].join('')
+  return {
+    subject: `${test ? '[TEST] ' : ''}${has ? `You are now ${roles.length > 1 ? 'an' : /^[AEIOU]/.test(list) ? 'an' : 'a'} ${list} on logoless` : 'Your logoless team access was removed'}`,
+    text: `${test ? 'THIS IS A TEST from the admin panel.\n\n' : ''}Hi ${first},\n\n${has ? `The owner of logoless gave you the ${list} role.${roles.includes('Admin') ? '\nAdmin dashboard: https://admin.logoless.io' : ''}${roles.includes('Developer') ? '\nDeveloper dashboard: https://dev.logoless.io' : ''}\n\nSign in with the same account you already use.` : 'The owner of logoless removed your team access. Your normal account is unchanged.'}\n\nlogoless`,
+    html: layout({
+      preheader: has ? `You now have the ${list} role.` : 'Your team access was removed.',
+      tag: test ? 'Test' : 'Team',
+      title: has ? `You are now ${list}` : 'Team access removed',
+      intro: has ? `Hi ${first}. The owner of logoless gave you the ${list} role. Sign in with the account you already use.` : `Hi ${first}. The owner of logoless removed your team access. Your normal account is unchanged.`,
+      body: has ? `<table role="presentation" align="center" cellpadding="0" cellspacing="0">${links}</table>` : '',
+      note: 'Only the owner can give or take away these roles. If this surprises you, reply through the contact page.',
+      test,
+    }),
+  }
+}
+
 /** A plain message to prove sending works. */
 export function plainTestEmail(): Mail {
   return {
@@ -187,5 +211,6 @@ export const PREVIEWS = [
   { id: 'reset', label: 'Password reset', make: () => codeEmail('730256', 'reset', false, { place: 'Singapore', device: 'Safari on iPhone' }) },
   { id: 'already', label: 'Already a member', make: () => alreadyMemberEmail(false, { place: 'Berlin, Germany', device: 'Firefox on Windows' }) },
   { id: 'deleted', label: 'Account deleted', make: () => accountDeletedEmail('Sam', 'Selling views against the campaign rules.', 'Your remaining balance was returned to the campaigns it came from.') },
+  { id: 'role', label: 'Role given', make: () => roleChangedEmail('Sam', ['Admin', 'Developer']) },
   { id: 'plain', label: 'Delivery test', make: () => plainTestEmail() },
 ] as const

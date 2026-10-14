@@ -4,20 +4,20 @@ import { FEATURE_IDS, FEATURES } from '@/lib/feature-defs'
 import { featureState, pushLog, readLive, setLive } from '@/lib/features'
 import { ipHash, protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
-import { requireAdmin } from '@/lib/user'
+import { requireStaff } from '@/lib/user'
 
 const schema = z.object({ action: z.enum(['push', 'undo']), ids: z.array(z.string()).min(1).max(40) })
 
 /** What can be pushed, what is live, and the history. */
 export const GET = route(async () => {
-  await requireAdmin()
+  await requireStaff()
   const s = await featureState()
   return json({ features: FEATURES.map((f) => ({ ...f, live: s.live[f.id] === true })), log: await pushLog(), dev: s.dev })
 })
 
 /** Push features to the live site, or take them off again. Takes effect immediately. */
 export const POST = route(async (req: Request) => {
-  const admin = await requireAdmin()
+  const admin = await requireStaff()
   await protect(req, { name: 'admin-features', max: 40, windowSec: 600, userId: admin.id })
   const parsed = schema.safeParse(await body(req, 4096))
   if (!parsed.success) throw new HttpError(400, 'That request is not valid.')

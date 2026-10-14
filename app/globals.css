@@ -597,3 +597,17 @@ html.text-large {
 .liquid-wave-b { animation: liquid-wave 7.4s linear infinite reverse; }
 .liquid-drift-a { animation: liquid-drift 9s ease-in-out infinite; }
 .liquid-drift-b { animation: liquid-drift 11s ease-in-out infinite reverse; }
+
+/* Campaign cover: one soft band of light crosses the cover when it is hovered. */
+@keyframes tile-sweep {
+  0% { transform: translateX(0) skewX(-18deg); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateX(380%) skewX(-18deg); opacity: 0; }
+}
+.group\/tile:hover .tile-sweep,
+.group\/tile:focus-within .tile-sweep {
+  animation: tile-sweep 1.1s cubic-bezier(.22, 1, .36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tile-sweep { display: none; }
+}

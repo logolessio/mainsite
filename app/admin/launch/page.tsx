@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { SectionTabs } from '@/components/app/section-tabs'
 import { LaunchBoard } from '@/components/admin/launch-board'
 import { readiness } from '@/lib/launch-readiness'
 import { pageAdmin } from '@/lib/user'
@@ -11,7 +10,6 @@ export default async function Page() {
   const r = await readiness()
   return (
     <>
-      <SectionTabs group="launch" />
       <LaunchBoard r={r} />
     </>
   )

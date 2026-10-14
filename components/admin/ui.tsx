@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { askAdminSecret } from './secret-dialog'
 
 /** A button that posts JSON to an admin route, then refreshes the page. Shows the server's error if it fails. */
 export function AdminButton({
@@ -13,6 +14,7 @@ export function AdminButton({
   variant = 'ghost',
   confirm,
   ask,
+  secret,
   className,
   onDone,
 }: {
@@ -23,6 +25,8 @@ export function AdminButton({
   confirm?: string
   /** Asks for a short typed reason first; it is sent as `note` (or the key you pass). */
   ask?: { label: string; key?: string; required?: boolean }
+  /** Needs the admin password before it runs: use it for anything that could hurt the company. */
+  secret?: string | boolean
   className?: string
   onDone?: (j: unknown) => void
 }) {
@@ -34,9 +38,14 @@ export function AdminButton({
 
   const run = async (extra?: Record<string, unknown>) => {
     if (confirm && !window.confirm(confirm)) return
+    let pass: string | null = null
+    if (secret) {
+      pass = await askAdminSecret(typeof secret === 'string' ? secret : undefined)
+      if (!pass) return
+    }
     setBusy(true)
     setError('')
-    const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...data, ...extra }) }).catch(() => null)
+    const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...data, ...extra, ...(pass ? { secret: pass } : {}) }) }).catch(() => null)
     const j = (await res?.json().catch(() => ({}))) as { error?: string } | undefined
     setBusy(false)
     if (!res?.ok) return setError(j?.error ?? 'Something went wrong.')
