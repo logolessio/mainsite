@@ -1,7 +1,7 @@
 import { type D1Database, db, nowSec, uid } from './db'
 import { HttpError } from './http'
 import { logEvent } from './log'
-import { costFor, feeFor } from './ledger-math'
+import { costFor, feeFor, startNeeded } from './ledger-math'
 import { SITE } from './site'
 
 /**
@@ -39,7 +39,7 @@ export async function balances(userId: string, at = nowSec()): Promise<Balances>
   return r ?? { brand: 0, available: 0, pending: 0, earned: 0, withdrawn: 0 }
 }
 
-export { costFor, feeFor }
+export { costFor, feeFor, startNeeded }
 
 /** Adds money a brand paid through PayPal to their balance. `ref` is the PayPal order id, so a repeat changes nothing. */
 export async function creditTopup(d: D1Database, userId: string, ref: string, amountCents: number) {
@@ -113,10 +113,33 @@ export async function campaignPool(campaignId: string) {
   return r?.pool ?? 0
 }
 
+/** Payout dollars (in cents) a campaign has paid its clippers so far, and what is left under its budget cap. */
+export async function campaignSpent(campaignId: string) {
+  const d = await db()
+  const r = await d.prepare('SELECT COALESCE(SUM(net_cents), 0) AS net, COALESCE(SUM(gross_cents), 0) AS gross FROM earnings WHERE campaign_id = ?1').bind(campaignId).first<{ net: number; gross: number }>()
+  return { net: r?.net ?? 0, gross: r?.gross ?? 0 }
+}
+
+export async function budgetLeft(campaignId: string, capCents: number) {
+  return Math.max(0, capCents - (await campaignSpent(campaignId)).net)
+}
+
+/** Why a payment could not be made. The caller shows `message`; `paused` means the campaign stopped itself. */
+export class PayError extends HttpError {
+  constructor(
+    public reason: 'cap' | 'balance',
+    message: string,
+  ) {
+    super(reason === 'cap' ? 409 : 402, message)
+  }
+}
+
 /**
- * Pays a clipper for verified views out of a campaign's pool. The clipper gets the full `payoutCents`; the platform fee is
- * charged to the brand on top of it, so the pool pays the payout plus the fee. Returns null if the pool cannot cover both.
+ * Pays a clipper for verified views. A brand has one balance and every campaign draws from it as clippers earn, up to the
+ * campaign's budget cap. (Older campaigns that were funded into their own pool use the pool first, then the balance.)
+ * The clipper gets the full `payoutCents`; the platform fee is charged to the brand on top, so the brand pays the payout plus the fee.
  * People with extra checks switched on (for example a VPN at sign-up) wait twice as long for the money to clear.
+ * If the brand's balance cannot cover it, the campaign pauses itself and the brand is told to add funds.
  */
 export async function creditEarning(input: {
   campaignId: string
@@ -128,28 +151,40 @@ export async function creditEarning(input: {
   const { campaignId, clipperId, payoutCents } = input
   if (!Number.isInteger(payoutCents) || payoutCents <= 0) throw new HttpError(400, 'Enter a valid amount.')
   const d = await db()
-  const camp = await d.prepare('SELECT brand_user_id, title FROM campaigns WHERE id = ?1').bind(campaignId).first<{ brand_user_id: string | null; title: string }>()
-  if (!camp?.brand_user_id) throw new HttpError(400, 'That campaign has no funded budget.')
+  const camp = await d.prepare('SELECT brand_user_id, title, budget_cents, status FROM campaigns WHERE id = ?1').bind(campaignId).first<{ brand_user_id: string | null; title: string; budget_cents: number; status: string }>()
+  if (!camp?.brand_user_id) throw new HttpError(400, 'That campaign has no brand to bill.')
   const clipper = await d.prepare('SELECT risk_level, status FROM users WHERE id = ?1').bind(clipperId).first<{ risk_level: string; status: string }>()
   if (!clipper || clipper.status !== 'active') throw new HttpError(400, 'That account cannot be paid right now.')
 
   const fee = feeFor(payoutCents)
-  const draw = payoutCents + fee // what leaves the pool
+  const draw = payoutCents + fee // what the brand pays
   const t = nowSec()
+  const release = t + SITE.holdDays * (clipper.risk_level === 'low' ? 1 : 2) * 86400
+  const spent = (await campaignSpent(campaignId)).net
+  if (spent + payoutCents > camp.budget_cents) throw new PayError('cap', 'This campaign has reached its budget cap, so nothing was paid. The brand can raise the cap.')
+
+  // Where the money comes from: the campaign's own pool if it still has enough (older campaigns), otherwise the brand's balance.
+  const pool = await campaignPool(campaignId)
+  const fromPool = pool >= draw
   const spendId = uid()
   const earningId = uid()
-  const release = t + SITE.holdDays * (clipper.risk_level === 'low' ? 1 : 2) * 86400
-
   const results = await d.batch([
-    // 1) the campaign pays the payout and the fee, only if its pool covers both
-    d
-      .prepare(
-        `INSERT INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at, campaign_id)
-         SELECT ?1, ?2, 'campaign', 'spend', -?3, ?4, ?1, ?5, ?4, ?6
-         WHERE (SELECT COALESCE(SUM(amount_cents), 0) FROM ledger WHERE account = 'campaign' AND campaign_id = ?6) >= ?3`,
-      )
-      .bind(spendId, camp.brand_user_id, draw, t, camp.title, campaignId),
-    // 2) the clipper is credited the full payout, only if (1) happened
+    fromPool
+      ? d
+          .prepare(
+            `INSERT INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at, campaign_id)
+             SELECT ?1, ?2, 'campaign', 'spend', -?3, ?4, ?1, ?5, ?4, ?6
+             WHERE (SELECT COALESCE(SUM(amount_cents), 0) FROM ledger WHERE account = 'campaign' AND campaign_id = ?6) >= ?3`,
+          )
+          .bind(spendId, camp.brand_user_id, draw, t, camp.title, campaignId)
+      : d
+          .prepare(
+            `INSERT INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at, campaign_id)
+             SELECT ?1, ?2, 'brand', 'earning_spend', -?3, ?4, ?1, ?5, ?4, ?6
+             WHERE (SELECT COALESCE(SUM(amount_cents), 0) FROM ledger WHERE user_id = ?2 AND account = 'brand') >= ?3`,
+          )
+          .bind(spendId, camp.brand_user_id, draw, t, camp.title, campaignId),
+    // the clipper is credited the full payout, only if the brand paid
     d
       .prepare(
         `INSERT INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at, campaign_id)
@@ -157,7 +192,7 @@ export async function creditEarning(input: {
          WHERE EXISTS (SELECT 1 FROM ledger WHERE id = ?5)`,
       )
       .bind(earningId, clipperId, payoutCents, release, spendId, camp.title, t, campaignId),
-    // 3) audit row (gross is what the brand paid, net is what the clipper got), only if (1) happened
+    // audit row (gross is what the brand paid, net is what the clipper got), only if the brand paid
     d
       .prepare(
         `INSERT INTO earnings (id, brand_user_id, clipper_user_id, campaign, gross_cents, fee_cents, net_cents, note, created_at, campaign_id, submission_id)
@@ -166,9 +201,44 @@ export async function creditEarning(input: {
       )
       .bind(earningId, camp.brand_user_id, clipperId, camp.title, draw, fee, payoutCents, input.note ?? null, t, spendId, campaignId, input.submissionId ?? null),
   ])
-  if (results[0].meta.changes !== 1) return null
-  logEvent({ kind: 'money', name: 'earning credited', detail: `${campaignId} → ${clipperId}: clipper $${(payoutCents / 100).toFixed(2)}, fee on top $${(fee / 100).toFixed(2)}, brand paid $${(draw / 100).toFixed(2)}` })
+  if (results[0].meta.changes !== 1) {
+    // the money was not there. Stop the campaign so it cannot keep taking clips it cannot pay for, and tell the brand.
+    if (camp.status === 'live') {
+      await d.prepare("UPDATE campaigns SET status = 'paused', updated_at = ?2 WHERE id = ?1 AND status = 'live'").bind(campaignId, t).run()
+      await d.prepare("INSERT INTO settings (key, value, updated_at) VALUES (?1, 'balance', ?2) ON CONFLICT(key) DO UPDATE SET value = 'balance', updated_at = excluded.updated_at").bind(`paused-by:${campaignId}`, t).run()
+      const { notify } = await import('./notify')
+      await notify(camp.brand_user_id, { kind: 'campaign', title: `${camp.title} paused: add funds`, body: 'Your balance ran out, so the campaign paused itself. Add funds and start it again. Clips already approved are paid once there is money.', href: '/brand/balance', dedupe: `camp-lowbal:${campaignId}:${Math.floor(t / 3600)}` })
+    }
+    throw new PayError('balance', 'The brand’s balance is too low, so nothing was paid. The campaign was paused and the brand was told.')
+  }
+  logEvent({ kind: 'money', name: 'earning credited', detail: `${campaignId} → ${clipperId}: clipper $${(payoutCents / 100).toFixed(2)}, fee on top $${(fee / 100).toFixed(2)}, brand paid $${(draw / 100).toFixed(2)} from ${fromPool ? 'the campaign pool' : 'the balance'}` })
   return { gross: draw, fee, net: payoutCents, releasesAt: release }
+}
+
+/** Moves whatever is left in an older campaign's own pool back into the brand's balance, where any campaign can use it. */
+export async function releasePool(brandUserId: string, campaignId: string) {
+  const d = await db()
+  const left = await campaignPool(campaignId)
+  if (left <= 0) return 0
+  const t = nowSec()
+  const id = uid()
+  const res = await d.batch([
+    d
+      .prepare(
+        `INSERT INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at, campaign_id)
+         SELECT ?1, ?2, 'campaign', 'pool_release', -?3, ?4, ?1, 'Returned to balance', ?4, ?5
+         WHERE (SELECT COALESCE(SUM(amount_cents), 0) FROM ledger WHERE account = 'campaign' AND campaign_id = ?5) >= ?3`,
+      )
+      .bind(id, brandUserId, left, t, campaignId),
+    d
+      .prepare(
+        `INSERT INTO ledger (id, user_id, account, kind, amount_cents, available_at, ref, note, created_at, campaign_id)
+         SELECT ?1, ?2, 'brand', 'pool_release', ?3, ?4, ?5, 'Returned from a campaign', ?4, ?6
+         WHERE EXISTS (SELECT 1 FROM ledger WHERE id = ?5)`,
+      )
+      .bind(uid(), brandUserId, left, t, id, campaignId),
+  ])
+  return res[0].meta.changes === 1 ? left : 0
 }
 
 /**

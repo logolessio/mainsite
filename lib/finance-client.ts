@@ -3,6 +3,7 @@
 export type Finance = {
   balances: { brand: number; available: number; pending: number; earned: number; withdrawn: number }
   paypalEmail: string
+  paypalEmails: string[]
   topups: { id: string; amount_cents: number; status: string; created_at: number }[]
   payouts: { id: string; amount_cents: number; status: string; created_at: number }[]
   ready: boolean

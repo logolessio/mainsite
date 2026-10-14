@@ -7,6 +7,7 @@ import { balances, startWithdrawal } from '@/lib/ledger'
 import { logEvent } from '@/lib/log'
 import { notify } from '@/lib/notify'
 import { paypalReady } from '@/lib/paypal'
+import { addPaypalEmail } from '@/lib/paypal-emails'
 import { reviewReason, sendPayout, setPayoutDestination } from '@/lib/payout'
 import { getSetting } from '@/lib/settings'
 import { SITE } from '@/lib/site'
@@ -35,16 +36,13 @@ export const POST = route(async (req: Request) => {
   if (!payoutId) throw new HttpError(409, 'That is more than your available balance.')
   await setPayoutDestination(payoutId, email)
   const d = await db()
-  await d
-    .prepare('INSERT INTO settings (key, value, updated_at) VALUES (?1, ?2, ?3) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at')
-    .bind(`paypal:${user.id}`, email, nowSec())
-    .run() // remembered for next time
+  await addPaypalEmail(user.id, email) // remembered for next time
 
   logEvent({ kind: 'money', name: 'withdrawal requested', actor: user.email, detail: `${payoutId} $${(cents / 100).toFixed(2)} to ${email}${reason ? ` (held: ${reason})` : ''}`, req })
   if (reason) {
     await d.prepare("UPDATE payouts SET status = 'review', review_reason = ?2, updated_at = ?3 WHERE id = ?1").bind(payoutId, reason.slice(0, 300), nowSec()).run()
     await auditSafe({ id: user.id, email: user.email }, 'payout.held', payoutId, reason)
-    await notify(user.id, { kind: 'payout', title: 'Your withdrawal is being checked', body: 'We review some withdrawals before sending them. This usually takes under a day.', href: '/dashboard/payouts', dedupe: `payout-review:${payoutId}` })
+    await notify(user.id, { kind: 'payout', title: 'Your withdrawal is being checked', body: 'We review some withdrawals before sending them. This usually takes under a day.', href: '/dashboard/earnings#withdraw', dedupe: `payout-review:${payoutId}` })
     return json({ ok: true, payoutId, amount: cents, review: true })
   }
 

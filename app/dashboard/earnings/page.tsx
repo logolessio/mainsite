@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { SectionTabs } from '@/components/app/section-tabs'
+import { PayoutsPanel } from '@/components/app/payouts-panel'
 import { ActionLink } from '@/components/app/action-link'
 import { Bento, Tile } from '@/components/app/bento'
 import { CountUp } from '@/components/app/count-up'
@@ -43,8 +43,7 @@ export default async function Page() {
 
   return (
     <>
-      <SectionTabs group="earnings" />
-      <PageHeader title="Earnings" sub="What your clips have earned, and where every dollar went." actions={<ActionLink href="/dashboard/payouts">Withdraw</ActionLink>} />
+      <PageHeader title="Earnings" sub="What your clips have earned, your PayPal emails, and withdrawing. We cover PayPal's fees." actions={<ActionLink href="#withdraw">Withdraw</ActionLink>} />
       <Bento>
         <Tile className="p-7 md:col-span-6 xl:col-span-6">
           <p className="text-sm text-mute">Lifetime earned</p>
@@ -71,6 +70,10 @@ export default async function Page() {
           {events.length === 0 ? <EmptyState icon="CircleDollarSign" title="No earnings yet" body="Your chart will appear here once your first clip is verified." /> : <EarningsChart events={events} now={now} />}
         </Tile>
       </Bento>
+
+      <div className="mt-6">
+        <PayoutsPanel />
+      </div>
 
       <Card title="Ledger" sub="Every earning and withdrawal, newest first." className="mt-6">
         <DataTable

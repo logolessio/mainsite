@@ -6,6 +6,7 @@ import { ClipperCalculator } from '@/components/marketing/calculators'
 import { CoverStrip } from '@/components/marketing/cover-strip'
 import { EarnDemo } from '@/components/marketing/earn-demo'
 import { Principles, Steps } from '@/components/marketing/layouts'
+import { FeePromise } from '@/components/marketing/fee-promise'
 import { PageHero } from '@/components/marketing/page-hero'
 import { PillLink } from '@/components/motion/cta'
 import { liveCampaigns } from '@/lib/campaigns-db'
@@ -37,12 +38,13 @@ export default async function Page() {
           { title: 'Get paid', body: `We check the clip and its views. Once your balance is $${SITE.minPayoutUsd}, withdraw it.` },
         ]}
       />
+      <FeePromise audience="clippers" />
       <EarnDemo />
       <ClipperCalculator />
       <Principles
         title="Good to know"
         items={[
-          { title: 'It costs nothing', body: 'Joining and submitting are free, and you keep everything a campaign pays you. Brands pay our fee on top.' },
+          { title: 'It costs nothing', body: "Joining and submitting are free, and you keep everything a campaign pays you. Brands pay our fee on top, and we cover PayPal's fees too." },
           { title: 'You keep your accounts', body: 'Clips stay on your own channels. We only read the view counts.' },
           { title: 'Rejections have reasons', body: "If we turn a clip down, you'll see why." },
         ]}

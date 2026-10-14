@@ -2,7 +2,7 @@ import { evaluateBadges } from '@/lib/badges'
 import { db } from '@/lib/db'
 import { json, route } from '@/lib/http'
 import { unreadCount } from '@/lib/notify'
-import { ensureProfile, toView } from '@/lib/profile'
+import { ensureProfile, profileStats, toView } from '@/lib/profile'
 import { recordSignup } from '@/lib/risk'
 import { getSession } from '@/lib/session'
 import { findOrCreateUser, touch } from '@/lib/user'
@@ -28,9 +28,15 @@ export const GET = route(async (req: Request) => {
   if (user.isNew) await evaluateBadges(user.id)
 
   const view = toView(row, user.role === 'admin')
+  const [stats, brand] = await Promise.all([
+    profileStats(user.id),
+    d.prepare("SELECT COALESCE(SUM(amount_cents), 0) AS c FROM ledger WHERE user_id = ?1 AND account = 'brand'").bind(user.id).first<{ c: number }>(),
+  ])
   return json({
     signedIn: true,
     isAdmin: session.user?.role === 'admin',
+    isDev: session.user?.roles?.includes('dev') === true,
+    stats: { clips: stats.clips, views: stats.views, earnedCents: stats.earnedCents, campaigns: stats.campaigns, brandCents: brand?.c ?? 0 },
     restricted: user.status !== 'active',
     unread: await unreadCount(user.id),
     profile: {

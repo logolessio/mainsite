@@ -16,6 +16,8 @@ export type NavUser =
   | {
       signedIn: true
       isAdmin: boolean
+      isDev: boolean
+      stats: { clips: number; views: number; earnedCents: number; campaigns: number; brandCents: number }
       restricted: boolean
       unread: number
       profile: {
@@ -141,14 +143,16 @@ function ProfileIcon({ onNavigate }: { onNavigate?: () => void }) {
               <div className="h-20" style={{ background: bannerCss(p.banner, p.bannerKind) }} />
               <div className="px-4 pb-4">
                 <Avatar src={p.avatar} name={p.displayName} size={56} className="-mt-9 border-2 border-surface" />
-                <p className="mt-2 truncate font-display text-xl leading-tight">{p.displayName}</p>
+                <div className="mt-2 flex items-center gap-1.5">
+                  <p className="min-w-0 truncate font-display text-xl leading-tight">{p.displayName}</p>
+                  {p.badges.length > 0 && (
+                    <span className="flex shrink-0 items-center gap-0.5">
+                      {p.badges.slice(0, 5).map((id) => (BADGE_BY_ID[id] ? <BadgeStar key={id} badge={BADGE_BY_ID[id]} size={16} /> : null))}
+                    </span>
+                  )}
+                </div>
                 <p className="font-mono text-xs text-mute">@{p.handle}</p>
                 {p.bio && <p className="mt-2 line-clamp-2 text-sm text-mute">{p.bio}</p>}
-                {p.badges.length > 0 && (
-                  <div className="mt-3 flex gap-1">
-                    {p.badges.slice(0, 5).map((id) => (BADGE_BY_ID[id] ? <BadgeStar key={id} badge={BADGE_BY_ID[id]} size={34} /> : null))}
-                  </div>
-                )}
                 <TransitionLink
                   href={`/@${p.handle}`}
                   onClick={onNavigate}

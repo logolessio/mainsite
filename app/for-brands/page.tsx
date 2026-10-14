@@ -3,6 +3,7 @@ import { CtaBand } from '@/components/marketing/blocks'
 import { Breadcrumbs, Related } from '@/components/marketing/breadcrumbs'
 import { BrandCalculator } from '@/components/marketing/calculators'
 import { Principles, Steps } from '@/components/marketing/layouts'
+import { FeePromise } from '@/components/marketing/fee-promise'
 import { PageHero } from '@/components/marketing/page-hero'
 import { PillLink } from '@/components/motion/cta'
 import { SITE } from '@/lib/site'
@@ -21,11 +22,12 @@ export default function Page() {
         <PillLink href="/onboarding?role=brand">Launch a campaign</PillLink>
       </PageHero>
 
+      <FeePromise audience="brands" />
       <Steps
         title="How it works"
         steps={[
           { title: 'Write a brief', body: "Say what to clip, which platforms count and what's off limits. Set a rate per 1,000 views and a budget." },
-          { title: 'We review it, you pay', body: "We read your brief and get back to you. Once we've said yes, you fund it and we launch it." },
+          { title: 'We review it, you add funds', body: "We read your brief and get back to you. Add money to your balance once, and every campaign draws from it as clippers earn. If it covers the start, your campaign goes live as soon as it is approved." },
           { title: 'Clips come in', body: 'Clippers post. We check every clip and its views, and you only pay for what is verified.' },
         ]}
       />
@@ -33,9 +35,10 @@ export default function Page() {
       <Principles
         title="Good to know"
         items={[
-          { title: 'Your budget is the ceiling', body: `The budget you set is what clippers can earn, and you never spend more than you fund. Our ${SITE.platformFeePct}% fee is added on top of that budget and shown before you pay.` },
+          { title: 'Your budget is the ceiling', body: `The budget you set is the most a campaign can pay clippers. Money leaves your balance only as clips earn it, and our ${SITE.platformFeePct}% fee is added on top and shown before you start.` },
+          { title: 'Pause and move money any time', body: 'One balance means no pots to manage. Pause or start a campaign, change its budget, or move budget from one campaign to another in a click.' },
           { title: 'You can say no', body: "If a clip isn't right, turn it down from your dashboard before it is paid." },
-          { title: 'Money back', body: 'If a campaign ends with budget left over, you can ask for it back.' },
+          { title: 'Money stays yours', body: 'What you do not spend stays in your balance, and you can ask for it back.' },
         ]}
       />
       <CtaBand title="Launch your first campaign" href="/onboarding?role=brand" label="Launch a campaign" />

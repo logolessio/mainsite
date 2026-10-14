@@ -23,6 +23,7 @@ export const SITE = {
   platformFeePct: 15, // charged to the brand ON TOP of what clippers are paid, never taken out of a clipper's earnings
   minPayoutUsd: 10,
   minTopUpUsd: 100, // TODO: confirm
+  minCampaignBudgetUsd: 50, // the smallest budget cap a campaign can have
   maxTopUpUsd: 10000, // per top-up; raise once you trust the flow
   holdDays: 3, // how long earnings stay pending before they can be withdrawn
   legalUpdated: 'October 10, 2026',

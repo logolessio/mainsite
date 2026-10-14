@@ -56,7 +56,7 @@ export function AddFunds({ ready }: { ready: boolean }) {
         </p>
       )}
       <p className="text-xs leading-relaxed text-mute">
-        This money sits in your logoless balance. When you launch a campaign, its budget for clippers plus our {SITE.platformFeePct}% fee comes out of it. You pay PayPal once, here, and nothing else.
+        This goes into your logoless balance, one pot for all your campaigns. Clippers are paid out of it as they earn, plus our {SITE.platformFeePct}% fee on top. <span className="text-paper/80">We cover PayPal&apos;s fees, so every dollar you add is a dollar you can spend.</span>
       </p>
     </div>
   )

@@ -1,9 +1,8 @@
 import type { Metadata } from 'next'
 import { ActionLink } from '@/components/app/action-link'
-import { PayCampaignButton } from '@/components/app/pay-campaign-button'
-import { costFor } from '@/lib/ledger-math'
-import { Badge, DataTable, EmptyState } from '@/components/app/table'
+import { Badge, EmptyState } from '@/components/app/table'
 import { PageHeader } from '@/components/app/ui'
+import { CampaignActions, MoveBudget } from '@/components/brand/campaign-actions'
 import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
 import { db } from '@/lib/db'
 import { pageUser } from '@/lib/user'
@@ -16,48 +15,72 @@ type Row = {
   status: string
   budget_cents: number
   admin_note: string | null
+  cover_url: string
   spent: number
+  paid: number
   clips: number
   views: number
+  pool: number
+  paused_by: string | null
 }
 
-export default async function Page({ searchParams }: { searchParams: Promise<{ requested?: string; paid?: string; cancelled?: string }> }) {
+const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+
+export default async function Page({ searchParams }: { searchParams: Promise<{ requested?: string; cancelled?: string }> }) {
   const user = await pageUser()
   const q = await searchParams
   const d = await db()
   const rows = (
     await d
       .prepare(
-        `SELECT c.id, c.title, c.status, c.budget_cents, c.admin_note,
-           COALESCE((SELECT -SUM(amount_cents) FROM ledger WHERE campaign_id = c.id AND account = 'campaign' AND kind = 'spend'), 0) AS spent,
+        `SELECT c.id, c.title, c.status, c.budget_cents, c.admin_note, c.cover_url,
+           COALESCE((SELECT SUM(net_cents) FROM earnings WHERE campaign_id = c.id), 0) AS spent,
+           COALESCE((SELECT SUM(gross_cents) FROM earnings WHERE campaign_id = c.id), 0) AS paid,
            (SELECT COUNT(*) FROM submissions WHERE campaign_id = c.id) AS clips,
-           COALESCE((SELECT SUM(views_verified) FROM submissions WHERE campaign_id = c.id), 0) AS views
-         FROM campaigns c WHERE c.brand_user_id = ?1 ORDER BY c.created_at DESC`,
+           COALESCE((SELECT SUM(views_verified) FROM submissions WHERE campaign_id = c.id), 0) AS views,
+           COALESCE((SELECT SUM(amount_cents) FROM ledger WHERE campaign_id = c.id AND account = 'campaign'), 0) AS pool,
+           (SELECT value FROM settings WHERE key = 'paused-by:' || c.id) AS paused_by
+         FROM campaigns c WHERE c.brand_user_id = ?1 ORDER BY CASE c.status WHEN 'live' THEN 0 WHEN 'paused' THEN 1 WHEN 'awaiting_payment' THEN 2 WHEN 'requested' THEN 3 ELSE 4 END, c.created_at DESC`,
       )
       .bind(user.id)
       .all<Row>()
   ).results
-  const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+  const movable = rows.filter((r) => ['live', 'paused', 'awaiting_payment', 'paid'].includes(r.status)).map((r) => ({ id: r.id, title: r.title, free: Math.max(0, r.budget_cents - r.spent) / 100 }))
 
   return (
     <>
-      <PageHeader title="Campaigns" sub="Request a campaign, pay once we confirm it, and we launch it." actions={<ActionLink href="/brand/campaigns/new">Request a campaign</ActionLink>} />
-      {q.requested && <p role="status" className="mb-4 rounded-2xl border border-line-strong px-4 py-3 text-sm">Request sent. We will review it and tell you the next step here and in your notifications.</p>}
-      {q.paid && <p role="status" className="mb-4 rounded-2xl border border-line-strong px-4 py-3 text-sm">Payment received. We will launch your campaign shortly.</p>}
-      {q.cancelled && <p role="status" className="mb-4 rounded-2xl border border-line px-4 py-3 text-sm text-mute">Payment cancelled. You have not been charged.</p>}
-      <DataTable
-        rows={rows}
-        columns={[
-          { key: 't', header: 'Campaign', render: (r) => <span>{r.title}{r.admin_note && r.status !== 'live' ? <span className="mt-0.5 block text-xs text-mute">{r.admin_note}</span> : null}</span> },
-          { key: 's', header: 'Status', render: (r) => <Badge tone={CAMPAIGN_STATUS[r.status]?.tone ?? 'neutral'}>{CAMPAIGN_STATUS[r.status]?.brand ?? r.status}</Badge> },
-          { key: 'b', header: 'Budget', render: (r) => usd(r.budget_cents), className: 'text-right' },
-          { key: 'sp', header: 'Spent', render: (r) => usd(r.spent), className: 'text-right' },
-          { key: 'v', header: 'Views', render: (r) => r.views.toLocaleString(), className: 'text-right' },
-          { key: 'c', header: 'Clips', render: (r) => r.clips, className: 'text-right' },
-          { key: 'a', header: '', render: (r) => (r.status === 'awaiting_payment' ? <PayCampaignButton id={r.id} amount={usd(costFor(r.budget_cents))} /> : null), className: 'text-right' },
-        ]}
-        empty={<EmptyState icon="Megaphone" title="No campaigns" body="Request a campaign and we will walk you through the rest." action={<ActionLink href="/brand/campaigns/new">Request a campaign</ActionLink>} />}
-      />
+      <PageHeader title="Campaigns" sub="Every campaign draws from your one balance as clippers earn. Pause, start or change a budget any time." actions={<ActionLink href="/brand/campaigns/new">New campaign</ActionLink>} />
+      {q.requested && <p role="status" className="mb-4 rounded-2xl border border-line-strong px-4 py-3 text-sm">Sent. We read every new campaign. Once it is approved it goes live as soon as your balance covers the start.</p>}
+      <MoveBudget campaigns={movable} />
+      {rows.length === 0 ? (
+        <EmptyState icon="Megaphone" title="No campaigns yet" body="Write a short brief, set a rate and a budget, and we do the rest." action={<ActionLink href="/brand/campaigns/new">New campaign</ActionLink>} />
+      ) : (
+        <ul className="grid gap-3">
+          {rows.map((r) => {
+            const pct = r.budget_cents > 0 ? Math.min(100, Math.round((r.spent / r.budget_cents) * 100)) : 0
+            return (
+              <li key={r.id} className="flex flex-wrap items-center gap-x-6 gap-y-4 rounded-[1.6rem] border border-line bg-white/[0.02] p-4 pr-6 sm:flex-nowrap">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={r.cover_url} alt="" className="size-20 shrink-0 rounded-2xl object-cover" />
+                <div className="min-w-0 flex-1">
+                  <p className="flex flex-wrap items-center gap-2 text-lg">
+                    <span className="truncate">{r.title}</span>
+                    <Badge tone={CAMPAIGN_STATUS[r.status]?.tone ?? 'neutral'}>{CAMPAIGN_STATUS[r.status]?.brand ?? r.status}</Badge>
+                  </p>
+                  {r.admin_note && !['live', 'paused'].includes(r.status) && <p className="mt-0.5 text-xs text-mute">{r.admin_note}</p>}
+                  <div className="mt-3 h-1.5 max-w-md overflow-hidden rounded-full bg-white/10" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Share of the budget paid out">
+                    <div className="h-full rounded-full bg-paper" style={{ width: `${pct}%` }} />
+                  </div>
+                  <p className="mt-2 text-sm text-mute tabular-nums">
+                    {usd(r.spent)} of {usd(r.budget_cents)} paid to clippers · {r.views.toLocaleString()} views · {r.clips} {r.clips === 1 ? 'clip' : 'clips'}
+                  </p>
+                </div>
+                <CampaignActions c={{ id: r.id, title: r.title, status: r.status, budget: Math.round(r.budget_cents / 100), spent: r.spent, poolCents: r.pool, adminPaused: r.paused_by === 'admin' }} />
+              </li>
+            )
+          })}
+        </ul>
+      )}
     </>
   )
 }

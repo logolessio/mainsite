@@ -28,6 +28,11 @@ export const BADGES: BadgeDef[] = [
   { id: 'founding', name: 'Founding member', how: 'Be one of the first 100 members', points: 12, icon: 'Sparkles', rarity: 'legendary' },
   { id: 'launched', name: 'Campaign live', how: 'Launch a campaign', points: 8, icon: 'Megaphone', rarity: 'rare' },
   { id: 'completionist', name: 'Completionist', how: 'Unlock 10 other badges', points: 12, icon: 'Trophy', rarity: 'epic' },
+  { id: 'views-10m', name: 'Orbit', how: 'Reach 10,000,000 verified views', points: 20, icon: 'Rocket', rarity: 'legendary' },
+  { id: 'earn-10k', name: 'Five figures', how: 'Earn $10,000 in total', points: 20, icon: 'Gem', rarity: 'legendary' },
+  { id: 'clip-1000', name: 'Thousand cuts', how: 'Submit 1,000 clips', points: 20, icon: 'Zap', rarity: 'legendary' },
+  { id: 'year', name: 'One year in', how: 'Be a member for a year', points: 15, icon: 'CalendarCheck', rarity: 'legendary' },
+  { id: 'team', name: 'The team', how: 'Be part of the logoless team', points: 15, icon: 'ShieldCheck', rarity: 'legendary' },
 ]
 
 export const BADGE_BY_ID = Object.fromEntries(BADGES.map((b) => [b.id, b])) as Record<string, BadgeDef>

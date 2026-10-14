@@ -4,7 +4,7 @@ import { audit } from '@/lib/chain'
 import { db, nowSec } from '@/lib/db'
 import { ipHash, protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
-import { campaignPool, costFor, creditEarning } from '@/lib/ledger'
+import { budgetLeft, creditEarning } from '@/lib/ledger'
 import { notify, notifyFavoriters } from '@/lib/notify'
 import { requireAdmin } from '@/lib/user'
 
@@ -59,16 +59,12 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
       const claim = await d.prepare('UPDATE submissions SET views_verified = ?2 WHERE id = ?1 AND views_verified = ?3').bind(id, views, s.views_verified).run()
       if (claim.meta.changes !== 1) throw new HttpError(409, 'This clip was just updated. Refresh and try again.')
       if (gross > 0) {
-        let res: Awaited<ReturnType<typeof creditEarning>> = null
+        let res: Awaited<ReturnType<typeof creditEarning>>
         try {
           res = await creditEarning({ campaignId: camp.id, clipperId: s.user_id, payoutCents: gross, submissionId: id, note: `${delta} views` })
         } catch (e) {
           await d.prepare('UPDATE submissions SET views_verified = ?2 WHERE id = ?1').bind(id, s.views_verified).run()
           throw e
-        }
-        if (!res) {
-          await d.prepare('UPDATE submissions SET views_verified = ?2 WHERE id = ?1').bind(id, s.views_verified).run()
-          throw new HttpError(409, 'This campaign’s budget cannot cover that. Nothing was paid.')
         }
         paid = { gross: res.gross, net: res.net }
         await d.prepare('UPDATE submissions SET earned_cents = earned_cents + ?2 WHERE id = ?1').bind(id, res.net).run()
@@ -84,11 +80,11 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
       await evaluateBadges(s.user_id)
 
       // budget warnings for people who favourited the campaign
-      const left = await campaignPool(camp.id)
+      const left = await budgetLeft(camp.id, camp.budget_cents)
       if (left <= 0) {
         await d.prepare("UPDATE campaigns SET status='ended', updated_at=?2 WHERE id=?1 AND status='live'").bind(camp.id, t).run()
         await notifyFavoriters(camp.id, { title: `${camp.title} has run out of budget`, body: 'It is no longer taking clips.', dedupe: `budget-out:${camp.id}` })
-      } else if (left < costFor(camp.budget_cents) * 0.2) {
+      } else if (left < camp.budget_cents * 0.2) {
         await notifyFavoriters(camp.id, { title: `${camp.title} is almost out of budget`, body: 'Less than 20% is left. Clip it soon.', dedupe: `budget-low:${camp.id}` })
       }
     }

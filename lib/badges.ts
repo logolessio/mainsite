@@ -15,6 +15,7 @@ type Facts = {
   hasBio: number
   hasLink: number
   equipped: number
+  team: number
   banner_changed: number
   dots_changed: number
   accent_changed: number
@@ -46,6 +47,11 @@ const RULES: Record<string, (f: Facts) => boolean> = {
   founding: (f) => f.rank <= 100,
   launched: (f) => f.launched >= 1,
   completionist: (f) => f.badges >= 10,
+  'views-10m': (f) => f.views >= 10_000_000,
+  'earn-10k': (f) => f.earned >= 1_000_000,
+  'clip-1000': (f) => f.clips >= 1000,
+  year: (f) => nowSec() - f.joined >= 365 * 86400,
+  team: (f) => f.team >= 1,
 }
 
 /** Counts an action, such as "banner_changed". Used for badges that depend on something you did once. */
@@ -74,7 +80,8 @@ async function facts(userId: string): Promise<Facts> {
            (SELECT COUNT(*) FROM badges_unlocked WHERE user_id = ?1 AND badge_id != 'completionist') AS badges,
            (SELECT CASE WHEN LENGTH(bio) > 0 THEN 1 ELSE 0 END FROM profiles WHERE user_id = ?1) AS hasBio,
            (SELECT CASE WHEN links_json != '[]' THEN 1 ELSE 0 END FROM profiles WHERE user_id = ?1) AS hasLink,
-           (SELECT json_array_length(badges_json) FROM profiles WHERE user_id = ?1) AS equipped`,
+           (SELECT json_array_length(badges_json) FROM profiles WHERE user_id = ?1) AS equipped,
+           (SELECT CASE WHEN role = 'admin' OR EXISTS (SELECT 1 FROM settings WHERE key = 'roles:' || ?1 AND value != '[]') THEN 1 ELSE 0 END FROM users WHERE id = ?1) AS team`,
       )
       .bind(userId)
       .first<Facts>(),

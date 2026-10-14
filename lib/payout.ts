@@ -79,7 +79,7 @@ export async function sendPayout(payoutId: string): Promise<{ ok: true } | { ok:
     const sent = await sendPayoutTo({ payoutId, email, amountCents: p.amount_cents })
     await markPayoutSent(payoutId, sent.batchId)
     logEvent({ kind: 'money', name: 'payout sent', detail: `${payoutId} $${(p.amount_cents / 100).toFixed(2)} → PayPal ${sent.batchId}` })
-    await notify(p.user_id, { kind: 'payout', title: `Payout sent: $${(p.amount_cents / 100).toFixed(2)}`, body: `It is on its way to ${email} on PayPal.`, href: '/dashboard/payouts', dedupe: `payout-sent:${payoutId}` })
+    await notify(p.user_id, { kind: 'payout', title: `Payout sent: $${(p.amount_cents / 100).toFixed(2)}`, body: `It is on its way to ${email} on PayPal.`, href: '/dashboard/earnings#withdraw', dedupe: `payout-sent:${payoutId}` })
     return { ok: true }
   } catch (e) {
     const reason = e instanceof Error ? e.message : 'Payout failed'
@@ -87,7 +87,7 @@ export async function sendPayout(payoutId: string): Promise<{ ok: true } | { ok:
       // PayPal said no, clearly: nothing was sent, so the money goes back.
       logEvent({ kind: 'money', name: 'payout refused', detail: `${payoutId}: ${e.code} ${reason.slice(0, 160)}` })
       await reverseWithdrawal(payoutId, 'failed', reason)
-      await notify(p.user_id, { kind: 'payout', title: 'Payout failed', body: 'PayPal did not accept it, so your balance has not changed. Check the email and try again.', href: '/dashboard/payouts', dedupe: `payout-failed:${payoutId}` })
+      await notify(p.user_id, { kind: 'payout', title: 'Payout failed', body: 'PayPal did not accept it, so your balance has not changed. Check the email and try again.', href: '/dashboard/earnings#withdraw', dedupe: `payout-failed:${payoutId}` })
       return { ok: false, error: `PayPal did not accept that: ${reason}` }
     }
     // No clear answer: hold it for a person to check in PayPal before anything is returned or resent.

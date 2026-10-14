@@ -4,7 +4,10 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef } from 'react'
-import { Avatar, useNavUser } from './nav-user'
+import { BadgeStar } from '@/components/badges/badge-star'
+import { BADGE_BY_ID } from '@/lib/badges-defs'
+import { BANNER_PRESETS } from '@/lib/profile-style'
+import { Avatar, type NavUser, useNavUser } from './nav-user'
 import { T } from './copy-provider'
 import { TransitionLink } from './transition-link'
 import { LEGAL_LINKS, NAV_LINKS } from '@/lib/site'
@@ -36,8 +39,6 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
     const t = window.setTimeout(() => first.current?.focus({ preventScroll: true }), 300)
     return () => window.clearTimeout(t)
   }, [open])
-
-  const small = 'text-[15px] text-mute transition-colors hover:text-paper'
 
   return (
     <AnimatePresence>
@@ -90,53 +91,97 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
             </div>
 
             <div className="mt-auto pt-10">
-              {user?.signedIn ? (
-                <>
-                  <TransitionLink href="/dashboard" onClick={onClose} className="mb-6 flex items-center gap-3.5">
-                    <Avatar src={user.profile.avatar} name={user.profile.displayName} size={44} />
-                    <span className="min-w-0">
-                      <span className="block truncate text-[17px] leading-tight">{user.profile.displayName}</span>
-                      <span className="block truncate text-[13px] text-mute">Open dashboard</span>
-                    </span>
-                  </TransitionLink>
-                  <div className="flex flex-wrap gap-x-6 gap-y-2">
-                    <TransitionLink href={`/@${user.profile.handle}`} onClick={onClose} className={small}>
-                      Profile
-                    </TransitionLink>
-                    {user.isAdmin && (
-                      <TransitionLink href="/admin" onClick={onClose} className={small}>
-                        Admin
-                      </TransitionLink>
-                    )}
-                    <button type="button" onClick={() => signOut({ callbackUrl: '/' })} className={small}>
-                      Log out
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="grid gap-4">
-                  <TransitionLink href="/onboarding" onClick={onClose} className="inline-flex h-14 items-center justify-center rounded-full bg-paper text-[17px] font-medium text-ink transition-colors hover:bg-paper/85">
+              {user?.signedIn ? <ProfilePill user={user} onClose={onClose} onTour={onTour} /> : (
+                <div className="overflow-hidden rounded-[28px] border border-line bg-white/[0.03] p-5">
+                  <TransitionLink href="/onboarding" onClick={onClose} className="inline-flex h-14 w-full items-center justify-center rounded-full bg-paper text-[17px] font-medium text-ink transition-colors hover:bg-paper/85">
                     Get started
                   </TransitionLink>
-                  <TransitionLink href="/login" onClick={onClose} className="py-1 text-center text-[15px] text-mute transition-colors hover:text-paper">
+                  <TransitionLink href="/login" onClick={onClose} className="mt-3 block py-1 text-center text-[15px] text-mute transition-colors hover:text-paper">
                     Log in
                   </TransitionLink>
+                  <Legal onClose={onClose} onTour={onTour} className="mt-4 justify-center border-t border-line pt-4" />
                 </div>
               )}
-              <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[12px] text-mute/70">
-                <button type="button" onClick={onTour} className="transition-colors hover:text-paper">
-                  Take the tour
-                </button>
-                {[LEGAL_LINKS[0], LEGAL_LINKS[1], LEGAL_LINKS[4], LEGAL_LINKS[6]].map((l) => (
-                  <TransitionLink key={l.href} href={l.href} onClick={onClose} className="transition-colors hover:text-paper">
-                    {l.label}
-                  </TransitionLink>
-                ))}
-              </div>
             </div>
           </motion.aside>
         </>
       )}
     </AnimatePresence>
+  )
+}
+
+const compact = (n: number) => (n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M` : n >= 10_000 ? `${Math.round(n / 1000)}k` : n.toLocaleString('en-US'))
+const dollars = (cents: number) => `$${Math.floor(cents / 100).toLocaleString('en-US')}`
+
+function Legal({ onClose, onTour, className }: { onClose: () => void; onTour: () => void; className?: string }) {
+  return (
+    <div className={cn('flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-mute/80', className)}>
+      <button type="button" onClick={onTour} className="transition-colors hover:text-paper">
+        Take the tour
+      </button>
+      {[LEGAL_LINKS[0], LEGAL_LINKS[1], LEGAL_LINKS[4], LEGAL_LINKS[6]].map((l) => (
+        <TransitionLink key={l.href} href={l.href} onClick={onClose} className="transition-colors hover:text-paper">
+          {l.label}
+        </TransitionLink>
+      ))}
+    </div>
+  )
+}
+
+/** You, in one pill: your banner, picture, name and badges, a few numbers, and the places you are most likely to go next. */
+function ProfilePill({ user, onClose, onTour }: { user: Extract<NavUser, { signedIn: true }>; onClose: () => void; onTour: () => void }) {
+  const p = user.profile
+  const banner = p.bannerKind === 'image' ? `center/cover url(${p.banner})` : p.bannerKind === 'color' ? p.banner : (BANNER_PRESETS.find((b) => b.id === p.banner)?.css ?? BANNER_PRESETS[0].css)
+  const stats: [string, string][] = [
+    ['Clips', compact(user.stats.clips)],
+    ['Views', compact(user.stats.views)],
+    [user.stats.brandCents > 0 ? 'Balance' : 'Earned', dollars(user.stats.brandCents > 0 ? user.stats.brandCents : user.stats.earnedCents)],
+  ]
+  const link = 'text-[14px] text-mute transition-colors hover:text-paper'
+  return (
+    <div className="overflow-hidden rounded-[28px] border border-line bg-white/[0.03]">
+      <div className="h-14" style={{ background: banner }} />
+      <div className="px-5 pb-5">
+        <TransitionLink href="/dashboard" onClick={onClose} className="group block">
+          <Avatar src={p.avatar} name={p.displayName} size={52} className="-mt-8 border-[3px] border-[#0b0b0d]" />
+          <span className="mt-2 flex items-center gap-1.5">
+            <span className="min-w-0 truncate text-[18px] leading-tight">{p.displayName}</span>
+            {p.badges.length > 0 && (
+              <span className="flex shrink-0 items-center gap-0.5">
+                {p.badges.slice(0, 4).map((id) => (BADGE_BY_ID[id] ? <BadgeStar key={id} badge={BADGE_BY_ID[id]} size={15} /> : null))}
+              </span>
+            )}
+          </span>
+          <span className="block truncate text-[13px] text-mute transition-colors group-hover:text-paper">Open dashboard</span>
+        </TransitionLink>
+        <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-4">
+          {stats.map(([k, v]) => (
+            <div key={k}>
+              <dd className="font-display text-[1.35rem] leading-none tabular-nums">{v}</dd>
+              <dt className="mt-1 text-[11px] text-mute">{k}</dt>
+            </div>
+          ))}
+        </dl>
+        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 border-t border-line pt-4">
+          <TransitionLink href={`/@${p.handle}`} onClick={onClose} className={link}>
+            Profile
+          </TransitionLink>
+          {user.isAdmin && (
+            <TransitionLink href="/admin" onClick={onClose} className={link}>
+              Admin
+            </TransitionLink>
+          )}
+          {(user.isDev || user.isAdmin) && (
+            <TransitionLink href="/dev" onClick={onClose} className={link}>
+              Dev
+            </TransitionLink>
+          )}
+          <button type="button" onClick={() => signOut({ callbackUrl: '/' })} className={link}>
+            Log out
+          </button>
+        </div>
+        <Legal onClose={onClose} onTour={onTour} className="mt-4 border-t border-line pt-4" />
+      </div>
+    </div>
   )
 }

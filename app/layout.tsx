@@ -6,6 +6,7 @@ import { TextEditor } from '@/components/admin/text-editor'
 import { DevBar } from '@/components/dev/dev-bar'
 import { DevGate } from '@/components/dev/dev-gate'
 import { AppShell } from '@/components/shell/app-shell'
+import { AutoCopy } from '@/components/shell/auto-copy'
 import { CopyProvider } from '@/components/shell/copy-provider'
 import { DesignProvider } from '@/components/shell/design-provider'
 import { FeaturesProvider } from '@/components/shell/features-provider'
@@ -68,6 +69,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <DesignProvider value={{ coverZoom: design.design_cover_zoom === '1', coverBorder: design.design_cover_border === '1', coverBar: design.design_cover_bar === '1', coverInfo: design.design_cover_info === '1', scrollEffects: design.design_scroll_effects === '1', liquidLoader: design.design_liquid_loader === '1' }}>
           <CopyProvider overrides={overrides} isAdmin={isAdmin}>
             <AppShell announcement={announcement} dots={design.bg_dots === '1'}>{blocked ? <DevGate email={session?.user?.email ?? null} /> : children}</AppShell>
+            <AutoCopy />
             {isAdmin && <TextEditor />}
             {isAdmin && <SecretDialogHost />}
             {fs.dev && (isAdmin || isDev) && <DevBar />}

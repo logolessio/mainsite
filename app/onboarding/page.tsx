@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
+import { db } from '@/lib/db'
 import { getSession } from '@/lib/session'
+import { isVerified } from '@/lib/verification'
 import { OnboardingFlow } from '@/components/onboarding/onboarding-flow'
 
 export const metadata: Metadata = {
@@ -14,9 +16,21 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   const user = session?.user ? { name: session.user.name ?? '', email: session.user.email ?? '' } : null
   // an admin's dry run: nothing is saved (see the Previews page in the admin area)
   const dry = preview === '1' && session?.user?.role === 'admin'
+  // everyone proves their account with a code during onboarding, except people who signed in with Discord (for now)
+  let needsVerify = false
+  if (session?.user?.email && !dry) {
+    const d = await db()
+    const u = await d.prepare('SELECT id FROM users WHERE email = ?1').bind(session.user.email.toLowerCase()).first<{ id: string }>()
+    needsVerify = u ? !(await isVerified(u.id, session.user.email)).verified : true
+    if (!u) {
+      const hasDiscord = await d.prepare('SELECT 1 AS x FROM settings WHERE key = ?1').bind(`discord-email:${session.user.email.toLowerCase()}`).first()
+      const hasPassword = await d.prepare('SELECT 1 AS x FROM credentials WHERE email = ?1').bind(session.user.email.toLowerCase()).first()
+      needsVerify = !hasDiscord && !hasPassword
+    }
+  }
   return (
     <Suspense>
-      <OnboardingFlow preview={dry} sessionUser={user} initialRole={role === 'brand' ? 'brand' : role === 'clipper' ? 'clipper' : undefined} />
+      <OnboardingFlow preview={dry} needsVerify={needsVerify} sessionUser={user} initialRole={role === 'brand' ? 'brand' : role === 'clipper' ? 'clipper' : undefined} />
     </Suspense>
   )
 }

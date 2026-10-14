@@ -8,7 +8,8 @@ import { db, setting } from './db'
 export async function discordIdOf(userId: string): Promise<string | null> {
   try {
     const d = await db()
-    const r = await d.prepare('SELECT value FROM settings WHERE key = ?1').bind(`discord:${userId}`).first<{ value: string }>()
+    // saved by email when someone signs in with Discord (see auth.ts), so it works before their account row exists
+    const r = await d.prepare("SELECT s.value FROM settings s JOIN users u ON s.key = 'discord-email:' || u.email WHERE u.id = ?1").bind(userId).first<{ value: string }>()
     return r?.value ?? null
   } catch {
     return null

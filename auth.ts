@@ -84,8 +84,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => ({
           const { db, nowSec } = await import('./lib/db')
           const d = await db()
           await d
-            .prepare("INSERT INTO settings (key, value, updated_at) SELECT 'discord:' || id, ?1, ?3 FROM users WHERE email = ?2 ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at")
-            .bind(account.providerAccountId, user.email.toLowerCase(), nowSec())
+            .prepare('INSERT INTO settings (key, value, updated_at) VALUES (?1, ?2, ?3) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at')
+            .bind(`discord-email:${user.email.toLowerCase()}`, account.providerAccountId, nowSec())
             .run()
         } catch {
           /* the id is a convenience; signing in must never fail because of it */

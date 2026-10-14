@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { ActionButton } from './ui'
 
-/** Pays for an accepted campaign from the brand's balance: the budget plus our fee on top. If the balance is short, it says so. */
-export function PayCampaignButton({ id, amount }: { id: string; amount: string }) {
+/** Starts an approved campaign. Nothing is charged: clippers are paid from the balance as they earn. If the balance is too low it says so. */
+export function PayCampaignButton({ id, label = 'Start campaign' }: { id: string; label?: string }) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -22,19 +22,19 @@ export function PayCampaignButton({ id, amount }: { id: string; amount: string }
           const res = await fetch(`/api/campaigns/${id}/pay`, { method: 'POST' })
           const j = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string }
           setBusy(false)
-          if (!res.ok || !j.ok) return setError(j.error ?? 'Could not take the payment.')
+          if (!res.ok || !j.ok) return setError(j.error ?? 'Could not start it.')
           router.refresh()
         }}
       >
         {busy && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
-        Pay {amount} from balance
+        {label}
       </ActionButton>
       {error && (
         <span role="alert" className="max-w-xs text-right text-xs text-signal">
           {error}{' '}
           {short && (
-            <Link href="/brand/billing" className="underline underline-offset-4">
-              Add funds
+            <Link href="/brand/balance" className="underline underline-offset-4">
+              Open balance
             </Link>
           )}
         </span>

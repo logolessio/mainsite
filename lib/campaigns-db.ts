@@ -1,7 +1,6 @@
 import type { Campaign, Platform } from './campaigns'
 import { shortDate } from './campaign-input'
 import { db } from './db'
-import { costFor } from './ledger-math'
 
 export type CampaignRow = {
   id: string
@@ -60,18 +59,18 @@ export async function liveCampaigns(): Promise<Campaign[]> {
   try {
     const d = await db()
     const rows = (await d.prepare("SELECT * FROM campaigns WHERE status = 'live' ORDER BY launched_at DESC, created_at DESC").all<CampaignRow>()).results
-    // what is left of each funded pool, straight from the ledger
-    const pools = new Map<string, number>()
+    // how much of each campaign's budget cap has been paid out so far
+    const spent = new Map<string, number>()
     try {
-      const sums = (await d.prepare("SELECT campaign_id, COALESCE(SUM(amount_cents), 0) AS pool FROM ledger WHERE account = 'campaign' AND campaign_id IS NOT NULL GROUP BY campaign_id").all<{ campaign_id: string; pool: number }>()).results
-      for (const r of sums) pools.set(r.campaign_id, r.pool)
+      const sums = (await d.prepare('SELECT campaign_id, COALESCE(SUM(net_cents), 0) AS net FROM earnings WHERE campaign_id IS NOT NULL GROUP BY campaign_id').all<{ campaign_id: string; net: number }>()).results
+      for (const r of sums) spent.set(r.campaign_id, r.net)
     } catch {
-      /* no ledger yet: every campaign shows as full */
+      /* no earnings yet: every campaign shows as full */
     }
     return rows.map((r) => {
       const c = toCampaign(r)
-      const pool = pools.get(r.id)
-      return pool === undefined || r.budget_cents <= 0 ? c : { ...c, budgetLeftPct: Math.max(0, Math.min(100, Math.round((pool / costFor(r.budget_cents)) * 100))) }
+      const net = spent.get(r.id)
+      return net === undefined || r.budget_cents <= 0 ? c : { ...c, budgetLeftPct: Math.max(0, Math.min(100, Math.round(((r.budget_cents - net) / r.budget_cents) * 100))) }
     })
   } catch (e) {
     console.error('liveCampaigns failed', e instanceof Error ? e.message : e)

@@ -15,7 +15,7 @@ export const campaignRequestSchema = z.object({
   clipThis: z.array(line).max(8),
   offLimits: z.array(line).max(8),
   rate: z.number().min(0.5).max(50), // USD per 1,000 views
-  budget: z.number().min(SITE.minTopUpUsd).max(SITE.maxTopUpUsd), // USD
+  budget: z.number().min(SITE.minCampaignBudgetUsd).max(SITE.maxTopUpUsd * 10), // USD, the most this campaign may pay out in total
   endsOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
 })
 export type CampaignRequest = z.infer<typeof campaignRequestSchema>

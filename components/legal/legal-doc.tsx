@@ -1,6 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion, useScroll, useSpring } from 'framer-motion'
+import { useDesign } from '@/components/shell/design-provider'
 import { ArrowLeft, ArrowRight, Check, ChevronDown, Link2, Printer } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Reveal } from '@/components/motion/reveal'
@@ -37,6 +38,7 @@ function Rich({ text }: { text: string }) {
 export function LegalDocView({ doc }: { doc: LegalDoc }) {
   const { scrollYProgress } = useScroll()
   const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 30 })
+  const { scrollEffects } = useDesign()
   const [active, setActive] = useState(slug(doc.sections[0]?.h ?? ''))
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState('')
@@ -90,7 +92,7 @@ export function LegalDocView({ doc }: { doc: LegalDoc }) {
 
   return (
     <main>
-      <motion.div style={{ scaleX }} className="fixed inset-x-0 top-0 z-[60] h-px origin-left bg-paper" />
+      {scrollEffects && <motion.div style={{ scaleX }} className="fixed inset-x-0 top-0 z-[60] h-px origin-left bg-paper" />}
       <header className={cn(CONTAINER, 'flex flex-col items-center pt-44 pb-16 text-center md:pt-60 md:pb-24')}>
         <Reveal y={10}>
           <p className="text-xs text-mute">Legal · Updated {SITE.legalUpdated}</p>

@@ -1,12 +1,15 @@
 'use client'
 
 import { motion, type HTMLMotionProps } from 'framer-motion'
+import { useDesign } from '@/components/shell/design-provider'
 import { EASE_OUT } from '@/lib/layout'
 
 type Props = HTMLMotionProps<'div'> & { delay?: number; x?: number; y?: number; blur?: boolean }
 
 /** Fades and slides content in once it scrolls into view. */
 export function Reveal({ delay = 0, x: _x = 0, y: _y = 0, blur: _blur = false, children, ...rest }: Props) {
+  const { scrollEffects } = useDesign()
+  if (!scrollEffects) return <motion.div initial={false} {...rest}>{children}</motion.div>
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -22,6 +25,8 @@ export function Reveal({ delay = 0, x: _x = 0, y: _y = 0, blur: _blur = false, c
 
 /** A hairline that draws itself left to right. */
 export function Rule({ className = '', delay = 0 }: { className?: string; delay?: number }) {
+  const { scrollEffects } = useDesign()
+  if (!scrollEffects) return <div aria-hidden="true" className={`h-px bg-line-strong ${className}`} />
   return (
     <motion.div
       aria-hidden="true"

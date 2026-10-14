@@ -92,11 +92,11 @@ function button(href: string, label: string) {
 const metaText = (m?: Meta) => [m?.place ? `Where: ${m.place}` : '', m?.device ? `Device: ${m.device}` : ''].filter(Boolean).join('\n')
 
 /** The "confirm your email" code, or the "reset your password" code. The code is digits only, so nothing a person typed ever reaches the HTML. */
-export function codeEmail(code: string, kind: 'signup' | 'reset', test = false, meta?: Meta): Mail {
-  const signup = kind === 'signup'
-  const title = signup ? 'Confirm your email' : 'Reset your password'
-  const intro = signup ? 'Enter this code on the page you came from to finish creating your logoless account.' : 'Enter this code, then choose a new password.'
-  const note = signup ? 'If you did not sign up, ignore this email and nothing will be created.' : 'If you did not ask to reset your password, ignore this email. Your password has not changed.'
+export function codeEmail(code: string, kind: 'signup' | 'reset' | 'verify', test = false, meta?: Meta): Mail {
+  const signup = kind === 'signup' || kind === 'verify'
+  const title = kind === 'verify' ? 'Confirm it is you' : signup ? 'Confirm your email' : 'Reset your password'
+  const intro = kind === 'verify' ? 'Enter this code on the page you came from to finish setting up your logoless account.' : signup ? 'Enter this code on the page you came from to finish creating your logoless account.' : 'Enter this code, then choose a new password.'
+  const note = kind === 'verify' ? 'If you did not just sign in to logoless, ignore this email. Nothing has changed.' : signup ? 'If you did not sign up, ignore this email and nothing will be created.' : 'If you did not ask to reset your password, ignore this email. Your password has not changed.'
   const tag = test ? 'Test' : signup ? 'Welcome' : 'Security'
   const body = `${codeBoxes(code)}${expiry()}${details(meta)}${signup ? '' : `<div style="margin-top:26px">${button(`${SITE_URL}/forgot-password`, 'Open the reset page')}</div>`}`
   const t = test ? '[TEST] ' : ''

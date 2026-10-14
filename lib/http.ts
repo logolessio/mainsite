@@ -88,5 +88,5 @@ export async function body<T>(req: Request, max = MAX_BODY): Promise<T> {
 }
 
 /** Only paths on this site are allowed as post-payment return targets. */
-const RETURN_PATHS = ['/brand/billing', '/dashboard/payouts', '/onboarding']
+const RETURN_PATHS = ['/brand/billing', '/brand/balance', '/dashboard/payouts', '/dashboard/earnings', '/onboarding']
 export const safeReturn = (p: unknown, fallback: string) => (typeof p === 'string' && RETURN_PATHS.includes(p) ? p : fallback)

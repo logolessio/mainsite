@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BrandIcon } from '@/components/brand-icon'
+import { useDesign } from '@/components/shell/design-provider'
 import { useMotionPrefs, useMounted } from '@/hooks/use-motion-prefs'
 import { type Provider, type Role, signInWithProvider, signUpWithEmail } from '@/lib/auth'
 import { uploadImage } from '@/lib/image-client'
@@ -312,11 +313,12 @@ const STEP_ORDER: Id[] = ['welcome', 'role', 'method', 'email', 'password', 'cod
  * `preview` is an admin's dry run: it starts as a stranger would (signed out), every question works, and nothing is sent to the
  * server or saved. Sign-in is pretended, uploads stay in the browser, and the end of the flow shows two buttons instead of redirecting.
  */
-export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = false }: { sessionUser: { name: string; email: string } | null; initialRole?: Role; preview?: boolean }) {
+export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = false, needsVerify = false }: { sessionUser: { name: string; email: string } | null; initialRole?: Role; preview?: boolean; needsVerify?: boolean }) {
   const sessionUser = preview ? null : realUser
   const router = useRouter()
   const mounted = useMounted()
   const { reduced } = useMotionPrefs()
+  const { liquidLoader } = useDesign()
   const [id, setId] = useState<Id>('welcome')
   const [trail, setTrail] = useState<Id[]>([])
   const [ready, setReady] = useState(false) // the line has finished typing
@@ -330,6 +332,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
   const [picking, setPicking] = useState<string | null>(null) // which sign-in card was pressed
   const [data, setData] = useState<Data>({ role: initialRole ?? null, email: sessionUser?.email ?? '', paypal: '', name: sessionUser?.name ?? '', handle: '', avatarKey: null, avatarUrl: null, bannerKey: null, bannerUrl: null })
   const [signedIn, setSignedIn] = useState(Boolean(sessionUser))
+  const [verifyMode, setVerifyMode] = useState(false) // the code step is proving a signed-in account, not finishing an email sign-up
   const avatarInput = useRef<HTMLInputElement>(null)
   const bannerInput = useRef<HTMLInputElement>(null)
   const brand = data.role === 'brand'
@@ -422,9 +425,20 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
   // the name just needs a couple of letters: no spinner, no tick
   const canContinue = id === 'name' ? text.trim().length >= 2 : shown.st === 'ok'
 
+  // Everyone proves their account with a code, except people who signed in with Discord. Email sign-ups already did it.
+  const sendVerifyCode = () => fetch('/api/me/verify', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'send' }) }).catch(() => null)
+  const enterAfterAuth = (role: Role | null) => {
+    if (needsVerify && !preview) {
+      setVerifyMode(true)
+      void sendVerifyCode()
+      return go('code')
+    }
+    go(afterAuth(role))
+  }
   const choose = (role: Role) => {
     patch({ role })
-    go(signedIn ? afterAuth(role) : 'method')
+    if (signedIn) enterAfterAuth(role)
+    else go('method')
   }
 
   const provider = async (p: Provider) => {
@@ -471,7 +485,11 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       if (!/^\d{6}$/.test(v)) return
       setBusy(true)
       setForced({ st: 'checking', msg: '' })
-      const ok = preview ? (await wait(700), true) : await verifyEmailCode(data.email, v)
+      const ok = preview
+        ? (await wait(700), true)
+        : verifyMode
+          ? await fetch('/api/me/verify', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'check', code: v }) }).then((r) => r.ok).catch(() => false)
+          : await verifyEmailCode(data.email, v)
       setBusy(false)
       if (!ok) return setForced({ st: 'bad', msg: 'That code is not right. Check the 6 digits in your email.' })
       setForced({ st: 'ok', msg: 'Verified' })
@@ -576,7 +594,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
   // Portalled to the body: a page transition on an ancestor would otherwise become the "screen" this fixed layer is centred in.
   return createPortal(
     <main className="fixed inset-0 z-[60] overflow-y-auto text-center">
-      <AnimatePresence>{id === 'saving' && !reduced && <LiquidFill key="liquid" />}</AnimatePresence>
+      <AnimatePresence>{id === 'saving' && !reduced && liquidLoader && <LiquidFill key="liquid" />}</AnimatePresence>
       <div aria-hidden="true" className="fixed top-0 left-0 z-[70] h-[2px] bg-paper transition-[width] duration-700 ease-out" style={{ width: `${progress * 100}%` }} />
       {preview && (
         <div className="fixed top-4 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-3 rounded-full border border-line-strong bg-ink/90 py-1.5 pr-1.5 pl-4 text-[13px] text-mute backdrop-blur">
@@ -599,7 +617,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
               text={line}
               onReady={() => setReady(true)}
               onDone={() => {
-                if (id === 'welcome') window.setTimeout(() => go(data.role ? (signedIn ? afterAuth(data.role) : 'method') : 'role'), 500)
+                if (id === 'welcome') window.setTimeout(() => (data.role ? (signedIn ? enterAfterAuth(data.role) : go('method')) : go('role')), 500)
               }}
             />
             <p className={cn('mt-3 min-h-[1.5rem] text-[16px] text-mute transition-opacity duration-500', ready && hint[id] ? 'opacity-100' : 'opacity-0')}>{hint[id] ?? ''}</p>
@@ -710,7 +728,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                       </button>
                     )}
                     {id === 'code' && (
-                      <button type="button" onClick={() => (preview ? setForced({ st: 'ok', msg: 'We sent a new code' }) : resendEmailCode(data.email).then(() => setForced({ st: 'ok', msg: 'We sent a new code' })).catch(() => setForced({ st: 'bad', msg: 'Could not send a new code' })))} className={quiet}>
+                      <button type="button" onClick={() => (preview ? setForced({ st: 'ok', msg: 'We sent a new code' }) : (verifyMode ? sendVerifyCode().then((r) => (r?.ok ? undefined : Promise.reject(new Error('no')))) : resendEmailCode(data.email)).then(() => setForced({ st: 'ok', msg: 'We sent a new code' })).catch(() => setForced({ st: 'bad', msg: 'Could not send a new code' })))} className={quiet}>
                         Send it again
                       </button>
                     )}

@@ -7,7 +7,7 @@ import { ipHash, protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
 import { notify, notifyFavoriters } from '@/lib/notify'
 import { evaluateBadges } from '@/lib/badges'
-import { costFor } from '@/lib/ledger'
+import { balances, costFor, releasePool, startNeeded } from '@/lib/ledger'
 import { requireAdmin } from '@/lib/user'
 
 const schema = z.discriminatedUnion('action', [
@@ -51,9 +51,16 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
     case 'accept': {
       if (c.status !== 'requested') throw new HttpError(409, 'Only new requests can be accepted.')
       if (!c.brand_user_id) throw new HttpError(409, 'This campaign has no owner to bill.')
-      await set('awaiting_payment', a.note ?? null)
-      if (c.brand_user_id)
-        await notify(c.brand_user_id, { kind: 'campaign', title: `${c.title} is approved`, body: `We are ready to launch it. Pay $${(costFor(c.budget_cents) / 100).toLocaleString()} from your balance ($${(c.budget_cents / 100).toLocaleString()} for clippers plus our fee) to get it live.`, href: '/brand/campaigns', dedupe: `camp-accepted:${id}` })
+      // One balance pays for every campaign as clippers earn. If it already covers the start, the campaign simply goes live.
+      const covered = (await balances(c.brand_user_id)).brand >= startNeeded(c.budget_cents)
+      if (covered) {
+        await d.prepare("UPDATE campaigns SET status = 'live', admin_note = COALESCE(?2, admin_note), launched_at = ?3, paid_at = ?3, updated_at = ?3 WHERE id = ?1").bind(id, a.note ?? null, t).run()
+        await notify(c.brand_user_id, { kind: 'campaign', title: `${c.title} is live`, body: 'We approved it and your balance covers it, so clippers can start posting now.', href: `/campaign/${id}`, dedupe: `camp-live:${id}` })
+        await evaluateBadges(c.brand_user_id)
+      } else {
+        await set('awaiting_payment', a.note ?? null)
+        await notify(c.brand_user_id, { kind: 'campaign', title: `${c.title} is approved`, body: `Add at least $${(startNeeded(c.budget_cents) / 100).toLocaleString()} to your balance and press start. You only pay as clippers earn.`, href: '/brand/balance', dedupe: `camp-accepted:${id}` })
+      }
       break
     }
     case 'reject': {
@@ -77,6 +84,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
     case 'pause': {
       if (c.status !== 'live') throw new HttpError(409, 'Only live campaigns can be paused.')
       await set('paused', a.note ?? null)
+      await d.prepare("INSERT INTO settings (key, value, updated_at) VALUES (?1, 'admin', ?2) ON CONFLICT(key) DO UPDATE SET value = 'admin', updated_at = excluded.updated_at").bind(`paused-by:${id}`, t).run()
       await notifyFavoriters(id, { title: `${c.title} is paused`, body: 'It is not taking new clips for now.', dedupe: `camp-paused:${id}:${t}` })
       if (c.brand_user_id) await notify(c.brand_user_id, { kind: 'campaign', title: `${c.title} was paused`, body: a.note, href: '/brand/campaigns', dedupe: `camp-paused-owner:${id}:${t}` })
       break
@@ -84,14 +92,17 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
     case 'resume': {
       if (c.status !== 'paused') throw new HttpError(409, 'Only paused campaigns can resume.')
       await set('live')
+      await d.prepare('DELETE FROM settings WHERE key = ?1').bind(`paused-by:${id}`).run()
       await notifyFavoriters(id, { title: `${c.title} is back`, body: 'It is taking clips again.', dedupe: `camp-resumed:${id}:${t}` })
       break
     }
     case 'end': {
       if (!['live', 'paused'].includes(c.status)) throw new HttpError(409, 'Only live or paused campaigns can end.')
       await set('ended', a.note ?? null)
+      // an older campaign that was funded into its own pool: what is left goes back to the brand's balance
+      const back = c.brand_user_id ? await releasePool(c.brand_user_id, id) : 0
       await notifyFavoriters(id, { title: `${c.title} has ended`, body: 'It is no longer taking clips.', dedupe: `camp-ended:${id}` })
-      if (c.brand_user_id) await notify(c.brand_user_id, { kind: 'campaign', title: `${c.title} has ended`, body: 'Unspent budget can be refunded: contact support.', href: '/brand/campaigns', dedupe: `camp-ended-owner:${id}` })
+      if (c.brand_user_id) await notify(c.brand_user_id, { kind: 'campaign', title: `${c.title} has ended`, body: back > 0 ? `$${(back / 100).toFixed(2)} that was not spent went back to your balance.` : 'Nothing more will be spent on it. Your balance is untouched.', href: '/brand/campaigns', dedupe: `camp-ended-owner:${id}` })
       break
     }
     case 'delete': {

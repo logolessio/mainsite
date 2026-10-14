@@ -2,6 +2,7 @@
 
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useRef } from 'react'
+import { useDesign } from '@/components/shell/design-provider'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 
 /** Moves its children vertically at a different speed than the page. */
@@ -16,8 +17,9 @@ export function Parallax({
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const { reduced } = useMotionPrefs()
+  const { scrollEffects } = useDesign()
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
-  const y = useTransform(scrollYProgress, [0, 1], reduced ? [0, 0] : [distance, -distance])
+  const y = useTransform(scrollYProgress, [0, 1], reduced || !scrollEffects ? [0, 0] : [distance, -distance])
   return (
     <div ref={ref} className={className}>
       <motion.div style={{ y }} className="will-change-transform">{children}</motion.div>
@@ -29,7 +31,8 @@ export function Parallax({
 export function DriftWord({ text, from = '10%', to = '-30%' }: { text: string; from?: string; to?: string }) {
   const ref = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
-  const x = useTransform(scrollYProgress, [0, 1], [from, to])
+  const { scrollEffects } = useDesign()
+  const x = useTransform(scrollYProgress, [0, 1], scrollEffects ? [from, to] : [from, from])
   return (
     <div ref={ref} aria-hidden="true" className="pointer-events-none overflow-hidden py-6 select-none">
       <motion.p

@@ -6,7 +6,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react'
 import { Field, Input } from '@/components/ui/fields'
 import { GlassTabs } from '@/components/ui/glass-tabs'
 import { calmWasAutomatic, clearCalmChoice, getCalmChoice, getLargeText, setCalm, setLargeText, subscribeCalm } from '@/lib/calm'
-import { DeleteCard, PayPalCard } from './account-cards'
+import { DeleteCard } from './account-cards'
 import { ActionButton, Card } from './ui'
 
 type Me = { email: string; hasPassword: boolean }
@@ -36,7 +36,6 @@ export function SettingsPanel({ role }: { role: 'clipper' | 'brand' }) {
 
       <Display />
 
-      {role === 'clipper' && <PayPalCard />}
 
       <PasswordCard me={me} />
 

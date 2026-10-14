@@ -33,7 +33,7 @@ export default async function Page() {
   const steps = [
     { label: 'Write your bio', body: 'A line or two about you, then pick your colours and font', href: '/dashboard/profile', done: Boolean(profile?.bio.trim()) },
     { label: 'Link your clipping accounts', body: 'TikTok, YouTube or Instagram. You choose if the public sees them', href: '/dashboard/accounts', done: Boolean(profile && profile.links_json !== '[]') },
-    { label: 'Add your PayPal email', body: 'So you can withdraw your earnings', href: '/dashboard/payouts', done: payEmail },
+    { label: 'Add your PayPal email', body: 'So you can withdraw your earnings', href: '/dashboard/earnings#withdraw', done: payEmail },
     { label: 'Join your first campaign', body: 'Pick something you would actually clip', href: '/', done: clips > 0 },
   ]
   const done = steps.filter((s) => s.done).length
@@ -51,7 +51,7 @@ export default async function Page() {
           </p>
           <p className="mt-5 text-[15px] text-paper/50">{b.available > 0 ? 'Ready when you are.' : 'Earnings land here once your clips are approved.'}</p>
           <div className="mt-6 flex flex-wrap gap-2">
-            <ActionLink href="/dashboard/payouts">Withdraw</ActionLink>
+            <ActionLink href="/dashboard/earnings#withdraw">Withdraw</ActionLink>
             <ActionLink href="/dashboard/earnings" variant="ghost">
               See earnings
             </ActionLink>
@@ -106,6 +106,9 @@ export default async function Page() {
             <div className="h-px bg-paper transition-all duration-700" style={{ width: `${(done / steps.length) * 100}%` }} />
           </div>
           <Checklist items={steps} />
+          <ActionLink href="/dashboard/setup" variant="ghost" className="mt-5">
+            Open the full guide
+          </ActionLink>
         </section>
       </div>
     </>

@@ -26,7 +26,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
 
   if (parsed.data.action === 'reject') {
     await reverseWithdrawal(id, 'failed', `Declined: ${parsed.data.note}`)
-    await notify(p.user_id, { kind: 'payout', title: 'Your withdrawal was not approved', body: `${parsed.data.note} Your balance is unchanged.`, href: '/dashboard/payouts', dedupe: `payout-declined:${id}` })
+    await notify(p.user_id, { kind: 'payout', title: 'Your withdrawal was not approved', body: `${parsed.data.note} Your balance is unchanged.`, href: '/dashboard/earnings#withdraw', dedupe: `payout-declined:${id}` })
     await audit(actor, 'payout.reject', id, parsed.data.note, ip)
     return json({ ok: true })
   }

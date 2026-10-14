@@ -16,12 +16,14 @@ const HUE: Record<string, number> = {
   'first-approved': 146, 'approved-25': 172, 'views-1k': 208, 'views-100k': 322, 'views-1m': 44,
   'first-earn': 42, 'earn-1k': 292, banner: 220, palette: 338, accent: 190, typeface: 250, bio: 18,
   linked: 156, collector: 350, showcase: 46, week: 100, month: 234, founding: 40, launched: 2, completionist: 280,
+  'views-10m': 268, 'earn-10k': 152, 'clip-1000': 46, year: 196, team: 350,
 }
 
+/** Everything is black, white and grey except the legendary badges, which keep their gold rim and their own colour. */
 const RIM: Record<Rarity, [string, string]> = {
-  common: ['#f6c796', '#a2602a'],
-  rare: ['#f6f8fc', '#8c93a8'],
-  epic: ['#dccfff', '#6a46e2'],
+  common: ['#cfcfd6', '#5c5c65'],
+  rare: ['#ededf1', '#8a8a95'],
+  epic: ['#ffffff', '#b4b4be'],
   legendary: ['#fff6c2', '#d58f14'],
 }
 
@@ -202,6 +204,34 @@ const GLYPH: Record<string, (g: G) => ReactNode> = {
       <rect x="7.6" y="17.8" width="8.8" height="3" rx="1.2" fill={W} />
     </g>
   ),
+  'views-10m': ({ ink }) => (
+    <g>
+      <path d="M12 2.4c3.1 2.4 4.7 5.9 4.7 9.8l-2 3.4H9.3l-2-3.4c0-3.9 1.6-7.4 4.7-9.8Z" fill={W} />
+      <circle cx="12" cy="9.2" r="1.9" fill={ink} />
+      <path d="M7.4 11.6 4.6 16l3.9-1ZM16.6 11.6 19.4 16l-3.9-1Z" fill={W} />
+      <path d="M10.2 17.4h3.6L12 21.8Z" fill={W} />
+    </g>
+  ),
+  'earn-10k': ({ ink }) => (
+    <g>
+      <path d="M7 3.6h10l4.6 5.6L12 21 2.4 9.2Z" fill={W} />
+      <path d="M2.4 9.2h19.2M9.2 3.6 7.6 9.2 12 21l4.4-11.8-1.6-5.6" fill="none" stroke={ink} strokeWidth="1.2" strokeLinejoin="round" />
+    </g>
+  ),
+  'clip-1000': () => <path d="M13.8 2 5 13.6h5.6L9.4 22 19 9.6h-5.8Z" fill={W} />,
+  year: ({ ink }) => (
+    <g>
+      <rect x="3.4" y="4.6" width="17.2" height="16" rx="2.6" fill={W} />
+      <rect x="3.4" y="4.6" width="17.2" height="4.2" rx="2" fill={ink} opacity=".55" />
+      <path d="m12 10.2 1.5 3 3.3.5-2.4 2.3.6 3.3-3-1.6-3 1.6.6-3.3-2.4-2.3 3.3-.5Z" fill={ink} />
+    </g>
+  ),
+  team: ({ ink }) => (
+    <g>
+      <path d="M12 2.4 20 5.6v5.9c0 4.9-3.3 8.4-8 10-4.7-1.6-8-5.1-8-10V5.6Z" fill={W} />
+      <path d="m8.2 12.2 2.8 2.8 4.9-5.4" fill="none" stroke={ink} strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
+    </g>
+  ),
 }
 
 export function BadgeArt({ badge, size = 40, locked = false, className }: { badge: BadgeDef; size?: number; locked?: boolean; animated?: boolean; className?: string }) {
@@ -209,9 +239,10 @@ export function BadgeArt({ badge, size = 40, locked = false, className }: { badg
   const r = badge.rarity
   const h = HUE[badge.id] ?? 210
   const rim = locked ? ['#5a5a63', '#33333a'] : RIM[r]
-  const top = locked ? '#43434b' : `hsl(${h} 78% 63%)`
-  const bottom = locked ? '#27272d' : `hsl(${h} 72% 36%)`
-  const ink = locked ? '#1c1c21' : `hsl(${h} 70% 21%)`
+  const colour = r === 'legendary' && !locked
+  const top = locked ? '#43434b' : colour ? `hsl(${h} 78% 63%)` : '#55555d'
+  const bottom = locked ? '#27272d' : colour ? `hsl(${h} 72% 36%)` : '#26262b'
+  const ink = locked ? '#1c1c21' : colour ? `hsl(${h} 70% 21%)` : '#151518'
   const glyph = GLYPH[badge.id]
   const s = SCALE[r]
   const inner = `translate(32 32) scale(${s}) translate(-32 -32)`
@@ -261,8 +292,8 @@ export function BadgeArt({ badge, size = 40, locked = false, className }: { badg
 }
 
 export const RARITY_STYLE: Record<Rarity, { label: string; text: string; ring: string; glow: string }> = {
-  common: { label: 'Common', text: 'text-[#e0a06a]', ring: 'border-[#c9803f]/40', glow: 'rgb(201 128 63 / 0.22)' },
-  rare: { label: 'Rare', text: 'text-[#d7dbea]', ring: 'border-[#cfd2dd]/45', glow: 'rgb(207 210 221 / 0.2)' },
-  epic: { label: 'Epic', text: 'text-[#b9a6ff]', ring: 'border-[#9b87ff]/55', glow: 'rgb(155 135 255 / 0.3)' },
+  common: { label: 'Common', text: 'text-[#9d9da6]', ring: 'border-[#9d9da6]/35', glow: 'rgb(157 157 166 / 0.16)' },
+  rare: { label: 'Rare', text: 'text-[#cfcfd6]', ring: 'border-[#cfcfd6]/45', glow: 'rgb(207 207 214 / 0.18)' },
+  epic: { label: 'Epic', text: 'text-white', ring: 'border-white/55', glow: 'rgb(255 255 255 / 0.22)' },
   legendary: { label: 'Legendary', text: 'text-[#ffd45c]', ring: 'border-[#ffd45c]/60', glow: 'rgb(255 212 92 / 0.34)' },
 }

@@ -1,55 +1,51 @@
 import type { Metadata } from 'next'
 import { AddFunds } from '@/components/app/add-funds'
 import { CaptureOnReturn } from '@/components/app/capture-on-return'
-import { FundCampaign } from '@/components/app/fund-campaign'
 import { PayCampaignButton } from '@/components/app/pay-campaign-button'
-import { SectionTabs } from '@/components/app/section-tabs'
 import { Badge, DataTable, EmptyState } from '@/components/app/table'
-import { Card, PageHeader, StatCard } from '@/components/app/ui'
-import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
+import { Card, PageHeader } from '@/components/app/ui'
 import { db } from '@/lib/db'
 import { money } from '@/lib/format'
 import { balances } from '@/lib/ledger'
-import { costFor } from '@/lib/ledger-math'
+import { costFor, startNeeded } from '@/lib/ledger-math'
 import { paypalReady } from '@/lib/paypal'
-import { SITE } from '@/lib/site'
 import { pageUser } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Funding | logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Balance | logoless', robots: { index: false } }
 
-type Row = { id: string; amount_cents: number; status: string; created_at: number }
 type Waiting = { id: string; title: string; budget_cents: number }
-type Camp = { id: string; title: string; status: string; funded: number; spent: number; pool: number }
+type Move = { id: string; kind: string; amount_cents: number; created_at: number; title: string | null }
 
-// The pool holds what clippers get plus our fee on top. These show the clippers' part.
-const forClippers = (gross: number) => Math.floor((gross * 100) / (100 + SITE.platformFeePct))
+const KIND: Record<string, { label: string; tone: 'good' | 'neutral' | 'warn' }> = {
+  topup: { label: 'Added with PayPal', tone: 'good' },
+  earning_spend: { label: 'Paid to clippers', tone: 'neutral' },
+  campaign_spend: { label: 'Put into a campaign', tone: 'neutral' },
+  pool_release: { label: 'Returned from a campaign', tone: 'good' },
+  refund: { label: 'Refunded', tone: 'warn' },
+}
 
+/** One balance for every campaign: add money here, and clippers are paid out of it as they earn. */
 export default async function Page({ searchParams }: { searchParams: Promise<{ funded?: string; cancelled?: string; paypal?: string; token?: string }> }) {
   const user = await pageUser()
   const q = await searchParams
   const d = await db()
-  const [b, ready, waiting, rows, camps] = await Promise.all([
+  const [b, ready, waiting, moves, rate] = await Promise.all([
     balances(user.id),
     paypalReady(),
     d.prepare("SELECT id, title, budget_cents FROM campaigns WHERE brand_user_id = ?1 AND status = 'awaiting_payment' ORDER BY updated_at DESC").bind(user.id).all<Waiting>(),
-    d.prepare("SELECT id, amount_cents, status, created_at FROM topups WHERE user_id = ?1 AND status <> 'open' ORDER BY created_at DESC LIMIT 100").bind(user.id).all<Row>(),
     d
-      .prepare(
-        `SELECT c.id, c.title, c.status,
-           COALESCE((SELECT SUM(amount_cents) FROM ledger WHERE campaign_id = c.id AND account = 'campaign' AND kind IN ('campaign_fund')), 0) AS funded,
-           COALESCE((SELECT -SUM(amount_cents) FROM ledger WHERE campaign_id = c.id AND account = 'campaign' AND kind = 'spend'), 0) AS spent,
-           COALESCE((SELECT SUM(amount_cents) FROM ledger WHERE campaign_id = c.id AND account = 'campaign'), 0) AS pool
-         FROM campaigns c WHERE c.brand_user_id = ?1 AND c.status IN ('paid','live','paused','ended') ORDER BY c.updated_at DESC`,
-      )
+      .prepare("SELECT l.id, l.kind, l.amount_cents, l.created_at, c.title FROM ledger l LEFT JOIN campaigns c ON c.id = l.campaign_id WHERE l.user_id = ?1 AND l.account = 'brand' ORDER BY l.created_at DESC LIMIT 100")
       .bind(user.id)
-      .all<Camp>(),
+      .all<Move>(),
+    d.prepare("SELECT COALESCE(AVG(rate_cents), 0) AS r FROM campaigns WHERE brand_user_id = ?1 AND status IN ('live','paused','awaiting_payment')").bind(user.id).first<{ r: number }>(),
   ])
-  const totalLeft = camps.results.reduce((a, c) => a + forClippers(c.pool), 0)
+  const avg = rate?.r ?? 0
+  // what the balance would pay for: the fee comes on top of what clippers earn
+  const views = avg > 0 ? Math.floor((b.brand / (1 + 0.15) / avg) * 1000) : 0
 
   return (
     <>
-      <SectionTabs group="account" />
-      <PageHeader title="Funding" sub="Add money to your balance with PayPal, then put it into campaigns. Clippers are paid from the campaign, and our fee is added on top." />
+      <PageHeader title="Balance" sub="One balance for all your campaigns. Clippers are paid out of it as they earn, and we cover PayPal's fees on every deposit." />
       {q.paypal === 'return' && q.token && <CaptureOnReturn orderId={q.token} />}
       {q.funded && (
         <p role="status" className="mb-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/[0.05] px-4 py-3 text-sm">
@@ -58,78 +54,48 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
       )}
       {q.cancelled && <p role="status" className="mb-4 rounded-2xl border border-line px-4 py-3 text-sm text-mute">Payment cancelled. You have not been charged.</p>}
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Your balance" value={money(b.brand)} note="Ready to put into campaigns" />
-        <StatCard label="Left for clippers" value={money(totalLeft)} note="Across your running campaigns" />
-        <StatCard label="Campaigns" value={String(camps.results.length)} />
+      <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
+        <div className="border-t border-line-strong pt-5">
+          <p className="text-[15px] text-paper/50">Your balance</p>
+          <p className="mt-6 font-display text-6xl leading-none tracking-[-0.045em] tabular-nums md:text-[4.5rem]">{money(b.brand)}</p>
+          <p className="mt-5 text-[15px] text-paper/50">{views > 0 ? `Pays for about ${views.toLocaleString()} more verified views at your current rates.` : 'Add funds and start a campaign to see what it will pay for.'}</p>
+        </div>
+        <Card title="Add funds">
+          <AddFunds ready={ready} />
+        </Card>
       </div>
 
       {waiting.results.length > 0 && (
         <div className="mt-8 grid gap-3">
-          {waiting.results.map((w) => (
-            <Card key={w.id}>
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p className="text-lg">{w.title} is approved and waiting for you</p>
-                  <p className="mt-1 text-sm text-mute">
-                    {money(w.budget_cents)} for clippers + {money(costFor(w.budget_cents) - w.budget_cents)} fee = {money(costFor(w.budget_cents))}. {b.brand >= costFor(w.budget_cents) ? 'Your balance covers it.' : `Add ${money(costFor(w.budget_cents) - b.brand)} or more below first.`}
-                  </p>
+          {waiting.results.map((w) => {
+            const need = startNeeded(w.budget_cents)
+            return (
+              <Card key={w.id}>
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <p className="text-lg">{w.title} is approved</p>
+                    <p className="mt-1 text-sm text-mute">
+                      {b.brand >= need ? 'Your balance covers the start. Nothing is charged until clippers earn.' : `Add ${money(need - b.brand)} or more first. Up to ${money(costFor(w.budget_cents))} can be spent in total, only as clippers earn.`}
+                    </p>
+                  </div>
+                  <PayCampaignButton id={w.id} />
                 </div>
-                <PayCampaignButton id={w.id} amount={money(costFor(w.budget_cents))} />
-              </div>
-            </Card>
-          ))}
+              </Card>
+            )
+          })}
         </div>
       )}
 
-      <h2 className="mt-10 mb-4 font-display text-2xl">Add funds</h2>
-      <Card>
-        <AddFunds ready={ready} />
-      </Card>
-
-      <h2 className="mt-10 mb-4 font-display text-2xl">Your campaigns</h2>
-      <div className="grid gap-3">
-        {camps.results.length === 0 && (
-          <Card>
-            <EmptyState icon="CreditCard" title="Nothing to fund yet" body="Once a campaign is paid for you can add more money to it here." />
-          </Card>
-        )}
-        {camps.results.map((c) => {
-          const left = forClippers(c.pool)
-          const spent = forClippers(c.spent)
-          const total = left + spent
-          const pct = total > 0 ? Math.min(100, Math.round((spent / total) * 100)) : 0
-          return (
-            <Card key={c.id}>
-              <div className="flex flex-wrap items-start justify-between gap-5">
-                <div className="min-w-0 flex-1">
-                  <p className="flex flex-wrap items-center gap-2 text-lg">
-                    {c.title} <Badge tone={CAMPAIGN_STATUS[c.status]?.tone}>{CAMPAIGN_STATUS[c.status]?.brand ?? c.status}</Badge>
-                  </p>
-                  <p className="mt-1 text-sm text-mute">
-                    {money(left)} left for clippers · {money(spent)} paid out so far
-                  </p>
-                  <div className="mt-3 h-2 max-w-md overflow-hidden rounded-full bg-white/10" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Share of the budget paid out">
-                    <div className="h-full rounded-full bg-paper" style={{ width: `${pct}%` }} />
-                  </div>
-                </div>
-                {c.status !== 'ended' && <FundCampaign id={c.id} title={c.title} />}
-              </div>
-            </Card>
-          )
-        })}
-      </div>
-
-      <h2 className="mt-10 mb-4 font-display text-2xl">Payment history</h2>
+      <h2 className="mt-12 mb-4 font-display text-2xl">History</h2>
       <DataTable
-        rows={rows.results}
+        rows={moves.results}
         columns={[
           { key: 'd', header: 'Date', render: (r) => new Date(r.created_at * 1000).toLocaleDateString('en-US', { dateStyle: 'medium' }) },
-          { key: 'c', header: 'What', render: () => 'Added with PayPal' },
-          { key: 'a', header: 'Amount', render: (r) => money(r.amount_cents), className: 'text-right' },
-          { key: 's', header: 'Status', render: (r) => <Badge tone={r.status === 'paid' ? 'good' : r.status === 'disputed' ? 'bad' : 'neutral'}>{r.status}</Badge> },
+          { key: 'k', header: 'What', render: (r) => <Badge tone={KIND[r.kind]?.tone ?? 'neutral'}>{KIND[r.kind]?.label ?? r.kind}</Badge> },
+          { key: 'c', header: 'Campaign', render: (r) => r.title ?? '' },
+          { key: 'a', header: 'Amount', render: (r) => <span className={r.amount_cents < 0 ? 'text-mute' : ''}>{r.amount_cents < 0 ? '-' : '+'}{money(Math.abs(r.amount_cents))}</span>, className: 'text-right tabular-nums' },
         ]}
-        empty={<EmptyState icon="CreditCard" title="No payments yet" body="Money you add with PayPal appears here." />}
+        empty={<EmptyState icon="CreditCard" title="Nothing yet" body="Money you add with PayPal, and what clippers are paid, appears here." />}
       />
     </>
   )
