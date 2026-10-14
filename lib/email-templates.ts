@@ -144,6 +144,28 @@ export function inviteEmail(artistName: string, url: string, test = false): Mail
   }
 }
 
+/** Sent to the owner when a logoless admin deletes their account. The reason is what the admin typed, escaped, so it cannot inject HTML. */
+export function accountDeletedEmail(name: string, reason: string, money: string, test = false): Mail {
+  const first = name.trim().slice(0, 60) || 'there'
+  const why = reason.trim().slice(0, 280)
+  const note = 'This was done by a person on the logoless team. If you think it is a mistake, write to us through the contact page and we will look again.'
+  const reasonBlock = why ? `<table role="presentation" align="center" width="100%" cellpadding="0" cellspacing="0" style="margin:0 auto 22px;max-width:380px"><tr><td align="left" style="background:#111114;border:1px solid #26262b;border-radius:16px;padding:14px 18px"><p style="margin:0 0 6px;font:600 11px/1 ${SANS};letter-spacing:.12em;text-transform:uppercase;color:#80808a">Reason given</p><p style="margin:0;font:400 15px/1.5 ${SANS};color:#e4e4e8">${esc(why)}</p></td></tr></table>` : ''
+  const moneyBlock = money ? `<p style="margin:0 auto 24px;max-width:380px;font:400 14px/1.55 ${SANS};color:#a2a2a9">${esc(money)}</p>` : ''
+  return {
+    subject: `${test ? '[TEST] ' : ''}Your logoless account has been deleted`,
+    text: `${test ? 'THIS IS A TEST from the admin panel.\n\n' : ''}Hi ${first},\n\nA member of the logoless team has deleted your account.${why ? `\n\nReason given: ${why}` : ''}${money ? `\n\n${money}` : ''}\n\nYour profile, linked accounts and saved details have been removed. Records we are required to keep, like payment history, stay without your name.\n\nIf you think this is a mistake, write to us: ${SITE_URL}/contact\n\nlogoless`,
+    html: layout({
+      preheader: 'A member of the logoless team deleted your account.',
+      tag: test ? 'Test' : 'Account',
+      title: 'Your account was deleted',
+      intro: `Hi ${first}. A member of the logoless team has deleted your account. Your profile, linked accounts and saved details are gone.`,
+      body: `${reasonBlock}${moneyBlock}${button(`${SITE_URL}/contact`, 'Contact us')}`,
+      note,
+      test,
+    }),
+  }
+}
+
 /** A plain message to prove sending works. */
 export function plainTestEmail(): Mail {
   return {
@@ -164,5 +186,6 @@ export const PREVIEWS = [
   { id: 'signup', label: 'Sign-up code', make: () => codeEmail('482 913'.replace(' ', ''), 'signup', false, { place: 'London, United Kingdom', device: 'Chrome on macOS' }) },
   { id: 'reset', label: 'Password reset', make: () => codeEmail('730256', 'reset', false, { place: 'Singapore', device: 'Safari on iPhone' }) },
   { id: 'already', label: 'Already a member', make: () => alreadyMemberEmail(false, { place: 'Berlin, Germany', device: 'Firefox on Windows' }) },
+  { id: 'deleted', label: 'Account deleted', make: () => accountDeletedEmail('Sam', 'Selling views against the campaign rules.', 'Your remaining balance was returned to the campaigns it came from.') },
   { id: 'plain', label: 'Delivery test', make: () => plainTestEmail() },
 ] as const

@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Activity, BarChart3, Banknote, CheckCircle2, Clapperboard, Copy, Eye, EyeOff, FileText, Loader2, Megaphone, Pencil, Search, Settings, ShieldCheck, Shuffle, Users, Wrench, X, XCircle } from 'lucide-react'
+import { Activity, Banknote, BarChart3, CheckCircle2, Clapperboard, Copy, Eye, EyeOff, FileText, Loader2, Mail, Megaphone, Palette, Pencil, Search, Settings, ShieldCheck, Shuffle, Users, Wrench, X, XCircle } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useCopy } from '@/components/shell/copy-provider'
@@ -108,10 +108,12 @@ export function ToolsMenu() {
     ['/admin/submissions', 'Clips', Clapperboard, counts.clips ?? 0],
     ['/admin/payouts', 'Payouts', Banknote, counts.payouts ?? 0],
     ['/admin/users', 'Users', Users, 0],
+    ['/admin/inbox', 'Inbox', Mail, 0],
     ['/admin/logs', 'Logs', Activity, 0],
     ['/admin/text', 'Site text', FileText, 0],
     ['/admin/keys', 'Keys', ShieldCheck, 0],
     ['/admin/settings', 'Settings', Settings, 0],
+    ['/admin/design', 'Design', Palette, 0],
   ] as const
 
   return (

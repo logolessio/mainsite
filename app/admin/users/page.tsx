@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { PurgeDeletions } from '@/components/admin/purge-deletions'
+import { DeleteAccountButton } from '@/components/admin/delete-account-button'
 import { AdminButton } from '@/components/admin/ui'
 import { money, when } from '@/lib/format'
 import { Badge } from '@/components/app/table'
@@ -40,7 +41,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
   const t = nowSec()
   const d = await db()
   const waiting = (await d.prepare("SELECT value FROM settings WHERE key LIKE 'deletion:%'").all<{ value: string }>()).results.map((r) => { try { return (JSON.parse(r.value) as { at: number }).at } catch { return t } })
-  const where: string[] = []
+  const where: string[] = ["u.email NOT LIKE 'deleted-%@deleted.invalid'"] // accounts already deleted are not listed
   const args: unknown[] = []
   if (q) {
     where.push("(u.email LIKE ?1 OR p.handle LIKE ?1 OR p.display_name LIKE ?1)")
@@ -115,6 +116,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
                     ) : (
                       <AdminButton url={`/api/admin/users/${u.id}`} data={{ action: 'unflag' }}>Clear checks</AdminButton>
                     )}
+                    <DeleteAccountButton id={u.id} email={u.email} />
                   </div>
                 )}
               </div>

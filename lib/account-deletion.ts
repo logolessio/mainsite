@@ -89,7 +89,13 @@ export async function purgeDue() {
     try {
       const del = JSON.parse(r.value) as Deletion
       if (del.at <= cutoff) {
-        await purgeAccount(r.key.slice('deletion:'.length), del)
+        const id = r.key.slice('deletion:'.length)
+        const blocked = await deletionBlocker(id)
+        if (blocked) {
+          failed.push(`${id}: ${blocked}`.slice(0, 200))
+          continue
+        }
+        await purgeAccount(id, del)
         n++
       }
     } catch (e) {
@@ -100,4 +106,19 @@ export async function purgeDue() {
     }
   }
   return { removed: n, failed }
+}
+
+/**
+ * Money or work that has to be sorted out by a person before an account can be deleted, or null when it is safe. A brand's balance
+ * and running campaigns are real money, and a waiting withdrawal is not finished: deleting around them would lose it.
+ */
+export async function deletionBlocker(userId: string): Promise<string | null> {
+  const d = await db()
+  const b = await balances(userId)
+  if (b.brand > 0) return `This account still has $${(b.brand / 100).toFixed(2)} in its brand balance. Refund it in PayPal and bring the balance to zero first.`
+  const camp = await d.prepare("SELECT COUNT(*) AS n FROM campaigns WHERE brand_user_id = ?1 AND status IN ('awaiting_payment','paid','live','paused')").bind(userId).first<{ n: number }>()
+  if ((camp?.n ?? 0) > 0) return 'This account has campaigns that are not finished. End them, and refund what is left in their pools, first.'
+  const pay = await d.prepare("SELECT COUNT(*) AS n FROM payouts WHERE user_id = ?1 AND status IN ('pending','review')").bind(userId).first<{ n: number }>()
+  if ((pay?.n ?? 0) > 0) return 'A withdrawal for this account is still waiting. Approve or decline it first.'
+  return null
 }

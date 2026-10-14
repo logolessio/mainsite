@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { usePathname } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { usePreview } from '@/components/shell/preview-provider'
 import { useMounted } from '@/hooks/use-motion-prefs'
 import type { Campaign } from '@/lib/campaigns'
 import { EASE_OUT } from '@/lib/layout'
@@ -16,6 +17,7 @@ export const useCampaignModal = () => useContext(Ctx)
 export function CampaignModalProvider({ children }: { children: React.ReactNode }) {
   const mounted = useMounted()
   const pathname = usePathname()
+  const { stop } = usePreview()
   const [campaign, setCampaign] = useState<Campaign | null>(null)
   const panel = useRef<HTMLDivElement>(null)
   const returnTo = useRef<HTMLElement | null>(null)
@@ -25,9 +27,10 @@ export function CampaignModalProvider({ children }: { children: React.ReactNode 
     setCampaign(c)
   }, [])
   const close = useCallback(() => {
+    stop() // leaving a campaign ends its music
     setCampaign(null)
     returnTo.current?.focus()
-  }, [])
+  }, [stop])
 
   useEffect(() => {
     if (!campaign) return
