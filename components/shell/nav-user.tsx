@@ -92,7 +92,7 @@ export function Avatar({ src, name, size = 40, className }: { src: string | null
 }
 
 /** Dashboard button, profile icon with a hover card, and the notification bell. Shown only when signed in. */
-export function NavUserActions({ onNavigate }: { onNavigate?: () => void }) {
+export function NavUserActions({ onNavigate, menuOpen = false }: { onNavigate?: () => void; menuOpen?: boolean }) {
   const { user } = useNavUser()
   if (!user?.signedIn) return null
   return (
@@ -106,12 +106,12 @@ export function NavUserActions({ onNavigate }: { onNavigate?: () => void }) {
       >
         Dashboard
       </TransitionLink>
-      <ProfileIcon onNavigate={onNavigate} />
+      <ProfileIcon onNavigate={onNavigate} menuOpen={menuOpen} />
     </>
   )
 }
 
-function ProfileIcon({ onNavigate }: { onNavigate?: () => void }) {
+function ProfileIcon({ onNavigate, menuOpen }: { onNavigate?: () => void; menuOpen: boolean }) {
   const { user } = useNavUser()
   const [open, setOpen] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -126,12 +126,13 @@ function ProfileIcon({ onNavigate }: { onNavigate?: () => void }) {
     timer.current = setTimeout(() => setOpen(false), 140)
   }
   return (
-    <div className="relative" onPointerEnter={(e) => e.pointerType === 'mouse' && show()} onPointerLeave={(e) => e.pointerType === 'mouse' && hide()} onFocus={show} onBlur={hide}>
+    // the preview is for a mouse or the keyboard only, and never while the menu is open (the menu already shows you)
+    <div className="relative" onPointerEnter={(e) => e.pointerType === 'mouse' && show()} onPointerLeave={(e) => e.pointerType === 'mouse' && hide()} onFocus={(e) => (e.target as HTMLElement).matches(':focus-visible') && show()} onBlur={hide}>
       <TransitionLink href={`/@${p.handle}`} onClick={onNavigate} aria-label={`Your profile, @${p.handle}`} className="block rounded-full">
         <Avatar src={p.avatar} name={p.displayName} size={44} />
       </TransitionLink>
       <AnimatePresence>
-        {open && (
+        {open && !menuOpen && (
           <motion.div
             initial={{ opacity: 0, y: 8, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
