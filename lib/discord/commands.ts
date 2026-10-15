@@ -143,7 +143,7 @@ export const COMMANDS = [
     default_member_permissions: '8',
     options: [
       { type: 1, name: 'stats', description: 'The site at a glance' },
-      { type: 1, name: 'queue', description: 'Clips waiting for a decision, with buttons' },
+      { type: 1, name: 'queue', description: 'How many clips are waiting, and for which campaigns' },
       { type: 1, name: 'lookup', description: 'Look someone up', options: [{ type: S, name: 'who', description: 'A @handle or an email', required: true }] },
       { type: 1, name: 'announce', description: 'Post an announcement in #news', options: [{ type: S, name: 'title', description: 'Headline', required: true, max_length: 200 }, { type: S, name: 'text', description: 'The message', required: true, max_length: 1500 }] },
       { type: 1, name: 'update', description: 'Post a product update in #updates', options: [{ type: S, name: 'title', description: 'Headline', required: true, max_length: 200 }, { type: S, name: 'text', description: 'What changed', required: true, max_length: 1500 }] },
@@ -481,18 +481,25 @@ async function admin(i: Interaction): Promise<Reply> {
       })
     }
     case 'queue': {
-      const rows = (await d.prepare("SELECT s.id, s.platform, s.url, c.title, p.handle FROM submissions s JOIN campaigns c ON c.id = s.campaign_id LEFT JOIN profiles p ON p.user_id = s.user_id WHERE s.status = 'pending' ORDER BY s.created_at LIMIT 5").all<{ id: string; platform: string; url: string; title: string; handle: string | null }>()).results
-      if (!rows.length) return embedReply({ description: 'No clips are waiting. 🎉', color: GREEN })
-      // one message per clip, each with its own buttons
-      const cfg = await getDiscordConfig()
-      const channel = i.channel_id ?? cfg.channels.clips
-      for (const r of rows) {
-        await postMessage(channel, {
-          embeds: [{ title: r.title, url: r.url, description: `${r.platform} · ${r.handle ? `@${r.handle}` : 'someone'}\n${r.url}`, color: WHITE }],
-          components: [{ type: 1, components: [{ type: 2, style: 3, label: 'Approve', custom_id: `adm:clip:approve:${r.id}` }, { type: 2, style: 4, label: 'Decline', custom_id: `adm:clip:reject:${r.id}` }] }],
-        })
-      }
-      return embedReply({ description: `Posted ${rows.length} clip${rows.length > 1 ? 's' : ''} for review.`, color: GREEN })
+      // only a count per campaign: clips are reviewed on the dashboard, never in Discord
+      const rows = (
+        await d
+          .prepare("SELECT c.title, COUNT(*) AS n FROM submissions s JOIN campaigns c ON c.id = s.campaign_id WHERE s.status = 'pending' AND c.id NOT LIKE 'mock-%' GROUP BY c.id ORDER BY n DESC, c.title LIMIT 20")
+          .all<{ title: string; n: number }>()
+      ).results
+      const total = rows.reduce((a, r) => a + r.n, 0)
+      if (!total) return embedReply({ description: 'No clips are waiting. 🎉', color: GREEN })
+      return embedReply(
+        {
+          title: `${total} ${total === 1 ? 'clip is' : 'clips are'} waiting`,
+          description: rows.map((r) => `**${r.title}** · ${r.n}`).join('\n'),
+          color: WHITE,
+          footer: { text: 'Review them on the dashboard' },
+          url: 'https://owner.logoless.io/admin/submissions',
+        },
+        true,
+        [link('Open the clips', 'https://owner.logoless.io/admin/submissions')],
+      )
     }
     case 'lookup': {
       const who = String(opt(i, 'who') ?? '').trim().replace(/^@/, '').toLowerCase()
@@ -615,18 +622,6 @@ async function component(i: Interaction): Promise<Reply> {
     return { type: 6 }
   }
   if (id === 'panel:campaigns') return cmdCampaigns()
-  if (id.startsWith('adm:clip:')) {
-    const [, , action, clipId] = id.split(':')
-    const m = await me(whoami(i).id)
-    if (!m || !(await isTeam(m))) return fail('This is for the logoless team.')
-    if (action === 'reject') return modal(`modal:clipreject:${clipId}`, 'Decline this clip', [{ id: 'reason', label: 'Why? The clipper will see this.', style: 2, min: 3, max: 200 }])
-    const d = await db()
-    const s = await d.prepare("SELECT s.user_id, c.title FROM submissions s JOIN campaigns c ON c.id = s.campaign_id WHERE s.id = ?1 AND s.status = 'pending'").bind(clipId).first<{ user_id: string; title: string }>()
-    if (!s) return { type: 7, data: { content: 'Already decided.', embeds: [], components: [] } }
-    await d.prepare("UPDATE submissions SET status = 'approved', reviewed_by = ?2, reviewed_at = ?3 WHERE id = ?1 AND status = 'pending'").bind(clipId, m.email, nowSec()).run()
-    await notify(s.user_id, { kind: 'submission', title: `Clip approved (${s.title})`, body: 'It is now earning.', href: '/dashboard/submissions', dedupe: `sub-approved:${clipId}` })
-    return { type: 7, data: { content: `✅ Approved by ${m.name || m.handle}.`, embeds: [], components: [] } }
-  }
   return fail('That button is out of date.')
 }
 
@@ -660,18 +655,6 @@ async function modalSubmit(i: Interaction): Promise<Reply> {
     await saveInquiry(inq)
     if (inq.userId) await notify(inq.userId, { kind: 'account', title: `We replied: ${inq.subject}`.slice(0, 120), body: text.slice(0, 200), href: `/inquiry/${inq.id}`, dedupe: `inq-reply-user:${inq.id}:${inq.replies.length}` })
     return say({ content: `<@${inq.discord.userId}>`, embeds: [{ description: text, color: GREEN, author: { name: `${m?.name || u.global_name || u.username} · logoless team` } }], allowed_mentions: { users: [inq.discord.userId] } }, false)
-  }
-  if (id.startsWith('modal:clipreject:')) {
-    const clipId = id.split(':')[2]
-    const m = await me(whoami(i).id)
-    if (!m || !(await isTeam(m))) return fail('This is for the logoless team.')
-    const d = await db()
-    const s = await d.prepare("SELECT s.user_id, s.views_verified, c.title FROM submissions s JOIN campaigns c ON c.id = s.campaign_id WHERE s.id = ?1 AND s.status = 'pending'").bind(clipId).first<{ user_id: string; views_verified: number; title: string }>()
-    if (!s) return fail('Already decided.')
-    const reason = cleanText(value('reason'), 200)
-    await d.prepare("UPDATE submissions SET status = 'rejected', reject_reason = ?2, reviewed_by = ?3, reviewed_at = ?4 WHERE id = ?1").bind(clipId, reason, m.email, nowSec()).run()
-    await notify(s.user_id, { kind: 'submission', title: `A clip was not approved (${s.title})`, body: reason, href: '/dashboard/submissions', dedupe: `sub-rejected:${clipId}` })
-    return say(`❌ Declined: ${reason}`)
   }
   return fail('That form is out of date.')
 }

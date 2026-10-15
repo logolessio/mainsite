@@ -46,7 +46,7 @@ const CHANNELS: { key: ChannelKey; label: string; hint: string; post?: 'getStart
   { key: 'news', label: '#news', hint: 'Announcements you send from Broadcast.' },
   { key: 'system', label: '#system', hint: 'A welcome card for every new member, the moment they finish making their account.' },
   { key: 'updates', label: '#updates', hint: 'Product updates, including features you push live.' },
-  { key: 'clips', label: 'Clips and shout-outs', hint: 'Big earnings, and clips for the team to review.' },
+  { key: 'clips', label: 'Proof', hint: 'Big earnings are celebrated here, as proof that people get paid. Clips are never reviewed in Discord: that is done on the dashboard.' },
   { key: 'logs', label: 'Team log', hint: 'Tickets, reports and admin actions.' },
 ]
 
