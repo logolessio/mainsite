@@ -12,7 +12,7 @@ const admins = (process.env.ADMIN_EMAILS ?? '')
 export const authConfigured = Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET)
 
 /**
- * One sign-in for logoless.io, dev.logoless.io and admin.logoless.io: on those addresses the session cookie is set for the
+ * One sign-in for logoless.io, dev.logoless.io and owner.logoless.io: on those addresses the session cookie is set for the
  * whole domain. Anywhere else (a local machine) it stays on the address it was made on.
  */
 const sharedCookies = (req?: Request) => {
@@ -114,7 +114,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => ({
       if (url.startsWith('/')) return `${baseUrl}${url}`
       try {
         const u = new URL(url)
-        if (u.origin === baseUrl || /^https:\/\/(admin|dev)\.logoless\.io$/.test(u.origin)) return url
+        if (u.origin === baseUrl || /^https:\/\/(owner|admin|dev)\.logoless\.io$/.test(u.origin)) return url
       } catch {
         /* not a URL */
       }

@@ -2,7 +2,7 @@ import { db, nowSec, setting } from './db'
 
 /**
  * Roles are set by the owner, never by the person themselves.
- *  - admin: the admin dashboard (admin.logoless.io): money, people, content.
+ *  - admin: the admin dashboard (owner.logoless.io): money, people, content.
  *  - dev: the developer dashboard (dev.logoless.io): vitals, design options, feature pushes.
  * The addresses in ADMIN_EMAILS are the owner: always both. Everyone else's roles live in the settings table ("roles:<userId>").
  */

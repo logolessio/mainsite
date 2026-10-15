@@ -11,7 +11,7 @@ export default async function Page() {
   await pageDev()
   const host = await requestHost()
   const local = host.startsWith('localhost') || host.startsWith('127.')
-  const admin = local ? '/admin' : 'https://admin.logoless.io/admin'
+  const admin = local ? '/admin' : 'https://owner.logoless.io/admin'
   const dev = local ? '/dev' : 'https://dev.logoless.io/dev'
   const items: PreviewItem[] = [
     { id: 'clipper', title: 'Clipper', note: 'What a creator sees: balance, clips, earnings, profile and the Getting set up guide.', href: '/dashboard' },

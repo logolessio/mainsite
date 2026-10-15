@@ -4,7 +4,7 @@
 export type HostResult = { host: string; ok: boolean; status: number; ms: number; note?: string }
 export type SiteCheckResult = { ok: boolean; hosts: HostResult[]; database: boolean; label: string; at: number }
 
-const HOSTS = ['logoless.io', 'dev.logoless.io', 'admin.logoless.io']
+const HOSTS = ['logoless.io', 'dev.logoless.io', 'owner.logoless.io']
 
 async function ping(host: string): Promise<HostResult> {
   const t0 = performance.now()

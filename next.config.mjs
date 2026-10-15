@@ -60,13 +60,15 @@ const nextConfig = {
     const publicHosts = [{ type: 'host', value: 'logoless.io' }, { type: 'host', value: 'www.logoless.io' }, { type: 'host', value: 'dev.logoless.io' }]
     return [
       // The admin dashboard lives on its own address. Anything that asks for it on another address is sent there.
-      ...publicHosts.map((h) => ({ source: '/admin/:path*', has: [h], destination: 'https://admin.logoless.io/admin/:path*', permanent: false })),
-      { source: '/', has: [{ type: 'host', value: 'admin.logoless.io' }], destination: '/admin', permanent: false },
-      { source: '/login', has: [{ type: 'host', value: 'admin.logoless.io' }], destination: 'https://logoless.io/login?next=https%3A%2F%2Fadmin.logoless.io%2F', permanent: false },
+      ...publicHosts.map((h) => ({ source: '/admin/:path*', has: [h], destination: 'https://owner.logoless.io/admin/:path*', permanent: false })),
+      // admin.logoless.io was the first address of the owner area. It only forwards now.
+      { source: '/:path*', has: [{ type: 'host', value: 'admin.logoless.io' }], destination: 'https://owner.logoless.io/:path*', permanent: false },
+      { source: '/', has: [{ type: 'host', value: 'owner.logoless.io' }], destination: '/admin', permanent: false },
+      { source: '/login', has: [{ type: 'host', value: 'owner.logoless.io' }], destination: 'https://logoless.io/login?next=https%3A%2F%2Fowner.logoless.io%2F', permanent: false },
       // The developer dashboard is the front page of the dev site (add ?site=1 to see the site itself).
       { source: '/', has: [{ type: 'host', value: 'dev.logoless.io' }], missing: [{ type: 'query', key: 'site' }], destination: '/dev', permanent: false },
       { source: '/dev/:path*', has: [{ type: 'host', value: 'logoless.io' }], destination: 'https://dev.logoless.io/dev/:path*', permanent: false },
-      { source: '/dev/:path*', has: [{ type: 'host', value: 'admin.logoless.io' }], destination: 'https://dev.logoless.io/dev/:path*', permanent: false },
+      { source: '/dev/:path*', has: [{ type: 'host', value: 'owner.logoless.io' }], destination: 'https://dev.logoless.io/dev/:path*', permanent: false },
       // Old placeholder pages now live inside the login and forgot-password pages.
       { source: '/campaigns', destination: '/', permanent: true },
       // Pages that were folded into simpler ones.

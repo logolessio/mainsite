@@ -15,7 +15,7 @@ const CHECKS = [
   { id: 'ledger', label: 'Money check', hint: 'Looks for negative balances and for earnings, fees and spending that do not add up.' },
   { id: 'chains', label: 'Tamper check on the logs', hint: 'Re-computes the chain on the admin and text logs. Any edit or deletion shows up.' },
   { id: 'captcha', label: 'Human check (Turnstile)', hint: 'Asks Cloudflare whether the secret key is valid.' },
-  { id: 'cloudflare', label: 'Cloudflare check', hint: 'Asks the Cloudflare edge whether logoless.io, dev.logoless.io and admin.logoless.io all answer, and how fast. Runs by itself after anything important.' },
+  { id: 'cloudflare', label: 'Cloudflare check', hint: 'Asks the Cloudflare edge whether logoless.io, dev.logoless.io and owner.logoless.io all answer, and how fast. Runs by itself after anything important.' },
   { id: 'headers', label: 'Security headers', hint: 'Requests the home page from this browser and checks the security headers are present.' },
   { id: 'email', label: 'Email (Resend)', hint: 'Checks the key and whether your sending domain is verified.' },
   { id: 'auth', label: 'Sign-in', hint: 'Checks the sign-in secret, Google keys and admin emails.' },

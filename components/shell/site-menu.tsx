@@ -1,6 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
+import { ArrowUpRight } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef } from 'react'
@@ -113,22 +114,28 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
 const compact = (n: number) => (n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M` : n >= 10_000 ? `${Math.round(n / 1000)}k` : n.toLocaleString('en-US'))
 const dollars = (cents: number) => `$${Math.floor(cents / 100).toLocaleString('en-US')}`
 
+/** Quiet small print: the tour and the three pages people ask about most. */
 function Legal({ onClose, onTour, className }: { onClose: () => void; onTour: () => void; className?: string }) {
+  const links = [
+    { label: 'Terms', href: LEGAL_LINKS[0].href },
+    { label: 'Privacy', href: LEGAL_LINKS[1].href },
+    { label: 'Payments', href: LEGAL_LINKS[6].href },
+  ]
   return (
-    <div className={cn('flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-mute/80', className)}>
+    <p className={cn('flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[12px] text-mute/75', className)}>
       <button type="button" onClick={onTour} className="transition-colors hover:text-paper">
         Take the tour
       </button>
-      {[LEGAL_LINKS[0], LEGAL_LINKS[1], LEGAL_LINKS[4], LEGAL_LINKS[6]].map((l) => (
+      {links.map((l) => (
         <TransitionLink key={l.href} href={l.href} onClick={onClose} className="transition-colors hover:text-paper">
           {l.label}
         </TransitionLink>
       ))}
-    </div>
+    </p>
   )
 }
 
-/** You, in one pill: your banner, picture, name and badges, a few numbers, and the places you are most likely to go next. */
+/** You, in one pill: your banner, picture, name and badges, three numbers, and the places you are most likely to go next. */
 function ProfilePill({ user, onClose, onTour }: { user: Extract<NavUser, { signedIn: true }>; onClose: () => void; onTour: () => void }) {
   const p = user.profile
   const banner = p.bannerKind === 'image' ? `center/cover url(${p.banner})` : p.bannerKind === 'color' ? p.banner : (BANNER_PRESETS.find((b) => b.id === p.banner)?.css ?? BANNER_PRESETS[0].css)
@@ -137,50 +144,58 @@ function ProfilePill({ user, onClose, onTour }: { user: Extract<NavUser, { signe
     ['Views', compact(user.stats.views)],
     [user.stats.brandCents > 0 ? 'Balance' : 'Earned', dollars(user.stats.brandCents > 0 ? user.stats.brandCents : user.stats.earnedCents)],
   ]
-  const link = 'text-[14px] text-mute transition-colors hover:text-paper'
+  const chip = 'inline-flex h-8 items-center rounded-full bg-white/[0.06] px-3.5 text-[13px] text-paper/80 transition-colors hover:bg-white/[0.12] hover:text-paper'
   return (
-    <div className="overflow-hidden rounded-[28px] border border-line bg-white/[0.03]">
-      <div className="h-14" style={{ background: banner }} />
-      <div className="px-5 pb-5">
-        <TransitionLink href="/dashboard" onClick={onClose} className="group block">
-          <Avatar src={p.avatar} name={p.displayName} size={52} className="-mt-8 border-[3px] border-[#0b0b0d]" />
-          <span className="mt-2 flex items-center gap-1.5">
-            <span className="min-w-0 truncate text-[18px] leading-tight">{p.displayName}</span>
-            {p.badges.length > 0 && (
-              <span className="flex shrink-0 items-center gap-0.5">
-                {p.badges.slice(0, 4).map((id) => (BADGE_BY_ID[id] ? <BadgeStar key={id} badge={BADGE_BY_ID[id]} size={15} /> : null))}
-              </span>
-            )}
-          </span>
-          <span className="block truncate text-[13px] text-mute transition-colors group-hover:text-paper">Open dashboard</span>
-        </TransitionLink>
-        <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-4">
+    <div className="overflow-hidden rounded-[30px] border border-white/[0.09] bg-[#0b0b0d] shadow-[0_30px_60px_-30px_rgb(0_0_0/0.9)]">
+      <div className="relative h-[84px]" style={{ background: banner }}>
+        <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/10 to-[#0b0b0d]" />
+      </div>
+      <div className="relative px-5 pb-5">
+        <div className="-mt-9 flex items-end justify-between gap-3">
+          <Avatar src={p.avatar} name={p.displayName} size={68} className="border-[4px] border-[#0b0b0d]" />
+          <TransitionLink href="/dashboard" onClick={onClose} className="mb-1 inline-flex h-9 items-center gap-1.5 rounded-full bg-paper pr-3 pl-4 text-[13px] font-medium text-ink transition-colors hover:bg-paper/85">
+            Dashboard <ArrowUpRight aria-hidden="true" className="size-3.5" />
+          </TransitionLink>
+        </div>
+        <div className="mt-3.5 flex items-center gap-2">
+          <p className="min-w-0 truncate font-display text-[1.5rem] leading-none tracking-[-0.03em]">{p.displayName}</p>
+          {p.badges.length > 0 && (
+            <span className="flex shrink-0 items-center gap-1">
+              {p.badges.slice(0, 4).map((id) => (BADGE_BY_ID[id] ? <BadgeStar key={id} badge={BADGE_BY_ID[id]} size={18} /> : null))}
+            </span>
+          )}
+        </div>
+        <p className="mt-1.5 text-[13px] text-mute">@{p.handle}</p>
+
+        <dl className="mt-5 grid grid-cols-3 divide-x divide-white/[0.07] rounded-[1.1rem] bg-white/[0.035] py-3.5">
           {stats.map(([k, v]) => (
-            <div key={k}>
-              <dd className="font-display text-[1.35rem] leading-none tabular-nums">{v}</dd>
-              <dt className="mt-1 text-[11px] text-mute">{k}</dt>
+            <div key={k} className="px-4">
+              <dd className="font-display text-[1.3rem] leading-none tabular-nums">{v}</dd>
+              <dt className="mt-1.5 text-[11px] text-mute">{k}</dt>
             </div>
           ))}
         </dl>
-        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 border-t border-line pt-4">
-          <TransitionLink href={`/@${p.handle}`} onClick={onClose} className={link}>
+
+        <nav aria-label="Account" className="mt-4 flex flex-wrap items-center gap-1.5">
+          <TransitionLink href={`/@${p.handle}`} onClick={onClose} className={chip}>
             Profile
           </TransitionLink>
           {user.isAdmin && (
-            <TransitionLink href="/admin" onClick={onClose} className={link}>
+            <TransitionLink href="/admin" onClick={onClose} className={chip}>
               Admin
             </TransitionLink>
           )}
           {(user.isDev || user.isAdmin) && (
-            <TransitionLink href="/dev" onClick={onClose} className={link}>
+            <TransitionLink href="/dev" onClick={onClose} className={chip}>
               Dev
             </TransitionLink>
           )}
-          <button type="button" onClick={() => signOut({ callbackUrl: '/' })} className={link}>
+          <button type="button" onClick={() => signOut({ callbackUrl: '/' })} className="ml-auto px-1.5 text-[13px] text-mute transition-colors hover:text-paper">
             Log out
           </button>
-        </div>
-        <Legal onClose={onClose} onTour={onTour} className="mt-4 border-t border-line pt-4" />
+        </nav>
+
+        <Legal onClose={onClose} onTour={onTour} className="mt-5" />
       </div>
     </div>
   )

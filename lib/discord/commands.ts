@@ -447,7 +447,7 @@ async function admin(i: Interaction): Promise<Reply> {
           { name: 'Owed to clippers', value: usd(r?.owed ?? 0), inline: true },
           { name: 'Fees earned', value: usd(r?.fees ?? 0), inline: true },
         ],
-        url: 'https://admin.logoless.io/admin',
+        url: 'https://owner.logoless.io/admin',
       })
     }
     case 'queue': {
@@ -469,7 +469,7 @@ async function admin(i: Interaction): Promise<Reply> {
       const r = await d.prepare('SELECT u.id FROM users u LEFT JOIN profiles p ON p.user_id = u.id WHERE lower(u.email) = ?1 OR p.handle = ?1 LIMIT 1').bind(who).first<{ id: string }>()
       if (!r) return fail('Nobody found.')
       const e = await profileEmbed(r.id)
-      return embedReply({ ...(e ?? { title: who }), url: `https://admin.logoless.io/admin/people/${r.id}`, footer: { text: 'Open to manage' } })
+      return embedReply({ ...(e ?? { title: who }), url: `https://owner.logoless.io/admin/people/${r.id}`, footer: { text: 'Open to manage' } })
     }
     case 'announce': {
       const cfg = await getDiscordConfig()

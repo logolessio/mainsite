@@ -172,12 +172,12 @@ export function roleChangedEmail(name: string, roles: string[], test = false): M
   const has = roles.length > 0
   const list = roles.join(' and ')
   const links = [
-    roles.includes('Admin') ? `<tr><td style="padding:0 0 8px">${button('https://admin.logoless.io', 'Open the admin dashboard')}</td></tr>` : '',
+    roles.includes('Admin') ? `<tr><td style="padding:0 0 8px">${button('https://owner.logoless.io', 'Open the admin dashboard')}</td></tr>` : '',
     roles.includes('Developer') ? `<tr><td>${button('https://dev.logoless.io', 'Open the developer dashboard')}</td></tr>` : '',
   ].join('')
   return {
     subject: `${test ? '[TEST] ' : ''}${has ? `You are now ${roles.length > 1 ? 'an' : /^[AEIOU]/.test(list) ? 'an' : 'a'} ${list} on logoless` : 'Your logoless team access was removed'}`,
-    text: `${test ? 'THIS IS A TEST from the admin panel.\n\n' : ''}Hi ${first},\n\n${has ? `The owner of logoless gave you the ${list} role.${roles.includes('Admin') ? '\nAdmin dashboard: https://admin.logoless.io' : ''}${roles.includes('Developer') ? '\nDeveloper dashboard: https://dev.logoless.io' : ''}\n\nSign in with the same account you already use.` : 'The owner of logoless removed your team access. Your normal account is unchanged.'}\n\nlogoless`,
+    text: `${test ? 'THIS IS A TEST from the admin panel.\n\n' : ''}Hi ${first},\n\n${has ? `The owner of logoless gave you the ${list} role.${roles.includes('Admin') ? '\nAdmin dashboard: https://owner.logoless.io' : ''}${roles.includes('Developer') ? '\nDeveloper dashboard: https://dev.logoless.io' : ''}\n\nSign in with the same account you already use.` : 'The owner of logoless removed your team access. Your normal account is unchanged.'}\n\nlogoless`,
     html: layout({
       preheader: has ? `You now have the ${list} role.` : 'Your team access was removed.',
       tag: test ? 'Test' : 'Team',
