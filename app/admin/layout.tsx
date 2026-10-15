@@ -19,7 +19,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
         { label: 'Users', href: '/admin/users', icon: 'Users' },
         { label: 'Inbox', href: '/admin/inbox', icon: 'Mail' },
         { label: 'Content', href: '/admin/text', icon: 'FileCheck2', match: ['/admin/email', '/admin/broadcast', '/admin/discord'] },
-        { label: 'System', href: '/admin/logs', icon: 'BarChart3', match: ['/admin/audit', '/admin/keys', '/admin/settings', '/admin/security'] },
+        { label: 'System', href: '/admin/logs', icon: 'BarChart3', match: ['/admin/audit', '/admin/keys', '/admin/settings', '/admin/security', '/admin/api'] },
       ]}
     >
       {children}
