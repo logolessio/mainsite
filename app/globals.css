@@ -565,14 +565,18 @@ li {
   mask-image: radial-gradient(ellipse 80% 70% at 50% 38%, #000 25%, transparent 78%);
 }
 
-/* ---------- the typeface option (Admin > Design): Geist Mono as the main font ---------- */
-html[data-font='mono'] {
-  --font-body: var(--font-mono-face);
-  --font-display-face: var(--font-mono-face);
-}
-html[data-font='mono'] .font-display {
+/* ---------- the typeface option (dev dashboard, Design): which font the whole site is set in ---------- */
+html[data-kind='mono'] .font-display {
   font-weight: 500;
   letter-spacing: -0.045em;
+}
+html[data-kind='serif'] .font-display {
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+/* a face with only one weight must not be faked into bold */
+html[data-font='instrument-serif'] {
+  font-synthesis: none;
 }
 
 /* Larger text (Settings > Text size) */

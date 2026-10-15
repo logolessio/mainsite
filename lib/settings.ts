@@ -5,7 +5,8 @@ export const SETTING_DEFAULTS = {
   payouts_paused: '0', // 1 = nobody can withdraw
   submissions_paused: '0', // 1 = no new clip submissions
   signups_paused: '0', // 1 = no new accounts
-  design_font_mono: '0', // 1 = Geist Mono is the main typeface everywhere
+  design_font_mono: '0', // older switch: 1 = Geist Mono is the main typeface (design_font replaces it)
+  design_font: 'inter', // the typeface for the whole site (an id from lib/fonts.ts)
   design_cover_zoom: '0', // 1 = campaign covers zoom in on hover
   design_cover_border: '0', // 1 = the thin border around campaign covers
   design_cover_bar: '0', // 1 = the bar along the bottom of a cover showing how much budget is left

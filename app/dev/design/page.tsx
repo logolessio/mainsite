@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Switch } from '@/components/admin/switches'
 import { Card, PageHeader } from '@/components/app/ui'
+import { FontPicker } from '@/components/dev/font-picker'
+import { effectiveFont } from '@/lib/fonts'
 import { allSettings } from '@/lib/settings'
 import { pageDev } from '@/lib/user'
 
@@ -16,6 +18,10 @@ export default async function Page() {
   return (
     <>
       <PageHeader title="Design" sub="Everything that was taken out to keep the site clean lives here. Switch any of it back on and it shows up for everyone straight away." />
+      <h2 className="mb-4 font-display text-3xl tracking-[-0.03em]">Typeface</h2>
+      <FontPicker current={effectiveFont(s.design_font, s.design_font_mono)} />
+
+      <h2 className="mt-16 mb-4 font-display text-3xl tracking-[-0.03em]">Everything else</h2>
       <div className="grid max-w-3xl gap-6">
         <Card title="Campaign covers">
           <ul className="divide-y divide-line">
@@ -34,11 +40,6 @@ export default async function Page() {
         <Card title="Background">
           <ul className="divide-y divide-line">
             <Switch endpoint={EP} k="bg_dots" label="Dot landscape" hint="The rolling field of dots behind the site. Off: the moving gradient and faint grid are shown instead." on={on('bg_dots')} />
-          </ul>
-        </Card>
-        <Card title="Typeface">
-          <ul className="divide-y divide-line">
-            <Switch endpoint={EP} k="design_font_mono" label="Geist Mono as the main font" hint="Every page set in the monospace face used for addresses. Off: the standard Inter sans." on={on('design_font_mono')} />
           </ul>
         </Card>
       </div>
