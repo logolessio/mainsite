@@ -24,6 +24,8 @@ export type Inquiry = {
   updated: number
   replies: Reply[]
   adminSeen: boolean
+  /** Set when this conversation is a ticket opened in Discord: the private channel and the person's Discord id. */
+  discord?: { channelId: string; userId: string }
 }
 
 const key = (id: string) => `inq:${id}`

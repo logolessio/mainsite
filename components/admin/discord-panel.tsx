@@ -18,6 +18,8 @@ type Status = {
 
 const input = 'h-10 w-full rounded-xl border border-line-strong bg-ink/80 px-3 font-mono text-xs outline-none focus:border-paper'
 const btn = 'inline-flex h-10 items-center justify-center gap-2 rounded-full px-5 text-sm transition-colors disabled:opacity-40'
+const ghost = `${btn} border border-line-strong hover:bg-paper/10`
+const solid = `${btn} bg-paper font-medium text-ink hover:bg-paper/85`
 
 async function call(data: object) {
   const res = await fetch('/api/admin/discord', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) })
@@ -33,13 +35,26 @@ const Tick = ({ ok, children }: { ok: boolean; children: React.ReactNode }) => (
   </li>
 )
 
-/** Everything to run the Discord bot: what is missing, the address to give Discord, where it posts and which roles it hands out. */
+type ChannelKey = keyof DiscordConfig['channels']
+const CHANNELS: { key: ChannelKey; label: string; hint: string; post?: 'getStarted' | 'rules' | 'site' | 'support' | 'status' }[] = [
+  { key: 'getStarted', label: '#get-started', hint: 'The walkthrough new members see first.', post: 'getStarted' },
+  { key: 'rules', label: '#rules', hint: 'The rules, with buttons to the important pages and channels.', post: 'rules' },
+  { key: 'site', label: '#site', hint: 'The site card.', post: 'site' },
+  { key: 'support', label: '#support', hint: 'The Open a ticket panel.', post: 'support' },
+  { key: 'status', label: '#status', hint: 'A live status card that keeps itself up to date.', post: 'status' },
+  { key: 'news', label: '#news', hint: 'Announcements you send from Broadcast, and new campaigns without an artist channel.' },
+  { key: 'system', label: '#system', hint: 'A welcome card for every new member, the moment they finish making their account.' },
+  { key: 'updates', label: '#updates', hint: 'Product updates, including features you push live.' },
+  { key: 'clips', label: 'Clips and shout-outs', hint: 'Big earnings, and clips for the team to review.' },
+  { key: 'logs', label: 'Team log', hint: 'Tickets, reports and admin actions.' },
+]
+
+/** Everything to run the Discord bot: what is missing, the address to give Discord, where each thing is posted and which roles it hands out. */
 export function DiscordPanel() {
   const [s, setS] = useState<Status | null>(null)
   const [cfg, setCfg] = useState<DiscordConfig | null>(null)
   const [busy, setBusy] = useState('')
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
-  const [panelChannel, setPanelChannel] = useState('')
   const [copied, setCopied] = useState(false)
 
   const load = useCallback(async () => {
@@ -65,19 +80,7 @@ export function DiscordPanel() {
 
   if (!s || !cfg) return <p className="text-sm text-mute">Loading…</p>
   const set = (patch: Partial<DiscordConfig>) => setCfg({ ...cfg, ...patch })
-  const ch = (k: keyof DiscordConfig['channels'], label: string, hint: string) => (
-    <label key={k} className="grid gap-1.5">
-      <span className="text-xs text-mute">{label}</span>
-      <input className={input} inputMode="numeric" value={cfg.channels[k]} onChange={(e) => set({ channels: { ...cfg.channels, [k]: e.target.value.replace(/\D/g, '') } })} placeholder="Channel ID" />
-      <span className="text-[11px] text-mute/70">{hint}</span>
-    </label>
-  )
-  const role = (k: 'linked' | 'clipper' | 'brand' | 'team', label: string) => (
-    <label key={k} className="grid gap-1.5">
-      <span className="text-xs text-mute">{label}</span>
-      <input className={input} inputMode="numeric" value={cfg.roles[k]} onChange={(e) => set({ roles: { ...cfg.roles, [k]: e.target.value.replace(/\D/g, '') } })} placeholder="Role ID" />
-    </label>
-  )
+  const digits = (v: string) => v.replace(/\D/g, '')
 
   return (
     <div className="grid max-w-4xl gap-6">
@@ -110,29 +113,68 @@ export function DiscordPanel() {
               'save your application ID in Cloudflare first.'
             )}
           </li>
-          <li><span className="text-paper">4.</span> Turn on Developer Mode in Discord (Settings, Advanced) so you can right-click a server, channel or role and copy its ID. Fill them in below and save.</li>
-          <li><span className="text-paper">5.</span> Press <b>Register commands</b>. Then drag the bot&apos;s role above the roles it hands out, so it is allowed to give them.</li>
+          <li><span className="text-paper">4.</span> Turn on Developer Mode in Discord (Settings, Advanced), then right-click a server, channel, category or role and copy its ID into the boxes below. Save.</li>
+          <li><span className="text-paper">5.</span> Press <b>Register commands</b>, then <b>Post it</b> next to each channel. Drag the bot&apos;s role above the roles it hands out.</li>
+          <li><span className="text-paper">6.</span> Visibility: make <b>Welcome</b> the only category @everyone can see, and give the <b>Linked members</b> role access to the rest. People get that role the moment they link, which is how the other channels appear for them.</li>
         </ol>
       </Card>
 
-      <Card title="Server, channels and roles" sub="IDs only. Leave a box empty to turn that part off.">
+      <Card title="Server and channels" sub="IDs only. Leave a box empty to turn that part off. “Post it” puts the message in that channel (it is posted again each time you press it).">
         <div className="grid gap-5">
           <label className="grid gap-1.5">
             <span className="text-xs text-mute">Server ID</span>
-            <input className={`${input} max-w-sm`} inputMode="numeric" value={cfg.guildId} onChange={(e) => set({ guildId: e.target.value.replace(/\D/g, '') })} placeholder="Server ID" />
+            <input className={`${input} max-w-sm`} inputMode="numeric" value={cfg.guildId} onChange={(e) => set({ guildId: digits(e.target.value) })} placeholder="Server ID" />
           </label>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {ch('announce', 'Announcements', 'New campaigns and /admin announce go here.')}
-            {ch('clips', 'Clips and shout-outs', 'Big earnings are celebrated here, and /admin queue posts clips to review.')}
-            {ch('leaderboard', 'Leaderboard', 'Reserved for leaderboard posts.')}
-            {ch('logs', 'Team log', 'Messages, reports and admin actions.')}
-            {ch('support', 'Support', 'Where the support panel lives.')}
-          </div>
-          <div className="grid gap-4 sm:grid-cols-4">
-            {role('linked', 'Linked members')}
-            {role('clipper', 'Clippers')}
-            {role('brand', 'Brands')}
-            {role('team', 'Team')}
+          <ul className="grid gap-4">
+            {CHANNELS.map((c) => (
+              <li key={c.key} className="grid gap-1.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end sm:gap-3">
+                <label className="grid gap-1.5">
+                  <span className="text-xs text-mute">{c.label}</span>
+                  <input className={input} inputMode="numeric" value={cfg.channels[c.key]} onChange={(e) => set({ channels: { ...cfg.channels, [c.key]: digits(e.target.value) } })} placeholder="Channel ID" />
+                  <span className="text-[11px] text-mute/70">{c.hint}</span>
+                </label>
+                {c.post && (
+                  <button type="button" disabled={Boolean(busy) || !cfg.channels[c.key]} className={ghost} onClick={() => run(`post-${c.post}`, async () => (await call({ action: 'post', what: c.post }), `Posted in ${c.label}. Save first if you just changed the ID.`))}>
+                    {busy === `post-${c.post}` && <Loader2 className="size-4 animate-spin" />} Post it
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+          <label className="grid gap-1.5">
+            <span className="text-xs text-mute">Tickets category</span>
+            <input className={`${input} max-w-sm`} inputMode="numeric" value={cfg.ticketCategory} onChange={(e) => set({ ticketCategory: digits(e.target.value) })} placeholder="Category ID" />
+            <span className="text-[11px] text-mute/70">Each ticket becomes a private channel under this category. The bot needs Manage Channels.</span>
+          </label>
+        </div>
+      </Card>
+
+      <Card title="Artist channels" sub="Campaigns for an artist are announced in that artist's channel. Anything without one goes to #news.">
+        <ul className="grid gap-2">
+          {cfg.artists.map((a, n) => (
+            <li key={n} className="flex flex-wrap items-center gap-2">
+              <input aria-label="Artist name" className={`${input} max-w-[14rem] font-sans`} value={a.name} onChange={(e) => set({ artists: cfg.artists.map((x, k) => (k === n ? { ...x, name: e.target.value } : x)) })} placeholder="Artist name" />
+              <input aria-label="Channel ID" className={`${input} max-w-[16rem]`} inputMode="numeric" value={a.channel} onChange={(e) => set({ artists: cfg.artists.map((x, k) => (k === n ? { ...x, channel: digits(e.target.value) } : x)) })} placeholder="Channel ID" />
+              <button type="button" aria-label="Remove" className="grid size-8 place-items-center rounded-full text-mute hover:bg-white/[0.07] hover:text-paper" onClick={() => set({ artists: cfg.artists.filter((_, k) => k !== n) })}>
+                <X className="size-4" />
+              </button>
+            </li>
+          ))}
+        </ul>
+        <button type="button" className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-full border border-line-strong px-4 text-xs hover:bg-paper/10" onClick={() => set({ artists: [...cfg.artists, { name: '', channel: '' }] })}>
+          <Plus className="size-3.5" /> Add an artist
+        </button>
+      </Card>
+
+      <Card title="Roles" sub="IDs only. The bot gives and takes these as people link and earn.">
+        <div className="grid gap-5">
+          <div className="grid gap-4 sm:grid-cols-3">
+            {(['linked', 'clipper', 'brand', 'team', 'staff'] as const).map((k) => (
+              <label key={k} className="grid gap-1.5">
+                <span className="text-xs text-mute">{{ linked: 'Linked members', clipper: 'Clippers', brand: 'Brands', team: 'Team', staff: 'Staff (can see tickets)' }[k]}</span>
+                <input className={input} inputMode="numeric" value={cfg.roles[k]} onChange={(e) => set({ roles: { ...cfg.roles, [k]: digits(e.target.value) } })} placeholder="Role ID" />
+              </label>
+            ))}
           </div>
           <div>
             <p className="mb-2 text-xs text-mute">Earnings roles: a member gets the highest one they have reached.</p>
@@ -140,8 +182,8 @@ export function DiscordPanel() {
               {cfg.roles.tiers.map((t, n) => (
                 <li key={n} className="flex flex-wrap items-center gap-2">
                   <span className="text-sm text-mute">From $</span>
-                  <input aria-label="Earned dollars" className={`${input} w-28`} inputMode="numeric" value={t.minUsd} onChange={(e) => set({ roles: { ...cfg.roles, tiers: cfg.roles.tiers.map((x, k) => (k === n ? { ...x, minUsd: Number(e.target.value.replace(/\D/g, '')) || 0 } : x)) } })} />
-                  <input aria-label="Role ID" className={`${input} max-w-[16rem]`} inputMode="numeric" value={t.role} onChange={(e) => set({ roles: { ...cfg.roles, tiers: cfg.roles.tiers.map((x, k) => (k === n ? { ...x, role: e.target.value.replace(/\D/g, '') } : x)) } })} placeholder="Role ID" />
+                  <input aria-label="Earned dollars" className={`${input} w-28`} inputMode="numeric" value={t.minUsd} onChange={(e) => set({ roles: { ...cfg.roles, tiers: cfg.roles.tiers.map((x, k) => (k === n ? { ...x, minUsd: Number(digits(e.target.value)) || 0 } : x)) } })} />
+                  <input aria-label="Role ID" className={`${input} max-w-[16rem]`} inputMode="numeric" value={t.role} onChange={(e) => set({ roles: { ...cfg.roles, tiers: cfg.roles.tiers.map((x, k) => (k === n ? { ...x, role: digits(e.target.value) } : x)) } })} placeholder="Role ID" />
                   <button type="button" aria-label="Remove" className="grid size-8 place-items-center rounded-full text-mute hover:bg-white/[0.07] hover:text-paper" onClick={() => set({ roles: { ...cfg.roles, tiers: cfg.roles.tiers.filter((_, k) => k !== n) } })}>
                     <X className="size-4" />
                   </button>
@@ -155,30 +197,22 @@ export function DiscordPanel() {
           <label className="flex items-center gap-2 text-sm text-mute">
             <input type="checkbox" className="size-4 accent-white" checked={cfg.dm} onChange={(e) => set({ dm: e.target.checked })} /> Send linked members their notifications as direct messages
           </label>
-          <div>
-            <button type="button" disabled={busy === 'save'} className={`${btn} bg-paper font-medium text-ink hover:bg-paper/85`} onClick={() => run('save', async () => (await call({ action: 'save', config: cfg }), 'Saved.'))}>
-              {busy === 'save' && <Loader2 className="size-4 animate-spin" />} Save
-            </button>
-          </div>
         </div>
       </Card>
 
-      <Card title="Make it work" sub={`${s.commands} commands: link, profile, stats, balance, clips, badges, campaigns, submit, leaderboard, earn, faq, support, report and more.`}>
+      <Card title="Make it work" sub={`${s.commands} commands: rules, site, status, support, link, profile, stats, balance, clips, badges, campaigns, submit, leaderboard, earn, faq, report and more.`}>
         <div className="flex flex-wrap gap-2">
-          <button type="button" disabled={Boolean(busy)} className={`${btn} bg-paper font-medium text-ink hover:bg-paper/85`} onClick={() => run('register', async () => { const j = (await call({ action: 'register' })) as { count?: number; where?: string }; return `Registered ${j.count} commands in ${j.where}.` })}>
+          <button type="button" disabled={busy === 'save'} className={solid} onClick={() => run('save', async () => (await call({ action: 'save', config: cfg }), 'Saved.'))}>
+            {busy === 'save' && <Loader2 className="size-4 animate-spin" />} Save
+          </button>
+          <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('register', async () => { const j = (await call({ action: 'register' })) as { count?: number; where?: string }; return `Registered ${j.count} commands in ${j.where}.` })}>
             {busy === 'register' && <Loader2 className="size-4 animate-spin" />} Register commands
           </button>
-          <button type="button" disabled={Boolean(busy)} className={`${btn} border border-line-strong hover:bg-paper/10`} onClick={() => run('test', async () => (await call({ action: 'test' }), 'Posted a test message in the announcements channel.'))}>
+          <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('test', async () => (await call({ action: 'test' }), 'Posted a test message.'))}>
             {busy === 'test' && <Loader2 className="size-4 animate-spin" />} Send a test message
           </button>
-          <button type="button" disabled={Boolean(busy)} className={`${btn} border border-line-strong hover:bg-paper/10`} onClick={() => run('sync', async () => { const j = (await call({ action: 'sync' })) as { checked?: number; changed?: number }; return `Checked ${j.checked} members, ${j.changed} had roles changed.` })}>
+          <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('sync', async () => { const j = (await call({ action: 'sync' })) as { checked?: number; changed?: number }; return `Checked ${j.checked} members, ${j.changed} had roles changed.` })}>
             {busy === 'sync' && <Loader2 className="size-4 animate-spin" />} Refresh everyone&apos;s roles
-          </button>
-        </div>
-        <div className="mt-5 flex flex-wrap items-center gap-2">
-          <input aria-label="Channel ID for the panel" className={`${input} max-w-[16rem]`} inputMode="numeric" value={panelChannel} onChange={(e) => setPanelChannel(e.target.value.replace(/\D/g, ''))} placeholder="Channel ID" />
-          <button type="button" disabled={Boolean(busy) || panelChannel.length < 15} className={`${btn} border border-line-strong hover:bg-paper/10`} onClick={() => run('panel', async () => (await call({ action: 'panel', channel: panelChannel }), 'Posted the link panel there.'))}>
-            {busy === 'panel' && <Loader2 className="size-4 animate-spin" />} Post the link panel
           </button>
         </div>
         {msg && (

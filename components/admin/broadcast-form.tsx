@@ -13,6 +13,7 @@ const AUDIENCES = [
   { id: 'active', label: 'Active this week', hint: 'Anyone seen in the last 7 days.' },
   { id: 'team', label: 'The team', hint: 'Admins and developers.' },
   { id: 'one', label: 'One person', hint: 'By email address.' },
+  { id: 'discord', label: 'Discord only', hint: 'Only post it in the Discord server. Nobody is notified on the site.' },
 ] as const
 
 const input = 'h-11 w-full rounded-2xl border border-line-strong bg-ink/80 px-4 text-sm outline-none focus:border-paper'
@@ -25,9 +26,11 @@ export function BroadcastForm() {
   const [text, setText] = useState('')
   const [href, setHref] = useState('')
   const [email, setEmail] = useState(false)
+  const [discord, setDiscord] = useState<'' | 'news' | 'updates'>('')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const big = audience !== 'one' && audience !== 'team'
+  const onlyDiscord = audience === 'discord'
   const aud = AUDIENCES.find((a) => a.id === audience)!
 
   return (
@@ -43,11 +46,11 @@ export function BroadcastForm() {
         }
         setBusy(true)
         setMsg(null)
-        const res = await fetch('/api/admin/broadcast', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ audience, to: audience === 'one' ? to : undefined, title, text, href: href || undefined, email, secret }) }).catch(() => null)
-        const j = (await res?.json().catch(() => ({}))) as { error?: string; sent?: number; emailed?: number; emailNote?: string }
+        const res = await fetch('/api/admin/broadcast', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ audience, to: audience === 'one' ? to : undefined, title, text, href: href || undefined, email: onlyDiscord ? false : email, secret, discord: onlyDiscord ? (discord || 'news') : discord || undefined }) }).catch(() => null)
+        const j = (await res?.json().catch(() => ({}))) as { error?: string; sent?: number; emailed?: number; emailNote?: string; posted?: boolean | null }
         setBusy(false)
         if (!res?.ok) return setMsg({ ok: false, text: j?.error ?? 'Could not send it.' })
-        setMsg({ ok: true, text: `Sent to ${j.sent ?? 0} ${j.sent === 1 ? 'person' : 'people'}${j.emailed ? `, ${j.emailed} emailed` : ''}. ${j.emailNote ?? ''}`.trim() })
+        setMsg({ ok: true, text: `${onlyDiscord ? 'Posted in Discord.' : `Sent to ${j.sent ?? 0} ${j.sent === 1 ? 'person' : 'people'}${j.emailed ? `, ${j.emailed} emailed` : ''}.`}${discord && !onlyDiscord ? (j.posted ? ' Also posted in Discord.' : ' Could not post in Discord.') : ''} ${j.emailNote ?? ''}`.trim() })
         if (big) runSiteCheck('a broadcast')
         setTitle('')
         setText('')
@@ -80,8 +83,16 @@ export function BroadcastForm() {
           <input id="bc-href" className={input} value={href} maxLength={200} onChange={(e) => setHref(e.target.value)} placeholder="/" />
         </div>
         <label className="flex h-11 items-center gap-2 text-sm text-mute">
-          <input type="checkbox" checked={email} onChange={(e) => setEmail(e.target.checked)} className="size-4 accent-white" /> Also email (small groups only)
+          <input type="checkbox" checked={email} disabled={onlyDiscord} onChange={(e) => setEmail(e.target.checked)} className="size-4 accent-white" /> Also email (small groups only)
         </label>
+      </div>
+      <div>
+        <label htmlFor="bc-dc" className="mb-1.5 block text-xs text-mute">Also post in the Discord server</label>
+        <select id="bc-dc" className={`${input} max-w-xs`} value={onlyDiscord ? discord || 'news' : discord} onChange={(e) => setDiscord(e.target.value as '' | 'news' | 'updates')}>
+          {!onlyDiscord && <option value="">Not in Discord</option>}
+          <option value="news">#news (announcements)</option>
+          <option value="updates">#updates (product changes)</option>
+        </select>
       </div>
       <div className="flex flex-wrap items-center gap-4">
         <button type="submit" disabled={busy || title.trim().length < 3 || (audience === 'one' && !to)} className="inline-flex h-12 items-center gap-2 rounded-full bg-paper px-7 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">

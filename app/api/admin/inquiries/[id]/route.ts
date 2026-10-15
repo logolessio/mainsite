@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { auditSafe } from '@/lib/chain'
 import { protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
+import { closeTicket, postTeamReply } from '@/lib/discord/tickets'
 import { clean, getInquiry, saveInquiry } from '@/lib/inquiries'
 import { notify } from '@/lib/notify'
 import { requireAdmin } from '@/lib/user'
@@ -34,6 +35,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
     inq.status = a.status
     await saveInquiry(inq)
     await auditSafe({ id: admin.id, email: admin.email }, 'inquiry.status', inq.id, a.status)
+    if (a.status === 'closed' && inq.discord) await closeTicket(inq, 'the team')
     return json({ ok: true })
   }
   inq.replies.push({ by: 'admin', text: clean(a.text, 4000), at: Math.floor(Date.now() / 1000) })
@@ -42,5 +44,10 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
   await saveInquiry(inq)
   await auditSafe({ id: admin.id, email: admin.email }, 'inquiry.reply', inq.id, a.close ? 'replied and closed' : 'replied')
   if (inq.userId) await notify(inq.userId, { kind: 'account', title: `We replied: ${inq.subject}`.slice(0, 120), body: a.text.slice(0, 200), href: `/inquiry/${inq.id}`, dedupe: `inq-reply-user:${inq.id}:${inq.replies.length}` })
+  // a ticket opened in Discord: the answer goes into its channel too, pinging the person
+  if (inq.discord) {
+    await postTeamReply(inq, clean(a.text, 3800), admin.name ?? 'The team')
+    if (a.close) await closeTicket(inq, 'the team')
+  }
   return json({ ok: true })
 })

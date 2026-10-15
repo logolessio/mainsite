@@ -11,8 +11,13 @@ import { profileStats } from '../profile'
 import { rolesForEmail } from '../roles'
 import { submitClip } from '../submit-clip'
 import { abs, type Embed, type Message, RED, siteUrl, GREEN, WHITE, postMessage } from './api'
+import { getStartedMessage, rulesMessage, siteMessage, statusMessage, supportPanel } from './panels'
+import { addUserReply, closeTicket, openTicket } from './tickets'
 import { getDiscordConfig } from './config'
-import { announceCampaign, logToDiscord } from './outbound'
+import { announceCampaign, logToDiscord, postTo, refreshStatus } from './outbound'
+import { getInquiry, saveInquiry } from '../inquiries'
+import { publicStats } from '../public-stats'
+import { runHealth } from '../health'
 import { consumeLinkCode, linkDiscord, setDmEnabled, unlinkDiscord, userByDiscord } from './link'
 import { syncRoles } from './roles'
 
@@ -111,7 +116,10 @@ export const COMMANDS = [
   { name: 'leaderboard', description: 'Who is bringing in the most views', type: 1, options: [{ type: S, name: 'period', description: 'How far back', required: false, choices: choices('30 days', 'all time') }] },
   { name: 'earn', description: 'Work out what some views are worth', type: 1, options: [{ type: 4, name: 'views', description: 'How many views', required: true, min_value: 1, max_value: 1_000_000_000 }, { type: S, name: 'campaign', description: 'Which campaign’s rate to use', required: false, autocomplete: true }] },
   { name: 'faq', description: 'Answers to common questions', type: 1, options: [{ type: S, name: 'question', description: 'What you want to know', required: true, autocomplete: true }] },
-  { name: 'support', description: 'Message the logoless team', type: 1, options: [{ type: S, name: 'message', description: 'What you need', required: true, max_length: 1000 }] },
+  { name: 'support', description: 'Open a private ticket with the logoless team', type: 1, options: [{ type: S, name: 'message', description: 'What you need', required: true, max_length: 1000 }] },
+  { name: 'status', description: 'Is everything at logoless working?', type: 1 },
+  { name: 'rules', description: 'Post the server rules in this channel (team only)', type: 1, default_member_permissions: '8' },
+  { name: 'site', description: 'Post the logoless site card in this channel (team only)', type: 1, default_member_permissions: '8' },
   {
     name: 'report',
     description: 'Report a clip, a campaign or a person',
@@ -134,10 +142,11 @@ export const COMMANDS = [
       { type: 1, name: 'stats', description: 'The site at a glance' },
       { type: 1, name: 'queue', description: 'Clips waiting for a decision, with buttons' },
       { type: 1, name: 'lookup', description: 'Look someone up', options: [{ type: S, name: 'who', description: 'A @handle or an email', required: true }] },
-      { type: 1, name: 'announce', description: 'Post an announcement in the announcements channel', options: [{ type: S, name: 'title', description: 'Headline', required: true, max_length: 200 }, { type: S, name: 'text', description: 'The message', required: true, max_length: 1500 }] },
+      { type: 1, name: 'announce', description: 'Post an announcement in #news', options: [{ type: S, name: 'title', description: 'Headline', required: true, max_length: 200 }, { type: S, name: 'text', description: 'The message', required: true, max_length: 1500 }] },
+      { type: 1, name: 'update', description: 'Post a product update in #updates', options: [{ type: S, name: 'title', description: 'Headline', required: true, max_length: 200 }, { type: S, name: 'text', description: 'What changed', required: true, max_length: 1500 }] },
       { type: 1, name: 'campaign', description: 'Pause, start or announce a campaign', options: [{ type: S, name: 'campaign', description: 'Which one', required: true, autocomplete: true }, { type: S, name: 'action', description: 'What to do', required: true, choices: choices('pause', 'resume', 'announce') }] },
       { type: 1, name: 'sync-all', description: 'Refresh everyone’s roles' },
-      { type: 1, name: 'panel', description: 'Post the “link your account” panel in this channel' },
+      { type: 1, name: 'panel', description: 'Post a panel in this channel', options: [{ type: S, name: 'which', description: 'Which panel', required: true, choices: [{ name: 'Get started', value: 'start' }, { name: 'Support tickets', value: 'support' }, { name: 'Live status', value: 'status' }] }] },
     ],
   },
 ]
@@ -393,10 +402,15 @@ async function cmdSupport(i: Interaction, textIn: string, kind: 'contact' | 'rep
   const m = await me(u.id)
   const message = cleanText(textIn, 1500)
   if (message.length < 3) return fail('Tell us a little more.')
+  if (kind === 'contact') {
+    const r = await openTicket({ discordId: u.id, discordName: u.global_name ?? u.username, user: m ? { id: m.id, handle: m.handle, name: m.name } : null, subject: message.split('\n')[0].slice(0, 70), message })
+    if (!r.ok) return fail(r.message)
+    return embedReply({ title: 'Ticket opened', description: r.channelId ? `Your private channel is <#${r.channelId}>. The team answers there and you will be pinged.` : `The team has it (reference \`${r.inquiry.id}\`). ${m ? 'We will answer in your logoless notifications, and here if you have DMs on.' : 'Link your account with `/link` to get the answer here.'}`, color: GREEN })
+  }
   const inq = await createInquiry({
     kind,
     topic: extra?.topic ?? 'discord',
-    subject: kind === 'report' ? 'Report from Discord' : 'Message from Discord',
+    subject: 'Report from Discord',
     message: `${message}\n\n(sent from Discord by ${u.global_name ?? u.username}, id ${u.id})`,
     name: m?.name || u.global_name || u.username,
     userId: m?.id ?? null,
@@ -404,9 +418,20 @@ async function cmdSupport(i: Interaction, textIn: string, kind: 'contact' | 'rep
     target: extra?.target ?? '',
   })
   const { notifyAdmins } = await import('../notify')
-  await notifyAdmins({ title: kind === 'report' ? 'New report from Discord' : 'New message from Discord', body: message.slice(0, 120), href: `/admin/inbox/${inq.id}`, dedupe: `inq-discord:${inq.id}` })
-  await logToDiscord(`📨 ${kind === 'report' ? 'Report' : 'Message'} from <@${u.id}>: ${message.slice(0, 200)}`)
-  return embedReply({ title: kind === 'report' ? 'Report sent' : 'Message sent', description: `The team has it (reference \`${inq.id}\`). ${m ? 'We will answer in your logoless notifications, and here if you have DMs on.' : 'Link your account with `/link` if you want to get the answer here.'}`, color: GREEN })
+  await notifyAdmins({ title: 'New report from Discord', body: message.slice(0, 120), href: `/admin/inbox/${inq.id}`, dedupe: `inq-discord:${inq.id}` })
+  await logToDiscord(`📨 Report from <@${u.id}>: ${message.slice(0, 200)}`)
+  return embedReply({ title: 'Report sent', description: `The team has it (reference \`${inq.id}\`). ${m ? 'We will answer in your logoless notifications, and here if you have DMs on.' : 'Link your account with `/link` if you want the answer here.'}`, color: GREEN })
+}
+
+// Staff for the bot: a Discord administrator, or someone whose linked logoless account is an admin.
+async function isStaff(i: Interaction): Promise<boolean> {
+  try {
+    if (BigInt(i.member?.permissions ?? '0') & BigInt(8)) return true
+  } catch {
+    /* no permissions field */
+  }
+  const m = await me(whoami(i).id)
+  return Boolean(m && (await isTeam(m)))
 }
 
 async function cmdSync(i: Interaction): Promise<Reply> {
@@ -471,11 +496,11 @@ async function admin(i: Interaction): Promise<Reply> {
       const e = await profileEmbed(r.id)
       return embedReply({ ...(e ?? { title: who }), url: `https://owner.logoless.io/admin/people/${r.id}`, footer: { text: 'Open to manage' } })
     }
-    case 'announce': {
-      const cfg = await getDiscordConfig()
-      if (!cfg.channels.announce) return fail('Set the announcements channel in the admin area first.')
-      const res = await postMessage(cfg.channels.announce, { embeds: [{ title: String(opt(i, 'title')), description: String(opt(i, 'text')), color: WHITE, footer: { text: `from ${m.name || 'the team'}` } }] })
-      return res.ok ? embedReply({ description: 'Posted.', color: GREEN }) : fail('Discord would not take it. Check that the bot can post in that channel.')
+    case 'announce':
+    case 'update': {
+      const where = sub(i) === 'announce' ? 'news' : 'updates'
+      const ok = await postTo(where, { title: String(opt(i, 'title')), text: String(opt(i, 'text')) })
+      return ok ? embedReply({ description: `Posted in #${where}.`, color: GREEN }) : fail(`Could not post. Set the ${where} channel in the admin area, and check the bot can post there.`)
     }
     case 'campaign': {
       const id = String(opt(i, 'campaign') ?? '')
@@ -506,13 +531,11 @@ async function admin(i: Interaction): Promise<Reply> {
       return embedReply({ description: `Checked ${users.length} linked members. ${n} had roles changed.`, color: GREEN })
     }
     case 'panel': {
-      const res = await postMessage(i.channel_id!, {
-        embeds: [{ title: 'Welcome to logoless', description: 'Connect your account to see your numbers, get your roles and send clips from Discord.\n\n**1.** Open **Settings** on logoless.io and press **Connect Discord**.\n**2.** Press **Link my account** below and paste the code.', color: WHITE, url: siteUrl }],
-        components: [
-          { type: 1, components: [{ type: 2, style: 1, label: 'Link my account', custom_id: 'panel:link' }, { type: 2, style: 2, label: 'Live campaigns', custom_id: 'panel:campaigns' }, { type: 2, style: 2, label: 'Contact the team', custom_id: 'panel:support' }, { type: 2, style: 5, label: 'logoless.io', url: siteUrl }] },
-        ],
-      })
-      return res.ok ? embedReply({ description: 'Posted the panel here.', color: GREEN }) : fail('Discord would not take it. Does the bot have permission to post in this channel?')
+      const which = String(opt(i, 'which'))
+      const cfg = await getDiscordConfig()
+      const msg = which === 'start' ? getStartedMessage(cfg) : which === 'support' ? supportPanel() : statusMessage(await runHealth())
+      const res = await postMessage(i.channel_id!, msg)
+      return res.ok ? embedReply({ description: 'Posted it here.', color: GREEN }) : fail('Discord would not take it. Does the bot have permission to post in this channel?')
     }
   }
   return fail('Unknown admin command.')
@@ -522,7 +545,20 @@ async function admin(i: Interaction): Promise<Reply> {
 async function component(i: Interaction): Promise<Reply> {
   const id = i.data?.custom_id ?? ''
   if (id === 'panel:link') return modal('modal:link', 'Link your logoless account', [{ id: 'code', label: 'The code from Settings on logoless.io', style: 1, min: 6, max: 12, placeholder: 'ABCD2345' }])
-  if (id === 'panel:support') return modal('modal:support', 'Contact the team', [{ id: 'text', label: 'What do you need?', style: 2, min: 3, max: 1000 }])
+  if (id === 'panel:support' || id === 'ticket:open') return modal('modal:ticket', 'Open a ticket', [{ id: 'subject', label: 'What is it about?', style: 1, min: 3, max: 80, placeholder: 'e.g. My withdrawal has not arrived' }, { id: 'text', label: 'Tell us what happened', style: 2, min: 3, max: 1000 }])
+  if (id.startsWith('ticket:reply:')) {
+    const inq = await getInquiry(id.split(':')[2])
+    if (!inq?.discord) return fail('That ticket is closed.')
+    return modal(`modal:ticketreply:${inq.id}`, 'Reply', [{ id: 'text', label: 'Your message', style: 2, min: 1, max: 1000 }])
+  }
+  if (id.startsWith('ticket:close:')) {
+    const inq = await getInquiry(id.split(':')[2])
+    if (!inq?.discord) return fail('That ticket is already closed.')
+    const u = whoami(i)
+    if (u.id !== inq.discord.userId && !(await isStaff(i))) return fail('Only the person who opened it, or the team, can close it.')
+    await closeTicket(inq, u.global_name ?? u.username)
+    return { type: 6 }
+  }
   if (id === 'panel:campaigns') return cmdCampaigns()
   if (id.startsWith('adm:clip:')) {
     const [, , action, clipId] = id.split(':')
@@ -544,6 +580,32 @@ async function modalSubmit(i: Interaction): Promise<Reply> {
   const value = (name: string) => i.data?.components?.flatMap((r) => r.components).find((c) => c.custom_id === name)?.value ?? ''
   if (id === 'modal:link') return cmdLink(i, value('code'))
   if (id === 'modal:support') return cmdSupport(i, value('text'))
+  if (id === 'modal:ticket') {
+    const u = whoami(i)
+    const m = await me(u.id)
+    const r = await openTicket({ discordId: u.id, discordName: u.global_name ?? u.username, user: m ? { id: m.id, handle: m.handle, name: m.name } : null, subject: value('subject'), message: value('text') })
+    if (!r.ok) return fail(r.message)
+    return embedReply({ title: 'Ticket opened', description: r.channelId ? `Your private channel is <#${r.channelId}>. The team answers there and you will be pinged.` : `The team has it (reference \`${r.inquiry.id}\`). Link your account with \`/link\` to get the answer here.`, color: GREEN })
+  }
+  if (id.startsWith('modal:ticketreply:')) {
+    const inq = await getInquiry(id.split(':')[2])
+    if (!inq?.discord) return fail('That ticket is closed.')
+    const u = whoami(i)
+    const text = value('text')
+    if (u.id === inq.discord.userId) {
+      const t = await addUserReply(inq, text)
+      return say({ embeds: [{ description: t, color: WHITE, author: { name: u.global_name ?? u.username } }] }, false)
+    }
+    if (!(await isStaff(i))) return fail('Only the person who opened it, or the team, can reply here.')
+    // a team member answering from Discord: the same as answering in the dashboard
+    const m = await me(u.id)
+    inq.replies.push({ by: 'admin', text: cleanText(text, 1500), at: nowSec() })
+    inq.status = 'open'
+    inq.adminSeen = true
+    await saveInquiry(inq)
+    if (inq.userId) await notify(inq.userId, { kind: 'account', title: `We replied: ${inq.subject}`.slice(0, 120), body: text.slice(0, 200), href: `/inquiry/${inq.id}`, dedupe: `inq-reply-user:${inq.id}:${inq.replies.length}` })
+    return say({ content: `<@${inq.discord.userId}>`, embeds: [{ description: text, color: GREEN, author: { name: `${m?.name || u.global_name || u.username} · logoless team` } }], allowed_mentions: { users: [inq.discord.userId] } }, false)
+  }
   if (id.startsWith('modal:clipreject:')) {
     const clipId = id.split(':')[2]
     const m = await me(whoami(i).id)
@@ -610,6 +672,22 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<Reply
         return embedReply({ description: on ? 'Done. Your notifications will arrive as messages from me.' : 'Done. I will stop sending you notifications. You still get them on the site.', color: GREEN })
       }
       case 'sync': return await cmdSync(i)
+      case 'status': {
+        const h = await runHealth()
+        void refreshStatus(false)
+        return say(statusMessage(h), true)
+      }
+      case 'rules': {
+        if (!(await isStaff(i))) return fail('Only the team can post the rules.')
+        const res = await postMessage(i.channel_id!, rulesMessage(await getDiscordConfig()))
+        return res.ok ? embedReply({ description: 'Posted the rules here.', color: GREEN }) : fail('Discord would not take it. Does the bot have permission to post in this channel?')
+      }
+      case 'site': {
+        if (!(await isStaff(i))) return fail('Only the team can post the site card.')
+        const stats = await publicStats()
+        const res = await postMessage(i.channel_id!, siteMessage(stats))
+        return res.ok ? embedReply({ description: 'Posted the site card here.', color: GREEN }) : fail('Discord would not take it. Does the bot have permission to post in this channel?')
+      }
       case 'admin': return await admin(i)
     }
     return fail('I do not know that command yet. Try `/help`.')

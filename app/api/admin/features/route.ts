@@ -26,5 +26,10 @@ export const POST = route(async (req: Request) => {
   await setLive(ids, parsed.data.action === 'push', admin.email)
   await audit({ id: admin.id, email: admin.email }, `feature.${parsed.data.action}`, ids.join(','), null, await ipHash(req))
   const live = await readLive()
+  if (parsed.data.action === 'push') {
+    const { postTo } = await import('@/lib/discord/outbound')
+    const names = ids.map((id) => FEATURES.find((f) => f.id === id)).filter(Boolean)
+    await postTo('updates', { title: names.length === 1 ? `New: ${names[0]!.name}` : `${names.length} new things are live`, text: names.map((f) => `**${f!.name}**\n${f!.description.slice(0, 220)}`).join('\n\n'), href: names.length === 1 ? names[0]!.path : '/' })
+  }
   return json({ ok: true, features: FEATURES.map((f) => ({ ...f, live: live[f.id] === true })), log: await pushLog() })
 })

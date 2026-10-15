@@ -9,7 +9,8 @@ import { body, HttpError, json, route } from '@/lib/http'
 import { requireAdmin } from '@/lib/user'
 
 const schema = z.object({
-  audience: z.enum(['everyone', 'clippers', 'brands', 'active', 'team', 'one']),
+  audience: z.enum(['everyone', 'clippers', 'brands', 'active', 'team', 'one', 'discord']),
+  discord: z.enum(['news', 'updates']).optional(), // also post it in the Discord server
   to: z.string().trim().toLowerCase().max(254).optional(), // an email, for "one"
   title: z.string().trim().min(3).max(100),
   text: z.string().trim().max(240).default(''),
@@ -37,6 +38,7 @@ export const POST = route(async (req: Request) => {
   if (!parsed.success) throw new HttpError(400, parsed.error.issues[0]?.message ?? 'That is not valid.')
   const a = parsed.data
   if (a.href && !/^\/(?!\/)[\w\-./?=&%#]*$/.test(a.href) && !/^https:\/\/[^\s]+$/.test(a.href)) throw new HttpError(400, 'The link must be a page on this site or an https address.')
+  if (a.audience === 'discord' && !a.discord) throw new HttpError(400, 'Pick a Discord channel.')
   if (a.audience !== 'one' && a.audience !== 'team') await requireAdminSecret(admin.id, a.secret)
 
   const d = await db()
@@ -48,7 +50,10 @@ export const POST = route(async (req: Request) => {
   if (a.audience === 'one') args = [a.to]
   const where = (n: number) => (a.audience === 'one' ? `${LIVE} AND u.email = ?${n}` : AUDIENCE[a.audience].replace('%NOW%', String(t)))
 
-  const res = await d
+  const onlyDiscord = a.audience === 'discord'
+  const res = onlyDiscord
+    ? { meta: { changes: 0 } }
+    : await d
     .prepare(
       `INSERT OR IGNORE INTO notifications (id, user_id, kind, title, body, href, dedupe_key, created_at)
        SELECT lower(hex(randomblob(16))), u.id, 'account', ?1, ?2, ?3, ?4 || u.id, ?5 FROM users u WHERE ${where(6)}`,
@@ -57,10 +62,16 @@ export const POST = route(async (req: Request) => {
     .run()
   const sent = res.meta.changes ?? 0
   if (a.audience === 'one' && sent === 0) throw new HttpError(404, 'Nobody with that email.')
+  let posted: boolean | null = null
+  if (a.discord) {
+    const { postTo } = await import('@/lib/discord/outbound')
+    posted = await postTo(a.discord, { title: a.title, text: a.text, href: a.href })
+    if (onlyDiscord && !posted) throw new HttpError(502, 'Could not post in Discord. Set that channel on the Discord page, and check the bot can post there.')
+  }
 
   let emailed = 0
   let emailNote = ''
-  if (a.email) {
+  if (a.email && !onlyDiscord) {
     const rows = (await d.prepare(`SELECT u.email, COALESCE(p.display_name, u.name, '') AS name FROM users u LEFT JOIN profiles p ON p.user_id = u.id WHERE ${where(1)} LIMIT ${MAX_EMAILS + 1}`).bind(...args).all<{ email: string; name: string }>()).results
     if (rows.length > MAX_EMAILS) emailNote = `Too many people to email from here (more than ${MAX_EMAILS}). They were all notified on the site.`
     else {
@@ -75,6 +86,6 @@ export const POST = route(async (req: Request) => {
       }
     }
   }
-  await audit({ id: admin.id, email: admin.email }, 'broadcast.send', a.audience === 'one' ? a.to ?? '' : a.audience, `${a.title} · ${sent} people${emailed ? `, ${emailed} emailed` : ''}`, await ipHash(req))
-  return json({ ok: true, sent, emailed, emailNote })
+  await audit({ id: admin.id, email: admin.email }, 'broadcast.send', a.audience === 'one' ? a.to ?? '' : a.audience, `${a.title} · ${sent} people${emailed ? `, ${emailed} emailed` : ''}${a.discord ? `, Discord #${a.discord}${posted ? '' : ' (failed)'}` : ''}`, await ipHash(req))
+  return json({ ok: true, sent, emailed, emailNote, posted })
 })

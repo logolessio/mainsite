@@ -68,5 +68,8 @@ export const POST = route(async (req: Request) => {
   }
   const d = await db()
   await d.prepare('UPDATE users SET name = COALESCE(?2, name) WHERE id = ?1').bind(user.id, a.name || a.company || null).run()
+  // say hello in the Discord server, once, now that the account exists
+  const { welcomeMember } = await import('@/lib/discord/outbound')
+  await welcomeMember(user.id)
   return json({ ok: true })
 })

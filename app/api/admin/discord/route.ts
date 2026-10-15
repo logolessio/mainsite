@@ -2,22 +2,24 @@ import { z } from 'zod'
 import { audit } from '@/lib/chain'
 import { db, setting } from '@/lib/db'
 import { botReady, discord, postMessage, registerCommands, WHITE } from '@/lib/discord/api'
+import { getStartedMessage, rulesMessage, siteMessage, supportPanel } from '@/lib/discord/panels'
+import { publicStats } from '@/lib/public-stats'
 import { COMMANDS } from '@/lib/discord/commands'
 import { clean, getDiscordConfig, saveDiscordConfig } from '@/lib/discord/config'
-import { logToDiscord } from '@/lib/discord/outbound'
+import { logToDiscord, refreshStatus } from '@/lib/discord/outbound'
 import { syncRoles } from '@/lib/discord/roles'
 import { ipHash, protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
 import { requireAdmin } from '@/lib/user'
 
-/** Permissions the bot asks for when it is added: see channels, send messages, embed links, read history, manage roles. */
-const PERMISSIONS = 268520448
+/** Permissions the bot asks for when it is added: see channels, send messages, embed links, read history, manage roles and manage channels (for tickets). */
+const PERMISSIONS = 268520464
 
 const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('save'), config: z.unknown() }),
   z.object({ action: z.literal('register') }),
   z.object({ action: z.literal('test') }),
-  z.object({ action: z.literal('panel'), channel: z.string().regex(/^\d{15,22}$/) }),
+  z.object({ action: z.literal('post'), what: z.enum(['getStarted', 'rules', 'site', 'support', 'status']) }),
   z.object({ action: z.literal('sync') }),
 ])
 
@@ -67,17 +69,28 @@ export const POST = route(async (req: Request) => {
     return json({ ok: true, count: COMMANDS.length, where: cfg.guildId ? 'your server (instant)' : 'every server (can take up to an hour)' })
   }
   if (a.action === 'test') {
-    if (!cfg.channels.announce) throw new HttpError(409, 'Pick the announcements channel first.')
-    const res = await postMessage(cfg.channels.announce, { embeds: [{ title: 'The logoless bot is working', description: 'This is a test from the admin area.', color: WHITE }] })
+    const channel = cfg.channels.news || cfg.channels.logs
+    if (!channel) throw new HttpError(409, 'Pick the news channel first.')
+    const res = await postMessage(channel, { embeds: [{ title: 'The logoless bot is working', description: 'This is a test from the admin area.', color: WHITE }] })
     if (!res.ok) throw new HttpError(502, `Discord would not take it (${res.status}). Does the bot have permission in that channel?`)
     return json({ ok: true })
   }
-  if (a.action === 'panel') {
-    const res = await postMessage(a.channel, {
-      embeds: [{ title: 'Welcome to logoless', description: 'Connect your account to see your numbers, get your roles and send clips from Discord.\n\n**1.** Open **Settings** on logoless.io and press **Connect Discord**.\n**2.** Press **Link my account** below and paste the code.', color: WHITE, url: 'https://logoless.io' }],
-      components: [{ type: 1, components: [{ type: 2, style: 1, label: 'Link my account', custom_id: 'panel:link' }, { type: 2, style: 2, label: 'Live campaigns', custom_id: 'panel:campaigns' }, { type: 2, style: 2, label: 'Contact the team', custom_id: 'panel:support' }, { type: 2, style: 5, label: 'logoless.io', url: 'https://logoless.io' }] }],
-    })
+  if (a.action === 'post') {
+    const ok = {
+      getStarted: { id: cfg.channels.getStarted, label: 'get-started', msg: () => getStartedMessage(cfg) },
+      rules: { id: cfg.channels.rules, label: 'rules', msg: () => rulesMessage(cfg) },
+      site: { id: cfg.channels.site, label: 'site', msg: async () => siteMessage(await publicStats()) },
+      support: { id: cfg.channels.support, label: 'support', msg: () => supportPanel() },
+      status: { id: cfg.channels.status, label: 'status', msg: () => null },
+    }[a.what]
+    if (!ok.id) throw new HttpError(409, `Set the ${ok.label} channel first, and save.`)
+    if (a.what === 'status') {
+      if (!(await refreshStatus(true))) throw new HttpError(502, 'Discord would not take it. Does the bot have permission in that channel?')
+      return json({ ok: true })
+    }
+    const res = await postMessage(ok.id, (await ok.msg())!)
     if (!res.ok) throw new HttpError(502, `Discord would not take it (${res.status}). Does the bot have permission in that channel?`)
+    await audit(actor, 'discord.post', a.what, null, ip)
     return json({ ok: true })
   }
   // sync: refresh the roles of linked members, a batch at a time
