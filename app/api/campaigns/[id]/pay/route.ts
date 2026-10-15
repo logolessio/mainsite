@@ -5,6 +5,7 @@ import { protect } from '@/lib/guard'
 import { HttpError, json, route } from '@/lib/http'
 import { balances, startNeeded } from '@/lib/ledger'
 import { notify, notifyAdmins } from '@/lib/notify'
+import { announceCampaign } from '@/lib/discord/outbound'
 import { requireUser } from '@/lib/user'
 
 /**
@@ -29,6 +30,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
   if (res.meta.changes !== 1) throw new HttpError(409, 'This campaign was just changed. Refresh and try again.')
   await auditSafe({ id: user.id, email: user.email }, 'campaign.started', c.id, `balance $${(have / 100).toFixed(2)}`)
   await notify(user.id, { kind: 'campaign', title: `${c.title} is live`, body: 'Clippers can see it and start posting. You only pay for approved views.', href: `/campaign/${id}`, dedupe: `camp-live:${id}` })
+  await announceCampaign(id)
   await notifyAdmins({ title: `${c.title} started`, body: 'The brand started an approved campaign.', href: '/admin/campaigns', dedupe: `camp-live:${id}` })
   return json({ ok: true })
 })

@@ -3,6 +3,25 @@ import { db, nowSec } from './db'
 import { HttpError } from './http'
 import { logEvent } from './log'
 
+/** Admin actions worth a line in the team's Discord log. */
+const NOTABLE = /^(payout\.|role\.|user\.(ban|delete|suspend|adjust)|setting\.|broadcast\.|campaign\.(accept|reject|launch|pause|end|started)|feature\.|discord\.)/
+
+async function tellDiscord(actor: Actor, action: string, target?: string | null, detail?: string | null) {
+  if (!NOTABLE.test(action)) return
+  try {
+    const { logToDiscord } = await import('./discord/outbound')
+    const p = logToDiscord(`🛡️ **${action}** by ${actor.email}${target ? ` · ${target}` : ''}${detail ? ` · ${detail.slice(0, 160)}` : ''}`)
+    try {
+      const { getCloudflareContext } = await import('@opennextjs/cloudflare')
+      getCloudflareContext().ctx.waitUntil(p)
+    } catch {
+      void p
+    }
+  } catch {
+    /* the log line is a nice-to-have */
+  }
+}
+
 /**
  * Tamper-evident logs. Every row stores the hash of the row before it, so editing or deleting an old row breaks
  * the chain, and the admin audit page shows it. A UNIQUE index on prev_hash stops two rows claiming the same parent.
@@ -28,6 +47,7 @@ export async function audit(actor: Actor, action: string, target?: string | null
         .bind(actor.id, actor.email, action, target ?? null, detail ? detail.slice(0, 1000) : null, ipHash ?? null, t, prev, hash)
         .run()
       logEvent({ kind: 'admin', name: action, actor: actor.email, detail: [target, detail].filter(Boolean).join(' · ') })
+      await tellDiscord(actor, action, target, detail)
       return
     } catch (e) {
       if (!isConflict(e)) throw e

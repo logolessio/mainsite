@@ -7,6 +7,7 @@ import { Field, Input } from '@/components/ui/fields'
 import { GlassTabs } from '@/components/ui/glass-tabs'
 import { calmWasAutomatic, clearCalmChoice, getCalmChoice, getLargeText, setCalm, setLargeText, subscribeCalm } from '@/lib/calm'
 import { DeleteCard } from './account-cards'
+import { DiscordCard } from './discord-card'
 import { ActionButton, Card } from './ui'
 
 type Me = { email: string; hasPassword: boolean }
@@ -33,6 +34,8 @@ export function SettingsPanel({ role }: { role: 'clipper' | 'brand' }) {
           )}
         </ul>
       </Card>
+
+      <DiscordCard />
 
       <Display />
 

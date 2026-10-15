@@ -8,6 +8,7 @@ import { body, HttpError, json, route } from '@/lib/http'
 import { notify, notifyFavoriters } from '@/lib/notify'
 import { evaluateBadges } from '@/lib/badges'
 import { balances, costFor, releasePool, startNeeded } from '@/lib/ledger'
+import { announceCampaign } from '@/lib/discord/outbound'
 import { requireAdmin } from '@/lib/user'
 
 const schema = z.discriminatedUnion('action', [
@@ -57,6 +58,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
         await d.prepare("UPDATE campaigns SET status = 'live', admin_note = COALESCE(?2, admin_note), launched_at = ?3, paid_at = ?3, updated_at = ?3 WHERE id = ?1").bind(id, a.note ?? null, t).run()
         await notify(c.brand_user_id, { kind: 'campaign', title: `${c.title} is live`, body: 'We approved it and your balance covers it, so clippers can start posting now.', href: `/campaign/${id}`, dedupe: `camp-live:${id}` })
         await evaluateBadges(c.brand_user_id)
+        await announceCampaign(id)
       } else {
         await set('awaiting_payment', a.note ?? null)
         await notify(c.brand_user_id, { kind: 'campaign', title: `${c.title} is approved`, body: `Add at least $${(startNeeded(c.budget_cents) / 100).toLocaleString()} to your balance and press start. You only pay as clippers earn.`, href: '/brand/balance', dedupe: `camp-accepted:${id}` })
@@ -78,6 +80,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
       if (c.brand_user_id) {
         await notify(c.brand_user_id, { kind: 'campaign', title: `${c.title} is live`, body: 'Clippers can see it and start posting.', href: `/campaign/${id}`, dedupe: `camp-live:${id}` })
         await evaluateBadges(c.brand_user_id)
+        await announceCampaign(id)
       }
       break
     }

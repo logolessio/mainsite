@@ -12,13 +12,18 @@ export async function notify(
 ) {
   try {
     const d = await db()
-    await d
+    const res = await d
       .prepare(
         `INSERT OR IGNORE INTO notifications (id, user_id, kind, title, body, href, dedupe_key, created_at)
          VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)`,
       )
       .bind(uid(), userId, n.kind, n.title.slice(0, 120), (n.body ?? '').slice(0, 240), n.href ?? null, n.dedupe.slice(0, 120), nowSec())
       .run()
+    // people who linked Discord get the same message there, which is the only way to reach someone who has no email
+    if (res.meta.changes === 1) {
+      const { dmNotification } = await import('./discord-bot')
+      await dmNotification(userId, { kind: n.kind, title: n.title, body: n.body, href: n.href })
+    }
   } catch (e) {
     // A failed notification must never break the action that caused it.
     console.error('notify failed', e instanceof Error ? e.message : e)

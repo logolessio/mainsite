@@ -6,6 +6,7 @@ import { ipHash, protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
 import { budgetLeft, creditEarning } from '@/lib/ledger'
 import { notify, notifyFavoriters } from '@/lib/notify'
+import { shoutout } from '@/lib/discord/outbound'
 import { requireAdmin } from '@/lib/user'
 
 const schema = z.discriminatedUnion('action', [
@@ -67,6 +68,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
           throw e
         }
         paid = { gross: res.gross, net: res.net }
+        await shoutout(s.user_id, res.net, camp.title)
         await d.prepare('UPDATE submissions SET earned_cents = earned_cents + ?2 WHERE id = ?1').bind(id, res.net).run()
         await notify(s.user_id, {
           kind: 'earning',

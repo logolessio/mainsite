@@ -1,38 +1,33 @@
-import { db, setting } from './db'
+import { botReady, sendDm } from './discord/api'
+import { discordIdFor, dmEnabled } from './discord/link'
+import { getDiscordConfig } from './discord/config'
 
-/**
- * The logoless Discord bot. For now it only sends direct messages, and only when a bot token (DISCORD_BOT_TOKEN) is set.
- * Until then every call quietly does nothing, so features that want to message someone can already call it.
- * It is meant for people who signed up without an email address: it is the only way to reach them.
- */
-export async function discordIdOf(userId: string): Promise<string | null> {
+/** Kept for the code that already calls it: who is this person on Discord, and can the bot reach them. */
+export const discordIdOf = discordIdFor
+export { botReady }
+
+/** Sends a direct message to someone's linked Discord. Returns true if Discord accepted it. Never throws. */
+export async function dmUser(userId: string, text: string): Promise<boolean> {
   try {
-    const d = await db()
-    // saved by email when someone signs in with Discord (see auth.ts), so it works before their account row exists
-    const r = await d.prepare("SELECT s.value FROM settings s JOIN users u ON s.key = 'discord-email:' || u.email WHERE u.id = ?1").bind(userId).first<{ value: string }>()
-    return r?.value ?? null
+    if (!(await botReady())) return false
+    const id = await discordIdFor(userId)
+    if (!id) return false
+    return await sendDm(id, { content: text.slice(0, 1900), allowed_mentions: { parse: [] } })
   } catch {
-    return null
+    return false
   }
 }
 
-export async function botReady() {
-  return Boolean(await setting('DISCORD_BOT_TOKEN'))
-}
-
-/** Sends a direct message. Returns true if Discord accepted it. Never throws. */
-export async function dmUser(userId: string, text: string): Promise<boolean> {
+/** Passes a site notification on to Discord, when the person linked it, did not switch it off, and the bot is set up. */
+export async function dmNotification(userId: string, n: { kind: string; title: string; body?: string; href?: string }) {
   try {
-    const token = await setting('DISCORD_BOT_TOKEN')
-    const id = await discordIdOf(userId)
-    if (!token || !id) return false
-    const headers = { authorization: `Bot ${token}`, 'content-type': 'application/json' }
-    const ch = await fetch('https://discord.com/api/v10/users/@me/channels', { method: 'POST', headers, body: JSON.stringify({ recipient_id: id }) })
-    if (!ch.ok) return false
-    const { id: channel } = (await ch.json()) as { id?: string }
-    if (!channel) return false
-    const sent = await fetch(`https://discord.com/api/v10/channels/${channel}/messages`, { method: 'POST', headers, body: JSON.stringify({ content: text.slice(0, 1900) }) })
-    return sent.ok
+    if (n.kind === 'favorite') return false // too noisy for a message in your inbox
+    const cfg = await getDiscordConfig()
+    if (!cfg.dm || !(await botReady()) || !(await dmEnabled(userId))) return false
+    const id = await discordIdFor(userId)
+    if (!id) return false
+    const url = n.href ? (n.href.startsWith('http') ? n.href : `https://logoless.io${n.href}`) : undefined
+    return await sendDm(id, { embeds: [{ title: n.title.slice(0, 250), description: n.body?.slice(0, 500), url, color: 0xf3f2ee, footer: { text: 'logoless' } }], allowed_mentions: { parse: [] } })
   } catch {
     return false
   }
