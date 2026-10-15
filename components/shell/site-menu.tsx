@@ -10,6 +10,7 @@ import { BADGE_BY_ID } from '@/lib/badges-defs'
 import { BANNER_PRESETS } from '@/lib/profile-style'
 import { Avatar, type NavUser, useNavUser } from './nav-user'
 import { T } from './copy-provider'
+import { OWNER_URL } from '@/lib/staff-nav'
 import { TransitionLink } from './transition-link'
 import { LEGAL_LINKS, NAV_LINKS } from '@/lib/site'
 import { useFeature } from './features-provider'
@@ -180,15 +181,10 @@ function ProfilePill({ user, onClose, onTour }: { user: Extract<NavUser, { signe
           <TransitionLink href={`/@${p.handle}`} onClick={onClose} className={chip}>
             Profile
           </TransitionLink>
-          {user.isAdmin && (
-            <TransitionLink href="/admin" onClick={onClose} className={chip}>
-              Admin
-            </TransitionLink>
-          )}
-          {(user.isDev || user.isAdmin) && (
-            <TransitionLink href="/dev" onClick={onClose} className={chip}>
-              Dev
-            </TransitionLink>
+          {(user.isAdmin || user.isDev) && (
+            <a href={OWNER_URL ? `${OWNER_URL}/` : '/owner'} onClick={onClose} className={chip}>
+              Owner
+            </a>
           )}
           <button type="button" onClick={() => signOut({ callbackUrl: '/' })} className="ml-auto px-1.5 text-[13px] text-mute transition-colors hover:text-paper">
             Log out

@@ -9,7 +9,8 @@ export default async function Layout({ children }: { children: React.ReactNode }
     <AppFrame
       area="Clipper"
       items={[
-        { label: 'Overview', href: '/dashboard', icon: 'LayoutDashboard', exact: true },
+        { label: 'Home', href: '/dashboard', icon: 'LayoutGrid', exact: true },
+        { label: 'Overview', href: '/dashboard/overview', icon: 'LayoutDashboard' },
         { label: 'Getting set up', href: '/dashboard/setup', icon: 'Compass' },
         { label: 'Clips', href: '/dashboard/submissions', icon: 'Clapperboard' },
         { label: 'Earnings', href: '/dashboard/earnings', icon: 'CircleDollarSign', match: ['/dashboard/payouts'] },

@@ -8,7 +8,8 @@ export default async function Layout({ children }: { children: React.ReactNode }
     <AppFrame
       area="Brand"
       items={[
-        { label: 'Dashboard', href: '/brand', icon: 'LayoutDashboard', exact: true },
+        { label: 'Home', href: '/brand', icon: 'LayoutGrid', exact: true },
+        { label: 'Overview', href: '/brand/overview', icon: 'LayoutDashboard' },
         { label: 'Campaigns', href: '/brand/campaigns', icon: 'Megaphone' },
         { label: 'Clips', href: '/brand/submissions', icon: 'Clapperboard' },
         { label: 'Balance', href: '/brand/balance', icon: 'Wallet', match: ['/brand/billing'] },

@@ -11,6 +11,7 @@ import { useNavUser } from '@/components/shell/nav-user'
 import { NotificationBell } from '@/components/shell/notifications'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { useTransitions } from '@/components/shell/transition-provider'
+import { OWNER_URL, SITE_URL_FOR_STAFF } from '@/lib/staff-nav'
 import { cn } from '@/lib/utils'
 import { type AppNavItem, isActive } from './nav-types'
 import { Palette } from './palette'
@@ -19,6 +20,19 @@ import { Palette } from './palette'
  * The working area: a solid sidebar with the whole menu in plain view, a slim bar across the top, and the page.
  * Square, flat and quiet. On phones the sidebar becomes a tab bar along the bottom.
  */
+/** A link that may leave this address (the owner dashboard and the public site are different addresses). */
+function Go({ href, children, ...rest }: { href: string; children: React.ReactNode } & Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'>) {
+  return href.startsWith('http') ? (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ) : (
+    <TransitionLink href={href} {...rest}>
+      {children}
+    </TransitionLink>
+  )
+}
+
 export function DashShell({ area, items, children }: { area: string; items: AppNavItem[]; children: React.ReactNode }) {
   const pathname = usePathname()
   const { user } = useNavUser()
@@ -26,7 +40,11 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
   const [palette, setPalette] = useState(false)
   const [more, setMore] = useState(false)
   const signedIn = user?.signedIn ? user : null
-  const showAdmin = Boolean(signedIn?.isAdmin) && area !== 'Admin'
+  // the owner dashboard holds the admin and developer pages; its "back" goes to the public site, which is a different address
+  const staffArea = area === 'Owner' || area === 'Admin' || area === 'Dev'
+  const showOwner = Boolean(signedIn?.isAdmin || signedIn?.isDev) && !staffArea
+  const siteHref = staffArea ? SITE_URL_FOR_STAFF : '/'
+  const ownerHref = OWNER_URL ? `${OWNER_URL}/` : '/owner'
   const current = useMemo(() => [...items].reverse().find((it) => isActive(pathname, it)) ?? items[0], [items, pathname])
   const logout = () => signOut({ callbackUrl: '/' })
 
@@ -51,17 +69,19 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
       {/* ---------- sidebar (larger screens) ---------- */}
       <aside aria-label={`${area} navigation`} className="island fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col bg-gradient-to-b from-[#0c0c0e] to-[#050506] md:flex">
         <div className="flex h-[72px] shrink-0 items-center border-b border-line px-6">
-          <TransitionLink href="/" aria-label="logoless home">
+          <Go href={siteHref} aria-label="logoless home">
             <Logo className="h-9 md:h-9" />
-          </TransitionLink>
+          </Go>
         </div>
         <p className="px-6 pt-7 pb-3 text-[13px] text-paper/40">{area}</p>
         <nav className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-3 pb-4">
           <ul className="grid gap-0.5">
-            {items.map((it) => {
+            {items.map((it, n) => {
               const active = isActive(pathname, it)
+              const heading = it.section && it.section !== items[n - 1]?.section
               return (
                 <li key={it.href}>
+                  {heading && <p className="px-3 pt-5 pb-1.5 text-[12px] text-paper/35">{it.section}</p>}
                   <TransitionLink href={it.href} aria-current={active ? 'page' : undefined} className={cn('group relative flex h-10 items-center gap-3 rounded-xl px-3 text-[15px] transition-colors', active ? 'bg-paper text-ink' : 'text-paper/55 hover:bg-white/[0.06] hover:text-paper')}>
                     <Icon name={it.icon} aria-hidden="true" className="size-[18px] shrink-0" />
                     {it.label}
@@ -72,14 +92,14 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
           </ul>
         </nav>
         <div className="shrink-0 border-t border-line p-3">
-          {showAdmin && (
-            <TransitionLink href="/admin" className="flex h-10 items-center gap-3 rounded-xl px-3 text-[15px] text-paper/55 transition-colors hover:bg-white/[0.03] hover:text-paper">
-              <ShieldCheck aria-hidden="true" className="size-[18px]" /> Admin dashboard
-            </TransitionLink>
+          {showOwner && (
+            <Go href={ownerHref} className="flex h-10 items-center gap-3 rounded-xl px-3 text-[15px] text-paper/55 transition-colors hover:bg-white/[0.03] hover:text-paper">
+              <ShieldCheck aria-hidden="true" className="size-[18px]" /> Owner dashboard
+            </Go>
           )}
-          <TransitionLink href="/" className="flex h-10 items-center gap-3 rounded-xl px-3 text-[15px] text-paper/55 transition-colors hover:bg-white/[0.03] hover:text-paper">
+          <Go href={siteHref} className="flex h-10 items-center gap-3 rounded-xl px-3 text-[15px] text-paper/55 transition-colors hover:bg-white/[0.03] hover:text-paper">
             <ArrowUpRight aria-hidden="true" className="size-[18px]" /> Back to the site
-          </TransitionLink>
+          </Go>
         </div>
         {signedIn && (
           <div className="shrink-0 p-3">
@@ -107,9 +127,9 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
       {/* ---------- top bar ---------- */}
       <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-line bg-ink px-5 md:px-10">
         <div className="flex items-center gap-4">
-          <TransitionLink href="/" aria-label="logoless home" className="md:hidden">
+          <Go href={siteHref} aria-label="logoless home" className="md:hidden">
             <Logo className="h-8" />
-          </TransitionLink>
+          </Go>
           <p className="hidden items-center gap-2 text-[15px] text-paper/45 md:flex">
             <span>{area}</span>
             <span aria-hidden="true">/</span>
@@ -171,17 +191,17 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
                   </TransitionLink>
                 </li>
               ))}
-              {showAdmin && (
+              {showOwner && (
                 <li className="border-b border-line">
-                  <TransitionLink href="/admin" onClick={() => setMore(false)} className="flex h-14 items-center gap-4 text-lg text-paper/60">
-                    <ShieldCheck aria-hidden="true" className="size-5" /> Admin dashboard
-                  </TransitionLink>
+                  <Go href={ownerHref} onClick={() => setMore(false)} className="flex h-14 items-center gap-4 text-lg text-paper/60">
+                    <ShieldCheck aria-hidden="true" className="size-5" /> Owner dashboard
+                  </Go>
                 </li>
               )}
               <li className="border-b border-line">
-                <TransitionLink href="/" onClick={() => setMore(false)} className="flex h-14 items-center gap-4 text-lg text-paper/60">
+                <Go href={siteHref} onClick={() => setMore(false)} className="flex h-14 items-center gap-4 text-lg text-paper/60">
                   <ArrowUpRight aria-hidden="true" className="size-5" /> Back to the site
-                </TransitionLink>
+                </Go>
               </li>
               <li>
                 <button type="button" onClick={logout} className="flex h-14 w-full items-center gap-4 text-left text-lg text-paper/60">

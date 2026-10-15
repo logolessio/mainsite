@@ -1,5 +1,6 @@
 'use client'
 
+import { SITE_URL_FOR_STAFF } from '@/lib/staff-nav'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowUpRight, CornerDownLeft, Search, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -19,7 +20,7 @@ export function Palette({ open, onClose, items, area, onLogout }: { open: boolea
   const rows = useMemo(() => {
     const all = [
       ...items.map((it) => ({ key: it.href, label: it.label, icon: it.icon as IconName | null, hint: area, run: () => navigate(it.href) })),
-      { key: 'site', label: 'Back to the site', icon: null as IconName | null, hint: 'Go', run: () => navigate('/') },
+      { key: 'site', label: 'Back to the site', icon: null as IconName | null, hint: 'Go', run: () => (area === 'Owner' ? window.location.assign(SITE_URL_FOR_STAFF) : navigate('/')) },
       { key: 'out', label: 'Log out', icon: null as IconName | null, hint: 'Account', run: onLogout },
     ]
     const t = q.trim().toLowerCase()

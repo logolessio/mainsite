@@ -43,7 +43,7 @@ export const POST = route(async (req: Request, ctx: { params: Promise<{ id: stri
       kind: 'account',
       title: after.length ? `You are now ${labels.join(' and ')}` : 'Your team access was removed',
       body: after.length ? 'The owner gave you a new role. Sign out and back in if you do not see it yet.' : 'The owner removed your team access.',
-      href: after.includes('admin') ? 'https://owner.logoless.io' : after.includes('dev') ? 'https://dev.logoless.io' : undefined,
+      href: after.includes('admin') || after.includes('dev') ? 'https://owner.logoless.io' : undefined,
       dedupe: `role:${id}:${stamp}`,
     })
     // email and Discord are best effort: the role is already saved, so a failure here must not undo it
