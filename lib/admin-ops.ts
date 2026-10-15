@@ -7,6 +7,7 @@ import { db, nowSec, uid } from './db'
 import { announceCampaign } from './discord/outbound'
 import { HttpError } from './http'
 import { balances, budgetLeft, costFor, creditEarning, releasePool, startNeeded } from './ledger'
+import { allowedPayout, getCaps } from './campaign-caps'
 import { notify, notifyFavoriters } from './notify'
 import { closeTicket, postTeamReply } from './discord/tickets'
 import { clean as cleanText, getInquiry, saveInquiry } from './inquiries'
@@ -132,6 +133,10 @@ export async function campaignAction(actor: Actor, ip: string | null, id: string
     }
   }
   await audit(actor, `campaign.${a.action}`, id, c.title, ip)
+  if (a.action !== 'delete') {
+    const { campaignChanged } = await import('./discord/campaigns')
+    await campaignChanged(id)
+  }
 }
 
 export const clipActionSchema = z.discriminatedUnion('action', [
@@ -144,7 +149,7 @@ export type ClipAction = z.infer<typeof clipActionSchema>
 type Sub = { id: string; campaign_id: string; user_id: string; status: string; views_verified: number; earned_cents: number }
 
 /** What an admin can decide about a clip. Setting verified views pays the clipper the difference since last time, out of the brand's balance. */
-export async function clipAction(actor: Actor, ip: string | null, id: string, a: ClipAction): Promise<{ paid: { gross: number; net: number } | null }> {
+export async function clipAction(actor: Actor, ip: string | null, id: string, a: ClipAction): Promise<{ paid: { gross: number; net: number } | null; capped: 'post' | 'user' | null }> {
   const d = await db()
   const s = await d.prepare('SELECT id, campaign_id, user_id, status, views_verified, earned_cents FROM submissions WHERE id = ?1').bind(id).first<Sub>()
   if (!s) throw new HttpError(404, 'Clip not found.')
@@ -152,13 +157,14 @@ export async function clipAction(actor: Actor, ip: string | null, id: string, a:
   if (!camp) throw new HttpError(404, 'Campaign not found.')
   const t = nowSec()
   let paid: { gross: number; net: number } | null = null
+  let capped: 'post' | 'user' | null = null
 
   if (a.action === 'reject') {
     if (s.views_verified > 0) throw new HttpError(409, 'This clip has already been paid for. It cannot be rejected now.')
     await d.prepare("UPDATE submissions SET status='rejected', reject_reason=?2, reviewed_by=?3, reviewed_at=?4 WHERE id=?1").bind(id, a.reason, actor.email, t).run()
     await notify(s.user_id, { kind: 'submission', title: `A clip was not approved (${camp.title})`, body: a.reason, href: '/dashboard/submissions', dedupe: `sub-rejected:${id}` })
     await audit(actor, 'submission.reject', id, a.reason, ip)
-    return { paid: null }
+    return { paid: null, capped: null }
   }
 
   if (s.status === 'rejected') throw new HttpError(409, 'This clip was rejected. It cannot be approved or paid.')
@@ -173,7 +179,12 @@ export async function clipAction(actor: Actor, ip: string | null, id: string, a:
     if (views < s.views_verified) throw new HttpError(400, 'Verified views can only go up. Contact support to correct a mistake.')
     const delta = views - s.views_verified
     if (delta > 0) {
-      const gross = Math.floor((delta * camp.rate_cents) / 1000) // what the clipper earns; the fee is charged to the brand on top
+      const wanted = Math.floor((delta * camp.rate_cents) / 1000) // what the clipper would earn; the fee is charged to the brand on top
+      // the campaign may limit what one clip, or one clipper, can earn in total
+      const caps = await getCaps(camp.id)
+      const byClipper = caps.perUserCents > 0 ? ((await d.prepare('SELECT COALESCE(SUM(net_cents), 0) AS n FROM earnings WHERE campaign_id = ?1 AND clipper_user_id = ?2').bind(camp.id, s.user_id).first<{ n: number }>())?.n ?? 0) : 0
+      const { allowed: gross, by: cappedBy } = allowedPayout(wanted, caps, s.earned_cents, byClipper)
+      capped = cappedBy
       // claim the new view count first (only if nobody else changed it), then pay; undo the claim if payment fails
       const claim = await d.prepare('UPDATE submissions SET views_verified = ?2 WHERE id = ?1 AND views_verified = ?3').bind(id, views, s.views_verified).run()
       if (claim.meta.changes !== 1) throw new HttpError(409, 'This clip was just updated. Refresh and try again.')
@@ -196,7 +207,8 @@ export async function clipAction(actor: Actor, ip: string | null, id: string, a:
           dedupe: `earn:${id}:${views}`,
         })
       }
-      await audit(actor, 'submission.views', id, `${s.views_verified} → ${views}${paid ? ` · $${(paid.gross / 100).toFixed(2)} paid` : ''}`, ip)
+      if (capped) await notify(s.user_id, { kind: 'earning', title: `A cap was reached (${camp.title})`, body: capped === 'post' ? 'This clip has earned the most the campaign pays for one clip.' : 'You have earned the most the campaign pays one clipper.', href: '/dashboard/earnings', dedupe: `capped:${id}:${capped}` })
+      await audit(actor, 'submission.views', id, `${s.views_verified} → ${views}${paid ? ` · $${(paid.gross / 100).toFixed(2)} paid` : ''}${capped ? ` · limited by the ${capped === 'post' ? 'per-clip' : 'per-clipper'} cap` : ''}`, ip)
       await evaluateBadges(s.user_id)
 
       // budget warnings for people who favourited the campaign
@@ -209,7 +221,11 @@ export async function clipAction(actor: Actor, ip: string | null, id: string, a:
       }
     }
   }
-  return { paid }
+  if (paid || a.action === 'approve') {
+    const { campaignChanged } = await import('./discord/campaigns')
+    await campaignChanged(camp.id)
+  }
+  return { paid, capped }
 }
 
 // ---------- conversations and messages (also used by the API) ----------

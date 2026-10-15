@@ -15,7 +15,7 @@ async function call(path: string, data: object) {
   return j
 }
 
-export type CampaignInfo = { id: string; title: string; status: string; budget: number; spent: number; poolCents: number; adminPaused: boolean }
+export type CampaignInfo = { id: string; title: string; status: string; budget: number; spent: number; poolCents: number; adminPaused: boolean; capPerPost: number; capPerUser: number }
 
 /** Start, pause, change the budget cap, or return what is left of an older campaign's own pool. */
 export function CampaignActions({ c }: { c: CampaignInfo }) {
@@ -24,6 +24,8 @@ export function CampaignActions({ c }: { c: CampaignInfo }) {
   const [error, setError] = useState('')
   const [edit, setEdit] = useState(false)
   const [budget, setBudget] = useState(String(c.budget))
+  const [perPost, setPerPost] = useState(c.capPerPost ? String(c.capPerPost) : '')
+  const [perUser, setPerUser] = useState(c.capPerUser ? String(c.capPerUser) : '')
 
   const run = async (key: string, fn: () => Promise<unknown>) => {
     setBusy(key)
@@ -62,19 +64,31 @@ export function CampaignActions({ c }: { c: CampaignInfo }) {
       </div>
       {canEdit && !edit && (
         <button type="button" onClick={() => setEdit(true)} className={link}>
-          Change budget
+          Budget and limits
         </button>
       )}
       {edit && (
         <form
-          className="flex items-center gap-2"
+          className="flex max-w-md flex-wrap items-center justify-end gap-2"
           onSubmit={(e) => {
             e.preventDefault()
-            void run('budget', () => call(`/api/campaigns/${c.id}/budget`, { budget: Math.round(Number(budget)) }))
+            void run('budget', () => call(`/api/campaigns/${c.id}/budget`, { budget: Math.round(Number(budget)), capPerPost: Number(perPost) || 0, capPerUser: Number(perUser) || 0 }))
           }}
         >
-          <span className="text-mute">$</span>
-          <Input aria-label="Budget cap in dollars" inputMode="numeric" value={budget} onChange={(e) => setBudget(e.target.value.replace(/\D/g, '').slice(0, 7))} className="h-9 w-28" />
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <label className="flex items-center gap-1 text-xs text-mute">
+              Budget $
+              <Input aria-label="Budget cap in dollars" inputMode="numeric" value={budget} onChange={(e) => setBudget(e.target.value.replace(/\D/g, '').slice(0, 7))} className="h-9 w-24" />
+            </label>
+            <label className="flex items-center gap-1 text-xs text-mute">
+              Per clip $
+              <Input aria-label="Most one clip can earn, in dollars" inputMode="numeric" value={perPost} placeholder="none" onChange={(e) => setPerPost(e.target.value.replace(/\D/g, '').slice(0, 6))} className="h-9 w-20" />
+            </label>
+            <label className="flex items-center gap-1 text-xs text-mute">
+              Per clipper $
+              <Input aria-label="Most one clipper can earn, in dollars" inputMode="numeric" value={perUser} placeholder="none" onChange={(e) => setPerUser(e.target.value.replace(/\D/g, '').slice(0, 6))} className="h-9 w-20" />
+            </label>
+          </div>
           <ActionButton type="submit" disabled={Boolean(busy)} className="h-9">
             {busy === 'budget' ? <Loader2 aria-hidden="true" className="size-4 animate-spin" /> : 'Save'}
           </ActionButton>

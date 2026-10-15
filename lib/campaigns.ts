@@ -18,6 +18,9 @@ export type Campaign = {
   offLimits: string[]
   /** How much of the budget is still unspent, 0 to 100. Unfunded campaigns count as full. */
   budgetLeftPct?: number
+  /** The most one clip can earn, and the most one clipper can earn in this campaign, in dollars. Missing means no limit. */
+  capPerPost?: number
+  capPerUser?: number
 }
 
 export const campaigns: Campaign[] = [

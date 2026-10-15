@@ -42,7 +42,8 @@ const CHANNELS: { key: ChannelKey; label: string; hint: string; post?: 'getStart
   { key: 'site', label: '#site', hint: 'The site card.', post: 'site' },
   { key: 'support', label: '#support', hint: 'The Open a ticket panel.', post: 'support' },
   { key: 'status', label: '#status', hint: 'A live status card that keeps itself up to date.', post: 'status' },
-  { key: 'news', label: '#news', hint: 'Announcements you send from Broadcast, and new campaigns without an artist channel.' },
+  { key: 'newCampaigns', label: '#new-campaigns', hint: 'Every campaign that goes live is announced here, with a Join campaign button.' },
+  { key: 'news', label: '#news', hint: 'Announcements you send from Broadcast.' },
   { key: 'system', label: '#system', hint: 'A welcome card for every new member, the moment they finish making their account.' },
   { key: 'updates', label: '#updates', hint: 'Product updates, including features you push live.' },
   { key: 'clips', label: 'Clips and shout-outs', hint: 'Big earnings, and clips for the team to review.' },
@@ -141,6 +142,18 @@ export function DiscordPanel() {
               </li>
             ))}
           </ul>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-1.5">
+              <span className="text-xs text-mute">Artists category</span>
+              <input className={input} inputMode="numeric" value={cfg.artistsCategory} onChange={(e) => set({ artistsCategory: digits(e.target.value) })} placeholder="Category ID" />
+              <span className="text-[11px] text-mute/70">New artist channels are made here, and come back here when the artist has a live campaign.</span>
+            </label>
+            <label className="grid gap-1.5">
+              <span className="text-xs text-mute">Inactive category</span>
+              <input className={input} inputMode="numeric" value={cfg.inactiveCategory} onChange={(e) => set({ inactiveCategory: digits(e.target.value) })} placeholder="Category ID" />
+              <span className="text-[11px] text-mute/70">An artist with no live campaign has their channel moved here.</span>
+            </label>
+          </div>
           <label className="grid gap-1.5">
             <span className="text-xs text-mute">Tickets category</span>
             <input className={`${input} max-w-sm`} inputMode="numeric" value={cfg.ticketCategory} onChange={(e) => set({ ticketCategory: digits(e.target.value) })} placeholder="Category ID" />
@@ -210,6 +223,12 @@ export function DiscordPanel() {
           </button>
           <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('test', async () => (await call({ action: 'test' }), 'Posted a test message.'))}>
             {busy === 'test' && <Loader2 className="size-4 animate-spin" />} Send a test message
+          </button>
+          <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('cards', async () => { const j = (await call({ action: 'cards' })) as { live?: number; done?: number }; return `Made or refreshed ${j.done} of ${j.live} live campaign cards.` })}>
+            {busy === 'cards' && <Loader2 className="size-4 animate-spin" />} Make artist channels and cards
+          </button>
+          <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('artists', async () => { const j = (await call({ action: 'artists' })) as { artists?: number; checked?: number }; return `Checked ${j.artists} artists, ${j.checked} channels filed in the right category.` })}>
+            {busy === 'artists' && <Loader2 className="size-4 animate-spin" />} Sort artist channels
           </button>
           <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('sync', async () => { const j = (await call({ action: 'sync' })) as { checked?: number; changed?: number }; return `Checked ${j.checked} members, ${j.changed} had roles changed.` })}>
             {busy === 'sync' && <Loader2 className="size-4 animate-spin" />} Refresh everyone&apos;s roles

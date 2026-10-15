@@ -16,6 +16,9 @@ import { addUserReply, closeTicket, openTicket } from './tickets'
 import { getDiscordConfig } from './config'
 import { announceCampaign, logToDiscord, postTo, refreshStatus } from './outbound'
 import { getInquiry, saveInquiry } from '../inquiries'
+import { getCaps } from '../campaign-caps'
+import { artistChannel, campaignChanged } from './campaigns'
+import { evaluateBadges } from '../badges'
 import { publicStats } from '../public-stats'
 import { runHealth } from '../health'
 import { consumeLinkCode, linkDiscord, setDmEnabled, unlinkDiscord, userByDiscord } from './link'
@@ -302,6 +305,7 @@ async function cmdCampaign(i: Interaction): Promise<Reply> {
   const id = String(opt(i, 'name') ?? '')
   const c = (await liveCampaigns()).find((x) => x.id === id || x.title.toLowerCase() === id.toLowerCase())
   if (!c) return fail('I could not find a live campaign by that name.')
+  const capText = [c.capPerPost ? `$${c.capPerPost.toLocaleString('en-US')} per clip` : '', c.capPerUser ? `$${c.capPerUser.toLocaleString('en-US')} per clipper` : ''].filter(Boolean).join(' · ')
   return embedReply(
     {
       title: c.title,
@@ -313,6 +317,7 @@ async function cmdCampaign(i: Interaction): Promise<Reply> {
         { name: 'Pays', value: `$${c.ratePer1k.toFixed(2)} per 1,000 views`, inline: true },
         { name: 'Budget left', value: `${c.budgetLeftPct ?? 100}%`, inline: true },
         { name: 'Platforms', value: c.platforms.join(', '), inline: true },
+        ...(capText ? [{ name: 'Limits', value: `Up to ${capText}`, inline: false }] : []),
         ...(c.clipThis.length ? [{ name: 'Clip this', value: c.clipThis.map((x) => `• ${x}`).join('\n').slice(0, 1000), inline: false }] : []),
         ...(c.offLimits.length ? [{ name: 'Off limits', value: c.offLimits.map((x) => `• ${x}`).join('\n').slice(0, 1000), inline: false }] : []),
       ],
@@ -541,10 +546,60 @@ async function admin(i: Interaction): Promise<Reply> {
   return fail('Unknown admin command.')
 }
 
+// ---------- joining a campaign ----------
+/**
+ * The Join campaign button. It saves the campaign to the person's favourites (which is what makes the site tell them when its budget
+ * runs low, or it pauses or ends), sends them the brief and how to start, and counts them on the live card.
+ */
+async function joinCampaign(i: Interaction, campaignId: string): Promise<Reply> {
+  const m = await me(whoami(i).id)
+  if (!m) return notLinked()
+  const d = await db()
+  const c = await d.prepare("SELECT id, title, creator, rate_cents, summary, clip_this_json, off_limits_json, platforms_json, status FROM campaigns WHERE id = ?1").bind(campaignId).first<{ id: string; title: string; creator: string; rate_cents: number; summary: string; clip_this_json: string; off_limits_json: string; platforms_json: string; status: string }>()
+  if (!c || c.status !== 'live') return fail('That campaign is not taking clips right now.')
+  const had = await d.prepare('SELECT 1 AS x FROM favorites WHERE user_id = ?1 AND campaign_id = ?2').bind(m.id, c.id).first()
+  const count = await d.prepare('SELECT COUNT(*) AS n FROM favorites WHERE user_id = ?1').bind(m.id).first<{ n: number }>()
+  if (!had && (count?.n ?? 0) >= 200) return fail('You have joined a lot of campaigns already. Remove some on the site first.')
+  await d.prepare('INSERT OR IGNORE INTO favorites (user_id, campaign_id, created_at) VALUES (?1, ?2, ?3)').bind(m.id, c.id, nowSec()).run()
+  if (!had) {
+    await notify(m.id, { kind: 'campaign', title: `You joined ${c.title}`, body: 'We will tell you when its budget runs low, or it pauses or ends. Send your first clip any time.', href: `/campaign/${c.id}`, dedupe: `joined:${c.id}` })
+    await evaluateBadges(m.id)
+    await campaignChanged(c.id)
+  }
+  const list = (j: string) => {
+    try {
+      return (JSON.parse(j) as string[]).slice(0, 5).map((x) => `• ${x}`).join('\n')
+    } catch {
+      return ''
+    }
+  }
+  const [caps, channel] = await Promise.all([getCaps(c.id), artistChannel(c.creator, false)])
+  const cfg = await getDiscordConfig()
+  const limits = [caps.perPostCents ? `${usd(caps.perPostCents)} per clip` : '', caps.perUserCents ? `${usd(caps.perUserCents)} per clipper` : ''].filter(Boolean).join(' · ')
+  const clipThis = list(c.clip_this_json)
+  const off = list(c.off_limits_json)
+  return embedReply(
+    {
+      title: had ? `You are already in: ${c.title}` : `You joined ${c.title}`,
+      description: `${c.summary.slice(0, 400)}${c.summary.length > 400 ? '…' : ''}`,
+      color: GREEN,
+      fields: [
+        { name: 'Pays', value: `${usd(c.rate_cents)} per 1,000 views${limits ? `\nUp to ${limits}` : ''}`, inline: false },
+        ...(clipThis ? [{ name: 'Clip this', value: clipThis, inline: true }] : []),
+        ...(off ? [{ name: 'Off limits', value: off, inline: true }] : []),
+        { name: 'Next', value: `**1.** Make a clip and post it on your own account.\n**2.** Send it with \`/submit campaign:${c.title}\`.\n**3.** Approved views turn into money.${channel ? `\n\nFollow the live numbers in <#${channel}>.` : ''}\n\nYou will get its updates in your notifications${cfg.dm ? ' here and on the site' : ''}.`, inline: false },
+      ],
+    },
+    true,
+    [{ type: 1, components: [{ type: 2, style: 5, label: 'Open campaign', url: `${siteUrl}/campaign/${c.id}` }, { type: 2, style: 5, label: 'Rules', url: `${siteUrl}/legal/campaign-rules` }, ...(channel && cfg.guildId ? [{ type: 2 as const, style: 5 as const, label: 'Artist channel', url: `https://discord.com/channels/${cfg.guildId}/${channel}` }] : [])] }],
+  )
+}
+
 // ---------- buttons, forms and autocomplete ----------
 async function component(i: Interaction): Promise<Reply> {
   const id = i.data?.custom_id ?? ''
   if (id === 'panel:link') return modal('modal:link', 'Link your logoless account', [{ id: 'code', label: 'The code from Settings on logoless.io', style: 1, min: 6, max: 12, placeholder: 'ABCD2345' }])
+  if (id.startsWith('camp:join:')) return joinCampaign(i, id.split(':')[2])
   if (id === 'panel:support' || id === 'ticket:open') return modal('modal:ticket', 'Open a ticket', [{ id: 'subject', label: 'What is it about?', style: 1, min: 3, max: 80, placeholder: 'e.g. My withdrawal has not arrived' }, { id: 'text', label: 'Tell us what happened', style: 2, min: 3, max: 1000 }])
   if (id.startsWith('ticket:reply:')) {
     const inq = await getInquiry(id.split(':')[2])

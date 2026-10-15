@@ -32,13 +32,8 @@ export default async function CampaignPage({ params, searchParams }: Props) {
   const dry = asked === 'approved' || asked === 'declined' || asked === 'review' ? ((await getSession())?.user?.role === 'admin' ? asked : undefined) : undefined
   const campaign = await liveCampaign((await params).id)
   if (!campaign) notFound()
-  // How much of the pool is left, from the real ledger. Only for funded campaigns, and only once the feature is pushed.
-  let poolLeftCents: number | null = null
-  if (await featureOn('pool-meter')) {
-    const d = await db()
-    const row = await d.prepare("SELECT COUNT(*) AS n, COALESCE(SUM(amount_cents), 0) AS left FROM ledger WHERE account = 'campaign' AND campaign_id = ?1").bind(campaign.id).first<{ n: number; left: number }>()
-    if (row && row.n > 0) poolLeftCents = row.left
-  }
+  // How much of the budget is left, from what has really been paid out. Only once the feature is pushed.
+  const leftPct = (await featureOn('pool-meter')) ? (campaign.budgetLeftPct ?? 100) : null
   const ld = { '@context': 'https://schema.org', '@type': 'WebPage', name: `${campaign.title} by ${campaign.creator}`, url: `${SITE.url}/campaign/${campaign.id}`, image: `${SITE.url}${campaign.cover}`, description: campaign.summary }
   return (
     <main>
@@ -47,7 +42,7 @@ export default async function CampaignPage({ params, searchParams }: Props) {
         {campaign.title} by {campaign.creator}
       </h1>
       <div className="px-4 pt-8 pb-16 md:pt-12">
-        <CampaignSheet campaign={campaign} poolLeftCents={poolLeftCents} preview={dry} inline />
+        <CampaignSheet campaign={campaign} leftPct={leftPct} preview={dry} inline />
       </div>
       <Related links={[{ href: '/', label: 'All campaigns' }, { href: '/for-clippers', label: 'How creators earn' }, { href: '/faq', label: 'Questions' }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />

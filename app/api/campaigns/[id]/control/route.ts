@@ -27,6 +27,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
     await d.prepare("UPDATE campaigns SET status = 'paused', updated_at = ?2 WHERE id = ?1 AND status = 'live'").bind(id, t).run()
     await d.prepare("INSERT INTO settings (key, value, updated_at) VALUES (?1, 'brand', ?2) ON CONFLICT(key) DO UPDATE SET value = 'brand', updated_at = excluded.updated_at").bind(`paused-by:${id}`, t).run()
     await auditSafe({ id: user.id, email: user.email }, 'campaign.paused', id, 'by brand')
+    await (await import('@/lib/discord/campaigns')).campaignChanged(id)
     return json({ ok: true })
   }
   if (c.status !== 'paused') throw new HttpError(409, 'Only a paused campaign can be started again.')
@@ -36,5 +37,6 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
   await d.prepare("UPDATE campaigns SET status = 'live', updated_at = ?2 WHERE id = ?1 AND status = 'paused'").bind(id, t).run()
   await d.prepare('DELETE FROM settings WHERE key = ?1').bind(`paused-by:${id}`).run()
   await auditSafe({ id: user.id, email: user.email }, 'campaign.resumed', id, 'by brand')
+  await (await import('@/lib/discord/campaigns')).campaignChanged(id)
   return json({ ok: true })
 })

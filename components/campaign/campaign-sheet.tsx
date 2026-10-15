@@ -20,12 +20,12 @@ export type SheetPreview = 'approved' | 'declined' | 'review'
  * the right, and one pill across the bottom that starts the submission. Nothing scrolls. In the pop-up the sheet shrinks a little
  * to fit short screens; on its own page it is simply as tall as it needs to be and shows every line.
  */
-export function CampaignSheet({ campaign, onClose, poolLeftCents = null, inline = false, preview }: { campaign: Campaign; onClose?: () => void; poolLeftCents?: number | null; inline?: boolean; preview?: SheetPreview }) {
+export function CampaignSheet({ campaign, onClose, leftPct = null, inline = false, preview }: { campaign: Campaign; onClose?: () => void; leftPct?: number | null; inline?: boolean; preview?: SheetPreview }) {
   const [view, setView] = useState<'details' | 'submit'>('details')
   const { user } = useNavUser()
   const { wide } = useMotionPrefs()
   const signedIn = Boolean(preview) || Boolean(user?.signedIn)
-  const left = poolLeftCents === null ? null : Math.max(0, Math.min(100, Math.round((poolLeftCents / 100 / Math.max(1, campaign.budget * (1 + SITE.platformFeePct / 100))) * 100)))
+  const left = leftPct === null ? null : Math.max(0, Math.min(100, Math.round(leftPct)))
   const cap = inline ? 99 : 3
   const root = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
@@ -80,7 +80,7 @@ export function CampaignSheet({ campaign, onClose, poolLeftCents = null, inline 
       <dl className="grid grid-cols-3 gap-2.5 text-center">
         {[
           ['You earn', usd(campaign.ratePer1k, 2), 'per 1,000 views'],
-          ['Budget', usd(campaign.budget), left === null ? 'in the pool' : `${left}% left`],
+          ['Budget', usd(campaign.budget), left === null ? 'to be paid out' : `${left}% left`],
           ['Ends', campaign.endsOn || 'Open', 'deadline'],
         ].map(([k, v, s]) => (
           <div key={k} className="rounded-2xl border border-white/10 px-2 py-3">
@@ -90,6 +90,11 @@ export function CampaignSheet({ campaign, onClose, poolLeftCents = null, inline 
           </div>
         ))}
       </dl>
+      {(campaign.capPerPost || campaign.capPerUser) && (
+        <p className="-mt-1 text-center text-[12.5px] text-white/50">
+          Up to {[campaign.capPerPost ? `${usd(campaign.capPerPost)} per clip` : '', campaign.capPerUser ? `${usd(campaign.capPerUser)} per clipper` : ''].filter(Boolean).join(' · ')}
+        </p>
+      )}
 
       <ul aria-label="Platforms that count" className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[14px] text-white/70">
         {campaign.platforms.map((p) => (

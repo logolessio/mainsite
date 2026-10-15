@@ -14,6 +14,7 @@ export type DiscordConfig = {
     support: string
     status: string
     news: string
+    newCampaigns: string
     system: string
     updates: string
     clips: string
@@ -21,18 +22,23 @@ export type DiscordConfig = {
   }
   /** The category that private ticket channels are created under. */
   ticketCategory: string
+  /** Artist channels live here while the artist has a live campaign, and move to the inactive category when they do not. */
+  artistsCategory: string
+  inactiveCategory: string
   roles: { linked: string; clipper: string; brand: string; team: string; staff: string; tiers: { minUsd: number; role: string }[] }
   /** One channel per artist: the artist's name (as written on the campaign) and the channel its campaigns are announced in. */
   artists: { name: string; channel: string }[]
   dm: boolean // direct-message linked members their notifications
 }
 
-export const EMPTY_CHANNELS: DiscordConfig['channels'] = { getStarted: '', rules: '', site: '', support: '', status: '', news: '', system: '', updates: '', clips: '', logs: '' }
+export const EMPTY_CHANNELS: DiscordConfig['channels'] = { getStarted: '', rules: '', site: '', support: '', status: '', news: '', newCampaigns: '', system: '', updates: '', clips: '', logs: '' }
 
 export const EMPTY: DiscordConfig = {
   guildId: '',
   channels: EMPTY_CHANNELS,
   ticketCategory: '',
+  artistsCategory: '',
+  inactiveCategory: '',
   roles: { linked: '', clipper: '', brand: '', team: '', staff: '', tiers: [] },
   artists: [],
   dm: true,
@@ -64,12 +70,15 @@ export function clean(input: unknown): DiscordConfig {
       support: snowflake(ch.support),
       status: snowflake(ch.status),
       news: snowflake(ch.news) || snowflake(ch.announce), // "announce" was the first name for the news channel
+      newCampaigns: snowflake(ch.newCampaigns),
       system: snowflake(ch.system),
       updates: snowflake(ch.updates),
       clips: snowflake(ch.clips),
       logs: snowflake(ch.logs),
     },
     ticketCategory: snowflake(i.ticketCategory),
+    artistsCategory: snowflake(i.artistsCategory),
+    inactiveCategory: snowflake(i.inactiveCategory),
     roles: { linked: snowflake(ro.linked), clipper: snowflake(ro.clipper), brand: snowflake(ro.brand), team: snowflake(ro.team), staff: snowflake(ro.staff), tiers },
     artists,
     dm: i.dm !== false,

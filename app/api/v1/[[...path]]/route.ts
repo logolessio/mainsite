@@ -181,7 +181,7 @@ const clipAct: Handler = async ({ req, seg, key }: Ctx & { key?: ApiKey }) => {
   const a = await bodyOf(req, clipActionSchema)
   if ((a.action === 'views' || (a.action === 'approve' && a.views !== undefined)) && !key!.scopes.includes('pay')) throw new HttpError(403, 'Setting views pays the clipper, so the key needs the "pay" scope.')
   const r = await clipAction(actorOf(key!), null, seg[1], a)
-  return { ok: true, paid: r.paid }
+  return { ok: true, paid: r.paid, capped: r.capped }
 }
 const inboxReply: Handler = async ({ req, seg, key }: Ctx & { key?: ApiKey }) => {
   const a = await bodyOf(req, z.object({ text: z.string().min(2).max(4000), close: z.boolean().optional() }))

@@ -21,6 +21,8 @@ const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('test') }),
   z.object({ action: z.literal('post'), what: z.enum(['getStarted', 'rules', 'site', 'support', 'status']) }),
   z.object({ action: z.literal('sync') }),
+  z.object({ action: z.literal('artists') }),
+  z.object({ action: z.literal('cards') }),
 ])
 
 /** What is set up, and the buttons that make it work. */
@@ -92,6 +94,22 @@ export const POST = route(async (req: Request) => {
     if (!res.ok) throw new HttpError(502, `Discord would not take it (${res.status}). Does the bot have permission in that channel?`)
     await audit(actor, 'discord.post', a.what, null, ip)
     return json({ ok: true })
+  }
+  if (a.action === 'artists') {
+    const { syncAllArtists } = await import('@/lib/discord/campaigns')
+    const r = await syncAllArtists()
+    await audit(actor, 'discord.artists', null, `${r.artists} artists`, ip)
+    return json({ ok: true, ...r })
+  }
+  if (a.action === 'cards') {
+    // every live campaign gets its artist channel and its live card (made now if missing)
+    const { refreshCampaignCard } = await import('@/lib/discord/campaigns')
+    const d0 = await db()
+    const live = (await d0.prepare("SELECT id FROM campaigns WHERE status = 'live' LIMIT 25").all<{ id: string }>()).results
+    let done = 0
+    for (const c of live) if (await refreshCampaignCard(c.id, true)) done++
+    await audit(actor, 'discord.cards', null, `${done} of ${live.length}`, ip)
+    return json({ ok: true, live: live.length, done })
   }
   // sync: refresh the roles of linked members, a batch at a time
   const d = await db()

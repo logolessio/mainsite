@@ -208,6 +208,8 @@ export async function creditEarning(input: {
       await d.prepare("INSERT INTO settings (key, value, updated_at) VALUES (?1, 'balance', ?2) ON CONFLICT(key) DO UPDATE SET value = 'balance', updated_at = excluded.updated_at").bind(`paused-by:${campaignId}`, t).run()
       const { notify } = await import('./notify')
       await notify(camp.brand_user_id, { kind: 'campaign', title: `${camp.title} paused: add funds`, body: 'Your balance ran out, so the campaign paused itself. Add funds and start it again. Clips already approved are paid once there is money.', href: '/brand/balance', dedupe: `camp-lowbal:${campaignId}:${Math.floor(t / 3600)}` })
+      const { campaignChanged } = await import('./discord/campaigns')
+      await campaignChanged(campaignId)
     }
     throw new PayError('balance', 'The brand’s balance is too low, so nothing was paid. The campaign was paused and the brand was told.')
   }

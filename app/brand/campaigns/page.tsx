@@ -3,6 +3,7 @@ import { ActionLink } from '@/components/app/action-link'
 import { Badge, EmptyState } from '@/components/app/table'
 import { PageHeader } from '@/components/app/ui'
 import { CampaignActions, MoveBudget } from '@/components/brand/campaign-actions'
+import { allCaps } from '@/lib/campaign-caps'
 import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
 import { db } from '@/lib/db'
 import { pageUser } from '@/lib/user'
@@ -45,6 +46,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ r
       .bind(user.id)
       .all<Row>()
   ).results
+  const caps = await allCaps()
   const movable = rows.filter((r) => ['live', 'paused', 'awaiting_payment', 'paid'].includes(r.status)).map((r) => ({ id: r.id, title: r.title, free: Math.max(0, r.budget_cents - r.spent) / 100 }))
 
   return (
@@ -75,7 +77,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ r
                     {usd(r.spent)} of {usd(r.budget_cents)} paid to clippers · {r.views.toLocaleString()} views · {r.clips} {r.clips === 1 ? 'clip' : 'clips'}
                   </p>
                 </div>
-                <CampaignActions c={{ id: r.id, title: r.title, status: r.status, budget: Math.round(r.budget_cents / 100), spent: r.spent, poolCents: r.pool, adminPaused: r.paused_by === 'admin' }} />
+                <CampaignActions c={{ id: r.id, title: r.title, status: r.status, budget: Math.round(r.budget_cents / 100), spent: r.spent, poolCents: r.pool, adminPaused: r.paused_by === 'admin', capPerPost: (caps[r.id]?.perPostCents ?? 0) / 100, capPerUser: (caps[r.id]?.perUserCents ?? 0) / 100 }} />
               </li>
             )
           })}

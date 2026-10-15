@@ -4,6 +4,7 @@ import { db, nowSec } from '@/lib/db'
 import { protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
 import { notify, notifyAdmins } from '@/lib/notify'
+import { setCaps } from '@/lib/campaign-caps'
 import { requireUser } from '@/lib/user'
 
 /** A brand or artist asks for a campaign. Nothing goes live: an admin has to accept it, the brand pays, then an admin launches it. */
@@ -49,6 +50,7 @@ export const POST = route(async (req: Request) => {
     )
     .run()
 
+  if (c.capPerPost || c.capPerUser) await setCaps(id, { perPostCents: Math.round((c.capPerPost ?? 0) * 100), perUserCents: Math.round((c.capPerUser ?? 0) * 100) }, Math.round(c.budget * 100))
   await auditSafe({ id: user.id, email: user.email }, 'campaign.request', id, `${c.title} · $${c.budget}`)
   await notify(user.id, { kind: 'campaign', title: `Request received: ${c.title}`, body: 'We will review it and let you know the next step.', href: '/brand/campaigns', dedupe: `camp-req:${id}` })
   await notifyAdmins({ title: `New campaign request: ${c.title}`, body: `${c.creator} · $${c.budget.toLocaleString()} budget`, href: '/admin/campaigns', dedupe: `camp-req:${id}` })

@@ -32,6 +32,8 @@ export function CampaignWizard({ balanceCents = 0 }: { balanceCents?: number }) 
     offLimits: '',
     rate: '2.50',
     budget: '500',
+    capPerPost: '',
+    capPerUser: '',
     endsOn: '',
   })
   const [more, setMore] = useState(false)
@@ -67,7 +69,7 @@ export function CampaignWizard({ balanceCents = 0 }: { balanceCents?: number }) 
       const res = await fetch('/api/campaigns', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ title: d.title, creator: d.creator, type: d.type, cover: d.cover || null, platforms: d.platforms, summary: d.summary, clipThis: lines(d.clipThis), offLimits: lines(d.offLimits), rate, budget, endsOn: d.endsOn || null }),
+        body: JSON.stringify({ title: d.title, creator: d.creator, type: d.type, cover: d.cover || null, platforms: d.platforms, summary: d.summary, clipThis: lines(d.clipThis), offLimits: lines(d.offLimits), rate, budget, endsOn: d.endsOn || null, ...(Number(d.capPerPost) > 0 ? { capPerPost: Number(d.capPerPost) } : {}), ...(Number(d.capPerUser) > 0 ? { capPerUser: Number(d.capPerUser) } : {}) }),
       })
       const j = (await res.json().catch(() => ({}))) as { error?: string }
       if (!res.ok) throw new Error(j.error ?? 'Could not send your campaign.')
@@ -156,6 +158,20 @@ export function CampaignWizard({ balanceCents = 0 }: { balanceCents?: number }) 
                   })}
                 </div>
               </fieldset>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="Most one clip can earn" hint="Optional. Stops a single viral clip taking the whole budget.">
+                  <span className="relative block">
+                    <span className="pointer-events-none absolute inset-y-0 left-4 grid place-items-center text-mute">$</span>
+                    <Input inputMode="numeric" value={d.capPerPost} placeholder="No limit" onChange={(e) => set('capPerPost', e.target.value.replace(/\D/g, '').slice(0, 6))} className="pl-8" />
+                  </span>
+                </Field>
+                <Field label="Most one clipper can earn" hint="Optional. Spreads the budget across more people.">
+                  <span className="relative block">
+                    <span className="pointer-events-none absolute inset-y-0 left-4 grid place-items-center text-mute">$</span>
+                    <Input inputMode="numeric" value={d.capPerUser} placeholder="No limit" onChange={(e) => set('capPerUser', e.target.value.replace(/\D/g, '').slice(0, 6))} className="pl-8" />
+                  </span>
+                </Field>
+              </div>
               <Field label="Clip this" hint="One idea per line.">
                 <Textarea value={d.clipThis} onChange={(e) => set('clipThis', e.target.value)} rows={3} />
               </Field>

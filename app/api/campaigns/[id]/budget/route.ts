@@ -4,11 +4,12 @@ import { campaignRow } from '@/lib/campaigns-db'
 import { db, nowSec } from '@/lib/db'
 import { protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
+import { setCaps } from '@/lib/campaign-caps'
 import { campaignSpent } from '@/lib/ledger'
 import { SITE } from '@/lib/site'
 import { requireUser } from '@/lib/user'
 
-const schema = z.object({ budget: z.number().int().min(SITE.minCampaignBudgetUsd).max(SITE.maxTopUpUsd * 10) })
+const schema = z.object({ budget: z.number().int().min(SITE.minCampaignBudgetUsd).max(SITE.maxTopUpUsd * 10), capPerPost: z.number().min(0).max(1_000_000).optional(), capPerUser: z.number().min(0).max(1_000_000).optional() })
 
 /** Changes how much a campaign may pay out in total (its cap). No money moves: the cap only limits what it can spend from the balance. */
 export const POST = route(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
@@ -25,6 +26,8 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
   if (cents < spent) throw new HttpError(409, `$${(spent / 100).toFixed(2)} has already been paid out, so the budget cannot go below that.`)
   const d = await db()
   await d.prepare("UPDATE campaigns SET budget_cents = ?2, status = CASE WHEN status = 'ended' AND ?2 > ?3 THEN 'paused' ELSE status END, updated_at = ?4 WHERE id = ?1").bind(id, cents, spent, nowSec()).run()
-  await auditSafe({ id: user.id, email: user.email }, 'campaign.budget', id, `$${parsed.data.budget}`)
+  const caps = await setCaps(id, { perPostCents: parsed.data.capPerPost === undefined ? undefined : Math.round(parsed.data.capPerPost * 100), perUserCents: parsed.data.capPerUser === undefined ? undefined : Math.round(parsed.data.capPerUser * 100) }, cents)
+  await auditSafe({ id: user.id, email: user.email }, 'campaign.budget', id, `$${parsed.data.budget}${caps.perPostCents || caps.perUserCents ? ` · caps $${caps.perPostCents / 100} per clip, $${caps.perUserCents / 100} per clipper` : ''}`)
+  await (await import('@/lib/discord/campaigns')).campaignChanged(id)
   return json({ ok: true })
 })

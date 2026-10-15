@@ -1,4 +1,3 @@
-import { campaignRow } from '../campaigns-db'
 import { db, nowSec } from '../db'
 import { runHealth } from '../health'
 import { abs, botReady, discord, type Embed, postMessage, siteUrl, WHITE, GREEN } from './api'
@@ -30,40 +29,10 @@ export async function logToDiscord(text: string) {
   }
 }
 
-/** A new campaign is live: tell the server, in the artist's own channel when there is one, otherwise in news. */
+/** A new campaign is live: its artist channel and live card, and the announcement with a Join button (see campaigns.ts). */
 export async function announceCampaign(campaignId: string) {
-  try {
-    const cfg = await getDiscordConfig()
-    if (!(await botReady())) return
-    const c = await campaignRow(campaignId)
-    if (!c) return
-    const artist = cfg.artists.find((a) => slug(a.name) === slug(c.creator) || slug(a.name) === slug(c.title))
-    const target = artist?.channel || cfg.channels.news
-    if (!target) return
-    const platforms = (() => {
-      try {
-        return (JSON.parse(c.platforms_json) as string[]).join(', ')
-      } catch {
-        return ''
-      }
-    })()
-    const embed: Embed = {
-      title: `New campaign: ${c.title}`,
-      url: `${siteUrl}/campaign/${c.id}`,
-      description: `${c.summary.slice(0, 300)}${c.summary.length > 300 ? '…' : ''}`,
-      color: WHITE,
-      thumbnail: abs(c.cover_url) ? { url: abs(c.cover_url)! } : undefined,
-      fields: [
-        { name: 'Pays', value: `${usd(c.rate_cents)} per 1,000 views`, inline: true },
-        { name: 'Budget', value: usd(c.budget_cents), inline: true },
-        ...(platforms ? [{ name: 'Platforms', value: platforms, inline: true }] : []),
-      ],
-      footer: { text: `${c.creator} · logoless` },
-    }
-    await postMessage(target, { embeds: [embed], components: linkRow('Open the campaign', `${siteUrl}/campaign/${c.id}`) })
-  } catch {
-    /* an announcement is a nice-to-have */
-  }
+  const { announceNewCampaign } = await import('./campaigns')
+  await announceNewCampaign(campaignId)
 }
 
 /** Someone just earned a good amount: say so in the clips channel. */
