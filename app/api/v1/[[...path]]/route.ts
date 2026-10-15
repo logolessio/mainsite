@@ -232,7 +232,7 @@ async function handle(req: Request, method: string, path: string[]) {
   return match.run({ req, url: new URL(req.url), seg: path, method, key } as Ctx & { key: ApiKey })
 }
 
-async function run(req: Request, ctx: { params: Promise<{ path: string[] }> }) {
+async function run(req: Request, ctx: { params: Promise<{ path?: string[] }> }) {
   try {
     const { path } = await ctx.params
     return reply(await handle(req, req.method, path ?? []))

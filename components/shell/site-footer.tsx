@@ -53,6 +53,15 @@ export function SiteFooter() {
                       </TransitionLink>
                     </li>
                   ))}
+                  {group === 'Company' && (
+                    <Feature id="developers">
+                      <li>
+                        <TransitionLink href="/developers" className="text-paper/85 transition-colors hover:text-paper">
+                          Developers
+                        </TransitionLink>
+                      </li>
+                    </Feature>
+                  )}
                 </ul>
               </Reveal>
             ))}
