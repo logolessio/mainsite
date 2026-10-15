@@ -57,7 +57,7 @@ export async function artistChannel(creator: string, create: boolean, cfg?: Disc
 /** True if the artist has at least one live campaign right now. */
 async function hasLive(creator: string) {
   const d = await db()
-  const rows = (await d.prepare("SELECT creator FROM campaigns WHERE status = 'live'").all<{ creator: string }>()).results
+  const rows = (await d.prepare("SELECT creator FROM campaigns WHERE status = 'live' AND id NOT LIKE 'mock-%'").all<{ creator: string }>()).results
   return rows.some((r) => slug(r.creator) === slug(creator))
 }
 

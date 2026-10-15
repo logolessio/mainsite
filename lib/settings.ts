@@ -6,6 +6,7 @@ export const SETTING_DEFAULTS = {
   submissions_paused: '0', // 1 = no new clip submissions
   signups_paused: '0', // 1 = no new accounts
   design_font_mono: '0', // older switch: 1 = Geist Mono is the main typeface (design_font replaces it)
+  mock_public: '0', // 1 = mock campaigns (made up by an admin to try the site) are shown to everyone, not just the team
   design_font: 'inter', // the typeface for the whole site (an id from lib/fonts.ts)
   design_cover_zoom: '0', // 1 = campaign covers zoom in on hover
   design_cover_border: '0', // 1 = the thin border around campaign covers

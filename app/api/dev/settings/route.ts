@@ -16,6 +16,8 @@ export const POST = route(async (req: Request) => {
   const parsed = schema.safeParse(await body(req, 1024))
   if (!parsed.success) throw new HttpError(400, 'That switch is not valid.')
   await setSetting(parsed.data.key, parsed.data.value)
+  // the picker replaces the older "Geist Mono as the main font" switch, so choosing a font clears it
+  if (parsed.data.key === 'design_font') await setSetting('design_font_mono', '0')
   await audit({ id: dev.id, email: dev.email }, 'design.change', parsed.data.key, parsed.data.value, await ipHash(req))
   return json({ ok: true })
 })

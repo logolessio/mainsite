@@ -9,7 +9,7 @@ export async function publicStats(): Promise<PublicStats> {
     const r = await d
       .prepare(
         `SELECT
-           (SELECT COUNT(*) FROM campaigns WHERE status = 'live' AND COALESCE(admin_note, '') != 'sample') AS campaigns,
+           (SELECT COUNT(*) FROM campaigns WHERE status = 'live' AND COALESCE(admin_note, '') != 'sample' AND id NOT LIKE 'mock-%') AS campaigns,
            (SELECT COUNT(*) FROM submissions WHERE status = 'approved') AS clips,
            (SELECT COALESCE(SUM(amount_cents), 0) FROM ledger WHERE account = 'clipper' AND kind = 'earning') AS paid,
            (SELECT COALESCE(SUM(views_verified), 0) FROM submissions WHERE status = 'approved') AS views`,

@@ -3,12 +3,14 @@ import { SectionTabs } from '@/components/app/section-tabs'
 import { AdminButton } from '@/components/admin/ui'
 import { money, when } from '@/lib/format'
 import { CampaignEditor } from '@/components/admin/campaign-editor'
+import { MockCampaigns } from '@/components/admin/mock-campaigns'
 import { RemoveSamples } from '@/components/admin/remove-samples'
 import { Badge } from '@/components/app/table'
 import { Card, PageHeader } from '@/components/app/ui'
 import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
 import { type CampaignRow } from '@/lib/campaigns-db'
 import { db } from '@/lib/db'
+import { getSetting } from '@/lib/settings'
 import { pageAdmin } from '@/lib/user'
 
 export const metadata: Metadata = { title: 'Campaigns | logoless', robots: { index: false } }
@@ -39,12 +41,17 @@ export default async function Page() {
       )
       .all<Row>()
   ).results
+  const mocks = rows.filter((r) => r.id.startsWith('mock-'))
+  const mockPublic = (await getSetting('mock_public')) === '1'
   const groups = ORDER.map((s) => ({ s, items: rows.filter((r) => r.status === s) })).filter((g) => g.items.length)
 
   return (
     <>
       <SectionTabs group="campaigns" />
       <PageHeader title="Campaigns" sub="Accept a request, wait for the artist to pay, then launch. Nothing goes live until it is paid." actions={<RemoveSamples count={rows.filter((r) => r.admin_note === 'sample').length} />} />
+      <Card title="Mock campaigns" sub="Made-up campaigns to try the site with: the browse page, the campaign sheet, sending a clip, reviewing it. Nothing real is involved." className="mb-8">
+        <MockCampaigns rows={mocks.map((r) => ({ id: r.id, title: r.title, creator: r.creator, cover_url: r.cover_url, rate_cents: r.rate_cents, budget_cents: r.budget_cents, clips: r.clips }))} publicOn={mockPublic} />
+      </Card>
       {groups.length === 0 && <p className="text-mute">No campaigns yet.</p>}
       <div className="grid gap-8">
         {groups.map((g) => (
@@ -63,6 +70,7 @@ export default async function Page() {
                         {c.title} <span className="text-sm text-mute">by {c.creator}</span>
                         <Badge tone={CAMPAIGN_STATUS[c.status]?.tone}>{CAMPAIGN_STATUS[c.status]?.admin ?? c.status}</Badge>
                         {c.admin_note === 'sample' && <Badge>sample</Badge>}
+                        {c.id.startsWith('mock-') && <Badge>mock</Badge>}
                       </p>
                       <p className="mt-1 text-xs text-mute">
                         {c.owner ? `Requested by ${c.owner}` : 'No owner'} · {money(c.budget_cents)} budget · ${(c.rate_cents / 100).toFixed(2)} per 1,000 views · {c.clips} clips · pool {money(c.pool)} · updated {when(c.updated_at)}

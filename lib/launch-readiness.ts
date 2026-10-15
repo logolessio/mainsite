@@ -71,7 +71,7 @@ export async function readiness(): Promise<Readiness> {
           `SELECT
              (SELECT COUNT(*) FROM stripe_events) AS events,
              (SELECT COUNT(*) FROM campaigns WHERE admin_note = 'sample') AS samples,
-             (SELECT COUNT(*) FROM campaigns WHERE status = 'live' AND COALESCE(admin_note, '') != 'sample') AS realLive,
+             (SELECT COUNT(*) FROM campaigns WHERE status = 'live' AND COALESCE(admin_note, '') != 'sample' AND id NOT LIKE 'mock-%') AS realLive,
              (SELECT COUNT(*) FROM ledger WHERE kind = 'earning_spend' OR kind = 'campaign_fund') AS campaignPayments,
              (SELECT COUNT(*) FROM payouts WHERE status = 'sent') AS payoutsSent,
              (SELECT COUNT(*) FROM users WHERE role != 'admin') AS people,

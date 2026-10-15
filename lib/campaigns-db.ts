@@ -2,6 +2,7 @@ import type { Campaign, Platform } from './campaigns'
 import { shortDate } from './campaign-input'
 import { allCaps, getCaps } from './campaign-caps'
 import { db } from './db'
+import { isMockId, mockVisible, NOT_MOCK } from './mock-campaigns'
 
 export type CampaignRow = {
   id: string
@@ -61,7 +62,8 @@ export function toCampaign(r: CampaignRow): Campaign {
 export async function liveCampaigns(): Promise<Campaign[]> {
   try {
     const d = await db()
-    const rows = (await d.prepare("SELECT * FROM campaigns WHERE status = 'live' ORDER BY launched_at DESC, created_at DESC").all<CampaignRow>()).results
+    const show = await mockVisible()
+    const rows = (await d.prepare(`SELECT * FROM campaigns WHERE status = 'live' ${show ? '' : `AND ${NOT_MOCK}`} ORDER BY launched_at DESC, created_at DESC`).all<CampaignRow>()).results
     // how much of each campaign's budget cap has been paid out so far
     const spent = new Map<string, number>()
     try {
@@ -87,6 +89,7 @@ export async function liveCampaign(id: string): Promise<Campaign | null> {
     const d = await db()
     const r = await d.prepare("SELECT * FROM campaigns WHERE id = ?1 AND status = 'live'").bind(id).first<CampaignRow>()
     if (!r) return null
+    if (isMockId(r.id) && !(await mockVisible())) return null
     const [paid, caps] = await Promise.all([d.prepare('SELECT COALESCE(SUM(net_cents), 0) AS n FROM earnings WHERE campaign_id = ?1').bind(id).first<{ n: number }>(), getCaps(id)])
     const c = withCaps(toCampaign(r), caps)
     return r.budget_cents > 0 && paid && paid.n > 0 ? { ...c, budgetLeftPct: Math.max(0, Math.min(100, Math.round(((r.budget_cents - paid.n) / r.budget_cents) * 100))) } : c

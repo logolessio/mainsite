@@ -6,6 +6,7 @@ import { audit, type Actor } from './chain'
 import { db, nowSec, uid } from './db'
 import { announceCampaign } from './discord/outbound'
 import { HttpError } from './http'
+import { isMockId } from './mock-campaigns'
 import { balances, budgetLeft, costFor, creditEarning, releasePool, startNeeded } from './ledger'
 import { allowedPayout, getCaps } from './campaign-caps'
 import { notify, notifyFavoriters } from './notify'
@@ -178,6 +179,12 @@ export async function clipAction(actor: Actor, ip: string | null, id: string, a:
   if (views !== undefined) {
     if (views < s.views_verified) throw new HttpError(400, 'Verified views can only go up. Contact support to correct a mistake.')
     const delta = views - s.views_verified
+    if (delta > 0 && isMockId(camp.id)) {
+      // a mock campaign: the views are recorded so the review flow can be tried, but no money moves
+      await d.prepare('UPDATE submissions SET views_verified = ?2 WHERE id = ?1').bind(id, views).run()
+      await audit(actor, 'submission.views', id, `${s.views_verified} → ${views} (mock campaign, nothing paid)`, ip)
+      return { paid: null, capped: null }
+    }
     if (delta > 0) {
       const wanted = Math.floor((delta * camp.rate_cents) / 1000) // what the clipper would earn; the fee is charged to the brand on top
       // the campaign may limit what one clip, or one clipper, can earn in total

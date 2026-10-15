@@ -105,7 +105,7 @@ export const POST = route(async (req: Request) => {
     // every live campaign gets its artist channel and its live card (made now if missing)
     const { refreshCampaignCard } = await import('@/lib/discord/campaigns')
     const d0 = await db()
-    const live = (await d0.prepare("SELECT id FROM campaigns WHERE status = 'live' LIMIT 25").all<{ id: string }>()).results
+    const live = (await d0.prepare("SELECT id FROM campaigns WHERE status = 'live' AND id NOT LIKE 'mock-%' LIMIT 25").all<{ id: string }>()).results
     let done = 0
     for (const c of live) if (await refreshCampaignCard(c.id, true)) done++
     await audit(actor, 'discord.cards', null, `${done} of ${live.length}`, ip)

@@ -149,6 +149,7 @@ export async function creditEarning(input: {
   note?: string
 }) {
   const { campaignId, clipperId, payoutCents } = input
+  if (campaignId.startsWith('mock-')) throw new HttpError(400, 'A mock campaign never pays anyone.')
   if (!Number.isInteger(payoutCents) || payoutCents <= 0) throw new HttpError(400, 'Enter a valid amount.')
   const d = await db()
   const camp = await d.prepare('SELECT brand_user_id, title, budget_cents, status FROM campaigns WHERE id = ?1').bind(campaignId).first<{ brand_user_id: string | null; title: string; budget_cents: number; status: string }>()
