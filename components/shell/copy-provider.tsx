@@ -55,7 +55,16 @@ export function CopyProvider({ overrides, isAdmin, children }: { overrides: Reco
     [overrides, isAdmin, flush],
   )
 
-  useEffect(() => () => void (timer.current && clearTimeout(timer.current)), [])
+  // On unmount (and in development, where React mounts twice) drop the waiting timer and forget what was queued, so the next mount registers again.
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current)
+      timer.current = null
+      for (const k of pending.current.keys()) sent.current.delete(k)
+      pending.current.clear()
+    },
+    [],
+  )
 
   const value = useMemo(() => ({ overrides, isAdmin, editing, setEditing, tx }), [overrides, isAdmin, editing, tx])
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
