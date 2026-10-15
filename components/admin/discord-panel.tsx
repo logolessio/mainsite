@@ -16,6 +16,7 @@ type Status = {
   invite: string | null
 }
 
+type AccessLine = { label: string; ok: boolean; note: string }
 const input = 'h-10 w-full rounded-xl border border-line-strong bg-ink/80 px-3 font-mono text-xs outline-none focus:border-paper'
 const btn = 'inline-flex h-10 items-center justify-center gap-2 rounded-full px-5 text-sm transition-colors disabled:opacity-40'
 const ghost = `${btn} border border-line-strong hover:bg-paper/10`
@@ -56,6 +57,7 @@ export function DiscordPanel() {
   const [cfg, setCfg] = useState<DiscordConfig | null>(null)
   const [busy, setBusy] = useState('')
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [access, setAccess] = useState<AccessLine[] | null>(null)
   const [copied, setCopied] = useState(false)
 
   const load = useCallback(async () => {
@@ -116,7 +118,7 @@ export function DiscordPanel() {
           </li>
           <li><span className="text-paper">4.</span> Turn on Developer Mode in Discord (Settings, Advanced), then right-click a server, channel, category or role and copy its ID into the boxes below. Save.</li>
           <li><span className="text-paper">5.</span> Press <b>Register commands</b>, then <b>Post it</b> next to each channel. Drag the bot&apos;s role above the roles it hands out.</li>
-          <li><span className="text-paper">6.</span> Visibility: make <b>Welcome</b> the only category @everyone can see, and give the <b>Linked members</b> role access to the rest. People get that role the moment they link, which is how the other channels appear for them.</li>
+          <li><span className="text-paper">6.</span> Visibility: make <b>Welcome</b> the only category @everyone can see, and give the <b>Linked members</b> role access to the rest. People get that role the moment they link, which is how the other channels appear for them. <b>Important:</b> a channel hidden from @everyone is hidden from the bot too, even if the bot has View Channels. Add the bot&apos;s role to each hidden channel or category (View Channel, Send Messages, Embed Links, and Manage Channels on categories), or give the bot role Administrator. Press <b>Check the bot&apos;s access</b> to see exactly which channel is missing what.</li>
         </ol>
       </Card>
 
@@ -221,6 +223,9 @@ export function DiscordPanel() {
           <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('register', async () => { const j = (await call({ action: 'register' })) as { count?: number; where?: string }; return `Registered ${j.count} commands in ${j.where}.` })}>
             {busy === 'register' && <Loader2 className="size-4 animate-spin" />} Register commands
           </button>
+          <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('check', async () => { const j = (await call({ action: 'check' })) as { good?: boolean; lines?: AccessLine[] }; setAccess(j.lines ?? []); return j.good ? 'Everything the bot needs is in place.' : 'Some things need fixing: see the list below.' })}>
+            {busy === 'check' && <Loader2 className="size-4 animate-spin" />} Check the bot&apos;s access
+          </button>
           <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('test', async () => (await call({ action: 'test' }), 'Posted a test message.'))}>
             {busy === 'test' && <Loader2 className="size-4 animate-spin" />} Send a test message
           </button>
@@ -238,6 +243,19 @@ export function DiscordPanel() {
           <p role={msg.ok ? 'status' : 'alert'} className={`mt-4 text-sm ${msg.ok ? 'text-emerald-300' : 'text-signal'}`}>
             {msg.text}
           </p>
+        )}
+        {access && (
+          <ul className="mt-4 divide-y divide-line" aria-label="What the bot can do">
+            {access.map((l) => (
+              <li key={l.label} className="flex items-start gap-3 py-2.5 text-sm">
+                {l.ok ? <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-300" /> : <XCircle className="mt-0.5 size-4 shrink-0 text-signal" />}
+                <span className="min-w-0">
+                  <span className={l.ok ? '' : 'text-paper'}>{l.label}</span>
+                  <span className={`block text-xs ${l.ok ? 'text-mute' : 'text-signal'}`}>{l.note}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
         )}
       </Card>
     </div>

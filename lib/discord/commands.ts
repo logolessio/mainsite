@@ -10,7 +10,7 @@ import { notify } from '../notify'
 import { profileStats } from '../profile'
 import { rolesForEmail } from '../roles'
 import { submitClip } from '../submit-clip'
-import { abs, type Embed, type Message, RED, siteUrl, GREEN, WHITE, postMessage } from './api'
+import { abs, explainDiscord, type Embed, type Message, RED, siteUrl, GREEN, WHITE, postMessage } from './api'
 import { getStartedMessage, rulesMessage, siteMessage, statusMessage, supportPanel } from './panels'
 import { addUserReply, closeTicket, openTicket } from './tickets'
 import { getDiscordConfig } from './config'
@@ -547,7 +547,7 @@ async function admin(i: Interaction): Promise<Reply> {
       const cfg = await getDiscordConfig()
       const msg = which === 'start' ? getStartedMessage(cfg) : which === 'support' ? supportPanel() : statusMessage(await runHealth())
       const res = await postMessage(i.channel_id!, msg)
-      return res.ok ? embedReply({ description: 'Posted it here.', color: GREEN }) : fail('Discord would not take it. Does the bot have permission to post in this channel?')
+      return res.ok ? embedReply({ description: 'Posted it here.', color: GREEN }) : fail(explainDiscord(res, 'this channel'))
     }
   }
   return fail('Unknown admin command.')
@@ -718,13 +718,13 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<Reply
       case 'rules': {
         if (!(await isStaff(i))) return fail('Only the team can post the rules.')
         const res = await postMessage(i.channel_id!, rulesMessage(await getDiscordConfig()))
-        return res.ok ? embedReply({ description: 'Posted the rules here.', color: GREEN }) : fail('Discord would not take it. Does the bot have permission to post in this channel?')
+        return res.ok ? embedReply({ description: 'Posted the rules here.', color: GREEN }) : fail(explainDiscord(res, 'this channel'))
       }
       case 'site': {
         if (!(await isStaff(i))) return fail('Only the team can post the site card.')
         const stats = await publicStats()
         const res = await postMessage(i.channel_id!, siteMessage(stats))
-        return res.ok ? embedReply({ description: 'Posted the site card here.', color: GREEN }) : fail('Discord would not take it. Does the bot have permission to post in this channel?')
+        return res.ok ? embedReply({ description: 'Posted the site card here.', color: GREEN }) : fail(explainDiscord(res, 'this channel'))
       }
       case 'admin': return await admin(i)
     }

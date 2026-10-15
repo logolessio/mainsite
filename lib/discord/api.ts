@@ -71,3 +71,20 @@ export async function editOriginal(appId: string, interactionToken: string, m: M
 
 export const siteUrl = 'https://logoless.io'
 export const abs = (path: string | null | undefined) => (!path ? undefined : path.startsWith('http') ? path : `${siteUrl}${path.startsWith('/') ? '' : '/'}${path}`)
+
+/**
+ * Turns a refusal from Discord into a sentence that says what to do. Discord always sends a number saying why, and the
+ * number matters more than the status: a 403 can mean "cannot see the channel" or "cannot post in it".
+ */
+export function explainDiscord(r: Call<unknown>, what = 'that channel'): string {
+  const j = r.json as { code?: number; message?: string } | null
+  const code = j?.code
+  if (r.status === 401) return 'Discord rejected the bot token. Check DISCORD_BOT_TOKEN in Cloudflare.'
+  if (code === 50001) return `The bot cannot see ${what} (Missing Access). Either it is not in this server, or the channel is hidden from it. Give the bot's role View Channel on that channel, or give the role Administrator.`
+  if (code === 50013) return `The bot can see ${what} but is not allowed to post there (Missing Permissions). Allow Send Messages and Embed Links for the bot's role on that channel.`
+  if (code === 10003) return `Discord says ${what} does not exist. Check the channel ID, and that it belongs to your server.`
+  if (code === 10004) return 'Discord says that server does not exist. Check the server ID.'
+  if (code === 50007) return 'That person has direct messages from server members switched off.'
+  if (r.status === 0) return 'Could not reach Discord. Try again in a moment.'
+  return `Discord refused it (${r.status}${code ? `, code ${code}` : ''}${j?.message ? `: ${j.message}` : ''}). Press "Check the bot's access" on the Discord page to see what is missing.`
+}

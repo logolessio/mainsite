@@ -1,7 +1,8 @@
 import { z } from 'zod'
 import { audit } from '@/lib/chain'
 import { db, setting } from '@/lib/db'
-import { botReady, discord, postMessage, registerCommands, WHITE } from '@/lib/discord/api'
+import { botReady, discord, explainDiscord, postMessage, registerCommands, WHITE } from '@/lib/discord/api'
+import { checkAccess } from '@/lib/discord/diagnose'
 import { getStartedMessage, rulesMessage, siteMessage, supportPanel } from '@/lib/discord/panels'
 import { publicStats } from '@/lib/public-stats'
 import { COMMANDS } from '@/lib/discord/commands'
@@ -18,6 +19,7 @@ const PERMISSIONS = 268520464
 const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('save'), config: z.unknown() }),
   z.object({ action: z.literal('register') }),
+  z.object({ action: z.literal('check') }),
   z.object({ action: z.literal('test') }),
   z.object({ action: z.literal('post'), what: z.enum(['getStarted', 'rules', 'site', 'support', 'status']) }),
   z.object({ action: z.literal('sync') }),
@@ -74,8 +76,12 @@ export const POST = route(async (req: Request) => {
     const channel = cfg.channels.news || cfg.channels.logs
     if (!channel) throw new HttpError(409, 'Pick the news channel first.')
     const res = await postMessage(channel, { embeds: [{ title: 'The logoless bot is working', description: 'This is a test from the admin area.', color: WHITE }] })
-    if (!res.ok) throw new HttpError(502, `Discord would not take it (${res.status}). Does the bot have permission in that channel?`)
+    if (!res.ok) throw new HttpError(502, explainDiscord(res, 'the news channel'))
     return json({ ok: true })
+  }
+  if (a.action === 'check') {
+    const lines = await checkAccess(cfg)
+    return json({ ok: true, good: lines.every((l) => l.ok), lines })
   }
   if (a.action === 'post') {
     const ok = {
@@ -87,11 +93,11 @@ export const POST = route(async (req: Request) => {
     }[a.what]
     if (!ok.id) throw new HttpError(409, `Set the ${ok.label} channel first, and save.`)
     if (a.what === 'status') {
-      if (!(await refreshStatus(true))) throw new HttpError(502, 'Discord would not take it. Does the bot have permission in that channel?')
+      if (!(await refreshStatus(true))) throw new HttpError(502, 'Discord would not take the status card. Press "Check the bot\'s access" to see what is missing in that channel.')
       return json({ ok: true })
     }
     const res = await postMessage(ok.id, (await ok.msg())!)
-    if (!res.ok) throw new HttpError(502, `Discord would not take it (${res.status}). Does the bot have permission in that channel?`)
+    if (!res.ok) throw new HttpError(502, explainDiscord(res, `the ${ok.label} channel`))
     await audit(actor, 'discord.post', a.what, null, ip)
     return json({ ok: true })
   }
