@@ -19,7 +19,8 @@ const csp = [
   "media-src 'self' blob:",
   "font-src 'self' data:",
   "connect-src 'self' https://challenges.cloudflare.com",
-  'frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com https://www.youtube.com https://www.tiktok.com https://www.instagram.com',
+  // our own pages may be framed by our own pages: the dashboards preview in the dev area needs it
+  "frame-src 'self' https://logoless.io https://*.logoless.io https://challenges.cloudflare.com https://www.youtube-nocookie.com https://www.youtube.com https://www.tiktok.com https://www.instagram.com",
   "frame-ancestors 'self' https://logoless.io https://*.logoless.io",
   "form-action 'self' https://accounts.google.com https://discord.com",
   "base-uri 'self'",
