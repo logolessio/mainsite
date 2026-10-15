@@ -54,7 +54,7 @@ export function FilterBar({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.45, ease: EASE_OUT }}
-      className="glass-liquid mx-auto mb-10 flex w-full max-w-3xl flex-wrap items-center justify-center gap-1 rounded-[26px] p-1.5 md:mb-14 md:justify-between md:rounded-full md:px-3"
+      className="glass-liquid mx-auto mb-10 flex w-fit max-w-full flex-wrap items-center justify-center gap-1 rounded-[26px] p-1.5 md:mb-14 md:rounded-full md:px-3"
     >
       <div role="group" aria-label="Category" className="flex flex-wrap justify-center gap-0.5">
         {categories.map((c) => (
@@ -83,13 +83,13 @@ export function FilterBar({
         })}
       </div>
       <span aria-hidden="true" className="mx-1 hidden h-4 w-px bg-line-strong md:block" />
-      <label>
+      {/* the visible text decides the width, so the bar is only as wide as its choices; the real select sits invisibly on top */}
+      <label className="group/sort relative inline-grid h-8 cursor-pointer items-center rounded-full has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-paper/60">
         <span className="sr-only">Sort by</span>
-        <select
-          value={sort}
-          onChange={(e) => onSort(e.target.value as SortKey)}
-          className="h-8 cursor-pointer appearance-none rounded-full bg-transparent px-3 text-xs text-mute transition-colors hover:text-paper focus:outline-none"
-        >
+        <span aria-hidden="true" className="px-3 text-xs whitespace-nowrap text-mute transition-colors group-hover/sort:text-paper">
+          {SORTS.find((x) => x.key === sort)?.label}
+        </span>
+        <select value={sort} onChange={(e) => onSort(e.target.value as SortKey)} className="absolute inset-0 size-full cursor-pointer appearance-none opacity-0 focus:outline-none">
           {SORTS.map((s) => (
             <option key={s.key} value={s.key} className="bg-ink">
               {s.label}
