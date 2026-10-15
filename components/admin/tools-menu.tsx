@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useCopy } from '@/components/shell/copy-provider'
 import { EASE_OUT } from '@/lib/layout'
+import { runSiteCheck } from '@/lib/site-check-client'
 import { askAdminSecret } from './secret-dialog'
 import { cn } from '@/lib/utils'
 
@@ -89,6 +90,7 @@ export function ToolsMenu() {
     setPulse((p) => (p ? { ...p, settings: { ...p.settings, [key]: on ? '1' : '0' } } : p))
     const res = await fetch('/api/admin/settings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ key, value: on ? '1' : '0', secret: pass }) })
     if (!res.ok) load()
+    else runSiteCheck(`${key.replace(/_/g, ' ')} switched ${on ? 'on' : 'off'}`)
   }
 
   const runChecks = async () => {

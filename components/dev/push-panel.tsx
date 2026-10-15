@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Check, ExternalLink, History, Loader2, Rocket, Undo2, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { runSiteCheck } from '@/lib/site-check-client'
 import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
 
@@ -50,6 +51,7 @@ export function PushPanel({ onClose }: { onClose?: () => void }) {
     setRows(j.features)
     setLog(j.log ?? [])
     setPick(new Set())
+    runSiteCheck(action === 'push' ? 'features pushed live' : 'features taken off the live site')
     setMsg(action === 'push' ? `${ids.length} feature${ids.length > 1 ? 's' : ''} pushed. They are live on logoless.io now.` : 'Taken off the live site.')
   }
 

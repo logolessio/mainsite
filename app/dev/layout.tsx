@@ -11,6 +11,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
       items={[
         { label: 'Overview', href: '/dev', icon: 'LayoutDashboard', exact: true },
         { label: 'Design', href: '/dev/design', icon: 'Palette' },
+        { label: 'Dashboards', href: '/dev/dashboards', icon: 'Layers' },
         { label: 'Features', href: '/dev/features', icon: 'Rocket' },
         { label: 'Events', href: '/dev/events', icon: 'BarChart3' },
         { label: 'Previews', href: '/dev/previews', icon: 'Eye' },

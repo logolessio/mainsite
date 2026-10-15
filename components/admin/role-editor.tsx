@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Toggle } from '@/components/app/ui'
 import { ROLES, type Role } from '@/lib/roles'
+import { runSiteCheck } from '@/lib/site-check-client'
 import { askAdminSecret } from './secret-dialog'
 
 /** The roles someone holds. Changing them asks for the admin password, then tells the person by notification, email and Discord. */
@@ -27,6 +28,7 @@ export function RoleEditor({ userId, initial, owner, canEdit }: { userId: string
       const j = (await res.json().catch(() => ({}))) as { error?: string; roles?: Role[]; emailed?: boolean; discord?: boolean }
       if (!res.ok) throw new Error(j.error ?? 'Could not change the role.')
       setRoles(j.roles ?? next)
+      runSiteCheck(`${label} role ${on ? 'given' : 'removed'}`)
       setNote(`Saved. They were notified${j.emailed ? ', emailed' : ''}${j.discord ? ' and messaged on Discord' : ''}.`)
       router.refresh()
     } catch (e) {

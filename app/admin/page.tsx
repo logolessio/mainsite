@@ -2,18 +2,22 @@ import type { Metadata } from 'next'
 import { ActionLink } from '@/components/app/action-link'
 import { Badge } from '@/components/app/table'
 import { Card, PageHeader, StatCard } from '@/components/app/ui'
+import { LockdownButton } from '@/components/admin/lockdown'
+import { OverviewQueue } from '@/components/admin/overview-queue'
 import { Pill } from '@/components/admin/ui'
 import { money } from '@/lib/format'
 import { SITE } from '@/lib/site'
 import { counts, funds, health, paypalStatus } from '@/lib/admin-stats'
 import { newInquiryCount } from '@/lib/inquiries'
+import { allSettings } from '@/lib/settings'
 import { pageAdmin } from '@/lib/user'
 
 export const metadata: Metadata = { title: 'Admin | logoless', robots: { index: false } }
 
 export default async function Page() {
   await pageAdmin()
-  const [f, c, h, sb, inbox] = await Promise.all([funds(), counts(), health(), paypalStatus(), newInquiryCount()])
+  const [f, c, h, sb, inbox, st] = await Promise.all([funds(), counts(), health(), paypalStatus(), newInquiryCount(), allSettings()])
+  const locked = st.payouts_paused === '1' && st.submissions_paused === '1' && st.signups_paused === '1'
   const todo = [
     { label: 'Campaign requests', n: c.requests, href: '/admin/campaigns' },
     { label: 'Paid, ready to launch', n: c.readyToLaunch, href: '/admin/campaigns' },
@@ -29,6 +33,7 @@ export default async function Page() {
       <PageHeader title="Admin" sub="Money, people and what needs you right now." actions={
           <div className="flex flex-wrap gap-2">
             <ActionLink href="/admin/people">People</ActionLink>
+            <ActionLink href="/admin/broadcast" variant="ghost">Broadcast</ActionLink>
             <ActionLink href="/admin/campaigns">Campaigns</ActionLink>
           </div>
         } />
@@ -70,12 +75,18 @@ export default async function Page() {
         </Card>
       )}
 
+      <OverviewQueue />
+
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Active now" value={String(c.activeNow ?? 0)} note="Signed in, last 5 minutes" />
         <StatCard label="Active today" value={String(c.active24h ?? 0)} note={`${c.signups24h ?? 0} new in 24 hours`} />
         <StatCard label="Members" value={String(c.users ?? 0)} note={`${c.restricted ?? 0} restricted`} />
         <StatCard label="Live campaigns" value={String(c.live ?? 0)} note={`${c.awaitingPayment ?? 0} waiting for payment`} />
       </div>
+
+      <Card title="Emergency" sub="If something looks wrong, stop withdrawals, new clips and sign-ups at once. Nothing is lost, and you can open them again." className="mt-6">
+        <LockdownButton locked={locked} />
+      </Card>
 
       <Card title="Queues" className="mt-6">
         <ul className="divide-y divide-line">

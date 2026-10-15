@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { RoleEditor } from '@/components/admin/role-editor'
 import { DeleteAccountButton } from '@/components/admin/delete-account-button'
+import { AdjustMoney, MessageBox, Moderation, Recognise } from '@/components/admin/user-actions'
 import { ActionLink } from '@/components/app/action-link'
 import { Card, PageHeader } from '@/components/app/ui'
 import { ProfileCard, type ProfileLinkOut } from '@/components/profile/profile-card'
@@ -13,21 +14,22 @@ import { CLIPPING_PLATFORMS, LINK_PLATFORMS } from '@/lib/profile-style'
 import { ownerEmails, rolesOf } from '@/lib/roles'
 import { getSession } from '@/lib/session'
 import { pageAdmin } from '@/lib/user'
+import { isVerified } from '@/lib/verification'
 
 export const metadata: Metadata = { title: 'Person | logoless', robots: { index: false } }
 
-type U = { id: string; email: string; name: string | null; status: string; created_at: number; last_seen_at: number | null; signup_country: string | null; handle: string | null }
+type U = { id: string; email: string; name: string | null; status: string; risk_level: string; created_at: number; last_seen_at: number | null; signup_country: string | null; handle: string | null }
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   await pageAdmin()
   const { id } = await params
   const d = await db()
   const u = await d
-    .prepare('SELECT u.id, u.email, u.name, u.status, u.created_at, u.last_seen_at, u.signup_country, p.handle FROM users u LEFT JOIN profiles p ON p.user_id = u.id WHERE u.id = ?1')
+    .prepare('SELECT u.id, u.email, u.name, u.status, u.risk_level, u.created_at, u.last_seen_at, u.signup_country, p.handle FROM users u LEFT JOIN profiles p ON p.user_id = u.id WHERE u.id = ?1')
     .bind(id)
     .first<U>()
   if (!u) notFound()
-  const [owners, roles, session, stats, prof, discord, bot] = await Promise.all([ownerEmails(), rolesOf(u.id), getSession(), profileStats(u.id), u.handle ? profileByHandle(u.handle) : null, discordIdOf(u.id), botReady()])
+  const [owners, roles, session, stats, prof, discord, bot, ver] = await Promise.all([ownerEmails(), rolesOf(u.id), getSession(), profileStats(u.id), u.handle ? profileByHandle(u.handle) : null, discordIdOf(u.id), botReady(), isVerified(u.id, u.email)])
   const isOwner = owners.includes(u.email.toLowerCase())
   const viewerIsOwner = owners.includes((session?.user?.email ?? '').toLowerCase())
   const links: ProfileLinkOut[] = []
@@ -69,6 +71,22 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               <ActionLink href={`/admin/users?q=${encodeURIComponent(u.email)}`} variant="ghost">Manage in Users</ActionLink>
               {!isOwner && <DeleteAccountButton id={u.id} email={u.email} />}
             </div>
+          </Card>
+          <Card title="Message" sub="Send them a notification, and optionally an email.">
+            <MessageBox id={u.id} />
+          </Card>
+          {!isOwner && (
+            <>
+              <Card title="Moderation" sub="Suspend, ban or add extra checks. They are told why.">
+                <Moderation id={u.id} status={u.status} risk={u.risk_level} />
+              </Card>
+              <Card title="Money" sub="Correct a balance by hand. Needs your admin password and a reason the person can see.">
+                <AdjustMoney id={u.id} />
+              </Card>
+            </>
+          )}
+          <Card title="Verification and badges">
+            <Recognise id={u.id} verified={ver.verified} />
           </Card>
         </div>
       </div>

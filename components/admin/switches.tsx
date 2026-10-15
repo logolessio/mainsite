@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Toggle } from '@/components/app/ui'
 import { cn } from '@/lib/utils'
+import { runSiteCheck } from '@/lib/site-check-client'
 import { askAdminSecret } from './secret-dialog'
 
 async function save(key: string, value: string, secret?: string, endpoint = '/api/admin/settings') {
@@ -34,6 +35,7 @@ export function Switch({ k, label, hint, on, danger, endpoint }: { k: string; la
           setError('')
           try {
             await save(k, next ? '1' : '0', pass ?? undefined, endpoint)
+            if (danger) runSiteCheck(`${label} switched ${next ? 'on' : 'off'}`)
             router.refresh()
           } catch (e) {
             setV(!next)
@@ -67,6 +69,7 @@ export function NumberSetting({ k, label, hint, cents }: { k: string; label: str
             if (!pass) return
             try {
               await save(k, String(n), pass)
+              runSiteCheck('a money limit changed')
               setMsg('Saved')
               router.refresh()
             } catch (e) {

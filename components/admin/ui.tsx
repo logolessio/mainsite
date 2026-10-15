@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { runSiteCheck } from '@/lib/site-check-client'
 import { askAdminSecret } from './secret-dialog'
 
 /** A button that posts JSON to an admin route, then refreshes the page. Shows the server's error if it fails. */
@@ -51,6 +52,7 @@ export function AdminButton({
     if (!res?.ok) return setError(j?.error ?? 'Something went wrong.')
     setOpen(false)
     setText('')
+    if (secret) runSiteCheck(typeof children === 'string' ? children : 'an admin action')
     onDone?.(j)
     router.refresh()
   }

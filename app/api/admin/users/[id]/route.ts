@@ -54,6 +54,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
     return json({ ok: true, emailed })
   }
 
+  if (action === 'ban') await requireAdminSecret(admin.id, parsed.data.secret)
   if (action === 'suspend' || action === 'ban') {
     if (!note || note.length < 3) throw new HttpError(400, 'Add a short reason.')
     await d.prepare('UPDATE users SET status = ?2, risk_reasons = ?3 WHERE id = ?1').bind(id, action === 'ban' ? 'banned' : 'suspended', `${action === 'ban' ? 'Banned' : 'Suspended'}: ${note}`).run()

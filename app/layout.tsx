@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Geist_Mono, Inter, Inter_Tight } from 'next/font/google'
 import { connection } from 'next/server'
 import { SecretDialogHost } from '@/components/admin/secret-dialog'
+import { SiteCheckHost } from '@/components/admin/site-check-host'
 import { TextEditor } from '@/components/admin/text-editor'
 import { DevBar } from '@/components/dev/dev-bar'
 import { DevGate } from '@/components/dev/dev-gate'
@@ -72,6 +73,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <AutoCopy />
             {isAdmin && <TextEditor />}
             {isAdmin && <SecretDialogHost />}
+            {(isAdmin || isDev) && <SiteCheckHost />}
             {fs.dev && (isAdmin || isDev) && <DevBar />}
           </CopyProvider>
           </DesignProvider>

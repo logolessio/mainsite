@@ -214,3 +214,22 @@ export const PREVIEWS = [
   { id: 'role', label: 'Role given', make: () => roleChangedEmail('Sam', ['Admin', 'Developer']) },
   { id: 'plain', label: 'Delivery test', make: () => plainTestEmail() },
 ] as const
+
+/** A short message from the team to one person. */
+export function plainMessageEmail(name: string, title: string, text: string, href?: string, test = false): Mail {
+  const first = name.trim().slice(0, 60) || 'there'
+  const link = href ? (href.startsWith('/') ? `${SITE_URL}${href}` : href) : ''
+  return {
+    subject: `${test ? '[TEST] ' : ''}${title}`,
+    text: `${test ? 'THIS IS A TEST from the admin panel.\n\n' : ''}Hi ${first},\n\n${title}\n${text ? `\n${text}\n` : ''}${link ? `\n${link}\n` : ''}\nlogoless`,
+    html: layout({
+      preheader: text || title,
+      tag: test ? 'Test' : 'From the team',
+      title,
+      intro: `Hi ${first}. ${text}`.trim(),
+      body: link ? button(link, 'Open it') : '',
+      note: 'This message came from a person on the logoless team.',
+      test,
+    }),
+  }
+}

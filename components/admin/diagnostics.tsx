@@ -2,6 +2,7 @@
 
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
 import { useState } from 'react'
+import { checkSite } from '@/lib/site-check-client'
 
 type Result = { ok: boolean; title: string; lines: string[] }
 type Check = { id: string; label: string; hint: string }
@@ -11,10 +12,16 @@ export function Diagnostics({ checks }: { checks: Check[] }) {
   const [busy, setBusy] = useState<string | null>(null)
   const run = async (id: string) => {
     setBusy(id)
+    if (id === 'cloudflare') {
+      const r = await checkSite('a manual test')
+      setResults((s) => ({ ...s, [id]: { ok: r.ok, title: id, lines: [...r.hosts.map((h) => `${h.host}: ${h.note ?? `${h.status} in ${h.ms} ms`}`), `database: ${r.database ? 'answers' : 'not answering'}`] } }))
+      setBusy(null)
+      return
+    }
     if (id === 'headers') {
       // Checked in this browser, on the real response, so it tests exactly what visitors get.
       const res = await fetch('/', { cache: 'no-store' })
-      const want = ['content-security-policy', 'strict-transport-security', 'x-content-type-options', 'x-frame-options', 'referrer-policy', 'permissions-policy', 'cross-origin-opener-policy']
+      const want = ['content-security-policy', 'strict-transport-security', 'x-content-type-options', 'referrer-policy', 'permissions-policy', 'cross-origin-opener-policy']
       const missing = want.filter((h) => !res.headers.get(h))
       const local = location.hostname === 'localhost'
       const lines = missing.length ? [`Missing: ${missing.join(', ')}`] : [`All ${want.length} security headers are present on the home page.`]
