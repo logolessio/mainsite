@@ -2,7 +2,10 @@ import { z } from 'zod'
 import { campaignAction, campaignActionSchema, clipAction, clipActionSchema, inquiryReply, messageUser } from '@/lib/admin-ops'
 import { counts, funds, health } from '@/lib/admin-stats'
 import { type ApiKey, type ApiScope, authenticate } from '@/lib/adminapi'
+import { getAnnouncement, setAnnouncement } from '@/lib/announcement'
 import { db, nowSec } from '@/lib/db'
+import { changeFeatures, featureList } from '@/lib/feature-admin'
+import { getHero, listText, resetText, saveText, scanPublicPages, setHero, textHistory } from '@/lib/text-admin'
 import { postTo } from '@/lib/discord/outbound'
 import { getInquiry, listInquiries, newInquiryCount } from '@/lib/inquiries'
 import { HttpError } from '@/lib/http'
@@ -201,6 +204,41 @@ const announce: Handler = async ({ req, key }: Ctx & { key?: ApiKey }) => {
   return { ok: true }
 }
 
+// ---------- site text, features and the announcement bar ----------
+const textH: Handler = async ({ url, seg }) => {
+  if (seg[1] === 'hero') return getHero()
+  if (seg[1]) return textHistory(seg[1], num(url.searchParams.get('history'), 20, 1, 100))
+  return listText({ q: (url.searchParams.get('q') ?? '').trim().slice(0, 80), page: (url.searchParams.get('page') ?? '').slice(0, 100), edited: url.searchParams.get('edited') === '1', limit: num(url.searchParams.get('limit'), 50, 1, 200), offset: num(url.searchParams.get('offset'), 0, 0, 100000) })
+}
+const textSave: Handler = async ({ req, key }: Ctx & { key?: ApiKey }) => {
+  const a = await bodyOf(req, z.object({ key: z.string().max(40).optional(), original: z.string().max(2000).optional(), value: z.string().max(2000), reason: z.string().max(300).optional() }))
+  return { ok: true, ...(await saveText(actorOf(key!), a)) }
+}
+const textReset: Handler = async ({ req, seg, key }: Ctx & { key?: ApiKey }) => {
+  const a = await bodyOf(req, z.object({ reason: z.string().max(300).optional() }))
+  await resetText(actorOf(key!), seg[1], a.reason)
+  return { ok: true }
+}
+const heroSave: Handler = async ({ req, key }: Ctx & { key?: ApiKey }) => {
+  const a = await bodyOf(req, z.object({ variants: z.array(z.string().max(200)).max(60).nullable() }))
+  await setHero(actorOf(key!), a.variants)
+  return { ok: true, ...(await getHero()) }
+}
+const textScan: Handler = async ({ url }) => ({ ok: true, ...(await scanPublicPages(url.origin)) })
+const featuresH: Handler = async () => featureList()
+const featuresAct: Handler = async ({ req, seg, key }: Ctx & { key?: ApiKey }) => {
+  const a = await bodyOf(req, z.object({ ids: z.array(z.string().max(60)).min(1).max(40) }))
+  return { ok: true, ...(await changeFeatures(actorOf(key!), seg[1] === 'undo' ? 'undo' : 'push', a.ids)) }
+}
+const announcementH: Handler = async () => ({ announcement: (await getAnnouncement()) ?? { text: '', href: '' } })
+const announcementSet: Handler = async ({ req, key }: Ctx & { key?: ApiKey }) => {
+  const a = await bodyOf(req, z.object({ text: z.string().trim().max(140), href: z.string().trim().max(200).refine((v) => v === '' || /^\/(?!\/)[\w\-./?=&%#]*$/.test(v) || /^https:\/\/[^\s]+$/.test(v), 'Use a page on this site (like /campaign/red-room) or an https link.') }))
+  await setAnnouncement(a)
+  const { audit } = await import('@/lib/chain')
+  await audit(actorOf(key!), 'api.announcement', null, a.text || '(cleared)')
+  return { ok: true }
+}
+
 type Route = { method: 'GET' | 'POST'; first: string; shape: number; second?: string; scope: ApiScope; run: Handler }
 const ROUTES: Route[] = [
   { method: 'GET', first: 'overview', shape: 1, scope: 'read', run: overviewH },
@@ -219,13 +257,26 @@ const ROUTES: Route[] = [
   { method: 'POST', first: 'inbox', shape: 3, second: 'reply', scope: 'message', run: inboxReply },
   { method: 'POST', first: 'users', shape: 3, second: 'message', scope: 'message', run: userMessage },
   { method: 'POST', first: 'announce', shape: 1, scope: 'message', run: announce },
+  { method: 'GET', first: 'text', shape: 1, scope: 'content', run: textH },
+  { method: 'GET', first: 'text', shape: 2, scope: 'content', run: textH },
+  { method: 'POST', first: 'text', shape: 1, scope: 'content', run: textSave },
+  { method: 'POST', first: 'text', shape: 2, second: 'hero', scope: 'content', run: heroSave },
+  { method: 'POST', first: 'text', shape: 3, second: 'reset', scope: 'content', run: textReset },
+  { method: 'POST', first: 'text', shape: 2, second: 'scan', scope: 'content', run: textScan },
+  { method: 'GET', first: 'features', shape: 1, scope: 'read', run: featuresH },
+  { method: 'POST', first: 'features', shape: 2, second: 'push', scope: 'publish', run: featuresAct },
+  { method: 'POST', first: 'features', shape: 2, second: 'undo', scope: 'publish', run: featuresAct },
+  { method: 'GET', first: 'announcement', shape: 1, scope: 'read', run: announcementH },
+  { method: 'POST', first: 'announcement', shape: 1, scope: 'publish', run: announcementSet },
 ]
 
 async function handle(req: Request, method: string, path: string[]) {
   const first = path[0] ?? ''
-  const match = ROUTES.find((r) => r.method === method && r.first === first && r.shape === path.length && (!r.second || r.second === path[2]))
+  // the second word sits in third place for /things/{id}/word, and in second place for /things/word
+  const word = (r: Route) => (r.shape === 2 ? path[1] : path[2])
+  const match = ROUTES.find((r) => r.method === method && r.first === first && r.shape === path.length && (!r.second || r.second === word(r)))
   if (!match) {
-    if (first === '' || first === 'help') return { name: 'logoless owner API', version: 1, auth: 'Authorization: Bearer lgk_…', docs: 'https://owner.logoless.io/admin/api', routes: ROUTES.map((r) => `${r.method} /api/v1/${[r.first, r.shape >= 2 ? '{id}' : '', r.second ?? ''].filter(Boolean).join('/')} (${r.scope})`) }
+    if (first === '' || first === 'help') return { name: 'logoless owner API', version: 1, auth: 'Authorization: Bearer lgk_…', docs: 'https://owner.logoless.io/admin/api', routes: ROUTES.map((r) => `${r.method} /api/v1/${[r.first, r.shape >= 3 || (r.shape === 2 && !r.second) ? '{id}' : '', r.second ?? ''].filter(Boolean).join('/')} (${r.scope})`) }
     throw new HttpError(404, 'No such route. GET /api/v1 lists them.')
   }
   const key = await authenticate(req, match.scope)

@@ -509,7 +509,7 @@ async function joinCampaign(i: Interaction, campaignId: string): Promise<Reply> 
   }
   const [caps, channel] = await Promise.all([getCaps(c.id), artistChannel(c.creator, false)])
   const cfg = await getDiscordConfig()
-  return say(k.joinedCard({ id: c.id, title: c.title, summary: c.summary, already: Boolean(had), rateCents: c.rate_cents, limits: k.limitsText(caps.perPostCents, caps.perUserCents), makeThis: list(c.clip_this_json), offLimits: list(c.off_limits_json), channelId: channel && cfg.guildId ? channel : null, dm: cfg.dm }))
+  return say(k.joinedCard({ id: c.id, title: c.title, summary: c.summary, already: Boolean(had), rateCents: c.rate_cents, limits: k.limitsText(caps.perPostCents, caps.perUserCents), makeThis: list(c.clip_this_json), offLimits: list(c.off_limits_json), channelId: channel && cfg.guildId ? channel : null, guildId: cfg.guildId, dm: cfg.dm }))
 }
 
 // ---------- buttons, forms and autocomplete ----------

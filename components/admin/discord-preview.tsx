@@ -100,6 +100,7 @@ export function MessagePreview({ message }: { message: Message }) {
           {r.components.map((c, k) => (
             <span key={k} className="inline-flex h-8 items-center rounded-[3px] bg-[#4e5058] px-4 text-[0.875rem] font-medium text-white">
               {c.label}
+              {c.url && <span aria-hidden="true" className="ml-1.5 text-[0.7rem]">↗</span>}
             </span>
           ))}
         </div>

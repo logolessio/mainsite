@@ -2,7 +2,7 @@ import type { Health } from '../health'
 import { LEGAL_LINKS, SITE } from '../site'
 import type { Component, Embed, Message } from './api'
 import {
-  big, btn, bullets, card, chip, dot, go, icon, join, meter, num, row, small, usd, SITE_URL, OWNER_URL, type IconName,
+  big, btn, bullets, card, chan, chip, dot, go, icon, join, meter, num, row, small, usd, SITE_URL, OWNER_URL, type IconName,
 } from './ui'
 
 /**
@@ -207,6 +207,7 @@ export type JoinData = {
   makeThis: string[]
   offLimits: string[]
   channelId?: string | null
+  guildId?: string
   dm: boolean
 }
 export const joinedCard = (j: JoinData): Message =>
@@ -228,7 +229,7 @@ export const joinedCard = (j: JoinData): Message =>
         ],
       }),
     ],
-    [row(go('Open campaign', `/campaign/${j.id}`), go('Rules', LEGAL_LINKS[4].href), ...(j.channelId ? [go('Artist channel', `#${j.channelId}`)] : []))],
+    [row(go('Open campaign', `/campaign/${j.id}`), go('Rules', LEGAL_LINKS[4].href), ...(j.channelId && j.guildId ? [go('Artist channel', chan(j.guildId, j.channelId))] : []))],
   )
 
 // ---------- submitting ----------
@@ -333,7 +334,7 @@ export const rulesCard = (links: { rules: string; support: string; getStarted: s
     ['8. Staff decisions stand', 'If you think we got it wrong, open a ticket. Do not argue it out in the channels.'],
     ['9. Discord’s rules apply too', 'Discord’s Terms of Service and Community Guidelines are part of ours.'],
   ]
-  const ch = (id: string, label: string) => (links.guildId && id ? [go(label, `#${id}`)] : [])
+  const ch = (id: string, label: string) => (links.guildId && id ? [go(label, chan(links.guildId, id))] : [])
   return msg(
     [card({ icon: 'book', label: 'Rules', title: 'Server rules', text: 'Short and fair. Break them and the team will act.', fields: rules.map(([name, value]) => ({ name, value })), foot: 'By staying here you agree to these rules and to the logoless Terms of Service.' })],
     [row(go('Terms of Service', LEGAL_LINKS[0].href), go('Campaign rules', LEGAL_LINKS[4].href), go('Questions', '/faq'), ...ch(links.getStarted, 'Get started'), ...ch(links.support, 'Support'))],
@@ -378,7 +379,7 @@ export const getStartedCard = (links: { rules: string; guildId: string }): Messa
       card({ icon: 'spark', label: 'Welcome', title: 'Welcome to logoless', text: 'Setting up takes about three minutes. Follow the steps in order, and open a ticket if you get stuck.', thumb: logoUrl }),
       card({ icon: 'check', label: 'Step by step', fields: steps.map(([name, value]) => ({ name, value })), foot: 'Brands: add funds once on your Balance page and every campaign draws from it.' }),
     ],
-    [row(go('Create your account', '/onboarding'), btn('Link my account', 'panel:link'), btn('Live campaigns', 'panel:campaigns'), ...(links.guildId && links.rules ? [go('Rules', `#${links.rules}`)] : []))],
+    [row(go('Create your account', '/onboarding'), btn('Link my account', 'panel:link'), btn('Live campaigns', 'panel:campaigns'), ...(links.guildId && links.rules ? [go('Rules', chan(links.guildId, links.rules))] : []))],
   )
 }
 
@@ -490,7 +491,7 @@ export const trackerCard = (c: TrackerData): Message => {
         go('Open campaign', `/campaign/${c.id}`),
         go('How to start', '/for-clippers'),
         go('Rules', LEGAL_LINKS[4].href),
-        ...(c.guildId && c.getStartedChannel && !c.here ? [go('Get started', `#${c.getStartedChannel}`)] : []),
+        ...(c.guildId && c.getStartedChannel && !c.here ? [go('Get started', chan(c.guildId, c.getStartedChannel))] : []),
       ),
     ],
   )
@@ -536,8 +537,8 @@ export const announceCard = (c: AnnounceData): Message =>
       }),
     ],
     [
-      row(btn('Join campaign', `camp:join:${c.id}`), go('Open campaign', `/campaign/${c.id}`), ...(c.channelId && c.guildId ? [go('Artist channel', `#${c.channelId}`)] : []), go('Rules', LEGAL_LINKS[4].href), go('Questions', '/faq')),
-      ...(c.guildId && c.getStartedChannel ? [row(go('New here? Get started', `#${c.getStartedChannel}`), go('Pricing', '/pricing'))] : []),
+      row(btn('Join campaign', `camp:join:${c.id}`), go('Open campaign', `/campaign/${c.id}`), ...(c.channelId && c.guildId ? [go('Artist channel', chan(c.guildId, c.channelId))] : []), go('Rules', LEGAL_LINKS[4].href), go('Questions', '/faq')),
+      ...(c.guildId && c.getStartedChannel ? [row(go('New here? Get started', chan(c.guildId, c.getStartedChannel)), go('Pricing', '/pricing'))] : []),
     ],
   )
 

@@ -77,16 +77,15 @@ export const btn = (label: string, customId: string): Button => ({ type: 2, styl
 export const row = (...b: Button[]): Component => ({ type: 1, components: b.slice(0, 5) })
 
 /**
- * "Open this" without a link button. The button asks the bot, and the bot answers with the address (only the person who pressed
- * it sees the answer). `where` is a path on logoless.io, a full address, or a Discord channel id given as `#<id>`.
+ * A button that opens an address: a path on logoless.io (like /campaign/x) or a full https address. Discord draws a small arrow on
+ * every link button and that cannot be turned off, but it is the only kind of button that really takes you there.
  */
-export const go = (label: string, where: string): Button => {
-  const owner = where.startsWith(OWNER_URL) ? `o:${where.slice(OWNER_URL.length)}` : null
-  const path = where.startsWith(SITE_URL) ? where.slice(SITE_URL.length) || '/' : where
-  return btn(label, `go:${owner ?? path}`)
-}
+export const go = (label: string, where: string): Button => ({ type: 2, style: 5, label: label.slice(0, 80), url: where.startsWith('/') ? `${SITE_URL}${where}` : where })
 
-/** What the bot says when a `go` button is pressed. */
+/** The address of a channel in the server. */
+export const chan = (guildId: string, channelId: string) => `https://discord.com/channels/${guildId}/${channelId}`
+
+/** Older messages have buttons that ask the bot for the address (`go:` ids). They still work. */
 export function goTarget(id: string, guildId?: string): { url: string; label: string } | null {
   const raw = id.slice(3)
   if (raw.startsWith('#') && guildId) return { url: `https://discord.com/channels/${guildId}/${raw.slice(1)}`, label: 'this channel' }

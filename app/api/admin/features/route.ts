@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { audit } from '@/lib/chain'
-import { FEATURE_IDS, FEATURES } from '@/lib/feature-defs'
-import { featureState, pushLog, readLive, setLive } from '@/lib/features'
+import { changeFeatures } from '@/lib/feature-admin'
+import { featureList } from '@/lib/feature-admin'
+import { featureState } from '@/lib/features'
 import { ipHash, protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
 import { requireStaff } from '@/lib/user'
@@ -12,7 +12,7 @@ const schema = z.object({ action: z.enum(['push', 'undo']), ids: z.array(z.strin
 export const GET = route(async () => {
   await requireStaff()
   const s = await featureState()
-  return json({ features: FEATURES.map((f) => ({ ...f, live: s.live[f.id] === true })), log: await pushLog(), dev: s.dev })
+  return json({ ...(await featureList()), dev: s.dev })
 })
 
 /** Push features to the live site, or take them off again. Takes effect immediately. */
@@ -21,15 +21,5 @@ export const POST = route(async (req: Request) => {
   await protect(req, { name: 'admin-features', max: 40, windowSec: 600, userId: admin.id })
   const parsed = schema.safeParse(await body(req, 4096))
   if (!parsed.success) throw new HttpError(400, 'That request is not valid.')
-  const ids = [...new Set(parsed.data.ids)]
-  if (ids.some((id) => !FEATURE_IDS.includes(id))) throw new HttpError(400, 'Unknown feature.')
-  await setLive(ids, parsed.data.action === 'push', admin.email)
-  await audit({ id: admin.id, email: admin.email }, `feature.${parsed.data.action}`, ids.join(','), null, await ipHash(req))
-  const live = await readLive()
-  if (parsed.data.action === 'push') {
-    const { postTo } = await import('@/lib/discord/outbound')
-    const names = ids.map((id) => FEATURES.find((f) => f.id === id)).filter(Boolean)
-    await postTo('updates', { title: names.length === 1 ? `New: ${names[0]!.name}` : `${names.length} new things are live`, text: names.map((f) => `**${f!.name}**\n${f!.description.slice(0, 220)}`).join('\n\n'), href: names.length === 1 ? names[0]!.path : '/' })
-  }
-  return json({ ok: true, features: FEATURES.map((f) => ({ ...f, live: live[f.id] === true })), log: await pushLog() })
+  return json({ ok: true, ...(await changeFeatures({ id: admin.id, email: admin.email }, parsed.data.action, parsed.data.ids, await ipHash(req))) })
 })

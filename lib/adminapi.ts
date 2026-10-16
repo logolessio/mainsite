@@ -7,14 +7,17 @@ import { HttpError } from './http'
  * Keys for the owner API (/api/v1), so another tool, like a dashboard built in Base44, can run the admin work from anywhere.
  * A key is shown once when it is made and only a fingerprint is kept. Scopes decide what it may do. Nothing that moves money out
  * (sending withdrawals, correcting balances), deletes or bans people, changes roles or switches site-wide settings is available
- * through a key: those stay in the owner dashboard behind the admin password.
+ * through a key: those stay in the owner dashboard behind the admin password. Editing site text and pushing features live
+ * are allowed, with their own scopes.
  */
-export type ApiScope = 'read' | 'moderate' | 'message' | 'pay'
+export type ApiScope = 'read' | 'moderate' | 'message' | 'pay' | 'content' | 'publish'
 export const API_SCOPES: { id: ApiScope; label: string; hint: string }[] = [
   { id: 'read', label: 'Read', hint: 'See stats, people, campaigns, clips, withdrawals, the inbox and the audit log.' },
   { id: 'moderate', label: 'Moderate', hint: 'Accept, decline, pause, resume or end campaigns, and approve or decline clips.' },
   { id: 'message', label: 'Message', hint: 'Answer inbox conversations and tickets, message one person, post announcements in Discord.' },
-  { id: 'pay', label: 'Pay', hint: 'Set verified views on a clip, which pays the clipper out of the brand balance.' },
+  { id: 'pay', label: 'Pay', hint: 'Set verified views on a submission, which pays the creator out of the brand balance.' },
+  { id: 'content', label: 'Site text', hint: 'See every sentence on the site, change or reset any of them, and edit the home page headline lines.' },
+  { id: 'publish', label: 'Publish', hint: 'Push new features to the live site or take them off again, and set the announcement bar.' },
 ]
 export const isScope = (v: unknown): v is ApiScope => API_SCOPES.some((s) => s.id === v)
 
@@ -31,7 +34,7 @@ const revokedRow = (id: string) => `adminapi-revoked:${id}`
 const STARTER: Omit<ApiKey, 'lastUsed'> = {
   id: 'b007571a01',
   name: 'Starter key (sent by email)',
-  scopes: ['read', 'moderate', 'message'],
+  scopes: ['read', 'moderate', 'message', 'content', 'publish'],
   hash: '6bc8fc0e18fbf481521aa65c06f9e1aef3e48d5efba8408518a47d3d0757af76',
   createdAt: 1792083000,
   createdBy: 'setup',
