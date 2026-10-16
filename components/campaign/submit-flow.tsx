@@ -4,12 +4,13 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, Check, Loader2, X } from 'lucide-react'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { BrandIcon, PLATFORM_LABEL } from '@/components/brand-icon'
+import { PLATFORM_LABEL } from '@/components/brand-icon'
+import { useNavUser } from '@/components/shell/nav-user'
 import { type Campaign, type Platform, usd } from '@/lib/campaigns'
 import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
 
-type Step = 'platform' | 'confirm' | 'link' | 'preview' | 'checking'
+type Step = 'link' | 'preview' | 'checking'
 type CheckRow = { id: string; label: string; state: 'pass' | 'fail' | 'unknown'; note?: string }
 type Result = { id: string; status: 'approved' | 'declined' | 'review'; checks: CheckRow[]; reason: string | null }
 
@@ -49,35 +50,47 @@ const mockResult = (o: 'approved' | 'declined' | 'review'): Result => ({
   ],
 })
 
-const STEPS: Step[] = ['platform', 'confirm', 'link', 'preview', 'checking']
+const STEPS: Step[] = ['link', 'preview', 'checking']
 
-/** Picking a platform, confirming the campaign, pasting the link, watching it play, and following the check to the end. */
+/** Which of the campaign's platforms a link belongs to, from its address. */
+const detect = (raw: string, allowed: Platform[]): Platform | null => {
+  try {
+    const host = new URL(raw.trim()).hostname
+    return allowed.find((p) => HOSTS[p].test(host)) ?? null
+  } catch {
+    return null
+  }
+}
+
+/** Pasting the link (the platform is worked out from it), watching it play, and following the check to the end. */
 export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: Campaign; onBack: () => void; onClose?: () => void; preview?: 'approved' | 'declined' | 'review' }) {
-  const [step, setStep] = useState<Step>(campaign.platforms.length === 1 ? 'confirm' : 'platform')
-  const [platform, setPlatform] = useState<Platform>(campaign.platforms[0])
+  const [step, setStep] = useState<Step>('link')
+  // someone who is not signed in is asked to sign up or log in first, and comes straight back to this campaign
+  const { user } = useNavUser()
+  const needsAccount = !preview && user !== null && !user.signedIn
   const [url, setUrl] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [phase, setPhase] = useState<0 | 1 | 2>(0)
   const [result, setResult] = useState<Result | null>(null)
   const [asked, setAsked] = useState<'idle' | 'busy' | 'done'>('idle')
+  const platform = detect(url, campaign.platforms) ?? campaign.platforms[0]
   const embed = useMemo(() => (url ? embedUrl(platform, url.trim()) : null), [platform, url])
   const idx = STEPS.indexOf(step)
 
   const back = () => {
     setError('')
-    if (step === 'platform' || (step === 'confirm' && campaign.platforms.length === 1)) return onBack()
+    if (step === 'link') return onBack()
     setStep(STEPS[idx - 1])
   }
 
   const checkLink = () => {
-    let host = ''
     try {
-      host = new URL(url.trim()).hostname
+      new URL(url.trim())
     } catch {
       return setError('Paste the full link to your post, starting with https://')
     }
-    if (!HOSTS[platform].test(host)) return setError(`That doesn’t look like a ${PLATFORM_LABEL[platform]} link.`)
+    if (!detect(url, campaign.platforms)) return setError(`That doesn’t look like a ${campaign.platforms.map((p) => PLATFORM_LABEL[p]).join(', ').replace(/, ([^,]*)$/, ' or $1')} link.`)
     setError('')
     setStep('preview')
   }
@@ -162,63 +175,25 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
 
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={step} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25, ease: EASE_OUT }} className="mt-6 flex flex-1 flex-col items-center justify-center text-center">
-          {step === 'platform' && (
+          {step === 'link' && needsAccount && (
             <>
-              <h2 className="font-display text-3xl md:text-4xl">Where did you post it?</h2>
+              <h2 className="font-display text-3xl md:text-4xl">Make a free account first</h2>
+              <p className="mt-3 max-w-sm text-white/55">It takes a minute, and you come straight back here to paste your link.</p>
               <div className="mt-8 grid w-full max-w-sm gap-3">
-                {campaign.platforms.map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => {
-                      setPlatform(p)
-                      setStep('confirm')
-                    }}
-                    className="flex h-14 items-center justify-center gap-3 rounded-full border border-white/20 text-[17px] transition-colors hover:border-white hover:bg-white/10"
-                  >
-                    <BrandIcon name={p} className="size-5" />
-                    {PLATFORM_LABEL[p]}
-                  </button>
-                ))}
+                <Link href={`/onboarding?role=clipper`} className="inline-flex h-14 items-center justify-center rounded-full bg-white text-[16px] font-medium text-black transition-colors hover:bg-white/85">
+                  Get started
+                </Link>
+                <Link href={`/login?next=${encodeURIComponent(`/campaign/${campaign.id}`)}`} className="inline-flex h-14 items-center justify-center rounded-full border border-white/25 text-[16px] transition-colors hover:bg-white/10">
+                  I already have an account
+                </Link>
               </div>
             </>
           )}
 
-          {step === 'confirm' && (
-            <>
-              <h2 className="font-display text-3xl md:text-4xl">Check the details</h2>
-              <dl className="mt-8 grid w-full max-w-sm gap-3 text-left text-[15px]">
-                {[
-                  ['Campaign', `${campaign.title} by ${campaign.creator}`],
-                  ['Platform', PLATFORM_LABEL[platform]],
-                  ['You earn', `${usd(campaign.ratePer1k, 2)} per 1,000 verified views`],
-                ].map(([k, v]) => (
-                  <div key={k} className="flex justify-between gap-4 border-b border-white/10 pb-3">
-                    <dt className="text-white/50">{k}</dt>
-                    <dd className="text-right">{v}</dd>
-                  </div>
-                ))}
-              </dl>
-              {campaign.clipThis.length > 0 && (
-                <div className="mt-6 w-full max-w-sm text-left">
-                  <p className="text-sm text-white/50">Your clip should</p>
-                  <ul className="mt-2 grid gap-1.5 text-[15px] text-white/85">
-                    {campaign.clipThis.slice(0, 3).map((t) => (
-                      <li key={t}>{t}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              <button type="button" onClick={() => setStep('link')} className="mt-8 h-14 w-full max-w-sm rounded-full bg-white text-[16px] font-medium text-black transition-colors hover:bg-white/85">
-                Looks right
-              </button>
-            </>
-          )}
-
-          {step === 'link' && (
+          {step === 'link' && !needsAccount && (
             <>
               <h2 className="font-display text-3xl md:text-4xl">Paste the link</h2>
-              <p className="mt-3 text-white/55">The link to your {PLATFORM_LABEL[platform]} post.</p>
+              <p className="mt-3 text-white/55">The link to your post on {campaign.platforms.map((p) => PLATFORM_LABEL[p]).join(', ').replace(/, ([^,]*)$/, ' or $1')}.</p>
               <form
                 className="mt-8 w-full max-w-sm"
                 onSubmit={(e) => {
@@ -266,6 +241,7 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
                     </div>
                   ))}
                   <p className="break-all pt-1 text-[13px] text-white/45">{url}</p>
+                  {campaign.clipThis.length > 0 && <p className="text-[13px] text-white/70">It should: {campaign.clipThis.slice(0, 3).join('; ')}.</p>}
                   {campaign.offLimits.length > 0 && <p className="text-[13px] text-white/55">Not allowed: {campaign.offLimits.slice(0, 2).join('; ')}.</p>}
                 </div>
               </div>
@@ -325,7 +301,7 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
                   </p>
                   <div className="mt-4 grid gap-2.5">
                     <Link href="/dashboard/submissions" className="inline-flex h-12 items-center justify-center rounded-full bg-white text-[15px] font-medium text-black hover:bg-white/85">
-                      See it in Clips
+                      See it in Submissions
                     </Link>
                     {result.status === 'declined' && asked !== 'done' && (
                       <button type="button" onClick={askForReview} disabled={asked === 'busy'} className="h-12 rounded-full border border-white/25 text-[15px] hover:bg-white/10 disabled:opacity-50">

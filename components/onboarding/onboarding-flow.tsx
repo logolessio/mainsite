@@ -16,7 +16,7 @@ import { avatarCss, bannerCss, lookById, lookFor, lookKey } from '@/lib/looks'
 import { checkHandleAvailable, resendEmailCode, verifyEmailCode } from '@/lib/onboarding'
 import { cn } from '@/lib/utils'
 
-type Id = 'welcome' | 'role' | 'method' | 'email' | 'password' | 'code' | 'paypal' | 'name' | 'handle' | 'pictures' | 'happy' | 'saving' | 'hello' | 'tour' | 'done'
+type Id = 'welcome' | 'role' | 'method' | 'email' | 'password' | 'code' | 'paypal' | 'name' | 'handle' | 'pictures' | 'accounts' | 'happy' | 'saving' | 'hello' | 'tour' | 'done'
 
 type Data = {
   role: Role | null
@@ -30,6 +30,8 @@ type Data = {
   bannerUrl: string | null
   /** The ready-made look used for whatever was not uploaded (see lib/looks.ts). */
   lookId: string
+  /** Platform handles, for the accounts the person posts from. */
+  linked: Record<string, string>
 }
 
 type St = 'idle' | 'checking' | 'ok' | 'bad'
@@ -316,7 +318,7 @@ function MiniDash({ role, onFinish }: { role: Role; onFinish: () => void }) {
   )
 }
 
-const STEP_ORDER: Id[] = ['welcome', 'role', 'method', 'email', 'password', 'code', 'paypal', 'name', 'handle', 'pictures', 'happy', 'saving', 'hello', 'tour', 'done']
+const STEP_ORDER: Id[] = ['welcome', 'role', 'method', 'email', 'password', 'code', 'paypal', 'name', 'handle', 'pictures', 'accounts', 'happy', 'saving', 'hello', 'tour', 'done']
 
 /**
  * `preview` is an admin's dry run: it starts as a stranger would (signed out), every question works, and nothing is sent to the
@@ -341,7 +343,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
   const [tick, setTick] = useState(0) // which reassuring line to show while things are set up
   const [copied, setCopied] = useState(false)
   const [picking, setPicking] = useState<string | null>(null) // which sign-in card was pressed
-  const [data, setData] = useState<Data>({ role: initialRole ?? (startAt !== 'welcome' ? 'clipper' : null), email: sessionUser?.email ?? '', paypal: '', name: sessionUser?.name || (startAt !== 'welcome' ? 'Luna Ray' : ''), handle: startAt !== 'welcome' ? 'luna_ray' : '', avatarKey: null, avatarUrl: null, bannerKey: null, bannerUrl: null, lookId: startAt !== 'welcome' ? lookFor('luna_ray').id : '' })
+  const [data, setData] = useState<Data>({ role: initialRole ?? (startAt !== 'welcome' ? 'clipper' : null), email: sessionUser?.email ?? '', paypal: '', name: sessionUser?.name || (startAt !== 'welcome' ? 'Luna Ray' : ''), handle: startAt !== 'welcome' ? 'luna_ray' : '', avatarKey: null, avatarUrl: null, bannerKey: null, bannerUrl: null, lookId: startAt !== 'welcome' ? lookFor('luna_ray').id : '', linked: {} })
   const [signedIn, setSignedIn] = useState(Boolean(sessionUser))
   const [verifyMode, setVerifyMode] = useState(false) // the code step is proving a signed-in account, not finishing an email sign-up
   const avatarInput = useRef<HTMLInputElement>(null)
@@ -394,6 +396,8 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
         return 'Pick a username.'
       case 'pictures':
         return 'Make it yours.'
+      case 'accounts':
+        return 'Where do you post?'
       case 'happy':
         return 'Are you happy with how it looks?'
       case 'saving':
@@ -413,6 +417,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
     paypal: 'That is where your earnings go. You can change it later.',
     handle: 'This is your address on logoless. Letters, numbers and underscores.',
     pictures: 'Pick a ready-made look, or tap the circle and the wide part to upload your own. You can change it any time.',
+    accounts: 'Add the accounts you post from, so we can match your submissions to you. Skip it if you like: it is in your dashboard when you are ready.',
     saving: 'This only takes a moment.',
     hello: 'Your profile page is ready.',
   }
@@ -561,7 +566,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       const res = await fetch('/api/me/onboarding', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ role: data.role ?? 'clipper', name: data.name, handle: data.handle, avatarKey: data.avatarKey ?? (data.lookId ? lookKey(data.lookId) : null), company: brand ? data.name : undefined }),
+        body: JSON.stringify({ role: data.role ?? 'clipper', name: data.name, handle: data.handle, avatarKey: data.avatarKey ?? (data.lookId ? lookKey(data.lookId) : null), company: brand ? data.name : undefined, linked: Object.fromEntries(Object.entries(data.linked).filter(([, v]) => v.trim())) }),
       }).catch(() => null)
       if (!res?.ok) return ((await res?.json().catch(() => ({}))) as { error?: string })?.error ?? 'We could not save your profile. Please try again.'
       const banner = data.bannerKey ? { bannerKind: 'image', banner: data.bannerKey } : data.lookId ? { bannerKind: 'preset', banner: data.lookId } : null
@@ -762,8 +767,39 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                     </p>
                   )}
                   <div className="mt-8 flex flex-col items-center gap-4">
-                    <button type="button" className={primary} disabled={Boolean(uploading)} onClick={() => go('happy')}>
+                    <button type="button" className={primary} disabled={Boolean(uploading)} onClick={() => go(brand ? 'happy' : 'accounts')}>
                       Continue
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {id === 'accounts' && (
+                <>
+                  <div className="grid w-full max-w-sm gap-3">
+                    {([
+                      ['tiktok', 'TikTok', '@username'],
+                      ['youtube', 'YouTube', '@channel'],
+                      ['instagram', 'Instagram', '@username'],
+                    ] as const).map(([key, label, ph]) => (
+                      <label key={key} className="flex h-14 items-center gap-3 rounded-full border border-line-strong px-5 focus-within:border-paper">
+                        <BrandIcon name={key} className="size-5 shrink-0 text-mute" />
+                        <span className="sr-only">{label}</span>
+                        <input
+                          value={data.linked[key] ?? ''}
+                          onChange={(e) => patch({ linked: { ...data.linked, [key]: e.target.value.replace(/\s/g, '').slice(0, 60) } })}
+                          placeholder={ph}
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          className="min-w-0 flex-1 bg-transparent text-[16px] outline-none placeholder:text-mute/60"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                  <div className="mt-8 flex flex-col items-center gap-4">
+                    <button type="button" className={primary} onClick={() => go('happy')}>
+                      {Object.values(data.linked).some((v) => v.trim()) ? 'Continue' : 'Skip for now'}
                     </button>
                   </div>
                 </>
