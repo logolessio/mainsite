@@ -170,7 +170,6 @@ export function ProfileEditor() {
   const tabs: { id: TabId; label: string; icon: LucideIcon; badge?: number }[] = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'style', label: 'Style', icon: Palette },
-    { id: 'effects', label: 'Effects', icon: Sparkles },
     { id: 'privacy', label: 'Privacy', icon: Eye },
     { id: 'preview', label: 'Preview', icon: Eye },
   ]
@@ -315,8 +314,8 @@ export function ProfileEditor() {
             )}
 
             {/* ================= EFFECTS ================= */}
-            {tab === 'effects' && (
-              <div className="grid gap-8">
+            {tab === 'style' && (
+              <div className="mt-10 grid gap-8 border-t border-line pt-10">
                 <Group title="Card effect" hint="Moves over your whole card">
                   <div className="grid gap-5">
                     <button type="button" onClick={() => set('cardEffect', 'none')} aria-pressed={f.cardEffect === 'none'} className={cn('flex h-11 items-center gap-2 justify-self-start rounded-full border px-4 text-sm transition-colors', f.cardEffect === 'none' ? 'border-paper bg-paper/10' : 'border-line text-mute hover:text-paper')}>
@@ -402,7 +401,7 @@ export function ProfileEditor() {
   )
 }
 
-type TabId = 'profile' | 'style' | 'effects' | 'privacy' | 'preview'
+type TabId = 'profile' | 'style' | 'privacy' | 'preview'
 
 const EFFECT_GROUPS: { title: string; ids: string[] }[] = [
   { title: 'Weather', ids: ['snow', 'rain', 'lightning', 'smoke'] },

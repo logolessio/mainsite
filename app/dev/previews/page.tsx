@@ -50,6 +50,16 @@ export default async function Page() {
                 Open
               </Link>
             </Row>
+            <Row title="Picking a look" body="Jumps straight to the step where a ready-made picture and banner are chosen.">
+              <Link href="/onboarding?preview=1&step=pictures" className={btn}>
+                Open
+              </Link>
+            </Row>
+            <Row title="Where do you post?" body="Jumps straight to the optional step for TikTok, YouTube and Instagram.">
+              <Link href="/onboarding?preview=1&step=accounts" className={btn}>
+                Open
+              </Link>
+            </Row>
           </div>
         </Card>
 
