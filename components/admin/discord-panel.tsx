@@ -65,6 +65,7 @@ export function DiscordPanel() {
   const [to, setTo] = useState<'logs' | 'me'>('logs')
   const [progress, setProgress] = useState('')
   const [group, setGroup] = useState('Commands')
+  const [tab, setTab] = useState<'setup' | 'server' | 'messages'>('setup')
 
   const load = useCallback(async () => {
     const res = await fetch('/api/admin/discord', { cache: 'no-store' })
@@ -112,6 +113,19 @@ export function DiscordPanel() {
 
   return (
     <div className="grid max-w-4xl gap-6">
+      <div role="tablist" aria-label="Discord sections" className="flex flex-wrap gap-2">
+        {([
+          ['setup', 'Setup'],
+          ['server', 'Server'],
+          ['messages', 'Messages'],
+        ] as const).map(([id, label]) => (
+          <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`inline-flex h-10 items-center rounded-full px-5 text-sm transition-colors ${tab === id ? 'bg-paper text-ink' : 'border border-line-strong text-mute hover:text-paper'}`}>
+            {label}
+          </button>
+        ))}
+      </div>
+      {tab === 'setup' && (
+        <>
       <Card title="Is it set up?">
         <ul className="divide-y divide-line">
           <Tick ok={s.has.appId}>DISCORD_APP_ID is set in Cloudflare</Tick>
@@ -150,7 +164,11 @@ export function DiscordPanel() {
           <li><span className="text-paper">6.</span> Visibility: make <b>Welcome</b> the only category @everyone can see, and give the <b>Linked members</b> role access to the rest. People get that role the moment they link, which is how the other channels appear for them. <b>Important:</b> a channel hidden from @everyone is hidden from the bot too, even if the bot has View Channels. Add the bot&apos;s role to each hidden channel or category (View Channel, Send Messages, Embed Links, and Manage Channels on categories), or give the bot role Administrator. Press <b>Check the bot&apos;s access</b> to see exactly which channel is missing what.</li>
         </ol>
       </Card>
+        </>
+      )}
 
+      {tab === 'server' && (
+        <>
       <Card title="Server and channels" sub="IDs only. Leave a box empty to turn that part off. “Post it” puts the message in that channel (it is posted again each time you press it).">
         <div className="grid gap-5">
           <label className="grid gap-1.5">
@@ -192,7 +210,11 @@ export function DiscordPanel() {
           </label>
         </div>
       </Card>
+        </>
+      )}
 
+      {tab === 'server' && (
+        <>
       <Card title="Artist channels" sub="Campaigns for an artist are announced in that artist's channel. Anything without one goes to #news.">
         <ul className="grid gap-2">
           {cfg.artists.map((a, n) => (
@@ -209,7 +231,11 @@ export function DiscordPanel() {
           <Plus className="size-3.5" /> Add an artist
         </button>
       </Card>
+        </>
+      )}
 
+      {tab === 'server' && (
+        <>
       <Card title="Roles" sub="IDs only. The bot gives and takes these as people link and earn.">
         <div className="grid gap-5">
           <div className="grid gap-4 sm:grid-cols-3">
@@ -243,7 +269,21 @@ export function DiscordPanel() {
           </label>
         </div>
       </Card>
+          <div className="flex flex-wrap items-center gap-3">
+            <button type="button" disabled={busy === 'save'} className={solid} onClick={() => run('save', async () => (await call({ action: 'save', config: cfg }), 'Saved.'))}>
+              {busy === 'save' && <Loader2 className="size-4 animate-spin" />} Save
+            </button>
+            {msg && (
+              <p role={msg.ok ? 'status' : 'alert'} className={`text-sm ${msg.ok ? 'text-emerald-300' : 'text-signal'}`}>
+                {msg.text}
+              </p>
+            )}
+          </div>
+        </>
+      )}
 
+      {tab === 'setup' && (
+        <>
       <Card title="Make it work" sub={`${s.commands} commands: rules, site, status, support, link, profile, stats, balance, submissions, badges, campaigns, submit, leaderboard, earn, faq, report and more.`}>
         <div className="flex flex-wrap gap-2">
           <button type="button" disabled={busy === 'save'} className={solid} onClick={() => run('save', async () => (await call({ action: 'save', config: cfg }), 'Saved.'))}>
@@ -287,7 +327,11 @@ export function DiscordPanel() {
           </ul>
         )}
       </Card>
+        </>
+      )}
 
+      {tab === 'messages' && (
+        <>
       <Card title="Test every message" sub="Sends a sample of each message the bot can send, with made-up data, so you can see how it reads. Nothing real happens. In Discord you can also type /admin test and pick one.">
         <div className="flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-2 text-sm text-mute">
@@ -323,6 +367,8 @@ export function DiscordPanel() {
           ))}
         </ul>
       </Card>
+        </>
+      )}
     </div>
   )
 }

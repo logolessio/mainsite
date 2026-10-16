@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { SectionTabs } from '@/components/app/section-tabs'
 import { CheckCircle2, KeyRound, Send, XCircle } from 'lucide-react'
 import { EmailStudio, StatusButton } from '@/components/admin/email-tools'
 import { PageHeader } from '@/components/app/ui'
@@ -44,7 +43,6 @@ export default async function Page() {
 
   return (
     <>
-      <SectionTabs group="content" />
       <PageHeader title="Email" sub="Check that email works, see exactly what members receive, and send yourself a test of each one." />
       <div className="grid max-w-5xl gap-6">
         <ul className="grid gap-3 sm:grid-cols-3">

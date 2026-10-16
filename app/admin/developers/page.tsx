@@ -12,7 +12,7 @@ export default async function Page() {
   const apps = (await allApps()).map((a) => ({ ...appPublic(a), ownerEmail: a.ownerEmail }))
   return (
     <>
-      <SectionTabs group="content" />
+      <SectionTabs group="system" />
       <PageHeader title="Developer apps" sub="Apps that use Sign in with logoless. Check one to remove the “independent developer” note, or switch one off." />
       <DeveloperApps apps={apps} />
     </>

@@ -31,7 +31,6 @@ const GROUPS: Record<string, { label: string; items: Item[] }> = {
       { id: 'previews', label: 'Previews', href: '/dev/previews' },
     ],
   },
-  content: { label: 'Site', items: [{ id: 'text', label: 'Site text', href: '/admin/text' }, { id: 'broadcast', label: 'Broadcast', href: '/admin/broadcast' }, { id: 'discord', label: 'Discord', href: '/admin/discord' }, { id: 'developers', label: 'Developer apps', href: '/admin/developers' }, { id: 'email', label: 'Email', href: '/admin/email' }] },
   system: {
     label: 'System',
     items: [
@@ -40,6 +39,7 @@ const GROUPS: Record<string, { label: string; items: Item[] }> = {
       { id: 'keys', label: 'Keys', href: '/admin/keys' },
       { id: 'settings', label: 'Settings', href: '/admin/settings' },
       { id: 'api', label: 'API', href: '/admin/api' },
+      { id: 'developers', label: 'Developer apps', href: '/admin/developers' },
       { id: 'security', label: 'Security', href: '/admin/security' },
     ],
   },
