@@ -1,7 +1,8 @@
 import { db, nowSec } from '../db'
 import { createInquiry, clean, getInquiry, type Inquiry, saveInquiry } from '../inquiries'
 import { notifyAdmins } from '../notify'
-import { botReady, discord, postMessage, siteUrl, WHITE, GREEN } from './api'
+import { botReady, discord, postMessage, siteUrl } from './api'
+import { teamReplyCard, ticketClosedCard, ticketThreadCard } from './cards'
 import { channelUrl, getDiscordConfig, slug } from './config'
 import { logToDiscord } from './outbound'
 
@@ -14,16 +15,6 @@ const VIEW = 1024
 const SEND = 2048
 const HISTORY = 65536
 const ALLOW = String(VIEW + SEND + HISTORY)
-
-const buttons = (id: string) => [
-  {
-    type: 1 as const,
-    components: [
-      { type: 2 as const, style: 1 as const, label: 'Reply', custom_id: `ticket:reply:${id}` },
-      { type: 2 as const, style: 4 as const, label: 'Close ticket', custom_id: `ticket:close:${id}` },
-    ],
-  },
-]
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 async function background(p: Promise<unknown>) {
@@ -75,30 +66,20 @@ export async function openTicket(a: { discordId: string; discordName: string; us
     inq.discord = { channelId, userId: a.discordId }
     await saveInquiry(inq)
     await d.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?1, ?2, ?3) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at').bind(`discord:ticket:${a.discordId}`, inq.id, nowSec()).run()
-    await postMessage(channelId, {
-      content: `<@${a.discordId}>${cfg.roles.staff ? ` <@&${cfg.roles.staff}>` : ''}`,
-      embeds: [
-        { title: subject, description: text, color: WHITE, author: { name: a.discordName }, footer: { text: `Ticket ${inq.id} · the team answers here and in the dashboard` } },
-        { description: 'A person will answer soon. Use **Reply** to add more, or **Close ticket** when you are done.', color: WHITE },
-      ],
-      components: buttons(inq.id),
-      allowed_mentions: { users: [a.discordId], roles: cfg.roles.staff ? [cfg.roles.staff] : [] },
-    })
+    await postMessage(
+      channelId,
+      ticketThreadCard({ ref: inq.id, subject, text, who: a.discordName, pings: `<@${a.discordId}>${cfg.roles.staff ? ` <@&${cfg.roles.staff}>` : ''}`, staffId: cfg.roles.staff || undefined, userId: a.discordId }),
+    )
   }
   await notifyAdmins({ title: `New ticket: ${subject}`.slice(0, 120), body: text.slice(0, 160), href: `/admin/inbox/${inq.id}`, dedupe: `inq-discord:${inq.id}` })
-  await logToDiscord(`🎫 New ticket from <@${a.discordId}>: ${subject}`)
+  await logToDiscord(`New ticket from <@${a.discordId}>: ${subject}`, 'ticket')
   return { ok: true, inquiry: inq, channelId }
 }
 
 /** The team answered in the dashboard: say it in the ticket channel and ping the person. */
 export async function postTeamReply(inq: Inquiry, text: string, who: string) {
   if (!inq.discord) return false
-  const res = await postMessage(inq.discord.channelId, {
-    content: `<@${inq.discord.userId}>`,
-    embeds: [{ description: text.slice(0, 3800), color: GREEN, author: { name: `${who} · logoless team` } }],
-    components: buttons(inq.id),
-    allowed_mentions: { users: [inq.discord.userId] },
-  })
+  const res = await postMessage(inq.discord.channelId, teamReplyCard({ who, text, ref: inq.id, userId: inq.discord.userId }))
   return res.ok
 }
 
@@ -121,7 +102,7 @@ export async function closeTicket(inq: Inquiry, by: string) {
   const { channelId, userId } = inq.discord
   const d = await db()
   await d.prepare('DELETE FROM settings WHERE key = ?1').bind(`discord:ticket:${userId}`).run()
-  await postMessage(channelId, { embeds: [{ description: `Ticket closed by ${by}. This channel will be removed in a few seconds. The conversation is kept in the dashboard, and you can open a new ticket any time.`, color: WHITE }], allowed_mentions: { parse: [] } })
+  await postMessage(channelId, ticketClosedCard(by))
   await background(
     (async () => {
       await sleep(8000)

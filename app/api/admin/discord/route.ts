@@ -1,7 +1,10 @@
 import { z } from 'zod'
 import { audit } from '@/lib/chain'
 import { db, setting } from '@/lib/db'
-import { botReady, discord, explainDiscord, postMessage, registerCommands, WHITE } from '@/lib/discord/api'
+import { botReady, discord, explainDiscord, postMessage, registerCommands, sendDm } from '@/lib/discord/api'
+import { done } from '@/lib/discord/cards'
+import { discordIdFor } from '@/lib/discord/link'
+import { SAMPLE_BY_ID, sampleList } from '@/lib/discord/samples'
 import { checkAccess } from '@/lib/discord/diagnose'
 import { getStartedMessage, rulesMessage, siteMessage, supportPanel } from '@/lib/discord/panels'
 import { publicStats } from '@/lib/public-stats'
@@ -21,6 +24,7 @@ const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('register') }),
   z.object({ action: z.literal('check') }),
   z.object({ action: z.literal('test') }),
+  z.object({ action: z.literal('sample'), id: z.string().max(60), to: z.enum(['logs', 'me']).default('logs'), channel: z.string().max(30).optional() }),
   z.object({ action: z.literal('post'), what: z.enum(['getStarted', 'rules', 'site', 'support', 'status']) }),
   z.object({ action: z.literal('sync') }),
   z.object({ action: z.literal('artists') }),
@@ -43,6 +47,7 @@ export const GET = route(async () => {
     cfg,
     linked: (linked?.n ?? 0) + (byLogin?.n ?? 0),
     commands: COMMANDS.length,
+    samples: sampleList(),
     endpoint: 'https://logoless.io/api/discord/interactions',
     invite: appId ? `https://discord.com/oauth2/authorize?client_id=${appId}&scope=bot%20applications.commands&permissions=${PERMISSIONS}` : null,
   })
@@ -75,9 +80,25 @@ export const POST = route(async (req: Request) => {
   if (a.action === 'test') {
     const channel = cfg.channels.news || cfg.channels.logs
     if (!channel) throw new HttpError(409, 'Pick the news channel first.')
-    const res = await postMessage(channel, { embeds: [{ title: 'The logoless bot is working', description: 'This is a test from the admin area.', color: WHITE }] })
+    const res = await postMessage(channel, done('This is a test from the admin area.', 'The bot is working'))
     if (!res.ok) throw new HttpError(502, explainDiscord(res, 'the news channel'))
     return json({ ok: true })
+  }
+  if (a.action === 'sample') {
+    const sample = SAMPLE_BY_ID[a.id]
+    if (!sample) throw new HttpError(404, 'There is no sample by that name.')
+    const message = sample.build()
+    if (a.to === 'me') {
+      const did = await discordIdFor(admin.id)
+      if (!did) throw new HttpError(409, 'Link your own Discord first (Settings, Connect Discord), then I can message you.')
+      if (!(await sendDm(did, message))) throw new HttpError(502, 'Discord would not take the direct message. Check that you allow messages from server members.')
+      return json({ ok: true, where: 'your direct messages' })
+    }
+    const channel = (a.channel && /^\d{15,22}$/.test(a.channel) ? a.channel : '') || cfg.channels.logs || cfg.channels.news
+    if (!channel) throw new HttpError(409, 'Set the team log channel (or the news channel) first, and save.')
+    const res = await postMessage(channel, message)
+    if (!res.ok) throw new HttpError(502, explainDiscord(res, 'that channel'))
+    return json({ ok: true, where: 'the team log channel' })
   }
   if (a.action === 'check') {
     const lines = await checkAccess(cfg)
@@ -125,7 +146,7 @@ export const POST = route(async (req: Request) => {
     const s = await syncRoles(r.value)
     if (s.ok && (s.added.length || s.removed.length)) changed++
   }
-  await logToDiscord(`🔄 Roles refreshed by ${admin.email}: ${changed} of ${rows.length} changed.`)
+  await logToDiscord(`Roles refreshed by ${admin.email}: ${changed} of ${rows.length} changed.`, 'spark')
   await audit(actor, 'discord.sync', null, `${rows.length} members, ${changed} changed`, ip)
   return json({ ok: true, checked: rows.length, changed })
 })

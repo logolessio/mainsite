@@ -4,6 +4,8 @@ import { CheckCircle2, Copy, ExternalLink, Loader2, Plus, X, XCircle } from 'luc
 import { useCallback, useEffect, useState } from 'react'
 import type { DiscordConfig } from '@/lib/discord/config'
 import { Card } from '@/components/app/ui'
+import { SAMPLES } from '@/lib/discord/samples'
+import { MessagePreview } from './discord-preview'
 
 type Status = {
   has: { token: boolean; appId: boolean; key: boolean }
@@ -12,6 +14,7 @@ type Status = {
   cfg: DiscordConfig
   linked: number
   commands: number
+  samples: { id: string; label: string; group: string }[]
   endpoint: string
   invite: string | null
 }
@@ -59,6 +62,9 @@ export function DiscordPanel() {
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [access, setAccess] = useState<AccessLine[] | null>(null)
   const [copied, setCopied] = useState(false)
+  const [to, setTo] = useState<'logs' | 'me'>('logs')
+  const [progress, setProgress] = useState('')
+  const [group, setGroup] = useState('Commands')
 
   const load = useCallback(async () => {
     const res = await fetch('/api/admin/discord', { cache: 'no-store' })
@@ -78,6 +84,25 @@ export function DiscordPanel() {
     } catch (e) {
       setMsg({ ok: false, text: e instanceof Error ? e.message : 'That did not work.' })
     }
+    setBusy('')
+  }
+
+  const sendSample = (id: string) => call({ action: 'sample', id, to })
+  const sendAll = async () => {
+    if (!s) return
+    setBusy('all')
+    setMsg(null)
+    try {
+      for (let n = 0; n < s.samples.length; n++) {
+        setProgress(`Sending ${n + 1} of ${s.samples.length}: ${s.samples[n].label}`)
+        await sendSample(s.samples[n].id)
+        await new Promise((r) => setTimeout(r, 1300)) // Discord allows about five messages every five seconds in one channel
+      }
+      setMsg({ ok: true, text: `Sent all ${s.samples.length} samples.` })
+    } catch (e) {
+      setMsg({ ok: false, text: e instanceof Error ? e.message : 'That did not work.' })
+    }
+    setProgress('')
     setBusy('')
   }
 
@@ -215,7 +240,7 @@ export function DiscordPanel() {
         </div>
       </Card>
 
-      <Card title="Make it work" sub={`${s.commands} commands: rules, site, status, support, link, profile, stats, balance, clips, badges, campaigns, submit, leaderboard, earn, faq, report and more.`}>
+      <Card title="Make it work" sub={`${s.commands} commands: rules, site, status, support, link, profile, stats, balance, submissions, badges, campaigns, submit, leaderboard, earn, faq, report and more.`}>
         <div className="flex flex-wrap gap-2">
           <button type="button" disabled={busy === 'save'} className={solid} onClick={() => run('save', async () => (await call({ action: 'save', config: cfg }), 'Saved.'))}>
             {busy === 'save' && <Loader2 className="size-4 animate-spin" />} Save
@@ -257,6 +282,42 @@ export function DiscordPanel() {
             ))}
           </ul>
         )}
+      </Card>
+
+      <Card title="Test every message" sub="Sends a sample of each message the bot can send, with made-up data, so you can see how it reads. Nothing real happens. In Discord you can also type /admin test and pick one.">
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-sm text-mute">
+            Send to
+            <select value={to} onChange={(e) => setTo(e.target.value as 'logs' | 'me')} className="h-10 rounded-full border border-line-strong bg-ink/80 px-4 text-sm text-paper outline-none focus:border-paper">
+              <option value="logs">The team log channel</option>
+              <option value="me">My direct messages</option>
+            </select>
+          </label>
+          <button type="button" disabled={Boolean(busy)} className={solid} onClick={sendAll}>
+            {busy === 'all' && <Loader2 className="size-4 animate-spin" />} Send all {s.samples.length}
+          </button>
+          {progress && <span className="text-sm text-mute">{progress}</span>}
+        </div>
+        <div role="tablist" aria-label="Kinds of message" className="mt-6 flex flex-wrap gap-2">
+          {Array.from(new Set(s.samples.map((x) => x.group))).map((g) => (
+            <button key={g} type="button" role="tab" aria-selected={group === g} onClick={() => setGroup(g)} className={`inline-flex h-9 items-center rounded-full px-4 text-sm transition-colors ${group === g ? 'bg-paper text-ink' : 'border border-line-strong text-mute hover:text-paper'}`}>
+              {g}
+            </button>
+          ))}
+        </div>
+        <ul className="mt-6 grid gap-8">
+          {SAMPLES.filter((x) => x.group === group).map((x) => (
+            <li key={x.id} className="grid gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-[15px]">{x.label}</p>
+                <button type="button" disabled={Boolean(busy)} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line-strong px-4 text-xs transition-colors hover:bg-paper/10 disabled:opacity-40" onClick={() => run(`sample-${x.id}`, async () => { const j = (await sendSample(x.id)) as { where?: string }; return `Sent “${x.label}” to ${j.where}.` })}>
+                  {busy === `sample-${x.id}` && <Loader2 className="size-3.5 animate-spin" />} Send to {to === 'me' ? 'me' : 'the log channel'}
+                </button>
+              </div>
+              <MessagePreview message={x.build()} />
+            </li>
+          ))}
+        </ul>
       </Card>
     </div>
   )

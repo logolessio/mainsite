@@ -1,17 +1,15 @@
 import { type CampaignRow, campaignRow } from '../campaigns-db'
 import { getCaps } from '../campaign-caps'
 import { db, nowSec } from '../db'
-import { abs, botReady, discord, type Embed, type Message, postMessage, siteUrl, GREEN } from './api'
-import { channelUrl, type DiscordConfig, getDiscordConfig, slug } from './config'
-import { LEGAL_LINKS } from '../site'
+import { abs, botReady, discord, type Message, postMessage } from './api'
+import { announceCard, limitsText, trackerCard } from './cards'
+import { type DiscordConfig, getDiscordConfig, slug } from './config'
 
 /**
  * Campaigns in the server. Every artist has a channel (made when their first campaign goes live), where each campaign gets a card
  * with the cover, the details and a live tracker that keeps itself up to date. New campaigns are announced in the new-campaigns
  * channel with a Join button. An artist with no live campaign has their channel moved to the inactive category.
  */
-const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { maximumFractionDigits: 2 })}`
-const btn = (label: string, url: string) => ({ type: 2 as const, style: 5 as const, label, url })
 const SOON = 20 // seconds between card edits for one campaign
 const sleepless = async (p: Promise<unknown>) => {
   try {
@@ -86,11 +84,6 @@ export async function syncAllArtists() {
 }
 
 // ---------- the card ----------
-const bar = (pct: number) => {
-  const filled = Math.max(0, Math.min(10, Math.round(pct / 10)))
-  return `${'▰'.repeat(filled)}${'▱'.repeat(10 - filled)}`
-}
-
 async function stats(c: CampaignRow) {
   const d = await db()
   const [paid, clips, joined] = await Promise.all([
@@ -102,63 +95,41 @@ async function stats(c: CampaignRow) {
   return { paidCents, leftCents: Math.max(0, c.budget_cents - paidCents), leftPct: c.budget_cents > 0 ? Math.max(0, Math.min(100, Math.round(((c.budget_cents - paidCents) / c.budget_cents) * 100))) : 100, clips: clips?.clips ?? 0, views: clips?.views ?? 0, clippers: clips?.clippers ?? 0, joined: joined?.n ?? 0 }
 }
 
-const STATUS: Record<string, { label: string; color: number }> = {
-  live: { label: '🟢 Live', color: 0xf3f2ee },
-  paused: { label: '🟡 Paused', color: 0xf5c451 },
-  ended: { label: '⚪ Ended', color: 0x55555d },
+const list = (j: string, n = 4): string[] => {
+  try {
+    return (JSON.parse(j) as string[]).slice(0, n)
+  } catch {
+    return []
+  }
 }
 
 /** The live card for a campaign: cover, details and the numbers that change. */
 export async function campaignCard(c: CampaignRow, cfg: DiscordConfig, channelId?: string | null): Promise<Message> {
   const [s, caps] = await Promise.all([stats(c), getCaps(c.id)])
-  const st = STATUS[c.status] ?? { label: c.status, color: 0x55555d }
-  const platforms = (() => {
-    try {
-      return (JSON.parse(c.platforms_json) as string[]).join(', ')
-    } catch {
-      return ''
-    }
-  })()
-  const list = (j: string) => {
-    try {
-      return (JSON.parse(j) as string[]).slice(0, 4).map((x) => `• ${x}`).join('\n')
-    } catch {
-      return ''
-    }
-  }
-  const clipThis = list(c.clip_this_json)
-  const offLimits = list(c.off_limits_json)
-  const limits = [caps.perPostCents ? `${usd(caps.perPostCents)} per clip` : '', caps.perUserCents ? `${usd(caps.perUserCents)} per clipper` : ''].filter(Boolean).join(' · ')
-  const embed: Embed = {
-    title: `${c.title}`,
-    url: `${siteUrl}/campaign/${c.id}`,
-    description: `**${c.creator}** · ${st.label}\n${c.summary.slice(0, 350)}${c.summary.length > 350 ? '…' : ''}`,
-    color: st.color,
-    image: abs(c.cover_url) ? { url: abs(c.cover_url)! } : undefined,
-    fields: [
-      { name: 'Pays', value: `${usd(c.rate_cents)} per 1,000 views`, inline: true },
-      { name: 'Platforms', value: platforms || 'Any', inline: true },
-      { name: 'Joined', value: `${s.joined.toLocaleString('en-US')}`, inline: true },
-      { name: 'Budget left', value: `${bar(s.leftPct)} **${s.leftPct}%**\n${usd(s.leftCents)} of ${usd(c.budget_cents)}`, inline: false },
-      { name: 'Paid out', value: usd(s.paidCents), inline: true },
-      { name: 'Clips approved', value: s.clips.toLocaleString('en-US'), inline: true },
-      { name: 'Verified views', value: s.views.toLocaleString('en-US'), inline: true },
-      ...(limits ? [{ name: 'Limits', value: `Up to ${limits}`, inline: false }] : []),
-      ...(clipThis ? [{ name: 'Clip this', value: clipThis, inline: true }] : []),
-      ...(offLimits ? [{ name: 'Off limits', value: offLimits, inline: true }] : []),
-    ],
-    footer: { text: `Live tracker · updates itself${c.ends_on ? ` · ends ${c.ends_on}` : ''}` },
-    timestamp: new Date().toISOString(),
-  }
-  const live = c.status === 'live'
-  const row1 = [
-    ...(live ? [{ type: 2 as const, style: 1 as const, label: 'Join campaign', custom_id: `camp:join:${c.id}` }] : []),
-    btn('Open campaign', `${siteUrl}/campaign/${c.id}`),
-    btn('How to start', `${siteUrl}/for-clippers`),
-    btn('Rules', `${siteUrl}${LEGAL_LINKS[4].href}`),
-    ...(cfg.guildId && cfg.channels.getStarted && channelId !== cfg.channels.getStarted ? [btn('Get started', channelUrl(cfg.guildId, cfg.channels.getStarted))] : []),
-  ]
-  return { embeds: [embed], components: [{ type: 1, components: row1.slice(0, 5) }], allowed_mentions: { parse: [] } }
+  return trackerCard({
+    id: c.id,
+    title: c.title,
+    creator: c.creator,
+    status: c.status,
+    summary: c.summary,
+    cover: abs(c.cover_url),
+    rateCents: c.rate_cents,
+    budgetCents: c.budget_cents,
+    platforms: list(c.platforms_json, 6),
+    leftPct: s.leftPct,
+    leftCents: s.leftCents,
+    paidCents: s.paidCents,
+    approved: s.clips,
+    views: s.views,
+    joined: s.joined,
+    limits: limitsText(caps.perPostCents, caps.perUserCents),
+    makeThis: list(c.clip_this_json),
+    offLimits: list(c.off_limits_json),
+    endsOn: c.ends_on,
+    guildId: cfg.guildId,
+    getStartedChannel: cfg.channels.getStarted,
+    here: channelId === cfg.channels.getStarted,
+  })
 }
 
 /** Updates the card in the artist's channel, or posts it the first time. Edits are spaced out so the numbers do not hammer Discord. */
@@ -223,44 +194,26 @@ export async function announceNewCampaign(campaignId: string) {
     await refreshCampaignCard(campaignId, true)
     const target = cfg.channels.newCampaigns || cfg.channels.news
     if (!target) return
-    const s = await stats(c)
-    const caps = await getCaps(c.id)
-    const platforms = (() => {
-      try {
-        return (JSON.parse(c.platforms_json) as string[]).join(', ')
-      } catch {
-        return ''
-      }
-    })()
-    const limits = [caps.perPostCents ? `${usd(caps.perPostCents)} per clip` : '', caps.perUserCents ? `${usd(caps.perUserCents)} per clipper` : ''].filter(Boolean).join(' · ')
-    const where = [channel ? `<#${channel}> (live tracker)` : '', `[logoless.io/campaign/${c.id}](${siteUrl}/campaign/${c.id})`].filter(Boolean).join('\n')
-    const embed: Embed = {
-      title: `New campaign: ${c.title}`,
-      url: `${siteUrl}/campaign/${c.id}`,
-      description: `**${c.creator}** just launched a campaign. Clip it, post it, get paid for every 1,000 verified views.\n\n${c.summary.slice(0, 500)}${c.summary.length > 500 ? '…' : ''}`,
-      color: GREEN,
-      image: abs(c.cover_url) ? { url: abs(c.cover_url)! } : undefined,
-      fields: [
-        { name: 'Pays', value: `**${usd(c.rate_cents)}** per 1,000 views`, inline: true },
-        { name: 'Budget', value: usd(c.budget_cents), inline: true },
-        { name: 'Platforms', value: platforms || 'Any', inline: true },
-        ...(limits ? [{ name: 'Limits', value: `Up to ${limits}`, inline: false }] : []),
-        ...(c.ends_on ? [{ name: 'Ends', value: c.ends_on, inline: true }] : []),
-        { name: 'Where to find it', value: where, inline: false },
-        { name: 'How to get started', value: '**1.** Press **Join campaign** below.\n**2.** Read the brief and the rules on the campaign page.\n**3.** Make your clip and post it on your own account.\n**4.** Send it with `/submit` or paste the link on the campaign page.\n**5.** Approved views turn into money. Withdraw from $10, and we pay PayPal’s fees.', inline: false },
-      ],
-      footer: { text: s.joined ? `${s.joined} joined already` : 'Be one of the first to join' },
-      timestamp: new Date().toISOString(),
-    }
-    const links = [btn('Open campaign', `${siteUrl}/campaign/${c.id}`), ...(channel && cfg.guildId ? [btn('Artist channel', channelUrl(cfg.guildId, channel))] : []), btn('Rules', `${siteUrl}${LEGAL_LINKS[4].href}`), btn('Questions', `${siteUrl}/faq`)]
-    await postMessage(target, {
-      embeds: [embed],
-      components: [
-        { type: 1 as const, components: [{ type: 2 as const, style: 1 as const, label: 'Join campaign', custom_id: `camp:join:${c.id}` }, ...links].slice(0, 5) },
-        ...(cfg.guildId && cfg.channels.getStarted ? [{ type: 1 as const, components: [btn('New here? Get started', channelUrl(cfg.guildId, cfg.channels.getStarted)), btn('Pricing', `${siteUrl}/pricing`)] }] : []),
-      ],
-      allowed_mentions: { parse: [] },
-    })
+    const [s, caps] = await Promise.all([stats(c), getCaps(c.id)])
+    await postMessage(
+      target,
+      announceCard({
+        id: c.id,
+        title: c.title,
+        creator: c.creator,
+        summary: c.summary,
+        cover: abs(c.cover_url),
+        rateCents: c.rate_cents,
+        budgetCents: c.budget_cents,
+        platforms: list(c.platforms_json, 6),
+        limits: limitsText(caps.perPostCents, caps.perUserCents),
+        endsOn: c.ends_on,
+        channelId: channel,
+        joined: s.joined,
+        guildId: cfg.guildId,
+        getStartedChannel: cfg.channels.getStarted,
+      }),
+    )
   } catch {
     /* an announcement is a nice-to-have */
   }

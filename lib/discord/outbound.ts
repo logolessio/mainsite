@@ -1,12 +1,11 @@
 import { db, nowSec } from '../db'
 import { runHealth } from '../health'
-import { abs, botReady, discord, type Embed, postMessage, siteUrl, WHITE, GREEN } from './api'
-import { getDiscordConfig, slug } from './config'
+import { abs, botReady, discord, postMessage, siteUrl } from './api'
+import { logCard, postCard, shoutoutCard, welcomeMemberCard } from './cards'
+import { getDiscordConfig } from './config'
 import { discordIdFor } from './link'
-import { logoUrl, statusMessage } from './panels'
-
-const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { maximumFractionDigits: 2 })}`
-const linkRow = (label: string, url: string) => [{ type: 1 as const, components: [{ type: 2 as const, style: 5 as const, label, url }] }]
+import { statusMessage } from './panels'
+import type { IconName } from './ui'
 
 /** Runs a Discord post to the end even after the page has been answered. */
 async function background(p: Promise<unknown>) {
@@ -19,11 +18,11 @@ async function background(p: Promise<unknown>) {
 }
 
 /** A line in the team's log channel. Quiet when the bot is not set up. */
-export async function logToDiscord(text: string) {
+export async function logToDiscord(text: string, icon: IconName = 'info') {
   try {
     const cfg = await getDiscordConfig()
     if (!cfg.channels.logs || !(await botReady())) return
-    await postMessage(cfg.channels.logs, { content: text.slice(0, 1900), allowed_mentions: { parse: [] } })
+    await postMessage(cfg.channels.logs, logCard({ icon, text }))
   } catch {
     /* logging must never get in the way */
   }
@@ -49,10 +48,7 @@ export async function shoutout(clipperUserId: string, netCents: number, campaign
     } catch {
       /* private by default */
     }
-    await postMessage(cfg.channels.clips, {
-      embeds: [{ description: showEarnings ? `**${p.display_name}** just earned **${usd(netCents)}** on **${campaignTitle}**.` : `**${p.display_name}** just got paid on **${campaignTitle}**.`, url: `${siteUrl}/@${p.handle}`, color: GREEN }],
-      allowed_mentions: { parse: [] },
-    })
+    await postMessage(cfg.channels.clips, shoutoutCard({ name: p.display_name, handle: p.handle, campaign: campaignTitle, cents: showEarnings ? netCents : null }))
   } catch {
     /* ignore */
   }
@@ -66,11 +62,7 @@ export async function postTo(where: 'news' | 'updates', post: Post): Promise<boo
   const channel = cfg.channels[where]
   if (!channel || !(await botReady())) return false
   const url = post.href ? (post.href.startsWith('http') ? post.href : `${siteUrl}${post.href}`) : undefined
-  const res = await postMessage(channel, {
-    embeds: [{ title: post.title.slice(0, 250), description: post.text.slice(0, 3800) || undefined, url, color: WHITE, thumbnail: { url: logoUrl }, footer: { text: where === 'news' ? 'logoless news' : 'logoless update' }, timestamp: new Date().toISOString() }],
-    components: url ? linkRow(post.label ?? 'Read more', url) : undefined,
-    allowed_mentions: { parse: [] },
-  })
+  const res = await postMessage(channel, postCard({ where, title: post.title, text: post.text.slice(0, 3800), url, label: post.label }))
   return res.ok
 }
 
@@ -103,33 +95,24 @@ export async function welcomeMember(userId: string) {
     const niches = parse<string[]>(p.niches_json, [])
     const platforms = [...new Set(links.map((l) => l.platform).filter((x) => ['tiktok', 'youtube', 'instagram'].includes(x)))]
     const did = await discordIdFor(userId)
-    const color = /^#[0-9a-f]{6}$/i.test(p.accent) ? parseInt(p.accent.slice(1), 16) : WHITE
-    const fields = [
-      { name: 'Member', value: `#${p.n.toLocaleString('en-US')}`, inline: true },
-      { name: 'Joined as', value: p.brand ? 'A brand' : 'A creator', inline: true },
-      ...(p.country ? [{ name: 'From', value: p.country, inline: true }] : []),
-      ...(platforms.length ? [{ name: 'Clips from', value: platforms.join(', '), inline: true }] : []),
-      ...(niches.length ? [{ name: 'Into', value: niches.slice(0, 4).join(', '), inline: true }] : []),
-    ]
     const claimed = await d.prepare("INSERT OR IGNORE INTO settings (key, value, updated_at) VALUES (?1, '1', ?2)").bind(`discord:welcomed:${userId}`, nowSec()).run()
     if (claimed.meta.changes !== 1) return
-    await postMessage(cfg.channels.system, {
-      content: did ? `Welcome <@${did}>` : undefined,
-      embeds: [
-        {
-          title: `Welcome, ${p.display_name}`,
-          url: `${siteUrl}/@${p.handle}`,
-          description: [`**@${p.handle}** just joined logoless.`, p.bio ? `“${p.bio.slice(0, 200)}”` : ''].filter(Boolean).join('\n'),
-          color,
-          thumbnail: p.avatar_key ? { url: abs(`/api/img/${p.avatar_key}`)! } : { url: logoUrl },
-          image: p.banner_kind === 'image' ? { url: abs(`/api/img/${p.banner_value}`)! } : undefined,
-          fields,
-          footer: { text: 'logoless · welcome' },
-        },
-      ],
-      components: linkRow('View profile', `${siteUrl}/@${p.handle}`),
-      allowed_mentions: { parse: [] },
-    })
+    await postMessage(
+      cfg.channels.system,
+      welcomeMemberCard({
+        name: p.display_name,
+        handle: p.handle,
+        bio: p.bio,
+        avatar: p.avatar_key ? abs(`/api/img/${p.avatar_key}`) : undefined,
+        banner: p.banner_kind === 'image' ? abs(`/api/img/${p.banner_value}`) : undefined,
+        member: p.n,
+        brand: Boolean(p.brand),
+        country: p.country,
+        platforms,
+        niches,
+        discordId: did,
+      }),
+    )
   } catch {
     /* a welcome is a nice-to-have */
   }

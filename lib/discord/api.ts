@@ -1,4 +1,5 @@
 import { setting } from '../db'
+import { tidy } from './ui'
 
 const API = 'https://discord.com/api/v10'
 
@@ -10,16 +11,15 @@ export type Embed = {
   fields?: { name: string; value: string; inline?: boolean }[]
   thumbnail?: { url: string }
   image?: { url: string }
-  footer?: { text: string }
+  footer?: { text: string; icon_url?: string }
   author?: { name: string; icon_url?: string; url?: string }
   timestamp?: string
 }
 export type Component = { type: 1; components: ({ type: 2; style: 1 | 2 | 3 | 4 | 5; label: string; custom_id?: string; url?: string; emoji?: { name: string }; disabled?: boolean })[] }
 export type Message = { content?: string; embeds?: Embed[]; components?: Component[]; flags?: number; allowed_mentions?: { parse?: string[]; users?: string[]; roles?: string[] } }
 
-export const WHITE = 0xf3f2ee
-export const GREEN = 0x5be09a
-export const RED = 0xff6b5e
+// everything the bot says goes through `tidy` (see ui.ts): no emoji, the site's wording
+const isMessagePath = (path: string) => /\/messages(\/|$)/.test(path)
 
 export type Call<T = unknown> = { ok: boolean; status: number; json: T | null }
 
@@ -31,7 +31,7 @@ export async function discord<T = unknown>(method: string, path: string, body?: 
     const res = await fetch(`${API}${path}`, {
       method,
       headers: { authorization: `Bot ${token}`, ...(body !== undefined ? { 'content-type': 'application/json' } : {}), 'user-agent': 'DiscordBot (https://logoless.io, 1.0)' },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body !== undefined ? JSON.stringify(isMessagePath(path) ? tidy(body as Message) : body) : undefined,
       signal: AbortSignal.timeout(timeoutMs),
     })
     const json = (await res.json().catch(() => null)) as T | null
@@ -63,7 +63,7 @@ export async function registerCommands(appId: string, guildId: string | null, co
 /** Edits the reply to a slash command that was answered with "thinking…". No bot token needed: the interaction token is the key. */
 export async function editOriginal(appId: string, interactionToken: string, m: Message) {
   try {
-    await fetch(`${API}/webhooks/${appId}/${interactionToken}/messages/@original`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(m), signal: AbortSignal.timeout(8000) })
+    await fetch(`${API}/webhooks/${appId}/${interactionToken}/messages/@original`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(tidy(m)), signal: AbortSignal.timeout(8000) })
   } catch {
     /* the person simply keeps seeing "thinking" */
   }

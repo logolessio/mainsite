@@ -1,4 +1,6 @@
 import { botReady, sendDm } from './discord/api'
+import { notificationCard } from './discord/cards'
+import { kindIcon } from './discord/ui'
 import { discordIdFor, dmEnabled } from './discord/link'
 import { getDiscordConfig } from './discord/config'
 import { contactPref } from './contact-pref'
@@ -29,8 +31,7 @@ export async function dmNotification(userId: string, n: { kind: string; title: s
     if (pref === 'email' || pref === 'site') return false // they chose not to be messaged on Discord
     const id = await discordIdFor(userId)
     if (!id) return false
-    const url = n.href ? (n.href.startsWith('http') ? n.href : `https://logoless.io${n.href}`) : undefined
-    return await sendDm(id, { embeds: [{ title: n.title.slice(0, 250), description: n.body?.slice(0, 500), url, color: 0xf3f2ee, footer: { text: 'logoless' } }], allowed_mentions: { parse: [] } })
+    return await sendDm(id, notificationCard({ kind: n.kind, icon: kindIcon(n.kind), title: n.title, body: n.body, href: n.href }))
   } catch {
     return false
   }
