@@ -588,3 +588,16 @@ html.text-large {
 @media (prefers-reduced-motion: reduce) {
   .tile-sweep { display: none; }
 }
+
+
+/* a site's own logo, put before each mention of it in running text (see components/shell/auto-copy.tsx) */
+.ac-brand {
+  display: inline-block;
+  width: 1.05em;
+  height: 1.05em;
+  margin-right: 0.3em;
+  vertical-align: -0.17em;
+  background: currentColor;
+  -webkit-mask: var(--b) center / contain no-repeat;
+  mask: var(--b) center / contain no-repeat;
+}

@@ -92,7 +92,7 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
         <div className="flex items-center gap-3">
           <label className="glass-liquid relative block flex-1 rounded-full md:w-60 md:flex-none">
             <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-mute" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search clips" aria-label="Search clips" className="h-10 w-full rounded-full bg-transparent pr-4 pl-10 text-sm outline-none placeholder:text-mute" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search submissions" aria-label="Search submissions" className="h-10 w-full rounded-full bg-transparent pr-4 pl-10 text-sm outline-none placeholder:text-mute" />
           </label>
           <div className="glass-liquid inline-flex rounded-full p-1">
             {([['cards', LayoutGrid, 'Cards'], ['table', Rows3, 'Table']] as const).map(([id, Ico, label]) => (

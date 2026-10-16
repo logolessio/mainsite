@@ -3,6 +3,7 @@ import { evaluateBadges } from './badges'
 import { campaignRow } from './campaigns-db'
 import { shortDate } from './campaign-input'
 import { audit, type Actor } from './chain'
+import { SITE } from './site'
 import { db, nowSec, uid } from './db'
 import { announceCampaign } from './discord/outbound'
 import { HttpError } from './http'
@@ -191,8 +192,11 @@ export async function clipAction(actor: Actor, ip: string | null, id: string, a:
       // the campaign may limit what one clip, or one clipper, can earn in total
       const caps = await getCaps(camp.id)
       const byClipper = caps.perUserCents > 0 ? ((await d.prepare('SELECT COALESCE(SUM(net_cents), 0) AS n FROM earnings WHERE campaign_id = ?1 AND clipper_user_id = ?2').bind(camp.id, s.user_id).first<{ n: number }>())?.n ?? 0) : 0
-      const { allowed: gross, by: cappedBy } = allowedPayout(wanted, caps, s.earned_cents, byClipper)
+      const { allowed: limited, by: cappedBy } = allowedPayout(wanted, caps, s.earned_cents, byClipper)
       capped = cappedBy
+      // the campaign's budget is the most it can pay out: pay what is left, and the campaign ends below (instead of refusing the whole step)
+      const room = await budgetLeft(camp.id, camp.budget_cents)
+      const gross = Math.min(limited, room)
       // claim the new view count first (only if nobody else changed it), then pay; undo the claim if payment fails
       const claim = await d.prepare('UPDATE submissions SET views_verified = ?2 WHERE id = ?1 AND views_verified = ?3').bind(id, views, s.views_verified).run()
       if (claim.meta.changes !== 1) throw new HttpError(409, 'This clip was just updated. Refresh and try again.')
@@ -207,13 +211,14 @@ export async function clipAction(actor: Actor, ip: string | null, id: string, a:
         paid = { gross: res.gross, net: res.net }
         await shoutout(s.user_id, res.net, camp.title)
         await d.prepare('UPDATE submissions SET earned_cents = earned_cents + ?2 WHERE id = ?1').bind(id, res.net).run()
-        await notify(s.user_id, {
-          kind: 'earning',
-          title: `You earned $${(res.net / 100).toFixed(2)} (${camp.title})`,
-          body: `${views.toLocaleString()} verified views. It clears in a few days.`,
-          href: '/dashboard/earnings',
-          dedupe: `earn:${id}:${views}`,
-        })
+        const ready = SITE.holdDays === 0 ? 'It is ready to withdraw.' : `It clears in ${SITE.holdDays} days.`
+        // the automatic two-hourly look would otherwise send a message for every small step: one a day per submission is enough
+        await notify(
+          s.user_id,
+          actor.email.startsWith('system:')
+            ? { kind: 'earning', title: `Your views went up (${camp.title})`, body: `${views.toLocaleString()} verified views so far. ${ready}`, href: '/dashboard/earnings', dedupe: `earn-auto:${id}:${new Date().toISOString().slice(0, 10)}` }
+            : { kind: 'earning', title: `You earned $${(res.net / 100).toFixed(2)} (${camp.title})`, body: `${views.toLocaleString()} verified views. ${ready}`, href: '/dashboard/earnings', dedupe: `earn:${id}:${views}` },
+        )
       }
       if (capped) await notify(s.user_id, { kind: 'earning', title: `A cap was reached (${camp.title})`, body: capped === 'post' ? 'This clip has earned the most the campaign pays for one clip.' : 'You have earned the most the campaign pays one clipper.', href: '/dashboard/earnings', dedupe: `capped:${id}:${capped}` })
       await audit(actor, 'submission.views', id, `${s.views_verified} → ${views}${paid ? ` · $${(paid.gross / 100).toFixed(2)} paid` : ''}${capped ? ` · limited by the ${capped === 'post' ? 'per-clip' : 'per-clipper'} cap` : ''}`, ip)

@@ -14,5 +14,13 @@ export const POST = route(async (req: Request) => {
   const detail = [b.w ? `${b.w}px` : '', b.lang ?? '', b.tz ?? '', b.ms ? `loaded in ${Math.round(b.ms)}ms` : ''].filter(Boolean).join(' · ')
   if (b.t === 'error') logEvent({ kind: 'clienterror', name: 'browser error', path: b.path.slice(0, 200), actor, detail: String(b.msg ?? '').slice(0, 400), req })
   else logEvent({ kind: 'pageview', name: 'pageview', path: b.path.slice(0, 200), actor, detail, req })
+  // if the scheduled view check has not run for a while, the next visit starts one (see lib/views-rescan.ts)
+  const { lazyRescan } = await import('@/lib/views-rescan')
+  try {
+    const { getCloudflareContext } = await import('@opennextjs/cloudflare')
+    getCloudflareContext().ctx.waitUntil(lazyRescan())
+  } catch {
+    void lazyRescan()
+  }
   return json({ ok: true })
 })

@@ -5,6 +5,7 @@ import { Badge, EmptyState } from '@/components/app/table'
 import { Card, PageHeader } from '@/components/app/ui'
 import { db } from '@/lib/db'
 import { pageAdmin } from '@/lib/user'
+import { ViewChecks } from '@/components/admin/view-checks'
 
 export const metadata: Metadata = { title: 'Submissions | logoless', robots: { index: false } }
 
@@ -70,6 +71,7 @@ export default async function Page() {
   return (
     <>
       <PageHeader title="Submissions" sub="Open the clip, check the views on the platform, enter the verified number and approve. Paying is the same step." />
+      <ViewChecks />
       <h2 className="mb-3 font-display text-3xl">Waiting <span className="text-mute">{pending.length}</span></h2>
       {list(pending, 'Queue is clear')}
       <h2 className="mt-10 mb-3 font-display text-3xl">Recent</h2>

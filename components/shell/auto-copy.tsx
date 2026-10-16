@@ -8,6 +8,15 @@ import { useCopy } from './copy-provider'
 
 /** Where the text belongs to the tools themselves, not the site's wording. */
 const SKIP_PATHS = ['/admin', '/dev', '/api']
+/** Sites whose logo (public/brands) is shown next to their name. */
+/** Only when the name stands on its own, like a tag or a label. In the middle of a sentence it is left as plain text. */
+const BRAND_ONE = /^\s*(TikTok|YouTube|Instagram|Discord|Twitch|Google)\s*$/i
+const brandOf = (text: string): string | null => {
+  const m = BRAND_ONE.exec(text)
+  return m ? m[1].toLowerCase() : null
+}
+/** Buttons and links already carry their own icons, so mentions inside them are left alone. */
+const NO_ICONS = 'a,button,label,summary,[role=button],[role=tab],[role=radio],[data-no-brand]'
 /** Never touched: code, form fields, and anything inside the editor itself. */
 const SKIP_SELECTOR = 'script,style,svg,canvas,textarea,input,select,option,code,pre,[contenteditable],[data-text-editor],[data-no-copy],noscript'
 
@@ -27,27 +36,55 @@ export function AutoCopy() {
     const hasEdits = Object.keys(overrides).length > 0
 
     const edited = new Set(Object.values(overrides).map(norm))
+    // puts the site's logo before its name; the plain text is kept in data-ac-raw so it can be redone when an edit changes
+    const paint = (el: Element, shown: string, raw: string, brand: string) => {
+      if (el.getAttribute('data-ac-shown') === shown) return
+      const icon = document.createElement('span')
+      icon.className = 'ac-brand'
+      icon.setAttribute('aria-hidden', 'true')
+      icon.style.setProperty('--b', `url(/brands/${brand}.svg)`)
+      el.setAttribute('data-ac-raw', raw)
+      el.setAttribute('data-ac-shown', shown)
+      el.replaceChildren(icon, document.createTextNode(shown))
+    }
+    const unpaint = (el: Element, text: string) => {
+      el.removeAttribute('data-ac-raw')
+      el.removeAttribute('data-ac-shown')
+      el.replaceChildren(document.createTextNode(text))
+    }
+
     const scan = () => {
       // the tab title uses the same wording
       const title = applyWording(document.title)
       if (title !== document.title) document.title = title
+      const icons = !(isAdmin && editing) // while the team is editing text, the words stay plain so they can be clicked
       for (const el of document.body.querySelectorAll('*')) {
-        if (el.childNodes.length !== 1) continue
-        const node = el.firstChild
-        if (!node || node.nodeType !== Node.TEXT_NODE) continue
+        const painted = el.hasAttribute('data-ac-raw')
+        let node: Node | null = null
+        if (!painted) {
+          if (el.childNodes.length !== 1) continue
+          node = el.firstChild
+          if (!node || node.nodeType !== Node.TEXT_NODE) continue
+        }
         if (el.closest(SKIP_SELECTOR)) continue
-        const was = original.current.get(node)
-        const raw = norm(was ?? node.nodeValue ?? '')
+        const was = node ? original.current.get(node) : undefined
+        const raw = norm(painted ? (el.getAttribute('data-ac-raw') ?? '') : (was ?? node!.nodeValue ?? ''))
         if (raw.length < 3 || !/[A-Za-z]{2}/.test(raw) || raw.length > 600) continue
-        // visitors only need the text that has an edit or uses the old wording; the team needs all of it, to be able to edit it
-        if (!isAdmin && !hasEdits && !/clip/i.test(raw)) continue
-        if (!was && edited.has(raw)) continue // already showing an edit (it came through <T>)
+        const branded = icons && brandOf(raw) !== null && !el.closest(NO_ICONS)
+        // visitors only need the text that has an edit, uses the old wording or mentions a site; the team needs all of it, to be able to edit it
+        if (!isAdmin && !hasEdits && !branded && !/clip/i.test(raw)) continue
+        if (!painted && !was && edited.has(raw)) continue // already showing an edit (it came through <T>)
         const shown = tx(raw)
-        if (shown !== raw) {
-          if (!was) original.current.set(node, raw)
-          if (node.nodeValue !== shown) node.nodeValue = shown
-        } else if (was && node.nodeValue !== was) {
-          node.nodeValue = was // the edit was removed: put the original back
+        const brand = icons && !el.closest(NO_ICONS) ? brandOf(shown) : null
+        if (brand) {
+          paint(el, shown, raw, brand)
+        } else if (painted) {
+          unpaint(el, shown)
+        } else if (shown !== raw) {
+          if (!was) original.current.set(node!, raw)
+          if (node!.nodeValue !== shown) node!.nodeValue = shown
+        } else if (was && node!.nodeValue !== was) {
+          node!.nodeValue = was // the edit was removed: put the original back
         }
       }
     }

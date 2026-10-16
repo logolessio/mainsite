@@ -295,7 +295,7 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
                     ))}
                   </ul>
                   <p className="mt-4 text-[14px] leading-relaxed text-white/70">
-                    {result.status === 'approved' && 'Your clip is approved. Our team confirms the views before you are paid. You can follow it in your dashboard.'}
+                    {result.status === 'approved' && 'Your clip is approved. Its views are checked while the campaign runs, and you are paid for the verified ones. You can follow it in your dashboard.'}
                     {result.status === 'review' && 'Your clip is pending. A person on our team will look at it soon. You can see where it is in your dashboard.'}
                     {result.status === 'declined' && (result.reason ?? 'The link did not lead to a video.')}
                   </p>

@@ -20,6 +20,7 @@ export default async function Page() {
           <ul className="divide-y divide-line">
             <Switch k="payouts_paused" label="Pause all withdrawals" hint="Use this first if you see anything strange with money. Balances stay safe." on={s.payouts_paused === '1'} danger />
             <Switch k="signups_paused" label="Pause new accounts" hint="Nobody new can create an account while this is on. People already signed up are not affected." on={s.signups_paused === '1'} danger />
+            <Switch k="views_scan_paused" label="Pause the automatic view checks" hint="Stops the two-hourly look at views on YouTube and TikTok. Views then only change when someone sets them by hand." on={s.views_scan_paused === '1'} />
             <Switch k="submissions_paused" label="Pause new clip submissions" hint="Clippers cannot submit new links while this is on." on={s.submissions_paused === '1'} danger />
           </ul>
         </Card>

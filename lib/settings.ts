@@ -4,6 +4,7 @@ import { db, nowSec } from './db'
 export const SETTING_DEFAULTS = {
   payouts_paused: '0', // 1 = nobody can withdraw
   submissions_paused: '0', // 1 = no new clip submissions
+  views_scan_paused: '0', // 1 = the two-hourly look at the views of live submissions is switched off
   signups_paused: '0', // 1 = no new accounts
   design_font_mono: '0', // older switch: 1 = Geist Mono is the main typeface (design_font replaces it)
   mock_public: '0', // 1 = mock campaigns (made up by an admin to try the site) are shown to everyone, not just the team

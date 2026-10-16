@@ -201,7 +201,7 @@ export const submitCard = (r: SubmitData): Message =>
         title: r.status === 'approved' ? 'Approved' : r.status === 'declined' ? 'Not approved' : 'Sent for review',
         url: `${SITE_URL}/dashboard/submissions`,
         mute: r.status === 'declined',
-        text: join(`**${r.campaign}**`, r.status === 'declined' ? r.reason ?? '' : r.status === 'approved' ? 'Our team confirms the views before you are paid.' : 'You will get a message here when it is decided.', ...r.checks.filter((k) => k.state === 'fail').map((k) => `${chip('Failed')} ${k.label}`)),
+        text: join(`**${r.campaign}**`, r.status === 'declined' ? r.reason ?? '' : r.status === 'approved' ? 'Its views are checked while the campaign runs, and you are paid for the verified ones.' : 'You will get a message here when it is decided.', ...r.checks.filter((k) => k.state === 'fail').map((k) => `${chip('Failed')} ${k.label}`)),
       }),
     ],
     [row(btn('Submissions', 'cmd:submissions'), go('Open dashboard', '/dashboard/submissions'))],

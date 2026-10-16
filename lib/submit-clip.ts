@@ -66,7 +66,7 @@ export async function submitClip(user: { id: string; email: string }, campaignId
   const t = nowSec()
   if (result.verdict === 'approved') {
     await d.prepare("UPDATE submissions SET status = 'approved', reviewed_by = 'auto', reviewed_at = ?2 WHERE id = ?1").bind(subId, t).run()
-    await notify(user.id, { kind: 'submission', title: `Clip approved (${c.title})`, body: 'Our team confirms the views before you are paid.', href: '/dashboard/submissions', dedupe: `sub-approved:${subId}` })
+    await notify(user.id, { kind: 'submission', title: `Clip approved (${c.title})`, body: 'Its views are checked while the campaign runs, and you are paid for the verified ones.', href: '/dashboard/submissions', dedupe: `sub-approved:${subId}` })
   } else if (result.verdict === 'declined') {
     await d.prepare("UPDATE submissions SET status = 'rejected', reject_reason = ?2, reviewed_by = 'auto', reviewed_at = ?3 WHERE id = ?1").bind(subId, result.reason ?? 'The link did not lead to a video.', t).run()
     await notify(user.id, { kind: 'submission', title: `A clip was not approved (${c.title})`, body: result.reason, href: '/dashboard/submissions', dedupe: `sub-rejected:${subId}` })

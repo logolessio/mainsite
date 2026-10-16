@@ -12,7 +12,7 @@ const ADMIN: AppNavItem[] = [
   { label: 'Payouts', href: '/admin/payouts', icon: 'Banknote', section: 'Run' },
   { label: 'People', href: '/admin/people', icon: 'Users', match: ['/admin/users'], section: 'Run' },
   { label: 'Inbox', href: '/admin/inbox', icon: 'Mail', section: 'Run' },
-  { label: 'Discord', href: '/admin/discord', icon: 'Bot', section: 'Communicate' },
+  { label: 'Discord', href: '/admin/discord', icon: 'Discord', section: 'Communicate' },
   { label: 'Email', href: '/admin/email', icon: 'Send', section: 'Communicate' },
   { label: 'Broadcast', href: '/admin/broadcast', icon: 'Megaphone', section: 'Communicate' },
   { label: 'Site text', href: '/admin/text', icon: 'FileCheck2', section: 'Site' },
