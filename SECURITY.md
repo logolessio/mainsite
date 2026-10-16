@@ -39,5 +39,5 @@ Cloudflare tells us which network owns each visitor's address. Networks that bel
 
 - The CSP allows inline scripts because Next.js needs them without a per-request nonce. XSS protection therefore rests on there being no injection points, which is why raw HTML is never rendered.
 - The audit chain makes tampering **visible**. It cannot stop someone who already has full access to the database.
-- View counts are verified by an admin by hand for now.
+- View counts: YouTube and TikTok views are looked up automatically about every two hours while a campaign runs (jumps and videos older than the campaign are held for a person). Instagram views are still set by an admin by hand.
 - Legal pages are deliberately not editable from the site: change them in code so every edit is reviewed.
