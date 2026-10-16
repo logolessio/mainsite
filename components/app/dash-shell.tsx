@@ -1,12 +1,13 @@
 'use client'
 
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ArrowUpRight, Ellipsis, LogOut, Search, ShieldCheck, X } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { Icon } from '@/components/icons'
 import { Logo } from '@/components/logo'
+import { useFeature } from '@/components/shell/features-provider'
 import { useNavUser } from '@/components/shell/nav-user'
 import { NotificationBell } from '@/components/shell/notifications'
 import { TransitionLink } from '@/components/shell/transition-link'
@@ -15,6 +16,7 @@ import { OWNER_URL, SITE_URL_FOR_STAFF } from '@/lib/staff-nav'
 import { cn } from '@/lib/utils'
 import { type AppNavItem, isActive } from './nav-types'
 import { Palette } from './palette'
+import { Shortcuts } from './shortcuts'
 
 /**
  * The working area: a solid sidebar with the whole menu in plain view, a slim bar across the top, and the page.
@@ -37,6 +39,8 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
   const pathname = usePathname()
   const { user } = useNavUser()
   const { phase } = useTransitions()
+  const reduced = useReducedMotion()
+  const shortcuts = useFeature('dash-shortcuts')
   const [palette, setPalette] = useState(false)
   const [more, setMore] = useState(false)
   const signedIn = user?.signedIn ? user : null
@@ -65,9 +69,9 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
   const bottom = items.slice(0, 4)
 
   return (
-    <div className="relative z-10 min-h-dvh bg-ink md:pl-[248px]">
+    <div className="relative z-10 min-h-dvh md:pl-[248px]">
       {/* ---------- sidebar (larger screens) ---------- */}
-      <aside aria-label={`${area} navigation`} className="island fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col bg-gradient-to-b from-[#0c0c0e] to-[#050506] md:flex">
+      <aside aria-label={`${area} navigation`} className="fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col border-r border-line bg-black/45 backdrop-blur-2xl md:flex">
         <div className="flex h-[72px] shrink-0 items-center border-b border-line px-6">
           <Go href={siteHref} aria-label="logoless home">
             <Logo className="h-9 md:h-9" />
@@ -84,7 +88,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
                   {heading && <p className="px-3 pt-5 pb-1.5 text-[12px] text-paper/35">{it.section}</p>}
                   <TransitionLink href={it.href} aria-current={active ? 'page' : undefined} className={cn('group relative flex h-10 items-center gap-3 rounded-xl px-3 text-[15px] transition-colors', active ? 'bg-paper text-ink' : 'text-paper/55 hover:bg-white/[0.06] hover:text-paper')}>
                     <Icon name={it.icon} aria-hidden="true" className="size-[18px] shrink-0" />
-                    {it.label}
+                    <span>{it.label}</span>
                   </TransitionLink>
                 </li>
               )
@@ -125,7 +129,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
       </aside>
 
       {/* ---------- top bar ---------- */}
-      <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-line bg-ink px-5 md:px-10">
+      <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-line bg-ink/50 px-5 backdrop-blur-xl md:px-10">
         <div className="flex items-center gap-4">
           <Go href={siteHref} aria-label="logoless home" className="md:hidden">
             <Logo className="h-8" />
@@ -150,14 +154,21 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
       </header>
 
       <main className="px-5 pt-10 pb-32 md:px-10 md:pt-14 md:pb-24">
-        {/* only the page fades between pages: the sidebar and the bars stay exactly where they are */}
-        <motion.div animate={phase === 'exiting' ? { opacity: 0, y: -8 } : { opacity: 1, y: 0 }} transition={phase === 'exiting' ? { duration: 0.18, ease: [0.4, 0, 0.2, 1] } : { duration: 0 }} className="mx-auto max-w-[1160px]">
+        {/* only the page changes between pages: the sidebar and the bars stay exactly where they are.
+            The old page dims while the next one loads, and the new one eases in from that same dim, so nothing ever flashes. */}
+        <motion.div
+          key={pathname}
+          initial={reduced ? false : { opacity: 0.35, y: 8 }}
+          animate={phase === 'exiting' ? { opacity: 0.35, y: 0 } : { opacity: 1, y: 0 }}
+          transition={phase === 'exiting' ? { duration: 0.14, ease: 'easeOut' } : { duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          className="mx-auto max-w-[1160px]"
+        >
           {children}
         </motion.div>
       </main>
 
       {/* ---------- tab bar (phones) ---------- */}
-      <nav aria-label={`${area} navigation`} className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-ink md:hidden">
+      <nav aria-label={`${area} navigation`} className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-ink/80 backdrop-blur-xl md:hidden">
         {bottom.map((it) => {
           const active = isActive(pathname, it)
           return (
@@ -175,7 +186,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
 
       <AnimatePresence>
         {more && (
-          <motion.div key="more" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-50 flex flex-col bg-ink md:hidden">
+          <motion.div key="more" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-50 flex flex-col bg-ink/90 backdrop-blur-2xl md:hidden">
             <div className="flex h-[72px] shrink-0 items-center justify-between border-b border-line px-5">
               <p className="text-[15px] text-paper/45">{area}</p>
               <button type="button" aria-label="Close" onClick={() => setMore(false)} className="grid size-10 place-items-center rounded-full border border-line text-paper/70">
@@ -187,7 +198,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
                 <li key={it.href} className="border-b border-line">
                   <TransitionLink href={it.href} onClick={() => setMore(false)} className={cn('flex h-14 items-center gap-4 text-lg', isActive(pathname, it) ? 'text-paper' : 'text-paper/60')}>
                     <Icon name={it.icon} aria-hidden="true" className="size-5" />
-                    {it.label}
+                    <span>{it.label}</span>
                   </TransitionLink>
                 </li>
               ))}
@@ -213,6 +224,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
         )}
       </AnimatePresence>
 
+      {shortcuts && <Shortcuts items={items} area={area} />}
       <Palette open={palette} onClose={() => setPalette(false)} items={items} area={area} onLogout={logout} />
     </div>
   )

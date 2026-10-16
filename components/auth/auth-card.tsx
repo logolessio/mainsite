@@ -188,14 +188,14 @@ export function AuthCard({ mode }: { mode: Mode }) {
 
             {mode !== 'forgot' && (
               <>
-                <div className="mt-6 grid gap-2">
-                  <ProviderButton disabled={busy} onClick={() => provider('discord')}>
+                <div className="mt-6 grid grid-cols-2 gap-2">
+                  <ProviderButton disabled={busy} onClick={() => provider('discord')} aria-label="Continue with Discord">
                     <BrandIcon name="discord" className="size-4" />
-                    Continue with Discord
+                    Discord
                   </ProviderButton>
-                  <ProviderButton disabled={busy} onClick={() => provider('google')}>
+                  <ProviderButton disabled={busy} onClick={() => provider('google')} aria-label="Continue with Google">
                     <BrandIcon name="google" className="size-4" />
-                    Continue with Google
+                    Google
                   </ProviderButton>
                 </div>
                 <motion.div variants={item} className="my-6 flex items-center gap-3 text-xs text-mute">

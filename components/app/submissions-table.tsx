@@ -59,7 +59,7 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
   const views = rows.reduce((s, r) => s + r.views, 0)
   const earned = rows.reduce((s, r) => s + r.earned, 0)
 
-  if (rows.length === 0) return <div className="rounded-3xl border border-line bg-[#0a0a0b]">{empty}</div>
+  if (rows.length === 0) return <div className="rounded-3xl border border-line bg-black/45">{empty}</div>
 
   return (
     <div>
@@ -69,12 +69,12 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
           { label: 'In review', value: String(counts.pending), note: 'Waiting on checks' },
           { label: 'Verified views', value: views.toLocaleString(), note: 'Across all clips' },
           { label: 'Earned', value: usd(earned), note: 'From these clips' },
-        ].map((t, i) => (
-          <motion.div key={t.label} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: i * 0.06, ease: EASE_OUT }} className="rounded-3xl border border-line bg-[#0a0a0b] p-6">
+        ].map((t) => (
+          <div key={t.label} className="rounded-3xl border border-line bg-black/45 p-6">
             <p className="text-sm text-mute">{t.label}</p>
             <p className="mt-3 font-display text-4xl leading-none font-medium tracking-tight tabular-nums">{t.value}</p>
             <p className="mt-3 text-xs text-mute">{t.note}</p>
-          </motion.div>
+          </div>
         ))}
       </div>
 
@@ -113,7 +113,7 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
           <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <AnimatePresence initial={false} mode="popLayout">
               {shown.map((r, i) => (
-                <motion.li key={r.id} layout="position" initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.45, delay: Math.min(i, 8) * 0.035, ease: EASE_OUT }} whileHover={{ y: -3 }} className="group flex flex-col rounded-3xl border border-line bg-[#0a0a0b] p-6 transition-colors hover:border-line-strong">
+                <motion.li key={r.id} layout="position" initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.45, delay: Math.min(i, 8) * 0.035, ease: EASE_OUT }} whileHover={{ y: -3 }} className="group flex flex-col rounded-3xl border border-line bg-black/45 p-6 transition-colors hover:border-line-strong">
                   <div className="flex items-center justify-between gap-3">
                     <span className="rounded-full bg-white/[0.06] px-3 py-1 text-xs text-mute">{r.platform}</span>
                     <Badge tone={TONE[r.status]}>{r.status === 'pending' ? 'in review' : r.status}</Badge>

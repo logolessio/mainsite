@@ -1,7 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { EASE_OUT } from '@/lib/layout'
 import { CountUp } from './count-up'
 import { cn } from '@/lib/utils'
 
@@ -15,18 +13,13 @@ export function PageHeader({
   actions?: React.ReactNode
 }) {
   return (
-    <motion.header
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, ease: EASE_OUT }}
-      className="mb-10 flex flex-col gap-5 border-b border-line pb-8 md:mb-12 md:flex-row md:items-end md:justify-between md:pb-10"
-    >
+    <header className="mb-10 flex flex-col gap-5 border-b border-line pb-8 md:mb-12 md:flex-row md:items-end md:justify-between md:pb-10">
       <div className="min-w-0">
         <h1 className="font-display text-4xl leading-[1] tracking-[-0.035em] md:text-[3.4rem]">{title}</h1>
         {sub && <p className="mt-4 max-w-xl text-[17px] leading-relaxed text-paper/55">{sub}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
-    </motion.header>
+    </header>
   )
 }
 
@@ -35,12 +28,7 @@ export function PageHeader({
  */
 export function Card({ className, children, title, sub, action }: { className?: string; children: React.ReactNode; title?: string; sub?: string; action?: React.ReactNode }) {
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, ease: EASE_OUT }}
-      className={cn('overflow-hidden rounded-3xl border border-line bg-[#09090a]', className)}
-    >
+    <section className={cn('overflow-hidden rounded-3xl border border-line bg-black/45', className)}>
       {title && (
         <div className="flex items-start justify-between gap-4 px-6 pt-6">
           <div className="min-w-0">
@@ -51,20 +39,20 @@ export function Card({ className, children, title, sub, action }: { className?: 
         </div>
       )}
       <div className={cn('p-6 has-[[data-table]]:px-0 has-[[data-table]]:pb-2 [&_[data-table]]:rounded-none [&_[data-table]]:border-0 [&_[data-table]]:bg-transparent', title && 'pt-5 has-[[data-table]]:pt-3')}>{children}</div>
-    </motion.section>
+    </section>
   )
 }
 
 /** Values are rendered exactly as passed. Pass real data from your API; empty accounts show 0 or an em dash. */
 export function StatCard({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: EASE_OUT }} className="border-t border-line-strong pt-5">
+    <div className="border-t border-line-strong pt-5">
       <p className="text-[15px] text-paper/50">{label}</p>
       <p className="mt-6 font-display text-5xl leading-none tracking-[-0.045em] tabular-nums md:text-6xl">
         <CountUp value={value} />
       </p>
       {note && <p className="mt-5 text-[15px] text-paper/50">{note}</p>}
-    </motion.div>
+    </div>
   )
 }
 

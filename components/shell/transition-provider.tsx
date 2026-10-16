@@ -3,6 +3,7 @@
 import { useReducedMotion } from 'framer-motion'
 import { usePathname, useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { appArea } from '@/lib/app-areas'
 import type { Campaign } from '@/lib/campaigns'
 
 type Phase = 'idle' | 'exiting'
@@ -23,12 +24,19 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
   const router = useRouter()
   const pathname = usePathname()
   const reduced = useReducedMotion()
-  const [phase, setPhase] = useState<Phase>('idle')
+  // the page we are leaving, or null. Derived against the current path, so the new page never inherits the fade.
+  const [leaving, setLeaving] = useState<string | null>(null)
+  const phase: Phase = leaving === pathname ? 'exiting' : 'idle'
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  useEffect(() => setLeaving(null), [pathname])
+
+  // a navigation that keeps the same path (only the query changes) must not leave the page faded
   useEffect(() => {
-    setPhase('idle')
-  }, [pathname])
+    if (leaving === null) return
+    const t = setTimeout(() => setLeaving(null), 1500)
+    return () => clearTimeout(t)
+  }, [leaving])
 
   useEffect(() => () => {
     if (timer.current) clearTimeout(timer.current)
@@ -47,8 +55,13 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
         router.push(href)
         return
       }
-      setPhase('exiting')
+      setLeaving(pathname)
       if (timer.current) clearTimeout(timer.current)
+      // inside a working area the page only dims while the next one loads: no wait before going
+      if (appArea(pathname) && appArea(pathname) === appArea(target)) {
+        router.push(href)
+        return
+      }
       timer.current = setTimeout(() => router.push(href), EXIT_MS)
     },
     [pathname, reduced, router],

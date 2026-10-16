@@ -10,6 +10,7 @@ import { useNavUser } from '@/components/shell/nav-user'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { EASE_OUT } from '@/lib/layout'
 import { CampaignGrid } from './campaign-grid'
+import { EndingSoon } from './ending-soon'
 import { FilterBar, type SortKey } from './filter-bar'
 import { GlassSearch } from './glass-search'
 import { GuidedTour } from './guided-tour'
@@ -99,6 +100,8 @@ export function DashboardView({ campaigns, ended = [], startTour }: { campaigns:
           setSort('rate')
         }}
       />
+
+      {!filtersActive && !deferred.trim() && <EndingSoon campaigns={campaigns} />}
 
       <section id="campaigns" aria-label="Campaigns" className="scroll-mt-40">
         {results.length > 0 ? (

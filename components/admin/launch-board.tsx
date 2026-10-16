@@ -95,7 +95,7 @@ export function LaunchBoard({ r }: { r: Readiness }) {
 
   return (
     <>
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE_OUT }} className="relative mb-8 overflow-hidden rounded-[2rem] border border-line-strong bg-[#0a0a0b] p-6 md:p-10">
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE_OUT }} className="relative mb-8 overflow-hidden rounded-[2rem] border border-line-strong bg-black/45 p-6 md:p-10">
         <div aria-hidden="true" className="pointer-events-none absolute -top-1/2 -right-1/4 size-[40rem] rounded-full bg-[radial-gradient(closest-side,rgb(243_242_238/0.09),transparent)]" />
         <div className="relative flex flex-col items-center gap-8 md:flex-row md:items-center md:gap-12">
           <Ring percent={r.percent} tone={tone} />
@@ -159,7 +159,7 @@ export function LaunchBoard({ r }: { r: Readiness }) {
                   <span className="hidden h-1.5 w-28 overflow-hidden rounded-full bg-white/10 sm:block"><span className="block h-full rounded-full bg-paper transition-[width] duration-700" style={{ width: `${(done / all.length) * 100}%` }} /></span>
                 </div>
               </div>
-              <ul className="overflow-hidden rounded-3xl border border-line bg-[#0a0a0b]">
+              <ul className="overflow-hidden rounded-3xl border border-line bg-black/45">
                 {list.map((i) => {
                   const isOpen = open === i.id
                   const expandable = Boolean(i.how?.length || i.href || i.manual)

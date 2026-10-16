@@ -455,33 +455,6 @@
   background-size: 100% 1px;
 }
 
-/* Table rows slide in one after another. */
-@keyframes row-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-tbody tr {
-  animation: row-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-tbody tr:nth-child(2) { animation-delay: 0.04s; }
-tbody tr:nth-child(3) { animation-delay: 0.08s; }
-tbody tr:nth-child(4) { animation-delay: 0.12s; }
-tbody tr:nth-child(5) { animation-delay: 0.16s; }
-tbody tr:nth-child(6) { animation-delay: 0.2s; }
-tbody tr:nth-child(n + 7) { animation-delay: 0.24s; }
-
-@media (prefers-reduced-motion: reduce) {
-  tbody tr {
-    animation: none;
-  }
-}
-
 /* ---------- badge artwork ---------- */
 .b-spin,
 .b-spin-slow,

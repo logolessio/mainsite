@@ -14,6 +14,8 @@ const ORDINAL = '(?:first|next|latest|last|best|second|new)'
 
 type Rule = [RegExp, (...m: string[]) => string]
 const RULES: Rule[] = [
+  // "3 clips submitted" -> "3 submissions"
+  [new RegExp(`(\\b\\d[\\d,]*)\\s+clips?\\s+(?:submitted|posted)${END}`, 'gi'), (_m, n) => `${n} ${n === '1' ? 'submission' : 'submissions'}`],
   // people
   [new RegExp(`${WORD}(clipper)(s?)${END}`, 'gi'), (_m, w, s) => keep(w, 'creator') + s],
   // the verb "to clip", and a few set phrases

@@ -1,13 +1,12 @@
 import type { Metadata } from 'next'
 import { ActionLink } from '@/components/app/action-link'
-import { Checklist } from '@/components/app/checklist'
+import { EarnGoal } from '@/components/app/earn-goal'
 import { CountUp } from '@/components/app/count-up'
 import { PageHeader } from '@/components/app/ui'
 import { Badge, EmptyState } from '@/components/app/table'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { db } from '@/lib/db'
 import { balances } from '@/lib/ledger'
-import { SITE } from '@/lib/site'
 import { pageUser } from '@/lib/user'
 
 export const metadata: Metadata = { title: 'Dashboard | logoless', robots: { index: false } }
@@ -37,19 +36,21 @@ export default async function Page() {
     { label: 'Join your first campaign', body: 'Pick something you would actually clip', href: '/', done: clips > 0 },
   ]
   const done = steps.filter((s) => s.done).length
+  const next = steps.find((s) => !s.done)
 
   return (
     <>
       <PageHeader title={`Welcome back, ${first}`} sub="Your balance, your clips and anything that needs doing." actions={<ActionLink href="/">Find a campaign</ActionLink>} />
 
       {/* the money, as four plain figures */}
-      <section aria-label="Balance" className="grid gap-x-10 gap-y-12 sm:grid-cols-2 xl:grid-cols-4">
+      <section aria-label="Balance" className="grid gap-x-10 gap-y-12 sm:grid-cols-2 xl:grid-cols-3">
         <div className="border-t border-line-strong pt-5">
           <p className="text-[15px] text-paper/50">Available to withdraw</p>
           <p className="mt-6 font-display text-6xl leading-none tracking-[-0.045em] tabular-nums md:text-[4.5rem]">
             <CountUp value={usd(b.available)} />
           </p>
           <p className="mt-5 text-[15px] text-paper/50">{b.available > 0 ? 'Ready when you are.' : 'Earnings land here once your clips are approved.'}</p>
+          {b.pending > 0 && <p className="mt-1 text-[15px] text-paper/50">{usd(b.pending)} more is still being confirmed.</p>}
           <div className="mt-6 flex flex-wrap gap-2">
             <ActionLink href="/dashboard/earnings#withdraw">Withdraw</ActionLink>
             <ActionLink href="/dashboard/earnings" variant="ghost">
@@ -58,7 +59,6 @@ export default async function Page() {
           </div>
         </div>
         {[
-          { label: 'Pending', value: usd(b.pending), note: `Clears within ${SITE.holdDays} days` },
           { label: 'Total earned', value: usd(b.earned), note: 'Everything you have earned so far' },
           { label: 'Verified views', value: (views?.v ?? 0).toLocaleString(), note: `${clips} ${clips === 1 ? 'clip' : 'clips'} submitted` },
         ].map((f) => (
@@ -72,8 +72,10 @@ export default async function Page() {
         ))}
       </section>
 
+      <EarnGoal />
+
       <div className="mt-20 grid gap-16 xl:grid-cols-12 xl:gap-12">
-        <section aria-label="Recent clips" className="xl:col-span-7">
+        <section aria-label="Recent clips" className={next ? 'xl:col-span-7' : 'xl:col-span-12'}>
           <div className="flex items-end justify-between border-b border-line pb-4">
             <h2 className="font-display text-3xl tracking-[-0.03em]">Recent clips</h2>
             <TransitionLink href="/dashboard/submissions" className="text-[15px] text-paper/60 underline underline-offset-4 transition-colors hover:text-paper">
@@ -95,21 +97,26 @@ export default async function Page() {
           )}
         </section>
 
-        <section aria-label="Next steps" className="xl:col-span-5">
-          <div className="flex items-end justify-between border-b border-line pb-4">
-            <h2 className="font-display text-3xl tracking-[-0.03em]">Getting set up</h2>
-            <p className="text-[15px] text-paper/50 tabular-nums">
-              {done} of {steps.length} done
-            </p>
-          </div>
-          <div className="h-px bg-line">
-            <div className="h-px bg-paper transition-all duration-700" style={{ width: `${(done / steps.length) * 100}%` }} />
-          </div>
-          <Checklist items={steps} />
-          <ActionLink href="/dashboard/setup" variant="ghost" className="mt-5">
-            Open the full guide
-          </ActionLink>
-        </section>
+        {next && (
+          <section aria-label="Next steps" className="xl:col-span-5">
+            <div className="flex items-end justify-between border-b border-line pb-4">
+              <h2 className="font-display text-3xl tracking-[-0.03em]">Getting set up</h2>
+              <p className="text-[15px] text-paper/50 tabular-nums">
+                {done} of {steps.length} done
+              </p>
+            </div>
+            <div className="h-px bg-line">
+              <div className="h-px bg-paper transition-all duration-700" style={{ width: `${(done / steps.length) * 100}%` }} />
+            </div>
+            <TransitionLink href={next.href} className="group mt-6 block rounded-3xl border border-line bg-black/45 p-6 transition-colors hover:border-line-strong">
+              <p className="text-lg">{next.label}</p>
+              <p className="mt-2 text-[15px] leading-relaxed text-paper/55">{next.body}</p>
+            </TransitionLink>
+            <ActionLink href="/dashboard/setup" variant="ghost" className="mt-5">
+              Open the full guide
+            </ActionLink>
+          </section>
+        )}
       </div>
     </>
   )

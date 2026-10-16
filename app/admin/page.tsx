@@ -18,25 +18,17 @@ export default async function Page() {
   await pageAdmin()
   const [f, c, h, sb, inbox, st] = await Promise.all([funds(), counts(), health(), paypalStatus(), newInquiryCount(), allSettings()])
   const locked = st.payouts_paused === '1' && st.submissions_paused === '1' && st.signups_paused === '1'
+  // the requests, clips and withdrawals are decided right on this page; these are the rest that need a look
   const todo = [
-    { label: 'Campaign requests', n: c.requests, href: '/admin/campaigns' },
-    { label: 'Paid, ready to launch', n: c.readyToLaunch, href: '/admin/campaigns' },
-    { label: 'Clips to review', n: c.pendingClips, href: '/admin/submissions' },
-    { label: 'Withdrawals to check', n: c.payoutsInReview, href: '/admin/payouts' },
+    { label: 'Paid, ready to launch', n: c.readyToLaunch ?? 0, href: '/admin/campaigns' },
     { label: 'New messages and reports', n: inbox, href: '/admin/inbox' },
-    { label: 'Flagged accounts', n: c.flagged, href: '/admin/users?risk=1' },
-  ]
+    { label: 'Flagged accounts', n: c.flagged ?? 0, href: '/admin/users?risk=1' },
+  ].filter((t) => t.n > 0)
   const attention = h.filter((x) => x.state !== 'ok')
 
   return (
     <>
-      <PageHeader title="Admin" sub="Money, people and what needs you right now." actions={
-          <div className="flex flex-wrap gap-2">
-            <ActionLink href="/admin/people">People</ActionLink>
-            <ActionLink href="/admin/broadcast" variant="ghost">Broadcast</ActionLink>
-            <ActionLink href="/admin/campaigns">Campaigns</ActionLink>
-          </div>
-        } />
+      <PageHeader title="Admin" sub="Money, people and what needs you right now." />
 
       <div className="flex flex-col gap-4 lg:flex-row">
         <Pill
@@ -88,18 +80,20 @@ export default async function Page() {
         <LockdownButton locked={locked} />
       </Card>
 
-      <Card title="Queues" className="mt-6">
-        <ul className="divide-y divide-line">
-          {todo.map((t) => (
-            <li key={t.label}>
-              <a href={t.href} className="flex items-center justify-between gap-4 py-3 text-sm hover:text-paper">
-                <span>{t.label}</span>
-                <Badge tone={(t.n ?? 0) > 0 ? 'warn' : 'neutral'}>{t.n ?? 0}</Badge>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </Card>
+      {todo.length > 0 && (
+        <Card title="Also waiting" className="mt-6">
+          <ul className="divide-y divide-line">
+            {todo.map((t) => (
+              <li key={t.label}>
+                <a href={t.href} className="flex items-center justify-between gap-4 py-3 text-sm hover:text-paper">
+                  <span>{t.label}</span>
+                  <Badge tone="warn">{t.n}</Badge>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
     </>
   )
 }

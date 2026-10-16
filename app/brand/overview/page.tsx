@@ -7,11 +7,13 @@ import { ViewsChart, type Day } from '@/components/brand/views-chart'
 import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
 import { db } from '@/lib/db'
 import { money } from '@/lib/format'
+import { featureOn } from '@/lib/features'
 import { balances } from '@/lib/ledger'
 import { pageUser } from '@/lib/user'
 
 export const metadata: Metadata = { title: 'Dashboard | logoless', robots: { index: false } }
 
+type TopCreator = { uid: string; name: string; handle: string | null; paid: number; views: number }
 type Camp = { id: string; title: string; status: string; budget_cents: number; cover_url: string; views: number; spent: number }
 
 /** The brand's home: what the money bought, how it is going, the campaigns, and the balance they all draw from. */
@@ -48,6 +50,20 @@ export default async function Page() {
       .bind(user.id)
       .first<{ spent: number; views: number; live: number }>(),
   ])
+  const topOn = await featureOn('top-creators')
+  const top = topOn
+    ? (
+        await d
+          .prepare(
+            `SELECT e.clipper_user_id AS uid, COALESCE(NULLIF(p.display_name, ''), p.handle, 'Creator') AS name, p.handle AS handle, SUM(e.gross_cents) AS paid,
+               (SELECT COALESCE(SUM(views_verified), 0) FROM submissions s WHERE s.user_id = e.clipper_user_id AND s.campaign_id IN (SELECT id FROM campaigns WHERE brand_user_id = ?1)) AS views
+             FROM earnings e LEFT JOIN profiles p ON p.user_id = e.clipper_user_id
+             WHERE e.brand_user_id = ?1 GROUP BY e.clipper_user_id ORDER BY paid DESC LIMIT 5`,
+          )
+          .bind(user.id)
+          .all<TopCreator>()
+      ).results
+    : []
   const per1k = totals && totals.views > 0 ? totals.spent / (totals.views / 1000) : 0
 
   return (
@@ -55,14 +71,7 @@ export default async function Page() {
       <PageHeader
         title="Dashboard"
         sub="What your money bought, and how your campaigns are doing."
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href="/brand/balance" className="inline-flex h-10 items-center rounded-full border border-line-strong px-5 text-sm tabular-nums transition-colors hover:border-paper">
-              {money(b.brand)} balance
-            </Link>
-            <ActionLink href="/brand/campaigns/new">New campaign</ActionLink>
-          </div>
-        }
+        actions={<ActionLink href="/brand/campaigns/new">New campaign</ActionLink>}
       />
 
       <Card>
@@ -118,6 +127,21 @@ export default async function Page() {
           </div>
         </Card>
       </div>
+
+      {top.length > 0 && (
+        <Card title="Top creators" sub="Who your money has gone to the most." className="mt-6">
+          <ul className="divide-y divide-line">
+            {top.map((t, i) => (
+              <li key={t.uid} className="flex items-center gap-4 py-3.5 text-[15px]">
+                <span className="w-5 text-mute tabular-nums">{i + 1}</span>
+                <span className="min-w-0 flex-1 truncate">{t.handle ? <Link href={`/@${t.handle}`} className="hover:underline">{t.name}</Link> : t.name}</span>
+                <span className="hidden text-mute tabular-nums sm:block">{t.views.toLocaleString()} views</span>
+                <span className="w-24 text-right tabular-nums">{money(t.paid)}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
     </>
   )
 }

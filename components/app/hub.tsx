@@ -1,11 +1,9 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { Icon } from '@/components/icons'
 import { useFeature } from '@/components/shell/features-provider'
 import { TransitionLink } from '@/components/shell/transition-link'
 import type { HubGroup } from '@/lib/hubs'
-import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
 
 /**
@@ -16,7 +14,6 @@ export function Hub({ title, sub, groups, counts = {} }: { title: string; sub?: 
   const saved = useFeature('saved-campaigns')
   const recap = useFeature('recap')
   const on = (f?: string) => !f || (f === 'saved-campaigns' ? saved : f === 'recap' ? recap : true)
-  let n = 0
   return (
     <div className="mx-auto max-w-4xl text-center">
       <h1 className="font-display text-[clamp(2.2rem,5vw,3.6rem)] leading-[1.02] tracking-[-0.035em]">{title}</h1>
@@ -30,9 +27,8 @@ export function Hub({ title, sub, groups, counts = {} }: { title: string; sub?: 
               <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4">
                 {items.map((it) => {
                   const count = counts[it.href] ?? 0
-                  const delay = Math.min(n++, 14) * 0.025
                   return (
-                    <motion.li key={it.href} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay, ease: EASE_OUT }}>
+                    <li key={it.href}>
                       <TransitionLink href={it.href} className={cn('group relative flex aspect-[1/0.92] flex-col items-center justify-center gap-4 rounded-[1.8rem] border border-line bg-white/[0.02] px-3 text-center transition-all duration-300 hover:-translate-y-0.5 hover:border-line-strong hover:bg-white/[0.06] active:translate-y-0 active:scale-[0.985]')}>
                         <span className="grid size-14 place-items-center rounded-full bg-white/[0.06] text-paper transition-colors duration-300 group-hover:bg-paper group-hover:text-ink">
                           <Icon name={it.icon} aria-hidden="true" className="size-6" />
@@ -44,7 +40,7 @@ export function Hub({ title, sub, groups, counts = {} }: { title: string; sub?: 
                           </span>
                         )}
                       </TransitionLink>
-                    </motion.li>
+                    </li>
                   )
                 })}
               </ul>

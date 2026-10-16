@@ -2,13 +2,14 @@
 
 import { motion } from 'framer-motion'
 import { usePathname } from 'next/navigation'
+import { appArea } from '@/lib/app-areas'
 import { useTransitions } from './transition-provider'
 
 export function PageFrame({ children }: { children: React.ReactNode }) {
   const { phase } = useTransitions()
   const pathname = usePathname()
   // the dashboards fade only their own page (see DashShell), so the sidebar never blinks
-  const exiting = phase === 'exiting' && !/^\/(dashboard|brand|admin)(\/|$)/.test(pathname)
+  const exiting = phase === 'exiting' && !appArea(pathname)
 
   return (
     <motion.div
