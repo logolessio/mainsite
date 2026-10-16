@@ -29,7 +29,7 @@ export async function LogsView({ sp, base, canExport }: { sp: LogsSP; base: stri
 
   return (
     <>
-      <PageHeader title="Logs" sub="Every request, page view, sign-in, security event and money movement on the site. Visitors are counted by a salted hash, never a raw address." />
+      <PageHeader title={base.startsWith('/dev') ? 'Events' : 'Logs'} sub="Every request, page view, sign-in, security event and money movement on the site. Visitors are counted by a salted hash, never a raw address." />
       <div className="mb-6 flex flex-wrap items-center gap-2">
         {((canExport ? ['overview', 'events', 'export'] : ['overview', 'events']) as ('overview' | 'events' | 'export')[]).map((t) => (
           <a key={t} href={href(base, sp, { tab: t, p: undefined })} className={cn('inline-flex h-10 items-center rounded-full border px-5 text-sm capitalize', tab === t ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>

@@ -9,7 +9,7 @@ import { SITE } from '@/lib/site'
 
 export const metadata: Metadata = {
   title: 'Pricing | logoless',
-  description: 'No subscription. Clippers join free and keep every cent. Brands pay a small fee on top, and we cover all PayPal fees.',
+  description: "No subscription. Clippers join free and keep every cent. Brands pay a small fee on top, and we cover PayPal's fees on deposits and withdrawals.",
   alternates: { canonical: '/pricing' },
 }
 

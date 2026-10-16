@@ -153,7 +153,7 @@ export const FAQ: Record<'Clippers' | 'Brands' | 'Money' | 'Account', Faq[]> = {
     },
     {
       q: 'Is my money safe?',
-      a: 'All money is held and moved through PayPal. We never see your card or bank details, and every movement is written to a ledger we check against what PayPal reports.',
+      a: 'Payments and payouts go through PayPal, so we never see your card or bank details. Every movement is recorded in a ledger. The balance you see on logoless is our record of what you have added and earned: it is not a bank account and it is not insured. The Payments & Payouts policy has the details.',
     },
   ],
   Account: [
@@ -179,7 +179,7 @@ export const FAQ: Record<'Clippers' | 'Brands' | 'Money' | 'Account', Faq[]> = {
     },
     {
       q: 'What happens to my data?',
-      a: 'We keep what we need to run your account and to pay you, and nothing more. The privacy policy lists it all, and you can ask us for a copy or for removal.',
+      a: 'We keep only what we need to run your account and to pay you. The privacy policy lists it all, and you can ask us for a copy or for removal.',
     },
     {
       q: 'How do I report someone or something?',
@@ -195,7 +195,7 @@ export const FAQ: Record<'Clippers' | 'Brands' | 'Money' | 'Account', Faq[]> = {
     },
     {
       q: 'I signed up with Discord and have no email. Can you still reach me?',
-      a: 'Yes. The logoless Discord bot sends you messages and codes directly, so you never need to give an email address.',
+      a: 'If you connect Discord, the logoless bot can send your notifications to you there as messages.',
     },
   ],
 }

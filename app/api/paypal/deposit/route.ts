@@ -7,7 +7,7 @@ import { createOrder, paypalReady } from '@/lib/paypal'
 import { SITE } from '@/lib/site'
 import { requireUser } from '@/lib/user'
 
-const MIN = 10
+const MIN = SITE.minTopUpUsd
 const schema = z.object({ amount: z.number().int().min(MIN).max(SITE.maxTopUpUsd) })
 
 /** A brand adds funds to their balance. We open a PayPal checkout and send them there; the money lands once they approve it. */

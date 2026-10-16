@@ -103,3 +103,55 @@ export async function creatorSetup(user: { id: string; email: string }): Promise
     },
   ]
 }
+
+/** The same idea for a brand: verify, add funds, make a first campaign. */
+export async function brandSetup(user: { id: string; email: string }): Promise<SetupStep[]> {
+  const d = await db()
+  const [v, funded, camp, discord] = await Promise.all([
+    isVerified(user.id, user.email),
+    d.prepare("SELECT 1 AS x FROM ledger WHERE user_id = ?1 AND account = 'brand' AND kind = 'topup' LIMIT 1").bind(user.id).first(),
+    d.prepare('SELECT 1 AS x FROM campaigns WHERE brand_user_id = ?1 LIMIT 1').bind(user.id).first(),
+    discordIdFor(user.id),
+  ])
+  return [
+    {
+      id: 'verify',
+      title: 'Confirm it is you',
+      short: 'We email you a six digit code.',
+      why: 'It proves the account is really yours, and keeps your balance safe from anyone signing up as you.',
+      how: ['Press “Send me a code”.', 'Open the email we send you.', 'Type the six digits here.'],
+      done: v.verified,
+    },
+    {
+      id: 'funds',
+      title: 'Add funds',
+      short: 'One balance pays for every campaign.',
+      why: `Creators are paid out of your balance as they earn, up to each campaign's budget cap. A ${SITE.platformFeePct}% fee is added on top and shown before you start. You can add from $${SITE.minTopUpUsd}.`,
+      how: ['Open Balance.', 'Press Add funds and choose an amount.', 'Pay with PayPal. The whole amount is credited to your balance.'],
+      done: Boolean(funded),
+      href: '/brand/balance',
+      cta: 'Add funds',
+    },
+    {
+      id: 'campaign',
+      title: 'Make your first campaign',
+      short: 'A brief, a rate per 1,000 views and a budget cap.',
+      why: 'Say what you want made, which platforms count and what is off limits. A person on our team reads every new campaign before it goes live.',
+      how: ['Open Campaigns and press New campaign.', 'Write the brief and set the rate and the budget cap.', 'Send it. Once it has been read and your balance covers the start, it goes live.'],
+      done: Boolean(camp),
+      href: '/brand/campaigns/new',
+      cta: 'New campaign',
+    },
+    {
+      id: 'discord',
+      title: 'Connect Discord',
+      short: 'Optional. Get your notifications in the server.',
+      why: 'It is not needed to run a campaign. If you use Discord, connecting it adds you to the logoless server and lets us message you there.',
+      how: ['Open Settings and press Connect Discord.', 'Approve it on Discord’s own page.', 'You are added to the server with your role.'],
+      done: Boolean(discord),
+      href: '/brand/settings',
+      cta: 'Connect Discord',
+      optional: true,
+    },
+  ]
+}

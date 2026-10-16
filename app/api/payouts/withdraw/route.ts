@@ -19,11 +19,11 @@ const schema = z.object({ email: z.string().trim().toLowerCase().email().max(254
 export const POST = route(async (req: Request) => {
   const user = await requireUser()
   await protect(req, { name: 'withdraw', max: 6, windowSec: 600, userId: user.id })
-  if ((await getSetting('payouts_paused')) === '1') throw new HttpError(503, 'Withdrawals are paused for a short while. Your balance is safe.')
+  if ((await getSetting('payouts_paused')) === '1') throw new HttpError(503, 'Withdrawals are paused for a short while. Your balance has not changed.')
   const parsed = schema.safeParse(await body(req, 2048))
   if (!parsed.success) throw new HttpError(400, 'Enter the PayPal email you want to be paid at.')
   const { email, amount } = parsed.data
-  if (!(await paypalReady())) throw new HttpError(503, 'Withdrawals are not open yet. Your balance is safe.')
+  if (!(await paypalReady())) throw new HttpError(503, 'Withdrawals are not open yet. Your balance has not changed.')
 
   const b = await balances(user.id)
   const cents = amount === undefined ? b.available : Math.round(amount * 100)

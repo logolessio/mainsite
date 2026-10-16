@@ -7,13 +7,16 @@ import { ActionLink } from './action-link'
 import { VerifyCard } from './verify-card'
 import type { SetupStep } from '@/lib/setup-steps'
 
-const FLOW = ['Find a campaign', 'Post your content', 'Paste the link', 'Get paid']
+const FLOW = {
+  creator: ['Find a campaign', 'Post your content', 'Paste the link', 'Get paid'],
+  brand: ['Add funds', 'Write a brief', 'We read it and it goes live', 'Creators post and earn'],
+}
 
 /**
  * One thing at a time. The step to do next is big, with its button right there. The rest wait in a short list that opens
  * when you press it, and finished steps tuck away at the bottom.
  */
-export function SetupSteps({ steps, email }: { steps: SetupStep[]; email: string }) {
+export function SetupSteps({ steps, email, kind = 'creator' }: { steps: SetupStep[]; email: string; kind?: 'creator' | 'brand' }) {
   const todo = steps.filter((s) => !s.done)
   const done = steps.filter((s) => s.done)
   // the step to do next is the first one that is needed; optional ones wait at the end
@@ -71,12 +74,23 @@ export function SetupSteps({ steps, email }: { steps: SetupStep[]; email: string
       ) : (
         <section aria-label="All set" className="mt-10 rounded-[2rem] border border-line-strong bg-white/[0.03] p-7 md:p-9">
           <h2 className="font-display text-4xl leading-[1.05] tracking-[-0.035em]">You are all set.</h2>
-          <p className="mt-3 text-[17px] text-paper/65">Everything is in place. Find a campaign and keep clipping.</p>
+          <p className="mt-3 text-[17px] text-paper/65">{kind === 'brand' ? 'Everything is in place. Start a campaign whenever you are ready.' : 'Everything is in place. Find a campaign and keep clipping.'}</p>
           <div className="mt-6 flex flex-wrap gap-2">
-            <ActionLink href="/">Find a campaign</ActionLink>
-            <ActionLink href="/dashboard/earnings" variant="ghost">
-              See earnings
-            </ActionLink>
+            {kind === 'brand' ? (
+              <>
+                <ActionLink href="/brand/campaigns/new">New campaign</ActionLink>
+                <ActionLink href="/brand/balance" variant="ghost">
+                  Balance
+                </ActionLink>
+              </>
+            ) : (
+              <>
+                <ActionLink href="/">Find a campaign</ActionLink>
+                <ActionLink href="/dashboard/earnings" variant="ghost">
+                  See earnings
+                </ActionLink>
+              </>
+            )}
           </div>
         </section>
       )}
@@ -156,7 +170,7 @@ export function SetupSteps({ steps, email }: { steps: SetupStep[]; email: string
 
       {/* the whole journey, in one line */}
       <p className="mt-14 border-t border-line pt-6 text-sm text-paper/40">
-        <span className="text-paper/55">How it works:</span> {FLOW.join('  →  ')}
+        <span className="text-paper/55">How it works:</span> {FLOW[kind].join('  →  ')}
       </p>
     </div>
   )

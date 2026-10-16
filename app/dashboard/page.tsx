@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { ActionLink } from '@/components/app/action-link'
 import { EarnGoal } from '@/components/app/earn-goal'
 import { CountUp } from '@/components/app/count-up'
+import { SetupBanner } from '@/components/app/setup-banner'
 import { PageHeader } from '@/components/app/ui'
 import { Badge, EmptyState } from '@/components/app/table'
 import { TransitionLink } from '@/components/shell/transition-link'
@@ -28,37 +29,12 @@ export default async function Page() {
   ])
   const first = (user.name ?? user.email.split('@')[0]).split(' ')[0]
   const clips = views?.n ?? 0
-  const needed = steps.filter((s) => !s.optional)
-  const done = needed.filter((s) => s.done).length
-  const next = needed.find((s) => !s.done)
 
   return (
     <>
       <PageHeader title={`Welcome back, ${first}`} sub="Your balance, your clips and anything that needs doing." actions={<ActionLink href="/">Find a campaign</ActionLink>} />
 
-      {next && (
-        <section aria-label="Finish setting up" className="mb-14 rounded-[2rem] border border-line-strong bg-black/45 p-6 md:p-8">
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-[15px] text-paper/55">Finish setting up</p>
-            <p className="text-[15px] text-paper/55 tabular-nums">
-              {done} of {needed.length} done
-            </p>
-          </div>
-          <div className="mt-3 flex gap-1.5" role="progressbar" aria-valuemin={0} aria-valuemax={needed.length} aria-valuenow={done} aria-label="Set-up steps done">
-            {needed.map((s) => (
-              <span key={s.id} className={s.done ? 'h-1.5 flex-1 rounded-full bg-paper' : 'h-1.5 flex-1 rounded-full bg-white/12'} />
-            ))}
-          </div>
-          <h2 className="mt-6 font-display text-3xl leading-[1.05] tracking-[-0.03em] md:text-4xl">{next.title}</h2>
-          <p className="mt-2 text-[16px] text-paper/60">{next.short}</p>
-          <div className="mt-6 flex flex-wrap gap-2">
-            <ActionLink href={next.id === 'verify' ? '/dashboard/setup' : (next.href ?? '/dashboard/setup')}>{next.id === 'verify' ? 'Confirm it now' : (next.cta ?? 'Continue')}</ActionLink>
-            <ActionLink href="/dashboard/setup" variant="ghost">
-              See all the steps
-            </ActionLink>
-          </div>
-        </section>
-      )}
+      <SetupBanner steps={steps} guide="/dashboard/setup" />
 
       {/* the money, as four plain figures */}
       <section aria-label="Balance" className="grid gap-x-10 gap-y-12 sm:grid-cols-2 xl:grid-cols-3">

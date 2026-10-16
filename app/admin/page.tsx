@@ -28,7 +28,7 @@ export default async function Page() {
 
   return (
     <>
-      <PageHeader title="Admin" sub="Money, people and what needs you right now." />
+      <PageHeader title="Overview" sub="Money, people and what needs you right now." />
 
       <div className="flex flex-col gap-4 lg:flex-row">
         <Pill

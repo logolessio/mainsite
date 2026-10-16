@@ -97,7 +97,7 @@ export function PayoutsPanel() {
   return (
     <div id="withdraw" className="grid scroll-mt-24 gap-6">
       {fin?.testMode && <p className="rounded-2xl border border-amber-400/30 bg-amber-400/5 px-4 py-3 text-sm text-amber-200">PayPal sandbox. No real money moves.</p>}
-      {fin && !fin.ready && <p className="rounded-2xl border border-line-strong px-4 py-3 text-sm text-mute">Withdrawals are not open yet. Your earnings are safe and will be here when they are.</p>}
+      {fin && !fin.ready && <p className="rounded-2xl border border-line-strong px-4 py-3 text-sm text-mute">Withdrawals are not open yet. Your earnings are kept and will be here when they are.</p>}
       {notice && (
         <p role="status" className="rounded-2xl border border-line-strong px-4 py-3 text-sm">
           {notice}

@@ -88,7 +88,7 @@ export function SiteFooter() {
         <div className="mt-20 flex flex-col gap-8 border-t border-line pt-8 md:flex-row md:items-start md:justify-between">
           <div className="max-w-xl space-y-3 text-[13px] leading-relaxed text-paper/40">
             <p>
-              © {new Date().getFullYear()} {SITE.company}. All rights reserved.
+              © {new Date().getFullYear()} {SITE.company.replace(/\.$/, '')}. All rights reserved.
             </p>
             <p>
               logoless is not affiliated with or endorsed by TikTok, YouTube, Instagram, Discord or PayPal. Payments are processed by PayPal. YouTube content is subject to the{' '}

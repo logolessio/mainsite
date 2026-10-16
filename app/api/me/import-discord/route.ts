@@ -1,7 +1,8 @@
 import { auditSafe } from '@/lib/chain'
 import { setting } from '@/lib/db'
 import { protect } from '@/lib/guard'
-import { body, HttpError, json, route } from '@/lib/http'
+import { discordIdFor } from '@/lib/discord/link'
+import { HttpError, json, route } from '@/lib/http'
 import { storeImage } from '@/lib/upload'
 import { requireUser } from '@/lib/user'
 
@@ -15,18 +16,19 @@ async function image(url: string) {
 }
 
 /**
- * Pulls a person's public Discord picture, banner, colour and name using their Discord user ID. Discord only shares
- * these through its bot API. The "About me" text and connections are not available to apps, so those are added by hand.
+ * Pulls the picture, banner, colour and name of the person's OWN connected Discord account (connect it in Settings first).
+ * Discord only shares these through its bot API. The "About me" text and connections are not available to apps, so those are
+ * added by hand.
  */
 export const POST = route(async (req: Request) => {
   const user = await requireUser()
   await protect(req, { name: 'discord-import', max: 6, windowSec: 600, userId: user.id })
-  const { id } = await body<{ id?: string }>(req, 1024)
-  if (typeof id !== 'string' || !/^\d{15,22}$/.test(id.trim())) throw new HttpError(400, 'A Discord user ID is 17 to 19 digits. See the help text for how to copy yours.')
+  const id = await discordIdFor(user.id)
+  if (!id) throw new HttpError(409, 'Connect Discord first, in Settings.')
   const token = await setting('DISCORD_BOT_TOKEN')
   if (!token) throw new HttpError(503, 'Importing from Discord is not switched on yet.')
 
-  const res = await fetch(`https://discord.com/api/v10/users/${id.trim()}`, { headers: { authorization: `Bot ${token}`, 'user-agent': 'logoless (https://logoless.io, 1.0)' } })
+  const res = await fetch(`https://discord.com/api/v10/users/${id}`, { headers: { authorization: `Bot ${token}`, 'user-agent': 'logoless (https://logoless.io, 1.0)' } })
   if (res.status === 404) throw new HttpError(404, 'Discord could not find that user ID.')
   if (!res.ok) throw new HttpError(502, 'Discord did not answer. Please try again in a minute.')
   const u = (await res.json()) as DiscordUser

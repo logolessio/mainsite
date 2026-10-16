@@ -135,7 +135,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
     look: true,
     release: (data.projectTitle ?? '').trim().length >= 2 && Boolean(data.projectKind),
     brief: (data.platforms?.length ?? 0) > 0 && (data.summary ?? '').trim().length >= 20,
-    money: budget >= SITE.minTopUpUsd && budget <= SITE.maxTopUpUsd && rate >= 0.5 && rate <= 50,
+    money: budget >= SITE.minInviteBudgetUsd && budget <= SITE.maxTopUpUsd && rate >= 0.5 && rate <= 50,
     rules: Boolean(data.agreed),
     review: true,
     fund: true,
@@ -489,7 +489,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                     <Ask sub="Clippers earn for every 1,000 verified views, paid from your balance as they earn. You never pay more than the budget plus our fee.">How much do you want to spend?</Ask>
                     <div className="grid gap-7">
                       <Rise i={0}>
-                        <Label hint={`Minimum ${usd(SITE.minTopUpUsd)}`}>Total budget</Label>
+                        <Label hint={`Minimum ${usd(SITE.minInviteBudgetUsd)}`}>Total budget</Label>
                         <div className="flex flex-wrap gap-2">
                           {BUDGET_PRESETS.map((b) => (
                             <Chip key={b} on={budget === b} onClick={() => set({ budget: String(b) })}>
@@ -498,7 +498,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                           ))}
                         </div>
                         <div className="mt-3 max-w-xs">
-                          <BigInput label="Or type an amount" prefix="$" inputMode="numeric" value={data.budget ?? ''} maxLength={6} onChange={(e) => set({ budget: e.target.value.replace(/[^\d]/g, '') })} error={data.budget && (budget < SITE.minTopUpUsd || budget > SITE.maxTopUpUsd) ? `Between ${usd(SITE.minTopUpUsd)} and ${usd(SITE.maxTopUpUsd)}.` : undefined} />
+                          <BigInput label="Or type an amount" prefix="$" inputMode="numeric" value={data.budget ?? ''} maxLength={6} onChange={(e) => set({ budget: e.target.value.replace(/[^\d]/g, '') })} error={data.budget && (budget < SITE.minInviteBudgetUsd || budget > SITE.maxTopUpUsd) ? `Between ${usd(SITE.minInviteBudgetUsd)} and ${usd(SITE.maxTopUpUsd)}.` : undefined} />
                         </div>
                       </Rise>
                       <Rise i={1}>

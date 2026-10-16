@@ -81,7 +81,7 @@ export default async function Page() {
 
   return (
     <>
-      <PageHeader title="Clips" sub="Every clip made for your campaigns. We check the real views before anyone is paid, and you can turn down anything off-brief." />
+      <PageHeader title="Submissions" sub="Every clip made for your campaigns. We check the real views before anyone is paid, and you can turn down anything off-brief." />
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Clips made" value={String(rows.length)} />
         <StatCard label="Waiting for a check" value={String(pending.length)} />

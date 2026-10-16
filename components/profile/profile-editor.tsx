@@ -32,7 +32,7 @@ import { LookPicker } from './look-picker'
 import { MiniDots } from './mini-dots'
 import { ProfileTheme } from './profile-theme'
 
-type Loaded = { profile: ProfileView; unlocked: string[]; discordImport: boolean }
+type Loaded = { profile: ProfileView; unlocked: string[]; discordImport: boolean; discordLinked: boolean }
 
 async function api<T>(path: string, method: string, data?: unknown): Promise<T> {
   const res = await fetch(path, { method, headers: data ? { 'content-type': 'application/json' } : undefined, body: data ? JSON.stringify(data) : undefined })
@@ -51,7 +51,6 @@ export function ProfileEditor() {
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState<'avatar' | 'banner' | 'discord' | null>(null)
   const [pendingAvatar, setPendingAvatar] = useState<string | null | undefined>(undefined)
-  const [discordId, setDiscordId] = useState('')
   const [tab, setTab] = useState<TabId>('profile')
   const [discordOpen, setDiscordOpen] = useState(false)
   const avatarInput = useRef<HTMLInputElement>(null)
@@ -92,7 +91,7 @@ export function ProfileEditor() {
     setError('')
     setNote('')
     try {
-      const r = await api<{ displayName: string; avatar: string | null; banner: string | null; color: string | null }>('/api/me/import-discord', 'POST', { id: discordId.trim() })
+      const r = await api<{ displayName: string; avatar: string | null; banner: string | null; color: string | null }>('/api/me/import-discord', 'POST', {})
       setF((c) => {
         if (!c) return c
         const next = { ...c, displayName: r.displayName.slice(0, 40) }
@@ -247,14 +246,18 @@ export function ProfileEditor() {
                     {discordOpen && (
                       <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                         <div className="border-t border-line px-4 pt-4 pb-4">
-                          {!loaded.discordImport && <p className="mb-3 rounded-xl border border-line bg-ink/60 p-3 text-xs text-mute">This is not switched on yet. The site owner needs to add a Discord bot token first.</p>}
-                          <div className="flex flex-wrap gap-2">
-                            <Input value={discordId} onChange={(e) => setDiscordId(e.target.value.replace(/\D/g, '').slice(0, 22))} placeholder="Your Discord user ID" inputMode="numeric" className="max-w-xs flex-1" aria-label="Discord user ID" />
-                            <ActionButton onClick={importDiscord} disabled={!loaded.discordImport || busy === 'discord' || discordId.length < 15} className="rounded-full">
-                              {busy === 'discord' ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Import
+                          {!loaded.discordImport ? (
+                            <p className="rounded-xl border border-line bg-ink/60 p-3 text-xs text-mute">This is not switched on yet.</p>
+                          ) : !loaded.discordLinked ? (
+                            <a href="/api/discord/connect?back=/dashboard/profile" className="inline-flex h-10 items-center rounded-full bg-paper px-5 text-sm font-medium text-ink hover:bg-paper/85">
+                              Connect Discord first
+                            </a>
+                          ) : (
+                            <ActionButton onClick={importDiscord} disabled={busy === 'discord'} className="rounded-full">
+                              {busy === 'discord' ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Import from my Discord
                             </ActionButton>
-                          </div>
-                          <p className="mt-3 text-xs leading-snug text-mute">Find your ID: Discord Settings, Advanced, turn on Developer Mode, then right-click your name and choose Copy User ID. Discord does not share your “About me” or connections, so add those yourself.</p>
+                          )}
+                          <p className="mt-3 text-xs leading-snug text-mute">Discord does not share your “About me” or connections, so add those yourself.</p>
                         </div>
                       </motion.div>
                     )}

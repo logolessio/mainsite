@@ -22,11 +22,14 @@ export const SITE = {
   // Business rules shown in copy. Keep in sync with the backend.
   platformFeePct: 15, // charged to the brand ON TOP of what clippers are paid, never taken out of a clipper's earnings
   minPayoutUsd: 10,
-  minTopUpUsd: 100, // TODO: confirm
+  minTopUpUsd: 10, // the smallest amount a brand can add in one go (enforced when adding funds)
+  minInviteBudgetUsd: 100, // the smallest budget on an artist's private campaign link
   minCampaignBudgetUsd: 50, // the smallest budget cap a campaign can have
   maxTopUpUsd: 10000, // per top-up; raise once you trust the flow
   holdDays: 0, // 0: earnings can be withdrawn as soon as they are confirmed. (A number of days here would hold new earnings that long again.)
-  legalUpdated: 'October 10, 2026',
+  disputeDays: 60, // how long after a payment someone can tell us it is wrong
+  refundNote: 'usually within 5 to 10 business days of us approving it, depending on PayPal and your bank',
+  legalUpdated: 'October 16, 2026',
 }
 
 export const NAV_LINKS = [

@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowRight, Banknote, Check, CircleDollarSign, Clapperboard, Compass, Copy, ImagePlus, LayoutDashboard, Loader2, Mail, Megaphone, Plus, UserRound, X } from 'lucide-react'
+import { ArrowRight, Banknote, Check, CircleDollarSign, Clapperboard, Compass, Copy, ImagePlus, LayoutDashboard, Loader2, Mail, Megaphone, Plus, Settings as SettingsIcon, UserRound, X } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
@@ -261,17 +261,18 @@ function SettleOrb({ line, note }: { line: string; note: string }) {
 type TourItem = { icon: React.ComponentType<{ className?: string }>; label: string; text: string }
 const TOUR: Record<Role, TourItem[]> = {
   clipper: [
-    { icon: LayoutDashboard, label: 'Overview', text: 'Brands post campaigns, you cut clips, and approved views turn into money. This page shows your balance and what to do next.' },
-    { icon: Megaphone, label: 'Campaigns', text: 'Every live campaign is here. Open one for the brief, the rate and the rules, then post your clip.' },
-    { icon: Clapperboard, label: 'Clips', text: 'Paste the link to a clip you posted. We check it in seconds, and a person looks at anything unclear.' },
+    { icon: LayoutDashboard, label: 'Overview', text: 'Your balance, how your submissions are going, and the next thing to do to get set up.' },
+    { icon: Clapperboard, label: 'Submissions', text: 'Paste the link to something you posted. We take a first look right away, and a person checks anything unclear.' },
     { icon: CircleDollarSign, label: 'Earnings', text: 'Approved views are counted here. Withdraw to your PayPal once you reach the minimum.' },
-    { icon: UserRound, label: 'Profile', text: 'Your public page. Write a bio, choose your colours and decide which accounts people can see.' },
+    { icon: UserRound, label: 'Profile', text: 'Your public page: your look, a bio, and the accounts you post from.' },
+    { icon: SettingsIcon, label: 'Settings', text: 'Notifications, Discord, your password and your account.' },
   ],
   brand: [
-    { icon: LayoutDashboard, label: 'Overview', text: 'You post a campaign, creators cut clips, and you only pay for approved views. This page shows how it is going.' },
-    { icon: Megaphone, label: 'Campaigns', text: 'Launch a campaign with a rate, a budget and a brief. Pause or top it up any time.' },
-    { icon: Clapperboard, label: 'Clips', text: 'Every clip made for you, with its views and its status.' },
-    { icon: Banknote, label: 'Account', text: 'Add money to your budget and manage your details.' },
+    { icon: LayoutDashboard, label: 'Overview', text: 'How your campaigns are doing, and the next thing to do to get set up.' },
+    { icon: Megaphone, label: 'Campaigns', text: 'Launch a campaign with a brief, a rate and a budget cap. Pause it or change its budget any time.' },
+    { icon: Clapperboard, label: 'Submissions', text: 'Everything made for your campaigns, with its views and its status.' },
+    { icon: Banknote, label: 'Balance', text: 'Add funds once. Every campaign draws from the same balance as creators earn.' },
+    { icon: SettingsIcon, label: 'Settings', text: 'Notifications, Discord, your password and your account.' },
   ],
 }
 
@@ -809,7 +810,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
 
               {id === 'done' && (
                 <>
-                  <p className="max-w-sm text-[16px] leading-relaxed text-mute">{brand ? 'Launch your first campaign whenever you are ready.' : 'A good first step is to write a short bio and join your first campaign. You will find both in your dashboard.'}</p>
+                  <p className="max-w-sm text-[16px] leading-relaxed text-mute">{brand ? 'Your dashboard has a short guide for the rest: adding funds and making your first campaign.' : 'Your dashboard has a short guide for the rest: linking your accounts, connecting Discord and sending your first submission.'}</p>
                   {preview ? (
                     <div className="mt-8 flex flex-wrap justify-center gap-3">
                       <button type="button" className={cn(primary, 'bg-transparent text-paper ring-1 ring-line-strong hover:bg-paper/10')} onClick={() => window.location.reload()}>

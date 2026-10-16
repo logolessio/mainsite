@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { PayoutsPanel } from '@/components/app/payouts-panel'
-import { ActionLink } from '@/components/app/action-link'
 import { Bento, Tile } from '@/components/app/bento'
 import { CountUp } from '@/components/app/count-up'
 import { EarningsChart } from '@/components/app/earnings-chart'
@@ -43,7 +42,10 @@ export default async function Page() {
 
   return (
     <>
-      <PageHeader title="Earnings" sub="What your clips have earned, your PayPal emails, and withdrawing. We cover PayPal's fees." actions={<ActionLink href="#withdraw">Withdraw</ActionLink>} />
+      <PageHeader title="Earnings" sub="What your clips have earned, your PayPal emails, and withdrawing. We cover PayPal's fees." />
+      <div className="mb-6">
+        <PayoutsPanel />
+      </div>
       <Bento>
         <Tile className="p-7 md:col-span-6 xl:col-span-6">
           <p className="text-sm text-mute">Lifetime earned</p>
@@ -54,10 +56,10 @@ export default async function Page() {
         </Tile>
         {[
           { label: 'Available', value: usd(b.available), note: 'Ready to withdraw' },
-          { label: 'Pending', value: usd(b.pending), note: 'Clearing' },
+          ...(b.pending > 0 ? [{ label: 'Pending', value: usd(b.pending), note: 'Being confirmed' }] : []),
           { label: 'Withdrawn', value: usd(b.withdrawn), note: 'All time' },
         ].map((t) => (
-          <Tile key={t.label} className="p-6 md:col-span-2 xl:col-span-2">
+          <Tile key={t.label} className="p-6 md:col-span-3 xl:col-span-3">
             <p className="text-sm text-mute">{t.label}</p>
             <p className="mt-3 font-display text-3xl leading-none font-medium tracking-tight tabular-nums">
               <CountUp value={t.value} />
@@ -70,10 +72,6 @@ export default async function Page() {
           {events.length === 0 ? <EmptyState icon="CircleDollarSign" title="No earnings yet" body="Your chart will appear here once your first clip is verified." /> : <EarningsChart events={events} now={now} />}
         </Tile>
       </Bento>
-
-      <div className="mt-6">
-        <PayoutsPanel />
-      </div>
 
       <Card title="Ledger" sub="Every earning and withdrawal, newest first." className="mt-6">
         <DataTable

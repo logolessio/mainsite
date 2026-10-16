@@ -15,7 +15,7 @@ export function AddFunds({ ready }: { ready: boolean }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const n = Number(amount)
-  const ok = Number.isInteger(n) && n >= 10 && n <= SITE.maxTopUpUsd
+  const ok = Number.isInteger(n) && n >= SITE.minTopUpUsd && n <= SITE.maxTopUpUsd
 
   const go = async () => {
     setBusy(true)
@@ -49,7 +49,7 @@ export function AddFunds({ ready }: { ready: boolean }) {
         </ActionButton>
       </div>
       {!ready && <p className="text-sm text-mute">Adding funds is not open yet. It will be here very soon.</p>}
-      {!ok && amount && <p className="text-xs text-mute">Between $10 and ${SITE.maxTopUpUsd.toLocaleString()}.</p>}
+      {!ok && amount && <p className="text-xs text-mute">Between ${SITE.minTopUpUsd} and ${SITE.maxTopUpUsd.toLocaleString()}.</p>}
       {error && (
         <p role="alert" className="text-sm text-signal">
           {error}

@@ -3,12 +3,14 @@ import Link from 'next/link'
 import { ActionLink } from '@/components/app/action-link'
 import { Badge, EmptyState } from '@/components/app/table'
 import { Card, PageHeader } from '@/components/app/ui'
+import { SetupBanner } from '@/components/app/setup-banner'
 import { ViewsChart, type Day } from '@/components/brand/views-chart'
 import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
 import { db } from '@/lib/db'
 import { money } from '@/lib/format'
 import { featureOn } from '@/lib/features'
 import { balances } from '@/lib/ledger'
+import { brandSetup } from '@/lib/setup-steps'
 import { pageUser } from '@/lib/user'
 
 export const metadata: Metadata = { title: 'Overview | logoless', robots: { index: false } }
@@ -21,7 +23,7 @@ export default async function Page() {
   const user = await pageUser()
   const d = await db()
   const today = new Date().toISOString().slice(0, 10)
-  const [b, series, camps, totals] = await Promise.all([
+  const [b, series, camps, totals, steps] = await Promise.all([
     balances(user.id),
     d
       .prepare(
@@ -49,6 +51,7 @@ export default async function Page() {
       )
       .bind(user.id)
       .first<{ spent: number; views: number; live: number }>(),
+    brandSetup(user),
   ])
   const topOn = await featureOn('top-creators')
   const top = topOn
@@ -69,10 +72,12 @@ export default async function Page() {
   return (
     <>
       <PageHeader
-        title="Dashboard"
+        title="Overview"
         sub="What your money bought, and how your campaigns are doing."
         actions={<ActionLink href="/brand/campaigns/new">New campaign</ActionLink>}
       />
+
+      <SetupBanner steps={steps} guide="/brand/setup" />
 
       <Card>
         <ViewsChart series={series.results} today={today} />

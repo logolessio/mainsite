@@ -99,7 +99,7 @@ export const balanceCard = (b: BalanceData): Message =>
         icon: 'wallet',
         label: 'Balance',
         url: `${SITE_URL}/dashboard/earnings`,
-        text: join(big(usd(b.availableCents), 'ready to withdraw'), small('We pay PayPal’s fees, so the whole amount arrives.')),
+        text: join(big(usd(b.availableCents), 'ready to withdraw'), small('We pay PayPal’s fees, so the whole amount is sent.')),
         fields: [
           ...(b.pendingCents > 0 ? [{ name: 'Still being confirmed', value: usd(b.pendingCents), inline: true }] : []),
           { name: 'Withdrawn so far', value: usd(b.withdrawnCents), inline: true },

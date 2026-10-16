@@ -69,7 +69,7 @@ export default async function Page() {
 
   return (
     <>
-      <PageHeader title="Review queue" sub="Open the clip, check the views on the platform, enter the verified number and approve. Paying is the same step." />
+      <PageHeader title="Submissions" sub="Open the clip, check the views on the platform, enter the verified number and approve. Paying is the same step." />
       <h2 className="mb-3 font-display text-3xl">Waiting <span className="text-mute">{pending.length}</span></h2>
       {list(pending, 'Queue is clear')}
       <h2 className="mt-10 mb-3 font-display text-3xl">Recent</h2>
