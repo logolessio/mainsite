@@ -25,8 +25,10 @@ import {
   type ProfileView,
   type ShowMap,
 } from '@/lib/profile-style'
+import { avatarSrc, lookKey } from '@/lib/looks'
 import { cn } from '@/lib/utils'
 import { bannerStyle, ProfileCard } from './profile-card'
+import { LookPicker } from './look-picker'
 import { MiniDots } from './mini-dots'
 import { ProfileTheme } from './profile-theme'
 
@@ -209,11 +211,20 @@ export function ProfileEditor() {
                   <input ref={avatarInput} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => upload('avatar', e.target.files?.[0])} />
                   <div className="min-w-0 flex-1">
                     <Field label="Display name"><Input value={f.displayName} maxLength={40} onChange={(e) => set('displayName', e.target.value)} /></Field>
-                    <button type="button" onClick={() => { setPendingAvatar(null); set('avatar', null) }} className="mt-2 inline-flex items-center gap-1 text-xs text-mute hover:text-paper">
-                      <Trash2 className="size-3" /> Use my sign-in picture
+                    <button type="button" onClick={() => { setPendingAvatar(null); set('avatar', avatarSrc(null, f.displayName, f.handle)) }} className="mt-2 inline-flex items-center gap-1 text-xs text-mute hover:text-paper">
+                      <Trash2 className="size-3" /> Remove my picture
                     </button>
                   </div>
                 </div>
+                <Field label="Ready-made look" hint="A picture and a banner that go together. Upload your own any time.">
+                  <LookPicker
+                    value={f.avatar?.startsWith('/api/look/') ? (/\/api\/look\/([a-z]+)/.exec(f.avatar)?.[1] ?? '') : ''}
+                    onPick={(id) => {
+                      setPendingAvatar(lookKey(id))
+                      setF((c) => (c ? { ...c, avatar: avatarSrc(lookKey(id), c.displayName, c.handle), bannerKind: 'preset', banner: id } : c))
+                    }}
+                  />
+                </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Username" hint={`logoless.io/@${f.handle}`}><Input value={f.handle} maxLength={20} onChange={(e) => set('handle', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} /></Field>
                   <Field label="Pronouns (optional)"><Input value={f.pronouns} maxLength={30} placeholder="e.g. she/her" onChange={(e) => set('pronouns', e.target.value)} /></Field>

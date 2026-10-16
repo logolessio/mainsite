@@ -196,7 +196,7 @@ async function profileData(userId: string): Promise<k.ProfileData | null> {
     name: p.display_name,
     handle: p.handle,
     bio: p.bio,
-    avatar: p.avatar_key ? abs(`/api/img/${p.avatar_key}`) : undefined,
+    avatar: p.avatar_key && !p.avatar_key.startsWith('g:') ? abs(`/api/img/${p.avatar_key}`) : undefined,
     banner: p.banner_kind === 'image' ? abs(`/api/img/${p.banner_value}`) : undefined,
     show,
     stats: { submissions: s.clips, views: s.views, earnedCents: s.earnedCents },

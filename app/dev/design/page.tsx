@@ -5,6 +5,7 @@ import { FontPicker } from '@/components/dev/font-picker'
 import { effectiveFont } from '@/lib/fonts'
 import { allSettings } from '@/lib/settings'
 import { pageDev } from '@/lib/user'
+import { SectionTabs } from '@/components/app/section-tabs'
 
 export const metadata: Metadata = { title: 'Design | logoless', robots: { index: false } }
 
@@ -17,6 +18,7 @@ export default async function Page() {
   const on = (k: keyof typeof s) => s[k] === '1'
   return (
     <>
+      <SectionTabs group="dev" />
       <PageHeader title="Design" sub="Everything that was taken out to keep the site clean lives here. Switch any of it back on and it shows up for everyone straight away." />
       <h2 className="mb-4 font-display text-3xl tracking-[-0.03em]">Typeface</h2>
       <FontPicker current={effectiveFont(s.design_font, s.design_font_mono)} />

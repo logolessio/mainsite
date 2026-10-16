@@ -20,6 +20,7 @@ export const ISSUER = SITE.url
 
 export { SCOPES, SCOPE_IDS, type Scope } from './oauth-scopes'
 import { SCOPE_IDS } from './oauth-scopes'
+import { avatarSrc } from './looks'
 
 export type OAuthApp = {
   id: string
@@ -182,7 +183,7 @@ export async function claimsFor(userId: string, scope: string[], clientId: strin
       c.preferred_username = u.handle
       c.profile = `${ISSUER}/@${u.handle}`
     }
-    if (u.avatar_key) c.picture = `${ISSUER}/api/img/${u.avatar_key}`
+    if (u.avatar_key) c.picture = u.avatar_key.startsWith('g:') ? `${ISSUER}${avatarSrc(u.avatar_key, u.display_name ?? u.name ?? '', u.handle ?? '')}` : `${ISSUER}/api/img/${u.avatar_key}`
     c.updated_at = u.updated_at ?? u.created_at
   }
   if (scope.includes('email')) {

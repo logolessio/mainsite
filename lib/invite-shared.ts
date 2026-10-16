@@ -4,7 +4,7 @@ export const SLUG_RE = /^[a-z0-9](?:[a-z0-9]|-(?=[a-z0-9])){1,28}[a-z0-9]$/
 
 /** Names that are real pages, files or things staff would use. An invite can never take one of these. */
 export const RESERVED_SLUGS = new Set([
-  'about', 'admin', 'api', 'brand', 'brands', 'campaign', 'campaigns', 'careers', 'contact', 'covers', 'dashboard', 'faq', 'for-brands', 'for-clippers',
+  'about', 'admin', 'api', 'brand', 'brands', 'campaign', 'campaigns', 'careers', 'contact', 'covers', 'dashboard', 'faq', 'for-brands', 'for-clippers', 'for-creators',
   'forgot-password', 'how-it-works', 'legal', 'login', 'logout', 'onboarding', 'out', 'payouts', 'pricing', 'previews', 'signup', 'trust', 'u', 'welcome',
   'robots', 'sitemap', 'icon', 'apple-icon', 'favicon', 'logo', 'logoless', 'reset-password', 'verify-email', 'support', 'help', 'staff', 'root', 'static',
   'terms', 'privacy', 'settings', 'account', 'billing', 'pay', 'app', 'www', 'mail', 'email', 'dev', 'owner', 'test', 'blog', 'news', 'press', 'jobs', 'status',

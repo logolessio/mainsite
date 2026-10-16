@@ -31,11 +31,11 @@ export const SITE = {
 
 export const NAV_LINKS = [
   { label: 'Campaigns', href: '/' },
-  { label: 'For creators', href: '/for-clippers' },
+  { label: 'For creators', href: '/for-creators' },
   { label: 'For brands', href: '/for-brands' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'About', href: '/about' },
-  { label: 'FAQ', href: '/faq' },
+  { label: 'Questions', href: '/faq' },
 ]
 
 export const LEGAL_LINKS = [
@@ -56,7 +56,7 @@ export const LEGAL_LINKS = [
 export const FOOTER = {
   Product: [
     { label: 'Campaigns', href: '/' },
-    { label: 'For creators', href: '/for-clippers' },
+    { label: 'For creators', href: '/for-creators' },
     { label: 'For brands', href: '/for-brands' },
     { label: 'Pricing', href: '/pricing' },
   ],

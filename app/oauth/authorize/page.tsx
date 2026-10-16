@@ -9,6 +9,7 @@ import { getGrant, issueCode, saveGrant } from '@/lib/oauth'
 import { checkAuthRequest, codeRedirect, enc, errorRedirect } from '@/lib/oauth-request'
 import { getSession } from '@/lib/session'
 import { findOrCreateUser } from '@/lib/user'
+import { avatarSrc } from '@/lib/looks'
 
 export const metadata: Metadata = { title: 'Sign in with logoless', robots: { index: false, follow: false } }
 
@@ -60,7 +61,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Rec
     <main className={`${CONTAINER} grid min-h-dvh place-items-center py-24`}>
       <ConsentForm
         app={{ name: r.app.name, description: r.app.description, website: r.app.website, verified: r.app.verified }}
-        person={{ name: p?.display_name ?? user.name ?? email.split('@')[0], handle: p?.handle ?? '', avatar: p?.avatar_key ? `/api/img/${p.avatar_key}` : null }}
+        person={{ name: p?.display_name ?? user.name ?? email.split('@')[0], handle: p?.handle ?? '', avatar: p ? avatarSrc(p.avatar_key, p.display_name, p.handle) : null }}
         scope={r.scope}
         already={grant?.scope ?? []}
         params={{ client_id: r.app.id, redirect_uri: r.redirectUri, scope: r.scope.join(' '), ...(r.state ? { state: r.state } : {}), ...(r.nonce ? { nonce: r.nonce } : {}), ...(r.challenge ? { code_challenge: r.challenge, code_challenge_method: 'S256' } : {}) }}

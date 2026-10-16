@@ -4,6 +4,8 @@ import { PageHeader } from '@/components/app/ui'
 import { db, nowSec } from '@/lib/db'
 import { ownerEmails, roleHolders } from '@/lib/roles'
 import { pageAdmin } from '@/lib/user'
+import { SectionTabs } from '@/components/app/section-tabs'
+import { avatarSrc } from '@/lib/looks'
 
 export const metadata: Metadata = { title: 'People | logoless', robots: { index: false } }
 
@@ -55,7 +57,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
         id: r.id,
         handle: r.handle,
         name: r.display_name ?? r.email.split('@')[0],
-        avatar: r.avatar_key ? `/api/img/${r.avatar_key}` : null,
+        avatar: avatarSrc(r.avatar_key, r.display_name ?? r.email.split('@')[0], r.handle ?? ''),
         bannerKind: kind,
         banner: kind === 'image' ? `/api/img/${r.banner_value}` : (r.banner_value ?? 'noir'),
         badges,
@@ -69,6 +71,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
 
   return (
     <>
+      <SectionTabs group="people" />
       <PageHeader title="People" sub="Everyone on logoless. Open a profile to see all of it and to give someone a role." />
       <form action="/admin/people" className="mb-6 flex flex-wrap items-center gap-2">
         <input name="q" defaultValue={q} placeholder="Search name, handle or email" className="h-10 w-72 rounded-full border border-line-strong bg-ink/80 px-4 text-sm focus:outline-none" />

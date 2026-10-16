@@ -1,4 +1,5 @@
 // Shared (browser + server) definitions for profile customisation. No secrets or database code here.
+import { bannerCss, LOOKS } from './looks'
 
 export const FONT_OPTIONS = [
   { id: 'geist', label: 'Sans', note: 'Clean' },
@@ -59,20 +60,16 @@ export type CardEffect = (typeof CARD_EFFECTS)[number]['id']
 export const CARD_EFFECT_IDS = CARD_EFFECTS.map((e) => e.id) as string[]
 
 export const BANNER_PRESETS = [
-  { id: 'noir', label: 'Noir', css: 'linear-gradient(135deg,#050505 0%,#1a1a1c 55%,#050505 100%)' },
+  { id: 'noir', label: 'Noir', css: `${bannerCss({ id: 'noir', name: 'Noir', light: '#2a2a2e', mid: '#101012', dark: '#030303' })}` },
+  ...LOOKS.map((l) => ({ id: l.id, label: l.name, css: bannerCss(l) })),
   { id: 'chrome', label: 'Chrome', css: 'linear-gradient(120deg,#2b2b2e 0%,#d9d9de 22%,#4a4a50 45%,#f4f4f6 60%,#34343a 80%,#111 100%)' },
-  { id: 'dusk', label: 'Dusk', css: 'linear-gradient(135deg,#0b0b1e 0%,#2a1b4d 50%,#7a3b6e 100%)' },
-  { id: 'ember', label: 'Ember', css: 'linear-gradient(135deg,#120505 0%,#5a1408 50%,#e0521f 100%)' },
-  { id: 'ocean', label: 'Ocean', css: 'linear-gradient(135deg,#02080f 0%,#06304a 55%,#1b8fa8 100%)' },
-  { id: 'forest', label: 'Forest', css: 'linear-gradient(135deg,#030a05 0%,#0f3a1d 55%,#4c9a53 100%)' },
-  { id: 'rose', label: 'Rose', css: 'linear-gradient(135deg,#120309 0%,#5a1030 55%,#e86a92 100%)' },
   {
     id: 'grid',
     label: 'Grid',
     css: 'linear-gradient(rgb(255 255 255/.07) 1px,transparent 1px) 0 0/28px 28px,linear-gradient(90deg,rgb(255 255 255/.07) 1px,transparent 1px) 0 0/28px 28px,#050505',
   },
   { id: 'halftone', label: 'Halftone', css: 'radial-gradient(circle,rgb(255 255 255/.22) 1.4px,transparent 1.6px) 0 0/12px 12px,#050505' },
-] as const
+] as { id: string; label: string; css: string }[]
 export const BANNER_PRESET_IDS = BANNER_PRESETS.map((b) => b.id) as string[]
 
 export const DOT_SWATCHES = ['#ffffff', '#c9c9d1', '#ff4d4d', '#ff9f43', '#ffe14d', '#5eff9a', '#4de1ff', '#6d8bff', '#b36dff', '#ff6dd0']

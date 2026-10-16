@@ -15,7 +15,7 @@ export default function NotFound() {
           <PillLink href="/">See campaigns</PillLink>
         </div>
         <p className="mt-8 text-[15px] text-paper/50">
-          <Link href="/for-clippers" className="underline underline-offset-4 hover:text-paper">
+          <Link href="/for-creators" className="underline underline-offset-4 hover:text-paper">
             For creators
           </Link>
           {' · '}

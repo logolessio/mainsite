@@ -11,6 +11,8 @@ import { useDesign } from '@/components/shell/design-provider'
 import { useMotionPrefs, useMounted } from '@/hooks/use-motion-prefs'
 import { type Provider, type Role, signInWithProvider, signUpWithEmail } from '@/lib/auth'
 import { uploadImage } from '@/lib/image-client'
+import { LookPicker } from '@/components/profile/look-picker'
+import { avatarCss, bannerCss, lookById, lookFor, lookKey } from '@/lib/looks'
 import { checkHandleAvailable, resendEmailCode, verifyEmailCode } from '@/lib/onboarding'
 import { cn } from '@/lib/utils'
 
@@ -26,6 +28,8 @@ type Data = {
   avatarUrl: string | null
   bannerKey: string | null
   bannerUrl: string | null
+  /** The ready-made look used for whatever was not uploaded (see lib/looks.ts). */
+  lookId: string
 }
 
 type St = 'idle' | 'checking' | 'ok' | 'bad'
@@ -173,31 +177,35 @@ function SplitChoice({ options }: { options: { label: string; hint: string; onCl
 /** One rectangular pill holding the photo and the banner side by side. Each half is its own tap target while it is being set up. */
 function ProfilePill({ data, onAvatar, onBanner, busy }: { data: Data; onAvatar?: () => void; onBanner?: () => void; busy?: 'avatar' | 'banner' | null }) {
   const editable = Boolean(onAvatar)
+  const look = lookById(data.lookId) ?? lookFor(data.handle || data.name || 'x')
+  const letter = (data.name.trim()[0] ?? data.handle[0] ?? '').toUpperCase()
   return (
     <div className="flex w-fit max-w-full items-center gap-3 rounded-[2rem] border border-line-strong p-3 [--h:clamp(5.5rem,22vw,7.5rem)]">
-      <button type="button" disabled={!editable} onClick={onAvatar} aria-label="Profile picture" className={cn('relative grid size-[var(--h)] shrink-0 place-items-center overflow-hidden rounded-full outline-none', data.avatarUrl ? 'bg-raised' : 'border border-dashed border-line-strong text-mute', editable && 'transition-colors hover:border-paper hover:text-paper focus-visible:ring-2 focus-visible:ring-paper/60')}>
+      <button type="button" disabled={!editable} onClick={onAvatar} aria-label="Profile picture" style={data.avatarUrl ? undefined : { background: avatarCss(look) }} className={cn('relative grid size-[var(--h)] shrink-0 place-items-center overflow-hidden rounded-full outline-none', editable && 'transition-transform hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-paper/60')}>
         {data.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={data.avatarUrl} alt="Your profile picture" className="size-full object-cover" />
         ) : busy === 'avatar' ? (
-          <Loader2 className="size-5 animate-spin" />
+          <Loader2 className="size-5 animate-spin text-white" />
         ) : (
-          <span className="flex flex-col items-center gap-1 text-xs">
-            <Plus className="size-5" />
-            Photo
+          <span className="text-[2.6rem] font-semibold text-white/90">{letter}</span>
+        )}
+        {editable && !busy && (
+          <span aria-hidden="true" className="absolute inset-x-0 bottom-0 grid h-7 place-items-center bg-black/45 text-[11px] text-white">
+            Change
           </span>
         )}
       </button>
-      <button type="button" disabled={!editable} onClick={onBanner} aria-label="Banner" className={cn('relative grid h-[var(--h)] shrink-0 aspect-video place-items-center overflow-hidden rounded-[1.4rem] outline-none', data.bannerUrl ? 'bg-raised' : 'border border-dashed border-line-strong text-mute', editable && 'transition-colors hover:border-paper hover:text-paper focus-visible:ring-2 focus-visible:ring-paper/60')}>
+      <button type="button" disabled={!editable} onClick={onBanner} aria-label="Banner" style={data.bannerUrl ? undefined : { background: bannerCss(look) }} className={cn('relative grid h-[var(--h)] shrink-0 aspect-video place-items-center overflow-hidden rounded-[1.4rem] outline-none', editable && 'transition-transform hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-paper/60')}>
         {data.bannerUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={data.bannerUrl} alt="Your banner" className="size-full object-cover" />
         ) : busy === 'banner' ? (
-          <Loader2 className="size-5 animate-spin" />
-        ) : (
-          <span className="flex items-center gap-2 text-sm">
-            <ImagePlus className="size-5" />
-            Banner
+          <Loader2 className="size-5 animate-spin text-white" />
+        ) : null}
+        {editable && !busy && (
+          <span aria-hidden="true" className="absolute inset-x-0 bottom-0 grid h-7 place-items-center bg-black/45 text-[11px] text-white">
+            Change banner
           </span>
         )}
       </button>
@@ -313,13 +321,15 @@ const STEP_ORDER: Id[] = ['welcome', 'role', 'method', 'email', 'password', 'cod
  * `preview` is an admin's dry run: it starts as a stranger would (signed out), every question works, and nothing is sent to the
  * server or saved. Sign-in is pretended, uploads stay in the browser, and the end of the flow shows two buttons instead of redirecting.
  */
-export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = false, needsVerify = false }: { sessionUser: { name: string; email: string } | null; initialRole?: Role; preview?: boolean; needsVerify?: boolean }) {
+export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = false, needsVerify = false, initialStep }: { sessionUser: { name: string; email: string } | null; initialRole?: Role; preview?: boolean; needsVerify?: boolean; initialStep?: string }) {
   const sessionUser = preview ? null : realUser
   const router = useRouter()
   const mounted = useMounted()
   const { reduced } = useMotionPrefs()
   const { liquidLoader } = useDesign()
-  const [id, setId] = useState<Id>('welcome')
+  // a dry run (admin previews) can open on any step, with made-up answers, to look at it
+  const startAt = preview && initialStep && (STEP_ORDER as string[]).includes(initialStep) ? (initialStep as Id) : 'welcome'
+  const [id, setId] = useState<Id>(startAt)
   const [trail, setTrail] = useState<Id[]>([])
   const [ready, setReady] = useState(false) // the line has finished typing
   const [busy, setBusy] = useState(false)
@@ -330,7 +340,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
   const [tick, setTick] = useState(0) // which reassuring line to show while things are set up
   const [copied, setCopied] = useState(false)
   const [picking, setPicking] = useState<string | null>(null) // which sign-in card was pressed
-  const [data, setData] = useState<Data>({ role: initialRole ?? null, email: sessionUser?.email ?? '', paypal: '', name: sessionUser?.name ?? '', handle: '', avatarKey: null, avatarUrl: null, bannerKey: null, bannerUrl: null })
+  const [data, setData] = useState<Data>({ role: initialRole ?? (startAt !== 'welcome' ? 'clipper' : null), email: sessionUser?.email ?? '', paypal: '', name: sessionUser?.name || (startAt !== 'welcome' ? 'Luna Ray' : ''), handle: startAt !== 'welcome' ? 'luna_ray' : '', avatarKey: null, avatarUrl: null, bannerKey: null, bannerUrl: null, lookId: startAt !== 'welcome' ? lookFor('luna_ray').id : '' })
   const [signedIn, setSignedIn] = useState(Boolean(sessionUser))
   const [verifyMode, setVerifyMode] = useState(false) // the code step is proving a signed-in account, not finishing an email sign-up
   const avatarInput = useRef<HTMLInputElement>(null)
@@ -401,7 +411,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
     code: `We sent a 6 digit code to ${data.email}.`,
     paypal: 'That is where your earnings go. You can change it later.',
     handle: 'This is your address on logoless. Letters, numbers and underscores.',
-    pictures: 'Tap the circle for a photo and the wide part for a banner.',
+    pictures: 'Pick a ready-made look, or tap the circle and the wide part to upload your own. You can change it any time.',
     saving: 'This only takes a moment.',
     hello: 'Your profile page is ready.',
   }
@@ -515,7 +525,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
     }
     if (id === 'handle') {
       if (shown.st !== 'ok') return
-      patch({ handle: v.toLowerCase() })
+      patch({ handle: v.toLowerCase(), lookId: data.lookId || lookFor(v.toLowerCase()).id })
       return go('pictures')
     }
   }
@@ -550,10 +560,11 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       const res = await fetch('/api/me/onboarding', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ role: data.role ?? 'clipper', name: data.name, handle: data.handle, avatarKey: data.avatarKey, company: brand ? data.name : undefined }),
+        body: JSON.stringify({ role: data.role ?? 'clipper', name: data.name, handle: data.handle, avatarKey: data.avatarKey ?? (data.lookId ? lookKey(data.lookId) : null), company: brand ? data.name : undefined }),
       }).catch(() => null)
       if (!res?.ok) return ((await res?.json().catch(() => ({}))) as { error?: string })?.error ?? 'We could not save your profile. Please try again.'
-      if (data.bannerKey) await fetch('/api/me/profile', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ bannerKind: 'image', banner: data.bannerKey }) }).catch(() => null)
+      const banner = data.bannerKey ? { bannerKind: 'image', banner: data.bannerKey } : data.lookId ? { bannerKind: 'preset', banner: data.lookId } : null
+      if (banner) await fetch('/api/me/profile', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(banner) }).catch(() => null)
       return null
     }
     const [failed] = await Promise.all([work(), wait(SETTLE_MS)])
@@ -741,6 +752,9 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                   <input ref={avatarInput} type="file" accept="image/*" className="sr-only" aria-label="Choose a profile picture" onChange={(e) => void pick('avatar', e.target.files?.[0])} />
                   <input ref={bannerInput} type="file" accept="image/*" className="sr-only" aria-label="Choose a banner" onChange={(e) => void pick('banner', e.target.files?.[0])} />
                   <ProfilePill data={data} busy={uploading} onAvatar={() => avatarInput.current?.click()} onBanner={() => bannerInput.current?.click()} />
+                  <div className="mt-6 flex w-full justify-center">
+                    <LookPicker value={data.lookId} onPick={(lookId) => patch({ lookId })} />
+                  </div>
                   {error && (
                     <p role="alert" className="mt-4 text-sm text-red-500">
                       {error}
@@ -748,7 +762,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                   )}
                   <div className="mt-8 flex flex-col items-center gap-4">
                     <button type="button" className={primary} disabled={Boolean(uploading)} onClick={() => go('happy')}>
-                      {data.avatarUrl || data.bannerUrl ? 'Continue' : 'Skip for now'}
+                      Continue
                     </button>
                   </div>
                 </>

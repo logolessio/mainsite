@@ -3,13 +3,11 @@
 import { Check, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { applyWording } from '@/lib/wording'
 import { ActionLink } from './action-link'
 import { VerifyCard } from './verify-card'
+import type { SetupStep } from '@/lib/setup-steps'
 
-export type SetupStep = { id: string; title: string; short: string; why: string; done: boolean; href?: string; cta?: string }
-
-const FLOW = ['Find a campaign', 'Cut and post a clip', 'Paste the link', 'Get paid']
+const FLOW = ['Find a campaign', 'Post your content', 'Paste the link', 'Get paid']
 
 /**
  * One thing at a time. The step to do next is big, with its button right there. The rest wait in a short list that opens
@@ -18,8 +16,9 @@ const FLOW = ['Find a campaign', 'Cut and post a clip', 'Paste the link', 'Get p
 export function SetupSteps({ steps, email }: { steps: SetupStep[]; email: string }) {
   const todo = steps.filter((s) => !s.done)
   const done = steps.filter((s) => s.done)
-  const next = todo[0]
-  const rest = todo.slice(1)
+  // the step to do next is the first one that is needed; optional ones wait at the end
+  const next = todo.find((s) => !s.optional)
+  const rest = todo.filter((s) => s !== next)
   const [open, setOpen] = useState<string | null>(null)
   const [showWhy, setShowWhy] = useState(false)
   const [showDone, setShowDone] = useState(false)
@@ -30,8 +29,8 @@ export function SetupSteps({ steps, email }: { steps: SetupStep[]; email: string
       {/* where you are */}
       <div className="flex items-baseline justify-between gap-4">
         <p className="font-display text-5xl leading-none tracking-[-0.04em] tabular-nums">
-          {done.length}
-          <span className="text-paper/35"> / {steps.length}</span>
+          {done.filter((s) => !s.optional).length}
+          <span className="text-paper/35"> / {steps.filter((s) => !s.optional).length}</span>
         </p>
         <p className="text-[15px] text-paper/50">{next ? 'done so far' : 'all done'}</p>
       </div>
@@ -47,6 +46,14 @@ export function SetupSteps({ steps, email }: { steps: SetupStep[]; email: string
           <p className="text-[13px] text-paper/50">Up next · step {number(next.id)}</p>
           <h2 className="mt-3 font-display text-4xl leading-[1.05] tracking-[-0.035em] md:text-[2.6rem]">{next.title}</h2>
           <p className="mt-3 text-[17px] leading-snug text-paper/65">{next.short}</p>
+          <ol className="mt-5 grid gap-2 text-[15px] text-paper/70">
+            {next.how.map((h, n) => (
+              <li key={h} className="flex gap-3">
+                <span className="grid size-6 shrink-0 place-items-center rounded-full border border-line-strong text-xs text-paper/55 tabular-nums">{n + 1}</span>
+                <span className="pt-px">{h}</span>
+              </li>
+            ))}
+          </ol>
           {next.id === 'verify' ? (
             <VerifyCard email={email} />
           ) : (
@@ -86,7 +93,10 @@ export function SetupSteps({ steps, email }: { steps: SetupStep[]; email: string
                   <button type="button" onClick={() => setOpen(isOpen ? null : s.id)} aria-expanded={isOpen} className="group flex w-full items-center gap-4 py-4 text-left">
                     <span className="grid size-8 shrink-0 place-items-center rounded-full border border-line-strong text-xs text-paper/50 tabular-nums">{number(s.id)}</span>
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[16px]">{s.title}</span>
+                      <span className="block text-[16px]">
+                        {s.title}
+                        {s.optional && <span className="ml-2 text-xs text-paper/40">optional</span>}
+                      </span>
                       <span className="block truncate text-sm text-paper/45">{s.short}</span>
                     </span>
                     <ChevronDown className={cn('size-4 shrink-0 text-paper/40 transition-transform group-hover:text-paper', isOpen && 'rotate-180')} aria-hidden="true" />
@@ -94,6 +104,14 @@ export function SetupSteps({ steps, email }: { steps: SetupStep[]; email: string
                   {isOpen && (
                     <div className="pr-2 pb-5 pl-12">
                       <p className="text-[15px] leading-relaxed text-paper/60">{s.why}</p>
+                      <ol className="mt-4 grid gap-1.5 text-[15px] text-paper/70">
+                        {s.how.map((h, n) => (
+                          <li key={h} className="flex gap-3">
+                            <span className="grid size-6 shrink-0 place-items-center rounded-full border border-line-strong text-xs text-paper/55 tabular-nums">{n + 1}</span>
+                            <span className="pt-px">{h}</span>
+                          </li>
+                        ))}
+                      </ol>
                       {s.href && (
                         <div className="mt-4">
                           <ActionLink href={s.href} variant="ghost">
@@ -138,7 +156,7 @@ export function SetupSteps({ steps, email }: { steps: SetupStep[]; email: string
 
       {/* the whole journey, in one line */}
       <p className="mt-14 border-t border-line pt-6 text-sm text-paper/40">
-        <span className="text-paper/55">How it works:</span> {FLOW.map(applyWording).join('  →  ')}
+        <span className="text-paper/55">How it works:</span> {FLOW.join('  →  ')}
       </p>
     </div>
   )

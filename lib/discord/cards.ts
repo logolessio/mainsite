@@ -291,7 +291,7 @@ export const siteCard = (stats?: { campaigns: number; paidCents: number }): Mess
   const live = stats && stats.campaigns > 0 ? dot(`${stats.campaigns} live ${stats.campaigns === 1 ? 'campaign' : 'campaigns'}`, stats.paidCents > 0 && `$${Math.floor(stats.paidCents / 100).toLocaleString('en-US')} paid to creators`) : ''
   return msg(
     [card({ icon: 'logo', label: 'logoless.io', title: 'Views have value.', url: SITE_URL, text: join('Campaigns from artists, streamers and brands. Get paid for every 1,000 verified views.', live && small(live)), thumb: logoUrl })],
-    [row(go('Open logoless.io', '/'), go('For creators', '/for-clippers'), go('For brands', '/for-brands'))],
+    [row(go('Open logoless.io', '/'), go('For creators', '/for-creators'), go('For brands', '/for-brands'))],
   )
 }
 

@@ -12,7 +12,7 @@ import { newInquiryCount } from '@/lib/inquiries'
 import { allSettings } from '@/lib/settings'
 import { pageAdmin } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Admin | logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Overview | logoless', robots: { index: false } }
 
 export default async function Page() {
   await pageAdmin()

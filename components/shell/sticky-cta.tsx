@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 import { useNavUser } from './nav-user'
 import { TransitionLink } from './transition-link'
 
-const PAGES = ['/for-clippers', '/for-brands', '/about', '/pricing', '/faq', '/case-studies']
+const PAGES = ['/for-creators', '/for-brands', '/about', '/pricing', '/faq', '/case-studies']
 
 /** On phones, the main action stays at the bottom of the information pages. Hidden once someone has an account. */
 export function StickyCta() {

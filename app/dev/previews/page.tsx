@@ -6,6 +6,7 @@ import { BADGES } from '@/lib/badges-defs'
 import { Card, PageHeader } from '@/components/app/ui'
 import { liveCampaigns } from '@/lib/campaigns-db'
 import { pageDev } from '@/lib/user'
+import { SectionTabs } from '@/components/app/section-tabs'
 
 export const metadata: Metadata = { title: 'Previews | logoless', robots: { index: false } }
 
@@ -29,6 +30,7 @@ export default async function Page() {
   const first = (await liveCampaigns())[0]
   return (
     <>
+      <SectionTabs group="dev" />
       <PageHeader title="Previews" sub="Walk through what visitors see. Everything here is a dry run, so nothing is saved, sent or paid." />
       <div className="grid max-w-4xl gap-6">
         <Card title="Getting started">

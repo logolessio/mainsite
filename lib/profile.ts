@@ -2,6 +2,7 @@ import { db, nowSec } from './db'
 import { HttpError } from './http'
 import { hmacHex, safeEqual } from './crypto'
 import { setting } from './db'
+import { avatarSrc, isLookKey, lookFor } from './looks'
 import {
   BANNER_PRESET_IDS,
   CARD_EFFECT_IDS,
@@ -70,7 +71,7 @@ export function toView(row: ProfileRow, isStaff: boolean, online = false): Profi
     handle: row.handle,
     displayName: row.display_name,
     bio: row.bio,
-    avatar: row.avatar_key ? `/api/img/${row.avatar_key}` : null,
+    avatar: avatarSrc(row.avatar_key, row.display_name, row.handle),
     bannerKind: row.banner_kind,
     banner: row.banner_kind === 'image' ? `/api/img/${row.banner_value}` : row.banner_value,
     dotColor: row.dot_color,
@@ -112,10 +113,10 @@ export async function ensureProfile(user: UserRow): Promise<ProfileRow> {
     if (RESERVED_WORDS.some((w) => handle.includes(w))) handle = `user${Math.floor(100000 + Math.random() * 900000)}`
     const res = await d
       .prepare(
-        `INSERT OR IGNORE INTO profiles (user_id, handle, display_name, show_json, created_at, updated_at)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?5)`,
+        `INSERT OR IGNORE INTO profiles (user_id, handle, display_name, show_json, banner_kind, banner_value, created_at, updated_at)
+         VALUES (?1, ?2, ?3, ?4, 'preset', ?6, ?5, ?5)`,
       )
-      .bind(user.id, handle, name, JSON.stringify(DEFAULT_SHOW), t)
+      .bind(user.id, handle, name, JSON.stringify(DEFAULT_SHOW), t, lookFor(handle).id)
       .run()
     if (res.meta.changes === 1) break
     // The user_id may already exist (parallel request); stop if so.
@@ -248,6 +249,7 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
   }
   if (input.avatar !== undefined) {
     if (input.avatar === null) next.avatar_key = null
+    else if (isLookKey(input.avatar)) next.avatar_key = input.avatar // a ready-made look
     else {
       const own = await d.prepare("SELECT id FROM uploads WHERE id = ?1 AND user_id = ?2 AND kind = 'avatar'").bind(input.avatar, user.id).first()
       if (!own) throw new HttpError(400, 'Upload the picture first.')

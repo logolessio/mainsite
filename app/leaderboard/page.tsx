@@ -5,6 +5,7 @@ import { Leaderboard, type Entry } from '@/components/marketing/leaderboard'
 import { db, nowSec } from '@/lib/db'
 import { featureOn } from '@/lib/features'
 import { CONTAINER } from '@/lib/layout'
+import { avatarSrc } from '@/lib/looks'
 
 export const metadata: Metadata = { title: 'Leaderboard | logoless', description: 'The clippers bringing in the most verified views.' }
 
@@ -36,7 +37,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ p
       }
     })
     .slice(0, 25)
-    .map((r) => ({ handle: r.handle, name: r.display_name, avatar: r.avatar_key ? `/api/img/${r.avatar_key}` : null, accent: r.accent, views: r.views, clips: r.clips }))
+    .map((r) => ({ handle: r.handle, name: r.display_name, avatar: avatarSrc(r.avatar_key, r.display_name, r.handle), accent: r.accent, views: r.views, clips: r.clips }))
   return (
     <main className={`${CONTAINER} pt-32 pb-40 md:pt-44`}>
       <Leaderboard entries={shown} period={period} />

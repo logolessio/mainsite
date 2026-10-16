@@ -17,7 +17,7 @@ const schema = z.object({
   handle: z.string().trim().max(24).optional(),
   bio: z.string().max(400).optional(),
   country: z.string().max(40).optional(),
-  avatarKey: z.string().regex(/^[0-9a-f-]{36}$/).nullable().optional(),
+  avatarKey: z.string().regex(/^([0-9a-f-]{36}|g:[a-z]{2,12})$/).nullable().optional(),
   linked: z.record(z.string().max(20), z.string().trim().max(80)).optional(),
   niches: z.array(z.string().max(40)).max(12).optional(),
   company: z.string().trim().max(60).optional(),

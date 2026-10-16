@@ -9,7 +9,7 @@ import { PillLink } from '@/components/motion/cta'
 import { SITE } from '@/lib/site'
 
 export const metadata: Metadata = {
-  title: 'Launch a clipping campaign | logoless',
+  title: 'Launch a campaign | logoless',
   description: 'Turn one song, stream or launch into hundreds of clips. You set the budget and the rate, and pay only for views we verify.',
   alternates: { canonical: '/for-brands' },
 }

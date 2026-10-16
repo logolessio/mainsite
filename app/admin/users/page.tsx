@@ -7,6 +7,7 @@ import { Badge } from '@/components/app/table'
 import { Card, PageHeader } from '@/components/app/ui'
 import { db, nowSec } from '@/lib/db'
 import { pageAdmin } from '@/lib/user'
+import { SectionTabs } from '@/components/app/section-tabs'
 
 export const metadata: Metadata = { title: 'Users | logoless', robots: { index: false } }
 
@@ -67,6 +68,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
 
   return (
     <>
+      <SectionTabs group="people" />
       <PageHeader title="Users" sub="Who is here, who is new, and who needs a closer look." />
       <PurgeDeletions waiting={waiting.length} due={waiting.filter((a) => a <= t - 30 * 86400).length} />
       <form className="mb-4 flex flex-wrap items-center gap-2" action="/admin/users">

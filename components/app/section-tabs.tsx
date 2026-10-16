@@ -18,8 +18,20 @@ const GROUPS: Record<string, { label: string; items: Item[] }> = {
     ],
   },
   settings: { label: 'Settings', items: [{ id: 'settings', label: 'Settings', href: '/dashboard/settings' }, { id: 'notifications', label: 'Notifications', href: '/dashboard/notifications' }] },
-  campaigns: { label: 'Campaigns', items: [{ id: 'campaigns', label: 'Campaigns', href: '/admin/campaigns' }, { id: 'invites', label: 'Artist links', href: '/admin/invites' }] },
-  content: { label: 'Content', items: [{ id: 'text', label: 'Site text', href: '/admin/text' }, { id: 'broadcast', label: 'Broadcast', href: '/admin/broadcast' }, { id: 'discord', label: 'Discord', href: '/admin/discord' }, { id: 'developers', label: 'Developer apps', href: '/admin/developers' }, { id: 'email', label: 'Email', href: '/admin/email' }] },
+  campaigns: { label: 'Campaigns', items: [{ id: 'campaigns', label: 'Campaigns', href: '/admin/campaigns' }, { id: 'launch', label: 'Launch', href: '/admin/launch' }, { id: 'invites', label: 'Artist links', href: '/admin/invites' }] },
+  people: { label: 'People', items: [{ id: 'people', label: 'People', href: '/admin/people' }, { id: 'users', label: 'Users', href: '/admin/users' }] },
+  dev: {
+    label: 'Developer',
+    items: [
+      { id: 'overview', label: 'Overview', href: '/dev' },
+      { id: 'design', label: 'Design', href: '/dev/design' },
+      { id: 'features', label: 'Features', href: '/dev/features' },
+      { id: 'dashboards', label: 'Dashboards', href: '/dev/dashboards' },
+      { id: 'events', label: 'Events', href: '/dev/events' },
+      { id: 'previews', label: 'Previews', href: '/dev/previews' },
+    ],
+  },
+  content: { label: 'Site', items: [{ id: 'text', label: 'Site text', href: '/admin/text' }, { id: 'broadcast', label: 'Broadcast', href: '/admin/broadcast' }, { id: 'discord', label: 'Discord', href: '/admin/discord' }, { id: 'developers', label: 'Developer apps', href: '/admin/developers' }, { id: 'email', label: 'Email', href: '/admin/email' }] },
   system: {
     label: 'System',
     items: [

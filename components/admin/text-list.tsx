@@ -83,7 +83,7 @@ export function HeroVariantsEditor({ value, isDefault }: { value: string; isDefa
   )
 }
 
-const ROUTES = ['/', '/welcome', '/how-it-works', '/for-brands', '/for-clippers', '/pricing', '/payouts', '/trust', '/faq', '/about', '/contact', '/careers']
+const ROUTES = ['/', '/welcome', '/how-it-works', '/for-brands', '/for-creators', '/pricing', '/payouts', '/trust', '/faq', '/about', '/contact', '/careers']
 
 /** Opens each public page in a hidden frame so the editor can learn every piece of text on it. */
 export function ScanSite() {

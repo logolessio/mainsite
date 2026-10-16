@@ -8,7 +8,7 @@ export function GET() {
 
 ## Pages
 - [Campaigns](${SITE.url}/): every live campaign
-- [For creators](${SITE.url}/for-clippers): how clippers earn
+- [For creators](${SITE.url}/for-creators): how creators earn
 - [For brands](${SITE.url}/for-brands): how to launch a campaign
 - [Pricing](${SITE.url}/pricing): no subscription, clippers keep everything they earn, brands pay a ${SITE.platformFeePct}% fee on top of payouts, $${SITE.minPayoutUsd} minimum payout, paid out with PayPal
 - [About](${SITE.url}/about)

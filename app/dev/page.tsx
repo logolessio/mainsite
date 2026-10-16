@@ -10,8 +10,9 @@ import { readLive, requestHost } from '@/lib/features'
 import { money } from '@/lib/format'
 import { overview, sinceFor } from '@/lib/log-stats'
 import { pageDev } from '@/lib/user'
+import { SectionTabs } from '@/components/app/section-tabs'
 
-export const metadata: Metadata = { title: 'Dev | logoless', robots: { index: false } }
+export const metadata: Metadata = { title: 'Developer | logoless', robots: { index: false } }
 
 const when = (ts: number) => new Date(ts * 1000).toISOString().replace('T', ' ').slice(5, 16)
 
@@ -24,8 +25,9 @@ export default async function Page() {
   const bad = [...h.filter((x) => x.state !== 'ok').map((x) => x.label), ...checks.filter((x) => !x.ok).map((x) => x.label)]
   return (
     <>
+      <SectionTabs group="dev" />
       <PageHeader
-        title="Dev"
+        title="Developer"
         sub={bad.length ? `${bad.length} thing${bad.length > 1 ? 's' : ''} to look at: ${bad.join(', ')}.` : 'Everything is healthy.'}
         actions={
           <div className="flex flex-wrap gap-2">

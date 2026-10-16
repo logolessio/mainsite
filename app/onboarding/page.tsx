@@ -10,8 +10,8 @@ export const metadata: Metadata = {
   description: 'Create your account, link your socials, set up your profile and get paid, all in one guided flow.',
 }
 
-export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ role?: string; preview?: string }> }) {
-  const { role, preview } = await searchParams
+export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ role?: string; preview?: string; step?: string }> }) {
+  const { role, preview, step } = await searchParams
   const session = await getSession()
   const user = session?.user ? { name: session.user.name ?? '', email: session.user.email ?? '' } : null
   // an admin's dry run: nothing is saved (see the Previews page in the admin area)
@@ -30,7 +30,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   }
   return (
     <Suspense>
-      <OnboardingFlow preview={dry} needsVerify={needsVerify} sessionUser={user} initialRole={role === 'brand' ? 'brand' : role === 'clipper' ? 'clipper' : undefined} />
+      <OnboardingFlow preview={dry} initialStep={dry ? step : undefined} needsVerify={needsVerify} sessionUser={user} initialRole={role === 'brand' ? 'brand' : role === 'clipper' ? 'clipper' : undefined} />
     </Suspense>
   )
 }

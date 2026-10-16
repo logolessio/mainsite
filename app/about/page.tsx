@@ -27,7 +27,7 @@ export default function Page() {
         ]}
       />
       <CtaBand title="Come and join us" href="/onboarding" label="Get started" />
-      <Related links={[{ href: '/for-clippers', label: 'For creators' }, { href: '/for-brands', label: 'For brands' }, { href: '/contact', label: 'Contact' }]} />
+      <Related links={[{ href: '/for-creators', label: 'For creators' }, { href: '/for-brands', label: 'For brands' }, { href: '/contact', label: 'Contact' }]} />
     </main>
   )
 }
