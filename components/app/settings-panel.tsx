@@ -8,6 +8,7 @@ import { GlassTabs } from '@/components/ui/glass-tabs'
 import { calmWasAutomatic, clearCalmChoice, getCalmChoice, getLargeText, setCalm, setLargeText, subscribeCalm } from '@/lib/calm'
 import { DeleteCard } from './account-cards'
 import { ConnectedApps } from './connected-apps'
+import { ContactCard } from './contact-card'
 import { DiscordCard } from './discord-card'
 import { ActionButton, Card } from './ui'
 
@@ -35,6 +36,8 @@ export function SettingsPanel({ role }: { role: 'clipper' | 'brand' }) {
           )}
         </ul>
       </Card>
+
+      <ContactCard />
 
       <DiscordCard />
 

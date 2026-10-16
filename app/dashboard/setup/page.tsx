@@ -68,7 +68,7 @@ export default async function Page() {
       id: 'paid',
       title: 'Get paid',
       short: `Withdraw once you have $${SITE.minPayoutUsd} available.`,
-      why: `Approved views are paid at the campaign's rate. Earnings clear for ${SITE.holdDays} days, then they are yours to withdraw. Nothing is ever taken out of what you earn.`,
+      why: `Approved views are paid at the campaign's rate. Every earning is yours to withdraw as soon as it is confirmed. Nothing is ever taken out of what you earn.`,
       done: (paid?.n ?? 0) > 0,
       href: '/dashboard/earnings',
       cta: 'See earnings',

@@ -1,4 +1,5 @@
 import { db, nowSec, uid } from './db'
+import { applyWording } from './wording'
 
 /**
  * In-app notifications. Only things that directly affect the person are created, and each event can only
@@ -9,7 +10,7 @@ export type NotifyKind = 'badge' | 'submission' | 'payout' | 'campaign' | 'favor
 export async function notify(
   userId: string,
   n: { kind: NotifyKind; title: string; body?: string; href?: string; dedupe: string },
-) {
+): Promise<boolean> {
   try {
     const d = await db()
     const res = await d
@@ -17,16 +18,18 @@ export async function notify(
         `INSERT OR IGNORE INTO notifications (id, user_id, kind, title, body, href, dedupe_key, created_at)
          VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)`,
       )
-      .bind(uid(), userId, n.kind, n.title.slice(0, 120), (n.body ?? '').slice(0, 240), n.href ?? null, n.dedupe.slice(0, 120), nowSec())
+      .bind(uid(), userId, n.kind, applyWording(n.title).slice(0, 120), applyWording(n.body ?? '').slice(0, 240), n.href ?? null, n.dedupe.slice(0, 120), nowSec())
       .run()
     // people who linked Discord get the same message there, which is the only way to reach someone who has no email
     if (res.meta.changes === 1) {
       const { dmNotification } = await import('./discord-bot')
-      await dmNotification(userId, { kind: n.kind, title: n.title, body: n.body, href: n.href })
+      await dmNotification(userId, { kind: n.kind, title: applyWording(n.title), body: n.body ? applyWording(n.body) : undefined, href: n.href })
     }
+    return res.meta.changes === 1
   } catch (e) {
     // A failed notification must never break the action that caused it.
     console.error('notify failed', e instanceof Error ? e.message : e)
+    return false
   }
 }
 

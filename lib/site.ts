@@ -25,7 +25,7 @@ export const SITE = {
   minTopUpUsd: 100, // TODO: confirm
   minCampaignBudgetUsd: 50, // the smallest budget cap a campaign can have
   maxTopUpUsd: 10000, // per top-up; raise once you trust the flow
-  holdDays: 3, // how long earnings stay pending before they can be withdrawn
+  holdDays: 0, // 0: earnings can be withdrawn as soon as they are confirmed. (A number of days here would hold new earnings that long again.)
   legalUpdated: 'October 10, 2026',
 }
 

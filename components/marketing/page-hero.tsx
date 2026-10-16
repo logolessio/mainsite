@@ -1,6 +1,7 @@
 import { Reveal } from '@/components/motion/reveal'
 import { Words } from '@/components/motion/words'
 import { T } from '@/components/shell/copy-provider'
+import { LinkedLede } from './linked-lede'
 import { CONTAINER } from '@/lib/layout'
 import { cn } from '@/lib/utils'
 
@@ -31,7 +32,7 @@ export function PageHero({
         <div className="md:col-span-6 md:col-start-6">
           {lede && (
             <Reveal delay={0.45}>
-              <p className="max-w-lg text-pretty text-xl leading-[1.4] text-paper/70 md:text-2xl"><T>{lede}</T></p>
+              <p className="max-w-lg text-pretty text-xl leading-[1.4] text-paper/70 md:text-2xl"><LinkedLede text={lede} /></p>
             </Reveal>
           )}
           {children && (

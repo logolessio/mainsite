@@ -9,7 +9,7 @@ export const FAQ: Record<'Clippers' | 'Brands' | 'Money' | 'Account', Faq[]> = {
   Clippers: [
     {
       q: 'How do I get paid?',
-      a: `Each campaign pays a set rate for every 1,000 verified views your approved clips get. Your earnings clear for ${SITE.holdDays} days, then you can withdraw them to your PayPal once your balance is $${SITE.minPayoutUsd} or more. Pick any PayPal email, press withdraw, and it is sent. We pay PayPal's fees, so the full amount arrives.`,
+      a: `Each campaign pays a set rate for every 1,000 verified views your approved clips get. As soon as an earning is confirmed it is yours to withdraw to your PayPal, once your balance is $${SITE.minPayoutUsd} or more. Pick any PayPal email, press withdraw, and it is sent. We pay PayPal's fees, so the full amount arrives.`,
     },
     {
       q: 'Do I need a lot of followers?',
@@ -129,7 +129,7 @@ export const FAQ: Record<'Clippers' | 'Brands' | 'Money' | 'Account', Faq[]> = {
     },
     {
       q: 'How long until I can withdraw?',
-      a: `Earnings are held for ${SITE.holdDays} days after they are credited. After that they are available, and you can withdraw once your balance reaches $${SITE.minPayoutUsd}.`,
+      a: `Earnings are available the moment they are confirmed, and you can withdraw once your balance reaches $${SITE.minPayoutUsd}.`,
     },
     {
       q: 'Can I be paid to more than one PayPal email?',

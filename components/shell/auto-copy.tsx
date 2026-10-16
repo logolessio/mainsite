@@ -24,7 +24,6 @@ export function AutoCopy() {
   useEffect(() => {
     if (SKIP_PATHS.some((p) => pathname.startsWith(p))) return
     const hasEdits = Object.keys(overrides).length > 0
-    if (!isAdmin && !hasEdits) return
 
     const edited = new Set(Object.values(overrides).map(norm))
     const scan = () => {
@@ -36,6 +35,8 @@ export function AutoCopy() {
         const was = original.current.get(node)
         const raw = norm(was ?? node.nodeValue ?? '')
         if (raw.length < 3 || !/[A-Za-z]{2}/.test(raw) || raw.length > 600) continue
+        // visitors only need the text that has an edit or uses the old wording; the team needs all of it, to be able to edit it
+        if (!isAdmin && !hasEdits && !/clip/i.test(raw)) continue
         if (!was && edited.has(raw)) continue // already showing an edit (it came through <T>)
         const shown = tx(raw)
         if (shown !== raw) {

@@ -5,6 +5,7 @@ import { Loader2, RotateCcw, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { copyKey, norm } from '@/lib/copy-key'
+import { applyWording } from '@/lib/wording'
 import { seenCopy, useCopy } from '@/components/shell/copy-provider'
 import { ToolsMenu } from './tools-menu'
 import { cn } from '@/lib/utils'
@@ -31,7 +32,7 @@ export function TextEditor() {
     }
     marked.current.clear()
     const index = new Map<string, { key: string; original: string }>()
-    for (const [key, original] of seenCopy) index.set(norm(overrides[key] ?? original), { key, original })
+    for (const [key, original] of seenCopy) index.set(norm(overrides[key] ?? applyWording(original)), { key, original })
     const root = document.body
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
       acceptNode: (n) => ((n as Element).closest('[data-text-editor]') || ['SCRIPT', 'STYLE', 'SVG', 'CANVAS'].includes((n as Element).tagName.toUpperCase()) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
@@ -72,7 +73,7 @@ export function TextEditor() {
       e.stopPropagation()
       const key = el.getAttribute('data-copy-key')!
       const original = seenCopy.get(key) ?? ''
-      const current = overrides[key] ?? original
+      const current = overrides[key] ?? applyWording(original)
       setTarget({ key, original, current })
       setValue(current)
       setReason('')

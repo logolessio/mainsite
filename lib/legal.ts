@@ -1,4 +1,5 @@
 import { SITE } from './site'
+import { applyWording } from './wording'
 
 export type LegalSection = { h: string; p: string[] }
 export type LegalDoc = { slug: string; title: string; summary: string; sections: LegalSection[] }
@@ -7,7 +8,7 @@ const S = SITE.name
 const C = SITE.company
 
 // Starter legal text. Have qualified counsel review and tailor every document before launch.
-export const LEGAL: LegalDoc[] = [
+const RAW: LegalDoc[] = [
   {
     slug: 'terms',
     title: 'Terms of Service',
@@ -179,5 +180,8 @@ export const LEGAL: LegalDoc[] = [
     ],
   },
 ]
+
+/** The legal text in the site's current wording (creator, submission). The saved wording below is left as it is. */
+export const LEGAL: LegalDoc[] = RAW.map((d) => ({ ...d, title: applyWording(d.title), summary: applyWording(d.summary), sections: d.sections.map((x) => ({ h: applyWording(x.h), p: x.p.map(applyWording) })) }))
 
 export const getLegal = (slug: string) => LEGAL.find((d) => d.slug === slug)

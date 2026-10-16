@@ -1,0 +1,7 @@
+// When a sentence in the code is reworded on purpose, an edit an admin already made to the OLD wording would stop applying
+// (edits are keyed by the original sentence). List the change here as "new wording": "old wording" and the edit follows it.
+export const COPY_ALIASES: Record<string, string> = {
+  "Each campaign pays a set rate for every 1,000 verified views your approved clips get. As soon as an earning is confirmed it is yours to withdraw to your PayPal, once your balance is $10 or more. Pick any PayPal email, press withdraw, and it is sent. We pay PayPal's fees, so the full amount arrives.": "Each campaign pays a set rate for every 1,000 verified views your approved clips get. Your earnings clear for 3 days, then you can withdraw them to your PayPal once your balance is $10 or more. Pick any PayPal email, press withdraw, and it is sent. We pay PayPal's fees, so the full amount arrives.",
+  'Earnings are available the moment they are confirmed, and you can withdraw once your balance reaches $10.': 'Earnings are held for 3 days after they are credited. After that they are available, and you can withdraw once your balance reaches $10.',
+  "Approved views are paid at the campaign's rate. Every earning is yours to withdraw as soon as it is confirmed. Nothing is ever taken out of what you earn.": "Approved views are paid at the campaign's rate. Earnings clear for 3 days, then they are yours to withdraw. Nothing is ever taken out of what you earn.",
+}

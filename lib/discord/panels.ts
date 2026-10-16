@@ -69,7 +69,7 @@ export function getStartedMessage(cfg: DiscordConfig): Message {
     ['4. Link your clipping accounts', 'Add the TikTok, YouTube or Instagram accounts you post from, in **Settings**. You choose whether they show on your profile.'],
     ['5. Pick a campaign', 'Use `/campaigns` here, or browse the site. Open one, play the preview and read the brief and the rules before you start.'],
     ['6. Post and submit', 'Post your clip on your own account, then send it with `/submit` or paste the link on the campaign page. We check it in seconds.'],
-    ['7. Get paid', `Approved views turn into money. Earnings clear in ${SITE.holdDays} days, then you can withdraw from $${SITE.minPayoutUsd}.`],
+    ['7. Get paid', `Approved views turn into money. It is yours to withdraw as soon as it is confirmed, from $${SITE.minPayoutUsd}.`],
   ]
   return {
     embeds: [

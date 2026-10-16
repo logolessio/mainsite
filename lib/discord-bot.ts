@@ -1,6 +1,7 @@
 import { botReady, sendDm } from './discord/api'
 import { discordIdFor, dmEnabled } from './discord/link'
 import { getDiscordConfig } from './discord/config'
+import { contactPref } from './contact-pref'
 
 /** Kept for the code that already calls it: who is this person on Discord, and can the bot reach them. */
 export const discordIdOf = discordIdFor
@@ -24,6 +25,8 @@ export async function dmNotification(userId: string, n: { kind: string; title: s
     if (n.kind === 'favorite') return false // too noisy for a message in your inbox
     const cfg = await getDiscordConfig()
     if (!cfg.dm || !(await botReady()) || !(await dmEnabled(userId))) return false
+    const pref = await contactPref(userId)
+    if (pref === 'email' || pref === 'site') return false // they chose not to be messaged on Discord
     const id = await discordIdFor(userId)
     if (!id) return false
     const url = n.href ? (n.href.startsWith('http') ? n.href : `https://logoless.io${n.href}`) : undefined

@@ -24,6 +24,8 @@ export type Balances = {
 
 export async function balances(userId: string, at = nowSec()): Promise<Balances> {
   const d = await db()
+  // with no hold period, earnings that were credited under the old waiting rule are released the first time they are looked at
+  if (SITE.holdDays === 0) await d.prepare("UPDATE ledger SET available_at = ?2 WHERE user_id = ?1 AND account = 'clipper' AND available_at > ?2").bind(userId, at).run()
   const r = await d
     .prepare(
       `SELECT

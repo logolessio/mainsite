@@ -4,7 +4,6 @@ import { CtaBand } from '@/components/marketing/blocks'
 import { Breadcrumbs, Related } from '@/components/marketing/breadcrumbs'
 import { ClipperCalculator } from '@/components/marketing/calculators'
 import { CoverStrip } from '@/components/marketing/cover-strip'
-import { EarnDemo } from '@/components/marketing/earn-demo'
 import { Principles, Steps } from '@/components/marketing/layouts'
 import { FeePromise } from '@/components/marketing/fee-promise'
 import { PageHero } from '@/components/marketing/page-hero'
@@ -28,7 +27,7 @@ export default async function Page() {
         <PillLink href="/onboarding?role=clipper">Start earning</PillLink>
       </PageHero>
 
-      <CoverStrip campaigns={live} heading="Live right now" />
+      <CoverStrip campaigns={live} heading="Live right now" browse={false} />
 
       <Steps
         title="How it works"
@@ -39,7 +38,6 @@ export default async function Page() {
         ]}
       />
       <FeePromise audience="clippers" />
-      <EarnDemo />
       <ClipperCalculator />
       <Principles
         title="Good to know"

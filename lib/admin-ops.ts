@@ -9,6 +9,7 @@ import { HttpError } from './http'
 import { isMockId } from './mock-campaigns'
 import { balances, budgetLeft, costFor, creditEarning, releasePool, startNeeded } from './ledger'
 import { allowedPayout, getCaps } from './campaign-caps'
+import { finishCampaign, warnEnding } from './campaign-end'
 import { notify, notifyFavoriters } from './notify'
 import { closeTicket, postTeamReply } from './discord/tickets'
 import { clean as cleanText, getInquiry, saveInquiry } from './inquiries'
@@ -103,7 +104,7 @@ export async function campaignAction(actor: Actor, ip: string | null, id: string
       await set('ended', a.note ?? null)
       // an older campaign that was funded into its own pool: what is left goes back to the brand's balance
       const back = c.brand_user_id ? await releasePool(c.brand_user_id, id) : 0
-      await notifyFavoriters(id, { title: `${c.title} has ended`, body: 'It is no longer taking clips.', dedupe: `camp-ended:${id}` })
+      await finishCampaign(id, 'team') // the summary to everyone who sent something, and the time it closed
       if (c.brand_user_id) await notify(c.brand_user_id, { kind: 'campaign', title: `${c.title} has ended`, body: back > 0 ? `$${(back / 100).toFixed(2)} that was not spent went back to your balance.` : 'Nothing more will be spent on it. Your balance is untouched.', href: '/brand/campaigns', dedupe: `camp-ended-owner:${id}` })
       break
     }
@@ -221,10 +222,10 @@ export async function clipAction(actor: Actor, ip: string | null, id: string, a:
       // budget warnings for people who favourited the campaign
       const left = await budgetLeft(camp.id, camp.budget_cents)
       if (left <= 0) {
-        await d.prepare("UPDATE campaigns SET status='ended', updated_at=?2 WHERE id=?1 AND status='live'").bind(camp.id, t).run()
-        await notifyFavoriters(camp.id, { title: `${camp.title} has run out of budget`, body: 'It is no longer taking clips.', dedupe: `budget-out:${camp.id}` })
+        await finishCampaign(camp.id, 'budget') // off the front page, and everyone who sent something gets what they earned
       } else if (left < camp.budget_cents * 0.2) {
-        await notifyFavoriters(camp.id, { title: `${camp.title} is almost out of budget`, body: 'Less than 20% is left. Clip it soon.', dedupe: `budget-low:${camp.id}` })
+        await notifyFavoriters(camp.id, { title: `${camp.title} is almost out of budget`, body: 'Less than 20% is left. Submit soon.', dedupe: `budget-low:${camp.id}` })
+        await warnEnding(camp.id, (left / camp.budget_cents) * 100)
       }
     }
   }

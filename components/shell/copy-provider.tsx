@@ -2,7 +2,9 @@
 
 import { usePathname } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { COPY_ALIASES } from '@/lib/copy-aliases'
 import { copyKey, norm } from '@/lib/copy-key'
+import { applyWording } from '@/lib/wording'
 
 type CopyCtx = {
   overrides: Record<string, string>
@@ -50,7 +52,9 @@ export function CopyProvider({ overrides, isAdmin, children }: { overrides: Reco
           if (!timer.current) timer.current = setTimeout(flush, 1500)
         }
       }
-      return overrides[key] ?? original
+      // an edited sentence is shown exactly as it was written; only text nobody edited gets the site's current wording
+      const old = COPY_ALIASES[o]
+      return overrides[key] ?? (old ? overrides[copyKey(old)] : undefined) ?? applyWording(original)
     },
     [overrides, isAdmin, flush],
   )

@@ -102,3 +102,30 @@ export async function campaignRow(id: string) {
   const d = await db()
   return d.prepare('SELECT * FROM campaigns WHERE id = ?1').bind(id).first<CampaignRow>()
 }
+
+export type EndedCampaign = { id: string; title: string; creator: string; cover: string; endedAt: number }
+
+/** Campaigns that have closed, newest first, with when they closed (see markEnded in campaign-end.ts). They are not listed anywhere; they only answer when someone looks one up. */
+export async function endedCampaigns(limit = 120): Promise<EndedCampaign[]> {
+  try {
+    const d = await db()
+    const show = await mockVisible()
+    const rows = (
+      await d
+        .prepare(
+          `SELECT c.id, c.title, c.creator, c.cover_url,
+             COALESCE((SELECT CAST(value AS INTEGER) FROM settings WHERE key = 'ended-at:' || c.id), c.updated_at) AS ended_at
+           FROM campaigns c WHERE c.status = 'ended' ${show ? '' : "AND c.id NOT LIKE 'mock-%'"} ORDER BY ended_at DESC LIMIT ?1`,
+        )
+        .bind(limit)
+        .all<{ id: string; title: string; creator: string; cover_url: string; ended_at: number }>()
+    ).results
+    return rows.map((r) => ({ id: r.id, title: r.title, creator: r.creator, cover: r.cover_url, endedAt: r.ended_at }))
+  } catch {
+    return []
+  }
+}
+
+export async function endedCampaign(id: string): Promise<EndedCampaign | null> {
+  return (await endedCampaigns(500)).find((c) => c.id === id) ?? null
+}

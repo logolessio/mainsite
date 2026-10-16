@@ -4,6 +4,8 @@ import { motion } from 'framer-motion'
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { TOUR_EVENT } from '@/components/shell/site-nav'
 import type { Campaign, Platform } from '@/lib/campaigns'
+import type { EndedCampaign } from '@/lib/campaigns-db'
+import { agoText } from '@/lib/time-ago'
 import { useNavUser } from '@/components/shell/nav-user'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { EASE_OUT } from '@/lib/layout'
@@ -12,7 +14,7 @@ import { FilterBar, type SortKey } from './filter-bar'
 import { GlassSearch } from './glass-search'
 import { GuidedTour } from './guided-tour'
 
-export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[]; startTour: boolean }) {
+export function DashboardView({ campaigns, ended = [], startTour }: { campaigns: Campaign[]; ended?: EndedCampaign[]; startTour: boolean }) {
   const [query, setQuery] = useState('')
   const { user } = useNavUser()
   const signedIn = Boolean(user?.signedIn)
@@ -40,6 +42,13 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
       )
       .sort((a, b) => (sort === 'rate' ? b.ratePer1k - a.ratePer1k : sort === 'budget' ? b.budget - a.budget : end(a) - end(b)))
   }, [campaigns, deferred, category, platforms, sort])
+
+  // a campaign that has closed is not listed, but if someone searches for it, say that it ended and how long ago
+  const gone = useMemo(() => {
+    const q = deferred.trim().toLowerCase()
+    if (q.length < 2) return []
+    return ended.filter((c) => c.title.toLowerCase().includes(q) || c.creator.toLowerCase().includes(q)).slice(0, 3)
+  }, [ended, deferred])
 
   useEffect(() => {
     const open = () => setTourOpen(true)
@@ -98,8 +107,27 @@ export function DashboardView({ campaigns, startTour }: { campaigns: Campaign[];
           </div>
         ) : (
           <div className="mx-auto max-w-xl rounded-[28px] border border-dashed border-line-strong px-6 py-20 text-center">
-            <p className="font-display text-3xl">no campaigns match</p>
-            <p className="mt-2 text-sm text-mute">Try a different search, or clear the filters.</p>
+            {gone.length > 0 ? (
+              <>
+                <p className="font-display text-3xl">that campaign has ended</p>
+                <ul className="mt-5 grid gap-2 text-[15px]">
+                  {gone.map((c) => (
+                    <li key={c.id}>
+                      <TransitionLink href={`/campaign/${c.id}`} className="text-paper underline decoration-paper/30 underline-offset-4 transition-colors hover:decoration-paper">
+                        {c.title}
+                      </TransitionLink>{' '}
+                      <span className="text-mute">ended {agoText(c.endedAt)}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-4 text-sm text-mute">Try another search to find something that is live.</p>
+              </>
+            ) : (
+              <>
+                <p className="font-display text-3xl">no campaigns match</p>
+                <p className="mt-2 text-sm text-mute">Try a different search, or clear the filters.</p>
+              </>
+            )}
           </div>
         )}
       </section>

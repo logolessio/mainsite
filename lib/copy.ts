@@ -1,5 +1,7 @@
 import { cache } from 'react'
+import { COPY_ALIASES } from './copy-aliases'
 import { copyKey, norm } from './copy-key'
+import { applyWording } from './wording'
 import { db } from './db'
 
 type Map = Record<string, string>
@@ -27,7 +29,10 @@ export const bustOverrides = () => {
 /** For server components: returns the function that swaps a sentence for its edited version, if there is one. */
 export async function getCopy() {
   const map = await getOverrides()
-  return (original: string) => map[copyKey(original)] ?? original
+  return (original: string) => {
+    const old = COPY_ALIASES[norm(original)]
+    return map[copyKey(original)] ?? (old ? map[copyKey(old)] : undefined) ?? applyWording(original)
+  }
 }
 
 export { copyKey, norm }
