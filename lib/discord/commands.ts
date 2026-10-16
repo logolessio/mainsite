@@ -25,7 +25,7 @@ import { artistChannel, campaignChanged } from './campaigns'
 import { evaluateBadges } from '../badges'
 import { publicStats } from '../public-stats'
 import { runHealth } from '../health'
-import { consumeLinkCode, linkDiscord, setDmEnabled, unlinkDiscord, userByDiscord } from './link'
+import { setDmEnabled, unlinkDiscord, userByDiscord } from './link'
 import { syncRoles } from './roles'
 
 // ---------- Discord's shapes (only the parts we use) ----------
@@ -99,7 +99,7 @@ const U = 6 // user option
 const choices = (...v: string[]) => v.map((x) => ({ name: x, value: x }))
 const RAW_COMMANDS = [
   { name: 'help', description: 'What this bot can do', type: 1 },
-  { name: 'link', description: 'Connect your logoless account to Discord', type: 1, options: [{ type: S, name: 'code', description: 'The code from Settings on logoless.io', required: true, min_length: 6, max_length: 12 }] },
+  { name: 'link', description: 'Connect your logoless account to Discord', type: 1 },
   { name: 'unlink', description: 'Disconnect your logoless account from Discord', type: 1 },
   { name: 'profile', description: 'Show a logoless profile', type: 1, options: [{ type: U, name: 'member', description: 'Someone else in the server (leave empty for you)', required: false }] },
   { name: 'stats', description: 'Your submissions, views and earnings', type: 1 },
@@ -166,19 +166,10 @@ const localize = <T,>(v: T): T => {
 export const COMMANDS = localize(RAW_COMMANDS)
 
 // ---------- the answers ----------
-async function cmdLink(i: Interaction, codeIn: string): Promise<Reply> {
-  const u = whoami(i)
-  const userId = await consumeLinkCode(codeIn)
-  if (!userId) return fail('That code is not right, or it has expired. Get a new one in **Settings** on logoless.io.')
-  try {
-    await linkDiscord(userId, u.id)
-  } catch (e) {
-    return fail(e instanceof HttpError ? e.message : 'Could not link that.')
-  }
-  const m = await me(u.id)
-  await notify(userId, { kind: 'account', title: 'Discord connected', body: `Linked to ${u.global_name ?? u.username}. You will get your notifications there too.`, href: '/dashboard/settings', dedupe: `discord-linked:${u.id}:${nowSec()}` })
-  const synced = await syncRoles(userId)
-  return say(k.linkedCard({ name: m?.name ?? '', handle: m?.handle ?? '', rolesAdded: synced.added.length }))
+/** `/link`: connecting is done on logoless.io with Discord's own approval page (see connect.ts), so there is no code to type. */
+async function cmdLink(i: Interaction): Promise<Reply> {
+  const m = await me(whoami(i).id)
+  return m ? ok('Your Discord is already connected to your logoless account.', 'Connected') : notLinked()
 }
 
 async function profileData(userId: string): Promise<k.ProfileData | null> {
@@ -276,9 +267,6 @@ async function cmdCampaign(i: Interaction): Promise<Reply> {
       ratePer1k: c.ratePer1k,
       leftPct: c.budgetLeftPct ?? 100,
       platforms: c.platforms,
-      limits: k.limitsText((c.capPerPost ?? 0) * 100, (c.capPerUser ?? 0) * 100),
-      makeThis: c.clipThis,
-      offLimits: c.offLimits,
     }),
     false,
   )
@@ -415,7 +403,7 @@ async function queueRows() {
 
 async function admin(i: Interaction): Promise<Reply> {
   const m = await me(whoami(i).id)
-  if (!m || !(await isTeam(m))) return fail('This is for the logoless team. Link your admin account with `/link` first.')
+  if (!m || !(await isTeam(m))) return fail('This is for the logoless team. Connect your admin account on logoless.io first.')
   const d = await db()
   switch (sub(i)) {
     case 'stats':
@@ -500,16 +488,9 @@ async function joinCampaign(i: Interaction, campaignId: string): Promise<Reply> 
     await evaluateBadges(m.id)
     await campaignChanged(c.id)
   }
-  const list = (j: string) => {
-    try {
-      return (JSON.parse(j) as string[]).slice(0, 5)
-    } catch {
-      return []
-    }
-  }
-  const [caps, channel] = await Promise.all([getCaps(c.id), artistChannel(c.creator, false)])
+  const channel = await artistChannel(c.creator, false)
   const cfg = await getDiscordConfig()
-  return say(k.joinedCard({ id: c.id, title: c.title, summary: c.summary, already: Boolean(had), rateCents: c.rate_cents, limits: k.limitsText(caps.perPostCents, caps.perUserCents), makeThis: list(c.clip_this_json), offLimits: list(c.off_limits_json), channelId: channel && cfg.guildId ? channel : null, guildId: cfg.guildId, dm: cfg.dm }))
+  return say(k.joinedCard({ id: c.id, title: c.title, already: Boolean(had), rateCents: c.rate_cents, channelId: channel && cfg.guildId ? channel : null, guildId: cfg.guildId }))
 }
 
 // ---------- buttons, forms and autocomplete ----------
@@ -526,7 +507,7 @@ async function component(i: Interaction): Promise<Reply> {
   if (id === 'cmd:submissions') return cmdSubmissions(i)
   if (id === 'cmd:campaigns' || id === 'panel:campaigns') return cmdCampaigns(true)
   if (id === 'cmd:queue') return admin({ ...i, data: { ...i.data, options: [{ name: 'queue', type: 1 }] } })
-  if (id === 'panel:link') return modal('modal:link', 'Link your logoless account', [{ id: 'code', label: 'The code from Settings on logoless.io', style: 1, min: 6, max: 12, placeholder: 'ABCD2345' }])
+  if (id === 'panel:link') return notLinked() // buttons on older messages
   if (id.startsWith('camp:join:')) return joinCampaign(i, id.split(':')[2])
   if (id === 'panel:support' || id === 'ticket:open') return modal('modal:ticket', 'Open a ticket', [{ id: 'subject', label: 'What is it about?', style: 1, min: 3, max: 80, placeholder: 'e.g. My withdrawal has not arrived' }, { id: 'text', label: 'Tell us what happened', style: 2, min: 3, max: 1000 }])
   if (id.startsWith('ticket:reply:')) {
@@ -548,7 +529,6 @@ async function component(i: Interaction): Promise<Reply> {
 async function modalSubmit(i: Interaction): Promise<Reply> {
   const id = i.data?.custom_id ?? ''
   const value = (name: string) => i.data?.components?.flatMap((r) => r.components).find((c) => c.custom_id === name)?.value ?? ''
-  if (id === 'modal:link') return cmdLink(i, value('code'))
   if (id === 'modal:support') return cmdSupport(i, value('text'))
   if (id === 'modal:ticket') {
     const u = whoami(i)
@@ -564,7 +544,7 @@ async function modalSubmit(i: Interaction): Promise<Reply> {
     const text = value('text')
     if (u.id === inq.discord.userId) {
       const t = await addUserReply(inq, text)
-      return say(k.memberReplyCard({ who: u.global_name ?? u.username, text: t }), false)
+      return say(k.memberReplyCard({ text: t }), false)
     }
     if (!(await isStaff(i))) return fail('Only the person who opened it, or the team, can reply here.')
     // a team member answering from Discord: the same as answering in the dashboard
@@ -574,7 +554,7 @@ async function modalSubmit(i: Interaction): Promise<Reply> {
     inq.adminSeen = true
     await saveInquiry(inq)
     if (inq.userId) await notify(inq.userId, { kind: 'account', title: `We replied: ${inq.subject}`.slice(0, 120), body: text.slice(0, 200), href: `/inquiry/${inq.id}`, dedupe: `inq-reply-user:${inq.id}:${inq.replies.length}` })
-    return say(k.teamReplyCard({ who: m?.name || u.global_name || u.username, text, ref: inq.id, userId: inq.discord.userId }), false)
+    return say(k.teamReplyCard({ text, ref: inq.id }), false)
   }
   return fail('That form is out of date.')
 }
@@ -599,12 +579,12 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<Reply
     switch (name) {
       case 'help': return say(k.helpCard())
       case 'ping': return ok('Pong. I am awake.', 'Ping')
-      case 'link': return await cmdLink(i, String(opt(i, 'code') ?? ''))
+      case 'link': return await cmdLink(i)
       case 'unlink': {
         const m = await me(whoami(i).id)
         if (!m) return notLinked()
         await unlinkDiscord(m.id)
-        return ok('Unlinked. You can link again any time with a new code.', 'Unlinked')
+        return ok('Disconnected. You can connect again any time on logoless.io.', 'Unlinked')
       }
       case 'profile': return await cmdProfile(i)
       case 'stats': return await cmdStats(i)

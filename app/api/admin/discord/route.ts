@@ -5,6 +5,7 @@ import { botReady, discord, explainDiscord, postMessage, registerCommands, sendD
 import { done } from '@/lib/discord/cards'
 import { discordIdFor } from '@/lib/discord/link'
 import { SAMPLE_BY_ID, sampleList } from '@/lib/discord/samples'
+import { oauthClient } from '@/lib/discord/connect'
 import { checkAccess } from '@/lib/discord/diagnose'
 import { getStartedMessage, rulesMessage, siteMessage, supportPanel } from '@/lib/discord/panels'
 import { publicStats } from '@/lib/public-stats'
@@ -41,7 +42,7 @@ export const GET = route(async () => {
   let bot: string | null = null
   if (token) bot = (await discord<{ username: string }>('GET', '/users/@me')).json?.username ?? null
   return json({
-    has: { token: Boolean(token), appId: Boolean(appId), key: Boolean(key) },
+    has: { token: Boolean(token), appId: Boolean(appId), key: Boolean(key), secret: Boolean(await oauthClient()) },
     ready: await botReady(),
     bot,
     cfg,

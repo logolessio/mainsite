@@ -58,7 +58,9 @@ export async function openTicket(a: { discordId: string; discordName: string; us
       { id: a.discordId, type: 1, allow: ALLOW },
       ...(cfg.roles.staff ? [{ id: cfg.roles.staff, type: 0, allow: ALLOW }] : []),
     ]
-    const name = `ticket-${slug(a.user?.handle || a.discordName).slice(0, 16) || 'member'}-${inq.id.slice(-4)}`
+    // a clean channel named after the person: ・username
+    const person = (a.user?.handle || a.discordName).toLowerCase().replace(/[^a-z0-9_]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'member'
+    const name = `・${person}`
     const made = await discord<{ id: string }>('POST', `/guilds/${cfg.guildId}/channels`, { name, type: 0, parent_id: cfg.ticketCategory, topic: `${subject} · ${a.discordName}`.slice(0, 1000), permission_overwrites: overwrites })
     if (made.ok && made.json?.id) channelId = made.json.id
   }
@@ -68,7 +70,7 @@ export async function openTicket(a: { discordId: string; discordName: string; us
     await d.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?1, ?2, ?3) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at').bind(`discord:ticket:${a.discordId}`, inq.id, nowSec()).run()
     await postMessage(
       channelId,
-      ticketThreadCard({ ref: inq.id, subject, text, who: a.discordName, pings: `<@${a.discordId}>${cfg.roles.staff ? ` <@&${cfg.roles.staff}>` : ''}`, staffId: cfg.roles.staff || undefined, userId: a.discordId }),
+      ticketThreadCard({ ref: inq.id, subject, text, pings: `<@${a.discordId}>${cfg.roles.staff ? ` <@&${cfg.roles.staff}>` : ''}`, staffId: cfg.roles.staff || undefined, userId: a.discordId }),
     )
   }
   await notifyAdmins({ title: `New ticket: ${subject}`.slice(0, 120), body: text.slice(0, 160), href: `/admin/inbox/${inq.id}`, dedupe: `inq-discord:${inq.id}` })
@@ -79,7 +81,7 @@ export async function openTicket(a: { discordId: string; discordName: string; us
 /** The team answered in the dashboard: say it in the ticket channel and ping the person. */
 export async function postTeamReply(inq: Inquiry, text: string, who: string) {
   if (!inq.discord) return false
-  const res = await postMessage(inq.discord.channelId, teamReplyCard({ who, text, ref: inq.id, userId: inq.discord.userId }))
+  const res = await postMessage(inq.discord.channelId, teamReplyCard({ text, ref: inq.id }))
   return res.ok
 }
 
@@ -102,7 +104,7 @@ export async function closeTicket(inq: Inquiry, by: string) {
   const { channelId, userId } = inq.discord
   const d = await db()
   await d.prepare('DELETE FROM settings WHERE key = ?1').bind(`discord:ticket:${userId}`).run()
-  await postMessage(channelId, ticketClosedCard(by))
+  await postMessage(channelId, ticketClosedCard())
   await background(
     (async () => {
       await sleep(8000)

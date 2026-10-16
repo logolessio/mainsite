@@ -5,8 +5,10 @@ import type { Component, Embed, Message } from './api'
  * How every message from the bot looks. One style, so it reads the same wherever it shows up:
  *  - monochrome: a pale bar for normal things, a grey one for endings and problems, our own line icons, no emoji
  *  - a small header (icon and the kind of message), a short title, then the one thing that matters in large type
- *  - buttons are all plain grey, and none of them is a link (Discord puts an arrow on link buttons): "Open" buttons
- *    answer with the address instead, see `go` below
+ *  - buttons are all plain grey. A button that opens a page is a real link button (`go` below; Discord draws a small arrow on those),
+ *    the others run a command or open a form
+ *  - short: a few lines and a button to the site, where the real work happens (set-up, details, instructions)
+ *  - words written by a person (tickets) are sent as plain text, exactly as written
  */
 export const INK = 0xf3f2ee
 export const MUTE = 0x8a8a90
@@ -100,7 +102,9 @@ export function goTarget(id: string, guildId?: string): { url: string; label: st
 const EMOJI = /[\p{Extended_Pictographic}\u{FE0F}\u{200D}\u{20E3}]/gu
 const clean = (s: string | undefined) => (s === undefined ? s : applyWording(s.replace(EMOJI, '').replace(/ {2,}/g, ' ').trim()))
 
-export function tidy(m: Message): Message {
+export function tidy(message: Message): Message {
+  const { raw, ...m } = message
+  if (raw) return m // words written by a person are sent exactly as they are
   return {
     ...m,
     content: clean(m.content),

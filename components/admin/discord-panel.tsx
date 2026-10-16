@@ -8,7 +8,7 @@ import { SAMPLES } from '@/lib/discord/samples'
 import { MessagePreview } from './discord-preview'
 
 type Status = {
-  has: { token: boolean; appId: boolean; key: boolean }
+  has: { token: boolean; appId: boolean; key: boolean; secret: boolean }
   ready: boolean
   bot: string | null
   cfg: DiscordConfig
@@ -117,6 +117,7 @@ export function DiscordPanel() {
           <Tick ok={s.has.appId}>DISCORD_APP_ID is set in Cloudflare</Tick>
           <Tick ok={s.has.key}>DISCORD_PUBLIC_KEY is set in Cloudflare</Tick>
           <Tick ok={s.has.token}>DISCORD_BOT_TOKEN is set in Cloudflare{s.bot ? ` (the bot is ${s.bot})` : ''}</Tick>
+          <Tick ok={s.has.secret}>AUTH_DISCORD_SECRET is set in Cloudflare (lets people connect with Discord&apos;s approval page)</Tick>
           <Tick ok={Boolean(cfg.guildId)}>Your server ID is saved below</Tick>
           <Tick ok={s.linked > 0}>{s.linked} {s.linked === 1 ? 'member has' : 'members have'} linked Discord</Tick>
         </ul>
@@ -130,6 +131,9 @@ export function DiscordPanel() {
                 {copied ? <CheckCircle2 className="size-4 text-emerald-300" /> : <Copy className="size-4" />}
               </button>
             </span>
+          </li>
+          <li>
+            <span className="text-paper">2b.</span> Under <b>OAuth2</b> in the same application, copy the <b>Client Secret</b> into Cloudflare as AUTH_DISCORD_SECRET (and the Application ID as AUTH_DISCORD_ID), and add these two <b>Redirects</b>: <code className="rounded-lg bg-white/[0.06] px-2 py-1 text-xs text-paper">https://logoless.io/api/discord/callback</code> and <code className="rounded-lg bg-white/[0.06] px-2 py-1 text-xs text-paper">https://dev.logoless.io/api/discord/callback</code>. Members then press <b>Connect Discord</b> in Settings (or sign in with Discord), approve on Discord&apos;s own page, and are added to your server with the linked role. No codes.
           </li>
           <li>
             <span className="text-paper">3.</span> Add the bot to your server:{' '}

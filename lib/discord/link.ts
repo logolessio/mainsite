@@ -2,8 +2,8 @@ import { db, nowSec } from '../db'
 import { HttpError } from '../http'
 
 /**
- * Who is who. A logoless account and a Discord account are joined two ways: by signing in with Discord (the id is kept by email,
- * see auth.ts), or by a one-time code made on the site and typed into the bot with /link. Either way ends up here.
+ * Who is who. A logoless account and a Discord account are joined two ways, both with Discord's own OAuth2 approval page: by
+ * signing in with Discord (the id is kept by email, see auth.ts), or by "Connect Discord" in Settings (see connect.ts).
  */
 const put = async (key: string, value: string) => {
   const d = await db()
@@ -14,35 +14,6 @@ const put = async (key: string, value: string) => {
 }
 const del = async (key: string) => (await db()).prepare('DELETE FROM settings WHERE key = ?1').bind(key).run()
 const get = async (key: string) => (await (await db()).prepare('SELECT value FROM settings WHERE key = ?1').bind(key).first<{ value: string }>())?.value ?? null
-
-const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
-const code = () => [...crypto.getRandomValues(new Uint8Array(8))].map((b) => ALPHABET[b % ALPHABET.length]).join('')
-const TTL = 15 * 60
-
-/** A code to type into Discord. One at a time per person; it lasts fifteen minutes and works once. */
-export async function makeLinkCode(userId: string) {
-  const old = await get(`dlink-user:${userId}`)
-  if (old) await del(`dlink:${old}`)
-  const c = code()
-  await put(`dlink:${c}`, JSON.stringify({ userId, exp: nowSec() + TTL }))
-  await put(`dlink-user:${userId}`, c)
-  return { code: c, minutes: TTL / 60 }
-}
-
-export async function consumeLinkCode(raw: string): Promise<string | null> {
-  const c = raw.trim().toUpperCase().replace(/[^A-Z0-9]/g, '')
-  if (c.length !== 8) return null
-  const v = await get(`dlink:${c}`)
-  if (!v) return null
-  await del(`dlink:${c}`)
-  try {
-    const j = JSON.parse(v) as { userId: string; exp: number }
-    await del(`dlink-user:${j.userId}`)
-    return j.exp > nowSec() ? j.userId : null
-  } catch {
-    return null
-  }
-}
 
 export async function discordIdFor(userId: string): Promise<string | null> {
   const direct = await get(`discord:${userId}`)

@@ -17,12 +17,13 @@ async function background(p: Promise<unknown>) {
   }
 }
 
-/** A line in the team's log channel. Quiet when the bot is not set up. */
-export async function logToDiscord(text: string, icon: IconName = 'info') {
+/** A line in the team's log channel: plain text, nothing else. Quiet when the bot is not set up. (The icon is kept for old callers.) */
+export async function logToDiscord(text: string, _icon?: IconName) {
+  void _icon
   try {
     const cfg = await getDiscordConfig()
     if (!cfg.channels.logs || !(await botReady())) return
-    await postMessage(cfg.channels.logs, logCard({ icon, text }))
+    await postMessage(cfg.channels.logs, logCard({ text }))
   } catch {
     /* logging must never get in the way */
   }

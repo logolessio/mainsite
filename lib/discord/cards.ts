@@ -21,39 +21,30 @@ export const problem = (text: string) => msg([card({ icon: 'cross', label: 'Coul
 
 // ---------- help, linking ----------
 export const helpCard = (): Message =>
-  msg([
-    card({
-      icon: 'help',
-      label: 'Help',
-      title: 'logoless bot',
-      text: 'Campaigns, your numbers and your payouts, right here in Discord.',
-      fields: [
-        { name: 'Start', value: cmds([['link', 'connect your account'], ['profile', 'your page'], ['stats', 'your numbers'], ['balance', 'what you can withdraw'], ['badges', 'what you have unlocked']]) },
-        { name: 'Earn', value: cmds([['campaigns', 'what is live'], ['campaign', 'the brief'], ['submit', 'send your content'], ['submissions', 'where they stand'], ['earn', 'what views are worth']]) },
-        { name: 'Community', value: cmds([['leaderboard', 'the top creators'], ['faq', 'quick answers'], ['support', 'talk to the team'], ['report', 'tell us about a problem']]) },
-        { name: 'You', value: cmds([['notifications', 'messages from me on or off'], ['sync', 'refresh your roles'], ['unlink', 'disconnect']]) },
-      ],
-    }),
-  ])
-
-export const notLinkedCard = (): Message =>
   msg(
     [
       card({
-        icon: 'lock',
-        label: 'Not linked yet',
-        title: 'Link your account first',
-        text: join('Open **Settings** on logoless.io, press **Connect Discord** and copy the code.', 'Then type `/link` here and paste it.', small('Signed in with Discord on the site? You are already linked.')),
+        icon: 'help',
+        label: 'Help',
+        title: 'logoless bot',
+        text: join(
+          '`/campaigns` `/campaign` `/submit` `/submissions` `/earn`',
+          '`/stats` `/balance` `/profile` `/badges`',
+          '`/leaderboard` `/faq` `/support` `/report`',
+          '`/notifications` `/sync` `/unlink`',
+        ),
       }),
     ],
-    [row(go('Open settings', '/dashboard/settings'))],
+    [row(go('Open logoless.io', '/'))],
   )
 
-export const linkedCard = (a: { name: string; handle: string; rolesAdded: number }): Message =>
+export const notLinkedCard = (): Message =>
   msg(
-    [card({ icon: 'check', label: 'Account linked', title: 'You are linked', text: join(`Connected to **${a.name || 'your account'}**${a.handle ? ` (@${a.handle})` : ''}.`, a.rolesAdded > 0 && small(`${a.rolesAdded} ${a.rolesAdded === 1 ? 'role' : 'roles'} added`)) })],
-    [row(btn('My numbers', 'cmd:stats'), btn('Live campaigns', 'cmd:campaigns'))],
+    [card({ icon: 'lock', label: 'Not connected', title: 'Connect your Discord', text: 'It takes a few seconds on logoless.io, and unlocks your numbers, roles and notifications here.' })],
+    [row(go('Connect Discord', '/api/discord/connect'))],
   )
+
+
 
 // ---------- you ----------
 export type ProfileData = {
@@ -169,9 +160,6 @@ export type CampaignData = {
   ratePer1k: number
   leftPct: number
   platforms: string[]
-  limits: string
-  makeThis: string[]
-  offLimits: string[]
 }
 export const limitsText = (perPostCents: number, perUserCents: number) => [perPostCents ? `${usd(perPostCents, true)} per post` : '', perUserCents ? `${usd(perUserCents, true)} per creator` : ''].filter(Boolean).join(' · ')
 export const campaignDetailCard = (c: CampaignData): Message =>
@@ -182,54 +170,23 @@ export const campaignDetailCard = (c: CampaignData): Message =>
         label: c.creator,
         title: c.title,
         url: `${SITE_URL}/campaign/${c.id}`,
-        text: clip(c.summary, 600),
+        text: clip(c.summary, 260),
         thumb: c.cover,
         fields: [
           { name: 'Pays', value: `$${c.ratePer1k.toFixed(2)} per 1,000 views`, inline: true },
           { name: 'Budget left', value: `${c.leftPct}%`, inline: true },
           { name: 'Platforms', value: c.platforms.join(', ') || 'Any', inline: true },
-          ...(c.limits ? [{ name: 'Limits', value: `Up to ${c.limits}`, inline: false }] : []),
-          ...(c.makeThis.length ? [{ name: 'Make this', value: bullets(c.makeThis).slice(0, 1000), inline: true }] : []),
-          ...(c.offLimits.length ? [{ name: 'Not allowed', value: bullets(c.offLimits).slice(0, 1000), inline: true }] : []),
         ],
       }),
     ],
-    [row(btn('Join campaign', `camp:join:${c.id}`), go('Open campaign', `/campaign/${c.id}`), go('Rules', LEGAL_LINKS[4].href))],
+    [row(btn('Join campaign', `camp:join:${c.id}`), go('Open campaign', `/campaign/${c.id}`))],
   )
 
-export type JoinData = {
-  id: string
-  title: string
-  summary: string
-  already: boolean
-  rateCents: number
-  limits: string
-  makeThis: string[]
-  offLimits: string[]
-  channelId?: string | null
-  guildId?: string
-  dm: boolean
-}
+export type JoinData = { id: string; title: string; already: boolean; rateCents: number; channelId?: string | null; guildId?: string }
 export const joinedCard = (j: JoinData): Message =>
   msg(
-    [
-      card({
-        icon: 'check',
-        label: j.already ? 'Already in' : 'Joined',
-        title: j.title,
-        url: `${SITE_URL}/campaign/${j.id}`,
-        text: join(clip(j.summary, 400), '', big(`${usd(j.rateCents)} per 1,000 views`, j.limits ? `Up to ${j.limits}` : undefined)),
-        fields: [
-          ...(j.makeThis.length ? [{ name: 'Make this', value: bullets(j.makeThis).slice(0, 1000), inline: true }] : []),
-          ...(j.offLimits.length ? [{ name: 'Not allowed', value: bullets(j.offLimits).slice(0, 1000), inline: true }] : []),
-          {
-            name: 'Next',
-            value: join('**1.** Make it and post it on your own account.', `**2.** Send it with \`/submit campaign:${j.title}\`.`, '**3.** Approved views turn into money.', j.channelId && `Live numbers: <#${j.channelId}>`, small(`Updates about it reach you ${j.dm ? 'here and on the site' : 'on the site'}.`)),
-          },
-        ],
-      }),
-    ],
-    [row(go('Open campaign', `/campaign/${j.id}`), go('Rules', LEGAL_LINKS[4].href), ...(j.channelId && j.guildId ? [go('Artist channel', chan(j.guildId, j.channelId))] : []))],
+    [card({ icon: 'check', label: j.already ? 'Already in' : 'Joined', title: j.title, url: `${SITE_URL}/campaign/${j.id}`, text: `Pays ${usd(j.rateCents)} per 1,000 views. The brief and the rules are on the campaign page.` })],
+    [row(go('Open campaign', `/campaign/${j.id}`), ...(j.channelId && j.guildId ? [go('Artist channel', chan(j.guildId, j.channelId))] : []))],
   )
 
 // ---------- submitting ----------
@@ -244,12 +201,7 @@ export const submitCard = (r: SubmitData): Message =>
         title: r.status === 'approved' ? 'Approved' : r.status === 'declined' ? 'Not approved' : 'Sent for review',
         url: `${SITE_URL}/dashboard/submissions`,
         mute: r.status === 'declined',
-        text: join(
-          `**${r.campaign}**`,
-          r.status === 'approved' ? 'Our team confirms the views before you are paid.' : r.status === 'declined' ? r.reason ?? '' : 'A person will look at it soon. You will get a message here when it is decided.',
-          '',
-          r.checks.map((k) => `${chip(CHECK[k.state])} ${k.label}`).join('\n'),
-        ),
+        text: join(`**${r.campaign}**`, r.status === 'declined' ? r.reason ?? '' : r.status === 'approved' ? 'Our team confirms the views before you are paid.' : 'You will get a message here when it is decided.', ...r.checks.filter((k) => k.state === 'fail').map((k) => `${chip('Failed')} ${k.label}`)),
       }),
     ],
     [row(btn('Submissions', 'cmd:submissions'), go('Open dashboard', '/dashboard/submissions'))],
@@ -282,112 +234,75 @@ export const earnCard = (a: { views: number; rate: number; campaign?: string; ea
     }),
   ])
 
-export const faqCard = (a: { q: string; a: string; group: string }): Message => msg([card({ icon: 'help', label: `FAQ · ${a.group}`, title: a.q, url: `${SITE_URL}/faq`, text: clip(a.a, 3900) })], [row(go('More questions', '/faq'))])
+export const faqCard = (a: { q: string; a: string; group: string }): Message => msg([card({ icon: 'help', label: 'FAQ', title: a.q, url: `${SITE_URL}/faq`, text: clip(a.a, 500) })], [row(go('Read more', '/faq'))])
 
 // ---------- support ----------
+// A ticket is plain text, like the team log: no embeds, no names. What a person or the team writes is posted as it is.
+const plain = (content: string, extra: Partial<Message> = {}): Message => ({ content: clip(content, 1900), raw: true, allowed_mentions: quiet, ...extra })
+
 export const ticketOpenedCard = (a: { ref: string; channelId: string | null; linked: boolean }): Message =>
-  msg([
-    card({
-      icon: 'ticket',
-      label: 'Ticket opened',
-      text: a.channelId ? `Your private channel is <#${a.channelId}>. The team answers there and you will be pinged.` : join(`The team has it. Reference ${chip(a.ref)}.`, a.linked ? 'We will answer in your logoless notifications, and here if you have messages on.' : 'Link your account with `/link` to get the answer here.'),
-    }),
-  ])
+  plain(a.channelId ? `Your ticket is open: <#${a.channelId}>` : `Got it. Reference ${a.ref}. ${a.linked ? 'We will answer in your logoless notifications.' : 'Connect Discord on logoless.io to get the answer here.'}`)
 
 export const reportSentCard = (a: { ref: string; linked: boolean }): Message =>
-  msg([card({ icon: 'flag', label: 'Report sent', text: join(`The team has it. Reference ${chip(a.ref)}.`, a.linked ? 'We will answer in your logoless notifications, and here if you have messages on.' : 'Link your account with `/link` if you want the answer here.') })])
+  msg([card({ icon: 'flag', label: 'Report sent', text: join(`The team has it. Reference ${chip(a.ref)}.`, a.linked ? 'We will answer in your logoless notifications, and here if you have messages on.' : 'Connect Discord on logoless.io if you want the answer here.') })])
 
-export const ticketButtons = (id: string): Component[] => [row(btn('Reply', `ticket:reply:${id}`), btn('Close ticket', `ticket:close:${id}`))]
+/** The first message in a ticket channel: the person's words, with the buttons to answer and to close. */
+export const ticketThreadCard = (a: { ref: string; subject: string; text: string; pings: string; staffId?: string; userId: string }): Message =>
+  plain(`${a.pings ? `${a.pings}\n` : ''}**${a.subject}**\n${a.text}`, {
+    components: [row(btn('Reply', `ticket:reply:${a.ref}`), btn('Close ticket', `ticket:close:${a.ref}`))],
+    allowed_mentions: { users: [a.userId], roles: a.staffId ? [a.staffId] : [] },
+  })
 
-export const ticketThreadCard = (a: { ref: string; subject: string; text: string; who: string; pings: string; staffId?: string; userId: string }): Message => ({
-  content: a.pings || undefined,
-  embeds: [
-    card({ icon: 'ticket', label: `Ticket · ${a.who}`, title: a.subject, text: clip(a.text, 3500), foot: `Ref ${a.ref} · the team answers here and in the dashboard` }),
-    card({ icon: 'info', label: 'What happens next', text: 'A person will answer soon. Use **Reply** to add more, or **Close ticket** when you are done.' }),
-  ],
-  components: ticketButtons(a.ref),
-  allowed_mentions: { users: [a.userId], roles: a.staffId ? [a.staffId] : [] },
-})
+/** An answer from the team: just the words, with one Reply button (the bot cannot read ordinary chat, so replies go through it). */
+export const teamReplyCard = (a: { text: string; ref: string }): Message => plain(a.text, { components: [row(btn('Reply', `ticket:reply:${a.ref}`))] })
 
-export const teamReplyCard = (a: { who: string; text: string; ref: string; userId: string }): Message => ({
-  content: `<@${a.userId}>`,
-  embeds: [{ ...card({ icon: 'logo', label: `${a.who} · logoless team`, text: clip(a.text, 3800) }) }],
-  components: ticketButtons(a.ref),
-  allowed_mentions: { users: [a.userId] },
-})
+/** The person's answer: just the words. */
+export const memberReplyCard = (a: { text: string }): Message => plain(a.text)
 
-export const memberReplyCard = (a: { who: string; text: string }): Message => msg([card({ icon: 'user', label: a.who, text: clip(a.text, 3800) })])
-
-export const ticketClosedCard = (by: string): Message =>
-  msg([card({ icon: 'check', label: 'Ticket closed', text: join(`Closed by ${by}. This channel goes away in a few seconds.`, small('The conversation is kept in the dashboard, and you can open a new ticket any time.')) })])
+export const ticketClosedCard = (): Message => plain('Ticket closed.')
 
 // ---------- the fixed channels ----------
 export const rulesCard = (links: { rules: string; support: string; getStarted: string; guildId: string }): Message => {
-  const rules: [string, string][] = [
-    ['1. Be decent', 'No harassment, hate, slurs or threats. Disagree without going after people.'],
-    ['2. Keep views real', 'No bought, botted or faked views, and no trading or selling them. It gets submissions rejected and accounts banned.'],
-    ['3. Follow the brief', 'Make what a campaign asks for and nothing it forbids. Read the campaign page before you post.'],
-    ['4. No spam or ads', 'No unrelated links, server invites or promotion. Post things in the right channel.'],
-    ['5. No scams', 'The team will never DM you first, or ask for a password, a code or money. Report anyone who does.'],
-    ['6. Keep private things private', 'Do not share other people’s details, and do not leak campaign material before it is public.'],
-    ['7. Use the right place', 'Questions in help, ideas in suggestions, payment or account problems in a support ticket.'],
-    ['8. Staff decisions stand', 'If you think we got it wrong, open a ticket. Do not argue it out in the channels.'],
-    ['9. Discord’s rules apply too', 'Discord’s Terms of Service and Community Guidelines are part of ours.'],
-  ]
   const ch = (id: string, label: string) => (links.guildId && id ? [go(label, chan(links.guildId, id))] : [])
   return msg(
-    [card({ icon: 'book', label: 'Rules', title: 'Server rules', text: 'Short and fair. Break them and the team will act.', fields: rules.map(([name, value]) => ({ name, value })), foot: 'By staying here you agree to these rules and to the logoless Terms of Service.' })],
-    [row(go('Terms of Service', LEGAL_LINKS[0].href), go('Campaign rules', LEGAL_LINKS[4].href), go('Questions', '/faq'), ...ch(links.getStarted, 'Get started'), ...ch(links.support, 'Support'))],
+    [
+      card({
+        icon: 'book',
+        label: 'Rules',
+        title: 'Server rules',
+        text: join(
+          '**1.** Be decent. No harassment, hate or threats.',
+          '**2.** Keep views real. No botting, buying or faking.',
+          '**3.** Follow each campaign’s brief.',
+          '**4.** No spam, ads or scams. The team never DMs you first.',
+          '**5.** Keep private things private.',
+          '**6.** Use the right channel. Problems go in a ticket.',
+          '**7.** Staff decisions stand. Think we got it wrong? Open a ticket.',
+          '',
+          small('Discord’s Terms and Guidelines apply too.'),
+        ),
+      }),
+    ],
+    [row(go('Terms', LEGAL_LINKS[0].href), go('Campaign rules', LEGAL_LINKS[4].href), ...ch(links.support, 'Support'))],
   )
 }
 
 export const siteCard = (stats?: { campaigns: number; paidCents: number }): Message => {
-  const live = stats && stats.campaigns > 0 ? dot(`${stats.campaigns} live ${stats.campaigns === 1 ? 'campaign' : 'campaigns'}`, stats.paidCents > 0 && `$${Math.floor(stats.paidCents / 100).toLocaleString('en-US')} paid to creators`) : 'New campaigns land here first'
+  const live = stats && stats.campaigns > 0 ? dot(`${stats.campaigns} live ${stats.campaigns === 1 ? 'campaign' : 'campaigns'}`, stats.paidCents > 0 && `$${Math.floor(stats.paidCents / 100).toLocaleString('en-US')} paid to creators`) : ''
   return msg(
-    [
-      card({
-        icon: 'logo',
-        label: 'logoless.io',
-        title: 'Views have value.',
-        url: SITE_URL,
-        text: 'Campaigns from artists, streamers and brands. Post your content, and get paid for every 1,000 verified views.',
-        image: logoUrl,
-        fields: [
-          { name: 'For creators', value: `Free to join. You keep everything you earn. Withdraw from $${SITE.minPayoutUsd} to any PayPal email.`, inline: true },
-          { name: 'For brands', value: `One balance for every campaign. Pay only for verified views, plus a ${SITE.platformFeePct}% fee on top.`, inline: true },
-          { name: 'We pay PayPal’s fees', value: 'Every deposit and every withdrawal, in full.' },
-          { name: 'Right now', value: live },
-        ],
-      }),
-    ],
-    [row(go('Open logoless.io', '/'), go('For creators', '/for-clippers'), go('For brands', '/for-brands'), go('Pricing', '/pricing'), go('Questions', '/faq'))],
+    [card({ icon: 'logo', label: 'logoless.io', title: 'Views have value.', url: SITE_URL, text: join('Campaigns from artists, streamers and brands. Get paid for every 1,000 verified views.', live && small(live)), thumb: logoUrl })],
+    [row(go('Open logoless.io', '/'), go('For creators', '/for-clippers'), go('For brands', '/for-brands'))],
   )
 }
 
-export const getStartedCard = (links: { rules: string; guildId: string }): Message => {
-  const steps: [string, string][] = [
-    ['1. Make your account', 'Open **logoless.io/onboarding**. Choose creator or brand, pick a username and a picture. It asks for a code we email you (not needed if you sign in with Discord).'],
-    ['2. Link Discord', 'On the site open **Settings**, press **Connect Discord**, then press **Link my account** below and paste the code. Linking unlocks the rest of the server, your roles and your notifications here.'],
-    ['3. Add your PayPal email', 'Go to **Earnings** and add the PayPal email you want to be paid at. We pay PayPal’s fees, so the whole amount arrives.'],
-    ['4. Link your accounts', 'Add the TikTok, YouTube or Instagram accounts you post from, in **Settings**. You choose whether they show on your profile.'],
-    ['5. Pick a campaign', 'Use `/campaigns` here, or browse the site. Open one and read the brief and the rules before you start.'],
-    ['6. Post and submit', 'Post on your own account, then send it with `/submit` or paste the link on the campaign page. We check it in seconds.'],
-    ['7. Get paid', `Approved views turn into money. It is yours to withdraw as soon as it is confirmed, from $${SITE.minPayoutUsd}.`],
-  ]
-  return msg(
-    [
-      card({ icon: 'spark', label: 'Welcome', title: 'Welcome to logoless', text: 'Setting up takes about three minutes. Follow the steps in order, and open a ticket if you get stuck.', thumb: logoUrl }),
-      card({ icon: 'check', label: 'Step by step', fields: steps.map(([name, value]) => ({ name, value })), foot: 'Brands: add funds once on your Balance page and every campaign draws from it.' }),
-    ],
-    [row(go('Create your account', '/onboarding'), btn('Link my account', 'panel:link'), btn('Live campaigns', 'panel:campaigns'), ...(links.guildId && links.rules ? [go('Rules', chan(links.guildId, links.rules))] : []))],
+export const getStartedCard = (links: { rules: string; guildId: string }): Message =>
+  msg(
+    [card({ icon: 'spark', label: 'Welcome', title: 'Welcome to logoless', text: 'Join campaigns from artists, streamers and brands. Post your content and get paid for every 1,000 verified views.', thumb: logoUrl })],
+    [row(go('Get started', '/onboarding'), go('Log in', '/login'), btn('Live campaigns', 'panel:campaigns'), ...(links.guildId && links.rules ? [go('Rules', chan(links.guildId, links.rules))] : []))],
   )
-}
 
 export const supportPanelCard = (): Message =>
-  msg(
-    [card({ icon: 'ticket', label: 'Support', title: 'Need a hand?', text: join('Press the button to open a private ticket. Only you and the team can see it. We answer right there, and you will be pinged.', '', small('For quick answers, `/faq` is instant.')), thumb: logoUrl, foot: 'Payment problems, account problems, anything: open a ticket.' })],
-    [row(btn('Open a ticket', 'ticket:open'), go('Questions', '/faq'))],
-  )
+  msg([card({ icon: 'ticket', label: 'Support', title: 'Need a hand?', text: 'Open a private ticket. Only you and the team can see it.' })], [row(btn('Open a ticket', 'ticket:open'), go('Questions', '/faq'))])
 
 const SERVICE: Record<string, string> = { database: 'Database', signin: 'Sign-in', payments: 'Payments (PayPal)', email: 'Email' }
 export const statusCard = (h: Health): Message => {
@@ -448,9 +363,6 @@ export type TrackerData = {
   approved: number
   views: number
   joined: number
-  limits: string
-  makeThis: string[]
-  offLimits: string[]
   endsOn?: string | null
   guildId?: string
   getStartedChannel?: string
@@ -467,33 +379,22 @@ export const trackerCard = (c: TrackerData): Message => {
         title: c.title,
         url: `${SITE_URL}/campaign/${c.id}`,
         mute: c.status === 'ended',
-        text: join(`**${c.creator}** ${chip(STATUS[c.status] ?? c.status)}`, clip(c.summary, 350)),
-        image: c.cover,
+        text: join(`**${c.creator}** ${chip(STATUS[c.status] ?? c.status)}`, clip(c.summary, 200)),
+        thumb: c.cover,
         fields: [
           { name: 'Pays', value: `${usd(c.rateCents)} per 1,000 views`, inline: true },
-          { name: 'Platforms', value: c.platforms.join(', ') || 'Any', inline: true },
           { name: 'Joined', value: num(c.joined), inline: true },
+          { name: 'Platforms', value: c.platforms.join(', ') || 'Any', inline: true },
           { name: 'Budget left', value: `${meter(c.leftPct)} **${c.leftPct}%**\n${small(`${usd(c.leftCents)} of ${usd(c.budgetCents)}`)}` },
           { name: 'Paid out', value: usd(c.paidCents), inline: true },
           { name: 'Approved', value: num(c.approved), inline: true },
           { name: 'Verified views', value: num(c.views), inline: true },
-          ...(c.limits ? [{ name: 'Limits', value: `Up to ${c.limits}` }] : []),
-          ...(c.makeThis.length ? [{ name: 'Make this', value: bullets(c.makeThis).slice(0, 1000), inline: true }] : []),
-          ...(c.offLimits.length ? [{ name: 'Not allowed', value: bullets(c.offLimits).slice(0, 1000), inline: true }] : []),
         ],
         foot: `Updates itself${c.endsOn ? ` · ends ${c.endsOn}` : ''}`,
         time: true,
       }),
     ],
-    [
-      row(
-        ...(live ? [btn('Join campaign', `camp:join:${c.id}`)] : []),
-        go('Open campaign', `/campaign/${c.id}`),
-        go('How to start', '/for-clippers'),
-        go('Rules', LEGAL_LINKS[4].href),
-        ...(c.guildId && c.getStartedChannel && !c.here ? [go('Get started', chan(c.guildId, c.getStartedChannel))] : []),
-      ),
-    ],
+    [row(...(live ? [btn('Join campaign', `camp:join:${c.id}`)] : []), go('Open campaign', `/campaign/${c.id}`), ...(c.guildId && c.getStartedChannel && !c.here ? [go('Get started', chan(c.guildId, c.getStartedChannel))] : []))],
   )
 }
 
@@ -506,7 +407,6 @@ export type AnnounceData = {
   rateCents: number
   budgetCents: number
   platforms: string[]
-  limits: string
   endsOn?: string | null
   channelId?: string | null
   joined: number
@@ -521,25 +421,18 @@ export const announceCard = (c: AnnounceData): Message =>
         label: 'New campaign',
         title: c.title,
         url: `${SITE_URL}/campaign/${c.id}`,
-        text: join(`**${c.creator}** just launched a campaign. Make it, post it, get paid for every 1,000 verified views.`, '', clip(c.summary, 500)),
-        image: c.cover,
+        text: join(`**${c.creator}** just launched a campaign.`, clip(c.summary, 240)),
+        thumb: c.cover,
         fields: [
-          { name: 'Pays', value: `**${usd(c.rateCents)}** per 1,000 views`, inline: true },
+          { name: 'Pays', value: `${usd(c.rateCents)} per 1,000 views`, inline: true },
           { name: 'Budget', value: usd(c.budgetCents, true), inline: true },
           { name: 'Platforms', value: c.platforms.join(', ') || 'Any', inline: true },
-          ...(c.limits ? [{ name: 'Limits', value: `Up to ${c.limits}` }] : []),
-          ...(c.endsOn ? [{ name: 'Ends', value: c.endsOn, inline: true }] : []),
-          ...(c.channelId ? [{ name: 'Live tracker', value: `<#${c.channelId}>`, inline: true }] : []),
-          { name: 'How to start', value: join('**1.** Press **Join campaign** below.', '**2.** Read the brief and the rules on the campaign page.', '**3.** Make it and post it on your own account.', '**4.** Send it with `/submit`, or paste the link on the campaign page.', `**5.** Approved views turn into money. Withdraw from $${SITE.minPayoutUsd}, and we pay PayPal’s fees.`) },
         ],
-        foot: c.joined ? `${c.joined} joined already` : 'Be one of the first to join',
+        foot: c.endsOn ? `Ends ${c.endsOn}` : c.joined ? `${c.joined} joined already` : undefined,
         time: true,
       }),
     ],
-    [
-      row(btn('Join campaign', `camp:join:${c.id}`), go('Open campaign', `/campaign/${c.id}`), ...(c.channelId && c.guildId ? [go('Artist channel', chan(c.guildId, c.channelId))] : []), go('Rules', LEGAL_LINKS[4].href), go('Questions', '/faq')),
-      ...(c.guildId && c.getStartedChannel ? [row(go('New here? Get started', chan(c.guildId, c.getStartedChannel)), go('Pricing', '/pricing'))] : []),
-    ],
+    [row(btn('Join campaign', `camp:join:${c.id}`), go('Open campaign', `/campaign/${c.id}`), ...(c.channelId && c.guildId ? [go('Artist channel', chan(c.guildId, c.channelId))] : []))],
   )
 
 // ---------- notifications and the team's log ----------
@@ -549,7 +442,7 @@ export const notificationCard = (n: { kind: string; title: string; body?: string
     n.href ? [row(go('Open', n.href))] : undefined,
   )
 
-export const logCard = (a: { icon: IconName; text: string }): Message => msg([card({ icon: a.icon, label: 'Team log', text: clip(a.text, 1900), time: true })])
+export const logCard = (a: { text: string }): Message => ({ content: clip(a.text, 1900), allowed_mentions: quiet })
 
 // ---------- the team's own commands ----------
 export type SiteNow = { users: number; newToday: number; online: number; live: number; requests: number; toReview: number; held: number; brandCents: number; owedCents: number; feesCents: number }

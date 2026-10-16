@@ -27,7 +27,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => ({
   // Google reads AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET, Discord reads AUTH_DISCORD_ID / AUTH_DISCORD_SECRET.
   providers: [
     ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET ? [Google] : []),
-    ...(process.env.AUTH_DISCORD_ID && process.env.AUTH_DISCORD_SECRET ? [Discord] : []),
+    // identify + email to sign in, and guilds.join so the same approval lets the bot add them to the logoless server
+    ...(process.env.AUTH_DISCORD_ID && process.env.AUTH_DISCORD_SECRET ? [Discord({ authorization: { params: { scope: 'identify email guilds.join' } } })] : []),
     // Email and password. The password is checked against a salted hash, and the address was proven by an emailed code.
     Credentials({
       id: 'password',
@@ -89,6 +90,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => ({
             .run()
         } catch {
           /* the id is a convenience; signing in must never fail because of it */
+        }
+        // the approval they just gave also lets the bot add them to the server (done in the background, never blocks signing in)
+        const { joinAfterSignIn } = await import('./lib/discord/connect')
+        const job = joinAfterSignIn(account.providerAccountId, account.access_token)
+        try {
+          const { getCloudflareContext } = await import('@opennextjs/cloudflare')
+          getCloudflareContext().ctx.waitUntil(job)
+        } catch {
+          void job
         }
       }
     },

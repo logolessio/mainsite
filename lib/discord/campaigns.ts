@@ -1,8 +1,7 @@
 import { type CampaignRow, campaignRow } from '../campaigns-db'
-import { getCaps } from '../campaign-caps'
 import { db, nowSec } from '../db'
 import { abs, botReady, discord, type Message, postMessage } from './api'
-import { announceCard, limitsText, trackerCard } from './cards'
+import { announceCard, trackerCard } from './cards'
 import { type DiscordConfig, getDiscordConfig, slug } from './config'
 
 /**
@@ -105,7 +104,7 @@ const list = (j: string, n = 4): string[] => {
 
 /** The live card for a campaign: cover, details and the numbers that change. */
 export async function campaignCard(c: CampaignRow, cfg: DiscordConfig, channelId?: string | null): Promise<Message> {
-  const [s, caps] = await Promise.all([stats(c), getCaps(c.id)])
+  const s = await stats(c)
   return trackerCard({
     id: c.id,
     title: c.title,
@@ -122,9 +121,6 @@ export async function campaignCard(c: CampaignRow, cfg: DiscordConfig, channelId
     approved: s.clips,
     views: s.views,
     joined: s.joined,
-    limits: limitsText(caps.perPostCents, caps.perUserCents),
-    makeThis: list(c.clip_this_json),
-    offLimits: list(c.off_limits_json),
     endsOn: c.ends_on,
     guildId: cfg.guildId,
     getStartedChannel: cfg.channels.getStarted,
@@ -194,7 +190,7 @@ export async function announceNewCampaign(campaignId: string) {
     await refreshCampaignCard(campaignId, true)
     const target = cfg.channels.newCampaigns || cfg.channels.news
     if (!target) return
-    const [s, caps] = await Promise.all([stats(c), getCaps(c.id)])
+    const s = await stats(c)
     await postMessage(
       target,
       announceCard({
@@ -206,7 +202,6 @@ export async function announceNewCampaign(campaignId: string) {
         rateCents: c.rate_cents,
         budgetCents: c.budget_cents,
         platforms: list(c.platforms_json, 6),
-        limits: limitsText(caps.perPostCents, caps.perUserCents),
         endsOn: c.ends_on,
         channelId: channel,
         joined: s.joined,

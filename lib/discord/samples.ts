@@ -19,9 +19,6 @@ const camp: k.CampaignData = {
   ratePer1k: 2.5,
   leftPct: 64,
   platforms: ['TikTok', 'YouTube', 'Instagram'],
-  limits: k.limitsText(50000, 200000),
-  makeThis: ['Lyric moments', 'Fan edits', 'Reactions to the video'],
-  offLimits: ['Re-uploads of the full song', 'Edits with other artists’ music'],
 }
 const tracker: k.TrackerData = {
   id: camp.id,
@@ -39,9 +36,6 @@ const tracker: k.TrackerData = {
   approved: 412,
   views: 720000,
   joined: 1284,
-  limits: camp.limits,
-  makeThis: camp.makeThis,
-  offLimits: camp.offLimits,
   endsOn: 'Dec 14',
 }
 const profile: k.ProfileData = {
@@ -68,7 +62,6 @@ export const SAMPLES: Sample[] = [
   // ---- commands
   { id: 'help', group: 'Commands', label: 'Help', build: () => k.helpCard() },
   { id: 'not-linked', group: 'Commands', label: 'Not linked yet', build: () => k.notLinkedCard() },
-  { id: 'linked', group: 'Commands', label: 'Account linked', build: () => k.linkedCard({ name: 'Luna Ray', handle: 'luna_ray', rolesAdded: 2 }) },
   { id: 'profile', group: 'Commands', label: 'Profile', build: () => k.profileCard(profile) },
   { id: 'stats', group: 'Commands', label: 'Your numbers', build: () => k.statsCard({ name: 'Luna Ray', earnedCents: 79600, weekCents: 12400, availableCents: 31050, views: 318400, submissions: 42, campaigns: 6 }) },
   { id: 'balance', group: 'Commands', label: 'Balance', build: () => k.balanceCard({ availableCents: 31050, pendingCents: 2500, withdrawnCents: 46000, brandCents: 0 }) },
@@ -109,7 +102,7 @@ export const SAMPLES: Sample[] = [
       ]),
   },
   { id: 'campaign', group: 'Commands', label: 'One campaign', build: () => k.campaignDetailCard(camp) },
-  { id: 'joined', group: 'Commands', label: 'Joined a campaign', build: () => k.joinedCard({ id: camp.id, title: camp.title, summary: camp.summary, already: false, rateCents: 250, limits: camp.limits, makeThis: camp.makeThis, offLimits: camp.offLimits, channelId: null, dm: true }) },
+  { id: 'joined', group: 'Commands', label: 'Joined a campaign', build: () => k.joinedCard({ id: camp.id, title: camp.title, already: false, rateCents: 250, channelId: null }) },
   {
     id: 'submit-approved',
     group: 'Commands',
@@ -164,13 +157,13 @@ export const SAMPLES: Sample[] = [
   // ---- campaigns
   { id: 'tracker-live', group: 'Campaigns', label: 'Live tracker', build: () => k.trackerCard(tracker) },
   { id: 'tracker-ended', group: 'Campaigns', label: 'Tracker: ended', build: () => k.trackerCard({ ...tracker, status: 'ended', leftPct: 0, leftCents: 0, paidCents: 500000 }) },
-  { id: 'announcement', group: 'Campaigns', label: 'New campaign announcement', build: () => k.announceCard({ id: camp.id, title: camp.title, creator: camp.creator, summary: camp.summary, cover: COVER, rateCents: 250, budgetCents: 500000, platforms: camp.platforms, limits: camp.limits, endsOn: 'Dec 14', channelId: null, joined: 0 }) },
+  { id: 'announcement', group: 'Campaigns', label: 'New campaign announcement', build: () => k.announceCard({ id: camp.id, title: camp.title, creator: camp.creator, summary: camp.summary, cover: COVER, rateCents: 250, budgetCents: 500000, platforms: camp.platforms, endsOn: 'Dec 14', channelId: null, joined: 0 }) },
 
   // ---- tickets
-  { id: 'ticket-thread', group: 'Tickets', label: 'Ticket opened (in its channel)', build: () => k.ticketThreadCard({ ref: 'a1b2c3', subject: 'My withdrawal has not arrived', text: 'I withdrew $50 on Monday and it still says in review.', who: 'luna', pings: '', userId: '0' }) },
-  { id: 'ticket-team', group: 'Tickets', label: 'Ticket: team reply', build: () => k.teamReplyCard({ who: 'Sam', text: 'Thanks for waiting. It was held for a quick check and has been sent. It should arrive within the hour.', ref: 'a1b2c3', userId: '0' }) },
-  { id: 'ticket-member', group: 'Tickets', label: 'Ticket: member reply', build: () => k.memberReplyCard({ who: 'luna', text: 'Got it, thank you!' }) },
-  { id: 'ticket-closed', group: 'Tickets', label: 'Ticket closed', build: () => k.ticketClosedCard('Sam') },
+  { id: 'ticket-thread', group: 'Tickets', label: 'Ticket opened (in its channel)', build: () => k.ticketThreadCard({ ref: 'a1b2c3', subject: 'My withdrawal has not arrived', text: 'I withdrew $50 on Monday and it still says in review.', pings: '<@0>', userId: '0' }) },
+  { id: 'ticket-team', group: 'Tickets', label: 'Ticket: team reply', build: () => k.teamReplyCard({ text: 'Thanks for waiting. It was held for a quick check and has been sent. It should arrive within the hour.', ref: 'a1b2c3' }) },
+  { id: 'ticket-member', group: 'Tickets', label: 'Ticket: member reply', build: () => k.memberReplyCard({ text: 'Got it, thank you!' }) },
+  { id: 'ticket-closed', group: 'Tickets', label: 'Ticket closed', build: () => k.ticketClosedCard() },
 
   // ---- notifications that reach people as direct messages
   { id: 'dm-approved', group: 'Messages to members', label: 'A submission was approved', build: () => k.notificationCard({ kind: 'submission', icon: kindIcon('submission'), title: 'Approved: Red Room, the new single', body: 'Your submission was approved. We will confirm the views before you are paid.', href: '/dashboard/submissions' }) },
@@ -183,7 +176,7 @@ export const SAMPLES: Sample[] = [
   // ---- the team
   { id: 'team-stats', group: 'Team', label: 'The site right now', build: () => k.siteNowCard({ users: 1284, newToday: 12, online: 31, live: 5, requests: 2, toReview: 7, held: 1, brandCents: 1840000, owedCents: 320000, feesCents: 276000 }) },
   { id: 'team-queue', group: 'Team', label: 'What is waiting', build: () => k.queueCard([{ title: 'Red Room, the new single', n: 5 }, { title: 'Night Shift live session', n: 2 }]) },
-  { id: 'team-log', group: 'Team', label: 'A line in the team log', build: () => k.logCard({ icon: 'ticket', text: 'New ticket from <@0>: My withdrawal has not arrived' }) },
+  { id: 'team-log', group: 'Team', label: 'A line in the team log', build: () => k.logCard({ text: 'New ticket from <@0>: My withdrawal has not arrived' }) },
 ]
 
 export const SAMPLE_BY_ID = Object.fromEntries(SAMPLES.map((s) => [s.id, s])) as Record<string, Sample>
