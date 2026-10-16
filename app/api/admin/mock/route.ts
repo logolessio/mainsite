@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { audit } from '@/lib/chain'
+import { finishCampaign, warnEnding } from '@/lib/campaign-end'
 import { db, nowSec } from '@/lib/db'
 import { ipHash, protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
@@ -48,6 +49,7 @@ const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('delete'), id: z.string().max(80) }),
   z.object({ action: z.literal('clear') }),
   z.object({ action: z.literal('public'), on: z.boolean() }),
+  z.object({ action: z.literal('ending-test') }),
 ])
 
 async function insert(c: One) {
@@ -140,6 +142,27 @@ export const POST = route(async (req: Request) => {
     }
     await audit(actor, 'mock.clear', null, `removed ${removed} of ${rows.length}`, ip)
     return json({ ok: true, removed, kept: rows.length - removed })
+  }
+  if (a.action === 'ending-test') {
+    // a mock campaign with two made-up submissions from the admin, taken through the whole ending: the early warning, then the
+    // summary, both sent the way the admin chose to be contacted. Nothing is paid and no money moves.
+    const d = await db()
+    const t = nowSec()
+    const id = await insert({ title: 'Ending test', creator: 'Test Artist', type: 'Music', cover: 3, rate: 2.5, budget: 100, platforms: ['tiktok'] })
+    const mine = [
+      { views: 20000, earned: 5000 },
+      { views: 6000, earned: 1500 },
+    ]
+    for (const [n, m] of mine.entries()) {
+      await d
+        .prepare("INSERT INTO submissions (id, campaign_id, user_id, platform, url, status, views_verified, earned_cents, created_at) VALUES (?1, ?2, ?3, 'tiktok', ?4, 'approved', ?5, ?6, ?7)")
+        .bind(`${id}-s${n}`, id, admin.id, `https://www.tiktok.com/@mock/video/${id}${n}`, m.views, m.earned, t)
+        .run()
+    }
+    await warnEnding(id, 12)
+    await finishCampaign(id, 'budget')
+    await audit(actor, 'mock.ending-test', id, null, ip)
+    return json({ ok: true, id })
   }
   await setSetting('mock_public', a.on ? '1' : '0')
   await audit(actor, 'mock.public', null, a.on ? 'shown to everyone' : 'team only', ip)

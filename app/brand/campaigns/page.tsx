@@ -7,6 +7,7 @@ import { allCaps } from '@/lib/campaign-caps'
 import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
 import { db } from '@/lib/db'
 import { pageUser } from '@/lib/user'
+import { applyWording } from '@/lib/wording'
 
 export const metadata: Metadata = { title: 'Campaigns | logoless', robots: { index: false } }
 
@@ -74,7 +75,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ r
                     <div className="h-full rounded-full bg-paper" style={{ width: `${pct}%` }} />
                   </div>
                   <p className="mt-2 text-sm text-mute tabular-nums">
-                    {usd(r.spent)} of {usd(r.budget_cents)} paid to clippers · {r.views.toLocaleString()} views · {r.clips} {r.clips === 1 ? 'clip' : 'clips'}
+                    {applyWording(`${usd(r.spent)} of ${usd(r.budget_cents)} paid to clippers · ${r.views.toLocaleString()} views · ${r.clips} ${r.clips === 1 ? 'clip' : 'clips'}`)}
                   </p>
                 </div>
                 <CampaignActions c={{ id: r.id, title: r.title, status: r.status, budget: Math.round(r.budget_cents / 100), spent: r.spent, poolCents: r.pool, adminPaused: r.paused_by === 'admin', capPerPost: (caps[r.id]?.perPostCents ?? 0) / 100, capPerUser: (caps[r.id]?.perUserCents ?? 0) / 100 }} />

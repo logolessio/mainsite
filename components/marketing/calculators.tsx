@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Feature } from '@/components/shell/features-provider'
 import { Reveal } from '@/components/motion/reveal'
 import { SITE } from '@/lib/site'
+import { applyWording } from '@/lib/wording'
 import { cn } from '@/lib/utils'
 
 const RATES = [1, 2, 3, 5]
@@ -88,7 +89,7 @@ export function BrandCalculator() {
               <p className="text-[11px] text-mute">It buys up to</p>
               <p className="mt-3 font-display text-6xl tabular-nums md:text-7xl">{views.toLocaleString()}</p>
               <p className="mt-1 text-lg text-mute">verified views</p>
-              <p className="mt-6 text-sm leading-relaxed text-mute">Clippers earn the whole ${budget.toLocaleString()}. We add our {SITE.platformFeePct}% fee on top (${fee.toLocaleString()} here), so you pay ${total.toLocaleString()} in all, and anything you don't spend can be refunded.</p>
+              <p className="mt-6 text-sm leading-relaxed text-mute">{applyWording(`Clippers earn the whole $${budget.toLocaleString()}. We add our ${SITE.platformFeePct}% fee on top ($${fee.toLocaleString()} here), so you pay $${total.toLocaleString()} in all, and anything you don't spend can be refunded.`)}</p>
             </div>
           </div>
         </Reveal>

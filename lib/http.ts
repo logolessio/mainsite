@@ -1,3 +1,5 @@
+import { applyWording } from './wording'
+
 /** An error that carries the HTTP status and a message safe to show the person. */
 export class HttpError extends Error {
   constructor(
@@ -40,7 +42,7 @@ export function route<A extends unknown[]>(fn: (...args: A) => Promise<Response>
     } catch (e) {
       if (e instanceof HttpError) {
         void record(args, e.status, Date.now() - t0, e.message)
-        return json({ error: e.message }, e.status)
+        return json({ error: applyWording(e.message) }, e.status)
       }
       console.error('route error', e instanceof Error ? e.message : e)
       void record(args, 500, Date.now() - t0, e instanceof Error ? `${e.name}: ${e.message}` : 'unknown error')

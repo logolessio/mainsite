@@ -66,6 +66,15 @@ export function MockCampaigns({ rows, publicOn }: { rows: MockRow[]; publicOn: b
         <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className={cn(btn, 'border border-line-strong hover:bg-paper/10')}>
           <Plus className="size-4" /> {open ? 'Close the form' : 'Make one myself'}
         </button>
+        <button
+          type="button"
+          disabled={Boolean(busy)}
+          title="Makes a campaign that runs out of budget, with two made-up submissions from you, and sends you the warning and the summary."
+          className={cn(btn, 'border border-line-strong hover:bg-paper/10')}
+          onClick={() => run('ending', async () => { await call({ action: 'ending-test' }); return 'Done. Look in your notifications (and your email or Discord, whichever you chose) for the warning and the summary. The ended campaign is in the list below.' })}
+        >
+          {busy === 'ending' && <Loader2 className="size-4 animate-spin" />} Test the ending flow
+        </button>
         {rows.length > 0 && (
           <button
             type="button"

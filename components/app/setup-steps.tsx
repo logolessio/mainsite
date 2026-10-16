@@ -3,6 +3,7 @@
 import { Check, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { applyWording } from '@/lib/wording'
 import { ActionLink } from './action-link'
 import { VerifyCard } from './verify-card'
 
@@ -137,7 +138,7 @@ export function SetupSteps({ steps, email }: { steps: SetupStep[]; email: string
 
       {/* the whole journey, in one line */}
       <p className="mt-14 border-t border-line pt-6 text-sm text-paper/40">
-        <span className="text-paper/55">How it works:</span> {FLOW.join('  →  ')}
+        <span className="text-paper/55">How it works:</span> {FLOW.map(applyWording).join('  →  ')}
       </p>
     </div>
   )

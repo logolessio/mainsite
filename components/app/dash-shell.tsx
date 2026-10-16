@@ -129,7 +129,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
       </aside>
 
       {/* ---------- top bar ---------- */}
-      <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-line bg-ink/50 px-5 backdrop-blur-xl md:px-10">
+      <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-line bg-ink/75 px-5 backdrop-blur-xl md:px-10">
         <div className="flex items-center gap-4">
           <Go href={siteHref} aria-label="logoless home" className="md:hidden">
             <Logo className="h-8" />
@@ -168,7 +168,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
       </main>
 
       {/* ---------- tab bar (phones) ---------- */}
-      <nav aria-label={`${area} navigation`} className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-ink/80 backdrop-blur-xl md:hidden">
+      <nav aria-label={`${area} navigation`} className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-ink/95 backdrop-blur-xl md:hidden">
         {bottom.map((it) => {
           const active = isActive(pathname, it)
           return (

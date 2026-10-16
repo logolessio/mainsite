@@ -1,14 +1,19 @@
 import { setting } from './db'
 import { HttpError } from './http'
 import { logEvent } from './log'
+import { applyWording } from './wording'
 
 /** True when emails can be sent: a Resend key is set, or we are running locally (where the code is printed instead). */
 export async function emailEnabled() {
   return Boolean(await setting('RESEND_API_KEY')) || process.env.NODE_ENV !== 'production'
 }
 
+/** The site's wording in an email: the words between tags only, never the tags themselves. */
+const wordHtml = (html: string) => html.split(/(<[^>]*>)/).map((part) => (part.startsWith('<') ? part : applyWording(part))).join('')
+
 /** Sends one email through Resend. Locally, with no key, it prints the message to the server log instead. */
-export async function sendEmail(o: { to: string; subject: string; html: string; text: string; template?: string; replyTo?: string }): Promise<{ id: string | null }> {
+export async function sendEmail(input: { to: string; subject: string; html: string; text: string; template?: string; replyTo?: string }): Promise<{ id: string | null }> {
+  const o = { ...input, subject: applyWording(input.subject), text: applyWording(input.text), html: wordHtml(input.html) }
   const key = await setting('RESEND_API_KEY')
   const label = o.template ?? 'email'
   const who = o.to.replace(/^(.).*(@.*)$/, '$1***$2') // addresses are masked in the log

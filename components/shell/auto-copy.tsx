@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef } from 'react'
 import { norm } from '@/lib/copy-key'
+import { applyWording } from '@/lib/wording'
 import { useCopy } from './copy-provider'
 
 /** Where the text belongs to the tools themselves, not the site's wording. */
@@ -27,6 +28,9 @@ export function AutoCopy() {
 
     const edited = new Set(Object.values(overrides).map(norm))
     const scan = () => {
+      // the tab title uses the same wording
+      const title = applyWording(document.title)
+      if (title !== document.title) document.title = title
       for (const el of document.body.querySelectorAll('*')) {
         if (el.childNodes.length !== 1) continue
         const node = el.firstChild
