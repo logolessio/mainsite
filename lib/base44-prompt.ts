@@ -48,7 +48,7 @@ PAGE 9: WITHDRAWALS (GET /withdrawals?status=review|sent|failed)
 - Read only table. Add a note that sending or declining withdrawals is done in the real owner dashboard.
 
 PAGE 10: INBOX AND TICKETS (GET /inbox?status=new|open|closed, GET /inbox/{id})
-- List on the left, conversation on the right with all replies. A reply box calls POST /inbox/{id}/reply with {text, close?}. Mark Discord tickets with a small badge ("discordTicket": true); replying posts in the person's private Discord channel and pings them.
+- List on the left, conversation on the right with all replies. A reply box calls POST /inbox/{id}/reply with {text, close?}. Mark Discord tickets with a small badge ("discordTicket": true); replying posts your words, as plain text, in the person's private Discord channel.
 
 PAGE 11: DISCORD ANNOUNCEMENTS
 - A form calling POST /announce with {where:"news"|"updates", title, text, href?} to post in the Discord server.
