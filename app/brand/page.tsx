@@ -71,11 +71,7 @@ export default async function Page() {
 
   return (
     <>
-      <PageHeader
-        title="Overview"
-        sub="What your money bought, and how your campaigns are doing."
-        actions={<ActionLink href="/brand/campaigns/new">New campaign</ActionLink>}
-      />
+      <PageHeader title="Overview" sub="What your money bought, and how your campaigns are doing." />
 
       <SetupBanner steps={steps} guide="/brand/setup" />
 
@@ -127,7 +123,7 @@ export default async function Page() {
           <p className="font-display text-5xl leading-none tracking-[-0.04em] tabular-nums">{money(b.brand)}</p>
           <p className="mt-3 text-sm leading-relaxed text-mute">One balance for every campaign. Clippers are paid out of it as they earn. We cover PayPal&apos;s fees.</p>
           <div className="mt-5 flex flex-wrap gap-2">
-            <ActionLink href="/brand/balance">Add funds</ActionLink>
+            <ActionLink href="/brand/balance#add-funds">Add funds</ActionLink>
             <ActionLink href="/brand/balance" variant="ghost">History</ActionLink>
           </div>
         </Card>

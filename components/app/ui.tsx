@@ -26,9 +26,9 @@ export function PageHeader({
 /**
  * A quiet panel. Tables placed inside it sit flush against its edges, so there are no boxes inside boxes.
  */
-export function Card({ className, children, title, sub, action }: { className?: string; children: React.ReactNode; title?: string; sub?: string; action?: React.ReactNode }) {
+export function Card({ className, children, title, sub, action, id }: { className?: string; children: React.ReactNode; title?: string; sub?: string; action?: React.ReactNode; id?: string }) {
   return (
-    <section className={cn('overflow-hidden rounded-3xl border border-line bg-black/45', className)}>
+    <section id={id} className={cn('overflow-hidden rounded-3xl border border-line bg-black/45', id && 'scroll-mt-28', className)}>
       {title && (
         <div className="flex items-start justify-between gap-4 px-6 pt-6">
           <div className="min-w-0">

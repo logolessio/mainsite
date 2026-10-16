@@ -10,6 +10,7 @@ import { DeleteCard } from './account-cards'
 import { ConnectedApps } from './connected-apps'
 import { ContactCard } from './contact-card'
 import { DiscordCard } from './discord-card'
+import { JumpBar } from './jump-bar'
 import { ActionButton, Card } from './ui'
 
 type Me = { email: string; hasPassword: boolean }
@@ -24,8 +25,20 @@ export function SettingsPanel({ role }: { role: 'clipper' | 'brand' }) {
   }, [])
 
   return (
-    <div className="grid max-w-3xl gap-6">
-      <Card title="Account">
+    <div className="max-w-3xl">
+      <JumpBar
+        items={[
+          { id: 'account', label: 'Account' },
+          { id: 'contact', label: 'Contact' },
+          { id: 'discord', label: 'Discord' },
+          { id: 'apps', label: 'Apps' },
+          { id: 'display', label: 'Display' },
+          { id: 'password', label: 'Password' },
+          { id: 'delete', label: 'Delete' },
+        ]}
+      />
+      <div className="grid gap-6">
+      <Card id="account" title="Account">
         <ul className="divide-y divide-line">
           <Row icon={<Mail className="size-4" />} title="Email" body={me?.email ?? 'Loading…'} />
           {role === 'clipper' && (
@@ -49,6 +62,7 @@ export function SettingsPanel({ role }: { role: 'clipper' | 'brand' }) {
       <PasswordCard me={me} />
 
       <DeleteCard />
+      </div>
     </div>
   )
 }
@@ -78,7 +92,7 @@ function PasswordCard({ me }: { me: Me | null }) {
 
   if (me && !me.hasPassword)
     return (
-      <Card title="Password">
+      <Card id="password" title="Password">
         <p className="flex items-start gap-3 text-sm leading-relaxed text-mute">
           <KeyRound className="mt-0.5 size-4 shrink-0" />
           <span>
@@ -108,7 +122,7 @@ function PasswordCard({ me }: { me: Me | null }) {
   }
 
   return (
-    <Card title="Password">
+    <Card id="password" title="Password">
       <form onSubmit={submit}>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Current password">
@@ -146,7 +160,7 @@ function Display() {
   const large = useSyncExternalStore(subscribeCalm, getLargeText, () => false)
   const auto = useSyncExternalStore(subscribeCalm, calmWasAutomatic, () => false)
   return (
-    <Card title="Display">
+    <Card id="display" title="Display">
       <div className="grid gap-8">
         <div>
           <p className="text-[15px]">Calm mode</p>

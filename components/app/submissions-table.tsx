@@ -1,8 +1,8 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowUpRight, LayoutGrid, Rows3, Search } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { ArrowUpRight, LayoutGrid, Rows3, Search, X } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
 import { Badge, type Column, DataTable } from './table'
@@ -45,17 +45,49 @@ const cols: Column<SubmissionRow>[] = [
   { key: 'e', header: 'Earned', render: (r) => usd(r.earned), className: 'text-right' },
 ]
 
-/** Every clip, with filters, search and a switch between cards and a table. */
+type Sort = 'new' | 'views' | 'earned'
+const SORTS: { id: Sort; label: string }[] = [
+  { id: 'new', label: 'Newest' },
+  { id: 'views', label: 'Most views' },
+  { id: 'earned', label: 'Most earned' },
+]
+
+/** What you chose last time is what you see this time: the filter, the sort and cards or table. */
+const remembered = <T extends string>(key: string, allowed: readonly T[], fallback: T): T => {
+  try {
+    const v = window.localStorage.getItem(key)
+    return allowed.includes(v as T) ? (v as T) : fallback
+  } catch {
+    return fallback
+  }
+}
+const remember = (key: string, v: string) => {
+  try {
+    window.localStorage.setItem(key, v)
+  } catch {
+    /* a private window just forgets */
+  }
+}
+
+/** Every clip, with filters, search, a sort, and a switch between cards and a table. Your choices are remembered. */
 export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty: React.ReactNode }) {
   const [filter, setFilter] = useState<Filter>('all')
   const [q, setQ] = useState('')
   const [view, setView] = useState<'cards' | 'table'>('cards')
+  const [sort, setSort] = useState<Sort>('new')
+  useEffect(() => {
+    setFilter(remembered('ll:subs:filter', FILTERS.map((f) => f.id), 'all'))
+    setView(remembered('ll:subs:view', ['cards', 'table'] as const, 'cards'))
+    setSort(remembered('ll:subs:sort', SORTS.map((x) => x.id), 'new'))
+  }, [])
+  const pick = <T extends string>(key: string, set: (v: T) => void) => (v: T) => (set(v), remember(key, v))
 
   const counts = useMemo(() => ({ all: rows.length, approved: rows.filter((r) => r.status === 'approved').length, pending: rows.filter((r) => r.status === 'pending').length, rejected: rows.filter((r) => r.status === 'rejected').length }), [rows])
   const shown = useMemo(() => {
     const t = q.trim().toLowerCase()
-    return rows.filter((r) => (filter === 'all' || r.status === filter) && (!t || r.campaign.toLowerCase().includes(t) || r.platform.toLowerCase().includes(t)))
-  }, [rows, filter, q])
+    const list = rows.filter((r) => (filter === 'all' || r.status === filter) && (!t || r.campaign.toLowerCase().includes(t) || r.platform.toLowerCase().includes(t)))
+    return sort === 'views' ? [...list].sort((a, b) => b.views - a.views) : sort === 'earned' ? [...list].sort((a, b) => b.earned - a.earned) : list
+  }, [rows, filter, q, sort])
   const views = rows.reduce((s, r) => s + r.views, 0)
   const earned = rows.reduce((s, r) => s + r.earned, 0)
 
@@ -81,7 +113,7 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
       <div className="mt-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div role="tablist" aria-label="Filter clips" className="glass-liquid inline-flex w-fit flex-wrap rounded-full p-1">
           {FILTERS.map((f) => (
-            <button key={f.id} role="tab" type="button" aria-selected={filter === f.id} onClick={() => setFilter(f.id)} className="relative h-9 rounded-full px-4 text-sm">
+            <button key={f.id} role="tab" type="button" aria-selected={filter === f.id} onClick={() => pick<Filter>('ll:subs:filter', setFilter)(f.id)} className="relative h-9 rounded-full px-4 text-sm">
               {filter === f.id && <motion.span layoutId="clip-filter" transition={{ duration: 0.3, ease: EASE_OUT }} className="absolute inset-0 rounded-full bg-paper" />}
               <span className={cn('relative transition-colors', filter === f.id ? 'text-ink' : 'text-mute hover:text-paper')}>
                 {f.label} <span className="tabular-nums opacity-60">{counts[f.id]}</span>
@@ -92,11 +124,29 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
         <div className="flex items-center gap-3">
           <label className="glass-liquid relative block flex-1 rounded-full md:w-60 md:flex-none">
             <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-mute" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search submissions" aria-label="Search submissions" className="h-10 w-full rounded-full bg-transparent pr-4 pl-10 text-sm outline-none placeholder:text-mute" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Escape' && setQ('')} type="search" enterKeyHint="search" placeholder="Search submissions" aria-label="Search submissions" className="h-10 w-full rounded-full bg-transparent pr-9 pl-10 text-sm outline-none placeholder:text-mute [&::-webkit-search-cancel-button]:hidden" />
+            {q && (
+              <button type="button" aria-label="Clear search" onClick={() => setQ('')} className="absolute top-1/2 right-2 grid size-7 -translate-y-1/2 place-items-center rounded-full text-mute hover:text-paper">
+                <X aria-hidden="true" className="size-3.5" />
+              </button>
+            )}
+          </label>
+          <label className="glass-liquid relative inline-grid h-10 cursor-pointer items-center rounded-full has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-paper/60">
+            <span className="sr-only">Sort by</span>
+            <span aria-hidden="true" className="px-4 text-sm whitespace-nowrap text-mute">
+              {SORTS.find((x) => x.id === sort)?.label}
+            </span>
+            <select value={sort} onChange={(e) => pick<Sort>('ll:subs:sort', setSort)(e.target.value as Sort)} className="absolute inset-0 size-full cursor-pointer appearance-none opacity-0 focus:outline-none">
+              {SORTS.map((x) => (
+                <option key={x.id} value={x.id} className="bg-ink">
+                  {x.label}
+                </option>
+              ))}
+            </select>
           </label>
           <div className="glass-liquid inline-flex rounded-full p-1">
             {([['cards', LayoutGrid, 'Cards'], ['table', Rows3, 'Table']] as const).map(([id, Ico, label]) => (
-              <button key={id} type="button" aria-label={label} aria-pressed={view === id} onClick={() => setView(id)} className={cn('grid size-8 place-items-center rounded-full transition-colors', view === id ? 'bg-paper text-ink' : 'text-mute hover:text-paper')}>
+              <button key={id} type="button" aria-label={label} aria-pressed={view === id} onClick={() => pick<'cards' | 'table'>('ll:subs:view', setView)(id)} className={cn('grid size-8 place-items-center rounded-full transition-colors', view === id ? 'bg-paper text-ink' : 'text-mute hover:text-paper')}>
                 <Ico className="size-4" />
               </button>
             ))}
@@ -104,6 +154,7 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
         </div>
       </div>
 
+      <p role="status" className="sr-only">{shown.length} of {rows.length} shown</p>
       <div className="mt-6">
         {view === 'table' ? (
           <DataTable columns={cols} rows={shown} empty={<div className="px-6 py-12 text-center text-mute">No clips match.</div>} />

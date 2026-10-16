@@ -22,9 +22,9 @@ export default async function Page() {
     balances(user.id),
     d.prepare('SELECT COALESCE(SUM(views_verified), 0) AS v, COUNT(*) AS n FROM submissions WHERE user_id = ?1').bind(user.id).first<{ v: number; n: number }>(),
     d
-      .prepare('SELECT s.id, s.status, s.views_verified, c.title FROM submissions s JOIN campaigns c ON c.id = s.campaign_id WHERE s.user_id = ?1 ORDER BY s.created_at DESC LIMIT 5')
+      .prepare('SELECT s.id, s.campaign_id, s.status, s.views_verified, c.title FROM submissions s JOIN campaigns c ON c.id = s.campaign_id WHERE s.user_id = ?1 ORDER BY s.created_at DESC LIMIT 5')
       .bind(user.id)
-      .all<{ id: string; status: string; views_verified: number; title: string }>(),
+      .all<{ id: string; campaign_id: string; status: string; views_verified: number; title: string }>(),
     creatorSetup(user),
   ])
   const first = (user.name ?? user.email.split('@')[0]).split(' ')[0]
@@ -32,7 +32,7 @@ export default async function Page() {
 
   return (
     <>
-      <PageHeader title={`Welcome back, ${first}`} sub="Your balance, your clips and anything that needs doing." actions={<ActionLink href="/">Find a campaign</ActionLink>} />
+      <PageHeader title={`Welcome back, ${first}`} sub="Your balance, your clips and anything that needs doing." />
 
       <SetupBanner steps={steps} guide="/dashboard/setup" />
 
@@ -80,10 +80,12 @@ export default async function Page() {
           ) : (
             <ul>
               {recent.results.map((r) => (
-                <li key={r.id} className="flex items-center gap-4 border-b border-line py-5 transition-colors hover:bg-white/[0.02]">
-                  <span className="min-w-0 flex-1 truncate text-lg">{r.title}</span>
-                  <Badge tone={r.status === 'approved' ? 'good' : r.status === 'rejected' ? 'bad' : 'warn'}>{r.status}</Badge>
-                  <span className="w-28 text-right text-[15px] text-paper/55 tabular-nums">{r.views_verified.toLocaleString()} views</span>
+                <li key={r.id} className="border-b border-line">
+                  <TransitionLink href={`/campaign/${r.campaign_id}`} className="flex items-center gap-4 py-5 transition-colors hover:bg-white/[0.02]">
+                    <span className="min-w-0 flex-1 truncate text-lg">{r.title}</span>
+                    <Badge tone={r.status === 'approved' ? 'good' : r.status === 'rejected' ? 'bad' : 'warn'}>{r.status === 'pending' ? 'in review' : r.status}</Badge>
+                    <span className="hidden w-28 text-right text-[15px] text-paper/55 tabular-nums sm:block">{r.views_verified.toLocaleString()} views</span>
+                  </TransitionLink>
                 </li>
               ))}
             </ul>

@@ -32,6 +32,32 @@ export function DashboardView({ campaigns, ended = [], startTour }: { campaigns:
   )
   const filtersActive = category !== 'All' || platforms.length > 0 || sort !== 'rate'
 
+  // Open a campaign and come back: your search and filters are still there, instead of starting again from the top.
+  const [restored, setRestored] = useState(false)
+  useEffect(() => {
+    try {
+      const v = JSON.parse(window.sessionStorage.getItem('ll:browse') ?? 'null') as { q?: unknown; category?: unknown; platforms?: unknown; sort?: unknown } | null
+      if (v) {
+        if (typeof v.q === 'string') setQuery(v.q.slice(0, 80))
+        if (typeof v.category === 'string' && categories.includes(v.category)) setCategory(v.category)
+        if (Array.isArray(v.platforms)) setPlatforms(v.platforms.filter((p): p is Platform => p === 'tiktok' || p === 'youtube' || p === 'instagram'))
+        if (v.sort === 'rate' || v.sort === 'ending' || v.sort === 'budget') setSort(v.sort)
+      }
+    } catch {
+      /* nothing remembered, or storage is blocked: start fresh */
+    }
+    setRestored(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  useEffect(() => {
+    if (!restored) return
+    try {
+      window.sessionStorage.setItem('ll:browse', JSON.stringify({ q: query, category, platforms, sort }))
+    } catch {
+      /* blocked storage just forgets */
+    }
+  }, [restored, query, category, platforms, sort])
+
   const results = useMemo(() => {
     const q = deferred.trim().toLowerCase()
     const end = (c: Campaign) => Date.parse(`${c.endsOn} 2026`) || 0

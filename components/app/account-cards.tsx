@@ -92,7 +92,7 @@ export function DeleteCard() {
   if (s.deletion) {
     const days = Math.max(0, Math.ceil((s.deletion.at + s.graceDays * 86400 - Date.now() / 1000) / 86400))
     return (
-      <Card title="Your account is scheduled for deletion">
+      <Card id="delete" title="Your account is scheduled for deletion">
         <p className="text-sm leading-relaxed text-mute">
           It will be deleted for good in {days} {days === 1 ? 'day' : 'days'}.
           {left > 0 && ' Until then your money stays in your account and you can still withdraw it.'} Changed your mind? Nothing has been removed yet.
@@ -110,7 +110,7 @@ export function DeleteCard() {
   }
 
   return (
-    <Card title="Delete your account">
+    <Card id="delete" title="Delete your account">
       <p className="text-sm leading-relaxed text-mute">
         Your profile and linked accounts are removed after {s.graceDays} days. Until then nothing changes and you can undo it here. Records we must keep, like payment history, stay without your name.
       </p>

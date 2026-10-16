@@ -204,7 +204,34 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
                 <label htmlFor="clip-link" className="sr-only">
                   Link to your post
                 </label>
-                <input id="clip-link" autoFocus value={url} onChange={(e) => (setUrl(e.target.value), setError(''))} placeholder="https://" inputMode="url" autoComplete="off" className="h-14 w-full rounded-full border border-white/25 bg-transparent px-6 text-center text-[16px] outline-none placeholder:text-white/35 focus:border-white" />
+                <input
+                  id="clip-link"
+                  autoFocus
+                  value={url}
+                  onChange={(e) => (setUrl(e.target.value), setError(''))}
+                  onPaste={(e) => {
+                    // a link pasted whole goes straight to the preview: no extra click
+                    const text = e.clipboardData.getData('text').trim()
+                    if (!text) return
+                    e.preventDefault()
+                    setUrl(text)
+                    try {
+                      new URL(text)
+                    } catch {
+                      return setError('Paste the full link to your post, starting with https://')
+                    }
+                    if (!detect(text, campaign.platforms)) return setError(`That doesn’t look like a ${campaign.platforms.map((p) => PLATFORM_LABEL[p]).join(', ').replace(/, ([^,]*)$/, ' or $1')} link.`)
+                    setError('')
+                    setStep('preview')
+                  }}
+                  placeholder="https://"
+                  inputMode="url"
+                  enterKeyHint="go"
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  autoComplete="off"
+                  className="h-14 w-full rounded-full border border-white/25 bg-transparent px-6 text-center text-[16px] outline-none placeholder:text-white/35 focus:border-white" />
                 {error && (
                   <p role="alert" className="mt-3 text-sm text-red-400">
                     {error}
@@ -303,6 +330,37 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
                     <Link href="/dashboard/submissions" className="inline-flex h-12 items-center justify-center rounded-full bg-white text-[15px] font-medium text-black hover:bg-white/85">
                       See it in Submissions
                     </Link>
+                    {result.status !== 'declined' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUrl('')
+                          setResult(null)
+                          setError('')
+                          setAsked('idle')
+                          setPhase(0)
+                          setStep('link')
+                        }}
+                        className="h-12 rounded-full border border-white/25 text-[15px] hover:bg-white/10"
+                      >
+                        Submit another to this campaign
+                      </button>
+                    )}
+                    {result.status === 'declined' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUrl('')
+                          setResult(null)
+                          setError('')
+                          setPhase(0)
+                          setStep('link')
+                        }}
+                        className="h-12 rounded-full border border-white/25 text-[15px] hover:bg-white/10"
+                      >
+                        Try a different link
+                      </button>
+                    )}
                     {result.status === 'declined' && asked !== 'done' && (
                       <button type="button" onClick={askForReview} disabled={asked === 'busy'} className="h-12 rounded-full border border-white/25 text-[15px] hover:bg-white/10 disabled:opacity-50">
                         {asked === 'busy' ? 'Sending…' : 'Ask a person to look at it'}

@@ -42,7 +42,7 @@ export function ContactCard() {
     }
   }
   return (
-    <Card title="How we contact you" sub="For things that matter, like a campaign ending and what you earned from it. The notification bell on the site always gets it too.">
+    <Card id="contact" title="How we contact you" sub="For things that matter, like a campaign ending and what you earned from it. The notification bell on the site always gets it too.">
       <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4" role="radiogroup" aria-label="How we contact you">
         {options.map((o) => {
           const on = pref === o.id

@@ -60,7 +60,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
           <p className="mt-6 font-display text-6xl leading-none tracking-[-0.045em] tabular-nums md:text-[4.5rem]">{money(b.brand)}</p>
           <p className="mt-5 text-[15px] text-paper/50">{views > 0 ? `Pays for about ${views.toLocaleString()} more verified views at your current rates.` : 'Add funds and start a campaign to see what it will pay for.'}</p>
         </div>
-        <Card title="Add funds">
+        <Card id="add-funds" title="Add funds">
           <AddFunds ready={ready} />
         </Card>
       </div>

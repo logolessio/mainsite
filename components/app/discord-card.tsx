@@ -53,7 +53,7 @@ export function DiscordCard() {
   }
 
   return (
-    <Card title="Discord" sub="Connect it to see your numbers, send clips and get your roles in the server. Notifications can arrive there too.">
+    <Card id="discord" title="Discord" sub="Connect it to see your numbers, send clips and get your roles in the server. Notifications can arrive there too.">
       {s.linked ? (
         <div className="grid gap-5">
           <p className="flex items-center gap-2 text-sm">

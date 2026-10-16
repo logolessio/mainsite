@@ -9,6 +9,7 @@ import { DevGate } from '@/components/dev/dev-gate'
 import { AppShell } from '@/components/shell/app-shell'
 import { AutoCopy } from '@/components/shell/auto-copy'
 import { CopyProvider } from '@/components/shell/copy-provider'
+import { SkipLink } from '@/components/shell/skip-link'
 import { DesignProvider } from '@/components/shell/design-provider'
 import { FeaturesProvider } from '@/components/shell/features-provider'
 import { getAnnouncement } from '@/lib/announcement'
@@ -90,6 +91,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_LD) }} />
       </head>
       <body className="antialiased">
+        <SkipLink />
         <FeaturesProvider dev={fs.dev} on={fs.on}>
           <DesignProvider value={{ coverZoom: design.design_cover_zoom === '1', coverBorder: design.design_cover_border === '1', coverBar: design.design_cover_bar === '1', coverInfo: design.design_cover_info === '1', scrollEffects: design.design_scroll_effects === '1', liquidLoader: design.design_liquid_loader === '1' }}>
           <CopyProvider overrides={overrides} isAdmin={isAdmin}>

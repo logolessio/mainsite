@@ -161,13 +161,25 @@ export function PayoutsPanel() {
             <Field label="Amount" hint={available >= minCents ? `Leave empty to withdraw all ${cents(available)}.` : `You can withdraw once you have $${SITE.minPayoutUsd} available.`}>
               <span className="relative block">
                 <span className="pointer-events-none absolute inset-y-0 left-3 grid place-items-center text-mute">$</span>
-                <Input aria-label="Amount to withdraw" inputMode="decimal" value={amount} placeholder="All" disabled={available < minCents} onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))} className="w-36 pl-7" />
+                <Input aria-label="Amount to withdraw" inputMode="decimal" enterKeyHint="send" autoComplete="off" value={amount} placeholder="All" disabled={available < minCents} onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))} className="w-36 pl-7" />
               </span>
             </Field>
             <ActionButton type="submit" disabled={!can}>
               {busy && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
-              Withdraw
+              {amount.trim() ? `Withdraw $${amount}` : available >= minCents ? `Withdraw ${cents(available)}` : 'Withdraw'}
             </ActionButton>
+            {available >= minCents && (
+              <div className="flex basis-full flex-wrap gap-2" role="group" aria-label="Quick amounts">
+                <button type="button" aria-pressed={!amount.trim()} onClick={() => setAmount('')} className={cn('h-9 rounded-full border px-4 text-sm transition-colors', !amount.trim() ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
+                  All
+                </button>
+                {[10, 25, 50, 100].filter((v) => v * 100 >= minCents && v * 100 < available).map((v) => (
+                  <button key={v} type="button" aria-pressed={amount === String(v)} onClick={() => setAmount(String(v))} className={cn('h-9 rounded-full border px-4 text-sm transition-colors', amount === String(v) ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
+                    ${v}
+                  </button>
+                ))}
+              </div>
+            )}
           </form>
         </div>
       </Card>

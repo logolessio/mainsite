@@ -30,7 +30,13 @@ export function AddFunds({ ready }: { ready: boolean }) {
   }
 
   return (
-    <div className="grid gap-5">
+    <form
+      className="grid gap-5"
+      onSubmit={(e) => {
+        e.preventDefault()
+        if (ok && !busy && ready) void go()
+      }}
+    >
       <div className="flex flex-wrap gap-2" role="group" aria-label="Amount">
         {PRESETS.map((p) => (
           <button key={p} type="button" onClick={() => setAmount(String(p))} aria-pressed={n === p} className={cn('h-10 rounded-full border px-5 text-sm transition-colors', n === p ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
@@ -41,9 +47,9 @@ export function AddFunds({ ready }: { ready: boolean }) {
       <div className="flex flex-wrap items-center gap-3">
         <label className="flex h-12 w-44 items-center rounded-full border border-line-strong bg-ink/80 px-5 focus-within:border-paper/60">
           <span className="text-mute">$</span>
-          <input inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, '').slice(0, 5))} aria-label="Amount in dollars" className="ml-1 h-full w-full bg-transparent outline-none" />
+          <input inputMode="numeric" enterKeyHint="go" autoComplete="off" value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, '').slice(0, 5))} aria-label="Amount in dollars" className="ml-1 h-full w-full bg-transparent outline-none" />
         </label>
-        <ActionButton disabled={!ok || busy || !ready} onClick={go} className="h-12 px-7">
+        <ActionButton type="submit" disabled={!ok || busy || !ready} className="h-12 px-7">
           {busy && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
           Add ${ok ? n.toLocaleString() : '…'} with PayPal
         </ActionButton>
@@ -58,6 +64,6 @@ export function AddFunds({ ready }: { ready: boolean }) {
       <p className="text-xs leading-relaxed text-mute">
         This goes into your logoless balance, one pot for all your campaigns. Clippers are paid out of it as they earn, plus our {SITE.platformFeePct}% fee on top. <span className="text-paper/80">We cover PayPal&apos;s fees, so every dollar you add is a dollar you can spend.</span>
       </p>
-    </div>
+    </form>
   )
 }

@@ -24,7 +24,7 @@ export function ConnectedApps() {
   }, [on, load])
   if (!on || !items || items.length === 0) return null
   return (
-    <Card title="Connected apps" sub="Places you signed in to with logoless. Disconnecting ends their access at once.">
+    <Card id="apps" title="Connected apps" sub="Places you signed in to with logoless. Disconnecting ends their access at once.">
       <ul className="divide-y divide-line">
         {items.map(({ app, grant }) => (
           <li key={app.id} className="flex flex-wrap items-center justify-between gap-3 py-4 first:pt-0 last:pb-0">

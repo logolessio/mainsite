@@ -36,6 +36,8 @@ export function GlassSearch({ value, onChange, resultCount, className }: Props) 
           onChange={(e) => onChange(e.target.value)}
           placeholder="Search artists, streamers, songs…"
           autoComplete="off"
+          enterKeyHint="search"
+          onKeyDown={(e) => e.key === 'Escape' && onChange('')}
           className="h-full min-w-0 flex-1 bg-transparent text-base text-paper placeholder:text-mute focus:outline-none md:text-lg [&::-webkit-search-cancel-button]:hidden"
         />
         {value ? (
