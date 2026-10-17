@@ -523,5 +523,105 @@ export const FULL_LOWDOWN: Report = {
   footer: 'Sent once from logoless to emile@logoless.io. The full detail of the claims audit is in CLAIMS_REVIEW.md in the project.',
 }
 
+const pick = (h: string): Block => FULL_LOWDOWN.blocks.find((b) => b.h === h) as Block
+
+/** The public site block, with the links page added. */
+const publicSite: Block = {
+  ...pick('The public site (logoless.io)'),
+  items: [
+    ...(pick('The public site (logoless.io)').items ?? []),
+    ['The links page:', 'logoless.io/links is the one address for a bio: our mark, the site, the Discord and every social account, one big tap per place. What it lists is edited in the owner dashboard.'],
+  ],
+}
+
+export const LAUNCH_RUNDOWN: Report = {
+  id: 'launch-rundown-2026-10-17',
+  to: 'emile@logoless.io',
+  subject: 'logoless is ready to launch: the full rundown (October 17)',
+  preheader: 'What is new tonight, every feature, how to run it from the owner dashboard, and the short list that only you can finish.',
+  title: 'Ready to launch: the full rundown',
+  intro: 'Everything you asked for tonight is done and live, and this is the complete picture of the site as it stands: what is new, what every part does, how to run it, and the short list that only you can finish. This email was sent by a one-time trigger that has already been deleted.',
+  blocks: [
+    {
+      h: 'The short version',
+      items: [
+        ['Ready from the code side.', 'A crawl of every public page on logoless.io found no broken page, every page has a title and description, the standard files (sitemap, robots, manifest, security.txt, share image) are there, the new pages work on a phone without sideways scrolling, and the last deploys all passed.'],
+        ['What you asked for is done.', 'Your logo is the site logo, logoless.io/links exists, you can change every social account from the owner dashboard, there are 21 new site typefaces and 9 new profile fonts, the staff dashboards are organised into views, and the site is smoother.'],
+        ['What is left needs you.', 'Payments in live mode, your real company details, the mailboxes, the Discord redirects, and removing the sample campaigns. The last section is that list, in order. Nothing in it can be done from the code.'],
+        ['Honest limit.', 'I could not run the site on a real phone or time it with a profiler, so "insanely smooth" is built from known causes of lag (listed below) rather than measured. If anything still feels heavy on your device, tell me which page.'],
+      ],
+    },
+    {
+      h: 'New tonight',
+      items: [
+        ['Your logo.', 'The outline L mark is now the logo everywhere: the site header and footer, the dashboard sidebar, the browser tab icon, the phone app icon, the share image when a link is pasted into a chat, every email, and the Discord bot picture. The file you sent was a white outline on a transparent background, which is why it looked blank in the chat.'],
+        ['logoless.io/links.', 'Our mark and name, then big buttons: the site, start earning, launch a campaign, the Discord and each social. Phone first, it opens fast and has no menus around it. Put this one address in every bio.'],
+        ['Socials and links editor.', 'Owner dashboard, Site, Socials and links. Each row is one place: pick where it goes (27 choices including Discord, X, Instagram, TikTok, YouTube, Twitch, Kick, Threads, Bluesky, Spotify), type the name shown and the address, and switch it on for the footer, the links page, or both. Move rows up and down, add or delete, press Save, and both places update at once. Reset puts the built-in list back. It also tells search engines which accounts are yours.'],
+        ['Change the placeholders first.', 'The five starting accounts (Discord, X, TikTok, Instagram, YouTube) point at addresses I could not confirm are yours, for example discord.gg/logoless. Replace them with the real ones when you create the accounts.'],
+        ['New typefaces.', '21 for the whole site: Bricolage Grotesque, Funnel, Hanken Grotesk, Instrument Sans, Schibsted Grotesk, Special Gothic, Host Grotesk, Familjen Grotesk, Mona Sans, Onest, Figtree, Geologica, Wix Madefor Display, Syne, Newsreader, Young Serif, Gloock, Bodoni Moda, Martian Mono, DM Mono and Fragment Mono. Pick one under Developer, Design, Typeface, preview it big, then press Use on the whole site. I did not change the current font.'],
+        ['New profile fonts.', 'Creators can pick Bricolage, Funnel, Expanded, Syne, Unbounded, Young Serif, Gloock, Newsreader and Martian for their name, next to the older ones.'],
+        ['Staff dashboards, organised.', 'Every long page is split so you see one thing at a time. The details are in the owner dashboard section below.'],
+        ['Smoother everywhere.', 'One gentle easing for every hover and state change, so nothing snaps. The sidebar, top bar and phone tab bar no longer blur the moving background behind them (that blur was recomputed every frame and is the usual cause of lag). Dashboard pages show a skeleton straight away while their data loads, a thin progress line runs along the top while a page loads, and links start fetching their page when your pointer or finger lands on them. Text edits now wait until the page is fully ready, which removes a rare flicker.'],
+        ['Sign-up.', 'People now confirm they are 16 or older when they agree to the Terms.'],
+        ['The launch checklist is current.', 'Owner dashboard, Campaigns, Launch. It now covers the links page, social accounts, the automatic view checks and the Discord redirects.'],
+      ],
+    },
+    publicSite,
+    {
+      ...pick('The creator dashboard'),
+      items: (pick('The creator dashboard').items ?? []).map((it) => (Array.isArray(it) ? ([it[0], it[1].replace('15 fonts', '24 fonts')] as [string, string]) : it)),
+    },
+    pick('The brand dashboard'),
+    pick('The money, exactly'),
+    pick('How submissions and views are checked'),
+    pick('Discord'),
+    {
+      h: 'The owner dashboard (owner.logoless.io), now organised',
+      intro: 'One sidebar in four groups: Run, Communicate, Site and System. Small counters sit beside anything waiting on you, and ⌘K or / finds any page or action.',
+      items: [
+        ['Overview.', 'What needs you comes first: campaign requests, submissions and withdrawals with their buttons right there. Then the money, then activity. "Setup and health" and "Emergency controls" are folded away until you open them, with a count on the fold so nothing is hidden by accident.'],
+        ['Campaigns.', 'Views with counts: Needs you, Waiting for payment, Live, Paused, Ended, Rejected. Each campaign is one short row with its main button (Accept, Reject, Launch, Pause, End, Resume). The brief, edit form and delete sit under "Brief, edit and more". Mock and sample tools are folded at the bottom. Tabs beside it: Launch readiness and Artist links.'],
+        ['Submissions.', 'Views: Waiting, Approved, Rejected. The View checks card is now one slim bar showing the last scan, with Check now and a "How it works" fold.'],
+        ['Payouts.', 'Withdrawals being checked, sending held payouts (admin password) and the pause switch.'],
+        ['People.', 'One list instead of two. Filters: Everyone, Online now, New this week, Team, Extra checks, Restricted. Switch between a compact list and profile cards. Open anyone for everything: roles, messages, moderation, balance and removal. The deletion queue appears on top when someone is waiting.'],
+        ['Inbox.', 'Messages and reports, filtered To do, Reports, Messages, Closed.'],
+        ['Discord, Email, Broadcast.', 'Discord has Setup, Server and Messages tabs. Email has test sends, a code round trip, delivery lookup and recent sends. Broadcast sends to everyone, creators, brands, active people, the team, one person or a Discord channel; big audiences need your admin password.'],
+        ['Site text.', 'Now a list of pages with their sentence counts and how many you edited. Open a page to edit only its sentences, search all text, or filter to just what you edited. The home headline editor is folded away.'],
+        ['Socials and links.', 'The new editor described above.'],
+        ['System.', 'Seven tabs: Logs, Audit, Keys, Settings, API, Developer apps, Security. Logs split their statistics into Traffic, Speed and errors, Security, The business and Money. Audit splits into Admin actions and Text changes, with the chain check as a single line.'],
+        ['Developer.', 'Design toggles and the typeface picker, dashboard previews, features, events and previews. Only people with the developer role see it.'],
+        ['Protection on big actions.', 'Banning, deleting, role changes, balance adjustments, sending held payouts and broadcasting to large groups ask for your admin password, and the browser then runs the Cloudflare check.'],
+      ],
+    },
+    pick('The dev site and pushing features'),
+    pick('The optional features (switch on with Push)'),
+    pick('For developers: the owner API and Login with logoless'),
+    pick('Email'),
+    pick('Security and trust'),
+    {
+      h: 'Ergonomics (added earlier today)',
+      items: pick('What changed tonight (ergonomics)').items,
+    },
+    {
+      h: 'What is left, and only you can do it',
+      intro: 'In the order I would do them. Owner dashboard, Campaigns, Launch has the same list with a how-to under each item and ticks as you go.',
+      numbered: true,
+      items: [
+        ['Make the real social accounts', 'and put their addresses into Socials and links. The starting addresses are placeholders. Then put logoless.io/links in each bio.'],
+        ['Take PayPal live.', 'Live keys in Cloudflare, the webhook ID, Payouts switched on in PayPal, and enough money in the PayPal account to pay creators. Then run the whole loop once with a real $10: artist link, set-up, fund, campaign, clip, withdraw.'],
+        ['Real company details.', 'lib/site.ts still says Logoless Inc. with a placeholder address. The Terms need a real registered company. The DMCA notice agent has to be registered with the US Copyright Office to count.'],
+        ['The mailboxes.', 'Make support, legal, privacy, press and abuse @logoless.io exist and reach you, because the site tells people to write to them. Send yourself a message from /contact to prove it.'],
+        ['Discord.', 'In the Discord developer portal add https://logoless.io/api/discord/callback and https://dev.logoless.io/api/discord/callback as redirects, then press Register commands on the Discord page. The invite link in Socials and links should be your real server.'],
+        ['Remove the sample campaigns', 'from Campaigns, Testing tools once a real campaign is live, so the home page shows only real ones.'],
+        ['Confirm the view-check schedule.', 'Cloudflare, Workers, mainsite, Triggers should list a 30 minute cron. If it does not, the first visitor after three quiet hours starts a check instead. Add a YOUTUBE_API_KEY if you want the YouTube check to be sturdier.'],
+        ['Decide on your edited sentences.', 'Thirteen conflict with what the product does or what the Terms say (CLAIMS_REVIEW.md lists each with suggested wording). I have not touched them. Say "do them all" or tell me which.'],
+        ['Push the optional features you want live.', 'In particular Dashboard keyboard shortcuts, Ending soon and Earnings goal.'],
+        ['A lawyer.', 'Holding balances can count as stored value in some places, and the 16-or-older confirmation is a statement, not a check. Both deserve a professional look before a big launch.'],
+      ],
+    },
+  ],
+  footer: 'Sent once from logoless to emile@logoless.io. The claims audit is in CLAIMS_REVIEW.md in the project.',
+}
+
 /** The reports that can be sent, by id. */
-export const REPORTS: Record<string, Report> = { [OVERNIGHT.id]: OVERNIGHT, [ADDENDUM.id]: ADDENDUM, [FEATURE_LIST.id]: FEATURE_LIST, [SESSION_TWO.id]: SESSION_TWO, [FULL_LOWDOWN.id]: FULL_LOWDOWN }
+export const REPORTS: Record<string, Report> = { [OVERNIGHT.id]: OVERNIGHT, [ADDENDUM.id]: ADDENDUM, [FEATURE_LIST.id]: FEATURE_LIST, [SESSION_TWO.id]: SESSION_TWO, [FULL_LOWDOWN.id]: FULL_LOWDOWN, [LAUNCH_RUNDOWN.id]: LAUNCH_RUNDOWN }
