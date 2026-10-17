@@ -70,8 +70,18 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
       if (doc.startViewTransition && target !== pathname && html.dataset.vt !== '1' && html.dataset.vtPage !== '1' && !html.classList.contains('calm')) {
         html.dataset.vtPage = '1'
         let arrived = false
-        const run = doc.startViewTransition(async () => {
+        let pushed = false
+        const go = () => {
+          if (pushed) return
+          pushed = true
           router.push(href)
+        }
+        const run = doc.startViewTransition(async () => {
+          go()
+          if (window.location.pathname === target) {
+            arrived = true
+            return
+          }
           // wait for the new page to be in place (the path changes), but never more than a moment: a slow answer must not freeze the page
           await new Promise<void>((resolve) => {
             const cap = window.setTimeout(resolve, 1400)
@@ -85,6 +95,7 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
         })
         run.ready?.catch(() => {})
         run.updateCallbackDone?.catch(() => {})
+        window.setTimeout(go, 700) // if the browser has not got round to starting the transition (the tab is in the background), just go
         const clear = () => delete html.dataset.vtPage
         run.finished.catch(() => {}).finally(clear)
         window.setTimeout(clear, 2600) // never leave the flag set if the browser lost track of the transition
