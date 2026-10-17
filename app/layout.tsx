@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { DM_Sans, Fraunces, Geist, Geist_Mono, IBM_Plex_Mono, Inter, Inter_Tight, Instrument_Serif, JetBrains_Mono, Manrope, Outfit, Playfair_Display, Plus_Jakarta_Sans, Sora, Space_Grotesk, Space_Mono } from 'next/font/google'
+import { Bodoni_Moda, Bricolage_Grotesque, DM_Mono, DM_Sans, Familjen_Grotesk, Figtree, Fragment_Mono, Fraunces, Funnel_Display, Funnel_Sans, Geologica, Gloock, Hanken_Grotesk, Host_Grotesk, Instrument_Sans, Martian_Mono, Mona_Sans, Newsreader, Onest, Schibsted_Grotesk, Special_Gothic, Syne, Wix_Madefor_Display, Young_Serif, Geist, Geist_Mono, IBM_Plex_Mono, Inter, Inter_Tight, Instrument_Serif, JetBrains_Mono, Manrope, Outfit, Playfair_Display, Plus_Jakarta_Sans, Sora, Space_Grotesk, Space_Mono } from 'next/font/google'
 import { connection } from 'next/server'
 import { SecretDialogHost } from '@/components/admin/secret-dialog'
 import { SiteCheckHost } from '@/components/admin/site-check-host'
@@ -39,7 +39,29 @@ const playfair = Playfair_Display({ subsets: ['latin'], display: 'swap', preload
 const jetbrains = JetBrains_Mono({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-jetbrains-mono' })
 const plexMono = IBM_Plex_Mono({ subsets: ['latin'], display: 'swap', preload: false, weight: ['400', '500', '600'], variable: '--font-f-ibm-plex-mono' })
 const spaceMono = Space_Mono({ subsets: ['latin'], display: 'swap', preload: false, weight: ['400', '700'], variable: '--font-f-space-mono' })
-const FONT_CLASSES = [inter, tight, geistMono, geist, dmSans, manrope, sora, spaceGrotesk, jakarta, outfit, instrument, fraunces, playfair, jetbrains, plexMono, spaceMono].map((f) => f.variable).join(' ')
+const bricolage = Bricolage_Grotesque({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-bricolage' })
+const funnelDisplay = Funnel_Display({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-funnel-display' })
+const funnelSans = Funnel_Sans({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-funnel-sans' })
+const hanken = Hanken_Grotesk({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-hanken' })
+const instrumentSans = Instrument_Sans({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-instrument-sans' })
+const schibsted = Schibsted_Grotesk({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-schibsted' })
+const specialGothic = Special_Gothic({ subsets: ['latin'], display: 'swap', preload: false, adjustFontFallback: false, variable: '--font-f-special-gothic' })
+const hostGrotesk = Host_Grotesk({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-host' })
+const familjen = Familjen_Grotesk({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-familjen' })
+const mona = Mona_Sans({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-mona' })
+const onest = Onest({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-onest' })
+const figtree = Figtree({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-figtree' })
+const geologica = Geologica({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-geologica' })
+const wix = Wix_Madefor_Display({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-wix' })
+const syne = Syne({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-syne' })
+const newsreader = Newsreader({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-newsreader' })
+const youngSerif = Young_Serif({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-young-serif' })
+const gloock = Gloock({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-gloock' })
+const bodoni = Bodoni_Moda({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-bodoni' })
+const martian = Martian_Mono({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-martian' })
+const dmMono = DM_Mono({ subsets: ['latin'], display: 'swap', preload: false, weight: ['300', '400', '500'], variable: '--font-f-dm-mono' })
+const fragment = Fragment_Mono({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-fragment' })
+const FONT_CLASSES = [inter, tight, geistMono, geist, dmSans, manrope, sora, spaceGrotesk, jakarta, outfit, instrument, fraunces, playfair, jetbrains, plexMono, spaceMono, bricolage, funnelDisplay, funnelSans, hanken, instrumentSans, schibsted, specialGothic, hostGrotesk, familjen, mona, onest, figtree, geologica, wix, syne, newsreader, youngSerif, gloock, bodoni, martian, dmMono, fragment].map((f) => f.variable).join(' ')
 
 const baseMetadata: Metadata = {
   metadataBase: new URL(SITE.url),

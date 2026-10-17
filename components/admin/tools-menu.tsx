@@ -112,7 +112,7 @@ export function ToolsMenu() {
     ['/admin/campaigns', 'Campaigns', Megaphone, (counts.requests ?? 0) + (counts.launch ?? 0)],
     ['/admin/submissions', 'Clips', Clapperboard, counts.clips ?? 0],
     ['/admin/payouts', 'Payouts', Banknote, counts.payouts ?? 0],
-    ['/admin/users', 'Users', Users, 0],
+    ['/admin/people', 'People', Users, 0],
     ['/admin/inbox', 'Inbox', Mail, 0],
     ['/admin/logs', 'Logs', Activity, 0],
     ['/admin/text', 'Site text', FileText, 0],
@@ -165,7 +165,7 @@ export function ToolsMenu() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault()
-                  if (q.trim()) go(`/admin/users?q=${encodeURIComponent(q.trim())}`)
+                  if (q.trim()) go(`/admin/people?q=${encodeURIComponent(q.trim())}`)
                 }}
                 className="relative mt-2"
               >

@@ -19,7 +19,6 @@ const GROUPS: Record<string, { label: string; items: Item[] }> = {
   },
   settings: { label: 'Settings', items: [{ id: 'settings', label: 'Settings', href: '/dashboard/settings' }, { id: 'notifications', label: 'Notifications', href: '/dashboard/notifications' }] },
   campaigns: { label: 'Campaigns', items: [{ id: 'campaigns', label: 'Campaigns', href: '/admin/campaigns' }, { id: 'launch', label: 'Launch', href: '/admin/launch' }, { id: 'invites', label: 'Artist links', href: '/admin/invites' }] },
-  people: { label: 'People', items: [{ id: 'people', label: 'People', href: '/admin/people' }, { id: 'users', label: 'Users', href: '/admin/users' }] },
   dev: {
     label: 'Developer',
     items: [

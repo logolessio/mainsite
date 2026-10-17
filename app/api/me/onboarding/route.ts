@@ -62,7 +62,7 @@ export const POST = route(async (req: Request) => {
     await notifyAdmins({
       title: `New brand: ${a.company ?? user.email}`,
       body: [a.industry, a.budget, a.goals?.join(', ')].filter(Boolean).join(' · ').slice(0, 220),
-      href: '/admin/users',
+      href: '/admin/people',
       dedupe: `brand-signup:${user.id}`,
     })
   }

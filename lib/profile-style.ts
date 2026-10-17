@@ -3,6 +3,15 @@ import { bannerCss, LOOKS } from './looks'
 
 export const FONT_OPTIONS = [
   { id: 'geist', label: 'Sans', note: 'Clean' },
+  { id: 'bricolage', label: 'Bricolage', note: 'Editorial grotesque' },
+  { id: 'funnel', label: 'Funnel', note: 'Sleek display' },
+  { id: 'special', label: 'Expanded', note: 'Wide and confident' },
+  { id: 'syne', label: 'Syne', note: 'Art gallery' },
+  { id: 'unbounded', label: 'Unbounded', note: 'Round and futuristic' },
+  { id: 'young', label: 'Young Serif', note: 'Warm and bold' },
+  { id: 'gloock', label: 'Gloock', note: 'Magazine drama' },
+  { id: 'newsreader', label: 'Newsreader', note: 'Fine editorial' },
+  { id: 'martian', label: 'Martian', note: 'Wide mono' },
   { id: 'medieval', label: 'Medieval', note: 'Knights and castles' },
   { id: 'gothic', label: 'Gothic', note: 'Old blackletter' },
   { id: 'regal', label: 'Regal', note: 'Carved stone' },

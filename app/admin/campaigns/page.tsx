@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 import { SectionTabs } from '@/components/app/section-tabs'
 import { AdminButton } from '@/components/admin/ui'
+import { Disclosure } from '@/components/admin/disclosure'
+import { More } from '@/components/admin/more'
+import { Tabbed, type TabbedItem } from '@/components/admin/tabbed'
 import { money, when } from '@/lib/format'
 import { CampaignEditor } from '@/components/admin/campaign-editor'
 import { MockCampaigns } from '@/components/admin/mock-campaigns'
@@ -17,16 +20,15 @@ export const metadata: Metadata = { title: 'Campaigns | logoless', robots: { ind
 
 type Row = CampaignRow & { owner: string | null; pool: number; clips: number }
 
-const ORDER = ['requested', 'paid', 'awaiting_payment', 'live', 'paused', 'ended', 'rejected']
-const TITLES: Record<string, string> = {
-  requested: 'New requests',
-  paid: 'Paid: ready to launch',
-  awaiting_payment: 'Approved: waiting for the artist to pay',
-  live: 'Live',
-  paused: 'Paused',
-  ended: 'Ended',
-  rejected: 'Rejected',
-}
+/** The views of this page. "Needs you" is what only a person can move forward, so it comes first. */
+const VIEWS: { id: string; label: string; statuses: string[]; hot?: boolean; empty: string }[] = [
+  { id: 'now', label: 'Needs you', statuses: ['requested', 'paid'], hot: true, empty: 'Nothing is waiting on you. New requests and paid campaigns appear here.' },
+  { id: 'pay', label: 'Waiting for payment', statuses: ['awaiting_payment'], empty: 'No approved campaign is waiting for its artist to pay.' },
+  { id: 'live', label: 'Live', statuses: ['live'], empty: 'No campaign is live right now.' },
+  { id: 'paused', label: 'Paused', statuses: ['paused'], empty: 'Nothing is paused.' },
+  { id: 'ended', label: 'Ended', statuses: ['ended'], empty: 'No campaign has ended yet.' },
+  { id: 'rejected', label: 'Rejected', statuses: ['rejected'], empty: 'Nothing has been rejected.' },
+]
 
 export default async function Page() {
   await pageAdmin()
@@ -43,46 +45,42 @@ export default async function Page() {
   ).results
   const mocks = rows.filter((r) => r.id.startsWith('mock-'))
   const mockPublic = (await getSetting('mock_public')) === '1'
-  const groups = ORDER.map((s) => ({ s, items: rows.filter((r) => r.status === s) })).filter((g) => g.items.length)
+  const samples = rows.filter((r) => r.admin_note === 'sample').length
 
-  return (
-    <>
-      <SectionTabs group="campaigns" />
-      <PageHeader title="Campaigns" sub="Accept a request, wait for the artist to pay, then launch. Nothing goes live until it is paid." actions={<RemoveSamples count={rows.filter((r) => r.admin_note === 'sample').length} />} />
-      <Card title="Mock campaigns" sub="Made-up campaigns to try the site with: the browse page, the campaign sheet, sending a clip, reviewing it. Nothing real is involved." className="mb-8">
-        <MockCampaigns rows={mocks.map((r) => ({ id: r.id, title: r.title, creator: r.creator, cover_url: r.cover_url, rate_cents: r.rate_cents, budget_cents: r.budget_cents, clips: r.clips }))} publicOn={mockPublic} />
-      </Card>
-      {groups.length === 0 && <p className="text-mute">No campaigns yet.</p>}
-      <div className="grid gap-8">
-        {groups.map((g) => (
-          <section key={g.s}>
-            <h2 className="mb-3 font-display text-3xl">
-              {TITLES[g.s]} <span className="text-mute">{g.items.length}</span>
-            </h2>
-            <div className="grid gap-3">
-              {g.items.map((c) => (
-                <Card key={c.id}>
-                  <div className="flex flex-wrap items-start gap-4">
+  const tabs: TabbedItem[] = VIEWS.map((v) => {
+    const items = rows.filter((r) => v.statuses.includes(r.status))
+    return {
+      id: v.id,
+      label: v.label,
+      count: items.length,
+      hot: v.hot,
+      node:
+        items.length === 0 ? (
+          <p className="rounded-3xl border border-dashed border-line-strong px-6 py-14 text-center text-mute">{v.empty}</p>
+        ) : (
+          <ul className="grid gap-3">
+            {items.map((c) => (
+              <li key={c.id}>
+                <Card>
+                  <div className="flex flex-wrap items-center gap-4">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={c.cover_url} alt="" className="size-20 shrink-0 rounded-xl object-cover" />
-                    <div className="min-w-0 flex-1">
-                      <p className="flex flex-wrap items-center gap-2 text-lg">
+                    <img src={c.cover_url} alt="" className="size-14 shrink-0 rounded-xl object-cover" />
+                    <div className="min-w-0 flex-1 basis-64">
+                      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-lg leading-tight">
                         {c.title} <span className="text-sm text-mute">by {c.creator}</span>
                         <Badge tone={CAMPAIGN_STATUS[c.status]?.tone}>{CAMPAIGN_STATUS[c.status]?.admin ?? c.status}</Badge>
                         {c.admin_note === 'sample' && <Badge>sample</Badge>}
                         {c.id.startsWith('mock-') && <Badge>mock</Badge>}
                       </p>
-                      <p className="mt-1 text-xs text-mute">
-                        {c.owner ? `Requested by ${c.owner}` : 'No owner'} · {money(c.budget_cents)} budget · ${(c.rate_cents / 100).toFixed(2)} per 1,000 views · {c.clips} clips · pool {money(c.pool)} · updated {when(c.updated_at)}
+                      <p className="mt-1.5 text-[13px] text-mute">
+                        {money(c.budget_cents)} budget · ${(c.rate_cents / 100).toFixed(2)} per 1,000 views · {c.clips} {c.clips === 1 ? 'clip' : 'clips'} · {c.owner ?? 'no owner'}
                       </p>
-                      <p className="mt-2 line-clamp-2 text-sm text-paper/80">{c.summary}</p>
-                      {c.admin_note && c.admin_note !== 'sample' && <p className="mt-1 text-xs text-mute">Note: {c.admin_note}</p>}
                     </div>
-                    <div className="flex flex-wrap items-start justify-end gap-2">
+                    <div className="flex flex-wrap items-center justify-end gap-2">
                       {c.status === 'requested' && (
                         <>
                           <AdminButton variant="solid" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'accept' }} confirm={`Accept "${c.title}"? The artist will be asked to pay ${money(c.budget_cents)}.`}>
-                            Accept: we will launch it
+                            Accept
                           </AdminButton>
                           <AdminButton variant="danger" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'reject' }} ask={{ label: 'Why? (the artist sees this)', required: true }}>
                             Reject
@@ -111,18 +109,44 @@ export default async function Page() {
                           <AdminButton variant="danger" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'end' }} confirm="End this campaign?">End</AdminButton>
                         </>
                       )}
+                    </div>
+                  </div>
+                  <More label="Brief, edit and more" className="mt-3 -mb-1">
+                    <p className="text-sm text-paper/80">{c.summary}</p>
+                    <p className="mt-2 text-xs text-mute">
+                      Pool {money(c.pool)} · updated {when(c.updated_at)}
+                      {c.admin_note && c.admin_note !== 'sample' ? ` · Note: ${c.admin_note}` : ''}
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-start gap-2">
+                      <CampaignEditor c={{ id: c.id, title: c.title, creator: c.creator, summary: c.summary, rate: c.rate_cents / 100, endsOn: c.ends_on ?? '', cover: c.cover_url, previewUrl: c.preview_url ?? '' }} />
                       {c.clips === 0 && c.pool === 0 && (
                         <AdminButton variant="danger" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'delete' }} confirm={`Delete "${c.title}" for good?`}>Delete</AdminButton>
                       )}
                     </div>
-                  </div>
-                  <CampaignEditor c={{ id: c.id, title: c.title, creator: c.creator, summary: c.summary, rate: c.rate_cents / 100, endsOn: c.ends_on ?? '', cover: c.cover_url, previewUrl: c.preview_url ?? '' }} />
+                  </More>
                 </Card>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
+              </li>
+            ))}
+          </ul>
+        ),
+    }
+  })
+  const first = tabs[0].count ? tabs[0].id : tabs.find((t) => t.id === 'live')?.id
+
+  return (
+    <>
+      <SectionTabs group="campaigns" />
+      <PageHeader title="Campaigns" sub="Accept a request, wait for the artist to pay, then launch. Nothing goes live until it is paid." />
+      <Tabbed tabs={tabs} initial={first} />
+      <Disclosure className="mt-10" title="Testing tools" sub="Made-up campaigns to try the site with, and a clean-up for the sample campaigns.">
+        <div className="grid gap-6">
+          <MockCampaigns rows={mocks.map((r) => ({ id: r.id, title: r.title, creator: r.creator, cover_url: r.cover_url, rate_cents: r.rate_cents, budget_cents: r.budget_cents, clips: r.clips }))} publicOn={mockPublic} />
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
+            <p className="text-sm text-mute">Sample campaigns are placeholders that shipped with the site. Remove them once a real campaign is live.</p>
+            <RemoveSamples count={samples} />
+          </div>
+        </div>
+      </Disclosure>
     </>
   )
 }

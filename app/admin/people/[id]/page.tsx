@@ -68,7 +68,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               <dd>{discord ? (bot ? 'Linked, the bot can message them' : 'Linked, bot not set up yet') : 'Not linked'}</dd>
             </dl>
             <div className="mt-5 flex flex-wrap gap-2">
-              <ActionLink href={`/admin/users?q=${encodeURIComponent(u.email)}`} variant="ghost">Manage in Users</ActionLink>
               {!isOwner && <DeleteAccountButton id={u.id} email={u.email} />}
             </div>
           </Card>

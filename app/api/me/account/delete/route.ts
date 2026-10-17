@@ -23,6 +23,6 @@ export const POST = route(async (req: Request) => {
   const choice: Choice = left > 0 ? parsed.data.choice : 'none'
   await scheduleDeletion(user.id, choice)
   await auditSafe({ id: user.id, email: user.email }, 'account.delete_requested', user.id, `choice ${choice}, ${left} cents`)
-  await notifyAdmins({ title: 'Account deletion requested', body: user.email, href: '/admin/users', dedupe: `del:${user.id}:${Date.now() >> 17}` })
+  await notifyAdmins({ title: 'Account deletion requested', body: user.email, href: '/admin/people', dedupe: `del:${user.id}:${Date.now() >> 17}` })
   return json({ ok: true })
 })

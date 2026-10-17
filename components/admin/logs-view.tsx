@@ -1,3 +1,5 @@
+import { Disclosure } from '@/components/admin/disclosure'
+import { Tabbed } from '@/components/admin/tabbed'
 import { Bars, Ranked } from '@/components/admin/charts'
 import { CleanupLogs } from '@/components/admin/log-tools'
 import { Badge } from '@/components/app/table'
@@ -51,96 +53,128 @@ export async function LogsView({ sp, base, canExport }: { sp: LogsSP; base: stri
   )
 }
 
+const Tile = ({ k, v, note, small }: { k: string; v: string | number; note?: string; small?: boolean }) => (
+  <div className="rounded-[22px] border border-line bg-surface/70 p-4">
+    <p className="font-mono text-[11px] text-mute">{k}</p>
+    <p className={cn('mt-2 font-display leading-none', small ? 'text-3xl' : 'text-4xl')}>{v}</p>
+    {note && <p className="mt-1.5 text-[11px] text-mute">{note}</p>}
+  </div>
+)
+
 async function Overview({ since, canExport }: { since: number; canExport: boolean }) {
   const o = await overview(since)
   const t = o.totals
   const b = o.business
   const m = o.money
-  const tiles: [string, string | number, string?][] = [
-    ['Page views', n(t.pageviews).toLocaleString()],
-    ['Visitors', n(t.visitors).toLocaleString(), 'distinct networks'],
-    ['Signed-in people', n(t.signedInPeople).toLocaleString()],
-    ['Sign-ins', n(t.signins).toLocaleString()],
-    ['API calls', n(t.api).toLocaleString()],
-    ['Errors', n(t.errors).toLocaleString()],
-    ['Security events', n(t.security).toLocaleString(), 'blocked or refused'],
-    ['Money events', n(t.money).toLocaleString()],
-    ['Admin actions', n(t.admin).toLocaleString()],
-    ['Bots seen', n(t.bots).toLocaleString()],
-    ['All events', n(t.events).toLocaleString()],
-  ]
+  const series = o.series as never
+  const tiles = (rows: [string, string | number, string?][], small = false) => (
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+      {rows.map(([k, v, note]) => (
+        <Tile key={k} k={k} v={v} note={note} small={small} />
+      ))}
+    </div>
+  )
+  const grid = 'mt-4 grid gap-3 lg:grid-cols-2 xl:grid-cols-3'
+
   return (
     <div className="grid gap-8">
-      <section>
-        <h2 className="mb-3 font-display text-3xl">Traffic and activity</h2>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-          {tiles.map(([k, v, note]) => (
-            <div key={k} className="rounded-[22px] border border-line bg-surface/70 p-4">
-              <p className="font-mono text-[11px] text-mute">{k}</p>
-              <p className="mt-2 font-display text-4xl leading-none">{v}</p>
-              {note && <p className="mt-1.5 text-[11px] text-mute">{note}</p>}
-            </div>
-          ))}
-        </div>
-        <div className="mt-4 grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
-          <Bars data={o.series as never} field="views" label="Page views per day" />
-          <Bars data={o.series as never} field="visitors" label="Visitors per day" color="#8fb8ff" />
-          <Bars data={o.series as never} field="signins" label="Sign-ins per day" color="#7be0a0" />
-          <Bars data={o.series as never} field="api" label="API calls per day" />
-          <Bars data={o.series as never} field="errors" label="Errors per day" color="#ff6b6b" />
-          <Bars data={o.series as never} field="security" label="Security events per day" color="#ffcf70" />
-        </div>
-      </section>
-
-      <section className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
-        <Ranked title="Top pages" rows={o.pages as never} extra={(r) => `${n(r.u)} visitors`} />
-        <Ranked title="Where visitors come from" rows={o.refs as never} />
-        <Ranked title="Countries (visitors)" rows={o.countries as never} />
-        <Ranked title="Browsers and devices" rows={o.devices as never} />
-        <Ranked title="Busiest API routes" rows={o.routes as never} extra={(r) => `${n(r.ms)}ms · ${n(r.bad)} failed`} />
-        <Ranked title="Slowest routes (average ms)" rows={(o.slow as { label: string; ms: number; n: number }[]).map((r) => ({ label: r.label, n: r.ms }))} unit="ms" />
-        <Ranked title="Security events" rows={o.security as never} />
-        <Ranked title="Errors" rows={o.errors as never} />
-        <Ranked title="Most active people" rows={o.people as never} />
-      </section>
-
-      <section>
-        <h2 className="mb-3 font-display text-3xl">The business</h2>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
-          {(
-            [
-              ['Members', n(b.users).toLocaleString(), `${n(b.newUsers)} new in range`],
-              ['Profiles', n(b.profiles).toLocaleString()],
-              ['Flagged accounts', n(b.flagged).toLocaleString()],
-              ['Restricted', n(b.restricted).toLocaleString()],
-              ['Campaigns', n(b.campaigns).toLocaleString(), `${n(b.liveCampaigns)} live`],
-              ['Clips submitted', n(b.clips).toLocaleString(), `${n(b.pendingClips)} waiting`],
-              ['Verified views', n(b.verifiedViews).toLocaleString()],
-              ['Favourites', n(b.favourites).toLocaleString()],
-              ['Badges unlocked', n(b.badges).toLocaleString()],
-              ['Notifications sent', n(b.notifications).toLocaleString()],
-              ['Paid in', money(n(m.paidIn))],
-              ['PayPal costs', money(n(m.paypalCosts))],
-              ['Gross to clippers', money(n(m.gross))],
-              ['Site fees', money(n(m.fees))],
-              ['Clippers earned', money(n(m.earned))],
-              ['Paid out', money(n(m.paidOut)), `${n(m.payouts)} withdrawals`],
-              ['Waiting for review', money(n(m.inReview))],
-            ] as [string, string, string?][]
-          ).map(([k, v, note]) => (
-            <div key={k} className="rounded-[22px] border border-line bg-surface/70 p-4">
-              <p className="font-mono text-[11px] text-mute">{k}</p>
-              <p className="mt-2 font-display text-3xl leading-none">{v}</p>
-              {note && <p className="mt-1.5 text-[11px] text-mute">{note}</p>}
-            </div>
-          ))}
-        </div>
-      </section>
+      <Tabbed
+        memory="logs-stats"
+        tabs={[
+          {
+            id: 'traffic',
+            label: 'Traffic',
+            node: (
+              <div>
+                {tiles([['Page views', n(t.pageviews).toLocaleString()], ['Visitors', n(t.visitors).toLocaleString(), 'distinct networks'], ['Signed-in people', n(t.signedInPeople).toLocaleString()], ['Sign-ins', n(t.signins).toLocaleString()]])}
+                <div className={grid}>
+                  <Bars data={series} field="views" label="Page views per day" />
+                  <Bars data={series} field="visitors" label="Visitors per day" color="#8fb8ff" />
+                  <Bars data={series} field="signins" label="Sign-ins per day" color="#7be0a0" />
+                </div>
+                <div className={grid}>
+                  <Ranked title="Top pages" rows={o.pages as never} extra={(r) => `${n(r.u)} visitors`} />
+                  <Ranked title="Where visitors come from" rows={o.refs as never} />
+                  <Ranked title="Countries (visitors)" rows={o.countries as never} />
+                  <Ranked title="Browsers and devices" rows={o.devices as never} />
+                  <Ranked title="Most active people" rows={o.people as never} />
+                </div>
+              </div>
+            ),
+          },
+          {
+            id: 'health',
+            label: 'Speed and errors',
+            count: n(t.errors),
+            node: (
+              <div>
+                {tiles([['API calls', n(t.api).toLocaleString()], ['Errors', n(t.errors).toLocaleString()], ['All events', n(t.events).toLocaleString()]])}
+                <div className={grid}>
+                  <Bars data={series} field="api" label="API calls per day" />
+                  <Bars data={series} field="errors" label="Errors per day" color="#ff6b6b" />
+                </div>
+                <div className={grid}>
+                  <Ranked title="Busiest API routes" rows={o.routes as never} extra={(r) => `${n(r.ms)}ms · ${n(r.bad)} failed`} />
+                  <Ranked title="Slowest routes (average ms)" rows={(o.slow as { label: string; ms: number; n: number }[]).map((r) => ({ label: r.label, n: r.ms }))} unit="ms" />
+                  <Ranked title="Errors" rows={o.errors as never} />
+                </div>
+              </div>
+            ),
+          },
+          {
+            id: 'security',
+            label: 'Security',
+            count: n(t.security),
+            node: (
+              <div>
+                {tiles([['Security events', n(t.security).toLocaleString(), 'blocked or refused'], ['Admin actions', n(t.admin).toLocaleString()], ['Bots seen', n(t.bots).toLocaleString()], ['Flagged accounts', n(b.flagged).toLocaleString()], ['Restricted', n(b.restricted).toLocaleString()]])}
+                <div className={grid}>
+                  <Bars data={series} field="security" label="Security events per day" color="#ffcf70" />
+                  <Ranked title="Security events" rows={o.security as never} />
+                </div>
+              </div>
+            ),
+          },
+          {
+            id: 'business',
+            label: 'The business',
+            node: tiles(
+              [
+                ['Members', n(b.users).toLocaleString(), `${n(b.newUsers)} new in range`],
+                ['Profiles', n(b.profiles).toLocaleString()],
+                ['Campaigns', n(b.campaigns).toLocaleString(), `${n(b.liveCampaigns)} live`],
+                ['Clips submitted', n(b.clips).toLocaleString(), `${n(b.pendingClips)} waiting`],
+                ['Verified views', n(b.verifiedViews).toLocaleString()],
+                ['Favourites', n(b.favourites).toLocaleString()],
+                ['Badges unlocked', n(b.badges).toLocaleString()],
+                ['Notifications sent', n(b.notifications).toLocaleString()],
+              ],
+              true,
+            ),
+          },
+          {
+            id: 'money',
+            label: 'Money',
+            node: tiles(
+              [
+                ['Paid in', money(n(m.paidIn))],
+                ['PayPal costs', money(n(m.paypalCosts))],
+                ['Gross to clippers', money(n(m.gross))],
+                ['Site fees', money(n(m.fees))],
+                ['Clippers earned', money(n(m.earned))],
+                ['Paid out', money(n(m.paidOut)), `${n(m.payouts)} withdrawals`],
+                ['Waiting for review', money(n(m.inReview))],
+              ],
+              true,
+            ),
+          },
+        ]}
+      />
 
       {canExport && (
-        <Card title="Housekeeping">
+        <Disclosure title="Housekeeping" sub="Clear out old log rows.">
           <CleanupLogs />
-        </Card>
+        </Disclosure>
       )}
     </div>
   )

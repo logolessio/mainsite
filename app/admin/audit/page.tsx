@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Tabbed } from '@/components/admin/tabbed'
 import { SectionTabs } from '@/components/app/section-tabs'
 import { when } from '@/lib/format'
 import { Badge } from '@/components/app/table'
@@ -31,59 +32,73 @@ export default async function Page() {
     <>
       <SectionTabs group="system" />
       <PageHeader title="Audit log" sub="Every admin action and every text change. Each row is chained to the one before it, so a deleted or altered row shows up here." />
-      <div className="mb-8 grid gap-3 sm:grid-cols-2">
+      <div className="mb-8 flex flex-wrap items-center gap-x-6 gap-y-2 rounded-3xl border border-line bg-black/45 px-6 py-4">
         {[
           { name: 'Admin actions', c: chainA },
           { name: 'Text changes', c: chainV },
         ].map(({ name, c }) => (
-          <Card key={name}>
-            <p className="flex items-center justify-between gap-3">
-              <span>{name}</span>
-              <Badge tone={c.ok ? 'good' : 'bad'}>{c.ok ? 'chain intact' : `BROKEN at #${c.brokenAt}`}</Badge>
-            </p>
-            <p className="mt-1 text-xs text-mute">{c.rows} entries checked</p>
-          </Card>
+          <p key={name} className="flex items-center gap-3 text-sm">
+            <span>{name}</span>
+            <Badge tone={c.ok ? 'good' : 'bad'}>{c.ok ? 'chain intact' : `BROKEN at #${c.brokenAt}`}</Badge>
+            <span className="text-xs text-mute">{c.rows} checked</span>
+          </p>
         ))}
       </div>
 
-      <h2 className="mb-3 font-display text-3xl">Text changes</h2>
-      <Card className="mb-10">
-        {texts.results.length === 0 ? (
-          <p className="text-sm text-mute">No text has been changed yet.</p>
-        ) : (
-          <ul className="divide-y divide-line">
-            {texts.results.map((v) => (
-              <li key={v.id} className="py-3 text-sm">
-                <p className="flex flex-wrap items-center gap-x-3 text-xs text-mute">
-                  <span>{when(v.created_at)}</span>
-                  <span>{v.editor_email}</span>
-                  {v.reason && <span>“{v.reason}”</span>}
-                </p>
-                <p className="mt-1 text-mute line-through decoration-signal/50">{v.old_value ?? v.original ?? '(original wording)'}</p>
-                <p className="mt-0.5">{v.new_value}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
-
-      <h2 className="mb-3 font-display text-3xl">Admin actions</h2>
-      <Card>
-        {actions.results.length === 0 ? (
-          <p className="text-sm text-mute">Nothing yet.</p>
-        ) : (
-          <ul className="divide-y divide-line">
-            {actions.results.map((a) => (
-              <li key={a.id} className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2.5 text-sm">
-                <span className="w-44 shrink-0 text-xs text-mute">{when(a.created_at)}</span>
-                <span className="w-48 shrink-0 truncate text-xs">{a.actor_email}</span>
-                <span className="font-mono text-xs">{a.action}</span>
-                <span className="min-w-0 truncate text-xs text-mute">{[a.target, a.detail].filter(Boolean).join(' · ')}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
+      <Tabbed
+        memory="audit"
+        tabs={[
+          {
+            id: 'actions',
+            label: 'Admin actions',
+            count: actions.results.length,
+            node: (
+              <Card>
+                {actions.results.length === 0 ? (
+                  <p className="text-sm text-mute">Nothing yet.</p>
+                ) : (
+                  <ul className="divide-y divide-line">
+                    {actions.results.map((a) => (
+                      <li key={a.id} className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-2.5 text-sm">
+                        <span className="w-44 shrink-0 text-xs text-mute">{when(a.created_at)}</span>
+                        <span className="w-48 shrink-0 truncate text-xs">{a.actor_email}</span>
+                        <span className="font-mono text-xs">{a.action}</span>
+                        <span className="min-w-0 truncate text-xs text-mute">{[a.target, a.detail].filter(Boolean).join(' · ')}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Card>
+            ),
+          },
+          {
+            id: 'text',
+            label: 'Text changes',
+            count: texts.results.length,
+            node: (
+              <Card>
+                {texts.results.length === 0 ? (
+                  <p className="text-sm text-mute">No text has been changed yet.</p>
+                ) : (
+                  <ul className="divide-y divide-line">
+                    {texts.results.map((v) => (
+                      <li key={v.id} className="py-3 text-sm">
+                        <p className="flex flex-wrap items-center gap-x-3 text-xs text-mute">
+                          <span>{when(v.created_at)}</span>
+                          <span>{v.editor_email}</span>
+                          {v.reason && <span>“{v.reason}”</span>}
+                        </p>
+                        <p className="mt-1 text-mute line-through decoration-signal/50">{v.old_value ?? v.original ?? '(original wording)'}</p>
+                        <p className="mt-0.5">{v.new_value}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Card>
+            ),
+          },
+        ]}
+      />
     </>
   )
 }

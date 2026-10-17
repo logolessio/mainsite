@@ -548,8 +548,26 @@ html[data-kind='serif'] .font-display {
   letter-spacing: -0.02em;
 }
 /* a face with only one weight must not be faked into bold */
-html[data-font='instrument-serif'] {
+html[data-font='instrument-serif'],
+html[data-font='young-serif'],
+html[data-font='gloock'] {
   font-synthesis: none;
+}
+/* wide or dramatic faces need a looser headline than the tight default */
+html[data-font='syne'] .font-display,
+html[data-font='mona'] .font-display,
+html[data-font='special-gothic'] .font-display {
+  letter-spacing: -0.025em;
+}
+html[data-font='bodoni'] .font-display,
+html[data-font='newsreader'] .font-display,
+html[data-font='gloock'] .font-display,
+html[data-font='young-serif'] .font-display {
+  letter-spacing: -0.015em;
+}
+html[data-font='martian'] .font-display {
+  letter-spacing: -0.06em;
+  font-weight: 400;
 }
 
 /* Larger text (Settings > Text size) */
