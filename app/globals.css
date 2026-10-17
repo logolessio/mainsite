@@ -39,6 +39,13 @@
   --radius: 1rem;
 }
 
+/* Every hover, colour and state change on the site eases the same way: a little slower than the stock 150ms, and decelerating
+   into place, so nothing snaps. (Tailwind reads these two for every transition-* class.) */
+@theme {
+  --default-transition-duration: 220ms;
+  --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 @theme inline {
   --color-ink: var(--ink);
   --color-paper: var(--paper);
@@ -707,4 +714,34 @@ input[type='number']::-webkit-outer-spin-button {
 main:focus {
   outline: none;
   box-shadow: none;
+}
+
+/* ---------- loading skeletons: the shape of a page while it arrives, so a click answers at once ---------- */
+.skeleton {
+  border-radius: 1rem;
+  background: linear-gradient(100deg, rgb(255 255 255 / 0.045) 30%, rgb(255 255 255 / 0.1) 50%, rgb(255 255 255 / 0.045) 70%);
+  background-size: 220% 100%;
+  animation: skeleton-shimmer 1.7s ease-in-out infinite;
+}
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+/* A page that arrives after its skeleton eases in instead of snapping. */
+@supports (transition-behavior: allow-discrete) {
+  .page-root > * {
+    transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    @starting-style {
+      opacity: 0;
+    }
+  }
 }

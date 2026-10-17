@@ -19,6 +19,8 @@ const brandOf = (text: string): string | null => {
 const NO_ICONS = 'a,button,label,summary,[role=button],[role=tab],[role=radio],[data-no-brand]'
 /** Never touched: code, form fields, and anything inside the editor itself. */
 const SKIP_SELECTOR = 'script,style,svg,canvas,textarea,input,select,option,code,pre,[contenteditable],[data-text-editor],[data-no-copy],noscript'
+/** React marks every element it has taken over. Changing the words of one it has not reached yet would break its hydration. */
+const hydrated = (el: Element) => Object.keys(el).some((k) => k.startsWith('__reactFiber$'))
 
 /**
  * Makes every sentence on the site editable, including text nobody wrapped in <T>. It looks at plain text blocks on the
@@ -53,7 +55,9 @@ export function AutoCopy() {
       el.replaceChildren(document.createTextNode(text))
     }
 
+    let waiting = 0
     const scan = () => {
+      let pending = 0
       // the tab title uses the same wording
       const title = applyWording(document.title)
       if (title !== document.title) document.title = title
@@ -67,6 +71,11 @@ export function AutoCopy() {
           if (!node || node.nodeType !== Node.TEXT_NODE) continue
         }
         if (el.closest(SKIP_SELECTOR)) continue
+        // a page that is still being taken over by React is left alone for a moment, then looked at again
+        if (!painted && waiting < 24 && !hydrated(el)) {
+          pending++
+          continue
+        }
         const was = node ? original.current.get(node) : undefined
         const raw = norm(painted ? (el.getAttribute('data-ac-raw') ?? '') : (was ?? node!.nodeValue ?? ''))
         if (raw.length < 3 || !/[A-Za-z]{2}/.test(raw) || raw.length > 600) continue
@@ -87,6 +96,11 @@ export function AutoCopy() {
           node!.nodeValue = was // the edit was removed: put the original back
         }
       }
+      if (pending > 0) {
+        waiting++
+        if (timer.current) clearTimeout(timer.current)
+        timer.current = setTimeout(scan, 250)
+      } else waiting = 0
     }
     const later = () => {
       if (timer.current) clearTimeout(timer.current)

@@ -15,9 +15,9 @@ export default function Template({ children }: { children: React.ReactNode }) {
   const handoff = typeof document !== 'undefined' && document.documentElement.dataset.vt === '1'
   return (
     <motion.div
-      initial={handoff ? false : app ? { opacity: 0 } : { opacity: 0, y: 22 }}
+      initial={handoff ? false : app ? { opacity: 0 } : { opacity: 0, y: 14 }}
       animate={app ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-      transition={{ duration: app ? 0.3 : 0.7, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: app ? 0.3 : 0.55, ease: [0.16, 1, 0.3, 1] }}
     >
       {children}
     </motion.div>

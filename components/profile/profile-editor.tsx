@@ -368,7 +368,7 @@ export function ProfileEditor() {
         </AnimatePresence>
 
         {/* ---------- save bar ---------- */}
-        <div className="sticky bottom-4 z-20 mt-5 rounded-3xl border border-line-strong bg-surface/95 p-2.5 backdrop-blur">
+        <div className="sticky bottom-4 z-20 mt-5 rounded-3xl border border-line-strong bg-surface/95 p-2.5">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pl-1.5">
             <ActionButton onClick={save} disabled={saving || !dirty} className="rounded-full">
               {saving && <Loader2 className="size-4 animate-spin" />} Save profile

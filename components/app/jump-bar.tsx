@@ -24,7 +24,7 @@ export function JumpBar({ items }: { items: { id: string; label: string }[] }) {
   }, [items])
 
   return (
-    <nav aria-label="On this page" className="no-scrollbar sticky top-[72px] z-20 -mx-5 mb-6 flex gap-1.5 overflow-x-auto bg-ink/80 px-5 py-3 backdrop-blur-xl md:-mx-10 md:px-10">
+    <nav aria-label="On this page" className="no-scrollbar sticky top-[72px] z-20 -mx-5 mb-6 flex gap-1.5 overflow-x-auto bg-ink/90 px-5 py-3 md:-mx-10 md:px-10">
       {items.map((i) => (
         <a key={i.id} href={`#${i.id}`} aria-current={on === i.id ? 'true' : undefined} className={cn('h-9 shrink-0 rounded-full border px-4 text-sm leading-9 transition-colors duration-300', on === i.id ? 'border-line-strong bg-white/[0.08] text-paper' : 'border-transparent text-paper/50 hover:text-paper')}>
           {i.label}

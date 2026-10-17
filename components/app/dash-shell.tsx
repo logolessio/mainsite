@@ -133,7 +133,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
   return (
     <div className="relative z-10 min-h-dvh md:pl-[248px]">
       {/* ---------- sidebar (larger screens) ---------- */}
-      <aside aria-label={`${area} navigation`} className="fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col border-r border-line bg-black/45 backdrop-blur-2xl md:flex">
+      <aside aria-label={`${area} navigation`} className="fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col border-r border-line bg-black/80 md:flex">
         <div className="flex h-[72px] shrink-0 items-center border-b border-line px-6">
           <Go href={siteHref} aria-label="logoless home">
             <Logo className="h-9 md:h-9" />
@@ -189,7 +189,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
       </aside>
 
       {/* ---------- top bar ---------- */}
-      <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-line bg-ink/75 px-5 backdrop-blur-xl md:px-10">
+      <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-line bg-ink/90 px-5 md:px-10">
         <div className="flex items-center gap-4">
           <Go href={siteHref} aria-label="logoless home" className="md:hidden">
             <Logo className="h-8" />
@@ -232,14 +232,14 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
           initial={reduced ? false : { opacity: 0.35, y: 8 }}
           animate={phase === 'exiting' ? { opacity: 0.35, y: 0 } : { opacity: 1, y: 0 }}
           transition={phase === 'exiting' ? { duration: 0.14, ease: 'easeOut' } : { duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          className="mx-auto max-w-[1160px]"
+          className="page-root mx-auto max-w-[1160px]"
         >
           {children}
         </motion.div>
       </main>
 
       {/* ---------- tab bar (phones) ---------- */}
-      <nav aria-label={`${area} navigation`} className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-ink/95 backdrop-blur-xl md:hidden">
+      <nav aria-label={`${area} navigation`} className="fixed inset-x-0 bottom-0 z-40 flex border-t border-line bg-ink/95 md:hidden">
         {bottom.map((it) => {
           const active = isActive(pathname, it)
           return (

@@ -19,6 +19,7 @@ import { NavUserProvider } from './nav-user'
 import { Tracker } from './tracker'
 import { AnnouncementBar } from './announcement-bar'
 import { StickyCta } from './sticky-cta'
+import { NavProgress } from './nav-progress'
 import { CampaignModalProvider } from '@/components/campaign/campaign-modal'
 import type { LinkItem } from '@/lib/socials'
 
@@ -30,6 +31,7 @@ export function AppShell({ children, announcement = null, dots = false, links = 
         <PreviewProvider>
         <NavUserProvider>
         <CampaignModalProvider>
+        <NavProgress />
         <Tracker />
         <CalmApply />
         <AutoCalm />

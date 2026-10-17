@@ -123,7 +123,7 @@ export function LinksEditor({ initial }: { initial: LinkItem[] }) {
         </div>
       </Card>
 
-      <div className="sticky bottom-24 z-20 flex flex-wrap items-center gap-3 rounded-full border border-line-strong bg-ink/90 p-2 pl-5 backdrop-blur-xl md:bottom-6">
+      <div className="sticky bottom-24 z-20 flex flex-wrap items-center gap-3 rounded-full border border-line-strong bg-ink/95 p-2 pl-5 md:bottom-6">
         <p role="status" className={cn('min-w-0 flex-1 text-sm', msg ? (msg.ok ? 'text-emerald-300' : 'text-signal') : 'text-mute')}>
           {msg?.text ?? (dirty ? 'You have changes that are not saved yet.' : 'Everything is saved.')}
         </p>
