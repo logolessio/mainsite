@@ -12,7 +12,7 @@ export default function Template({ children }: { children: React.ReactNode }) {
   // An artist's private page fills the screen itself, so it must not sit inside an animated (transformed) wrapper.
   if (isInvitePath(pathname)) return <>{children}</>
   // During a cover-art transition the browser does the cross-fade itself, so the page must already be visible.
-  const handoff = typeof document !== 'undefined' && document.documentElement.dataset.vt === '1'
+  const handoff = typeof document !== 'undefined' && (document.documentElement.dataset.vt === '1' || document.documentElement.dataset.vtPage === '1')
   return (
     <motion.div
       initial={handoff ? false : app ? { opacity: 0 } : { opacity: 0, y: 14 }}

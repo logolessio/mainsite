@@ -2,6 +2,7 @@
 
 import { Check, Copy } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 
 /** Copies text and says so for two seconds. */
@@ -19,6 +20,7 @@ export function CopyButton({ text, label = 'Copy', done = 'Copied', className }:
       t.remove()
     }
     setOk(true)
+    toast.ok('Copied')
     window.setTimeout(() => setOk(false), 2000)
   }
   return (

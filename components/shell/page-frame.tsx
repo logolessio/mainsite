@@ -15,6 +15,7 @@ export function PageFrame({ children }: { children: React.ReactNode }) {
     <motion.div
       animate={exiting ? { opacity: 0, y: -10 } : { opacity: 1, y: 0 }}
       transition={exiting ? { duration: 0.2, ease: [0.4, 0, 0.2, 1] } : { duration: 0 }}
+      data-vt-frame=""
       className="relative z-10 min-h-dvh"
     >
       {children}

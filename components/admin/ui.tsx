@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { runSiteCheck } from '@/lib/site-check-client'
+import { toast } from '@/lib/toast'
 import { askAdminSecret } from './secret-dialog'
 
 /** A button that posts JSON to an admin route, then refreshes the page. Shows the server's error if it fails. */
@@ -53,6 +54,7 @@ export function AdminButton({
     setOpen(false)
     setText('')
     if (secret) runSiteCheck(typeof children === 'string' ? children : 'an admin action')
+    toast.ok('Done')
     onDone?.(j)
     router.refresh()
   }

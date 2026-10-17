@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ArrowUpRight, Ellipsis, LogOut, Plus, Search, ShieldCheck, X } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '@/components/icons'
 import { Logo } from '@/components/logo'
 import { useFeature } from '@/components/shell/features-provider'
@@ -12,6 +12,7 @@ import { useNavUser } from '@/components/shell/nav-user'
 import { NotificationBell } from '@/components/shell/notifications'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { useTransitions } from '@/components/shell/transition-provider'
+import { SPRING_GLIDE } from '@/lib/layout'
 import { OWNER_URL, SITE_URL_FOR_STAFF } from '@/lib/staff-nav'
 import { cn } from '@/lib/utils'
 import { type AppNavItem, isActive } from './nav-types'
@@ -85,6 +86,8 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
   const [more, setMore] = useState(false)
   const [recents, setRecents] = useState<string[]>([])
   const [hot, setHot] = useState<string | null>(null) // the sidebar item the pointer (or the keyboard) is on
+  const [lifted, setLifted] = useState(false) // the page has scrolled under the top bar
+  const top = useRef<HTMLSpanElement>(null)
   const signedIn = user?.signedIn ? user : null
   // the owner dashboard holds the admin and developer pages; its "back" goes to the public site, which is a different address
   const staffArea = area === 'Owner' || area === 'Admin' || area === 'Dev'
@@ -113,6 +116,13 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
     return () => window.removeEventListener('keydown', onKey)
   }, [shortcuts])
   useEffect(() => setMore(false), [pathname])
+  useEffect(() => {
+    const el = top.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver(([e]) => setLifted(!e.isIntersecting), { rootMargin: '-8px 0px 0px 0px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
 
   // where you were last, so the search box can offer it first
   useEffect(() => {
@@ -189,7 +199,8 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
       </aside>
 
       {/* ---------- top bar ---------- */}
-      <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-line bg-ink/90 px-5 md:px-10">
+      <span ref={top} aria-hidden="true" className="pointer-events-none absolute top-0 left-0 h-px w-px" />
+      <header className={cn('sticky top-0 z-30 flex h-[72px] items-center justify-between border-b bg-ink/90 px-5 transition-[box-shadow,border-color] duration-300 md:px-10', lifted ? 'border-line-strong shadow-[0_14px_30px_-18px_rgb(0_0_0/0.9)]' : 'border-line')}>
         <div className="flex items-center gap-4">
           <Go href={siteHref} aria-label="logoless home" className="md:hidden">
             <Logo className="h-8" />
@@ -229,7 +240,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
             The old page dims while the next one loads, and the new one eases in from that same dim, so nothing ever flashes. */}
         <motion.div
           key={pathname}
-          initial={reduced ? false : { opacity: 0.35, y: 8 }}
+          initial={reduced || (typeof document !== 'undefined' && document.documentElement.dataset.vtPage === '1') ? false : { opacity: 0.35, y: 8 }}
           animate={phase === 'exiting' ? { opacity: 0.35, y: 0 } : { opacity: 1, y: 0 }}
           transition={phase === 'exiting' ? { duration: 0.14, ease: 'easeOut' } : { duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
           className="page-root mx-auto max-w-[1160px]"
@@ -245,6 +256,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
           return (
             <TransitionLink key={it.href} href={it.href} aria-current={active ? 'page' : undefined} className={cn('flex h-16 flex-1 flex-col items-center justify-center gap-1 text-[11px] transition-colors', active ? 'text-paper' : 'text-paper/45')}>
               <span className="relative">
+                {active && <motion.span layoutId="tab-marker" aria-hidden="true" transition={SPRING_GLIDE} className="absolute -top-[13px] left-1/2 h-[3px] w-8 -translate-x-1/2 rounded-full bg-paper" />}
                 <Icon name={it.icon} aria-hidden="true" className="size-5" />
                 {(counts[it.href]?.n || counts[it.href]?.dot) && <span aria-hidden="true" className="absolute -top-1 -right-2 grid h-4 min-w-4 place-items-center rounded-full bg-paper px-1 text-[10px] font-medium text-ink">{counts[it.href]?.n ? (counts[it.href]!.n! > 9 ? '9+' : counts[it.href]!.n) : ''}</span>}
               </span>

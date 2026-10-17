@@ -7,6 +7,8 @@ import { BrandIcon } from '@/components/brand-icon'
 import { ActionButton, Card, Toggle } from '@/components/app/ui'
 import { Input, Select } from '@/components/ui/fields'
 import { type LinkItem, MAX_LINKS, PLATFORMS, safeUrl } from '@/lib/socials'
+import { useUnsavedGuard } from '@/hooks/use-unsaved-guard'
+import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 
 const same = (a: LinkItem[], b: LinkItem[]) => JSON.stringify(a) === JSON.stringify(b)
@@ -19,6 +21,7 @@ export function LinksEditor({ initial }: { initial: LinkItem[] }) {
   const [busy, setBusy] = useState<'save' | 'reset' | null>(null)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const dirty = !same(saved, links)
+  useUnsavedGuard(dirty)
 
   const set = (id: string, patch: Partial<LinkItem>) => setLinks((l) => l.map((x) => (x.id === id ? { ...x, ...patch } : x)))
   const move = (i: number, by: number) =>
@@ -41,6 +44,7 @@ export function LinksEditor({ initial }: { initial: LinkItem[] }) {
       setSaved(j.links)
       setLinks(j.links)
       setMsg({ ok: true, text: kind === 'reset' ? 'Back to the built-in list.' : 'Saved. The footer and the links page are updated.' })
+      toast.ok(kind === 'reset' ? 'Back to the built-in list' : 'Saved')
     } catch (e) {
       setMsg({ ok: false, text: e instanceof Error ? e.message : 'Could not save that.' })
     }

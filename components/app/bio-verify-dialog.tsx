@@ -5,9 +5,11 @@ import { Check, Copy, ExternalLink, Loader2, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BrandIcon } from '@/components/brand-icon'
+import { useDialog } from '@/hooks/use-dialog'
 import { useMounted } from '@/hooks/use-motion-prefs'
 import type { State } from '@/lib/bio-verify'
-import { EASE_OUT } from '@/lib/layout'
+import { SPRING_POP } from '@/lib/layout'
+import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 
 type P = State['platform']
@@ -53,17 +55,16 @@ function Dialog({ platform, handle, onClose, onChange }: { platform: P; handle: 
     }
   }, [platform])
 
+  const box = useDialog<HTMLDivElement>(true, onClose)
   useEffect(() => {
     void begin()
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [begin, onClose])
+  }, [begin])
 
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(code)
       setCopied(true)
+      toast.ok('Code copied')
       window.setTimeout(() => setCopied(false), 1600)
     } catch {
       /* the code is selectable, so it can still be copied by hand */
@@ -76,6 +77,7 @@ function Dialog({ platform, handle, onClose, onChange }: { platform: P; handle: 
       const r = j.result
       if (r?.status === 'verified') {
         setPhase({ kind: 'verified' })
+        toast.ok(`${LABEL[platform]} verified`)
         onChange()
       } else if (r?.status === 'unreadable') setPhase({ kind: 'unreadable', message: r.message ?? '' })
       else if (r?.status === 'not-found') setPhase({ kind: 'not-found', message: r.message ?? '' })
@@ -100,7 +102,7 @@ function Dialog({ platform, handle, onClose, onChange }: { platform: P; handle: 
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[90] grid place-items-center overflow-y-auto bg-black/75 p-4" onClick={onClose}>
-      <motion.div role="dialog" aria-modal="true" aria-label={`Verify ${LABEL[platform]}`} initial={{ opacity: 0, y: 20, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10 }} transition={{ duration: 0.3, ease: EASE_OUT }} onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-[28px] border border-white/12 bg-gradient-to-b from-[#17171b] to-[#0b0b0d] p-6 md:p-8">
+      <motion.div ref={box} role="dialog" aria-modal="true" aria-label={`Verify ${LABEL[platform]}`} initial={{ opacity: 0, y: 24, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.98, transition: { duration: 0.16 } }} transition={SPRING_POP} onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-[28px] border border-white/12 bg-gradient-to-b from-[#17171b] to-[#0b0b0d] p-6 md:p-8">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <span className="grid size-12 place-items-center rounded-full border border-line"><BrandIcon name={platform} className="size-6" /></span>

@@ -736,12 +736,182 @@ main:focus {
     animation: none;
   }
 }
-/* A page that arrives after its skeleton eases in instead of snapping. */
-@supports (transition-behavior: allow-discrete) {
-  .page-root > * {
-    transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-    @starting-style {
-      opacity: 0;
-    }
+
+/* ---------- page changes: the old page eases out while the new one eases in, on the graphics card ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  /* the page itself is what moves; the bars and menus around it stay exactly where they are */
+  html[data-vt-page] [data-vt-frame]:not(:has(.page-root)),
+  html[data-vt-page] .page-root {
+    view-transition-name: page; /* one name only: on a dashboard it is the page area, elsewhere the whole page */
+  }
+  html[data-vt-page]::view-transition-group(root) {
+    animation-duration: 0s;
+  }
+  html[data-vt-page]::view-transition-old(root),
+  html[data-vt-page]::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+  html[data-vt-page]::view-transition-group(page) {
+    animation-duration: 0.5s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  html[data-vt-page]::view-transition-old(page) {
+    animation: vt-page-out 0.2s cubic-bezier(0.4, 0, 1, 1) both;
+    mix-blend-mode: normal;
+  }
+  html[data-vt-page]::view-transition-new(page) {
+    animation: vt-page-in 0.46s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
+    mix-blend-mode: normal;
+  }
+}
+@keyframes vt-page-out {
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+@keyframes vt-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+/* ---------- the motion system: one easing, one set of speeds, used the same way everywhere ---------- */
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1); /* decelerates into place: most things */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1); /* accelerates away: things leaving */
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1); /* a touch of overshoot: things that pop */
+  --t-fast: 140ms;
+  --t-base: 240ms;
+  --t-slow: 480ms;
+}
+
+/* Press feedback. Pills and round buttons dip a little when pressed and spring back; cards dip less. Opt out with data-no-press. */
+button:not(:disabled):not([data-no-press]),
+[role='button']:not([data-no-press]),
+[role='tab'],
+summary,
+a[class*='rounded-full']:not([data-no-press]) {
+  transition-property: color, background-color, border-color, opacity, box-shadow, transform, scale, translate, outline-color, outline-offset;
+}
+
+button:not(:disabled):not([class*='transition']):not([data-no-press]),
+[role='button']:not([class*='transition']):not([data-no-press]),
+[role='tab']:not([class*='transition']) {
+  transition-duration: var(--t-base);
+  transition-timing-function: var(--ease-out);
+}
+button[class*='rounded-full']:not(:disabled):not([data-no-press]):active,
+a[class*='rounded-full']:not([data-no-press]):active,
+[role='tab']:active {
+  scale: 0.95;
+  transition-duration: 70ms;
+}
+button[class*='rounded-2xl']:not(:disabled):not([data-no-press]):active,
+button[class*='rounded-3xl']:not(:disabled):not([data-no-press]):active,
+button[class*='rounded-[']:not(:disabled):not([data-no-press]):active {
+  scale: 0.985;
+  transition-duration: 70ms;
+}
+
+/* The page area of a dashboard: its blocks rise in one after another, so the page builds instead of appearing all at once. */
+.page-root > * {
+  animation: rise-in var(--t-slow) var(--ease-out) both;
+}
+.page-root > :nth-child(2) { animation-delay: 45ms; }
+.page-root > :nth-child(3) { animation-delay: 90ms; }
+.page-root > :nth-child(4) { animation-delay: 135ms; }
+.page-root > :nth-child(5) { animation-delay: 180ms; }
+.page-root > :nth-child(6) { animation-delay: 225ms; }
+.page-root > :nth-child(n + 7) { animation-delay: 270ms; }
+/* a page that arrives through a view transition is already fading and rising as one piece */
+html[data-vt-page] .page-root > * {
+  animation: none;
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+/* a grid or list that builds itself: put .rise-list on the list, children rise in a quick cascade */
+.rise-list > * {
+  animation: rise-in var(--t-slow) var(--ease-out) both;
+}
+.rise-list > :nth-child(2) { animation-delay: 35ms; }
+.rise-list > :nth-child(3) { animation-delay: 70ms; }
+.rise-list > :nth-child(4) { animation-delay: 105ms; }
+.rise-list > :nth-child(5) { animation-delay: 140ms; }
+.rise-list > :nth-child(6) { animation-delay: 175ms; }
+.rise-list > :nth-child(7) { animation-delay: 210ms; }
+.rise-list > :nth-child(8) { animation-delay: 245ms; }
+.rise-list > :nth-child(n + 9) { animation-delay: 280ms; }
+@media (prefers-reduced-motion: reduce) {
+  .page-root > *,
+  .rise-list > * {
+    animation: none;
+  }
+}
+
+/* Pictures fade in once they have loaded instead of popping in. */
+.fade-img {
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-out);
+}
+.fade-img.is-loaded {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fade-img {
+    opacity: 1;
+    transition: none;
+  }
+}
+
+/* campaign covers rise in on first paint, left to right, row by row */
+.tile-rise {
+  animation: tile-rise 0.7s var(--ease-out) both;
+}
+@keyframes tile-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tile-rise {
+    animation: none;
+  }
+}
+
+/* In the base layer, so anything that sets its own outline or transition (outline-none, transition-colors) still wins. */
+@layer base {
+/* the keyboard focus ring glides in from a little further out, instead of switching on */
+  a,
+  button,
+  input:not([type='checkbox']):not([type='radio']),
+  select,
+  textarea,
+  [tabindex] {
+    outline: 2px solid transparent;
+    outline-offset: 6px;
+  }
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible {
+    outline-color: var(--paper);
+    outline-offset: 3px;
+  }
+  a,
+  input:not([type='checkbox']):not([type='radio']),
+  select,
+  textarea,
+  [tabindex] {
+    transition: outline-color var(--t-base) var(--ease-out), outline-offset var(--t-base) var(--ease-out);
   }
 }

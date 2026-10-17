@@ -5,9 +5,10 @@ import { X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BrandIcon } from '@/components/brand-icon'
+import { useDialog } from '@/hooks/use-dialog'
 import { useMounted } from '@/hooks/use-motion-prefs'
 import type { SocialPlatform } from '@/lib/accounts'
-import { EASE_OUT } from '@/lib/layout'
+import { SPRING_POP } from '@/lib/layout'
 import { buildLink, USERNAME_LINKS } from '@/lib/profile-style'
 
 const LABEL: Record<SocialPlatform, string> = { tiktok: 'TikTok', instagram: 'Instagram', youtube: 'YouTube' }
@@ -24,12 +25,10 @@ function Dialog({ platform, onClose, onAdded }: { platform: SocialPlatform; onCl
   const [error, setError] = useState('')
   const input = useRef<HTMLInputElement>(null)
   const spec = USERNAME_LINKS[platform]
+  const box = useDialog<HTMLFormElement>(true, onClose, { initial: 'none' })
   useEffect(() => {
     input.current?.focus()
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [])
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     const built = buildLink(platform, value)
@@ -38,7 +37,7 @@ function Dialog({ platform, onClose, onAdded }: { platform: SocialPlatform; onCl
   }
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[90] grid place-items-center bg-black/75 p-4" onClick={onClose}>
-      <motion.form onSubmit={submit} role="dialog" aria-modal="true" aria-label={`Add ${LABEL[platform]}`} initial={{ opacity: 0, y: 20, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10 }} transition={{ duration: 0.3, ease: EASE_OUT }} onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-[28px] border border-white/12 bg-gradient-to-b from-[#17171b] to-[#0b0b0d] p-6 md:p-8">
+      <motion.form ref={box} onSubmit={submit} role="dialog" aria-modal="true" aria-label={`Add ${LABEL[platform]}`} initial={{ opacity: 0, y: 24, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.98, transition: { duration: 0.16 } }} transition={SPRING_POP} onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-[28px] border border-white/12 bg-gradient-to-b from-[#17171b] to-[#0b0b0d] p-6 md:p-8">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <span className="grid size-12 place-items-center rounded-full border border-line"><BrandIcon name={platform} className="size-6" /></span>

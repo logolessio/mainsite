@@ -3,6 +3,7 @@
 import { motion, useInView, useMotionTemplate, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { ArrowUpRight, Pause, Play } from 'lucide-react'
 import { useRef } from 'react'
+import { FadeImg } from '@/components/ui/fade-img'
 import { usePreview } from '@/components/shell/preview-provider'
 import { useCampaignModal } from '@/components/campaign/campaign-modal'
 import { useDesign } from '@/components/shell/design-provider'
@@ -67,8 +68,7 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
         className="absolute inset-0 block overflow-hidden rounded-[22px] text-left outline-none focus-visible:ring-2 focus-visible:ring-paper"
       >
         {/* a fixed crop just past the edge hides any white border the artwork was exported with */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <FadeImg
           src={campaign.cover}
           alt=""
           loading={priority ? 'eager' : 'lazy'}

@@ -3,6 +3,7 @@
 import { Loader2, Lock } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useDialog } from '@/hooks/use-dialog'
 
 type Ask = { resolve: (v: string | null) => void; reason?: string }
 const EVENT = 'logoless:admin-secret'
@@ -48,6 +49,7 @@ export function SecretDialogHost() {
     ask?.resolve(v)
     setAsk(null)
   }
+  const box = useDialog<HTMLFormElement>(Boolean(ask), () => close(null), { initial: 'none' })
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -67,7 +69,7 @@ export function SecretDialogHost() {
   if (!ask || typeof document === 'undefined') return null
   return createPortal(
     <div className="fixed inset-0 z-[300] grid place-items-center bg-black/70 px-4" onMouseDown={() => close(null)} role="presentation">
-      <form onSubmit={submit} onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Admin password" className="w-full max-w-sm rounded-[2rem] border border-line-strong bg-ink p-7">
+      <form ref={box} onSubmit={submit} onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Admin password" className="w-full max-w-sm rounded-[2rem] border border-line-strong bg-ink p-7">
         <span className="grid size-11 place-items-center rounded-full bg-paper text-ink">
           <Lock className="size-5" />
         </span>

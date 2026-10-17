@@ -15,6 +15,8 @@ export function CampaignGrid({ campaigns }: { campaigns: Campaign[] }) {
           key={campaign.id}
           data-tour={i === 0 ? 'tile' : undefined}
           data-campaign={i === 0 ? campaign.id : undefined}
+          className={!scrollEffects && i < 12 ? 'tile-rise' : undefined}
+          style={!scrollEffects && i < 12 ? { animationDelay: `${(i % 4) * 55 + Math.floor(i / 4) * 70}ms` } : undefined}
           initial={scrollEffects ? 'hidden' : false}
           whileInView={scrollEffects ? 'show' : undefined}
           viewport={{ once: true, margin: '0px 0px -8% 0px' }}

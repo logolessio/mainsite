@@ -1,5 +1,7 @@
 'use client'
 
+import { useUnsavedGuard } from '@/hooks/use-unsaved-guard'
+import { toast } from '@/lib/toast'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Ban, Binary, Bug, Camera, Check, ChevronDown, CircleDot, CloudRain, Download, Droplets, Eye, EyeOff, Film, Flame, Flower2, Globe, ImagePlus, Leaf, Link2, Loader2, Palette, PartyPopper, Pencil, Plus, Rocket, Search, Snowflake, Sparkles, Star, Sun, Trash2, Tv, Undo2, User, Waves, Wind, X, Zap, type LucideIcon } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -149,6 +151,7 @@ export function ProfileEditor() {
       const names = res.newBadges.map((id) => BADGE_BY_ID[id]?.name).filter(Boolean)
       setNote(names.length ? `Saved. New badge${names.length > 1 ? 's' : ''}: ${names.join(', ')}` : 'Saved')
       setTimeout(() => setNote(''), 4500)
+      toast.ok(names.length ? `Saved. New badge: ${names.join(', ')}` : 'Profile saved')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save.')
     } finally {
@@ -156,6 +159,7 @@ export function ProfileEditor() {
     }
   }
 
+  useUnsavedGuard(Boolean(f && loaded && (pendingAvatar !== undefined || JSON.stringify(f) !== JSON.stringify(loaded.profile))))
   if (!f || !loaded) return <p className="text-mute">{error || 'Loading your profile…'}</p>
 
   const previewLinks = f.links.filter((l) => CLIPPING_PLATFORMS.includes(l.platform)).map((l) => ({ platform: l.platform, href: l.url, label: meta(l.platform)?.label ?? l.platform }))

@@ -2,7 +2,7 @@
 
 import { ImagePlus, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
 import { useTransitions } from '@/components/shell/transition-provider'
 import { Field, Input, Select, Textarea } from '@/components/ui/fields'
@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils'
 import { ActionButton, Card } from './ui'
 
 const PLATFORMS = ['tiktok', 'youtube', 'instagram'] as const
+const DRAFT = 'll:draft:campaign'
+const BLANK = { title: '', creator: '', type: 'Music', cover: '', coverPreview: '', platforms: ['tiktok', 'youtube', 'instagram'] as string[], summary: '', clipThis: '', offLimits: '', rate: '2.50', budget: '500', capPerPost: '', capPerUser: '', endsOn: '' }
 const usd = (n: number) => `$${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
 
 /**
@@ -20,26 +22,48 @@ const usd = (n: number) => `$${n.toLocaleString('en-US', { maximumFractionDigits
  */
 export function CampaignWizard({ balanceCents = 0 }: { balanceCents?: number }) {
   const { navigate } = useTransitions()
-  const [d, setD] = useState({
-    title: '',
-    creator: '',
-    type: 'Music',
-    cover: '',
-    coverPreview: '',
-    platforms: ['tiktok', 'youtube', 'instagram'] as string[],
-    summary: '',
-    clipThis: '',
-    offLimits: '',
-    rate: '2.50',
-    budget: '500',
-    capPerPost: '',
-    capPerUser: '',
-    endsOn: '',
-  })
+  const [d, setD] = useState(BLANK)
+  const [restored, setRestored] = useState(false)
+  const ready = useRef(false)
   const [more, setMore] = useState(false)
   const [busy, setBusy] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+  // What you have typed is kept on this device as you go, so a refresh or a wrong click never loses a campaign brief.
+  useEffect(() => {
+    try {
+      const v = JSON.parse(window.localStorage.getItem(DRAFT) ?? 'null') as Partial<typeof BLANK> | null
+      if (v && typeof v === 'object' && (v.title || v.summary || v.creator)) {
+        const pick = <K extends keyof typeof BLANK>(k: K): (typeof BLANK)[K] => (typeof v[k] === typeof BLANK[k] ? (v[k] as (typeof BLANK)[K]) : BLANK[k])
+        setD({ title: pick('title'), creator: pick('creator'), type: pick('type'), cover: pick('cover'), coverPreview: pick('coverPreview'), platforms: Array.isArray(v.platforms) ? v.platforms.filter((x) => typeof x === 'string').slice(0, 3) : BLANK.platforms, summary: pick('summary'), clipThis: pick('clipThis'), offLimits: pick('offLimits'), rate: pick('rate'), budget: pick('budget'), capPerPost: pick('capPerPost'), capPerUser: pick('capPerUser'), endsOn: pick('endsOn') })
+        setRestored(true)
+      }
+    } catch {
+      /* storage is blocked or the draft is unreadable: start fresh */
+    }
+    ready.current = true
+  }, [])
+  useEffect(() => {
+    if (!ready.current) return
+    const t = window.setTimeout(() => {
+      try {
+        if (d.title || d.summary || d.creator) window.localStorage.setItem(DRAFT, JSON.stringify(d))
+        else window.localStorage.removeItem(DRAFT)
+      } catch {
+        /* a private window just forgets */
+      }
+    }, 400)
+    return () => window.clearTimeout(t)
+  }, [d])
+  const startOver = () => {
+    try {
+      window.localStorage.removeItem(DRAFT)
+    } catch {
+      /* ignore */
+    }
+    setD(BLANK)
+    setRestored(false)
+  }
   const set = (k: keyof typeof d, v: string | string[]) => setD((s) => ({ ...s, [k]: v }))
   const rate = Number(d.rate) || 0
   const budget = Number(d.budget) || 0
@@ -73,6 +97,11 @@ export function CampaignWizard({ balanceCents = 0 }: { balanceCents?: number }) 
       })
       const j = (await res.json().catch(() => ({}))) as { error?: string }
       if (!res.ok) throw new Error(j.error ?? 'Could not send your campaign.')
+      try {
+        window.localStorage.removeItem(DRAFT)
+      } catch {
+        /* ignore */
+      }
       navigate('/brand/campaigns?requested=1')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not send your campaign.')
@@ -82,6 +111,14 @@ export function CampaignWizard({ balanceCents = 0 }: { balanceCents?: number }) 
 
   return (
     <div className="grid max-w-5xl items-start gap-6 lg:grid-cols-[1.4fr_1fr]">
+      {restored && (
+        <p role="status" className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-2xl border border-line-strong bg-white/[0.03] px-5 py-3 text-sm lg:col-span-2">
+          <span>We kept what you were writing.</span>
+          <button type="button" onClick={startOver} className="text-paper/70 underline underline-offset-4 transition-colors hover:text-paper">
+            Start over
+          </button>
+        </p>
+      )}
       <Card>
         <div className="grid gap-5">
           <div className="grid gap-5 sm:grid-cols-[1fr_auto]">

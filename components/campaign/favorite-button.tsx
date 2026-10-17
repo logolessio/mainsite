@@ -1,8 +1,10 @@
 'use client'
 
+import { motion } from 'framer-motion'
 import { Heart } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useTransitions } from '@/components/shell/transition-provider'
+import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 
 /** Heart a campaign to be told when it is paused, nearly out of budget, or ends. */
@@ -33,7 +35,10 @@ export function FavoriteButton({ id, className }: { id: string; className?: stri
     const next = !on
     setOn(next)
     const res = await fetch('/api/me/favorites', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ campaignId: id, on: next }) }).catch(() => null)
-    if (!res?.ok) setOn(!next)
+    if (!res?.ok) {
+      setOn(!next)
+      toast.error('Could not save that. Try again.')
+    } else toast.ok(next ? 'Favourited. We will tell you when it changes.' : 'Removed from favourites')
   }
 
   return (
@@ -45,7 +50,9 @@ export function FavoriteButton({ id, className }: { id: string; className?: stri
       title={signedIn || !known ? (on ? 'Favourited: we will tell you when it changes' : 'Favourite to get updates') : 'Log in to favourite'}
       className={cn('grid size-9 place-items-center rounded-full border border-line-strong transition-colors hover:bg-paper/10', className)}
     >
-      <Heart className={cn('size-4 transition-all', on && 'scale-110 fill-paper text-paper')} />
+      <motion.span key={String(on)} initial={on ? { scale: 0.6 } : false} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 600, damping: 14 }} className="grid place-items-center">
+        <Heart className={cn('size-4 transition-colors', on && 'fill-paper text-paper')} />
+      </motion.span>
     </button>
   )
 }

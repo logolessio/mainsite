@@ -4,6 +4,7 @@ import { useReducedMotion } from 'framer-motion'
 import { usePathname, useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { appArea } from '@/lib/app-areas'
+import { confirmLeave } from '@/hooks/use-unsaved-guard'
 import type { Campaign } from '@/lib/campaigns'
 
 type Phase = 'idle' | 'exiting'
@@ -51,10 +52,44 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
         else window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' })
         return
       }
+      if (!confirmLeave()) return // there is work in the page that has not been saved
       if (reduced) {
         router.push(href)
         return
       }
+
+      // Where the browser can do it, the page changes with a view transition: the old page stays up while the new one is on its way,
+      // then the two cross-fade on the graphics card. There is no wait before the click is answered and no empty moment in between.
+      const doc = document as Document & { startViewTransition?: (cb: () => Promise<void>) => { finished: Promise<unknown>; ready?: Promise<unknown>; updateCallbackDone?: Promise<unknown> } }
+      const html = document.documentElement
+      if (doc.startViewTransition && target !== pathname && html.dataset.vt !== '1' && html.dataset.vtPage !== '1' && !html.classList.contains('calm')) {
+        html.dataset.vtPage = '1'
+        let arrived = false
+        const run = doc.startViewTransition(async () => {
+          router.push(href)
+          await new Promise<void>((resolve) => {
+            const t0 = performance.now()
+            const poll = () => {
+              if (window.location.pathname === target) {
+                arrived = true
+                return resolve()
+              }
+              // a slow answer must not freeze the page: after a moment, carry on with the plain fade and the progress line
+              if (performance.now() - t0 > 1400) return resolve()
+              window.setTimeout(poll, 24) // a timer, not rAF, so a tab in the background cannot stall it
+            }
+            poll()
+          })
+          if (!arrived) setLeaving(pathname)
+        })
+        run.ready?.catch(() => {})
+        run.updateCallbackDone?.catch(() => {})
+        const clear = () => delete html.dataset.vtPage
+        run.finished.catch(() => {}).finally(clear)
+        window.setTimeout(clear, 2600) // never leave the flag set if the browser lost track of the transition
+        return
+      }
+
       setLeaving(pathname)
       if (timer.current) clearTimeout(timer.current)
       // inside a working area the page only dims while the next one loads: no wait before going

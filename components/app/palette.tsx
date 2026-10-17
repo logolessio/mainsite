@@ -5,13 +5,16 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowUpRight, Clock, CornerDownLeft, LogOut, Search, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon, type IconName } from '@/components/icons'
+import { useDialog } from '@/hooks/use-dialog'
 import { useTransitions } from '@/components/shell/transition-provider'
-import { EASE_OUT } from '@/lib/layout'
+import { EASE_OUT, SPRING_POP } from '@/lib/layout'
+import { toast } from '@/lib/toast'
 import { type QuickAction, actionsFor, scoreOf } from '@/lib/quick-actions'
 import { cn } from '@/lib/utils'
 import type { AppNavItem } from './nav-types'
 
-type Row = { key: string; group: 'Recent' | 'Do' | 'Go to'; label: string; icon: IconName | null; hint: string; keys: string; kbd?: string; run: () => void }
+type Row = { key: string; group: 'Recent' | 'Do' | 'Go to' | 'Campaigns'; label: string; icon: IconName | null; hint: string; keys: string; kbd?: string; cover?: string; run: () => void }
+type Camp = { id: string; title: string; creator: string; type: string; cover: string; rate: number }
 
 /**
  * ⌘K or /: one box for everything. With nothing typed it shows where you were last and the things people do most; typing finds a page
@@ -22,7 +25,9 @@ export function Palette({ open, onClose, items, area, onLogout, recents, handle,
   const [q, setQ] = useState('')
   const [i, setI] = useState(0)
   const [note, setNote] = useState('')
+  const [camps, setCamps] = useState<Camp[] | null>(null)
   const input = useRef<HTMLInputElement>(null)
+  const box = useDialog<HTMLDivElement>(open, onClose, { initial: 'none' })
 
   const rows = useMemo<Row[]>(() => {
     const byHref = new Map(items.map((it, n) => [it.href, { it, n }]))
@@ -38,6 +43,7 @@ export function Palette({ open, onClose, items, area, onLogout, recents, handle,
         if (a.run === 'profile-link') {
           if (!handle) return
           void navigator.clipboard?.writeText(`${window.location.origin}/@${handle}`).catch(() => {})
+          toast.ok('Profile link copied')
           return setNote('Profile link copied')
         }
         if (a.href) a.href.startsWith('http') ? window.location.assign(a.href) : navigate(a.href)
@@ -56,15 +62,30 @@ export function Palette({ open, onClose, items, area, onLogout, recents, handle,
     const all = [...actionsFor(area).map(act), ...pages, ...tail]
     const t = q.trim()
     if (!t) return [...recent, ...all]
-    return all
+    const found: Row[] = (camps ?? [])
+      .map((c) => ({ c, s: scoreOf(`${c.title} ${c.creator} ${c.type}`, t) }))
+      .filter((x) => x.s > 0 && t.length >= 2)
+      .sort((a, b) => b.s - a.s)
+      .slice(0, 5)
+      .map(({ c }) => ({ key: `c:${c.id}`, group: 'Campaigns' as const, label: c.title, icon: null, hint: `$${c.rate.toFixed(2)} per 1k`, keys: '', cover: c.cover, run: () => navigate(`/campaign/${c.id}`) }))
+    const search: Row[] =
+      area === 'Owner' && t.length >= 2
+        ? [
+            { key: 'sp', group: 'Do', label: `Find “${t}” in People`, icon: 'Users', hint: '', keys: t, run: () => navigate(`/admin/people?q=${encodeURIComponent(t)}`) },
+            { key: 'st', group: 'Do', label: `Find “${t}” in the site text`, icon: 'FileCheck2', hint: '', keys: t, run: () => navigate(`/admin/text?q=${encodeURIComponent(t)}`) },
+          ]
+        : []
+    const hits = all
       .map((r) => ({ r, s: scoreOf(`${r.label} ${r.keys}`, t) }))
       .filter((x) => x.s > 0) // only what matches; the small bonus below just puts actions ahead of pages on a tie
       .map((x) => ({ ...x, s: x.s + (x.r.group === 'Do' ? 0.5 : 0) }))
       .sort((a, b) => b.s - a.s)
       .map((x) => x.r)
-  }, [items, q, area, navigate, onLogout, recents, handle, onHelp])
+    return [...hits, ...found, ...search]
+  }, [items, q, area, navigate, onLogout, recents, handle, onHelp, camps])
 
   useEffect(() => {
+    if (open && camps === null) fetch('/api/search').then((r) => r.json()).then((j: { campaigns?: Camp[] }) => setCamps(j.campaigns ?? [])).catch(() => setCamps([]))
     if (open) {
       setQ('')
       setI(0)
@@ -109,13 +130,14 @@ export function Palette({ open, onClose, items, area, onLogout, recents, handle,
       {open && (
         <motion.div key="p" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="fixed inset-0 z-[70] flex items-start justify-center bg-black/60 px-4 pt-[12vh] md:pt-[16vh]" onMouseDown={onClose}>
           <motion.div
+            ref={box}
             role="dialog"
             aria-modal="true"
             aria-label="Search or jump"
-            initial={{ opacity: 0, y: -14, scale: 0.97 }}
+            initial={{ opacity: 0, y: -18, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.98 }}
-            transition={{ duration: 0.25, ease: EASE_OUT }}
+            exit={{ opacity: 0, y: -8, scale: 0.98, transition: { duration: 0.14 } }}
+            transition={SPRING_POP}
             onMouseDown={(e) => e.stopPropagation()}
             onKeyDown={onKey}
             className="w-full max-w-lg rounded-3xl border border-line-strong bg-[#08080a] shadow-[0_40px_100px_-20px_rgb(0_0_0/0.9)]"
@@ -149,7 +171,7 @@ export function Palette({ open, onClose, items, area, onLogout, recents, handle,
                   {!q.trim() && r.group !== rows[idx - 1]?.group && <p className="px-4 pt-3 pb-1.5 text-xs text-mute">{r.group === 'Do' ? 'Quick actions' : r.group === 'Recent' ? 'Recent' : 'Pages'}</p>}
                   <button id={`pal-${idx}`} role="option" aria-selected={idx === i} type="button" onMouseMove={() => i !== idx && setI(idx)} onClick={() => go(idx)} className={cn('relative flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 text-left text-[15px] transition-colors', idx === i ? 'text-paper' : 'text-paper/65')}>
                     {idx === i && <motion.span layoutId="palette-hl" transition={{ duration: 0.18, ease: EASE_OUT }} className="absolute inset-0 rounded-2xl bg-white/[0.08]" />}
-                    <span className="relative grid size-5 place-items-center">{r.group === 'Recent' ? <Clock aria-hidden="true" className="size-[18px]" /> : r.icon ? <Icon name={r.icon} aria-hidden="true" className="size-[18px]" /> : r.key === 'out' ? <LogOut className="size-[18px]" /> : <ArrowUpRight className="size-[18px]" />}</span>
+                    <span className="relative grid size-5 place-items-center">{r.cover ? <img src={r.cover} alt="" className="size-7 rounded-md object-cover" /> : r.group === 'Recent' ? <Clock aria-hidden="true" className="size-[18px]" /> : r.icon ? <Icon name={r.icon} aria-hidden="true" className="size-[18px]" /> : r.key === 'out' ? <LogOut className="size-[18px]" /> : <ArrowUpRight className="size-[18px]" />}</span>
                     <span className="relative flex-1">{r.label}</span>
                     {r.hint && r.hint !== 'Do' && r.hint !== 'Recent' && <span className="relative rounded-md border border-line px-1.5 py-0.5 font-mono text-[11px] text-mute">{r.hint}</span>}
                     {idx === i && <CornerDownLeft aria-hidden="true" className="relative size-4 text-mute" />}

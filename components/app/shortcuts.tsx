@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef } from 'react'
+import { useDialog } from '@/hooks/use-dialog'
 import { useTransitions } from '@/components/shell/transition-provider'
 import type { AppNavItem } from './nav-types'
 
@@ -24,6 +25,7 @@ export function Shortcuts({ items, area, help, setHelp, openSearch }: { items: A
   const { navigate } = useTransitions()
   const armed = useRef<ReturnType<typeof setTimeout> | null>(null)
   const primary = PRIMARY[area]
+  const box = useDialog<HTMLDivElement>(help, () => setHelp(false))
 
   useEffect(() => {
     const disarm = () => {
@@ -64,7 +66,7 @@ export function Shortcuts({ items, area, help, setHelp, openSearch }: { items: A
     <AnimatePresence>
       {help && (
         <motion.div key="help" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} onClick={() => setHelp(false)} className="fixed inset-0 z-[80] grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
-          <div role="dialog" aria-modal="true" aria-label="Keyboard shortcuts" onClick={(e) => e.stopPropagation()} className="max-h-[88dvh] w-full max-w-sm overflow-y-auto rounded-3xl border border-line-strong bg-ink/95 p-6">
+          <div ref={box} role="dialog" aria-modal="true" aria-label="Keyboard shortcuts" onClick={(e) => e.stopPropagation()} className="max-h-[88dvh] w-full max-w-sm overflow-y-auto rounded-3xl border border-line-strong bg-ink/95 p-6">
             <p className="text-lg">Shortcuts</p>
             <p className="mt-1 text-sm text-mute">Press g, then a number, to jump in {area}.</p>
             <ul className="mt-4 grid gap-1 text-[15px]">

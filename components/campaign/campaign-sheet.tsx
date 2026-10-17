@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { BrandIcon, PLATFORM_LABEL } from '@/components/brand-icon'
 import { useNavUser } from '@/components/shell/nav-user'
+import { FadeImg } from '@/components/ui/fade-img'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 import { type Campaign, usd } from '@/lib/campaigns'
 import { SITE } from '@/lib/site'
@@ -59,7 +60,7 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
   const cover = (
     <div className="aspect-square overflow-hidden rounded-[1.75rem] bg-white/10 max-md:size-24 max-md:shrink-0 max-md:rounded-3xl">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={campaign.cover} alt={`Cover of ${campaign.title} by ${campaign.creator}`} className="size-full scale-[1.07] object-cover" />
+      <FadeImg src={campaign.cover} alt={`Cover of ${campaign.title} by ${campaign.creator}`} className="size-full scale-[1.07] object-cover" />
     </div>
   )
   const more = (n: number) => (n > cap ? <li className="text-white/45">+{n - cap} more on the campaign page</li> : null)
