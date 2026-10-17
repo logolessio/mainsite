@@ -16,6 +16,7 @@ const ADMIN: AppNavItem[] = [
   { label: 'Email', href: '/admin/email', icon: 'Send', section: 'Communicate' },
   { label: 'Broadcast', href: '/admin/broadcast', icon: 'Megaphone', section: 'Communicate' },
   { label: 'Site text', href: '/admin/text', icon: 'FileCheck2', section: 'Site' },
+  { label: 'Socials and links', href: '/admin/socials', icon: 'Link2', section: 'Site' },
   { label: 'System', href: '/admin/logs', icon: 'BarChart3', match: ['/admin/audit', '/admin/keys', '/admin/settings', '/admin/security', '/admin/api', '/admin/developers'], section: 'System' },
 ]
 

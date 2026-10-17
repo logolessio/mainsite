@@ -42,7 +42,7 @@ function layout(l: Layout) {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#050506" style="background:#050506"><tr><td align="center" class="wrap" style="padding:36px 16px">
 <table role="presentation" width="520" cellpadding="0" cellspacing="0" style="width:100%;max-width:520px">
 ${banner}
-<tr><td align="center" style="padding:0 0 22px"><a href="${SITE_URL}" style="text-decoration:none"><img src="${LOGO}" width="120" height="63" alt="logoless" style="display:block;border:0;width:120px;height:63px;font:600 20px/63px ${SANS};color:#f3f2ee;text-align:center"></a></td></tr>
+<tr><td align="center" style="padding:0 0 22px"><a href="${SITE_URL}" style="text-decoration:none"><img src="${LOGO}" width="84" height="63" alt="logoless" style="display:block;border:0;width:84px;height:63px;font:600 20px/63px ${SANS};color:#f3f2ee;text-align:center"></a></td></tr>
 <tr><td class="card" bgcolor="#0b0b0d" style="background:#0b0b0d;background-image:linear-gradient(180deg,#141418 0%,#0b0b0d 38%);border:1px solid #232328;border-radius:28px;padding:42px 38px;text-align:center">
   <table role="presentation" align="center" cellpadding="0" cellspacing="0"><tr><td style="border:1px solid #2c2c31;border-radius:999px;padding:5px 13px;font:600 11px/1 ${SANS};letter-spacing:.14em;text-transform:uppercase;color:#a6a6ad">${esc(l.tag)}</td></tr></table>
   <h1 class="h1" style="margin:20px 0 10px;font:300 32px/1.12 ${SANS};letter-spacing:-.02em;color:#f3f2ee">${esc(l.title)}</h1>

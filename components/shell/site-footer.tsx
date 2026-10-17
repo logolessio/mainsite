@@ -1,5 +1,6 @@
 'use client'
 
+import { Globe } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { isInvitePath } from '@/lib/invite-shared'
 import { BrandIcon } from '@/components/brand-icon'
@@ -7,13 +8,14 @@ import { Logo } from '@/components/logo'
 import { Reveal } from '@/components/motion/reveal'
 import { CONTAINER } from '@/lib/layout'
 import { FOOTER, LEGAL_LINKS, SITE } from '@/lib/site'
+import type { LinkItem } from '@/lib/socials'
 import { TransitionLink } from './transition-link'
 import { T } from '@/components/shell/copy-provider'
 import { Feature } from './features-provider'
 
-const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin', '/@', '/u/']
+const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin', '/@', '/u/', '/links']
 
-export function SiteFooter() {
+export function SiteFooter({ links = [] }: { links?: LinkItem[] }) {
   const pathname = usePathname()
   if (HIDDEN.some((p) => pathname.startsWith(p)) || isInvitePath(pathname)) return null
 
@@ -27,15 +29,9 @@ export function SiteFooter() {
               <T>Brands, artists and streamers fund a brief. Clippers cut it, post it and are paid for every verified view.</T>
             </p>
             <div className="mt-8 flex items-center gap-5 text-paper/50">
-              {([
-                ['discord', 'Discord', SITE.social.discord],
-                ['x', 'X', SITE.social.x],
-                ['tiktok', 'TikTok', SITE.social.tiktok],
-                ['instagram', 'Instagram', SITE.social.instagram],
-                ['youtube', 'YouTube', SITE.social.youtube],
-              ] as const).map(([name, label, href]) => (
-                <a key={name} href={href} aria-label={label} className="transition-colors hover:text-paper">
-                  <BrandIcon name={name} className="size-5" />
+              {links.filter((l) => l.footer).map((l) => (
+                <a key={l.id} href={l.url} aria-label={l.label} {...(l.url.startsWith('mailto:') ? {} : { target: '_blank', rel: 'noopener noreferrer' })} className="transition-colors hover:text-paper">
+                  {l.platform === 'website' ? <Globe aria-hidden="true" className="size-5" /> : <BrandIcon name={l.platform} className="size-5" />}
                 </a>
               ))}
             </div>

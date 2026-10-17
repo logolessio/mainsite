@@ -7,10 +7,10 @@ export function Logo({ className }: { className?: string }) {
       data-logo
       src="/logo-sm.png"
       alt="logoless"
-      width={640}
-      height={336}
+      width={347}
+      height={260}
       decoding="async"
-      className={cn('block h-10 w-auto md:h-12', className)}
+      className={cn('block h-11 w-auto md:h-[52px]', className)}
     />
   )
 }

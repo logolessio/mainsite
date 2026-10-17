@@ -15,7 +15,7 @@ import { useTransitions } from './transition-provider'
 type C = { id: string; title: string; creator: string; type: string; cover: string; rate: number }
 type Row = { key: string; label: string; sub: string; group: 'Campaigns' | 'Pages'; href: string; cover?: string }
 // The dashboards have their own jump-to box, so this one stays out of them.
-const HIDDEN = ['/dashboard', '/brand', '/admin', '/onboarding', '/@', '/u/']
+const HIDDEN = ['/dashboard', '/brand', '/admin', '/onboarding', '/@', '/u/', '/links']
 const SHORTCUTS: [string, string][] = [
   ['⌘ K  or  /', 'Open search'],
   ['↑  ↓', 'Move through results'],

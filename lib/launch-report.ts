@@ -315,7 +315,7 @@ ${b.note ? `<p style="margin:12px 0 0;font:400 13px/1.55 ${SANS};color:#80808a">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#050506;font-size:1px;line-height:1px">${esc(r.preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#050506" style="background:#050506"><tr><td align="center" style="padding:32px 14px">
 <table role="presentation" width="640" cellpadding="0" cellspacing="0" style="width:100%;max-width:640px">
-<tr><td align="center" style="padding:0 0 20px"><a href="https://logoless.io" style="text-decoration:none"><img src="https://logoless.io/logo-sm.png" width="120" height="63" alt="logoless" style="display:block;border:0;width:120px;height:63px;font:600 20px/63px ${SANS};color:#f3f2ee"></a></td></tr>
+<tr><td align="center" style="padding:0 0 20px"><a href="https://logoless.io" style="text-decoration:none"><img src="https://logoless.io/logo-sm.png" width="84" height="63" alt="logoless" style="display:block;border:0;width:84px;height:63px;font:600 20px/63px ${SANS};color:#f3f2ee"></a></td></tr>
 <tr><td bgcolor="#0b0b0d" style="background:#0b0b0d;border:1px solid #232328;border-radius:24px;padding:38px 34px">
 <h1 style="margin:0 0 12px;font:300 34px/1.1 ${SANS};letter-spacing:-.02em;color:#f3f2ee">${esc(r.title)}</h1>
 <p style="margin:0;font:400 16px/1.6 ${SANS};color:#a2a2a9">${esc(r.intro)}</p>

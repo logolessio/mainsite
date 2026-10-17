@@ -16,7 +16,7 @@ import { SiteMenu } from './site-menu'
 import { useFeature } from './features-provider'
 import { useTransitions } from './transition-provider'
 
-const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin', '/@', '/u/']
+const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin', '/@', '/u/', '/links']
 export const TOUR_EVENT = 'logoless:tour'
 
 

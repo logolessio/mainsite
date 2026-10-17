@@ -6,7 +6,7 @@ export function LoginWithLogoless({ href = '#', dark = false }: { href?: string;
       className={`inline-flex h-12 items-center gap-3 rounded-full px-6 text-[15px] font-medium no-underline transition-opacity hover:opacity-90 ${dark ? 'border border-black/20 bg-black text-white' : 'bg-white text-black'}`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo-sm.png" alt="" width={44} height={23} className={dark ? 'h-5 w-auto' : 'h-5 w-auto invert'} />
+      <img src="/logo-sm.png" alt="" width={27} height={20} className={dark ? 'h-5 w-auto' : 'h-5 w-auto invert'} />
       Continue with logoless
     </a>
   )

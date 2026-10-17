@@ -17,6 +17,7 @@ import { featureState } from '@/lib/features'
 import { effectiveFont, fontById } from '@/lib/fonts'
 import { getOverrides } from '@/lib/copy'
 import { allSettings } from '@/lib/settings'
+import { getLinks } from '@/lib/socials-db'
 import { getSession } from '@/lib/session'
 import { SITE } from '@/lib/site'
 import './globals.css'
@@ -43,8 +44,8 @@ const FONT_CLASSES = [inter, tight, geistMono, geist, dmSans, manrope, sora, spa
 const baseMetadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: { default: 'logoless | views have value', template: '%s' },
-  openGraph: { title: 'logoless | views have value', siteName: 'logoless', type: 'website', images: ['/logo.png'] },
-  twitter: { card: 'summary_large_image' },
+  openGraph: { title: 'logoless | views have value', siteName: 'logoless', type: 'website', images: [{ url: '/og.png', width: 1200, height: 630, alt: 'logoless' }] },
+  twitter: { card: 'summary_large_image', images: ['/og.png'] },
   description:
     'Clip campaigns from artists, streamers and brands. Post the clip, get paid for every thousand views.',
 }
@@ -60,18 +61,18 @@ export const viewport: Viewport = {
 }
 
 /** What search engines are told about the site itself. Page-specific data (breadcrumbs, FAQs) is added on those pages. */
-const SITE_LD = {
+const SITE_LD = (sameAs: string[]) => ({
   '@context': 'https://schema.org',
   '@graph': [
-    { '@type': 'Organization', '@id': `${SITE.url}/#org`, name: SITE.name, url: SITE.url, logo: `${SITE.url}/logo.png`, email: SITE.emails.support },
+    { '@type': 'Organization', '@id': `${SITE.url}/#org`, name: SITE.name, url: SITE.url, logo: `${SITE.url}/logo.png`, email: SITE.emails.support, ...(sameAs.length ? { sameAs } : {}) },
     { '@type': 'WebSite', '@id': `${SITE.url}/#site`, name: SITE.name, url: SITE.url, publisher: { '@id': `${SITE.url}/#org` } },
   ],
-}
+})
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   // Site text can be edited by the owner, so every page is built per request with the current wording.
   await connection()
-  const [overrides, session, fs, design] = await Promise.all([getOverrides(), getSession(), featureState(), allSettings()])
+  const [overrides, session, fs, design, links] = await Promise.all([getOverrides(), getSession(), featureState(), allSettings(), getLinks()])
   const font = fontById(effectiveFont(design.design_font, design.design_font_mono))
   const isAdmin = session?.user?.role === 'admin'
   const isDev = session?.user?.roles?.includes('dev') === true
@@ -88,14 +89,14 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       className={`${FONT_CLASSES} bg-ink`}
     >
       <head>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_LD) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_LD(links.filter((l) => l.platform !== 'website' && l.url.startsWith('https://')).map((l) => l.url))) }} />
       </head>
       <body className="antialiased">
         <SkipLink />
         <FeaturesProvider dev={fs.dev} on={fs.on}>
           <DesignProvider value={{ coverZoom: design.design_cover_zoom === '1', coverBorder: design.design_cover_border === '1', coverBar: design.design_cover_bar === '1', coverInfo: design.design_cover_info === '1', scrollEffects: design.design_scroll_effects === '1', liquidLoader: design.design_liquid_loader === '1' }}>
           <CopyProvider overrides={overrides} isAdmin={isAdmin}>
-            <AppShell announcement={announcement} dots={design.bg_dots === '1'}>{blocked ? <DevGate email={session?.user?.email ?? null} /> : children}</AppShell>
+            <AppShell announcement={announcement} dots={design.bg_dots === '1'} links={links}>{blocked ? <DevGate email={session?.user?.email ?? null} /> : children}</AppShell>
             <AutoCopy />
             {isAdmin && <TextEditor />}
             {isAdmin && <SecretDialogHost />}

@@ -20,8 +20,9 @@ import { Tracker } from './tracker'
 import { AnnouncementBar } from './announcement-bar'
 import { StickyCta } from './sticky-cta'
 import { CampaignModalProvider } from '@/components/campaign/campaign-modal'
+import type { LinkItem } from '@/lib/socials'
 
-export function AppShell({ children, announcement = null, dots = false }: { children: React.ReactNode; announcement?: { text: string; href: string } | null; dots?: boolean }) {
+export function AppShell({ children, announcement = null, dots = false, links = [] }: { children: React.ReactNode; announcement?: { text: string; href: string } | null; dots?: boolean; links?: LinkItem[] }) {
   const calm = useSyncExternalStore(subscribeCalm, getCalm, () => false)
   return (
     <MotionConfig reducedMotion={calm ? 'always' : 'user'}>
@@ -43,7 +44,7 @@ export function AppShell({ children, announcement = null, dots = false }: { chil
         {announcement && <AnnouncementBar text={announcement.text} href={announcement.href} />}
         <PageFrame>
           {children}
-          <SiteFooter />
+          <SiteFooter links={links} />
         </PageFrame>
         </CampaignModalProvider>
         </NavUserProvider>
