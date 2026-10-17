@@ -6,6 +6,7 @@ import { Card, PageHeader } from '@/components/app/ui'
 import { db } from '@/lib/db'
 import { pageAdmin } from '@/lib/user'
 import { ViewChecks } from '@/components/admin/view-checks'
+import { Tabbed } from '@/components/admin/tabbed'
 
 export const metadata: Metadata = { title: 'Submissions | logoless', robots: { index: false } }
 
@@ -68,14 +69,21 @@ export default async function Page() {
       </div>
     )
 
+  const approved = rest.filter((r) => r.status === 'approved')
+  const rejected = rest.filter((r) => r.status === 'rejected')
+
   return (
     <>
       <PageHeader title="Submissions" sub="Open the clip, check the views on the platform, enter the verified number and approve. Paying is the same step." />
       <ViewChecks />
-      <h2 className="mb-3 font-display text-3xl">Waiting <span className="text-mute">{pending.length}</span></h2>
-      {list(pending, 'Queue is clear')}
-      <h2 className="mt-10 mb-3 font-display text-3xl">Recent</h2>
-      {list(rest, 'Nothing yet')}
+      <Tabbed
+        initial={pending.length > 0 ? 'waiting' : 'approved'}
+        tabs={[
+          { id: 'waiting', label: 'Waiting', count: pending.length, hot: true, node: list(pending, 'Queue is clear') },
+          { id: 'approved', label: 'Approved', count: approved.length, node: list(approved, 'Nothing approved yet') },
+          { id: 'rejected', label: 'Rejected', count: rejected.length, node: list(rejected, 'Nothing rejected') },
+        ]}
+      />
     </>
   )
 }

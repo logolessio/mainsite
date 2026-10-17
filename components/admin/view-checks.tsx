@@ -2,7 +2,7 @@
 
 import { Loader2, RefreshCw } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import { Card } from '@/components/app/ui'
+import { More } from '@/components/admin/more'
 
 type Summary = { at: number; checked: number; updated: number; unchanged: number; flagged: number; failed: number; manual: number; skipped?: string }
 type State = { last: Summary | null; due: number; held: number }
@@ -36,31 +36,30 @@ export function ViewChecks() {
   }
   const l = s?.last
   return (
-    <Card
-      title="View checks"
-      sub="About every two hours, the views of approved submissions on live campaigns are looked up again on YouTube and TikTok, and any increase is paid. Instagram does not allow this, so those are set by hand."
-      action={
+    <div className="mb-8 rounded-3xl border border-line bg-black/45 px-6 py-4">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <div className="min-w-0 flex-1 basis-72">
+          <p className="text-[15px]">
+            View checks{' '}
+            <span className="text-mute">
+              {!s ? 'loading…' : l ? `· last run ${ago(l.at)}` : '· has not run yet'}
+            </span>
+          </p>
+          {l && (
+            <p className="mt-0.5 text-[13px] text-mute">
+              Looked at {l.checked}: {l.updated} went up, {l.unchanged} unchanged, {l.manual} by hand (Instagram), {l.failed} could not be read.
+              {s && s.held > 0 && <span className="text-paper"> {s.held} held for a person.</span>}
+            </p>
+          )}
+        </div>
         <button type="button" onClick={run} disabled={busy} className="inline-flex h-9 items-center gap-2 rounded-full border border-line-strong px-4 text-sm transition-colors hover:bg-paper/10 disabled:opacity-40">
           {busy ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />} Check now
         </button>
-      }
-      className="mb-8"
-    >
-      {!s ? (
-        <p className="text-sm text-mute">Loading…</p>
-      ) : (
-        <p className="text-sm text-mute">
-          {l ? (
-            <>
-              Last run {ago(l.at)}: looked at {l.checked}, {l.updated} went up, {l.unchanged} unchanged, {l.manual} by hand (Instagram), {l.failed} could not be read.
-            </>
-          ) : (
-            'It has not run yet.'
-          )}{' '}
-          {s.held > 0 && <span className="text-paper">{s.held} held for a person (an unusual jump, or a video older than its campaign). They are listed in your notifications.</span>}
-        </p>
-      )}
+      </div>
       {msg && <p role="status" className="mt-3 text-sm">{msg}</p>}
-    </Card>
+      <More label="How it works" className="mt-1">
+        <p className="text-sm text-mute">About every two hours, the views of approved submissions on live campaigns are looked up again on YouTube and TikTok, and any increase is paid. Instagram does not allow this, so those are set by hand. A sudden jump, or a video older than its campaign, is held and listed in your notifications. The switch to pause all of this is under System, Settings.</p>
+      </More>
+    </div>
   )
 }

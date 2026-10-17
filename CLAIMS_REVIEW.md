@@ -47,5 +47,5 @@ I did not change any of these, because you asked me not to touch what you edited
 - **The company.** `lib/site.ts` still says "Logoless Inc." with the address "[Registered business address]" (both marked TODO). The Terms now leave the address out while it is a placeholder, but the entity name has to be a real registered company, and the governing-law clause refers to "the jurisdiction in which the company is registered".
 - **DMCA.** The Copyright page says to send notices to a "designated agent". To get the legal protection that goes with that, the agent has to be registered with the US Copyright Office.
 - **Terms of a stored balance.** Holding balances for brands and creators can count as money transmission or stored value in some places. The Terms now say a balance is not a bank account and is not insured, but a lawyer should say whether you need more (for example PayPal's own rules for marketplaces).
-- **Age.** The Terms require users to be 16, but sign-up does not ask for an age.
+- **Age.** The Terms require users to be 16. Sign-up now asks people to confirm they are 16 or older when they agree to the Terms, but nothing verifies it.
 - **Tax and consumer rules** for each country you launch in.

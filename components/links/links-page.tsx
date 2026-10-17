@@ -21,12 +21,12 @@ export function LinksPage({ links, tagline }: { links: LinkItem[]; tagline: stri
         <p className="mt-3 text-[17px] text-paper/55">{tagline}</p>
       </motion.div>
 
-      <ul className="mt-12 grid w-full gap-3" onPointerLeave={() => setHot(null)}>
+      <ul className="mt-12 grid w-full grid-cols-[minmax(0,1fr)] gap-3" onPointerLeave={() => setHot(null)}>
         {links.map((l, i) => {
           const lit = hot === l.id
           const main = i === 0
           return (
-            <motion.li key={l.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.18 + i * 0.055, ease: EASE }}>
+            <motion.li key={l.id} className="min-w-0" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.18 + i * 0.055, ease: EASE }}>
               <a
                 href={l.url}
                 {...(l.url.startsWith('https://logoless.io') ? {} : { target: '_blank', rel: 'noopener noreferrer' })}

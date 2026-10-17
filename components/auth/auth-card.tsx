@@ -248,7 +248,7 @@ export function AuthCard({ mode }: { mode: Mode }) {
                       {role === 'brand' ? 'Brand Terms' : 'Clipper Terms'}
                     </TransitionLink>{' '}
                     and{' '}
-                    <TransitionLink href="/legal/privacy" className="text-paper underline underline-offset-2">Privacy Policy</TransitionLink>.
+                    <TransitionLink href="/legal/privacy" className="text-paper underline underline-offset-2">Privacy Policy</TransitionLink>, and I am 16 or older.
                   </span>
                 </label>
               )}

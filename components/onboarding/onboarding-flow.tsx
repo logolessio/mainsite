@@ -701,7 +701,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                     <Link href="/legal/privacy" className="underline underline-offset-4 hover:text-paper">
                       Privacy Policy
                     </Link>
-                    .
+                    , and confirm you are 16 or older.
                   </p>
                 </>
               )}
