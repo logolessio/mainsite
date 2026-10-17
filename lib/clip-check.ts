@@ -25,7 +25,7 @@ async function oembed(platform: string, url: string): Promise<{ ok: true; title:
  * name the campaign, and was it posted from an account the clipper has added. It cannot hear the audio, so a person still
  * confirms that before anything is paid. Anything unclear goes to a person. Only a link that does not lead to a video is declined.
  */
-export async function checkClip(o: { platform: string; url: string; campaignTitle: string; creator: string; linked: { platform: string; url: string }[] }): Promise<Verdict> {
+export async function checkClip(o: { platform: string; url: string; campaignTitle: string; creator: string; linked: { platform: string; url: string }[]; /** the account name verified by a bio code for this platform, if any */ verified?: string; /** when true, only a verified account counts as a match */ needVerified?: boolean }): Promise<Verdict> {
   const checks: Check[] = []
   const meta = await oembed(o.platform, o.url)
 
@@ -47,11 +47,17 @@ export async function checkClip(o: { platform: string; url: string; campaignTitl
 
   const mine = o.linked.filter((l) => l.platform === o.platform).map((l) => norm(usernameOf(l.platform, l.url)).replace(/\s/g, ''))
   const who = norm(meta.authorId).replace(/\s/g, '')
-  if (mine.length && who) {
-    const ok = mine.some((m) => m === who || who.includes(m) || m.includes(who))
-    checks.push({ id: 'account', label: 'Posted from your account', state: ok ? 'pass' : 'fail', note: ok ? undefined : 'It looks like it came from an account that is not on your profile.' })
+  const proven = o.verified ? norm(o.verified).replace(/\s/g, '') : ''
+  const matches = (m: string) => m === who || who.includes(m) || m.includes(who)
+  if (who && proven && matches(proven)) {
+    checks.push({ id: 'account', label: 'Posted from your verified account', state: 'pass' })
+  } else if (mine.length && who) {
+    const ok = mine.some(matches)
+    if (!ok) checks.push({ id: 'account', label: 'Posted from your account', state: 'fail', note: 'It looks like it came from an account that is not on your profile.' })
+    else if (o.needVerified) checks.push({ id: 'account', label: 'Posted from your account', state: 'unknown', note: 'It matches an account you added. Verify that account with a code in its bio and clips from it are checked automatically.' })
+    else checks.push({ id: 'account', label: 'Posted from your account', state: 'pass' })
   } else {
-    checks.push({ id: 'account', label: 'Posted from your account', state: 'unknown', note: 'Add your accounts to your profile and we can check this.' })
+    checks.push({ id: 'account', label: 'Posted from your account', state: 'unknown', note: 'Add your accounts to your profile and verify them with a code in the bio, and we can check this.' })
   }
   checks.push({ id: 'audio', label: 'Uses the campaign audio', state: 'unknown', note: 'We cannot hear it automatically. A person confirms it before you are paid.' })
 

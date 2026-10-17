@@ -21,6 +21,7 @@ export default async function Page() {
             <Switch k="payouts_paused" label="Pause all withdrawals" hint="Use this first if you see anything strange with money. Balances stay safe." on={s.payouts_paused === '1'} danger />
             <Switch k="signups_paused" label="Pause new accounts" hint="Nobody new can create an account while this is on. People already signed up are not affected." on={s.signups_paused === '1'} danger />
             <Switch k="views_scan_paused" label="Pause the automatic view checks" hint="Stops the two-hourly look at views on YouTube and TikTok. Views then only change when someone sets them by hand." on={s.views_scan_paused === '1'} />
+            <Switch k="autoapprove_needs_verified" label="Only auto-approve clips from verified accounts" hint="On: a clip is approved by the first look only when it comes from an account the creator has proven with a code in its bio. Everything else waits for a person. Off: a matching linked account is enough." on={s.autoapprove_needs_verified === '1'} />
             <Switch k="submissions_paused" label="Pause new clip submissions" hint="Clippers cannot submit new links while this is on." on={s.submissions_paused === '1'} danger />
           </ul>
         </Card>

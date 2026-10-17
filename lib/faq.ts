@@ -24,6 +24,10 @@ export const FAQ: Record<'Clippers' | 'Brands' | 'Money' | 'Account', Faq[]> = {
       a: "Once we've approved your clip against the brief, we look up its views on the platform and pay for the verified ones. We check again while the campaign is running, so a clip that keeps growing keeps earning.",
     },
     {
+      q: 'How do I prove an account is mine?',
+      a: "Add the account to your profile, press Verify, and put the short code we give you in that account's bio. We read its public page to see the code, or for a site that will not let us (Instagram, for example) a person on our team checks it by hand. A verified account gets a tick on your public page, and clips from it can be approved automatically. Clips from other accounts are looked at by a person. You can take the code out of your bio once you are verified.",
+    },
+    {
       q: 'Why was my clip rejected?',
       a: "Usually it broke a rule in the brief, used something that's off limits, or the views didn't look genuine. The reason is shown on the clip. If you think we got it wrong, ask for a person to look again from the clip page.",
     },

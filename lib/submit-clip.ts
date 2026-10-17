@@ -1,4 +1,5 @@
 import { evaluateBadges } from './badges'
+import { verifiedHandles } from './bio-verify'
 import { checkClip, type Check } from './clip-check'
 import { db, nowSec, uid } from './db'
 import { HttpError } from './http'
@@ -62,7 +63,9 @@ export async function submitClip(user: { id: string; email: string }, campaignId
   } catch {
     /* no accounts added yet */
   }
-  const result = await checkClip({ platform, url: u.toString(), campaignTitle: c.title, creator: c.creator, linked })
+  const proven = await verifiedHandles(user.id, linked).catch(() => ({}))
+  const needVerified = (await getSetting('autoapprove_needs_verified')) === '1'
+  const result = await checkClip({ platform, url: u.toString(), campaignTitle: c.title, creator: c.creator, linked, verified: (proven as Record<string, string>)[platform], needVerified })
   const t = nowSec()
   if (result.verdict === 'approved') {
     await d.prepare("UPDATE submissions SET status = 'approved', reviewed_by = 'auto', reviewed_at = ?2 WHERE id = ?1").bind(subId, t).run()

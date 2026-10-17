@@ -1,3 +1,4 @@
+import { verifiedHandles } from './bio-verify'
 import { db } from './db'
 import { discordIdFor } from './discord/link'
 import { SITE } from './site'
@@ -31,6 +32,7 @@ export async function creatorSetup(user: { id: string; email: string }): Promise
     d.prepare("SELECT COUNT(*) AS n FROM payouts WHERE user_id = ?1 AND status = 'sent'").bind(user.id).first<{ n: number }>(),
     discordIdFor(user.id),
   ])
+  const verifiedAny = Object.keys(await verifiedHandles(user.id).catch(() => ({}))).length > 0
   return [
     {
       id: 'verify',
@@ -52,13 +54,13 @@ export async function creatorSetup(user: { id: string; email: string }): Promise
     },
     {
       id: 'accounts',
-      title: 'Link your accounts',
-      short: 'The TikTok, YouTube or Instagram accounts you post from.',
-      why: 'Linking lets us match your submissions to you. You choose whether they show on your public page.',
-      how: ['Open Profile, then Linked accounts.', 'Pick a platform and paste the link to your account.', 'Choose whether it shows on your public page.'],
-      done: Boolean(profile && profile.links_json !== '[]'),
+      title: 'Link and verify an account',
+      short: 'Prove the TikTok, YouTube or Instagram account you post from is yours.',
+      why: 'A short code in your bio proves the account is yours. Clips from a verified account can be checked automatically, and you can show a tick on your public page.',
+      how: ['Open Profile, then Linked accounts, and add the account by its username.', 'Press Verify and copy the code.', 'Put the code in that account’s bio, save, and press Check my bio. If the site cannot read it, ask the team to check.'],
+      done: verifiedAny,
       href: '/dashboard/accounts',
-      cta: 'Link accounts',
+      cta: 'Verify an account',
     },
     {
       id: 'paypal',

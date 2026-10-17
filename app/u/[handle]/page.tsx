@@ -6,6 +6,7 @@ import { Logo } from '@/components/logo'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { db } from '@/lib/db'
 import { profileByHandle, profileStats } from '@/lib/profile'
+import { verifiedHandles } from '@/lib/bio-verify'
 import { CLIPPING_PLATFORMS, LINK_PLATFORMS } from '@/lib/profile-style'
 import { getSession } from '@/lib/session'
 
@@ -49,11 +50,12 @@ export default async function ProfilePage({ params }: Props) {
   }
 
   const links: ProfileLinkOut[] = []
+  const proven = show.links ? await verifiedHandles(p.userId, p.view.links) : {}
   // Only the accounts a member clips from, and only when they chose to show them.
   for (const l of p.view.links) {
     const meta = LINK_PLATFORMS.find((m) => m.id === l.platform)
     if (!meta || !CLIPPING_PLATFORMS.includes(l.platform)) continue
-    links.push({ platform: l.platform, href: l.url, label: meta.label })
+    links.push({ platform: l.platform, href: l.url, label: meta.label, verified: Boolean((proven as Record<string, string>)[l.platform]) })
   }
 
   return (

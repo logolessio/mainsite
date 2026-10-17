@@ -1,7 +1,7 @@
 'use client'
 
 import { animate, motion, useInView } from 'framer-motion'
-import { CalendarDays, Flag, Pencil, ShieldCheck } from 'lucide-react'
+import { BadgeCheck, CalendarDays, Flag, Pencil, ShieldCheck } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { BadgeStar } from '@/components/badges/badge-star'
 import { BrandIcon } from '@/components/brand-icon'
@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils'
 import { CardEffectLayer } from './card-effect'
 import { ProfileTheme } from './profile-theme'
 
-export type ProfileLinkOut = { platform: string; href: string; label: string }
+export type ProfileLinkOut = { platform: string; href: string; label: string; verified?: boolean }
 
 export function bannerStyle(kind: 'preset' | 'image' | 'color', value: string): React.CSSProperties {
   if (kind === 'image') return { background: `center / cover no-repeat url(${value})` }
@@ -193,6 +193,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
                     >
                       <span aria-hidden="true" className="absolute inset-y-0 -left-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-[220%]" />
                       <BrandIcon name={l.platform} className="relative size-5" />
+                      {l.verified && <BadgeCheck aria-label="Verified" className="absolute right-0.5 bottom-0.5 size-3.5 rounded-full bg-black text-emerald-300" />}
                     </a>
                   </li>
                 ))}

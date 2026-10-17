@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { RoleEditor } from '@/components/admin/role-editor'
+import { AdminButton } from '@/components/admin/ui'
+import { Badge } from '@/components/app/table'
+import { labelOf, statesFor } from '@/lib/bio-verify'
 import { DeleteAccountButton } from '@/components/admin/delete-account-button'
 import { AdjustMoney, MessageBox, Moderation, Recognise } from '@/components/admin/user-actions'
 import { ActionLink } from '@/components/app/action-link'
@@ -29,7 +32,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     .bind(id)
     .first<U>()
   if (!u) notFound()
-  const [owners, roles, session, stats, prof, discord, bot, ver] = await Promise.all([ownerEmails(), rolesOf(u.id), getSession(), profileStats(u.id), u.handle ? profileByHandle(u.handle) : null, discordIdOf(u.id), botReady(), isVerified(u.id, u.email)])
+  const [owners, roles, session, stats, prof, discord, bot, ver, accounts] = await Promise.all([ownerEmails(), rolesOf(u.id), getSession(), profileStats(u.id), u.handle ? profileByHandle(u.handle) : null, discordIdOf(u.id), botReady(), isVerified(u.id, u.email), statesFor(u.id)])
   const isOwner = owners.includes(u.email.toLowerCase())
   const viewerIsOwner = owners.includes((session?.user?.email ?? '').toLowerCase())
   const links: ProfileLinkOut[] = []
@@ -71,6 +74,43 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               {!isOwner && <DeleteAccountButton id={u.id} email={u.email} />}
             </div>
           </Card>
+          {accounts.length > 0 && (
+            <Card title="Linked accounts" sub="Proven by a code in the bio. Check a bio by hand when the site could not read it, or take a verification away.">
+              <ul className="divide-y divide-line">
+                {accounts.map((a) => (
+                  <li key={a.platform} className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0">
+                    <div className="min-w-0 flex-1 basis-56">
+                      <p className="flex flex-wrap items-center gap-2 text-[15px]">
+                        {labelOf(a.platform)} {a.handle && <a href={a.profileUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-mute underline underline-offset-4 hover:text-paper">@{a.handle}</a>}
+                        {a.status === 'verified' && <Badge tone="good">verified{a.by === 'team' ? ' by the team' : ''}</Badge>}
+                        {a.status === 'waiting' && <Badge tone="warn">waiting for you</Badge>}
+                        {a.status === 'code' && <Badge>code issued</Badge>}
+                        {a.status === 'none' && <Badge>not started</Badge>}
+                      </p>
+                      {a.code && a.status !== 'verified' && <p className="mt-1 text-xs text-mute">Look for <span className="font-mono text-paper select-all">{a.code}</span> in the bio.</p>}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(a.status === 'waiting' || a.status === 'code') && (
+                        <AdminButton variant="solid" url="/api/admin/account-verify" data={{ userId: u.id, platform: a.platform, action: 'approve' }} confirm={`Mark @${a.handle} on ${labelOf(a.platform)} as verified? Only do this if you can see ${a.code} in its bio.`}>
+                          Approve
+                        </AdminButton>
+                      )}
+                      {a.status === 'waiting' && (
+                        <AdminButton url="/api/admin/account-verify" data={{ userId: u.id, platform: a.platform, action: 'decline' }}>
+                          Not there
+                        </AdminButton>
+                      )}
+                      {(a.status === 'verified' || a.status === 'code') && (
+                        <AdminButton variant="danger" url="/api/admin/account-verify" data={{ userId: u.id, platform: a.platform, action: 'remove' }} confirm="Take this verification away?">
+                          Remove
+                        </AdminButton>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
           <Card title="Message" sub="Send them a notification, and optionally an email.">
             <MessageBox id={u.id} />
           </Card>

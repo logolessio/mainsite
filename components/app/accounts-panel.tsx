@@ -1,11 +1,13 @@
 'use client'
 
-import { Check, Loader2 } from 'lucide-react'
+import { BadgeCheck, Check, Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { BrandIcon, type BrandName } from '@/components/brand-icon'
 import type { SocialPlatform } from '@/lib/accounts'
 import { usernameOf, type ProfileLink } from '@/lib/profile-style'
+import type { State } from '@/lib/bio-verify'
 import { AddAccountDialog } from './add-account-dialog'
+import { BioVerifyDialog } from './bio-verify-dialog'
 import { Badge } from './table'
 import { ActionButton, Card, Toggle } from './ui'
 
@@ -22,6 +24,14 @@ export function AccountsPanel() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [shown, setShown] = useState(false) // whether strangers can see these on the public profile
+  const [states, setStates] = useState<State[]>([])
+  const [verifying, setVerifying] = useState<SocialPlatform | null>(null)
+
+  const loadStates = () =>
+    fetch('/api/me/accounts/verify', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { accounts?: State[] } | null) => j?.accounts && setStates(j.accounts))
+      .catch(() => {})
 
   useEffect(() => {
     fetch('/api/me/profile', { cache: 'no-store' })
@@ -32,6 +42,7 @@ export function AccountsPanel() {
         setShown(Boolean(j.profile.show?.links))
       })
       .catch(() => setError('Could not load your accounts.'))
+    void loadStates()
   }, [])
 
   const save = async (next: ProfileLink[]) => {
@@ -42,6 +53,7 @@ export function AccountsPanel() {
     setBusy(false)
     if (!res?.ok || !j.profile) return setError(j.error ?? 'Could not save that.')
     setLinks(j.profile.links)
+    void loadStates()
   }
 
   const setVisible = async (next: boolean) => {
@@ -62,14 +74,20 @@ export function AccountsPanel() {
         <ul className="divide-y divide-line">
           {ACCOUNTS.map((a) => {
             const l = has(a.name)
+            const st = states.find((x) => x.platform === a.name)
+            const verified = st?.status === 'verified'
             return (
               <li key={a.name} className="flex flex-wrap items-center gap-4 py-4 first:pt-0 last:pb-0">
                 <span className="grid size-11 shrink-0 place-items-center rounded-full border border-line"><BrandIcon name={a.name as BrandName} className="size-5" /></span>
-                <span className="min-w-0 flex-1">
+                <span className="min-w-0 flex-1 basis-40">
                   <span className="block font-medium">{a.label}</span>
                   <span className="block truncate text-sm text-mute">{l ? `@${usernameOf(a.name, l.url).replace(/^https?:\/\/[^/]+\/@?/, '')}` : a.body}</span>
+                  {l && st?.note && !verified && <span className="mt-1 block text-xs text-amber-200/90">{st.note}</span>}
                 </span>
-                {l && <Badge tone="good"><Check className="mr-1 size-3" />Linked</Badge>}
+                {l && (verified ? <Badge tone="good"><BadgeCheck className="mr-1 size-3.5" />Verified</Badge> : st?.status === 'waiting' ? <Badge tone="warn">Waiting for the team</Badge> : <Badge><Check className="mr-1 size-3" />Linked</Badge>)}
+                {l && !verified && st?.handle && (
+                  <ActionButton onClick={() => setVerifying(a.name)}>{st.status === 'code' || st.status === 'waiting' ? 'Continue verifying' : 'Verify'}</ActionButton>
+                )}
                 {l ? (
                   <ActionButton variant="ghost" disabled={busy} onClick={() => save(links.filter((x) => x.platform !== a.name))}>
                     {busy && <Loader2 className="size-4 animate-spin" />} Remove
@@ -90,8 +108,15 @@ export function AccountsPanel() {
           <Toggle label="Show clipping accounts on my public profile" checked={shown} onChange={setVisible} />
         </div>
         <p className="mt-5 border-t border-line pt-4 text-xs leading-relaxed text-mute">
-          These are the accounts you post from. Our team checks every submitted clip against them, so only submit clips you posted yourself. You choose above whether the public can see them.</p>
+          These are the accounts you post from. Verify one by putting a short code in its bio: verified accounts get a tick on your public page, and clips from them can be checked automatically instead of waiting for a person. Only submit clips you posted yourself. You choose above whether the public can see them.</p>
       </Card>
+      <BioVerifyDialog
+        platform={verifying}
+        handle={states.find((x) => x.platform === verifying)?.handle ?? ''}
+        open={verifying !== null}
+        onClose={() => setVerifying(null)}
+        onChange={() => void loadStates()}
+      />
       <AddAccountDialog
         platform={dialog}
         open={dialog !== null}

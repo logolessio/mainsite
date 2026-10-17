@@ -384,6 +384,11 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
     if (/UNIQUE/i.test(e instanceof Error ? e.message : '')) throw new HttpError(409, 'That username is taken.')
     throw e
   }
+  if (changed.includes('links')) {
+    // an account that was removed or changed is no longer verified
+    const { prune } = await import('./bio-verify')
+    await prune(user.id, parse<{ platform: string; url: string }[]>(next.links_json, [])).catch(() => {})
+  }
   return { profile: next, changed }
 }
 

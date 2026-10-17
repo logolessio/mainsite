@@ -7,6 +7,7 @@ import { Card, PageHeader, StatCard } from '@/components/app/ui'
 import { LockdownButton } from '@/components/admin/lockdown'
 import { OverviewQueue } from '@/components/admin/overview-queue'
 import { Pill } from '@/components/admin/ui'
+import { waitingChecks } from '@/lib/bio-verify'
 import { money } from '@/lib/format'
 import { SITE } from '@/lib/site'
 import { counts, funds, health, paypalStatus } from '@/lib/admin-stats'
@@ -18,12 +19,13 @@ export const metadata: Metadata = { title: 'Overview | logoless', robots: { inde
 
 export default async function Page() {
   await pageAdmin()
-  const [f, c, h, sb, inbox, st] = await Promise.all([funds(), counts(), health(), paypalStatus(), newInquiryCount(), allSettings()])
+  const [f, c, h, sb, inbox, st, bios] = await Promise.all([funds(), counts(), health(), paypalStatus(), newInquiryCount(), allSettings(), waitingChecks()])
   const locked = st.payouts_paused === '1' && st.submissions_paused === '1' && st.signups_paused === '1'
   // the requests, clips and withdrawals are decided right on this page; these are the rest that need a look
   const todo = [
     { label: 'Paid, ready to launch', n: c.readyToLaunch ?? 0, href: '/admin/campaigns' },
     { label: 'New messages and reports', n: inbox, href: '/admin/inbox' },
+    { label: 'Bio checks to do', n: bios, href: '/admin/people' },
     { label: 'Flagged accounts', n: c.flagged ?? 0, href: '/admin/people?f=risk' },
   ].filter((t) => t.n > 0)
   const attention = h.filter((x) => x.state !== 'ok')

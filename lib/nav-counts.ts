@@ -1,3 +1,4 @@
+import { waitingChecks } from './bio-verify'
 import { db, nowSec } from './db'
 import { SITE } from './site'
 
@@ -54,6 +55,7 @@ export async function navCounts(area: 'creator' | 'brand' | 'owner', userId: str
     put('/admin/submissions', r?.submissions)
     put('/admin/payouts', r?.payouts)
     put('/admin/inbox', r?.inbox)
+    put('/admin/people', await waitingChecks())
     return out
   } catch {
     return {}
