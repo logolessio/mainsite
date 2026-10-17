@@ -46,6 +46,9 @@ export function FavoriteButton({ id, className }: { id: string; className?: stri
       type="button"
       onClick={toggle}
       aria-pressed={on}
+      data-key="f"
+      data-key-label="Favourite it"
+      aria-keyshortcuts="f"
       aria-label={on ? 'Remove from favourites' : 'Add to favourites'}
       title={signedIn || !known ? (on ? 'Favourited: we will tell you when it changes' : 'Favourite to get updates') : 'Log in to favourite'}
       className={cn('grid size-9 place-items-center rounded-full border border-line-strong transition-colors hover:bg-paper/10', className)}

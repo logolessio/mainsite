@@ -10,7 +10,6 @@ export type FeatureDef = {
 }
 
 export const FEATURES: FeatureDef[] = [
-  { id: 'spotlight', name: 'Spotlight search', category: 'Discover', path: '/', description: 'Press ⌘K (or /) anywhere on the public site to search every live campaign and jump to any page. Press ? for the shortcut list.' },
   { id: 'reels', name: 'Reels: swipe through campaigns', category: 'Discover', path: '/reels', description: 'A full-screen, swipeable way to browse live campaigns, one at a time. The track plays as you scroll, with the rate, pool and a one-tap Clip this button. Keyboard friendly (↑ ↓, M for sound). Also adds a "Swipe through campaigns" button on the home page.' },
   { id: 'leaderboard', name: 'Clipper leaderboard', category: 'Discover', path: '/leaderboard', description: 'A public ranking of the top clippers by verified views, for people who have chosen to show their views. Gold, silver and bronze podium.' },
   { id: 'live-numbers', name: 'Live numbers on the home page', category: 'Trust', path: '/', description: 'A band under the campaigns with real totals: live campaigns, paid out so far, clips posted. It stays hidden until the numbers are worth showing.' },
@@ -25,7 +24,6 @@ export const FEATURES: FeatureDef[] = [
   { id: 'ending-soon', name: 'Ending soon row', category: 'Discover', path: '/', description: 'A short row under the filters on the home page with the campaigns that have 25% or less of their pool left, so creators know which ones to hurry for. It stays hidden when none are close to ending.' },
   { id: 'top-creators', name: 'Top creators for brands', category: 'Trust', path: '/brand/overview', description: 'A card on the brand dashboard listing the five creators who earned the most across that brand\'s campaigns, with their views and what they were paid, so brands can see who is carrying a campaign.' },
   { id: 'earn-goal', name: 'Earnings goal', category: 'Account', path: '/dashboard/overview', description: 'Creators set a goal for the month on their dashboard and see a bar fill as they earn. The goal is private and can be changed or cleared at any time.' },
-  { id: 'dash-shortcuts', name: 'Dashboard keyboard shortcuts', category: 'Comfort', path: '/dashboard', description: 'Press g and then a number (g 1, g 2, …) in any dashboard to jump to that item in the sidebar. Press ? to see the list. Never fires while typing in a field.' },
 ]
 
 export const FEATURE_BY_ID = Object.fromEntries(FEATURES.map((f) => [f.id, f])) as Record<string, FeatureDef>

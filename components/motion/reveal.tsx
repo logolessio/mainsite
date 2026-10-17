@@ -4,14 +4,15 @@ import { motion, type HTMLMotionProps } from 'framer-motion'
 import { useDesign } from '@/components/shell/design-provider'
 import { EASE_OUT } from '@/lib/layout'
 
-type Props = HTMLMotionProps<'div'> & { delay?: number; x?: number; y?: number; blur?: boolean }
+type Props = HTMLMotionProps<'div'> & { delay?: number; x?: number; y?: number; blur?: boolean; as?: 'div' | 'li' }
 
 /** Fades and slides content in once it scrolls into view. */
-export function Reveal({ delay = 0, x: _x = 0, y: _y = 0, blur: _blur = false, children, ...rest }: Props) {
+export function Reveal({ delay = 0, x: _x = 0, y: _y = 0, blur: _blur = false, as = 'div', children, ...rest }: Props) {
   const { scrollEffects } = useDesign()
-  if (!scrollEffects) return <motion.div initial={false} {...rest}>{children}</motion.div>
+  const Tag = (as === 'li' ? motion.li : motion.div) as typeof motion.div
+  if (!scrollEffects) return <Tag initial={false} {...rest}>{children}</Tag>
   return (
-    <motion.div
+    <Tag
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true, margin: '0px 0px -8% 0px' }}
@@ -19,7 +20,7 @@ export function Reveal({ delay = 0, x: _x = 0, y: _y = 0, blur: _blur = false, c
       {...rest}
     >
       {children}
-    </motion.div>
+    </Tag>
   )
 }
 

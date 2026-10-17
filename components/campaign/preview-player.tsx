@@ -15,11 +15,14 @@ export function PreviewPlayer({ campaign }: { campaign: Campaign }) {
   const playing = playingId === campaign.id
   const fill = useRef<HTMLDivElement>(null)
   const time = useRef<HTMLSpanElement>(null)
+  const slider = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!playing) {
       if (fill.current) fill.current.style.clipPath = 'inset(0 100% 0 0)'
       if (time.current) time.current.textContent = '0:00'
+      slider.current?.setAttribute('aria-valuenow', '0')
+      slider.current?.setAttribute('aria-valuetext', 'Not playing')
       return
     }
     let raf = 0
@@ -29,6 +32,10 @@ export function PreviewPlayer({ campaign }: { campaign: Campaign }) {
       if (time.current) {
         const t = Math.floor(p * duration())
         time.current.textContent = `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`
+      }
+      if (slider.current) {
+        slider.current.setAttribute('aria-valuenow', String(Math.round(p * 100)))
+        slider.current.setAttribute('aria-valuetext', `${Math.floor(p * duration())} of ${Math.floor(duration())} seconds`)
       }
       raf = requestAnimationFrame(tick)
     }
@@ -42,17 +49,33 @@ export function PreviewPlayer({ campaign }: { campaign: Campaign }) {
         type="button"
         onClick={() => toggle(campaign.id, campaign.previewUrl)}
         aria-label={playing ? `Pause preview of ${campaign.title}` : `Play preview of ${campaign.title}`}
+        data-key="p"
+        data-key-label="Play or pause the preview"
+        aria-keyshortcuts="p"
         className="grid size-14 shrink-0 place-items-center rounded-full bg-paper text-ink transition-transform hover:scale-105 active:scale-95"
       >
         {playing ? <Pause className="size-5 fill-ink" /> : <Play className="size-5 translate-x-px fill-ink" />}
       </button>
       <div
+        ref={slider}
         role="slider"
         tabIndex={0}
         aria-label="Preview position"
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={0}
+        aria-valuetext="Not playing"
+        onKeyDown={(e) => {
+          if (!playing) return
+          const step = e.key === 'ArrowRight' || e.key === 'ArrowUp' ? 0.05 : e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? -0.05 : e.key === 'PageUp' ? 0.2 : e.key === 'PageDown' ? -0.2 : 0
+          if (step) {
+            e.preventDefault()
+            seek(Math.min(1, Math.max(0, progress() + step)))
+          } else if (e.key === 'Home' || e.key === 'End') {
+            e.preventDefault()
+            seek(e.key === 'Home' ? 0 : 0.999)
+          }
+        }}
         onClick={(e) => {
           if (!playing) return
           const r = e.currentTarget.getBoundingClientRect()

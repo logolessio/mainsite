@@ -131,8 +131,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
             const u = byId.get(p.id)
             if (!u) return null
             return (
-              <li key={p.id} className="border-b border-line last:border-0">
-                <Link href={`/admin/people/${p.id}`} className="group flex items-center gap-4 px-5 py-4 transition-colors duration-300 hover:bg-white/[0.04]">
+              <li key={p.id} data-kb-row className="border-b border-line last:border-0">
+                <Link data-kb-focus href={`/admin/people/${p.id}`} className="group flex items-center gap-4 px-5 py-4 transition-colors duration-300 hover:bg-white/[0.04]">
                   {p.avatar ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={p.avatar} alt="" className="size-11 shrink-0 rounded-full object-cover" />

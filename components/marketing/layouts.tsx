@@ -19,11 +19,9 @@ export function SplitBeat({ title, children, list }: { n?: string; label?: strin
           {list && (
             <ul className="mt-10 max-w-xl border-b border-line">
               {list.map((l, i) => (
-                <Reveal key={l} delay={0.15 + i * 0.05} blur={false}>
-                  <li className="border-t border-line py-4 text-lg text-paper/85">
+                <Reveal as="li" key={l} delay={0.15 + i * 0.05} blur={false} className="border-t border-line py-4 text-lg text-paper/85">
                     <T>{l}</T>
-                  </li>
-                </Reveal>
+                  </Reveal>
               ))}
             </ul>
           )}
@@ -39,13 +37,11 @@ export function StatRow({ stats }: { stats: { value: string; label: string; note
     <section className={cn(CONTAINER, 'py-20 md:py-32')}>
       <ul className={cn('grid gap-12 md:gap-10', stats.length === 4 ? 'md:grid-cols-4' : stats.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3')}>
         {stats.map((s, i) => (
-          <Reveal key={s.label} delay={i * 0.08} blur={false}>
-            <li className="border-t border-line pt-6">
+          <Reveal as="li" key={s.label} delay={i * 0.08} blur={false} className="border-t border-line pt-6">
               <p className="font-display text-[clamp(4.5rem,9vw,8.5rem)] leading-[0.9] tracking-[-0.05em]">{s.value}</p>
               <p className="mt-6 text-xl"><T>{s.label}</T></p>
               {s.note && <p className="mt-2 max-w-[28ch] text-[15px] leading-snug text-paper/50"><T>{s.note}</T></p>}
-            </li>
-          </Reveal>
+            </Reveal>
         ))}
       </ul>
     </section>
@@ -66,8 +62,7 @@ export function Steps({ title, steps }: { eyebrow?: string; title: string; steps
         </div>
         <ol className="border-b border-line md:col-span-6 md:col-start-7">
           {steps.map((s, i) => (
-            <Reveal key={s.title} delay={Math.min(i, 3) * 0.05} blur={false}>
-              <li className="border-t border-line py-9 md:py-11">
+            <Reveal as="li" key={s.title} delay={Math.min(i, 3) * 0.05} blur={false} className="border-t border-line py-9 md:py-11">
                 <h3 className="font-display text-3xl leading-[1.05] tracking-[-0.03em] md:text-4xl"><T>{s.title}</T></h3>
                 <p className="mt-4 max-w-lg text-pretty text-lg leading-relaxed text-paper/60"><T>{s.body}</T></p>
                 {s.detail && (
@@ -80,8 +75,7 @@ export function Steps({ title, steps }: { eyebrow?: string; title: string; steps
                     ))}
                   </p>
                 )}
-              </li>
-            </Reveal>
+              </Reveal>
           ))}
         </ol>
       </div>

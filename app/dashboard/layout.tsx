@@ -8,11 +8,11 @@ export default async function Layout({ children }: { children: React.ReactNode }
     <AppFrame
       area="Creator"
       items={[
-        { label: 'Overview', href: '/dashboard', icon: 'LayoutDashboard', exact: true, match: ['/dashboard/setup'] },
-        { label: 'Submissions', href: '/dashboard/submissions', icon: 'Clapperboard' },
-        { label: 'Earnings', href: '/dashboard/earnings', icon: 'CircleDollarSign', match: ['/dashboard/payouts'] },
-        { label: 'Profile', href: '/dashboard/profile', icon: 'UserCheck', match: ['/dashboard/achievements', '/dashboard/accounts', '/dashboard/saved', '/dashboard/recap'] },
-        { label: 'Settings', href: '/dashboard/settings', icon: 'Settings', match: ['/dashboard/notifications'] },
+        { key: 'o', label: 'Overview', href: '/dashboard', icon: 'LayoutDashboard', exact: true, match: ['/dashboard/setup'] },
+        { key: 's', label: 'Submissions', href: '/dashboard/submissions', icon: 'Clapperboard' },
+        { key: 'e', label: 'Earnings', href: '/dashboard/earnings', icon: 'CircleDollarSign', match: ['/dashboard/payouts'] },
+        { key: 'p', label: 'Profile', href: '/dashboard/profile', icon: 'UserCheck', match: ['/dashboard/achievements', '/dashboard/accounts', '/dashboard/saved', '/dashboard/recap'] },
+        { key: 't', label: 'Settings', href: '/dashboard/settings', icon: 'Settings', match: ['/dashboard/notifications'] },
       ]}
     >
       {children}

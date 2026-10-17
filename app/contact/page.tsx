@@ -39,8 +39,7 @@ export default function Page() {
         <p className="mb-8 font-display text-3xl tracking-[-0.03em] md:text-5xl"><T>Or email us</T></p>
         <ul className="border-b border-line">
           {WAYS.map(([k, hint, mail], i) => (
-            <Reveal key={k} delay={Math.min(i, 4) * 0.05}>
-              <li className="border-t border-line">
+            <Reveal as="li" key={k} delay={Math.min(i, 4) * 0.05} className="border-t border-line">
                 <a href={`mailto:${mail}`} className="group grid items-baseline gap-2 py-7 md:grid-cols-12 md:gap-10 md:py-9">
                   <span className="font-display text-3xl tracking-[-0.03em] md:col-span-5 md:text-[2.6rem]"><T>{k}</T></span>
                   <span className="text-lg text-paper/50 md:col-span-3 md:col-start-7"><T>{hint}</T></span>
@@ -49,8 +48,7 @@ export default function Page() {
                     <ArrowUpRight aria-hidden="true" className="size-4 text-paper/50 transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-paper" />
                   </span>
                 </a>
-              </li>
-            </Reveal>
+              </Reveal>
           ))}
         </ul>
       </section>

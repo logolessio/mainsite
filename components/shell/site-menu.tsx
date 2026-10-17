@@ -5,6 +5,7 @@ import { ArrowUpRight } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef } from 'react'
+import { useDialog } from '@/hooks/use-dialog'
 import { BadgeStar } from '@/components/badges/badge-star'
 import { BADGE_BY_ID } from '@/lib/badges-defs'
 import { BANNER_PRESETS } from '@/lib/profile-style'
@@ -24,6 +25,7 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
   const pathname = usePathname()
   const { user } = useNavUser()
   const first = useRef<HTMLAnchorElement>(null)
+  const box = useDialog<HTMLElement>(open, onClose, { initial: 'none', inert: false })
   const board = useFeature('leaderboard')
   const reels = useFeature('reels')
   const status = useFeature('status-page')
@@ -50,7 +52,9 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
           <motion.aside
             key="menu"
             id="site-menu"
+            ref={box}
             role="dialog"
+            aria-modal="true"
             aria-label="Menu"
             initial={{ x: '100%' }}
             animate={{ x: 0, transition: { duration: 0.5, ease: [0.32, 0.72, 0, 1] } }}

@@ -181,22 +181,23 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
           {showLinks && (
             <Section title="Clipping accounts">
               <ul className="flex flex-wrap gap-2">
-                {links.map((l) => (
+                {links.map((l) => {
+                  const Tag = (preview ? 'span' : 'a') as 'a'
+                  return (
                   <li key={l.platform}>
-                    <a
-                      href={preview ? undefined : l.href}
-                      target="_blank"
-                      rel="noopener noreferrer nofollow ugc"
-                      aria-label={l.label}
+                    <Tag
+                      {...(preview ? { role: 'img' } : { href: l.href, target: '_blank', rel: 'noopener noreferrer nofollow ugc' })}
+                      aria-label={preview ? l.label : `${l.label}${l.verified ? ', verified' : ''} (opens in a new tab)`}
                       title={l.label}
                       className="group relative grid size-11 place-items-center overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.06] transition-all duration-200 hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.14] active:scale-95"
                     >
                       <span aria-hidden="true" className="absolute inset-y-0 -left-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-[220%]" />
                       <BrandIcon name={l.platform} className="relative size-5" />
-                      {l.verified && <BadgeCheck aria-label="Verified" className="absolute right-0.5 bottom-0.5 size-3.5 rounded-full bg-black text-emerald-300" />}
-                    </a>
+                      {l.verified && <BadgeCheck aria-hidden="true" className="absolute right-0.5 bottom-0.5 size-3.5 rounded-full bg-black text-emerald-300" />}
+                    </Tag>
                   </li>
-                ))}
+                  )
+                })}
               </ul>
             </Section>
           )}

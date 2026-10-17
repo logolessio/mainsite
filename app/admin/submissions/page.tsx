@@ -47,7 +47,8 @@ export default async function Page() {
     ) : (
       <div className="grid gap-3">
         {items.map((r) => (
-          <Card key={r.id}>
+          <div key={r.id} data-kb-row>
+          <Card>
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="min-w-0">
                 <p className="flex flex-wrap items-center gap-2">
@@ -58,13 +59,14 @@ export default async function Page() {
                 <p className="mt-1 text-xs text-mute">
                   {r.platform} · submitted {when(r.created_at)} · {r.views_verified.toLocaleString()} verified views · ${(r.earned_cents / 100).toFixed(2)} earned
                 </p>
-                <a href={r.url} target="_blank" rel="noopener noreferrer nofollow" className="mt-1 inline-block max-w-full truncate text-sm underline underline-offset-4 hover:text-paper">
+                <a href={r.url} target="_blank" rel="noopener noreferrer nofollow" data-key="o" data-key-label="Open the clip" aria-keyshortcuts="o" className="mt-1 inline-block max-w-full truncate text-sm underline underline-offset-4 hover:text-paper">
                   {r.url}
                 </a>
               </div>
               <ReviewControls id={r.id} status={r.status} views={r.views_verified} rateCents={r.rate_cents} />
             </div>
           </Card>
+          </div>
         ))}
       </div>
     )

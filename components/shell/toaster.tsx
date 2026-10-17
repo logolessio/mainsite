@@ -3,6 +3,8 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Check, CircleAlert, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { useMounted } from '@/hooks/use-motion-prefs'
 import { TOAST_EVENT, type ToastInput } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 
@@ -13,6 +15,7 @@ type Item = ToastInput & { id: number }
  * own (or with a swipe down). Screen readers hear each one. At most three are shown.
  */
 export function Toaster() {
+  const mounted = useMounted()
   const [items, setItems] = useState<Item[]>([])
   const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>())
   const next = useRef(1)
@@ -48,8 +51,10 @@ export function Toaster() {
     }
   }, [arm])
 
-  return (
-    <div aria-live="polite" role="status" className="pointer-events-none fixed inset-x-0 bottom-24 z-[250] flex flex-col items-center gap-2 px-4 md:bottom-8">
+  if (!mounted) return null
+  // a direct child of <body>, so a dialog that freezes the page behind it leaves the messages readable
+  return createPortal(
+    <div data-keep-live aria-live="polite" role="status" className="pointer-events-none fixed inset-x-0 bottom-24 z-[250] flex flex-col items-center gap-2 px-4 md:bottom-8">
       <AnimatePresence initial={false}>
         {items.map((t) => (
           <motion.div
@@ -77,6 +82,7 @@ export function Toaster() {
           </motion.div>
         ))}
       </AnimatePresence>
-    </div>
+    </div>,
+    document.body,
   )
 }

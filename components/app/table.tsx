@@ -52,7 +52,7 @@ export function DataTable<T extends { id: string }>({
         {rows.length > 0 && (
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="border-b border-line/60 transition-colors last:border-0 hover:bg-white/[0.025]">
+              <tr key={r.id} data-kb-row className="border-b border-line/60 transition-colors last:border-0 hover:bg-white/[0.025]">
                 {columns.map((c) => (
                   <td key={c.key} className={cn('px-6 py-4', c.className)}>
                     {c.render(r)}

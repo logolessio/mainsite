@@ -13,7 +13,7 @@ import { TransitionLink } from './transition-link'
 import { T } from '@/components/shell/copy-provider'
 import { Feature } from './features-provider'
 
-const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin', '/@', '/u/', '/links']
+const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin', '/owner', '/dev', '/@', '/u/', '/links']
 
 export function SiteFooter({ links = [] }: { links?: LinkItem[] }) {
   const pathname = usePathname()
@@ -40,7 +40,7 @@ export function SiteFooter({ links = [] }: { links?: LinkItem[] }) {
           <div className="grid grid-cols-2 gap-x-6 gap-y-14 sm:grid-cols-4 md:col-span-8">
             {Object.entries(FOOTER).map(([group, links], i) => (
               <Reveal key={group} delay={0.06 * (i + 1)}>
-                <h3 className="text-[15px] text-paper/40"><T>{group}</T></h3>
+                <h2 className="text-[15px] text-paper/56"><T>{group}</T></h2>
                 <ul className="mt-5 flex flex-col gap-3 text-[15px]">
                   {links.map((l) => (
                     <li key={l.href}>
@@ -62,7 +62,7 @@ export function SiteFooter({ links = [] }: { links?: LinkItem[] }) {
               </Reveal>
             ))}
             <Reveal delay={0.3}>
-              <h3 className="text-[15px] text-paper/40">Legal</h3>
+              <h2 className="text-[15px] text-paper/56">Legal</h2>
               <ul className="mt-5 flex flex-col gap-3 text-[15px]">
                 {LEGAL_LINKS.slice(0, 4).map((l) => (
                   <li key={l.href}>

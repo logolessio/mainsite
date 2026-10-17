@@ -54,6 +54,7 @@ export const LEGAL_LINKS = [
   { label: 'External Links', href: '/legal/external-links' },
   { label: 'Copyright / DMCA', href: '/legal/dmca' },
   { label: 'Refund Policy', href: '/legal/refunds' },
+  { label: 'Accessibility', href: '/legal/accessibility' },
 ]
 
 export const FOOTER = {

@@ -3,13 +3,15 @@
 import { X } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { getCalm, getLargeText, hasCalmChoice, setCalm } from '@/lib/calm'
+import { getCalm, getContrast, getLargeText, getUnderline, hasCalmChoice, setCalm } from '@/lib/calm'
 
 /** Applies the saved choice to the page. Renders nothing. */
 export function CalmApply() {
   useEffect(() => {
     document.documentElement.classList.toggle('calm', getCalm())
     document.documentElement.classList.toggle('text-large', getLargeText())
+    document.documentElement.classList.toggle('contrast', getContrast())
+    document.documentElement.classList.toggle('underline-links', getUnderline())
   }, [])
   return null
 }

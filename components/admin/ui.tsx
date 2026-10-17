@@ -19,6 +19,7 @@ export function AdminButton({
   secret,
   className,
   onDone,
+  hotkey,
 }: {
   url: string
   data: Record<string, unknown>
@@ -31,6 +32,8 @@ export function AdminButton({
   secret?: string | boolean
   className?: string
   onDone?: (j: unknown) => void
+  /** A single letter that presses this button while its row has keyboard focus. */
+  hotkey?: string
 }) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
@@ -87,9 +90,10 @@ export function AdminButton({
           </button>
         </span>
       ) : (
-        <button type="button" disabled={busy} onClick={() => (ask ? setOpen(true) : run())} className={cls}>
+        <button type="button" disabled={busy} onClick={() => (ask ? setOpen(true) : run())} className={cls} {...(hotkey ? { 'data-key': hotkey, 'data-key-label': typeof children === 'string' ? children : undefined, 'aria-keyshortcuts': hotkey } : {})}>
           {busy && <Loader2 className="size-3 animate-spin" />}
           {children}
+          {hotkey && <kbd aria-hidden="true" className="kb-hint ml-1 rounded border border-current/30 px-1 font-mono text-[10px] opacity-70">{hotkey}</kbd>}
         </button>
       )}
       {error && <span role="alert" className="max-w-64 text-[11px] text-signal">{error}</span>}

@@ -7,7 +7,6 @@ import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '@/components/icons'
 import { Logo } from '@/components/logo'
-import { useFeature } from '@/components/shell/features-provider'
 import { useNavUser } from '@/components/shell/nav-user'
 import { NotificationBell } from '@/components/shell/notifications'
 import { TransitionLink } from '@/components/shell/transition-link'
@@ -17,7 +16,8 @@ import { OWNER_URL, SITE_URL_FOR_STAFF } from '@/lib/staff-nav'
 import { cn } from '@/lib/utils'
 import { type AppNavItem, isActive } from './nav-types'
 import { Palette } from './palette'
-import { PRIMARY, Shortcuts } from './shortcuts'
+import { setKeyMap } from '@/lib/keys'
+import { PRIMARY } from './primary'
 import { useNavCounts } from './use-nav-counts'
 import type { NavCounts } from '@/lib/nav-counts'
 
@@ -68,7 +68,7 @@ function SideLink({ it, n, active, lit, c, hint, onEnter }: { it: AppNavItem; n:
       <Icon name={it.icon} aria-hidden="true" className="relative size-[18px] shrink-0" />
       <span className="relative">{it.label}</span>
       <Badge c={c} lit={lit} />
-      {hint && n < 9 && !c && <kbd aria-hidden="true" className="relative ml-auto rounded border border-line px-1 font-mono text-[10px] text-paper/40 opacity-0 transition-opacity group-hover:opacity-100">g {n + 1}</kbd>}
+      {hint && !c && <kbd aria-hidden="true" className="relative ml-auto rounded border border-line px-1 font-mono text-[10px] text-paper/56 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">g {it.key ?? (n < 9 ? n + 1 : '')}</kbd>}
     </TransitionLink>
   )
 }
@@ -80,9 +80,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
   const { user } = useNavUser()
   const { phase } = useTransitions()
   const reduced = useReducedMotion()
-  const shortcuts = useFeature('dash-shortcuts')
   const [palette, setPalette] = useState(false)
-  const [help, setHelp] = useState(false)
   const [more, setMore] = useState(false)
   const [recents, setRecents] = useState<string[]>([])
   const [hot, setHot] = useState<string | null>(null) // the sidebar item the pointer (or the keyboard) is on
@@ -98,7 +96,11 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
   const logout = () => signOut({ callbackUrl: '/' })
   const counts = useNavCounts(area, pathname, Boolean(signedIn))
   const primary = PRIMARY[area]
-  const openSearch = useCallback(() => setPalette(true), [])
+  // tell the keyboard layer what this area's menu is, so "g" and a letter can go to each page
+  useEffect(() => {
+    setKeyMap({ area, items: items.map((it) => ({ label: it.label, href: it.href, key: it.key })), primary })
+    return () => setKeyMap(null)
+  }, [area, items, primary])
 
   useEffect(() => {
     const typing = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))
@@ -106,15 +108,14 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
         setPalette((v) => !v)
-      } else if (e.key === '/' && !shortcuts && !e.metaKey && !e.ctrlKey && !e.altKey && !typing(e.target)) {
-        // with the shortcuts switched off, "/" still opens search: it is the one every site has
+      } else if (e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey && !typing(e.target) && !document.querySelector('[aria-modal="true"]')) {
         e.preventDefault()
         setPalette(true)
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [shortcuts])
+  }, [])
   useEffect(() => setMore(false), [pathname])
   useEffect(() => {
     const el = top.current
@@ -151,7 +152,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
         </div>
         <p className="px-6 pt-7 pb-3 text-[13px] text-paper/40">{area}</p>
         <nav className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-3 pb-4">
-          <ul className="grid gap-0.5" onPointerLeave={() => setHot(null)} onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && setHot(null)}>
+          <ul data-kb-menu className="grid gap-0.5" onPointerLeave={() => setHot(null)} onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && setHot(null)}>
             {items.map((it, n) => {
               const active = isActive(pathname, it)
               const heading = it.section && it.section !== items[n - 1]?.section
@@ -159,7 +160,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
               return (
                 <li key={it.href}>
                   {heading && <p className="px-4 pt-5 pb-1.5 text-[12px] text-paper/35">{it.section}</p>}
-                  <SideLink it={it} n={n} active={active} lit={lit} c={counts[it.href]} hint={shortcuts} onEnter={() => setHot(it.href)} />
+                  <SideLink it={it} n={n} active={active} lit={lit} c={counts[it.href]} hint onEnter={() => setHot(it.href)} />
                 </li>
               )
             })}
@@ -222,7 +223,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
               <Plus aria-hidden="true" className="size-4" /> {primary.label}
             </TransitionLink>
           )}
-          <button type="button" onClick={() => setPalette(true)} aria-label="Search or jump" className="grid size-10 place-items-center rounded-full border border-line text-paper/60 transition-colors hover:text-paper md:hidden">
+          <button type="button" onClick={() => setPalette(true)} aria-label="Search or jump" aria-keyshortcuts="/" className="grid size-10 place-items-center rounded-full border border-line text-paper/60 transition-colors hover:text-paper md:hidden">
             <Search aria-hidden="true" className="size-4" />
           </button>
           {primary && (
@@ -235,7 +236,6 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
       </header>
 
       <main tabIndex={-1} className="px-5 pt-10 pb-32 md:px-10 md:pt-14 md:pb-24">
-        <p aria-live="polite" role="status" className="sr-only">{current.label}</p>
         {/* only the page changes between pages: the sidebar and the bars stay exactly where they are.
             The old page dims while the next one loads, and the new one eases in from that same dim, so nothing ever flashes. */}
         <motion.div
@@ -311,8 +311,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
         )}
       </AnimatePresence>
 
-      {shortcuts && <Shortcuts items={items} area={area} help={help} setHelp={setHelp} openSearch={openSearch} />}
-      <Palette open={palette} onClose={() => setPalette(false)} items={items} area={area} onLogout={logout} recents={recents} handle={signedIn?.profile.handle} onHelp={() => (setPalette(false), setHelp(true))} />
+      <Palette open={palette} onClose={() => setPalette(false)} items={items} area={area} onLogout={logout} recents={recents} handle={signedIn?.profile.handle} onHelp={() => (setPalette(false), window.dispatchEvent(new Event('logoless:help')))} />
     </div>
   )
 }

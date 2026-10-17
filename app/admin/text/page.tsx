@@ -75,8 +75,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
           ) : (
             <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {pages.results.map((p) => (
-                <li key={p.page}>
-                  <Link href={`/admin/text?page=${encodeURIComponent(p.page)}`} className="group flex items-center gap-4 rounded-3xl border border-line bg-black/45 px-5 py-4 transition-colors duration-300 hover:border-line-strong hover:bg-white/[0.04]">
+                <li key={p.page} data-kb-row>
+                  <Link data-kb-focus href={`/admin/text?page=${encodeURIComponent(p.page)}`} className="group flex items-center gap-4 rounded-3xl border border-line bg-black/45 px-5 py-4 transition-colors duration-300 hover:border-line-strong hover:bg-white/[0.04]">
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[16px]">{p.page === '/' ? 'Home page' : p.page || 'Everywhere'}</span>
                       <span className="mt-0.5 block text-[13px] text-mute">

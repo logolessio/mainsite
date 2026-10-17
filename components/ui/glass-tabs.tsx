@@ -18,7 +18,7 @@ export function GlassTabs({ tabs, value, onChange, label, className }: { tabs: G
   // scrollable overflow and a scrollbar would flash in and out. So the glass clips, and a plain inner row scrolls.
   return (
     <div className={cn('glass-liquid mx-auto w-fit max-w-full rounded-full', className)}>
-      <div role={onChange ? 'tablist' : undefined} aria-label={label} className="no-scrollbar flex items-center gap-1 overflow-x-auto overflow-y-hidden p-1.5">
+      <div role={onChange ? 'tablist' : 'navigation'} {...(onChange ? {} : { 'data-kb-tabs': '' })} aria-label={label} className="no-scrollbar flex items-center gap-1 overflow-x-auto overflow-y-hidden p-1.5">
         {tabs.map((t) => {
           const on = t.id === value
           const inner = (
@@ -33,7 +33,7 @@ export function GlassTabs({ tabs, value, onChange, label, className }: { tabs: G
               {inner}
             </Link>
           ) : (
-            <button key={t.id} type="button" role="tab" aria-selected={on} onClick={() => onChange?.(t.id)} className={cls}>
+            <button key={t.id} type="button" role="tab" aria-selected={on} tabIndex={on ? 0 : -1} onClick={() => onChange?.(t.id)} className={cls}>
               {inner}
             </button>
           )

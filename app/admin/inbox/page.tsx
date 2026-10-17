@@ -41,8 +41,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
             const last = i.replies[i.replies.length - 1]
             const waiting = i.status === 'new' || (last?.by === 'you' && i.status !== 'closed')
             return (
-              <li key={i.id}>
-                <Link href={`/admin/inbox/${i.id}`} className="block rounded-3xl border border-line p-5 transition-colors hover:border-line-strong hover:bg-white/[0.03]">
+              <li key={i.id} data-kb-row>
+                <Link data-kb-focus href={`/admin/inbox/${i.id}`} className="block rounded-3xl border border-line p-5 transition-colors hover:border-line-strong hover:bg-white/[0.03]">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <p className="flex flex-wrap items-center gap-2 text-lg">
                       {waiting && <span aria-label="Needs a reply" className="size-2 rounded-full bg-paper" />}

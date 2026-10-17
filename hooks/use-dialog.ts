@@ -14,12 +14,13 @@ let before = ''
  * and hand focus back to whatever opened it. Put the returned ref on the dialog's own box.
  * `initial`: where focus lands first ("first" control, the "panel" itself, or "none" when the dialog focuses something itself).
  */
-export function useDialog<T extends HTMLElement>(open: boolean, onClose: () => void, opts: { initial?: 'first' | 'panel' | 'none'; lockScroll?: boolean } = {}) {
+export function useDialog<T extends HTMLElement>(open: boolean, onClose: () => void, opts: { initial?: 'first' | 'panel' | 'none'; lockScroll?: boolean; /** freeze the rest of the page (default). Turn off when the control that closes the dialog sits outside it. */ inert?: boolean } = {}) {
   const panel = useRef<T>(null)
   const close = useRef(onClose)
   close.current = onClose
   const initial = opts.initial ?? 'first'
   const lockScroll = opts.lockScroll !== false
+  const freeze = opts.inert !== false
 
   useEffect(() => {
     if (!open) return
@@ -31,6 +32,22 @@ export function useDialog<T extends HTMLElement>(open: boolean, onClose: () => v
       }
       locks++
     }
+    // everything outside the dialog goes inert while it is open: it cannot be tabbed into, clicked, or read out behind it
+    const frozen: HTMLElement[] = []
+    const settle = window.setTimeout(() => {
+      if (!freeze) return
+      let node: HTMLElement | null = panel.current
+      while (node && node !== document.body) {
+        const parent: HTMLElement | null = node.parentElement
+        if (!parent) break
+        for (const sib of Array.from(parent.children)) {
+          if (sib === node || !(sib instanceof HTMLElement) || sib.hasAttribute('inert') || sib.matches('script, style, link, [data-keep-live]')) continue
+          sib.setAttribute('inert', '')
+          frozen.push(sib)
+        }
+        node = parent
+      }
+    }, 0)
     const t = window.setTimeout(() => {
       const el = panel.current
       if (!el || initial === 'none' || el.contains(document.activeElement)) return
@@ -54,6 +71,8 @@ export function useDialog<T extends HTMLElement>(open: boolean, onClose: () => v
     window.addEventListener('keydown', onKey)
     return () => {
       window.clearTimeout(t)
+      window.clearTimeout(settle)
+      frozen.forEach((f) => f.removeAttribute('inert'))
       window.removeEventListener('keydown', onKey)
       if (lockScroll) {
         locks = Math.max(0, locks - 1)
@@ -62,7 +81,7 @@ export function useDialog<T extends HTMLElement>(open: boolean, onClose: () => v
       if (returnTo && returnTo.isConnected) returnTo.focus({ preventScroll: true })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, initial, lockScroll])
+  }, [open, initial, lockScroll, freeze])
 
   return panel
 }

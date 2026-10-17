@@ -46,7 +46,7 @@ export function Ranked({ title, rows, unit = '', extra }: { title: string; rows:
   const max = Math.max(1, ...rows.map((r) => Number(r.n ?? 0)))
   return (
     <section className="rounded-[22px] border border-line bg-surface/70 p-4">
-      <h3 className="font-mono text-xs text-mute">{title}</h3>
+      <h2 className="font-mono text-xs text-mute">{title}</h2>
       {rows.length === 0 ? (
         <p className="mt-4 text-xs text-mute">Nothing yet.</p>
       ) : (

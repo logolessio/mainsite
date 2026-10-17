@@ -201,5 +201,9 @@ export const FAQ: Record<'Clippers' | 'Brands' | 'Money' | 'Account', Faq[]> = {
       q: 'I signed up with Discord and have no email. Can you still reach me?',
       a: 'If you connect Discord, the logoless bot can send your notifications to you there as messages.',
     },
+    {
+      q: 'Can I use the site with a keyboard or a screen reader?',
+      a: `Yes. Everything can be reached and used with a keyboard. Press ? on any page to see the shortcuts that work there, for example g then a letter to go to a page, j and k to move through lists, and / to search. In Settings, under Display, you can switch on less motion, larger text, higher contrast and underlined links. If something is hard to use, tell us at ${SITE.emails.support} and we will look at it. There is more on the Accessibility page.`,
+    },
   ],
 }

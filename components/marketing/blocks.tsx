@@ -15,12 +15,10 @@ export function FeatureGrid({ features }: { features: Feature[]; cols?: 2 | 3 })
   return (
     <ul className="border-b border-line">
       {features.map((f, i) => (
-        <Reveal key={f.title} delay={Math.min(i, 4) * 0.05} blur={false}>
-          <li className="grid gap-3 border-t border-line py-9 md:grid-cols-12 md:gap-10 md:py-12">
+        <Reveal as="li" key={f.title} delay={Math.min(i, 4) * 0.05} blur={false} className="grid gap-3 border-t border-line py-9 md:grid-cols-12 md:gap-10 md:py-12">
             <h3 className="font-display text-3xl leading-[1.05] tracking-[-0.03em] md:col-span-5 md:text-[2.6rem]"><T>{f.title}</T></h3>
             <p className="max-w-lg text-pretty text-lg leading-relaxed text-paper/60 md:col-span-6 md:col-start-7"><T>{f.body}</T></p>
-          </li>
-        </Reveal>
+          </Reveal>
       ))}
     </ul>
   )

@@ -60,7 +60,7 @@ export default async function Page() {
         ) : (
           <ul className="grid gap-3">
             {items.map((c) => (
-              <li key={c.id}>
+              <li key={c.id} data-kb-row>
                 <Card>
                   <div className="flex flex-wrap items-center gap-4">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -79,10 +79,10 @@ export default async function Page() {
                     <div className="flex flex-wrap items-center justify-end gap-2">
                       {c.status === 'requested' && (
                         <>
-                          <AdminButton variant="solid" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'accept' }} confirm={`Accept "${c.title}"? The artist will be asked to pay ${money(c.budget_cents)}.`}>
+                          <AdminButton variant="solid" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'accept' }} hotkey="a" confirm={`Accept "${c.title}"? The artist will be asked to pay ${money(c.budget_cents)}.`}>
                             Accept
                           </AdminButton>
-                          <AdminButton variant="danger" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'reject' }} ask={{ label: 'Why? (the artist sees this)', required: true }}>
+                          <AdminButton variant="danger" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'reject' }} hotkey="r" ask={{ label: 'Why? (the artist sees this)', required: true }}>
                             Reject
                           </AdminButton>
                         </>
@@ -93,19 +93,19 @@ export default async function Page() {
                         </AdminButton>
                       )}
                       {c.status === 'paid' && (
-                        <AdminButton variant="solid" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'launch' }} confirm={`Launch "${c.title}" now? It becomes visible to everyone.`}>
+                        <AdminButton variant="solid" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'launch' }} hotkey="l" confirm={`Launch "${c.title}" now? It becomes visible to everyone.`}>
                           Launch
                         </AdminButton>
                       )}
                       {c.status === 'live' && (
                         <>
-                          <AdminButton url={`/api/admin/campaigns/${c.id}`} data={{ action: 'pause' }} ask={{ label: 'Reason (optional)' }}>Pause</AdminButton>
+                          <AdminButton url={`/api/admin/campaigns/${c.id}`} data={{ action: 'pause' }} hotkey="p" ask={{ label: 'Reason (optional)' }}>Pause</AdminButton>
                           <AdminButton variant="danger" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'end' }} confirm="End this campaign? It stops taking clips.">End</AdminButton>
                         </>
                       )}
                       {c.status === 'paused' && (
                         <>
-                          <AdminButton variant="solid" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'resume' }}>Resume</AdminButton>
+                          <AdminButton variant="solid" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'resume' }} hotkey="s">Resume</AdminButton>
                           <AdminButton variant="danger" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'end' }} confirm="End this campaign?">End</AdminButton>
                         </>
                       )}

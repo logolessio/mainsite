@@ -117,7 +117,7 @@ export function EmailStudio({ adminEmail, from, previews }: { adminEmail: string
             </AnimatePresence>
           </div>
 
-          <aside className="border-t border-line p-5 lg:border-t-0 lg:border-l">
+          <div className="border-t border-line p-5 lg:border-t-0 lg:border-l">
             <p className="font-display text-xl leading-tight">{cur.label}</p>
             <p className="mt-1 text-sm text-mute">{cur.hint}</p>
             <label className="mt-5 block font-mono text-xs text-mute" htmlFor="email-to">Send a test to</label>
@@ -126,7 +126,7 @@ export function EmailStudio({ adminEmail, from, previews }: { adminEmail: string
               {busy === 'send' ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />} Send test
             </button>
             <p className="mt-3 text-xs leading-snug text-mute">The test is labelled [TEST], uses a fake code (123456) and creates nothing.</p>
-          </aside>
+          </div>
         </div>
       </section>
 
@@ -142,7 +142,7 @@ export function EmailStudio({ adminEmail, from, previews }: { adminEmail: string
           ].map((s, i) => {
             const state = step > i ? 'done' : step === i ? 'now' : 'todo'
             return (
-              <li key={s.n} className={cn('rounded-2xl border p-4 transition-colors', state === 'now' ? 'border-paper bg-paper/[0.06]' : state === 'done' ? 'border-emerald-400/40 bg-emerald-400/[0.05]' : 'border-line opacity-60')}>
+              <li key={s.n} className={cn('rounded-2xl border p-4 transition-colors', state === 'now' ? 'border-paper bg-paper/[0.06]' : state === 'done' ? 'border-emerald-400/40 bg-emerald-400/[0.05]' : 'border-line opacity-80')}>
                 <span className={cn('grid size-7 place-items-center rounded-full text-xs font-semibold', state === 'done' ? 'bg-emerald-300 text-ink' : state === 'now' ? 'bg-paper text-ink' : 'bg-line-strong text-mute')}>{state === 'done' ? <Check className="size-4" /> : s.n}</span>
                 <p className="mt-3 text-sm">{s.title}</p>
                 <p className="text-xs text-mute">{s.body}</p>

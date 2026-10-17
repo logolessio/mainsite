@@ -43,6 +43,8 @@ I did not change any of these, because you asked me not to touch what you edited
 | For creators | "We cover ALL PayPal transaction fees" and, on Pricing, "We fully cover all transaction fees" | PayPal can still charge currency conversion, and the Terms say so. | "We cover PayPal's fees on every deposit and withdrawal." |
 | For creators | "…get paid as soon and as frequently as you like." | Timing depends on PayPal, your country and the review of large withdrawals. | "…withdraw whenever you like, from $10. Timing depends on PayPal." |
 
+- **Accessibility.** The site has a keyboard layer (press ? for the list), a skip link, labelled controls, focus handling in dialogs, a reduced-motion mode, larger text, higher contrast and underlined links, and an Accessibility page. The page says we work towards WCAG 2.2 AA and does not claim full conformance. An automated check (axe) found no violations on the pages tested at the time of writing; it cannot find everything, and a real screen reader pass has not been done.
+
 ## Only you or a lawyer can fix
 
 - **The company.** `lib/site.ts` still says "Logoless Inc." with the address "[Registered business address]" (both marked TODO). The Terms now leave the address out while it is a placeholder, but the entity name has to be a real registered company, and the governing-law clause refers to "the jurisdiction in which the company is registered".

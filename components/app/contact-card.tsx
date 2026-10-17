@@ -43,16 +43,17 @@ export function ContactCard() {
   }
   return (
     <Card id="contact" title="How we contact you" sub="For things that matter, like a campaign ending and what you earned from it. The notification bell on the site always gets it too.">
-      <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4" role="radiogroup" aria-label="How we contact you">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" role="radiogroup" aria-label="How we contact you">
         {options.map((o) => {
           const on = pref === o.id
           const icons = ICONS[o.id] ?? [Ring]
           return (
-            <li key={o.id}>
+            <div key={o.id}>
               <button
                 type="button"
                 role="radio"
                 aria-checked={on}
+                tabIndex={on || (!options.some((x) => x.id === pref) && o.id === options[0]?.id) ? 0 : -1}
                 onClick={() => choose(o.id)}
                 className={cn('group relative flex h-full w-full flex-col items-start gap-4 rounded-2xl border p-4 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-paper/60', on ? 'border-paper bg-white/[0.06]' : 'border-line-strong hover:border-paper/50 hover:bg-white/[0.03]')}
               >
@@ -73,10 +74,10 @@ export function ContactCard() {
                   </span>
                 )}
               </button>
-            </li>
+            </div>
           )
         })}
-      </ul>
+      </div>
       {error && <p role="alert" className="mt-3 text-sm text-signal">{error}</p>}
     </Card>
   )

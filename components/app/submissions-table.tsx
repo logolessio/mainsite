@@ -113,7 +113,7 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
       <div className="mt-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div role="tablist" aria-label="Filter clips" className="glass-liquid inline-flex w-fit flex-wrap rounded-full p-1">
           {FILTERS.map((f) => (
-            <button key={f.id} role="tab" type="button" aria-selected={filter === f.id} onClick={() => pick<Filter>('ll:subs:filter', setFilter)(f.id)} className="relative h-9 rounded-full px-4 text-sm">
+            <button key={f.id} role="tab" type="button" aria-selected={filter === f.id} tabIndex={filter === f.id ? 0 : -1} onClick={() => pick<Filter>('ll:subs:filter', setFilter)(f.id)} className="relative h-9 rounded-full px-4 text-sm">
               {filter === f.id && <motion.span layoutId="clip-filter" transition={{ duration: 0.3, ease: EASE_OUT }} className="absolute inset-0 rounded-full bg-paper" />}
               <span className={cn('relative transition-colors', filter === f.id ? 'text-ink' : 'text-mute hover:text-paper')}>
                 {f.label} <span className="tabular-nums opacity-60">{counts[f.id]}</span>
@@ -164,12 +164,12 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
           <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <AnimatePresence initial={false} mode="popLayout">
               {shown.map((r, i) => (
-                <motion.li key={r.id} layout="position" initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.45, delay: Math.min(i, 8) * 0.035, ease: EASE_OUT }} whileHover={{ y: -3 }} className="group flex flex-col rounded-3xl border border-line bg-black/45 p-6 transition-colors hover:border-line-strong">
+                <motion.li key={r.id} data-kb-row layout="position" initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.45, delay: Math.min(i, 8) * 0.035, ease: EASE_OUT }} whileHover={{ y: -3 }} className="group flex flex-col rounded-3xl border border-line bg-black/45 p-6 transition-colors hover:border-line-strong">
                   <div className="flex items-center justify-between gap-3">
                     <span className="rounded-full bg-white/[0.06] px-3 py-1 text-xs text-mute">{r.platform}</span>
                     <Badge tone={TONE[r.status]}>{r.status === 'pending' ? 'in review' : r.status}</Badge>
                   </div>
-                  <h3 className="mt-5 line-clamp-2 min-h-[3.2rem] text-lg leading-snug font-medium tracking-tight">{r.campaign}</h3>
+                  <h2 className="mt-5 line-clamp-2 min-h-[3.2rem] text-lg leading-snug font-medium tracking-tight">{r.campaign}</h2>
                   <p className="mt-1 text-xs text-mute">Submitted {r.submittedAt}</p>
                   <dl className="mt-6 grid grid-cols-2 gap-4 border-t border-line pt-5">
                     <div>
@@ -181,7 +181,7 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
                       <dd className="mt-1 font-display text-2xl leading-none font-medium tabular-nums">{usd(r.earned)}</dd>
                     </div>
                   </dl>
-                  <a href={r.url} target="_blank" rel="noopener noreferrer nofollow" className="mt-6 inline-flex items-center gap-1.5 text-sm text-mute transition-colors group-hover:text-paper">
+                  <a href={r.url} target="_blank" rel="noopener noreferrer nofollow" data-key="o" data-key-label="Open the clip" aria-keyshortcuts="o" className="mt-6 inline-flex items-center gap-1.5 text-sm text-mute transition-colors group-hover:text-paper">
                     Open the clip <ArrowUpRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   </a>
                 </motion.li>

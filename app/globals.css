@@ -915,3 +915,97 @@ html[data-vt-page] .page-root > * {
     transition: outline-color var(--t-base) var(--ease-out), outline-offset var(--t-base) var(--ease-out);
   }
 }
+
+/* ---------- accessibility ---------- */
+/* The dimmest text tiers are below the 4.5:1 that small text needs, so they are lifted to a readable level. */
+.text-paper\/20,
+.text-paper\/25,
+.text-paper\/30,
+.text-paper\/35,
+.text-paper\/40,
+.text-paper\/45 {
+  color: color-mix(in oklab, var(--paper) 56%, transparent);
+}
+.text-white\/35,
+.text-white\/40,
+.text-white\/45 {
+  color: rgb(255 255 255 / 0.58);
+}
+.text-mute\/70,
+.text-mute\/80 {
+  color: var(--mute);
+}
+.placeholder\:text-mute\/70::placeholder {
+  color: var(--mute);
+}
+
+/* Higher contrast: switched on in Settings, or by the device's own preference. */
+html.contrast {
+  --mute: rgb(243 242 238 / 0.82);
+  --line: rgb(243 242 238 / 0.3);
+  --line-strong: rgb(243 242 238 / 0.55);
+}
+html.contrast .text-paper\/50,
+html.contrast .text-paper\/55,
+html.contrast .text-paper\/56,
+html.contrast .text-paper\/60,
+html.contrast .text-paper\/20,
+html.contrast .text-paper\/25,
+html.contrast .text-paper\/30,
+html.contrast .text-paper\/35,
+html.contrast .text-paper\/40,
+html.contrast .text-paper\/45 {
+  color: color-mix(in oklab, var(--paper) 82%, transparent);
+}
+html.contrast .text-white\/35,
+html.contrast .text-white\/40,
+html.contrast .text-white\/45,
+html.contrast .text-white\/50,
+html.contrast .text-white\/55,
+html.contrast .text-white\/60 {
+  color: rgb(255 255 255 / 0.84);
+}
+@media (prefers-contrast: more) {
+  :root {
+    --mute: rgb(243 242 238 / 0.82);
+    --line: rgb(243 242 238 / 0.3);
+    --line-strong: rgb(243 242 238 / 0.55);
+  }
+}
+
+/* Underlined links: a link is never told apart by colour alone. */
+html.underline-links main a:not([class*='rounded-full']):not([class*='button']),
+html.underline-links footer a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Windows high contrast and similar: let the system colours through, and keep a focus outline that shows. */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+  .skeleton,
+  .glass-liquid::before {
+    forced-color-adjust: none;
+  }
+  button,
+  [role='button'],
+  a[class*='rounded-full'] {
+    border: 1px solid ButtonText;
+  }
+}
+
+/* The row that holds keyboard focus is outlined along its own rounded edge, and its key hints appear. */
+[data-kb-row]:focus-visible,
+[data-kb-cell]:focus-within:focus-visible {
+  border-radius: 1.25rem;
+}
+.kb-hint {
+  display: none;
+}
+[data-kb-row]:focus-within .kb-hint {
+  display: inline-block;
+}

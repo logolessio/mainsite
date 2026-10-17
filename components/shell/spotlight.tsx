@@ -8,6 +8,7 @@ import { isInvitePath } from '@/lib/invite-shared'
 import { EASE_OUT } from '@/lib/layout'
 import { NAV_LINKS } from '@/lib/site'
 import { cn } from '@/lib/utils'
+import { useDialog } from '@/hooks/use-dialog'
 import { useFeature } from './features-provider'
 import { useNavUser } from './nav-user'
 import { useTransitions } from './transition-provider'
@@ -15,18 +16,11 @@ import { useTransitions } from './transition-provider'
 type C = { id: string; title: string; creator: string; type: string; cover: string; rate: number }
 type Row = { key: string; label: string; sub: string; group: 'Campaigns' | 'Pages'; href: string; cover?: string }
 // The dashboards have their own jump-to box, so this one stays out of them.
-const HIDDEN = ['/dashboard', '/brand', '/admin', '/onboarding', '/@', '/u/', '/links']
-const SHORTCUTS: [string, string][] = [
-  ['⌘ K  or  /', 'Open search'],
-  ['↑  ↓', 'Move through results'],
-  ['Enter', 'Open the highlighted result'],
-  ['Esc', 'Close'],
-  ['?', 'Show this list'],
-]
+const HIDDEN = ['/dashboard', '/brand', '/admin', '/owner', '/dev', '/onboarding', '/@', '/u/', '/links']
 
 /** ⌘K (or /) opens a search over every live campaign and page. ? lists the shortcuts. */
 export function Spotlight() {
-  const on = useFeature('spotlight')
+  const on = true // search is part of the site, not an optional feature
   const pathname = usePathname()
   const { navigate } = useTransitions()
   const { user } = useNavUser()
@@ -35,11 +29,11 @@ export function Spotlight() {
   const board = useFeature('leaderboard')
   const status = useFeature('status-page')
   const [open, setOpen] = useState(false)
-  const [help, setHelp] = useState(false)
   const [q, setQ] = useState('')
   const [i, setI] = useState(0)
   const [camps, setCamps] = useState<C[] | null>(null)
   const input = useRef<HTMLInputElement>(null)
+  const box = useDialog<HTMLDivElement>(open, () => setOpen(false), { initial: 'none' })
   const active = on && !HIDDEN.some((p) => pathname.startsWith(p)) && !isInvitePath(pathname)
   const showPill = false // the floating Search button is gone; the shortcut (⌘K or /) still works
 
@@ -49,19 +43,12 @@ export function Spotlight() {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
-        setHelp(false)
         setOpen((v) => !v)
-      } else if (e.key === '/' && !typing(e.target) && !e.metaKey && !e.ctrlKey) {
+      } else if (e.key === '/' && !typing(e.target) && !e.metaKey && !e.ctrlKey && !document.querySelector('[aria-modal="true"]')) {
         e.preventDefault()
-        setHelp(false)
         setOpen(true)
-      } else if (e.key === '?' && !typing(e.target)) {
-        e.preventDefault()
-        setOpen(false)
-        setHelp((v) => !v)
       } else if (e.key === 'Escape') {
         setOpen(false)
-        setHelp(false)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -122,7 +109,7 @@ export function Spotlight() {
       <AnimatePresence>
         {open && (
           <motion.div key="s" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="fixed inset-0 z-[130] flex items-start justify-center bg-black/65 px-4 pt-[14vh] backdrop-blur-sm" onMouseDown={() => setOpen(false)}>
-            <motion.div role="dialog" aria-label="Search" initial={{ opacity: 0, y: -16, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }} transition={{ duration: 0.25, ease: EASE_OUT }} onMouseDown={(e) => e.stopPropagation()} onKeyDown={onKey} className="w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/15 bg-[#0c0c0f]/95 shadow-[0_50px_110px_-30px_rgb(0_0_0/0.95)] backdrop-blur-xl">
+            <motion.div ref={box} role="dialog" aria-modal="true" aria-label="Search" initial={{ opacity: 0, y: -16, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }} transition={{ duration: 0.25, ease: EASE_OUT }} onMouseDown={(e) => e.stopPropagation()} onKeyDown={onKey} className="w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/15 bg-[#0c0c0f]/95 shadow-[0_50px_110px_-30px_rgb(0_0_0/0.95)] backdrop-blur-xl">
               <div className="flex items-center gap-3 border-b border-line px-5">
                 <Search aria-hidden="true" className="size-5 text-mute" />
                 <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search campaigns, artists and pages" aria-label="Search" className="h-16 flex-1 bg-transparent text-lg outline-none placeholder:text-mute" />
@@ -156,23 +143,8 @@ export function Spotlight() {
               </ul>
               <p className="flex items-center justify-between border-t border-line px-5 py-3 text-xs text-mute">
                 <span>↑ ↓ to move · Enter to open</span>
-                <button type="button" onClick={() => { setOpen(false); setHelp(true) }} className="inline-flex items-center gap-1.5 hover:text-paper"><Keyboard className="size-3.5" /> All shortcuts</button>
+                <button type="button" onClick={() => { setOpen(false); window.dispatchEvent(new Event('logoless:help')) }} className="inline-flex items-center gap-1.5 hover:text-paper"><Keyboard className="size-3.5" /> All shortcuts</button>
               </p>
-            </motion.div>
-          </motion.div>
-        )}
-        {help && (
-          <motion.div key="h" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[130] grid place-items-center bg-black/65 px-4 backdrop-blur-sm" onMouseDown={() => setHelp(false)}>
-            <motion.div role="dialog" aria-label="Keyboard shortcuts" initial={{ opacity: 0, y: 16, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.25, ease: EASE_OUT }} onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-sm rounded-[2rem] border border-white/15 bg-[#0c0c0f] p-6">
-              <h2 className="font-display text-2xl">Keyboard shortcuts</h2>
-              <ul className="mt-5 grid gap-3">
-                {SHORTCUTS.map(([k, d]) => (
-                  <li key={k} className="flex items-center justify-between gap-4 text-sm">
-                    <span className="text-mute">{d}</span>
-                    <kbd className="rounded-lg bg-white/[0.08] px-2.5 py-1 font-mono text-xs">{k}</kbd>
-                  </li>
-                ))}
-              </ul>
             </motion.div>
           </motion.div>
         )}

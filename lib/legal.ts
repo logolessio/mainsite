@@ -181,6 +181,19 @@ const RAW: LegalDoc[] = [
       { h: 'Contact', p: [`Questions about this page: ${SITE.emails.legal}.`] },
     ],
   },
+  {
+    slug: 'accessibility',
+    title: 'Accessibility',
+    summary: `How ${S} works for people who use a keyboard, a screen reader or other assistive tools, and how to tell us when it does not.`,
+    sections: [
+      { h: 'What we aim for', p: [`We want ${S} to be usable by everyone, including people who navigate with a keyboard, use a screen reader, magnify the page, or need less motion or more contrast. We work towards the Web Content Accessibility Guidelines (WCAG) 2.2 level AA. We cannot promise every page meets it at every moment, and we say below where we know it does not.`] },
+      { h: 'The keyboard', p: ['Everything can be reached and used with a keyboard. A skip link at the top jumps past the menus to the page, and a visible outline shows where you are.', 'Press ? on any page for the list of shortcuts that work there. In short: g then a letter goes to a page, j and k move through lists, the arrow keys move across grids, menus and tabs, [ and ] switch tabs, / opens search, and Esc closes a dialog. Letters never act while you are typing in a field.', 'Dialogs keep the keyboard inside them while they are open, and give it back to what opened them when they close.'] },
+      { h: 'Screen readers', p: ['Pages use headings, landmarks, labelled controls and lists. When a page changes, its name is announced and, after a keyboard click, focus moves into the new page. Short messages such as "Saved" are announced as they appear.'] },
+      { h: 'Reading and motion settings', p: ['In Settings, under Display, you can switch on calm mode (less motion), larger text, higher contrast and underlined links. Calm mode, and less motion, also follow your device setting, and higher contrast follows your device preference.'] },
+      { h: 'What does not work well yet', p: ['Some images and video previews come from other platforms and we cannot control their captions or descriptions. Embedded players from TikTok, YouTube and Instagram follow those platforms\' own accessibility.'] },
+      { h: 'Tell us', p: [`If something on ${S} is hard to use, tell us what you were trying to do and which assistive tool you use at ${SITE.emails.support}. We read every message and will tell you what we can do and when.`] },
+    ],
+  },
 ]
 
 /** The legal text in the site's current wording (creator, submission). The saved wording below is left as it is. */

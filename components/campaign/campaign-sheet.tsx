@@ -2,7 +2,7 @@
 
 import { X } from 'lucide-react'
 import Link from 'next/link'
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { BrandIcon, PLATFORM_LABEL } from '@/components/brand-icon'
 import { useNavUser } from '@/components/shell/nav-user'
 import { FadeImg } from '@/components/ui/fade-img'
@@ -30,6 +30,24 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
   const cap = inline ? 99 : 3
   const root = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
+
+  // s submits, f favourites and p plays: the keys for the three things you do on a campaign
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return
+      const t = e.target as HTMLElement | null
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return
+      const k = e.key.toLowerCase()
+      if (k !== 's' && k !== 'f' && k !== 'p') return
+      const el = root.current?.querySelector<HTMLElement>(`[data-key="${k}"]`)
+      if (el && !(el as HTMLButtonElement).disabled) {
+        e.preventDefault()
+        el.click()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   // The pop-up never scrolls: if the sheet is taller than the screen it is shrunk to fit, down to two thirds of its size.
   useLayoutEffect(() => {
@@ -87,7 +105,7 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
           <div key={k} className="rounded-2xl border border-white/10 px-2 py-3">
             <dt className="text-[12px] text-white/50">{k}</dt>
             <dd className="mt-0.5 font-display text-2xl">{v}</dd>
-            <p className="text-[11px] text-white/40">{s}</p>
+            <dd className="text-[11px] text-white/40">{s}</dd>
           </div>
         ))}
       </dl>
@@ -132,7 +150,7 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
   )
 
   return (
-    <div ref={root} style={scale < 1 ? { transform: `scale(${scale})` } : undefined} className={cn('island relative w-full max-w-[1000px] rounded-[2.5rem] bg-[#0b0b0d] p-5 text-white md:p-8', inline && 'mx-auto')}>
+    <div ref={root} data-kb-keys style={scale < 1 ? { transform: `scale(${scale})` } : undefined} className={cn('island relative w-full max-w-[1000px] rounded-[2.5rem] bg-[#0b0b0d] p-5 text-white md:p-8', inline && 'mx-auto')}>
       {view === 'details' && onClose && (
         <button type="button" aria-label="Close" onClick={onClose} className="absolute top-4 right-4 z-10 grid size-10 place-items-center rounded-full text-white/60 transition-colors hover:bg-white/10 hover:text-white md:top-6 md:right-6">
           <X className="size-5" />
@@ -161,11 +179,11 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
       {view === 'details' && (
         <div className="mt-5">
           {signedIn ? (
-            <button type="button" onClick={() => setView('submit')} className="h-14 w-full rounded-full bg-white text-[16px] font-medium text-black transition-colors hover:bg-white/85">
+            <button type="button" onClick={() => setView('submit')} data-key="s" data-key-label="Submit content" aria-keyshortcuts="s" className="h-14 w-full rounded-full bg-white text-[16px] font-medium text-black transition-colors hover:bg-white/85">
               Submit content
             </button>
           ) : (
-            <Link href="/login" className="inline-flex h-14 w-full items-center justify-center rounded-full bg-white text-[16px] font-medium text-black transition-colors hover:bg-white/85">
+            <Link href="/login" data-key="s" data-key-label="Log in to submit" aria-keyshortcuts="s" className="inline-flex h-14 w-full items-center justify-center rounded-full bg-white text-[16px] font-medium text-black transition-colors hover:bg-white/85">
               Log in to submit content
             </Link>
           )}

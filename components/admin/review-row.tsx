@@ -36,6 +36,8 @@ export function ReviewControls({ id, status, views, rateCents }: { id: string; s
             id={`v-${id}`}
             value={v}
             onChange={(e) => setV(e.target.value)}
+            data-key="v"
+            data-key-label="Set the views"
             inputMode="numeric"
             className="h-9 w-32 rounded-full border border-line-strong bg-ink/80 px-3 text-right text-xs focus:outline-none"
             aria-label="Verified views"
@@ -44,6 +46,9 @@ export function ReviewControls({ id, status, views, rateCents }: { id: string; s
             type="button"
             disabled={busy}
             onClick={() => send(status === 'pending' ? 'approve' : 'views')}
+            data-key="a"
+            data-key-label={status === 'pending' ? 'Approve' : 'Update'}
+            aria-keyshortcuts="a"
             className="inline-flex h-9 items-center gap-1.5 rounded-full bg-paper px-4 text-xs font-medium text-ink hover:bg-paper/85 disabled:opacity-40"
           >
             {busy && <Loader2 className="size-3 animate-spin" />}
@@ -52,7 +57,7 @@ export function ReviewControls({ id, status, views, rateCents }: { id: string; s
         </>
       )}
       {views === 0 && status !== 'rejected' && (
-        <AdminButton variant="danger" url={`/api/admin/submissions/${id}`} data={{ action: 'reject' }} ask={{ label: 'Reason (the clipper sees this)', key: 'reason', required: true }}>
+        <AdminButton variant="danger" url={`/api/admin/submissions/${id}`} data={{ action: 'reject' }} hotkey="r" ask={{ label: 'Reason (the clipper sees this)', key: 'reason', required: true }}>
           Reject
         </AdminButton>
       )}

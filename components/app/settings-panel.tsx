@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { Field, Input } from '@/components/ui/fields'
 import { GlassTabs } from '@/components/ui/glass-tabs'
-import { calmWasAutomatic, clearCalmChoice, getCalmChoice, getLargeText, setCalm, setLargeText, subscribeCalm } from '@/lib/calm'
+import { calmWasAutomatic, clearCalmChoice, getCalmChoice, getContrast, getLargeText, getUnderline, setCalm, setContrast, setLargeText, setUnderline, subscribeCalm } from '@/lib/calm'
 import { DeleteCard } from './account-cards'
 import { ConnectedApps } from './connected-apps'
 import { ContactCard } from './contact-card'
@@ -154,11 +154,13 @@ function PasswordCard({ me }: { me: Me | null }) {
   )
 }
 
-/** How the site moves and reads: calm mode and text size. */
+/** How the site moves and reads: calm mode, text size, contrast and links. */
 function Display() {
   const choice = useSyncExternalStore(subscribeCalm, getCalmChoice, () => 'auto' as const)
   const large = useSyncExternalStore(subscribeCalm, getLargeText, () => false)
   const auto = useSyncExternalStore(subscribeCalm, calmWasAutomatic, () => false)
+  const contrast = useSyncExternalStore(subscribeCalm, getContrast, () => false)
+  const underline = useSyncExternalStore(subscribeCalm, getUnderline, () => false)
   return (
     <Card id="display" title="Display">
       <div className="grid gap-8">
@@ -180,6 +182,29 @@ function Display() {
           <p className="mt-1 text-sm text-mute">Makes everything on the site a little bigger.</p>
           <div className="mt-4">
             <GlassTabs label="Text size" value={large ? 'large' : 'standard'} onChange={(v) => setLargeText(v === 'large')} tabs={[{ id: 'standard', label: 'Standard' }, { id: 'large', label: 'Large' }]} className="mx-0" />
+          </div>
+        </div>
+        <div>
+          <p className="text-[15px]">Contrast</p>
+          <p className="mt-1 text-sm text-mute">Brighter text and stronger outlines, so everything is easier to see. Your device&apos;s own high contrast setting turns this on by itself.</p>
+          <div className="mt-4">
+            <GlassTabs label="Contrast" value={contrast ? 'high' : 'standard'} onChange={(v) => setContrast(v === 'high')} tabs={[{ id: 'standard', label: 'Standard' }, { id: 'high', label: 'High' }]} className="mx-0" />
+          </div>
+        </div>
+        <div>
+          <p className="text-[15px]">Links</p>
+          <p className="mt-1 text-sm text-mute">Underline every link in the text, so links never depend on colour alone.</p>
+          <div className="mt-4">
+            <GlassTabs label="Links" value={underline ? 'underline' : 'standard'} onChange={(v) => setUnderline(v === 'underline')} tabs={[{ id: 'standard', label: 'Standard' }, { id: 'underline', label: 'Underlined' }]} className="mx-0" />
+          </div>
+        </div>
+        <div>
+          <p className="text-[15px]">Keyboard</p>
+          <p className="mt-1 text-sm text-mute">Press <kbd className="rounded border border-line-strong px-1.5 font-mono text-xs">?</kbd> on any page to see the shortcuts that work there. Letters stay quiet while you type.</p>
+          <div className="mt-4">
+            <ActionButton variant="ghost" onClick={() => window.dispatchEvent(new Event('logoless:help'))}>
+              Show the shortcut list
+            </ActionButton>
           </div>
         </div>
       </div>

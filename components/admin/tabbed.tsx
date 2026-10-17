@@ -44,7 +44,7 @@ export function Tabbed({ tabs, initial, memory, className }: { tabs: TabbedItem[
         {tabs.map((t) => {
           const active = t.id === current?.id
           return (
-            <button key={t.id} id={`${uid}-${t.id}`} type="button" role="tab" aria-selected={active} aria-controls={`${uid}-panel`} onClick={() => pick(t.id)} className="relative inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-[15px] outline-none transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-paper/60">
+            <button key={t.id} id={`${uid}-${t.id}`} type="button" role="tab" aria-selected={active} tabIndex={active ? 0 : -1} aria-controls={`${uid}-panel`} onClick={() => pick(t.id)} className="relative inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-[15px] outline-none transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-paper/60">
               {active && <motion.span layoutId={`tabbed-${uid}`} transition={{ type: 'spring', stiffness: 420, damping: 36 }} className="absolute inset-0 rounded-full border border-white/[0.14] bg-white/[0.08]" />}
               <span className={cn('relative', active ? 'text-paper' : 'text-paper/55 hover:text-paper')}>{t.label}</span>
               {t.count !== undefined && (

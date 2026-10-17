@@ -134,7 +134,7 @@ export function LinksEditor({ initial }: { initial: LinkItem[] }) {
         <ActionButton variant="ghost" onClick={() => call('reset')} disabled={busy !== null}>
           {busy === 'reset' ? <Loader2 aria-hidden="true" className="size-4 animate-spin" /> : <RotateCcw aria-hidden="true" className="size-4" />} Reset
         </ActionButton>
-        <ActionButton onClick={() => call('save')} disabled={!dirty || busy !== null || links.some(bad)}>
+        <ActionButton data-hotkey-save onClick={() => call('save')} disabled={!dirty || busy !== null || links.some(bad)}>
           {busy === 'save' && <Loader2 aria-hidden="true" className="size-4 animate-spin" />} Save changes
         </ActionButton>
       </div>

@@ -86,3 +86,41 @@ export const setLargeText = (on: boolean) => {
   document.documentElement.classList.toggle('text-large', on)
   listeners.forEach((l) => l())
 }
+
+// Higher contrast and underlined links: two more reading settings, kept in the browser like text size.
+const CONTRAST = 'logoless:contrast'
+const LINKS = 'logoless:links'
+export const getContrast = () => {
+  try {
+    return localStorage.getItem(CONTRAST) === 'high'
+  } catch {
+    return false
+  }
+}
+export const setContrast = (on: boolean) => {
+  try {
+    if (on) localStorage.setItem(CONTRAST, 'high')
+    else localStorage.removeItem(CONTRAST)
+  } catch {
+    /* private window */
+  }
+  document.documentElement.classList.toggle('contrast', on)
+  listeners.forEach((l) => l())
+}
+export const getUnderline = () => {
+  try {
+    return localStorage.getItem(LINKS) === 'underline'
+  } catch {
+    return false
+  }
+}
+export const setUnderline = (on: boolean) => {
+  try {
+    if (on) localStorage.setItem(LINKS, 'underline')
+    else localStorage.removeItem(LINKS)
+  } catch {
+    /* private window */
+  }
+  document.documentElement.classList.toggle('underline-links', on)
+  listeners.forEach((l) => l())
+}

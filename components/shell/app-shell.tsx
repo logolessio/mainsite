@@ -20,6 +20,7 @@ import { Tracker } from './tracker'
 import { AnnouncementBar } from './announcement-bar'
 import { StickyCta } from './sticky-cta'
 import { NavProgress } from './nav-progress'
+import { Keyboard } from './keyboard'
 import { Toaster } from './toaster'
 import { CampaignModalProvider } from '@/components/campaign/campaign-modal'
 import type { LinkItem } from '@/lib/socials'
@@ -34,6 +35,7 @@ export function AppShell({ children, announcement = null, dots = false, links = 
         <CampaignModalProvider>
         <NavProgress />
         <Toaster />
+        <Keyboard />
         <Tracker />
         <CalmApply />
         <AutoCalm />

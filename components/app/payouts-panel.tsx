@@ -114,13 +114,14 @@ export function PayoutsPanel() {
           <fieldset>
             <legend className="mb-2 text-sm text-mute">Send it to</legend>
             {emails.length > 0 && (
-              <ul className="grid gap-2" role="radiogroup" aria-label="PayPal email">
+              <div className="grid gap-2" role="radiogroup" aria-label="PayPal email">
                 {emails.map((e) => (
-                  <li key={e} className="flex items-center gap-2">
+                  <div key={e} className="flex items-center gap-2">
                     <button
                       type="button"
                       role="radio"
                       aria-checked={pick === e}
+                      tabIndex={pick === e || (!emails.includes(pick) && e === emails[0]) ? 0 : -1}
                       onClick={() => setPick(e)}
                       className={cn('flex h-12 min-w-0 flex-1 items-center gap-3 rounded-2xl border px-4 text-left text-[15px] transition-colors', pick === e ? 'border-paper bg-white/[0.06]' : 'border-line-strong text-paper/80 hover:border-paper/50')}
                     >
@@ -130,9 +131,9 @@ export function PayoutsPanel() {
                     <button type="button" onClick={() => remove(e)} aria-label={`Remove ${e}`} className="grid size-10 shrink-0 place-items-center rounded-full text-mute transition-colors hover:bg-white/[0.07] hover:text-paper">
                       <X className="size-4" />
                     </button>
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
             )}
             {emails.length < 5 && (
               <form
