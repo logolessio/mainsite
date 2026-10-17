@@ -623,5 +623,133 @@ export const LAUNCH_RUNDOWN: Report = {
   footer: 'Sent once from logoless to emile@logoless.io. The claims audit is in CLAIMS_REVIEW.md in the project.',
 }
 
+const L = (h: string): Block => LAUNCH_RUNDOWN.blocks.find((b) => b.h === h) as Block
+/** Replaces one item of a block (by its bold label), or drops it when `repl` is null. */
+const swap = (b: Block, label: string, repl: Item | null): Block => ({ ...b, items: (b.items ?? []).flatMap((it) => (Array.isArray(it) && it[0] === label ? (repl ? [repl] : []) : [it])) })
+const more = (b: Block, extra: Item[]): Block => ({ ...b, items: [...(b.items ?? []), ...extra] })
+
+export const FINAL_RUNDOWN: Report = {
+  id: 'full-rundown-2026-10-17-final',
+  to: 'emile@logoless.io',
+  subject: 'logoless: the updated full rundown (October 17), with bio verification, smoother motion, keyboard and accessibility',
+  preheader: 'Everything the site does today, what changed since the last rundown, how to run it, and the short list that only you can finish.',
+  title: 'The updated full rundown',
+  intro: 'This replaces the earlier rundowns. It describes the site as it stands now: what is new since the last email (bio verification, smoother motion, a keyboard layer and accessibility work), what every part does, how to run it from the owner dashboard, and the short list that only you can finish. This email was sent by a one-time trigger that has already been deleted.',
+  blocks: [
+    {
+      h: 'The short version',
+      items: [
+        ['Ready from the code side.', 'Every page answers, the deploys are green, and an accessibility check (axe) over 37 pages found a handful of problems, which are fixed, and a re-check of 13 key pages came back clean. What remains needs you: payments in live mode, your real company details, the mailboxes, the Discord redirects, real social accounts and removing the sample campaigns. The last section is that list.'],
+        ['Since the last rundown I added four things.', 'Real bio verification for TikTok, YouTube and Instagram accounts; a new motion system (page changes that cross-fade, springs, press feedback, toasts); a keyboard layer that works across the whole site; and an accessibility pass with an Accessibility page.'],
+        ['One change affects your workload.', 'The automatic first look now approves a clip only when it comes from a verified account. Clips from any other account wait for a person. A switch under Platform settings turns that off if the queue gets heavy.'],
+        ['What I could not check.', 'I could not run the site on a real phone or time it with a profiler, so the smoothness is built from known causes of lag, not measured. Bio checks were tested against stand-in pages and the real pages\' content, not yet from Cloudflare against a real account of yours. And no one has used the site with a real screen reader yet.'],
+      ],
+    },
+    {
+      h: 'New since the last rundown',
+      items: [
+        ['Bio verification.', 'A creator links a TikTok, YouTube or Instagram account, gets a code such as logoless-7KQ4MX, puts it in the account\'s bio, and presses Check my bio. The site reads the account\'s public page and looks for the code. Details are in the next section.'],
+        ['Page changes cross-fade.', 'Moving between pages, on the dashboards and the public site, now uses the browser\'s built-in page transitions: the old page eases out as the new one eases in, with no wait before the click is answered. If a browser cannot or does not start it, the site simply goes to the page.'],
+        ['One motion system.', 'One easing and one set of speeds for hovers and state changes. Buttons dip slightly when pressed and spring back. Dashboard pages build in section by section, campaign tiles rise in row by row, covers fade in once loaded, keyboard focus rings glide in, and dialogs, search and toasts open with a short spring.'],
+        ['Toasts and small kindnesses.', 'Short confirmations such as Saved, Copied and Done at the bottom of the screen. Profile and links editors ask before you leave with unsaved changes. The campaign form keeps what you typed on that device. The favourite heart pops. The top bar lifts with a shadow when you scroll, and the phone tab bar has a marker that slides.'],
+        ['Search finds campaigns.', '⌘K and / now also find live campaigns from inside the dashboards, and in the owner dashboard anything you type also offers to search People and Site text.'],
+        ['A keyboard layer.', 'g then a letter goes to a page, j and k move through lists, arrow keys move across grids, menus and tabs, [ and ] switch tabs, and one key per action on a row. Press ? on any page for the list. Search (/ and ⌘K) and the shortcuts are always on now, so I removed Spotlight search and Dashboard keyboard shortcuts from the Push list.'],
+        ['Accessibility.', 'Dialogs hold the keyboard and freeze the page behind them, page changes are announced and focus moves into the new page after a keyboard click, the dimmest text was brightened to a readable level, lists, headings and radio groups were fixed, the preview slider now works from the keyboard, and Settings has Contrast and Underlined links options. There is a new Accessibility page.'],
+      ],
+    },
+    {
+      h: 'Bio verification, in detail',
+      items: [
+        ['For creators.', 'Dashboard, Profile, Linked accounts. Add an account by its username, press Verify, copy the code, put it in the bio (the dialog says where for each platform), and press Check my bio. A verified account shows a Verified badge there, a tick on the public profile if the creator shows their accounts, and can be checked automatically. The code can be taken out of the bio afterwards.'],
+        ['What the site can read.', 'TikTok and YouTube are read from their public pages, and a missing code means the code is not in the bio. Instagram does not let a website read a profile, so for Instagram, and for any page a platform blocks, the creator presses Ask the team to check.'],
+        ['Your side.', 'Owner dashboard, People, open a person: a Linked accounts card shows each account, its status and the code to look for, with Approve, Not there and Remove. A counter on People and a line in Overview show how many are waiting, and every decision is in the audit log.'],
+        ['One account per person.', 'An account is verified for one logoless user at a time. If someone else proves the same account later, the newest proof wins and the first person is told. If a creator changes or removes the account, the verification is dropped.'],
+        ['What it changes.', 'The clip first look approves automatically only from a verified account. That is the real protection against someone claiming another person\'s account, and it also sends more clips to a person until creators verify. Platform settings, "Only auto-approve clips from verified accounts" turns it off. The set-up guide step is now "Link and verify an account".'],
+        ['What we say about it.', 'The Terms, Privacy Policy, FAQ and CLAIMS_REVIEW.md describe it: we read an account\'s public page to find the code, keep a record that it was verified, and a person may check by hand.'],
+        ['First real test.', 'Try it once with one of your own accounts on logoless.io. If Cloudflare\'s network is blocked by TikTok or YouTube you will see "ask the team", which is the designed fallback, and you can approve it from the People page.'],
+      ],
+    },
+    {
+      h: 'The keyboard, in detail',
+      items: [
+        ['Go to a page.', 'Press g, then a letter. A small card shows each letter, and the sidebar shows them on hover. Creator: o Overview, s Submissions, e Earnings, p Profile, t Settings. Brand: o, c Campaigns, s Submissions, b Balance, t. Owner: o, c, s, p Payouts, u People, i Inbox, d Discord, m Email, b Broadcast, x Site text, l Socials and links, y System, v Developer. A number works too. On the public site: h, c, b, p, a, q, t.'],
+        ['Move through things.', 'j and k step through the rows of a list and scroll a page that has none. The arrow keys move across the campaign grid, along a menu, and between tabs and radio buttons. [ and ] switch the page\'s tabs. Enter opens what has focus.'],
+        ['Act on a row.', 'With a row focused, its keys appear on its buttons. Submissions: a approve, r reject, o open the clip, v set the views. Campaigns: a Accept, r Reject, l Launch, p Pause, s Resume. On a campaign: s submit, f favourite, p play.'],
+        ['Forms.', '⌘ or Ctrl with Enter sends a message you are writing, with S saves the profile or links editor, and Esc leaves a field. Letters never act while you are typing.'],
+        ['Everywhere.', '/ or ⌘K searches or does something, n does the main thing in the area (Find a campaign, Start a campaign), ? shows the list for the page you are on, and Esc closes a dialog.'],
+      ],
+    },
+    {
+      h: 'Accessibility, in detail',
+      items: [
+        ['What was checked.', 'An automated check (axe) over 37 pages, then a re-check of 13 key pages after the fixes, which came back clean, plus real key presses for the keyboard features. It cannot find everything, and a real screen reader pass is still worth doing.'],
+        ['What was fixed.', 'Contrast of the dimmest text, valid lists, headings in order, radio groups with arrow keys, one navigation landmark on the developer pages, a skip link that has a target, and labels on the preview slider with working keys.'],
+        ['Dialogs.', 'Focus moves in, Tab stays inside, Esc closes, the page behind cannot be tabbed into or read, and focus returns to what opened it.'],
+        ['Page changes.', 'The new page\'s name is announced, and after a keyboard click focus moves into the page.'],
+        ['Settings, Display.', 'Calm mode, text size, Contrast (also follows the device\'s own preference), Underlined links, and a button for the shortcut list. Reduced motion follows the device setting.'],
+        ['The Accessibility page.', 'logoless.io/legal/accessibility says what we aim for (WCAG 2.2 AA, without claiming full conformance), what works, what does not yet, and where to write. Please read its wording once, as it is a public statement.'],
+      ],
+    },
+    { ...swap(L('New tonight'), 'Staff dashboards, organised.', null), h: 'Also new on October 17: logo, links, socials, fonts' },
+    {
+      ...L('The public site (logoless.io)'),
+      items: (L('The public site (logoless.io)').items ?? []).map((it) =>
+        Array.isArray(it) && it[0] === 'Legal:' ? (['Legal:', 'Thirteen documents under /legal: Terms, Privacy, Creator Terms, Brand Terms, Campaign Rules, Acceptable Use, Payments, Cookies, Do Not Sell, DMCA, Refunds, External Links and Accessibility. The fee, minimums and dispute window come from one place so they cannot drift apart.'] as [string, string]) : it,
+      ),
+    },
+    {
+      ...L('The creator dashboard'),
+      items: (L('The creator dashboard').items ?? []).map((it) => {
+        if (!Array.isArray(it)) return it
+        if (it[0] === 'Profile (tabs):') return ['Profile (tabs):', 'Profile (name, handle, photo, banner, bio, links, the gradient look picker, 24 fonts, 6 name effects, card effects and theme colours), Achievements (29 badges with rarity and points, equip up to five), Linked accounts (add TikTok, YouTube and Instagram and verify each with a code in its bio), Saved campaigns and Recap when those features are on.'] as [string, string]
+        if (it[0] === 'Set-up guide:') return ['Set-up guide:', 'Seven steps with plain how-tos: confirm your email, finish your profile, link and verify an account, add a PayPal email, connect Discord, make a first submission, get a first payout. The overview always shows the next one.'] as [string, string]
+        if (it[0] === 'Settings:') return ['Settings:', 'Account, How we contact you (an icon choice), Discord (connect with one click), Connected apps, Display (calm mode, text size, contrast, underlined links and the shortcut list), Password, and Delete account (a 30 day wait, and then the team removes it from People).'] as [string, string]
+        return it
+      }),
+    },
+    more(L('The brand dashboard'), [['Your draft is kept.', 'The campaign form saves what you type on that device as you go, so a refresh or a wrong click never loses a brief, with a Start over link.']]),
+    L('The money, exactly'),
+    more(L('How submissions and views are checked'), [['Which clips are approved automatically.', 'Only clips from a verified account (see bio verification). The switch is under Platform settings.']]),
+    L('Discord'),
+    {
+      ...L('The owner dashboard (owner.logoless.io), now organised'),
+      items: (L('The owner dashboard (owner.logoless.io), now organised').items ?? []).map((it) =>
+        Array.isArray(it) && it[0] === 'People.' ? (['People.', 'One list instead of two, with filters (Everyone, Online now, New this week, Team, Extra checks, Restricted) and a switch between a compact list and profile cards. Open anyone for everything: roles, messages, moderation, balance and removal, and their Linked accounts card for bio checks. The sidebar counter shows how many bio checks are waiting.'] as [string, string]) : it,
+      ),
+    },
+    L('The dev site and pushing features'),
+    {
+      h: 'The optional features (switch on with Push)',
+      intro: 'All 14 are on at dev.logoless.io. Each is live on logoless.io only if you have pushed it. Search and the keyboard shortcuts are no longer on this list: they are always on.',
+      items: (pick('The optional features (switch on with Push)').items ?? []).filter((it) => !(Array.isArray(it) && (it[0] === 'Spotlight search.' || it[0] === 'Dashboard keyboard shortcuts.'))),
+    },
+    L('For developers: the owner API and Login with logoless'),
+    L('Email'),
+    more(L('Security and trust'), [
+      ['Account ownership.', 'A linked TikTok, YouTube or Instagram account is proven by a code in its bio, one logoless user at a time, with every decision logged.'],
+      ['Reading other sites.', 'The only pages the bio check reads are the platform\'s own profile page for the account name, built by the site and never from an address a person typed, with a time limit and a size limit.'],
+    ]),
+    {
+      h: 'What is left, and only you can do it',
+      intro: 'In the order I would do them. Owner dashboard, Campaigns, Launch has most of this list with a how-to under each item.',
+      numbered: true,
+      items: [
+        ['Make the real social accounts', 'and put their addresses into Socials and links (the starting ones are placeholders), then put logoless.io/links in each bio.'],
+        ['Take PayPal live.', 'Live keys in Cloudflare, the webhook ID, Payouts switched on in PayPal, and enough money in the PayPal account to pay creators. Then run the whole loop once with a real $10.'],
+        ['Real company details.', 'lib/site.ts still says Logoless Inc. with a placeholder address. The Terms need a real registered company, and the DMCA agent has to be registered with the US Copyright Office to count.'],
+        ['The mailboxes.', 'Make support, legal, privacy, press and abuse @logoless.io exist and reach you, and send yourself a message from /contact to prove it.'],
+        ['Discord.', 'Add https://logoless.io/api/discord/callback and https://dev.logoless.io/api/discord/callback as redirects in the Discord developer portal, then press Register commands on the Discord page.'],
+        ['Try bio verification once.', 'With one of your own accounts. Decide whether to keep "Only auto-approve clips from verified accounts" on, knowing that clips from unverified accounts wait for you.'],
+        ['Remove the sample campaigns', 'from Campaigns, Testing tools once a real campaign is live.'],
+        ['Confirm the view-check schedule.', 'Cloudflare, Workers, mainsite, Triggers should list a 30 minute cron. If it does not, the first visitor after three quiet hours starts a check instead. A YOUTUBE_API_KEY makes the YouTube check sturdier.'],
+        ['Decide on your edited sentences.', 'Thirteen conflict with what the product does or what the Terms say (CLAIMS_REVIEW.md has each with suggested wording). I have not touched them. Say "do them all" or tell me which.'],
+        ['Push the optional features you want live.', 'Ending soon and Earnings goal are the ones about speed.'],
+        ['Two people checks.', 'Have someone use the site with a screen reader, and have a lawyer look at stored balances, the 16-or-older confirmation and the Accessibility page.'],
+      ],
+    },
+  ],
+  footer: 'Sent once from logoless to emile@logoless.io. The claims audit is in CLAIMS_REVIEW.md in the project.',
+}
+
 /** The reports that can be sent, by id. */
-export const REPORTS: Record<string, Report> = { [OVERNIGHT.id]: OVERNIGHT, [ADDENDUM.id]: ADDENDUM, [FEATURE_LIST.id]: FEATURE_LIST, [SESSION_TWO.id]: SESSION_TWO, [FULL_LOWDOWN.id]: FULL_LOWDOWN, [LAUNCH_RUNDOWN.id]: LAUNCH_RUNDOWN }
+export const REPORTS: Record<string, Report> = { [OVERNIGHT.id]: OVERNIGHT, [ADDENDUM.id]: ADDENDUM, [FEATURE_LIST.id]: FEATURE_LIST, [SESSION_TWO.id]: SESSION_TWO, [FULL_LOWDOWN.id]: FULL_LOWDOWN, [LAUNCH_RUNDOWN.id]: LAUNCH_RUNDOWN, [FINAL_RUNDOWN.id]: FINAL_RUNDOWN }
