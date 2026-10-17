@@ -30,7 +30,12 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
   const phase: Phase = leaving === pathname ? 'exiting' : 'idle'
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => setLeaving(null), [pathname])
+  // whoever is waiting for a page to arrive (a view transition) is told as soon as the path changes
+  const waiting = useRef<((path: string) => void)[]>([])
+  useEffect(() => {
+    setLeaving(null)
+    waiting.current.splice(0).forEach((w) => w(pathname))
+  }, [pathname])
 
   // a navigation that keeps the same path (only the query changes) must not leave the page faded
   useEffect(() => {
@@ -67,20 +72,16 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
         let arrived = false
         const run = doc.startViewTransition(async () => {
           router.push(href)
+          // wait for the new page to be in place (the path changes), but never more than a moment: a slow answer must not freeze the page
           await new Promise<void>((resolve) => {
-            const t0 = performance.now()
-            const poll = () => {
-              if (window.location.pathname === target) {
-                arrived = true
-                return resolve()
-              }
-              // a slow answer must not freeze the page: after a moment, carry on with the plain fade and the progress line
-              if (performance.now() - t0 > 1400) return resolve()
-              window.setTimeout(poll, 24) // a timer, not rAF, so a tab in the background cannot stall it
-            }
-            poll()
+            const cap = window.setTimeout(resolve, 1400)
+            waiting.current.push((now) => {
+              arrived = now === target
+              window.clearTimeout(cap)
+              resolve()
+            })
           })
-          if (!arrived) setLeaving(pathname)
+          if (!arrived) setLeaving(pathname) // carry on with the plain fade and the progress line
         })
         run.ready?.catch(() => {})
         run.updateCallbackDone?.catch(() => {})
