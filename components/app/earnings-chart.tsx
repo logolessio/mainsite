@@ -68,9 +68,7 @@ export function EarningsChart({ events, now }: { events: [number, number][]; now
             {bars.map((b, i) => (
               <button key={b.from} type="button" aria-label={`${label(b)}: ${usd(b.cents)}`} onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} onBlur={() => setHover(null)} className="group relative flex h-full flex-1 items-end outline-none">
                 <motion.span
-                  initial={{ scaleY: 0 }}
-                  animate={{ scaleY: 1 }}
-                  transition={{ duration: 0.7, delay: i * 0.018, ease: EASE_OUT }}
+                  initial={false}
                   style={{ height: `${Math.max(b.cents ? 4 : 1.5, (b.cents / max) * 100)}%`, transformOrigin: 'bottom' }}
                   className={cn('w-full rounded-t-md transition-colors', b.cents ? (hover === i ? 'bg-paper' : 'bg-paper/70') : 'bg-white/10')}
                 />

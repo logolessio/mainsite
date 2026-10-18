@@ -36,6 +36,11 @@ export type NavUser =
 type Ctx = { user: NavUser | null; hint: boolean | undefined; refresh: () => void; setUnread: (n: number) => void }
 const NavUserContext = createContext<Ctx>({ user: null, hint: undefined, refresh: () => {}, setUnread: () => {} })
 export const useNavUser = () => useContext(NavUserContext)
+/** Whether someone is signed in, as far as can be told right now: the details if they have arrived, otherwise what the server already knew. */
+export function useSignedIn(): boolean {
+  const { user, hint } = useNavUser()
+  return user ? user.signedIn : hint === true
+}
 
 export const NAV_USER_REFRESH = 'logoless:nav-user'
 

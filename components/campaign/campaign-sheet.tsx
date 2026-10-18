@@ -4,7 +4,7 @@ import { X } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { BrandIcon, PLATFORM_LABEL } from '@/components/brand-icon'
-import { useNavUser } from '@/components/shell/nav-user'
+import { useSignedIn } from '@/components/shell/nav-user'
 import { FadeImg } from '@/components/ui/fade-img'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 import { type Campaign, usd } from '@/lib/campaigns'
@@ -24,9 +24,9 @@ export type SheetPreview = 'approved' | 'declined' | 'review'
  */
 export function CampaignSheet({ campaign, onClose, leftPct = null, inline = false, preview }: { campaign: Campaign; onClose?: () => void; leftPct?: number | null; inline?: boolean; preview?: SheetPreview }) {
   const [view, setView] = useState<'details' | 'submit'>('details')
-  const { user } = useNavUser()
+  const signedInNow = useSignedIn()
   const { wide } = useMotionPrefs()
-  const signedIn = Boolean(preview) || Boolean(user?.signedIn)
+  const signedIn = Boolean(preview) || signedInNow
   const left = leftPct === null ? null : Math.max(0, Math.min(100, Math.round(leftPct)))
   const cap = inline ? 99 : 3
   const root = useRef<HTMLDivElement>(null)

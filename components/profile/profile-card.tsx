@@ -86,9 +86,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
         <span aria-hidden="true" className="absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/15 to-transparent [animation:banner-sheen_7s_ease-in-out_1.2s_infinite]" />
       </div>
       <motion.div
-        initial={{ scale: 0.4, opacity: 0, rotate: -14 }}
-        animate={{ scale: 1, opacity: 1, rotate: 0 }}
-        transition={{ type: 'spring', stiffness: 220, damping: 16, delay: 0.25 }}
+        initial={false}
         style={{ top: 'calc(100% - 48px)' }}
         className="absolute left-4 z-20"
       >
@@ -142,9 +140,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
         </p>
 
         <motion.div
-          initial="hidden"
-          animate="show"
-          variants={{ show: { transition: { staggerChildren: 0.09, delayChildren: 0.45 } } }}
+          initial={false}
           className="mt-4 grid gap-3.5 rounded-xl bg-black/40 p-3.5"
         >
           {view.bio && (

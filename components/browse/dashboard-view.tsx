@@ -6,7 +6,7 @@ import { TOUR_EVENT } from '@/components/shell/site-nav'
 import type { Campaign, Platform } from '@/lib/campaigns'
 import type { EndedCampaign } from '@/lib/campaigns-db'
 import { agoText } from '@/lib/time-ago'
-import { useNavUser } from '@/components/shell/nav-user'
+import { useNavUser, useSignedIn } from '@/components/shell/nav-user'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { EASE_OUT } from '@/lib/layout'
 import { CampaignGrid } from './campaign-grid'
@@ -18,7 +18,7 @@ import { GuidedTour } from './guided-tour'
 export function DashboardView({ campaigns, ended = [], startTour }: { campaigns: Campaign[]; ended?: EndedCampaign[]; startTour: boolean }) {
   const [query, setQuery] = useState('')
   const { user } = useNavUser()
-  const signedIn = Boolean(user?.signedIn)
+  const signedIn = useSignedIn()
   const [tourOpen, setTourOpen] = useState(startTour)
   const deferred = useDeferredValue(query)
 
