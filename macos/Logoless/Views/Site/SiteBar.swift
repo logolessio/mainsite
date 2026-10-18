@@ -24,7 +24,7 @@ struct SiteBar: View {
                     .help("Your profile")
             } else if app.phase != .starting {
                 GhostPill("Log in", height: 40) { Task { await app.signIn() } }
-                PaperPill("Get started", busy: app.signingIn, height: 40) { Task { await app.signIn() } }
+                PaperPill("Get started", busy: app.signingIn, height: 40) { app.beginOnboarding() }
             }
             GlassCircle(symbol: app.showMenu ? "xmark" : "line.3.horizontal", help: app.showMenu ? "Close the menu" : "Menu") { withAnimation(.smooth(duration: 0.3)) { app.showMenu.toggle(); app.showBell = false } }
         }
@@ -39,20 +39,19 @@ struct Avatar: View {
     let name: String
     var size: CGFloat = 36
 
-    /// The ready-made looks (/api/look/...) are vector pictures; they are drawn here as the same dark gradient with the first letter.
-    private var isLook: Bool { url?.path.hasPrefix("/api/look/") == true }
-    private var letter: String {
-        if let url, let l = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "l" })?.value, !l.isEmpty { return String(l.prefix(1)).uppercased() }
-        return String(name.prefix(1)).uppercased()
+    /// The ready-made looks (/api/look/<id>?l=L) are drawn here from the look's colours, as the site draws them.
+    private var look: (Look, String)? {
+        guard let url, url.path.hasPrefix("/api/look/") else { return nil }
+        let id = String(url.path.dropFirst("/api/look/".count))
+        let letter = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "l" })?.value ?? String(name.prefix(1))
+        return (Looks.byID(id) ?? Looks.forSeed(name), letter)
     }
 
     var body: some View {
         ZStack {
-            if let url, !isLook { RemoteImage(url: url, seed: name) }
-            else {
-                LinearGradient(colors: [Color(red: 0.31, green: 0.31, blue: 0.35), Color(red: 0.02, green: 0.02, blue: 0.02)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                Text(letter).font(.system(size: size * 0.46, weight: .semibold)).foregroundStyle(.white.opacity(0.92))
-            }
+            if let (l, letter) = look { LookArt(look: l, kind: .avatar, letter: letter) }
+            else if let url { RemoteImage(url: url, seed: name) }
+            else { LookArt(look: Looks.forSeed(name), kind: .avatar, letter: String(name.prefix(1))) }
         }
         .frame(width: size, height: size)
         .clipShape(Circle())

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { db } from '@/lib/db'
+import { db, nowSec } from '@/lib/db'
 import { protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
 import { notifyAdmins } from '@/lib/notify'
@@ -68,6 +68,8 @@ export const POST = route(async (req: Request) => {
   }
   const d = await db()
   await d.prepare('UPDATE users SET name = COALESCE(?2, name) WHERE id = ?1').bind(user.id, a.name || a.company || null).run()
+  // remembered, so the apps know this person has been through the flow and do not run it again on another device
+  await d.prepare("INSERT INTO settings (key, value, updated_at) VALUES (?1, '1', ?2) ON CONFLICT(key) DO UPDATE SET updated_at = excluded.updated_at").bind(`onboarded:${user.id}`, nowSec()).run()
   // say hello in the Discord server, once, now that the account exists
   const { welcomeMember } = await import('@/lib/discord/outbound')
   await welcomeMember(user.id)

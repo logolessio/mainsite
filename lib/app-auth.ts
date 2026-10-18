@@ -95,3 +95,31 @@ export const bearerOf = (req: Request) => {
   const m = /^Bearer (lgl_[0-9a-f]{48})$/.exec(req.headers.get('authorization') ?? '')
   return m ? m[1] : null
 }
+
+// ---------- showing the website's own pages inside the app ----------
+// The app signs in with a token; the website's pages sign in with a cookie. To show a page of the site in the app, the app asks for a link that
+// sets that cookie once (a code good for a minute, used once) and then lands on the page.
+
+/** A path on this site and nothing else: it starts with one slash, is not a protocol-relative address, and has only ordinary characters. */
+export const safeNext = (p: unknown): string => (typeof p === 'string' && /^\/(?!\/)[A-Za-z0-9\-_/?=&.%@~+#:,]*$/.test(p) && p.length <= 300 ? p : '/')
+
+export async function issueWebCode(email: string, next: string) {
+  const d = await db()
+  await d.prepare("DELETE FROM settings WHERE key LIKE 'appweb:%' AND updated_at < ?1").bind(nowSec() - 300).run()
+  const code = randomToken(24)
+  await put(`appweb:${await sha256Hex(code)}`, { e: email.toLowerCase(), n: safeNext(next), x: nowSec() + 60 })
+  return code
+}
+
+export async function redeemWebCode(code: string): Promise<{ email: string; next: string } | null> {
+  if (!/^[0-9a-f]{48}$/.test(code)) return null
+  const d = await db()
+  const row = await d.prepare('DELETE FROM settings WHERE key = ?1 RETURNING value').bind(`appweb:${await sha256Hex(code)}`).first<{ value: string }>()
+  if (!row) return null
+  try {
+    const v = JSON.parse(row.value) as { e: string; n: string; x: number }
+    return v.x < nowSec() ? null : { email: v.e, next: safeNext(v.n) }
+  } catch {
+    return null
+  }
+}

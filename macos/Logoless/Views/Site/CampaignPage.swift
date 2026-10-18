@@ -124,8 +124,8 @@ struct CampaignPage: View {
             }
             Text("Earnings can be withdrawn as soon as they are confirmed, from $10.").font(.system(size: 13)).foregroundStyle(.mute)
             HStack(spacing: 14) {
-                link("Campaign rules") { Platform.open(Config.base.appendingPathComponent("legal/campaign-rules")) }
-                link("Report") { Platform.open(Config.base.appendingPathComponent("report")) }
+                link("Campaign rules") { app.go(.page("/legal/campaign-rules")) }
+                link("Report") { app.go(.page("/report?about=campaign&ref=" + ("\(campaign.title) by \(campaign.creator)".addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""))) }
                 link(copied ? "Copied" : "Copy link") {
                     Platform.copy(campaign.pageURL.absoluteString)
                     copied = true

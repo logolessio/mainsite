@@ -168,6 +168,8 @@ struct Me: Decodable {
         let avatar: String?
         let accent: String?
         let badges: [String]
+        var banner: String?
+        var bannerKind: String?
     }
     let signedIn: Bool
     var isAdmin = false

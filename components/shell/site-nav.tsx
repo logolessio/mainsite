@@ -57,7 +57,7 @@ export function SiteNav() {
 
   return (
     <>
-      <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
+      <header data-site-nav className="pointer-events-none fixed inset-x-0 top-0 z-50">
         <div
           aria-hidden="true"
           className={cn('absolute inset-0 h-28 bg-gradient-to-b from-ink from-40% via-ink/85 to-transparent transition-opacity duration-300', open && 'opacity-0')}

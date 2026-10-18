@@ -1037,3 +1037,9 @@ html.underline-links footer a {
 [data-kb-row]:focus-within .kb-hint {
   display: inline-block;
 }
+
+/* ---------- inside the Mac and iPhone apps ---------- */
+/* The app draws the site's top bar and menu itself, with Liquid Glass; the page's own copies are hidden (the app sets data-app on the page). */
+html[data-app] [data-site-nav] {
+  display: none !important;
+}

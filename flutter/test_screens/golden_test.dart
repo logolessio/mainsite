@@ -13,6 +13,7 @@ Future<void> loadFont(String family, String path) async {
 
 AppState sample({AppRoute? route, bool onboarding = false, int step = 0}) {
   final s = AppState();
+  s.onboardingStart = step;
   s.phase = Phase.signedIn;
   s.loadedCampaigns = true;
   s.showOnboarding = onboarding;
@@ -42,14 +43,14 @@ void main() {
     await loadFont('Inter', 'assets/fonts/Inter.ttf');
   });
 
-  Future<void> shoot(WidgetTester t, String name, Size size, AppState state, {void Function(AppState)? after}) async {
+  Future<void> shoot(WidgetTester t, String name, Size size, AppState state, {void Function(AppState)? after, Duration wait = const Duration(milliseconds: 700)}) async {
     t.view.physicalSize = size;
     t.view.devicePixelRatio = 1;
     addTearDown(t.view.reset);
     await t.pumpWidget(LogolessApp(state: state));
     after?.call(state);
-    await t.pump(const Duration(milliseconds: 700));
-    await t.pump(const Duration(milliseconds: 700));
+    await t.pump(wait);
+    await t.pump(wait);
     await expectLater(find.byType(MaterialApp), matchesGoldenFile('goldens/$name.png'));
   }
 
@@ -65,5 +66,8 @@ void main() {
   testWidgets('profile desktop', (t) => shoot(t, 'profile_desktop', desk, sample(route: const AppRoute.dash(DashPage.profile))));
   testWidgets('queue desktop', (t) => shoot(t, 'queue_desktop', desk, sample(route: const AppRoute.dash(DashPage.queue))));
   testWidgets('menu desktop', (t) => shoot(t, 'menu_desktop', desk, sample(), after: (s) => s.showMenu = true));
-  testWidgets('onboarding welcome phone', (t) => shoot(t, 'onboarding_welcome_phone', phone, sample(onboarding: true)));
+  for (final i in [0, 1, 2, 3, 4, 5, 6]) {
+    testWidgets('onboarding $i phone', (t) => shoot(t, 'onboarding_${i}_phone', phone, sample(onboarding: true, step: i), wait: const Duration(milliseconds: 1600)));
+    testWidgets('onboarding $i desktop', (t) => shoot(t, 'onboarding_${i}_desktop', desk, sample(onboarding: true, step: i), wait: const Duration(milliseconds: 1600)));
+  }
 }

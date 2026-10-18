@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../core/state.dart';
 import '../pages/dash_shell.dart';
+import '../ui/background.dart';
 import '../ui/theme.dart';
 import 'bell_panel.dart';
 import 'campaign_page.dart';
@@ -56,7 +57,7 @@ class Shell extends StatelessWidget {
               if (app.showBell) const Positioned(top: 0, right: 0, child: SafeArea(child: Padding(padding: EdgeInsets.only(top: 56, right: 14, left: 14), child: BellPanel()))),
               if (app.showJump) const Positioned.fill(child: QuickJump()),
               if (app.banner != null) Positioned(left: 16, right: 16, bottom: 20, child: SafeArea(child: _Banner(app.banner!, () { app.banner = null; app.setOverlay(); }))),
-              if (app.showOnboarding) const Positioned.fill(child: Onboarding()),
+              if (app.showOnboarding) Positioned.fill(child: Onboarding(start: app.onboardingStart)),
             ]),
           ),
         ),

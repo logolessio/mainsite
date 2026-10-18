@@ -77,7 +77,6 @@ class PaperPill extends StatelessWidget {
           height: height,
           width: full ? double.infinity : null,
           padding: EdgeInsets.symmetric(horizontal: height > 40 ? 24 : 18),
-          alignment: Alignment.center,
           decoration: BoxDecoration(color: C.paper.withValues(alpha: 0.95), borderRadius: BorderRadius.circular(999), boxShadow: [BoxShadow(color: Colors.white.withValues(alpha: 0.10), blurRadius: 14, spreadRadius: -4)]),
           child: Row(mainAxisSize: full ? MainAxisSize.max : MainAxisSize.min, mainAxisAlignment: MainAxisAlignment.center, children: [
             if (busy) const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black)) else if (icon != null) Icon(icon, size: 16, color: Colors.black),
@@ -103,7 +102,6 @@ class GhostPill extends StatelessWidget {
           child: Container(
             height: height,
             padding: EdgeInsets.symmetric(horizontal: height > 40 ? 22 : 16),
-            alignment: Alignment.center,
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               if (icon != null) ...[Icon(icon, size: 15, color: C.paper), const SizedBox(width: 8)],
               Text(title, style: body(height > 40 ? 15 : 13, weight: 500)),

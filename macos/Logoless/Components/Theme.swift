@@ -208,15 +208,3 @@ extension Date {
         return f.localizedString(for: self, relativeTo: .now)
     }
 }
-
-/// The black the site sits on, with its soft glow.
-struct SiteBackground: View {
-    var body: some View {
-        ZStack {
-            Color.black
-            RadialGradient(colors: [Color.white.opacity(0.075), .clear], center: .init(x: 0.5, y: 0.02), startRadius: 0, endRadius: 560)
-            RadialGradient(colors: [Color.white.opacity(0.035), .clear], center: .init(x: 0.85, y: 0.6), startRadius: 0, endRadius: 420)
-        }
-        .ignoresSafeArea()
-    }
-}

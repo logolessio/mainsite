@@ -53,7 +53,15 @@ enum Route: Hashable {
     case home
     case campaign(String)
     case dash(DashPage)
+    /// A page of the website shown inside the app (a path such as "/pricing"), for every page that has no screen of its own.
+    case page(String)
     var isDash: Bool { if case .dash = self { return true } else { return false } }
+    /// Pages whose own layout has a rail and a header (the brand and owner dashboards), so the app's top bar stays away.
+    var isFullWeb: Bool {
+        guard case .page(let p) = self else { return false }
+        if p.hasPrefix("http") { return true }
+        return ["/dashboard", "/brand", "/admin", "/dev", "/owner"].contains { p == $0 || p.hasPrefix($0 + "/") || p.hasPrefix($0 + "?") }
+    }
 }
 
 enum Phase { case starting, signedOut, signedIn }
@@ -68,6 +76,11 @@ final class AppModel {
     var showBell = false
     var showOnboarding = false
     var onboardingStart = 0
+    var onboardingRole: String?
+    var liquidLoader = false
+    var features: [String: Bool] = [:]
+    /// Set by the web page on screen: asks it to go back one page; returns true if it did.
+    var webBack: (() -> Bool)?
 
     // who they are
     var phase: Phase = .starting
@@ -119,9 +132,13 @@ final class AppModel {
         #endif
         api.token = token
         async let list: Void = loadCampaigns()
+        Task { await loadConfig() }
         if token != nil { await refreshMe() } else { phase = .signedOut }
         await list
         if isSignedIn { startPolling(); await loadCurrent() }
+        #if DEBUG
+        if let p = ProcessInfo.processInfo.environment["LOGOLESS_OPEN"] { showOnboarding = false; goPage(p) }
+        #endif
     }
 
     func refreshMe() async {
@@ -163,7 +180,7 @@ final class AppModel {
         route = .home
     }
 
-    func replayOnboarding() { withAnimation(.smooth(duration: 0.4)) { showOnboarding = true } }
+    func replayOnboarding() { beginOnboarding() }
 
     /// Is this username free? nil when it could not be checked.
     func handleAvailable(_ h: String) async -> Bool? {
@@ -285,6 +302,7 @@ final class AppModel {
         switch route {
         case .home, .campaign: await loadCampaigns()
         case .dash(let p): await load(p)
+        case .page: break
         }
     }
 
@@ -383,7 +401,7 @@ final class AppModel {
     /// Moves to a page. The dashboard needs an account: signed-out people are asked to sign in first.
     func go(_ r: Route) {
         guard r != route else { return }
-        if r.isDash && !isSignedIn && phase != .starting {
+        if (r.isDash || r.isFullWeb) && !isSignedIn && phase != .starting {
             Task { await signIn(); if isSignedIn { go(r) } }
             return
         }
@@ -396,12 +414,74 @@ final class AppModel {
     }
 
     func back() {
+        if case .page = route, webBack?() == true { return }
         guard let last = history.popLast() else { return }
         showMenu = false; showBell = false
         if last.isDash != route.isDash { route = last } else { withAnimation(.easeInOut(duration: 0.22)) { route = last } }
     }
 
     var canGoBack: Bool { !history.isEmpty }
+
+    /// The screen the app has for a page of the site, if it has one.
+    func nativeRoute(forPath raw: String) -> Route? {
+        var path = raw.components(separatedBy: CharacterSet(charactersIn: "?#"))[0]
+        while path.count > 1 && path.hasSuffix("/") { path.removeLast() }
+        if path.isEmpty || path == "/" { return .home }
+        let parts = path.split(separator: "/").map(String.init)
+        if parts.count == 2, parts[0] == "campaign" { return .campaign(parts[1]) }
+        if parts.first == "dashboard" {
+            if parts.count == 1 { return .dash(.overview) }
+            if parts.count == 2 {
+                if parts[1] == "overview" { return .dash(.overview) }
+                if parts[1] == "payouts" { return .dash(.earnings) }
+                if let p = DashPage(rawValue: parts[1]), p != .queue { return .dash(p) }
+            }
+        }
+        return nil
+    }
+
+    /// Opens a page of the site: the app's own screen if it has one, otherwise the page itself, inside the app.
+    func goPage(_ path: String) {
+        if let r = nativeRoute(forPath: path) { go(r) } else { go(.page(path)) }
+    }
+
+    /// An address that shows the page already signed in (see /app/web on the site), or the plain address when signed out.
+    func webURL(for path: String) async -> URL {
+        let direct = URL(string: path, relativeTo: Config.base)?.absoluteURL ?? Config.base
+        guard isSignedIn else { return direct }
+        struct Body: Encodable { let next: String }
+        struct Reply: Decodable { let url: String }
+        if let r: Reply = try? await api.post("/api/app/web-link", Body(next: path)), let u = URL(string: r.url) { return u }
+        return direct
+    }
+
+    /// The owner dashboard: its own address on the real site, /admin on a local copy.
+    func goOwner() {
+        if let h = Config.base.host, h == "logoless.io" || h.hasSuffix(".logoless.io") { go(.page("https://owner.logoless.io/")) } else { go(.page("/admin")) }
+    }
+
+    func loadConfig() async {
+        struct F: Decodable { let leaderboard: Bool; let reels: Bool; let status: Bool }
+        struct C: Decodable { let liquidLoader: Bool; let features: F }
+        if let c: C = try? await api.get("/api/app/v1/config") {
+            liquidLoader = c.liquidLoader
+            features = ["leaderboard": c.features.leaderboard, "reels": c.features.reels, "status": c.features.status]
+        }
+    }
+
+    /// Plays the site's onboarding from the top (a link such as /onboarding?role=brand lands here).
+    func beginOnboarding(role: String? = nil) {
+        onboardingStart = 0
+        onboardingRole = role
+        withAnimation(.smooth(duration: 0.4)) { showOnboarding = true }
+    }
+
+    /// Has this account been through onboarding already (on this or another device)?
+    func onboardingDone() async -> Bool {
+        struct R: Decodable { let done: Bool }
+        let r: R? = try? await api.get("/api/app/v1/onboarding")
+        return r?.done ?? false
+    }
 
     func open(_ c: Campaign) { go(.campaign(c.id)) }
     func open(campaignID: String) { go(.campaign(campaignID)) }
@@ -413,8 +493,9 @@ final class AppModel {
         case .home: path = "/"
         case .campaign(let id): path = "/campaign/\(id)"
         case .dash(let p): path = p.webPath
+        case .page(let p): path = p
         }
-        Platform.open(Config.base.appendingPathComponent(path))
+        Platform.open(URL(string: path, relativeTo: Config.base)?.absoluteURL ?? Config.base)
     }
 
     // MARK: while the app is open

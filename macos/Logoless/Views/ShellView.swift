@@ -9,6 +9,7 @@ struct ShellView: View {
         case .home: "home"
         case .campaign(let id): "campaign-\(id)"
         case .dash(let p): "dash-\(p.rail.rawValue)"
+        case .page(let path): "page-\(path)"
         }
     }
 
@@ -33,12 +34,13 @@ struct ShellView: View {
                     if let c = app.campaign(id) { CampaignPage(campaign: c) }
                     else if app.loadedCampaigns { missing } else { ProgressView().controlSize(.large).frame(maxWidth: .infinity, maxHeight: .infinity) }
                 case .dash(let p): DashShell(page: p)
+                case .page(let path): WebPageView(path: path)
                 }
             }
             .id(key)
             .transition(.opacity)
 
-            if !app.route.isDash { SiteBar() }
+            if !app.route.isDash && !app.route.isFullWeb { SiteBar() }
 
             if app.showMenu || app.showBell {
                 Color.black.opacity(app.showMenu ? 0.45 : 0.001).ignoresSafeArea()

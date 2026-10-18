@@ -18,14 +18,24 @@ to share it, set a development team under Signing & Capabilities. Needs macOS 26
 
 ## How it is laid out (like the site)
 
-- **Site**: a floating top bar (the mark, the bell, Dashboard, you, the menu), the home page (the promise, a search that pins as you scroll,
-  filters, every campaign as its cover with the slide-up hover), a campaign page (cover and audio, the facts, the brief, Submit content), and the
-  slide-in menu.
-- **Dashboard** (the only place with a rail, as on the site): Overview, Submissions, Earnings, Profile (with Achievements and Saved), Settings
-  (with Notifications). Owners also get Queue: approve or decline submissions and held withdrawals.
-- **First launch**: a short welcome (what logoless is, how it pays), then sign in or create an account, a profile, and a PayPal email. Every step
-  can be skipped. Settings -> "Show the welcome tour" plays it again.
-- Keys: ⌘K jump to anything, ⌘1 to ⌘8 places, ⌘[ back, ⌘R refresh, ⇧⌘O open this page on logoless.io, Esc closes what floats or goes back.
+The app is the site, with Apple's Liquid Glass on everything that floats. Every page of the site is in it:
+
+- **Native screens** (drawn in SwiftUI from the site's JSON): the front page (the promise, a search that pins as you scroll, filters, every campaign as its
+  cover with the slide-up hover), campaign pages (with the audio player and Submit content), the floating top bar, the slide-in menu with your profile card,
+  the bell, and the creator dashboard: Overview, Submissions, Earnings (withdraw), Profile (with Achievements and Saved), Settings (with Notifications), and the
+  owner's Queue. The dashboard is the only place with a rail, as on the site (a glass bottom bar on a phone).
+- **Every other page of the site, inside the app** (`Views/Site/WebPageView.swift`): For creators, For brands, Pricing, About, Questions, Case studies, Contact,
+  Leaderboard, Reels, Status, the legal pages, public profiles, linked accounts, the brand dashboard, the owner dashboard (`owner.logoless.io`) and so on. They are
+  the site's own pages with no browser around them, already signed in (the app asks `/api/app/web-link` for a one-use link that sets the web session), and
+  the site's own top bar is hidden because the app draws it (`data-app` on the page, `data-site-nav` on the bar). Links to a page the app has its own screen for
+  (`/`, `/campaign/...`, `/dashboard/...`, `/login`, `/onboarding`) open that screen.
+- **First launch**: the app opens straight into the site's onboarding (`Views/Onboarding`), step for step: a line typed out in large type, Creator or Brand,
+  then one card, "Log in with logoless", which opens the website's own sign-in in a secure window (Google, Discord and email all work there; the site's own
+  email and password steps happen in that window), the email code if the account still needs one, PayPal, name, username (checked live), a look or your own
+  pictures, the accounts you post from, "Are you happy with how it looks?", the setting-up screen (with the white liquid when the owner has it switched on),
+  proving the accounts with a code in the bio, your profile address, the tour and done. An account that has already been through it (on this or another
+  device) skips it. Menu -> "Take the tour", or Profile -> "Show the welcome tour", plays it again.
+- Keys: ⌘K jump to anything, ⌘1 to ⌘8 places, ⌘[ back (a web page goes back a page first), ⌘R refresh, ⇧⌘O open this page on logoless.io, Esc closes what floats or goes back.
 
 ## Signing in
 
@@ -36,10 +46,10 @@ Signing out revokes it on the server. See `lib/app-auth.ts` on the site.
 
 ## Files
 
-`Logoless/Core` (API client, models, app state, sign-in), `Logoless/Components` (theme, glass controls), `Logoless/Views` (Site, Dash, Onboarding).
+`Logoless/Core` (API client, models, app state, sign-in, the looks), `Logoless/Components` (theme, glass controls, the site's moving background), `Logoless/Views` (Site, Dash, Onboarding).
 Xcode picks up any file added to those folders.
 
 ## Testing against a local site
 
-Debug builds read `LOGOLESS_BASE` (for example `http://localhost:3111`) and `LOGOLESS_TOKEN` from the environment. `LOGOLESS_SNAPSHOT="home,dash:overview"`
+Debug builds read `LOGOLESS_OPEN=/pricing` (open a site page at launch; the web view reports what it loaded to stderr), `LOGOLESS_BASE` (for example `http://localhost:3111`) and `LOGOLESS_TOKEN` from the environment. `LOGOLESS_SNAPSHOT="home,dash:overview"`
 draws pages into pictures in the app's temporary folder and quits (glass is drawn flat there). `LOGOLESS_ONBOARDING=1` forces the welcome tour.

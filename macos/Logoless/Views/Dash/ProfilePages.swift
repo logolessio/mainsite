@@ -25,7 +25,7 @@ struct ProfilePage: View {
                         }
                     }
                     if !compact { Spacer() }
-                    GhostPill("View public profile", symbol: "arrow.up.right", height: 40) { Platform.open(Config.base.appendingPathComponent("u/\(p.handle)")) }
+                    GhostPill("View public profile", symbol: "arrow.up.right", height: 40) { app.go(.page("/u/\(p.handle)")) }
                 }
                 .padding(28)
                 .frame(maxWidth: .infinity)
@@ -49,8 +49,8 @@ struct ProfilePage: View {
                     }
                 }
                 (compact ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12)) : AnyLayout(HStackLayout(spacing: 12))) {
-                    GhostPill("Handle, picture and look on logoless.io", symbol: "safari", height: 40) { Platform.open(Config.base.appendingPathComponent("dashboard/profile")) }
-                    GhostPill("Linked accounts", symbol: "link", height: 40) { Platform.open(Config.base.appendingPathComponent("dashboard/accounts")) }
+                    GhostPill("Handle, picture and look", symbol: "paintbrush", height: 40) { app.go(.page("/dashboard/profile")) }
+                    GhostPill("Linked accounts", symbol: "link", height: 40) { app.go(.page("/dashboard/accounts")) }
                 }
             } else {
                 ProgressView().controlSize(.large).frame(maxWidth: .infinity).padding(.vertical, 80)
@@ -145,7 +145,7 @@ struct SettingsPage: View {
                     row("This app talks to", Config.base.host ?? "logoless.io")
                     row("Version", Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")
                     (compact ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12)) : AnyLayout(HStackLayout(spacing: 12))) {
-                        GhostPill("Password, email and delete account", symbol: "safari", height: 40) { Platform.open(Config.base.appendingPathComponent("dashboard/settings")) }
+                        GhostPill("Password, Discord and delete account", symbol: "key", height: 40) { app.go(.page("/dashboard/settings")) }
                         GhostPill("Sign out", symbol: "rectangle.portrait.and.arrow.right", height: 40) { Task { await app.signOut() } }
                         GhostPill("Show the welcome tour", symbol: "sparkles", height: 40) { app.replayOnboarding() }
                     }

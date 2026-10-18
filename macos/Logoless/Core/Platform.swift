@@ -62,6 +62,18 @@ enum Platform {
         #endif
     }
 
+    /// A small tap under the finger (a phone only).
+    enum Tap { case tick, step, success }
+    static func tap(_ kind: Tap = .tick) {
+        #if os(iOS)
+        switch kind {
+        case .tick: UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        case .step: UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+        case .success: UINotificationFeedbackGenerator().notificationOccurred(.success)
+        }
+        #endif
+    }
+
     static func setBadge(_ n: Int) {
         #if os(macOS)
         NSApp?.dockTile.badgeLabel = n > 0 ? String(n) : nil

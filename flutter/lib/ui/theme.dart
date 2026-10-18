@@ -51,18 +51,3 @@ String relative(DateTime d) {
   if (s < 604800) return '${s ~/ 86400}d';
   return shortDate(d);
 }
-
-/// The black the site sits on, with its soft glow.
-class SiteBackground extends StatelessWidget {
-  const SiteBackground({super.key});
-  @override
-  Widget build(BuildContext context) => Positioned.fill(
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: Colors.black,
-            gradient: RadialGradient(center: const Alignment(0, -1.1), radius: 0.9, colors: [Colors.white.withValues(alpha: 0.075), Colors.transparent]),
-          ),
-          child: DecoratedBox(decoration: BoxDecoration(gradient: RadialGradient(center: const Alignment(0.7, 0.3), radius: 0.7, colors: [Colors.white.withValues(alpha: 0.035), Colors.transparent]))),
-        ),
-      );
-}

@@ -62,6 +62,7 @@ class AppState extends ChangeNotifier {
   AppRoute route = const AppRoute.home();
   final List<AppRoute> _history = [];
   bool showJump = false, showMenu = false, showBell = false, showOnboarding = false;
+  int onboardingStart = 0;
 
   // who they are
   Phase phase = Phase.starting;

@@ -11,6 +11,7 @@ struct QueuePage: View {
 
     var body: some View {
         DashPageFrame(page: .queue, subtitle: "Submissions and withdrawals that are waiting for you.") {
+            GhostPill("Open the full owner dashboard", symbol: "square.grid.2x2", height: 40) { app.goOwner() }
             ErrorLine(text: app.failures["staff"] ?? app.failures["decide"]) { Task { await app.loadStaff() } }
             if let s = app.staff {
                 SiteGrid(columns: compact ? 2 : 4, spacing: 14) {
