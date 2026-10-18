@@ -1,0 +1,38 @@
+name: logoless
+description: logoless for Android and Windows. Campaigns, submissions and earnings, drawn natively from logoless.io.
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: any
+  provider: any
+  shared_preferences: any
+  flutter_secure_storage: any
+  flutter_web_auth_2: any
+  url_launcher: any
+  flutter_svg: any
+  crypto: any
+  intl: any
+  audioplayers: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: any
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+  fonts:
+    - family: Gloock
+      fonts:
+        - asset: assets/fonts/Gloock-Regular.ttf
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter.ttf
