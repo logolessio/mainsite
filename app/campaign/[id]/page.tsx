@@ -69,7 +69,7 @@ export default async function CampaignPage({ params, searchParams }: Props) {
       <div className="px-4 pt-8 pb-16 md:pt-12">
         <CampaignSheet campaign={campaign} leftPct={leftPct} preview={dry} inline />
       </div>
-      <Related links={[{ href: '/', label: 'All campaigns' }, { href: '/for-creators', label: 'How creators earn' }, { href: '/faq', label: "That's why its called a Q&A :)" }]} />
+      <Related links={[{ href: '/', label: 'All campaigns' }, { href: '/for-creators', label: 'How creators earn' }, { href: '/faq', label: "Q&A" }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
     </main>
   )

@@ -22,8 +22,8 @@ const LD = {
 export default function Page() {
   return (
     <main>
-      <Breadcrumbs trail={[{ name: "That's why its called a Q&A :)" }]} />
-      <PageHero eyebrow="That's why its called a Q&A :)" title="Questions, answered" lede="If the answers your looking for aren't here, feel free to contact us." />
+      <Breadcrumbs trail={[{ name: "Q&A" }]} />
+      <PageHero eyebrow="Q&A" title="Questions, answered" lede="If the answers your looking for aren't here, feel free to contact us." />
       <Section className="pt-0 md:pt-0">
         <FaqTabs />
       </Section>

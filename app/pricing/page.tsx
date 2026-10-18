@@ -41,7 +41,7 @@ export default function Page() {
         </div>
       </section>
       <CtaBand title="Create your account now" href="/onboarding" label="Get started" />
-      <Related links={[{ href: '/for-creators', label: 'For creators' }, { href: '/for-brands', label: 'For brands' }, { href: '/faq', label: "That's why its called a Q&A :)" }]} />
+      <Related links={[{ href: '/for-creators', label: 'For creators' }, { href: '/for-brands', label: 'For brands' }, { href: '/faq', label: "Q&A" }]} />
     </main>
   )
 }

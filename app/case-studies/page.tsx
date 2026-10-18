@@ -27,7 +27,7 @@ export default function Page() {
         ]}
       />
       <CtaBand title="Want to be in the first one?" href="/contact" label="Talk to us" />
-      <Related links={[{ href: '/for-brands', label: 'For brands' }, { href: '/pricing', label: 'Pricing' }, { href: '/faq', label: "That's why its called a Q&A :)" }]} />
+      <Related links={[{ href: '/for-brands', label: 'For brands' }, { href: '/pricing', label: 'Pricing' }, { href: '/faq', label: "Q&A" }]} />
     </main>
   )
 }

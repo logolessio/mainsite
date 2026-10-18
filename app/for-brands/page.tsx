@@ -42,7 +42,7 @@ export default function Page() {
         ]}
       />
       <CtaBand title="Launch your first campaign" href="/onboarding?role=brand" label="Launch a campaign" />
-      <Related links={[{ href: '/pricing', label: 'Pricing' }, { href: '/faq', label: "That's why its called a Q&A :)" }, { href: '/case-studies', label: 'Case studies' }]} />
+      <Related links={[{ href: '/pricing', label: 'Pricing' }, { href: '/faq', label: "Q&A" }, { href: '/case-studies', label: 'Case studies' }]} />
     </main>
   )
 }

@@ -48,7 +48,7 @@ export default async function Page() {
         ]}
       />
       <CtaBand title="Ready to start?" href="/onboarding?role=clipper" label="Start earning" />
-      <Related links={[{ href: '/pricing', label: 'Pricing' }, { href: '/faq', label: "That's why its called a Q&A :)" }, { href: '/for-brands', label: 'For brands' }]} />
+      <Related links={[{ href: '/pricing', label: 'Pricing' }, { href: '/faq', label: "Q&A" }, { href: '/for-brands', label: 'For brands' }]} />
     </main>
   )
 }
