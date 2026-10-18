@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowRight, Banknote, Check, CircleDollarSign, Clapperboard, Compass, Copy, ImagePlus, LayoutDashboard, Loader2, Mail, Megaphone, Plus, Settings as SettingsIcon, UserRound, X } from 'lucide-react'
+import { ArrowRight, Check, Copy, Loader2, Mail, X } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
@@ -12,6 +12,7 @@ import { useMotionPrefs, useMounted } from '@/hooks/use-motion-prefs'
 import { type Provider, type Role, signInWithProvider, signUpWithEmail } from '@/lib/auth'
 import { uploadImage } from '@/lib/image-client'
 import { LookPicker } from '@/components/profile/look-picker'
+import { Tour } from './tour'
 import { VerifyAccounts } from './verify-accounts'
 import { avatarCss, bannerCss, lookById, lookFor, lookKey } from '@/lib/looks'
 import { checkHandleAvailable, resendEmailCode, verifyEmailCode } from '@/lib/onboarding'
@@ -257,64 +258,6 @@ function SettleOrb({ line, note }: { line: string; note: string }) {
             {note}
           </motion.p>
         </AnimatePresence>
-      </div>
-    </div>
-  )
-}
-
-type TourItem = { icon: React.ComponentType<{ className?: string }>; label: string; text: string }
-const TOUR: Record<Role, TourItem[]> = {
-  clipper: [
-    { icon: LayoutDashboard, label: 'Overview', text: 'Your balance, how your submissions are going, and the next thing to do to get set up.' },
-    { icon: Clapperboard, label: 'Submissions', text: 'Paste the link to something you posted. We take a first look right away, and a person checks anything unclear.' },
-    { icon: CircleDollarSign, label: 'Earnings', text: 'Approved views are counted here. Withdraw to your PayPal once you reach the minimum.' },
-    { icon: UserRound, label: 'Profile', text: 'Your public page: your look, a bio, and the accounts you post from.' },
-    { icon: SettingsIcon, label: 'Settings', text: 'Notifications, Discord, your password and your account.' },
-  ],
-  brand: [
-    { icon: LayoutDashboard, label: 'Overview', text: 'How your campaigns are doing, and the next thing to do to get set up.' },
-    { icon: Megaphone, label: 'Campaigns', text: 'Launch a campaign with a brief, a rate and a budget cap. Pause it or change its budget any time.' },
-    { icon: Clapperboard, label: 'Submissions', text: 'Everything made for your campaigns, with its views and its status.' },
-    { icon: Banknote, label: 'Balance', text: 'Add funds once. Every campaign draws from the same balance as creators earn.' },
-    { icon: SettingsIcon, label: 'Settings', text: 'Notifications, Discord, your password and your account.' },
-  ],
-}
-
-/** A tiny dashboard with a highlight that slides down it while a line explains each part. */
-function MiniDash({ role, onFinish }: { role: Role; onFinish: () => void }) {
-  const items = TOUR[role]
-  const [i, setI] = useState(0)
-  const last = i === items.length - 1
-  return (
-    <div className="w-full max-w-xl">
-      <div className="grid overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-line-strong sm:grid-cols-[11rem_1fr]">
-        <ul className="grid gap-1 border-b border-line-strong p-3 sm:border-r sm:border-b-0" aria-label="Dashboard sections">
-          {items.map((it, n) => (
-            <li key={it.label}>
-              <button type="button" onClick={() => setI(n)} aria-current={n === i} className="relative flex h-10 w-full items-center gap-2.5 rounded-xl px-3 text-left text-[15px] outline-none focus-visible:ring-2 focus-visible:ring-paper/60">
-                {n === i && <motion.span layoutId="tour-hl" transition={{ type: 'spring', stiffness: 420, damping: 34 }} className="absolute inset-0 rounded-xl bg-paper" />}
-                <it.icon className={cn('relative size-4', n === i ? 'text-ink' : 'text-mute')} />
-                <span className={cn('relative', n === i ? 'text-ink' : 'text-mute')}>{it.label}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-        <div className="flex min-h-[10rem] items-center p-6 text-left sm:min-h-[14rem]">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22 }}>
-              <p className="font-display text-3xl leading-none">{items[i].label}</p>
-              <p className="mt-3 text-[16px] leading-relaxed text-mute">{items[i].text}</p>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </div>
-      <div className="mt-8 flex items-center justify-center gap-6">
-        <button type="button" onClick={() => (i === 0 ? undefined : setI(i - 1))} disabled={i === 0} className={cn(quiet, 'disabled:invisible')}>
-          Back
-        </button>
-        <button type="button" onClick={() => (last ? onFinish() : setI(i + 1))} className={primary}>
-          {last ? 'Got it' : 'Next'}
-        </button>
       </div>
     </div>
   )
@@ -850,7 +793,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                 </>
               )}
 
-              {id === 'tour' && <MiniDash role={data.role ?? 'clipper'} onFinish={() => go('done')} />}
+              {id === 'tour' && <Tour role={data.role ?? 'clipper'} onFinish={() => go('done')} primary={primary} quiet={quiet} />}
 
               {id === 'done' && (
                 <>

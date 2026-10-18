@@ -297,3 +297,27 @@ struct Achievements: Decodable {
     let badges: [Badge]
     let points: Int
 }
+
+/// The Design page's choices that reach the apps: how the campaigns are laid out and how the text on a cover looks.
+struct CoverText: Decodable, Equatable {
+    var font = "site"
+    var fontKind = "site"
+    var size = "m"
+    var `case` = "normal"
+    var align = "left"
+    var panel = "solid"
+    var show = "hover"
+    var meta = "both"
+}
+
+struct SiteDesign: Decodable, Equatable {
+    var layout = "grid"
+    var cover = CoverText()
+    init() {}
+    init(from d: Decoder) throws {
+        let c = try d.container(keyedBy: CodingKeys.self)
+        layout = (try? c.decode(String.self, forKey: .layout)) ?? "grid"
+        cover = (try? c.decode(CoverText.self, forKey: .cover)) ?? CoverText()
+    }
+    private enum CodingKeys: String, CodingKey { case layout, cover }
+}

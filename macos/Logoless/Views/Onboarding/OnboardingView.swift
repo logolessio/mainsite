@@ -257,7 +257,7 @@ struct OnboardingView: View {
             }
 
         case .tour:
-            MiniDash(items: tour) { go(.done) }
+            Tour(brand: brand) { go(.done) }
 
         case .done:
             VStack(spacing: 32) {
@@ -268,22 +268,6 @@ struct OnboardingView: View {
 
         case .saving: EmptyView()
         }
-    }
-
-    private var tour: [(symbol: String, label: String, text: String)] {
-        brand ? [
-            ("square.grid.2x2", "Overview", "How your campaigns are doing, and the next thing to do to get set up."),
-            ("megaphone", "Campaigns", "Launch a campaign with a brief, a rate and a budget cap. Pause it or change its budget any time."),
-            ("film.stack", "Submissions", "Everything made for your campaigns, with its views and its status."),
-            ("banknote", "Balance", "Add funds once. Every campaign draws from the same balance as creators earn."),
-            ("gearshape", "Settings", "Notifications, Discord, your password and your account."),
-        ] : [
-            ("square.grid.2x2", "Overview", "Your balance, how your submissions are going, and the next thing to do to get set up."),
-            ("film.stack", "Submissions", "Paste the link to something you posted. We take a first look right away, and a person checks anything unclear."),
-            ("dollarsign.circle", "Earnings", "Approved views are counted here. Withdraw to your PayPal once you reach the minimum."),
-            ("person.crop.circle", "Profile", "Your public page: your look, a bio, and the accounts you post from."),
-            ("gearshape", "Settings", "Notifications, Discord, your password and your account."),
-        ]
     }
 
     private var look: Look { Looks.byID(data.lookId) ?? Looks.forSeed(data.handle.isEmpty ? (data.name.isEmpty ? "x" : data.name) : data.handle) }

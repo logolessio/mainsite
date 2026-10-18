@@ -44,6 +44,13 @@ back a one-use code; the app swaps it (with a PKCE secret it kept) for a token a
 The token is kept in the data-protection Keychain, or in a private file in the app's sandbox folder when the app is not signed for the Keychain.
 Signing out revokes it on the server. See `lib/app-auth.ts` on the site.
 
+## Following the Design page
+
+`GET /api/app/v1/config` carries the site's Design choices that matter to the apps, and the Home page follows them: the campaign **layout**
+(grid, large, compact, mosaic or list; `Views/Site/CampaignLayouts.swift`) and the **cover text** (when it shows, panel, size, letters, alignment, the line under
+the name, and the typeface kind; `Views/CampaignCard.swift`). The apps carry Gloock; another typeface picked on the site is drawn in the system serif, sans or mono.
+The onboarding tour (`Views/Onboarding/OBTour.swift`) is the site's walk through the dashboard, with a picture of each page.
+
 ## Files
 
 `Logoless/Core` (API client, models, app state, sign-in, the looks), `Logoless/Components` (theme, glass controls, the site's moving background), `Logoless/Views` (Site, Dash, Onboarding).

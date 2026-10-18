@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../core/state.dart';
 import '../ui/glass.dart';
 import '../ui/theme.dart';
-import 'campaign_card.dart';
+import 'campaign_layouts.dart';
 
 enum CampaignSort { featured('Newest'), rate('Highest rate'), budget('Most budget left');
   const CampaignSort(this.label);
@@ -69,14 +69,7 @@ class _HomePageState extends State<HomePage> {
       else
         SliverPadding(
           padding: EdgeInsets.fromLTRB(pad, 0, pad, 90),
-          sliver: SliverLayoutBuilder(builder: (context, c) {
-            final cols = compact ? 2 : (c.crossAxisExtent > 1100 ? 4 : c.crossAxisExtent > 760 ? 3 : 2);
-            final gap = compact ? 16.0 : 34.0;
-            return SliverGrid(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: cols, mainAxisSpacing: gap, crossAxisSpacing: gap),
-              delegate: SliverChildBuilderDelegate((context, i) => CampaignCard(campaign: list[i], onTap: () => app.open(list[i])), childCount: list.length),
-            );
-          }),
+          sliver: campaignSliver(layout: app.design.layout, list: list, compact: compact, onOpen: app.open),
         ),
     ]);
   }

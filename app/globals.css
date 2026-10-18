@@ -691,6 +691,20 @@ html[data-font='gloock'] .font-display,
 html[data-font='young-serif'] .font-display {
   letter-spacing: -0.015em;
 }
+/* capital style classical faces want air between the letters, not the tight serif default */
+html[data-font='cinzel'] .font-display,
+html[data-font='forum'] .font-display,
+html[data-font='marcellus'] .font-display,
+html[data-font='italiana'] .font-display,
+html[data-font='bellefair'] .font-display,
+html[data-font='playfair-sc'] .font-display {
+  letter-spacing: 0.005em;
+}
+html[data-font='abril'] .font-display,
+html[data-font='rozha'] .font-display,
+html[data-font='yeseva'] .font-display {
+  letter-spacing: -0.012em;
+}
 html[data-font='martian'] .font-display {
   letter-spacing: -0.06em;
   font-weight: 400;
@@ -778,6 +792,33 @@ html {
   outline: 2px solid var(--paper);
   outline-offset: 3px;
   box-shadow: 0 0 0 5px rgb(0 0 0 / 0.55);
+}
+/* A field that sits inside a rounded pill (the search bar) does not draw a ring around its own box, that looks misaligned and the offset
+   animation made it jump. The whole pill gets one ring along its own curve instead, which fades in without moving. */
+input[data-bare],
+input[data-bare]:focus-visible {
+  outline: none;
+  box-shadow: none;
+  transition: none;
+}
+/* the browser's own colour for an autofilled field would flash a pale box inside a dark group */
+input[data-bare]:-webkit-autofill {
+  -webkit-text-fill-color: var(--paper);
+  caret-color: var(--paper);
+  transition: background-color 99999s ease-out;
+}
+.lg-root::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 0 1.5px rgb(255 255 255 / 0.6);
+  opacity: 0;
+  transition: opacity var(--t-base) var(--ease-out);
+}
+.lg-root:has(input[data-bare]:focus-visible)::after {
+  opacity: 1;
 }
 /* Typing, and then pressing a number key, should not scroll a page by accident. */
 input[type='number'] {

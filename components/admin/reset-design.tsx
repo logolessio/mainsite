@@ -3,6 +3,7 @@
 import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { CHOICE_DEFAULTS } from '@/lib/design-choices'
 import { toast } from '@/lib/toast'
 
 // the standard look: how the site was before anything here was changed
@@ -14,6 +15,7 @@ const STANDARD: [string, string][] = [
   ['design_scroll_effects', '0'],
   ['design_liquid_loader', '0'],
   ['bg_dots', '0'],
+  ...Object.entries(CHOICE_DEFAULTS),
 ]
 
 /** One button that puts every design choice back to the standard look. Asks first. */

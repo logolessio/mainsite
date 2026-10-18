@@ -327,3 +327,25 @@ class Looks {
 
   static String key(String id) => 'g:$id';
 }
+
+/// The Design page's choices that reach the apps: how the text on a cover looks, and how the campaigns are laid out.
+class CoverText {
+  const CoverText({this.fontKind = 'site', this.size = 'm', this.letters = 'normal', this.align = 'left', this.panel = 'solid', this.show = 'hover', this.meta = 'both'});
+  final String fontKind, size, letters, align, panel, show, meta;
+  factory CoverText.fromJson(Map j) => CoverText(
+        fontKind: '${j['fontKind'] ?? 'site'}',
+        size: '${j['size'] ?? 'm'}',
+        letters: '${j['case'] ?? 'normal'}',
+        align: '${j['align'] ?? 'left'}',
+        panel: '${j['panel'] ?? 'solid'}',
+        show: '${j['show'] ?? 'hover'}',
+        meta: '${j['meta'] ?? 'both'}',
+      );
+}
+
+class SiteDesign {
+  const SiteDesign({this.layout = 'grid', this.cover = const CoverText()});
+  final String layout;
+  final CoverText cover;
+  factory SiteDesign.fromJson(Map j) => SiteDesign(layout: '${j['layout'] ?? 'grid'}', cover: j['cover'] is Map ? CoverText.fromJson(j['cover'] as Map) : const CoverText());
+}

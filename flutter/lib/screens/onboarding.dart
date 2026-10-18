@@ -13,6 +13,7 @@ import '../ui/background.dart';
 import '../ui/glass.dart';
 import '../ui/theme.dart';
 import 'ob_controls.dart';
+import 'ob_tour.dart';
 import 'ob_verify.dart';
 
 /// The site's onboarding (components/onboarding/onboarding-flow.tsx), step for step, drawn natively: a line typed out in large type, then the
@@ -493,7 +494,7 @@ class _OnboardingState extends State<Onboarding> {
         ]);
 
       case Id.tour:
-        return MiniDash(items: _brand ? const [(Icons.grid_view_rounded, 'Overview', 'How your campaigns are doing, and the next thing to do to get set up.'), (Icons.campaign_outlined, 'Campaigns', 'Launch a campaign with a brief, a rate and a budget cap. Pause it or change its budget any time.'), (Icons.video_library_outlined, 'Submissions', 'Everything made for your campaigns, with its views and its status.'), (Icons.payments_outlined, 'Balance', 'Add funds once. Every campaign draws from the same balance as creators earn.'), (Icons.settings_outlined, 'Settings', 'Notifications, Discord, your password and your account.')] : const [(Icons.grid_view_rounded, 'Overview', 'Your balance, how your submissions are going, and the next thing to do to get set up.'), (Icons.video_library_outlined, 'Submissions', 'Paste the link to something you posted. We take a first look right away, and a person checks anything unclear.'), (Icons.monetization_on_outlined, 'Earnings', 'Approved views are counted here. Withdraw to your PayPal once you reach the minimum.'), (Icons.person_outline_rounded, 'Profile', 'Your public page: your look, a bio, and the accounts you post from.'), (Icons.settings_outlined, 'Settings', 'Notifications, Discord, your password and your account.')], onFinish: () => _go(Id.done));
+        return Tour(brand: _brand, onFinish: () => _go(Id.done));
 
       case Id.done:
         return Column(children: [

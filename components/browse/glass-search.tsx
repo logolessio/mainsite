@@ -21,6 +21,7 @@ export function GlassSearch({ value, onChange, resultCount, className }: Props) 
         <Search aria-hidden="true" className="size-5 shrink-0 text-mute" />
         <input
           id="campaign-search"
+          data-bare
           type="search"
           value={value}
           onChange={(e) => onChange(e.target.value)}

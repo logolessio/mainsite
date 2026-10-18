@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Bodoni_Moda, Bricolage_Grotesque, DM_Mono, DM_Sans, Familjen_Grotesk, Figtree, Fragment_Mono, Fraunces, Funnel_Display, Funnel_Sans, Geologica, Gloock, Hanken_Grotesk, Host_Grotesk, Instrument_Sans, Martian_Mono, Mona_Sans, Newsreader, Onest, Schibsted_Grotesk, Special_Gothic, Syne, Wix_Madefor_Display, Young_Serif, Geist, Geist_Mono, IBM_Plex_Mono, Inter, Inter_Tight, Instrument_Serif, JetBrains_Mono, Manrope, Outfit, Playfair_Display, Plus_Jakarta_Sans, Sora, Space_Grotesk, Space_Mono } from 'next/font/google'
+import { Bodoni_Moda, Bricolage_Grotesque, DM_Mono, DM_Sans, Familjen_Grotesk, Figtree, Fragment_Mono, Fraunces, Funnel_Display, Funnel_Sans, Geologica, Gloock, Hanken_Grotesk, Host_Grotesk, Instrument_Sans, Martian_Mono, Mona_Sans, Newsreader, Onest, Schibsted_Grotesk, Special_Gothic, Syne, Wix_Madefor_Display, Young_Serif, Geist, Geist_Mono, IBM_Plex_Mono, Inter, Inter_Tight, Instrument_Serif, JetBrains_Mono, Manrope, Outfit, Playfair_Display, Plus_Jakarta_Sans, Sora, Space_Grotesk, Space_Mono, Cormorant_Garamond, EB_Garamond, DM_Serif_Display, Libre_Caslon_Text, Libre_Baskerville, Cinzel, Abril_Fatface, Prata, Rufina, Spectral, Lora, Old_Standard_TT, Gilda_Display, Playfair_Display_SC, Marcellus, Yeseva_One, Italiana, Bellefair, Vidaloka, Rozha_One, Cardo, Crimson_Pro, Sorts_Mill_Goudy, Libre_Bodoni, Baskervville, Forum, Cormorant_Infant, Castoro, Ovo, Gelasio, Source_Serif_4, Noto_Serif_Display, Libre_Caslon_Display, DM_Serif_Text, IM_Fell_English } from 'next/font/google'
 import { connection } from 'next/server'
 import { SecretDialogHost } from '@/components/admin/secret-dialog'
 import { SiteCheckHost } from '@/components/admin/site-check-host'
@@ -14,6 +14,7 @@ import { DesignProvider } from '@/components/shell/design-provider'
 import { FeaturesProvider } from '@/components/shell/features-provider'
 import { getAnnouncement } from '@/lib/announcement'
 import { featureState } from '@/lib/features'
+import { parseChoices } from '@/lib/design-choices'
 import { effectiveFont, fontById } from '@/lib/fonts'
 import { getOverrides } from '@/lib/copy'
 import { parseRoundness, roundnessVars } from '@/lib/roundness'
@@ -63,7 +64,43 @@ const bodoni = Bodoni_Moda({ subsets: ['latin'], display: 'swap', preload: false
 const martian = Martian_Mono({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-martian' })
 const dmMono = DM_Mono({ subsets: ['latin'], display: 'swap', preload: false, weight: ['300', '400', '500'], variable: '--font-f-dm-mono' })
 const fragment = Fragment_Mono({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-fragment' })
-const FONT_CLASSES = [inter, tight, geistMono, geist, dmSans, manrope, sora, spaceGrotesk, jakarta, outfit, instrument, fraunces, playfair, jetbrains, plexMono, spaceMono, bricolage, funnelDisplay, funnelSans, hanken, instrumentSans, schibsted, specialGothic, hostGrotesk, familjen, mona, onest, figtree, geologica, wix, syne, newsreader, youngSerif, gloock, bodoni, martian, dmMono, fragment].map((f) => f.variable).join(' ')
+// classical faces for the headlines (each one is paired with Inter for the text; see lib/fonts.ts)
+const cls_cormorant = Cormorant_Garamond({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-cormorant' })
+const cls_eb_garamond = EB_Garamond({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-eb-garamond' })
+const cls_dm_serif = DM_Serif_Display({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-dm-serif' })
+const cls_libre_caslon = Libre_Caslon_Text({ subsets: ['latin'], display: 'swap', preload: false, weight: ['400', '700'], variable: '--font-f-libre-caslon' })
+const cls_libre_baskerville = Libre_Baskerville({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-libre-baskerville' })
+const cls_cinzel = Cinzel({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-cinzel' })
+const cls_abril = Abril_Fatface({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-abril' })
+const cls_prata = Prata({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-prata' })
+const cls_rufina = Rufina({ subsets: ['latin'], display: 'swap', preload: false, weight: ['400', '700'], variable: '--font-f-rufina' })
+const cls_spectral = Spectral({ subsets: ['latin'], display: 'swap', preload: false, weight: ['300', '400', '500', '600'], variable: '--font-f-spectral' })
+const cls_lora = Lora({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-lora' })
+const cls_old_standard = Old_Standard_TT({ subsets: ['latin'], display: 'swap', preload: false, weight: ['400', '700'], variable: '--font-f-old-standard' })
+const cls_gilda = Gilda_Display({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-gilda' })
+const cls_playfair_sc = Playfair_Display_SC({ subsets: ['latin'], display: 'swap', preload: false, weight: ['400', '700', '900'], variable: '--font-f-playfair-sc' })
+const cls_marcellus = Marcellus({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-marcellus' })
+const cls_yeseva = Yeseva_One({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-yeseva' })
+const cls_italiana = Italiana({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-italiana' })
+const cls_bellefair = Bellefair({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-bellefair' })
+const cls_vidaloka = Vidaloka({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-vidaloka' })
+const cls_rozha = Rozha_One({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-rozha' })
+const cls_cardo = Cardo({ subsets: ['latin'], display: 'swap', preload: false, weight: ['400', '700'], variable: '--font-f-cardo' })
+const cls_crimson = Crimson_Pro({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-crimson' })
+const cls_sorts_mill = Sorts_Mill_Goudy({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-sorts-mill' })
+const cls_libre_bodoni = Libre_Bodoni({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-libre-bodoni' })
+const cls_baskervville = Baskervville({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-baskervville' })
+const cls_forum = Forum({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-forum' })
+const cls_cormorant_infant = Cormorant_Infant({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-cormorant-infant' })
+const cls_castoro = Castoro({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-castoro' })
+const cls_ovo = Ovo({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-ovo' })
+const cls_gelasio = Gelasio({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-gelasio' })
+const cls_source_serif = Source_Serif_4({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-source-serif' })
+const cls_noto_display = Noto_Serif_Display({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-noto-display' })
+const cls_libre_caslon_display = Libre_Caslon_Display({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-libre-caslon-display' })
+const cls_dm_serif_text = DM_Serif_Text({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-dm-serif-text' })
+const cls_im_fell = IM_Fell_English({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-im-fell' })
+const FONT_CLASSES = [inter, tight, geistMono, geist, dmSans, manrope, sora, spaceGrotesk, jakarta, outfit, instrument, fraunces, playfair, jetbrains, plexMono, spaceMono, bricolage, funnelDisplay, funnelSans, hanken, instrumentSans, schibsted, specialGothic, hostGrotesk, familjen, mona, onest, figtree, geologica, wix, syne, newsreader, youngSerif, gloock, bodoni, martian, dmMono, fragment, cls_cormorant, cls_eb_garamond, cls_dm_serif, cls_libre_caslon, cls_libre_baskerville, cls_cinzel, cls_abril, cls_prata, cls_rufina, cls_spectral, cls_lora, cls_old_standard, cls_gilda, cls_playfair_sc, cls_marcellus, cls_yeseva, cls_italiana, cls_bellefair, cls_vidaloka, cls_rozha, cls_cardo, cls_crimson, cls_sorts_mill, cls_libre_bodoni, cls_baskervville, cls_forum, cls_cormorant_infant, cls_castoro, cls_ovo, cls_gelasio, cls_source_serif, cls_noto_display, cls_libre_caslon_display, cls_dm_serif_text, cls_im_fell].map((f) => f.variable).join(' ')
 
 const baseMetadata: Metadata = {
   metadataBase: new URL(SITE.url),
@@ -118,7 +155,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body className="antialiased">
         <SkipLink />
         <FeaturesProvider dev={fs.dev} on={fs.on}>
-          <DesignProvider value={{ coverBorder: design.design_cover_border === '1', coverBar: design.design_cover_bar === '1', scrollEffects: design.design_scroll_effects === '1', liquidLoader: design.design_liquid_loader === '1' }}>
+          <DesignProvider value={{ coverBorder: design.design_cover_border === '1', coverBar: design.design_cover_bar === '1', scrollEffects: design.design_scroll_effects === '1', liquidLoader: design.design_liquid_loader === '1', ...parseChoices(design) }}>
           <CopyProvider overrides={overrides} isAdmin={isAdmin}>
             <AppShell announcement={announcement} dots={design.bg_dots === '1'} links={links} signedIn={Boolean(session?.user?.email)}>{blocked ? <DevGate email={session?.user?.email ?? null} /> : children}</AppShell>
             <AutoCopy />

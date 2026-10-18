@@ -108,6 +108,7 @@ private struct MoreSheet: View {
             row("Saved", "heart") { app.go(.dash(.saved)) }
             row("Achievements", "rosette") { app.go(.dash(.achievements)) }
             if app.isAdmin { row("Owner queue", "checklist") { app.go(.dash(.queue)) } }
+            row("Brand dashboard", "megaphone") { app.go(.page("/brand")) }
             Rectangle().fill(Color.line).frame(height: 1).padding(.vertical, 6)
             row("Back to the site", "arrow.up.left") { app.go(.home) }
             row("Sign out", "rectangle.portrait.and.arrow.right") { Task { await app.signOut() } }
@@ -164,6 +165,7 @@ private struct Rail: View {
             Spacer()
             VStack(alignment: .leading, spacing: 4) {
                 if app.isAdmin && page != .queue { footer("Owner dashboard", "shield") { app.go(.dash(.queue)) } }
+                footer("Brand dashboard", "megaphone") { app.go(.page("/brand")) }
                 footer("Back to the site", "arrow.up.left") { app.go(.home) }
             }
             .padding(.bottom, 14)

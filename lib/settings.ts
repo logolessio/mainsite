@@ -1,3 +1,4 @@
+import { COVER_TEXT_DEFAULTS, LAYOUT_DEFAULTS } from './design-choices'
 import { db, nowSec } from './db'
 
 /** Switches and limits the owner can change from the admin dashboard. Every change is written to the audit log by the caller. */
@@ -17,6 +18,8 @@ export const SETTING_DEFAULTS = {
   design_cover_bar: '0', // 1 = the bar along the bottom of a cover showing how much budget is left
   design_scroll_effects: '0', // 1 = sections fade and slide in as you scroll
   design_liquid_loader: '0', // 1 = the white liquid fill behind the onboarding loader
+  ...COVER_TEXT_DEFAULTS, // how the text on a campaign cover looks (see lib/design-choices.ts)
+  ...LAYOUT_DEFAULTS, // how the campaigns are laid out on the browse page
   bg_dots: '0', // 1 = show the rolling dot landscape behind the site (off by default)
   daily_payout_cap_cents: '500000', // above this much sent in 24 hours, new withdrawals wait for an admin
   review_over_cents: '50000', // single withdrawals above this wait for an admin

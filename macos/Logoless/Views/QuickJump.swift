@@ -18,7 +18,7 @@ struct QuickJump: View {
         for c in app.campaigns where !q.isEmpty && "\(c.title) \(c.creator)".lowercased().contains(q) {
             out.append(Hit(id: "c-\(c.id)", title: c.title, subtitle: c.creator, symbol: "square.grid.2x2") { app.open(c) })
         }
-        let site: [(String, String)] = [("For creators", "/for-creators"), ("For brands", "/for-brands"), ("Pricing", "/pricing"), ("About", "/about"), ("Questions", "/faq"), ("Case studies", "/case-studies"), ("Contact", "/contact"), ("Leaderboard", "/leaderboard"), ("Reels", "/reels"), ("Status", "/status"), ("Terms", "/legal/terms"), ("Privacy", "/legal/privacy"), ("Brand dashboard", "/brand"), ("Linked accounts", "/dashboard/accounts"), ("Setup guide", "/dashboard/setup")]
+        let site: [(String, String)] = [("For creators", "/for-creators"), ("For brands", "/for-brands"), ("Pricing", "/pricing"), ("About", "/about"), ("Q&A", "/faq"), ("Case studies", "/case-studies"), ("Contact", "/contact"), ("Leaderboard", "/leaderboard"), ("Reels", "/reels"), ("Status", "/status"), ("Terms", "/legal/terms"), ("Privacy", "/legal/privacy"), ("Brand dashboard", "/brand"), ("Linked accounts", "/dashboard/accounts"), ("Setup guide", "/dashboard/setup")]
         for (title, path) in site where q.isEmpty ? false : title.lowercased().contains(q) { out.append(Hit(id: "s-\(path)", title: title, subtitle: "Page", symbol: "doc.text") { app.goPage(path) }) }
         if q.isEmpty { out.append(Hit(id: "web", title: "Pricing", subtitle: "Page", symbol: "doc.text") { app.goPage("/pricing") }) }
         return Array(out.prefix(9))

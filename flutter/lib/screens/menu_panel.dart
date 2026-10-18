@@ -9,7 +9,7 @@ import '../ui/theme.dart';
 class MenuPanel extends StatelessWidget {
   const MenuPanel({super.key});
 
-  static const _main = [('Campaigns', null), ('For creators', '/for-clippers'), ('For brands', '/for-brands'), ('Pricing', '/pricing'), ('About', '/about'), ("That's why its called a Q&A :)", '/faq')];
+  static const _main = [('Campaigns', null), ('For creators', '/for-clippers'), ('For brands', '/for-brands'), ('Pricing', '/pricing'), ('About', '/about'), ("Q&A", '/faq')];
   static const _more = [('Case studies', '/case-studies'), ('Contact', '/contact'), ('Leaderboard', '/leaderboard'), ('Reels', '/reels'), ('Status', '/status')];
 
   @override

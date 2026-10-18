@@ -3,7 +3,9 @@ import { ResetDesign } from '@/components/admin/reset-design'
 import { Roundness } from '@/components/admin/roundness'
 import { Switch } from '@/components/admin/switches'
 import { Card, PageHeader } from '@/components/app/ui'
+import { CoverTextDesigner, LayoutPicker } from '@/components/admin/design-choices'
 import { FontPicker } from '@/components/dev/font-picker'
+import { parseChoices } from '@/lib/design-choices'
 import { effectiveFont } from '@/lib/fonts'
 import { parseRoundness } from '@/lib/roundness'
 import { allSettings } from '@/lib/settings'
@@ -25,6 +27,7 @@ export default async function Page() {
   await pageAdmin()
   const s = await allSettings()
   const on = (k: keyof typeof s) => s[k] === '1'
+  const { cover, layout } = parseChoices(s)
   return (
     <>
       <PageHeader title="Design" sub="How the whole site looks. Every change shows for everyone straight away." actions={<ResetDesign />} />
@@ -34,6 +37,12 @@ export default async function Page() {
 
       <H2 sub="Gloock for headers and titles, Inter for everything else, unless you pick something else here.">Typeface</H2>
       <FontPicker current={effectiveFont(s.design_font, s.design_font_mono)} />
+
+      <H2 sub="How the campaigns are arranged on the browse page.">Layout</H2>
+      <LayoutPicker initial={layout} />
+
+      <H2 sub="The name and the line under it on a campaign cover. Pick anything and the samples change, and it is saved for everyone.">Cover text</H2>
+      <CoverTextDesigner initial={cover} />
 
       <H2 sub="Things that were taken out to keep the site clean. Switch any of them back on.">Everything else</H2>
       <div className="grid max-w-3xl gap-6">

@@ -65,6 +65,7 @@ class AppState extends ChangeNotifier {
   int onboardingStart = 0;
   String? onboardingRole;
   bool liquidLoader = false;
+  SiteDesign design = const SiteDesign();
 
   // who they are
   Phase phase = Phase.starting;
@@ -205,6 +206,7 @@ class AppState extends ChangeNotifier {
     try {
       final c = await api.get('/api/app/v1/config') as Map;
       liquidLoader = c['liquidLoader'] == true;
+      if (c['design'] is Map) design = SiteDesign.fromJson(c['design'] as Map);
       _changed();
     } catch (_) {}
   }

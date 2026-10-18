@@ -49,3 +49,8 @@ flutter test test_screens --update-goldens   # writes test_screens/goldens/*.png
 
 `lib/core` (API client, models, app state, web sign-in), `lib/ui` (theme, glass controls, images), `lib/screens` (site pages, menu, bell, onboarding),
 `lib/pages` (dashboard).
+
+## Following the Design page
+
+`GET /api/app/v1/config` also carries the site's campaign layout (grid, large, compact, mosaic, list: `lib/screens/campaign_layouts.dart`) and the cover text
+choices (`lib/screens/campaign_card.dart`), and the onboarding tour (`lib/screens/ob_tour.dart`) is the site's walk through the dashboard with a picture of each page.

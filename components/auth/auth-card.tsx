@@ -1,13 +1,14 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Eye, EyeOff, Loader2, MailCheck } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Lock, Mail, UserRound } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { useTransitions } from '@/components/shell/transition-provider'
-import { Field, Input, PrimaryButton } from '@/components/ui/fields'
+import { PrimaryButton } from '@/components/ui/fields'
+import { FieldGroup, FieldRow, OtpInput, RowInput } from './email-ui'
 import {
   type Provider,
   type Role,
@@ -207,34 +208,35 @@ export function AuthCard({ mode }: { mode: Mode }) {
             )}
 
             <motion.form variants={item} onSubmit={submit} className={cn('grid gap-4', mode === 'forgot' && 'mt-7')}>
-              {mode === 'signup' && (
-                <Field label="Name">
-                  <Input name="name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} />
-                </Field>
-              )}
-              <Field label="Email">
-                <Input required type="email" name="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-              </Field>
-              {mode !== 'forgot' && (
-                <Field label="Password" hint={mode === 'signup' ? 'At least 10 characters. We check it has not been in a data breach.' : undefined}>
-                  <span className="relative block">
-                    <Input
-                      required
-                      name="password"
-                      type={show ? 'text' : 'password'}
-                      autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                      minLength={mode === 'signup' ? 10 : undefined}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pr-12"
-                    />
-                    <ShowToggle show={show} onClick={() => setShow((v) => !v)} />
-                  </span>
-                  {mode === 'signup' && password && <Meter level={pw} />}
-                </Field>
-              )}
+              <div>
+                <FieldGroup>
+                  {mode === 'signup' && (
+                    <FieldRow icon={UserRound} label="Name">
+                      <RowInput name="name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} />
+                    </FieldRow>
+                  )}
+                  <FieldRow icon={Mail} label="Email">
+                    <RowInput required type="email" name="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+                  </FieldRow>
+                  {mode !== 'forgot' && (
+                    <FieldRow icon={Lock} label="Password" right={<ShowToggle show={show} onClick={() => setShow((v) => !v)} />}>
+                      <RowInput
+                        required
+                        name="password"
+                        type={show ? 'text' : 'password'}
+                        autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                        minLength={mode === 'signup' ? 10 : undefined}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                    </FieldRow>
+                  )}
+                </FieldGroup>
+                {mode === 'signup' && <p className="mt-2 px-1 text-xs text-mute">At least 10 characters. We check it has not been in a data breach.</p>}
+                {mode === 'signup' && password && <Meter level={pw} />}
+              </div>
               {mode === 'login' && (
-                <TransitionLink href="/forgot-password" className="-mt-1 self-start text-xs text-mute underline underline-offset-4 hover:text-paper">
+                <TransitionLink href="/forgot-password" className="-mt-2 self-end text-xs text-mute underline underline-offset-4 hover:text-paper">
                   Forgot your password?
                 </TransitionLink>
               )}
@@ -271,33 +273,29 @@ export function AuthCard({ mode }: { mode: Mode }) {
             }}
             className="mt-7 text-center"
           >
-            <span className="mx-auto grid size-14 place-items-center rounded-pill border border-line-strong">
-              <MailCheck className="size-6" />
+            <span className="relative mx-auto grid size-14 place-items-center rounded-pill border border-line-strong">
+              <span aria-hidden="true" className="absolute inset-0 rounded-pill border border-paper/30 motion-safe:animate-ping [animation-duration:2.4s]" />
+              <Mail className="size-6" aria-hidden="true" />
             </span>
-            <input
-              autoFocus
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={6}
-              value={code}
-              onChange={(e) => {
-                const v = e.target.value.replace(/\D/g, '').slice(0, 6)
-                setCode(v)
-                if (mode === 'signup' && v.length === 6 && !busy) finish(v)
-              }}
-              aria-label="6-digit code"
-              placeholder="000000"
-              className="mx-auto mt-6 block h-14 w-56 rounded-pill border border-line-strong bg-ink/60 text-center font-mono text-2xl tracking-[0.5em] placeholder:text-mute/50 focus:border-paper/60 focus:outline-none"
-            />
+            <div className="mt-6">
+              <OtpInput
+                disabled={busy}
+                value={code}
+                onChange={(v) => {
+                  setCode(v)
+                  if (mode === 'signup' && v.length === 6 && !busy) finish(v)
+                }}
+              />
+            </div>
             {mode === 'forgot' && (
               <div className="mt-5 text-left">
-                <Field label="New password" hint="At least 10 characters.">
-                  <span className="relative block">
-                    <Input required name="new-password" type={show ? 'text' : 'password'} autoComplete="new-password" minLength={10} value={password} onChange={(e) => setPassword(e.target.value)} className="pr-12" />
-                    <ShowToggle show={show} onClick={() => setShow((v) => !v)} />
-                  </span>
-                  {password && <Meter level={pw} />}
-                </Field>
+                <FieldGroup>
+                  <FieldRow icon={Lock} label="New password" right={<ShowToggle show={show} onClick={() => setShow((v) => !v)} />}>
+                    <RowInput required name="new-password" type={show ? 'text' : 'password'} autoComplete="new-password" minLength={10} value={password} onChange={(e) => setPassword(e.target.value)} />
+                  </FieldRow>
+                </FieldGroup>
+                <p className="mt-2 px-1 text-xs text-mute">At least 10 characters.</p>
+                {password && <Meter level={pw} />}
               </div>
             )}
             <PrimaryButton type="submit" disabled={busy || code.length !== 6 || (mode === 'forgot' && password.length < 10)} className="mt-5 w-full">
@@ -305,10 +303,10 @@ export function AuthCard({ mode }: { mode: Mode }) {
               {mode === 'signup' ? 'Confirm and create account' : 'Set password and log in'}
             </PrimaryButton>
             <div className="mt-4 flex items-center justify-center gap-4 text-xs text-mute">
-              <button type="button" onClick={() => { setStep('form'); setError('') }} className="underline underline-offset-4 hover:text-paper">
+              <button type="button" onClick={() => { setStep('form'); setError('') }} className="rounded-pill border border-line px-3.5 py-1.5 transition-colors hover:border-line-strong hover:text-paper">
                 Use a different email
               </button>
-              <button type="button" disabled={cooldown > 0 || busy} onClick={resend} className="underline underline-offset-4 hover:text-paper disabled:no-underline disabled:opacity-60">
+              <button type="button" disabled={cooldown > 0 || busy} onClick={resend} className="rounded-pill border border-line px-3.5 py-1.5 transition-colors hover:border-line-strong hover:text-paper disabled:opacity-60 disabled:hover:border-line disabled:hover:text-mute">
                 {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend code'}
               </button>
             </div>
@@ -343,7 +341,7 @@ export function AuthCard({ mode }: { mode: Mode }) {
 
 function ShowToggle({ show, onClick }: { show: boolean; onClick: () => void }) {
   return (
-    <button type="button" aria-label={show ? 'Hide password' : 'Show password'} onClick={onClick} className="absolute inset-y-0 right-0 grid w-12 place-items-center text-mute hover:text-paper">
+    <button type="button" aria-label={show ? 'Hide password' : 'Show password'} onClick={onClick} className="flex w-12 shrink-0 items-center justify-center self-stretch text-mute transition-colors hover:text-paper">
       {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
     </button>
   )

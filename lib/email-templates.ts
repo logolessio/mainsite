@@ -21,72 +21,70 @@ type Layout = {
   test?: boolean
 }
 
+const SERIF = "Georgia,'Times New Roman',Times,serif"
+
 function layout(l: Layout) {
   const banner = l.test
-    ? `<tr><td style="padding:0 0 14px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="background:#2a1d05;border:1px solid #5a4210;border-radius:12px;padding:10px 14px;font:600 12px/1.4 ${SANS};letter-spacing:.06em;color:#ffcf70;text-transform:uppercase">Test email from the admin panel. Nothing was created.</td></tr></table></td></tr>`
+    ? `<tr><td style="padding:0 0 14px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="left" style="background:#2a1d05;border:1px solid #5a4210;border-radius:12px;padding:10px 14px;font:600 12px/1.4 ${SANS};color:#ffcf70">Test email from the admin panel. Nothing was created.</td></tr></table></td></tr>`
     : ''
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"><title>${esc(l.title)}</title>
 <style>
   body{margin:0!important;padding:0!important;background:#050506}
   a{color:#f3f2ee}
-  @media (max-width:520px){
-    .wrap{padding:20px 10px!important}
-    .card{padding:30px 20px!important}
-    .digit{width:40px!important;height:54px!important;font-size:24px!important;line-height:54px!important}
-    .h1{font-size:26px!important}
+  @media (max-width:560px){
+    .wrap{padding:20px 12px!important}
+    .card{padding:32px 22px!important}
+    .digit{width:42px!important;height:56px!important;font-size:26px!important;line-height:56px!important}
+    .h1{font-size:31px!important}
   }
 </style></head>
 <body style="margin:0;background:#050506">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#050506;font-size:1px;line-height:1px">${esc(l.preheader)}&#8199;&zwnj;&#8199;&zwnj;&#8199;&zwnj;&#8199;&zwnj;&#8199;&zwnj;&#8199;&zwnj;</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#050506" style="background:#050506"><tr><td align="center" class="wrap" style="padding:36px 16px">
-<table role="presentation" width="520" cellpadding="0" cellspacing="0" style="width:100%;max-width:520px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#050506" style="background:#050506"><tr><td align="center" class="wrap" style="padding:40px 16px">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="width:100%;max-width:560px">
 ${banner}
-<tr><td align="center" style="padding:0 0 22px"><a href="${SITE_URL}" style="text-decoration:none"><img src="${LOGO}" width="84" height="63" alt="logoless" style="display:block;border:0;width:84px;height:63px;font:600 20px/63px ${SANS};color:#f3f2ee;text-align:center"></a></td></tr>
-<tr><td class="card" bgcolor="#0b0b0d" style="background:#0b0b0d;background-image:linear-gradient(180deg,#141418 0%,#0b0b0d 38%);border:1px solid #232328;border-radius:28px;padding:42px 38px;text-align:center">
-  <table role="presentation" align="center" cellpadding="0" cellspacing="0"><tr><td style="border:1px solid #2c2c31;border-radius:999px;padding:5px 13px;font:600 11px/1 ${SANS};letter-spacing:.14em;text-transform:uppercase;color:#a6a6ad">${esc(l.tag)}</td></tr></table>
-  <h1 class="h1" style="margin:20px 0 10px;font:300 32px/1.12 ${SANS};letter-spacing:-.02em;color:#f3f2ee">${esc(l.title)}</h1>
-  <p style="margin:0 auto 30px;max-width:380px;font:400 15px/1.55 ${SANS};color:#a2a2a9">${esc(l.intro)}</p>
+<tr><td align="left" style="padding:0 4px 24px"><a href="${SITE_URL}" style="text-decoration:none"><img src="${LOGO}" width="52" height="39" alt="logoless" style="display:block;border:0;width:52px;height:39px;font:600 18px/39px ${SANS};color:#f3f2ee"></a></td></tr>
+<tr><td class="card" bgcolor="#0b0b0d" style="background:#0b0b0d;border:1px solid #232328;border-radius:24px;padding:46px 42px;text-align:left">
+  <h1 class="h1" style="margin:0 0 14px;font:400 38px/1.08 ${SERIF};letter-spacing:-.015em;color:#f3f2ee">${esc(l.title)}</h1>
+  <p style="margin:0 0 32px;max-width:410px;font:400 16px/1.6 ${SANS};color:#a2a2a9">${esc(l.intro)}</p>
   ${l.body}
-  ${l.note ? `<p style="margin:30px auto 0;max-width:390px;font:400 13px/1.55 ${SANS};color:#80808a">${esc(l.note)}</p>` : ''}
+  ${l.note ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:34px 0 0"><tr><td style="border-top:1px solid #222227;padding:18px 0 0;font:400 13px/1.6 ${SANS};color:#80808a">${esc(l.note)}</td></tr></table>` : ''}
 </td></tr>
-<tr><td align="center" style="padding:26px 12px 0;font:400 12px/1.7 ${SANS};color:#6c6c75">
+<tr><td align="left" style="padding:24px 6px 0;font:400 12px/1.7 ${SANS};color:#6c6c75">
   Sent by logoless because someone used this address on <a href="${SITE_URL}" style="color:#9a9aa3">logoless.io</a>.<br>
   <a href="${SITE_URL}/legal/terms" style="color:#9a9aa3">Terms</a> &nbsp;·&nbsp; <a href="${SITE_URL}/legal/privacy" style="color:#9a9aa3">Privacy</a> &nbsp;·&nbsp; <a href="${SITE_URL}/contact" style="color:#9a9aa3">Help</a>
 </td></tr>
 </table></td></tr></table></body></html>`
 }
 
-/** Six separate boxes, one per digit, so the code is easy to read and to type. */
+/** Six separate boxes, one per digit, so the code is easy to read and to type. Under them the same code as plain text, which is easy to select and copy. */
 function codeBoxes(code: string) {
-  const cells = [...code.replace(/\D/g, '').slice(0, 6)]
+  const digits = code.replace(/\D/g, '').slice(0, 6)
+  const cells = [...digits]
     .map(
-      (d, i) =>
-        `<td class="digit" align="center" width="48" height="62" style="width:48px;height:62px;background:#111114;border:1px solid #303036;border-radius:14px;font:600 30px/62px ${MONO};color:#ffffff${i === 2 ? ';' : ''}">${esc(d)}</td>${i === 2 ? '<td width="10" style="width:10px"></td>' : ''}`,
+      (d) =>
+        `<td class="digit" align="center" width="52" height="66" style="width:52px;height:66px;background:#111114;border:1px solid #303036;border-radius:14px;font:500 30px/66px ${MONO};color:#ffffff">${esc(d)}</td>`,
     )
-    .join('<td width="6" style="width:6px"></td>')
-  return `<table role="presentation" align="center" cellpadding="0" cellspacing="0" style="margin:0 auto"><tr>${cells}</tr></table>
-<table role="presentation" align="center" cellpadding="0" cellspacing="0" style="margin:18px auto 0"><tr>
-<td style="background:#ffffff;border-radius:999px 0 0 999px;padding:11px 16px 11px 18px;font:600 13px/1 ${SANS};color:#0a0a0b">Copy code</td>
-<td style="background:#16161a;border:1px solid #303036;border-left:0;border-radius:0 999px 999px 0;padding:10px 18px 10px 14px;font:600 15px/1 ${MONO};letter-spacing:.14em;color:#ffffff"><span style="-webkit-user-select:all;user-select:all">${esc(code.replace(/\D/g, '').slice(0, 6))}</span></td>
-</tr></table>
-<p style="margin:10px 0 0;font:400 12px/1.4 ${SANS};color:#6c6c75">Tap or double-click the code to select it, then copy.</p>`
+    .join('<td width="8" style="width:8px"></td>')
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0"><tr>${cells}</tr></table>
+<p style="clear:both;margin:20px 0 0;font:400 13px/1.5 ${SANS};color:#80808a">Cannot select the boxes? Copy it from here: <span style="font:600 14px/1.5 ${MONO};letter-spacing:.12em;color:#f3f2ee;-webkit-user-select:all;user-select:all">${esc(digits)}</span></p>`
 }
 
 function expiry() {
-  return `<table role="presentation" align="center" cellpadding="0" cellspacing="0" style="margin:22px auto 0"><tr><td style="background:#16161a;border-radius:999px;padding:8px 14px;font:500 12px/1 ${SANS};color:#b4b4bb">Works for 10 minutes · one use</td></tr></table>`
+  return `<p style="margin:22px 0 0;font:500 13px/1.5 ${SANS};color:#b4b4bb">Works for 10 minutes. It can be used once.</p>`
 }
 
 function details(meta?: Meta) {
   const rows = [meta?.place ? ['Where', meta.place] : null, meta?.device ? ['Device', meta.device] : null].filter(Boolean) as string[][]
   if (!rows.length) return ''
-  return `<table role="presentation" align="center" width="100%" cellpadding="0" cellspacing="0" style="margin:28px auto 0;max-width:340px;border-top:1px solid #222227">${rows
-    .map(([k, v]) => `<tr><td align="left" style="padding:11px 0 0;font:400 12px/1 ${SANS};color:#6c6c75">${esc(k)}</td><td align="right" style="padding:11px 0 0;font:500 12px/1 ${SANS};color:#c3c3ca">${esc(v)}</td></tr>`)
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:26px 0 0">${rows
+    .map(([k, v]) => `<tr><td align="left" style="padding:12px 0;border-top:1px solid #222227;font:400 13px/1 ${SANS};color:#6c6c75">${esc(k)}</td><td align="right" style="padding:12px 0;border-top:1px solid #222227;font:500 13px/1 ${SANS};color:#c3c3ca">${esc(v)}</td></tr>`)
     .join('')}</table>`
 }
 
 function button(href: string, label: string) {
-  return `<table role="presentation" align="center" cellpadding="0" cellspacing="0" style="margin:0 auto"><tr><td bgcolor="#f3f2ee" style="background:#f3f2ee;border-radius:999px"><a href="${esc(href)}" style="display:inline-block;padding:15px 34px;font:600 15px/1 ${SANS};color:#050506;text-decoration:none;border-radius:999px">${esc(label)}</a></td></tr></table>`
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0"><tr><td bgcolor="#f3f2ee" style="background:#f3f2ee;border-radius:999px"><a href="${esc(href)}" style="display:inline-block;padding:16px 34px;font:600 15px/1 ${SANS};color:#050506;text-decoration:none;border-radius:999px">${esc(label)}</a></td></tr></table>`
 }
 
 const metaText = (m?: Meta) => [m?.place ? `Where: ${m.place}` : '', m?.device ? `Device: ${m.device}` : ''].filter(Boolean).join('\n')
@@ -149,8 +147,8 @@ export function accountDeletedEmail(name: string, reason: string, money: string,
   const first = name.trim().slice(0, 60) || 'there'
   const why = reason.trim().slice(0, 280)
   const note = 'This was done by a person on the logoless team. If you think it is a mistake, write to us through the contact page and we will look again.'
-  const reasonBlock = why ? `<table role="presentation" align="center" width="100%" cellpadding="0" cellspacing="0" style="margin:0 auto 22px;max-width:380px"><tr><td align="left" style="background:#111114;border:1px solid #26262b;border-radius:16px;padding:14px 18px"><p style="margin:0 0 6px;font:600 11px/1 ${SANS};letter-spacing:.12em;text-transform:uppercase;color:#80808a">Reason given</p><p style="margin:0;font:400 15px/1.5 ${SANS};color:#e4e4e8">${esc(why)}</p></td></tr></table>` : ''
-  const moneyBlock = money ? `<p style="margin:0 auto 24px;max-width:380px;font:400 14px/1.55 ${SANS};color:#a2a2a9">${esc(money)}</p>` : ''
+  const reasonBlock = why ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 22px"><tr><td align="left" style="background:#111114;border:1px solid #26262b;border-radius:16px;padding:14px 18px"><p style="margin:0 0 6px;font:600 11px/1 ${SANS};letter-spacing:.12em;text-transform:uppercase;color:#80808a">Reason given</p><p style="margin:0;font:400 15px/1.5 ${SANS};color:#e4e4e8">${esc(why)}</p></td></tr></table>` : ''
+  const moneyBlock = money ? `<p style="margin:0 0 24px;max-width:400px;font:400 14px/1.55 ${SANS};color:#a2a2a9">${esc(money)}</p>` : ''
   return {
     subject: `${test ? '[TEST] ' : ''}Your logoless account has been deleted`,
     text: `${test ? 'THIS IS A TEST from the admin panel.\n\n' : ''}Hi ${first},\n\nA member of the logoless team has deleted your account.${why ? `\n\nReason given: ${why}` : ''}${money ? `\n\n${money}` : ''}\n\nYour profile, linked accounts and saved details have been removed. Records we are required to keep, like payment history, stay without your name.\n\nIf you think this is a mistake, write to us: ${SITE_URL}/contact\n\nlogoless`,
@@ -183,7 +181,7 @@ export function roleChangedEmail(name: string, roles: string[], test = false): M
       tag: test ? 'Test' : 'Team',
       title: has ? `You are now ${list}` : 'Team access removed',
       intro: has ? `Hi ${first}. The owner of logoless gave you the ${list} role. Sign in with the account you already use.` : `Hi ${first}. The owner of logoless removed your team access. Your normal account is unchanged.`,
-      body: has ? `<table role="presentation" align="center" cellpadding="0" cellspacing="0">${links}</table>` : '',
+      body: has ? `<table role="presentation" cellpadding="0" cellspacing="0">${links}</table>` : '',
       note: 'Only the owner can give or take away these roles. If this surprises you, reply through the contact page.',
       test,
     }),

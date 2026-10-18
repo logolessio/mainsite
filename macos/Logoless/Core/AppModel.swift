@@ -1,4 +1,5 @@
 import CryptoKit
+import WebKit
 import Observation
 import SwiftUI
 
@@ -79,6 +80,8 @@ final class AppModel {
     var onboardingRole: String?
     var liquidLoader = false
     var features: [String: Bool] = [:]
+    /// How the campaigns are laid out and how the text on a cover looks (the site's Design page).
+    var design = SiteDesign()
     /// Set by the web page on screen: asks it to go back one page; returns true if it did.
     var webBack: (() -> Bool)?
 
@@ -253,6 +256,8 @@ final class AppModel {
     func signOut() async {
         struct Empty: Encodable {}
         let _: API.OK? = try? await api.post("/api/app/signout", Empty())
+        // the site's own pages inside the app were signed in with a web session; it goes too
+        await WKWebsiteDataStore.default().removeData(ofTypes: [WKWebsiteDataTypeCookies, WKWebsiteDataTypeLocalStorage, WKWebsiteDataTypeSessionStorage], modifiedSince: .distantPast)
         dropSession()
     }
 
@@ -462,9 +467,10 @@ final class AppModel {
 
     func loadConfig() async {
         struct F: Decodable { let leaderboard: Bool; let reels: Bool; let status: Bool }
-        struct C: Decodable { let liquidLoader: Bool; let features: F }
+        struct C: Decodable { let liquidLoader: Bool; let features: F; let design: SiteDesign? }
         if let c: C = try? await api.get("/api/app/v1/config") {
             liquidLoader = c.liquidLoader
+            if let d = c.design { design = d }
             features = ["leaderboard": c.features.leaderboard, "reels": c.features.reels, "status": c.features.status]
         }
     }

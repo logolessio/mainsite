@@ -7,7 +7,7 @@ struct MenuPanel: View {
     @Environment(\.compact) private var compact
     @State private var hover: String?
 
-    private let main: [(String, String)] = [("Campaigns", "/"), ("For creators", "/for-creators"), ("For brands", "/for-brands"), ("Pricing", "/pricing"), ("About", "/about"), ("That's why its called a Q&A :)", "/faq")]
+    private let main: [(String, String)] = [("Campaigns", "/"), ("For creators", "/for-creators"), ("For brands", "/for-brands"), ("Pricing", "/pricing"), ("About", "/about"), ("Q&A", "/faq")]
 
     private var more: [(String, String)] {
         var out: [(String, String)] = [("Case studies", "/case-studies"), ("Contact", "/contact")]

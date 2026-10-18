@@ -129,11 +129,7 @@ struct HomeView: View {
         } else if shown.isEmpty {
             EmptyNote(symbol: "magnifyingglass", title: query.isEmpty ? "Nothing open here yet" : "Nothing matches that", message: query.isEmpty ? "New campaigns appear as soon as they go live." : "Try another word, or clear the search.")
         } else {
-            SiteGrid(columns: compact ? 2 : 4, spacing: compact ? 16 : 34) {
-                ForEach(shown) { c in
-                    Button { app.open(c) } label: { CampaignCard(campaign: c) }.buttonStyle(.plain)
-                }
-            }
+            CampaignCollection(campaigns: shown)
         }
     }
 }
