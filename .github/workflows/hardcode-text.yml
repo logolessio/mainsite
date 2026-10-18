@@ -1,0 +1,68 @@
+# Writes sentences edited in the owner dashboard (Site, Text) into the code, so what was edited becomes part of the site itself.
+# Every ten minutes it asks the site for edits that are not in the code yet. If there are any it can place, it changes the source,
+# checks that the project still type-checks, commits to main (which deploys), and lists the edits in lib/retired-edits.ts so the
+# saved copy stops being applied. An edit it cannot place safely keeps working from the editor. Nothing is committed if the check fails.
+name: Write edited text into the code
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Only report what would change
+        type: boolean
+        default: false
+
+concurrency:
+  group: hardcode-text
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  hardcode:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TEXT_SYNC_SECRET: ${{ secrets.TEXT_SYNC_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Are any edits waiting
+        id: check
+        run: node scripts/hardcode-edits.mjs --check
+        # prints "count=N" for the next step: how many edits can be written into the code
+
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.count != '0' && inputs.dry_run != true
+        with:
+          node-version: 22
+
+      - name: Install
+        if: steps.check.outputs.count != '0' && inputs.dry_run != true
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+
+      - name: Write the edits into the code
+        if: steps.check.outputs.count != '0' && inputs.dry_run != true
+        run: node scripts/hardcode-edits.mjs
+
+      - name: Check that the project still builds its types
+        if: steps.check.outputs.count != '0' && inputs.dry_run != true
+        run: pnpm exec tsc --noEmit -p .
+
+      - name: Commit and push
+        if: steps.check.outputs.count != '0' && inputs.dry_run != true
+        run: |
+          git config user.name "logoless text bot"
+          git config user.email "noreply@logoless.io"
+          git add -A -- app components lib hooks
+          if git diff --cached --quiet; then echo "Nothing changed."; exit 0; fi
+          git commit -F .hardcode-message.txt
+          git pull --rebase origin main
+          git push origin HEAD:main

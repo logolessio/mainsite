@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { HERO_VARIANTS_DEFAULT, HERO_VARIANTS_KEY } from '@/lib/copy-key'
 import { db } from '@/lib/db'
+import { pendingEdits } from '@/lib/text-pending'
 import { pageAdmin } from '@/lib/user'
 import { SectionTabs } from '@/components/app/section-tabs'
 
@@ -44,6 +45,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
     d.prepare('SELECT r.page AS page, COUNT(*) AS n, SUM(CASE WHEN c.value IS NOT NULL THEN 1 ELSE 0 END) AS edited FROM content_registry r LEFT JOIN content c ON c.key = r.key GROUP BY r.page ORDER BY r.page').all<PageCount>(),
     d.prepare('SELECT value FROM content WHERE key = ?1').bind(HERO_VARIANTS_KEY).first<{ value: string }>(),
   ])
+  const waiting = await pendingEdits()
   const total = pages.results.reduce((a, p) => a + p.n, 0)
   const edited = pages.results.reduce((a, p) => a + (p.edited ?? 0), 0)
   const chip = (on: boolean) => cn('inline-flex h-9 items-center rounded-pill border px-4 text-sm transition-colors duration-300', on ? 'border-white/[0.14] bg-white/[0.08] text-paper' : 'border-transparent text-paper/55 hover:text-paper')
@@ -52,6 +54,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
     <>
       <SectionTabs group="site" />
       <PageHeader title="Site text" sub="Every sentence on the site, grouped by page. You can also click “Edit text” in the corner of any page and click the words themselves." actions={<ScanSite />} />
+
+      <p className="mb-6 flex items-start gap-2.5 rounded-2xl border border-line px-5 py-4 text-[15px] text-mute">
+        <span aria-hidden="true" className={`mt-2 size-2 shrink-0 rounded-pill ${waiting.length ? 'bg-amber-300' : 'bg-emerald-400'}`} />
+        <span>
+          {waiting.length === 0
+            ? 'Everything you have edited is written into the code. New edits show on the site at once, and are written into the code by themselves within about ten minutes.'
+            : `${waiting.length} edit${waiting.length === 1 ? ' is' : 's are'} showing from the editor and waiting to be written into the code (about ten minutes). A sentence built from live numbers cannot be placed automatically and keeps working from the editor.`}
+        </span>
+      </p>
 
       <form className="mb-4 flex flex-wrap items-center gap-2" action="/admin/text">
         <input name="q" defaultValue={q} placeholder="Search all text" aria-label="Search all text" className="h-11 w-full rounded-pill border border-line-strong bg-ink/80 px-5 text-sm focus:outline-none sm:w-96" />
