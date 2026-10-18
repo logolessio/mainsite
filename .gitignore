@@ -27,3 +27,8 @@ node_modules
 .wrangler/
 .dev.vars
 tsconfig.tsbuildinfo
+
+# Mac app
+macos/build/
+macos/**/xcuserdata/
+macos/**/.DS_Store
