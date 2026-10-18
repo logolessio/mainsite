@@ -629,12 +629,12 @@ const swap = (b: Block, label: string, repl: Item | null): Block => ({ ...b, ite
 const more = (b: Block, extra: Item[]): Block => ({ ...b, items: [...(b.items ?? []), ...extra] })
 
 export const FINAL_RUNDOWN: Report = {
-  id: 'full-rundown-2026-10-17-final',
+  id: 'full-rundown-2026-10-18',
   to: 'emile@logoless.io',
-  subject: 'logoless: the updated full rundown (October 17), with bio verification, smoother motion, keyboard and accessibility',
+  subject: 'logoless: the updated full rundown (October 18): your text edits in the code, Gloock headlines, no flicker, a tidier owner dashboard',
   preheader: 'Everything the site does today, what changed since the last rundown, how to run it, and the short list that only you can finish.',
   title: 'The updated full rundown',
-  intro: 'This replaces the earlier rundowns. It describes the site as it stands now: what is new since the last email (bio verification, smoother motion, a keyboard layer and accessibility work), what every part does, how to run it from the owner dashboard, and the short list that only you can finish. This email was sent by a one-time trigger that has already been deleted.',
+  intro: 'This replaces the earlier rundowns. It describes the site as it stands now: what is new (your edited text written into the code, Gloock headlines, no more flicker, plain campaign covers, the owner dashboard in nine places with a roundness slider, bio verification in sign-up), what every part does, how to run it, and the short list that only you can finish.',
   blocks: [
     {
       h: 'The short version',
@@ -643,6 +643,33 @@ export const FINAL_RUNDOWN: Report = {
         ['Since the last rundown I added four things.', 'Real bio verification for TikTok, YouTube and Instagram accounts; a new motion system (page changes that cross-fade, springs, press feedback, toasts); a keyboard layer that works across the whole site; and an accessibility pass with an Accessibility page.'],
         ['One change affects your workload.', 'The automatic first look now approves a clip only when it comes from a verified account. Clips from any other account wait for a person. A switch under Platform settings turns that off if the queue gets heavy.'],
         ['What I could not check.', 'I could not run the site on a real phone or time it with a profiler, so the smoothness is built from known causes of lag, not measured. Bio checks were tested against stand-in pages and the real pages\' content, not yet from Cloudflare against a real account of yours. And no one has used the site with a real screen reader yet.'],
+      ],
+    },
+    {
+      h: 'New on October 18',
+      items: [
+        ['Your edited text is in the code.', 'All 84 sentences you changed in the text editor are now written straight into the site (the FAQ, For brands, For creators, Pricing, About, the sign-up screen and the rest), exactly as you wrote them, typos included. The saved copies in the database are retired, so nothing is swapped on a page after it loads any more. One thing to know: your edit of "Questions" applied to every label that said Questions (the heading on the FAQ page, the breadcrumb, the Related links at the bottom of six pages and the menu), so it now reads "That\'s why its called a Q&A :)" in all of them. Tell me if you want the links back to "Questions" and only the FAQ heading to keep the joke.'],
+        ['The site\'s wording is in the code too.', 'The swap from clip to submission and clipper to creator is written into the source, so it no longer happens in the browser after the page appears. Eight of your edited sentences use the word clip on purpose, and they are never reworded.'],
+        ['Gloock for headers and titles, Inter for the rest.', 'Every heading and title uses Gloock. Small labels that happen to be headings (14px and under) stay Inter, because a high contrast serif is not readable that small. Inter Tight headlines are still a choice under Site, Design.'],
+        ['No more flicker.', 'The causes were all the same kind: things that start invisible and fade in. The page wrapper, the blocks of a dashboard page, the campaign tiles, pictures, the search and filter bars, the profile card, the leaderboard and the loading skeletons all started at zero opacity, which means they are blank in the HTML the server sends until the page has woken up. None of them do now, the sign-in buttons in the top bar are drawn from the first paint, and the sidebar card is drawn at once. A slow page shows a thin progress line, a fast one shows nothing. The browser still cross-fades between pages.'],
+        ['Campaign covers are just covers.', 'No play button, no arrow, no text on top. When the pointer (or keyboard focus) is on one, a single panel slides up from the bottom with the name, the artist and the rate. Previews still play on the campaign\'s own page. The same cover is used in the strip on For creators.'],
+        ['Bio verification in sign-up.', 'After a creator saves their profile, the accounts they added are listed with a Verify button each: the same code in the bio, the same check. They can skip it and do it later in Accounts.'],
+        ['A tab icon that reads.', 'Your logo as the browser tab icon (a tight version so it stays readable at 16 pixels), the phone home-screen icon and the share image. The mark itself was already in use, so nothing else changed.'],
+      ],
+    },
+    {
+      h: 'The owner dashboard, in nine places',
+      intro: 'Fewer tabs, with related pages behind switches at the top of each page. Run is the daily work in the order it arrives; Manage is everything you set up or look at now and then. Press g then a letter to jump (o c s p u i w m y).',
+      items: [
+        ['Overview (o).', 'What needs a decision comes first, with the buttons right there; a queue with nothing in it takes no room and is named in one quiet line. Then the money, recent activity, your notes, and "Setup and health" and "Emergency controls" folded away with a count.'],
+        ['Campaigns (c).', 'Tabs: Campaigns, Launch, Artist links. Views with counts: Needs you, Waiting for payment, Live, Paused, Ended, Rejected. A live campaign can be pinned to the top of the home page (t) or unpinned.'],
+        ['Submissions (s), Payouts (p), People (u), Inbox (i).', 'As before: submissions with views and the verification bar, withdrawals being checked, one list of people with filters and a compact or card view, and the inbox with To do, Reports, Messages and Closed.'],
+        ['Site (w).', 'Design, Text, Links, then Features, Previews and Dashboards for developers. Design moved here. It now opens with Roundness: one slider from square to extra round that changes every corner on the whole site (buttons, fields, cards, covers, pictures), with presets and live samples, and "Back to the standard look" resets everything. Then the typeface, and the looks that were taken out.'],
+        ['Communicate (m).', 'Broadcast, Email and Discord, everything you send out. What comes in is the Inbox.'],
+        ['System (y).', 'Health (what used to be the Developer overview), Logs, Events, Audit, Settings, Keys, Security, API and Apps.'],
+        ['Search.', 'Press / or ⌘K and type a name or an address: people and campaigns appear as you type, next to pages and actions.'],
+        ['Notes and activity.', 'A private notepad on the Overview that saves itself, and a feed of what just happened (who joined, what was submitted, withdrawals, campaign requests).'],
+        ['Protection on big actions.', 'Banning, deleting, role changes, balance adjustments, sending held payouts and broadcasting to large groups ask for your admin password, and the browser then runs the Cloudflare check.'],
       ],
     },
     {
@@ -711,12 +738,6 @@ export const FINAL_RUNDOWN: Report = {
     L('The money, exactly'),
     more(L('How submissions and views are checked'), [['Which clips are approved automatically.', 'Only clips from a verified account (see bio verification). The switch is under Platform settings.']]),
     L('Discord'),
-    {
-      ...L('The owner dashboard (owner.logoless.io), now organised'),
-      items: (L('The owner dashboard (owner.logoless.io), now organised').items ?? []).map((it) =>
-        Array.isArray(it) && it[0] === 'People.' ? (['People.', 'One list instead of two, with filters (Everyone, Online now, New this week, Team, Extra checks, Restricted) and a switch between a compact list and profile cards. Open anyone for everything: roles, messages, moderation, balance and removal, and their Linked accounts card for bio checks. The sidebar counter shows how many bio checks are waiting.'] as [string, string]) : it,
-      ),
-    },
     L('The dev site and pushing features'),
     {
       h: 'The optional features (switch on with Push)',
@@ -742,7 +763,7 @@ export const FINAL_RUNDOWN: Report = {
         ['Try bio verification once.', 'With one of your own accounts. Decide whether to keep "Only auto-approve clips from verified accounts" on, knowing that clips from unverified accounts wait for you.'],
         ['Remove the sample campaigns', 'from Campaigns, Testing tools once a real campaign is live.'],
         ['Confirm the view-check schedule.', 'Cloudflare, Workers, mainsite, Triggers should list a 30 minute cron. If it does not, the first visitor after three quiet hours starts a check instead. A YOUTUBE_API_KEY makes the YouTube check sturdier.'],
-        ['Decide on your edited sentences.', 'Thirteen conflict with what the product does or what the Terms say (CLAIMS_REVIEW.md has each with suggested wording). I have not touched them. Say "do them all" or tell me which.'],
+        ['Decide on your edited sentences.', 'Thirteen conflict with what the product does or what the Terms say (CLAIMS_REVIEW.md has each with suggested wording). I have not touched them. Say "do them all" or tell me which. Your other 84 edits are already in the code.'],
         ['Push the optional features you want live.', 'Ending soon and Earnings goal are the ones about speed.'],
         ['Two people checks.', 'Have someone use the site with a screen reader, and have a lawyer look at stored balances, the 16-or-older confirmation and the Accessibility page.'],
       ],
