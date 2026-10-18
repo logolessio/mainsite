@@ -31,8 +31,8 @@ export default async function Page() {
   }))
   return (
     <>
-      <PageHeader title="Submissions" sub="Every clip you've submitted and where it stands. YouTube and TikTok views are checked about every two hours while a campaign is running." actions={<ActionLink href="/">Submit a clip</ActionLink>} />
-      <SubmissionsTable rows={rows} empty={<EmptyState icon="Clapperboard" title="Nothing submitted" body="Clips you submit to campaigns will appear here with their review status." />} />
+      <PageHeader title="Submissions" sub="Every submission you've submitted and where it stands. YouTube and TikTok views are checked about every two hours while a campaign is running." actions={<ActionLink href="/">Submit content</ActionLink>} />
+      <SubmissionsTable rows={rows} empty={<EmptyState icon="Clapperboard" title="Nothing submitted" body="Content you submit to campaigns will appear here with their review status." />} />
     </>
   )
 }

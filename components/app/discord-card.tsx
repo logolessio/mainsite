@@ -53,7 +53,7 @@ export function DiscordCard() {
   }
 
   return (
-    <Card id="discord" title="Discord" sub="Connect it to see your numbers, send clips and get your roles in the server. Notifications can arrive there too.">
+    <Card id="discord" title="Discord" sub="Connect it to see your numbers, send content and get your roles in the server. Notifications can arrive there too.">
       {s.linked ? (
         <div className="grid gap-5">
           <p className="flex items-center gap-2 text-sm">
@@ -62,7 +62,7 @@ export function DiscordCard() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm">Send my notifications as Discord messages</p>
-              <p className="text-xs text-mute">Clip decisions, earnings and payouts. Also use /notifications in the server.</p>
+              <p className="text-xs text-mute">Submission decisions, earnings and payouts. Also use /notifications in the server.</p>
             </div>
             <Toggle label="Discord messages" checked={s.dm} onChange={(on) => run('dm', async () => { await call({ action: 'dm', on }); setS({ ...s, dm: on }) })} />
           </div>
@@ -77,7 +77,7 @@ export function DiscordCard() {
         </div>
       ) : (
         <div>
-          <a href="/api/discord/connect?back=/dashboard/settings" className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-paper px-5 text-sm font-medium text-ink transition-colors hover:bg-paper/85">
+          <a href="/api/discord/connect?back=/dashboard/settings" className="inline-flex h-10 items-center justify-center gap-2 rounded-pill bg-paper px-5 text-sm font-medium text-ink transition-colors hover:bg-paper/85">
             Connect Discord
           </a>
         </div>

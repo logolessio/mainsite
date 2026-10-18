@@ -21,7 +21,7 @@ async function call(path: string, data?: object) {
 function Copy1({ text, label = 'Copy' }: { text: string; label?: string }) {
   const [done, setDone] = useState(false)
   return (
-    <button type="button" className="inline-flex h-8 items-center gap-1.5 rounded-full border border-line-strong px-3 text-xs hover:bg-paper/10" onClick={() => navigator.clipboard.writeText(text).then(() => (setDone(true), setTimeout(() => setDone(false), 1500)))}>
+    <button type="button" className="inline-flex h-8 items-center gap-1.5 rounded-pill border border-line-strong px-3 text-xs hover:bg-paper/10" onClick={() => navigator.clipboard.writeText(text).then(() => (setDone(true), setTimeout(() => setDone(false), 1500)))}>
       {done ? <Check className="size-3.5 text-emerald-300" /> : <Copy className="size-3.5" />} {done ? 'Copied' : label}
     </button>
   )
@@ -93,7 +93,7 @@ export function AppManager() {
   return (
     <div className="grid max-w-3xl gap-6">
       {fresh && (
-        <div className="rounded-[1.6rem] border border-emerald-400/30 bg-emerald-400/[0.05] p-5">
+        <div className="rounded-[calc(1.6rem*var(--round,1))] border border-emerald-400/30 bg-emerald-400/[0.05] p-5">
           <p className="text-sm">Copy this secret now. It is shown once, and we only keep a fingerprint.</p>
           <p className="mt-3 break-all rounded-xl bg-black/40 p-3 font-mono text-xs">{fresh.secret}</p>
           <div className="mt-3 flex gap-2">
@@ -109,7 +109,7 @@ export function AppManager() {
         title="Your apps"
         action={
           !open && (
-            <button type="button" onClick={() => (setOpen(true), setEditing(null), setForm(empty))} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-paper px-4 text-xs font-medium text-ink hover:bg-paper/85">
+            <button type="button" onClick={() => (setOpen(true), setEditing(null), setForm(empty))} className="inline-flex h-9 items-center gap-1.5 rounded-pill bg-paper px-4 text-xs font-medium text-ink hover:bg-paper/85">
               <Plus className="size-3.5" /> New app
             </button>
           )
@@ -117,7 +117,7 @@ export function AppManager() {
       >
         {open && (
           <form
-            className="mb-6 grid gap-4 rounded-[1.4rem] border border-line p-5"
+            className="mb-6 grid gap-4 rounded-[calc(1.4rem*var(--round,1))] border border-line p-5"
             onSubmit={(e) => {
               e.preventDefault()
               void save()
@@ -126,7 +126,7 @@ export function AppManager() {
             <p className="font-display text-xl">{editing ? 'Edit app' : 'New app'}</p>
             <label className="grid gap-1.5">
               <span className="text-xs text-mute">Name people will see</span>
-              <input className={input} value={form.name} maxLength={40} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="My clipping tool" />
+              <input className={input} value={form.name} maxLength={40} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="My creator tool" />
             </label>
             <label className="grid gap-1.5">
               <span className="text-xs text-mute">One line about it (optional)</span>
@@ -159,7 +159,7 @@ export function AppManager() {
               </fieldset>
             )}
             <div className="flex gap-2">
-              <button type="submit" disabled={busy === 'save'} className="inline-flex h-11 items-center gap-2 rounded-full bg-paper px-6 text-sm font-medium text-ink hover:bg-paper/85 disabled:opacity-40">
+              <button type="submit" disabled={busy === 'save'} className="inline-flex h-11 items-center gap-2 rounded-pill bg-paper px-6 text-sm font-medium text-ink hover:bg-paper/85 disabled:opacity-40">
                 {busy === 'save' && <Loader2 className="size-4 animate-spin" />} {editing ? 'Save' : 'Make the app'}
               </button>
               <button type="button" className="h-11 px-4 text-sm text-mute hover:text-paper" onClick={() => (setOpen(false), setEditing(null), setForm(empty))}>
@@ -184,12 +184,12 @@ export function AppManager() {
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-lg">{a.name}</p>
                   {a.verified && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-line-strong px-2.5 py-0.5 text-[11px]">
+                    <span className="inline-flex items-center gap-1 rounded-pill border border-line-strong px-2.5 py-0.5 text-[11px]">
                       <BadgeCheck className="size-3.5" /> Checked
                     </span>
                   )}
-                  {a.suspended && <span className="rounded-full border border-signal/50 px-2.5 py-0.5 text-[11px] text-signal">Switched off</span>}
-                  <span className="rounded-full border border-line px-2.5 py-0.5 text-[11px] text-mute">{a.type === 'confidential' ? 'Server app' : 'Browser or phone app'}</span>
+                  {a.suspended && <span className="rounded-pill border border-signal/50 px-2.5 py-0.5 text-[11px] text-signal">Switched off</span>}
+                  <span className="rounded-pill border border-line px-2.5 py-0.5 text-[11px] text-mute">{a.type === 'confidential' ? 'Server app' : 'Browser or phone app'}</span>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <code className="rounded-lg bg-white/[0.06] px-2.5 py-1.5 text-xs">{a.id}</code>
@@ -204,15 +204,15 @@ export function AppManager() {
                 </ul>
                 {!a.verified && <p className="text-xs text-mute">People see a warning that this app is from an independent developer until logoless checks it. To get it checked, write to us from the contact page.</p>}
                 <div className="flex flex-wrap gap-2">
-                  <button type="button" onClick={() => edit(a)} className="h-8 rounded-full border border-line-strong px-3.5 text-xs hover:bg-paper/10">
+                  <button type="button" onClick={() => edit(a)} className="h-8 rounded-pill border border-line-strong px-3.5 text-xs hover:bg-paper/10">
                     Edit
                   </button>
                   {a.type === 'confidential' && (
-                    <button type="button" disabled={busy === `rotate-${a.id}`} onClick={() => act(a.id, 'rotate')} className="h-8 rounded-full border border-line-strong px-3.5 text-xs hover:bg-paper/10 disabled:opacity-40">
+                    <button type="button" disabled={busy === `rotate-${a.id}`} onClick={() => act(a.id, 'rotate')} className="h-8 rounded-pill border border-line-strong px-3.5 text-xs hover:bg-paper/10 disabled:opacity-40">
                       New secret
                     </button>
                   )}
-                  <button type="button" disabled={busy === `delete-${a.id}`} onClick={() => act(a.id, 'delete')} className="inline-flex h-8 items-center gap-1 rounded-full border border-signal/50 px-3.5 text-xs text-signal hover:bg-signal/10 disabled:opacity-40">
+                  <button type="button" disabled={busy === `delete-${a.id}`} onClick={() => act(a.id, 'delete')} className="inline-flex h-8 items-center gap-1 rounded-pill border border-signal/50 px-3.5 text-xs text-signal hover:bg-signal/10 disabled:opacity-40">
                     <Trash2 className="size-3.5" /> Delete
                   </button>
                 </div>

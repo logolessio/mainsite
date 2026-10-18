@@ -39,13 +39,13 @@ export function AddFunds({ ready }: { ready: boolean }) {
     >
       <div className="flex flex-wrap gap-2" role="group" aria-label="Amount">
         {PRESETS.map((p) => (
-          <button key={p} type="button" onClick={() => setAmount(String(p))} aria-pressed={n === p} className={cn('h-10 rounded-full border px-5 text-sm transition-colors', n === p ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
+          <button key={p} type="button" onClick={() => setAmount(String(p))} aria-pressed={n === p} className={cn('h-10 rounded-pill border px-5 text-sm transition-colors', n === p ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
             ${p.toLocaleString()}
           </button>
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <label className="flex h-12 w-44 items-center rounded-full border border-line-strong bg-ink/80 px-5 focus-within:border-paper/60">
+        <label className="flex h-12 w-44 items-center rounded-pill border border-line-strong bg-ink/80 px-5 focus-within:border-paper/60">
           <span className="text-mute">$</span>
           <input inputMode="numeric" enterKeyHint="go" autoComplete="off" value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, '').slice(0, 5))} aria-label="Amount in dollars" className="ml-1 h-full w-full bg-transparent outline-none" />
         </label>
@@ -62,7 +62,7 @@ export function AddFunds({ ready }: { ready: boolean }) {
         </p>
       )}
       <p className="text-xs leading-relaxed text-mute">
-        This goes into your logoless balance, one pot for all your campaigns. Clippers are paid out of it as they earn, plus our {SITE.platformFeePct}% fee on top. <span className="text-paper/80">We cover PayPal&apos;s fees, so every dollar you add is a dollar you can spend.</span>
+        This goes into your logoless balance, one pot for all your campaigns. Creators are paid out of it as they earn, plus our {SITE.platformFeePct}% fee on top. <span className="text-paper/80">We cover PayPal&apos;s fees, so every dollar you add is a dollar you can spend.</span>
       </p>
     </form>
   )

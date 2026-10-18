@@ -44,7 +44,7 @@ export function PreviewPlayer({ campaign }: { campaign: Campaign }) {
   }, [playing, progress, duration])
 
   return (
-    <div data-tour="cc-preview" className="flex items-center gap-4 rounded-full border border-white/10 bg-white/[0.05] p-2.5 pr-5 backdrop-blur">
+    <div data-tour="cc-preview" className="flex items-center gap-4 rounded-pill border border-white/10 bg-white/[0.05] p-2.5 pr-5 backdrop-blur">
       <button
         type="button"
         onClick={() => toggle(campaign.id, campaign.previewUrl)}
@@ -52,7 +52,7 @@ export function PreviewPlayer({ campaign }: { campaign: Campaign }) {
         data-key="p"
         data-key-label="Play or pause the preview"
         aria-keyshortcuts="p"
-        className="grid size-14 shrink-0 place-items-center rounded-full bg-paper text-ink transition-transform hover:scale-105 active:scale-95"
+        className="grid size-14 shrink-0 place-items-center rounded-pill bg-paper text-ink transition-transform hover:scale-105 active:scale-95"
       >
         {playing ? <Pause className="size-5 fill-ink" /> : <Play className="size-5 translate-x-px fill-ink" />}
       </button>
@@ -85,12 +85,12 @@ export function PreviewPlayer({ campaign }: { campaign: Campaign }) {
       >
         <div className="absolute inset-0 flex items-center gap-[2px]">
           {heights.map((h, i) => (
-            <span key={i} style={{ height: `${h}%` }} className="w-full max-w-[4px] rounded-full bg-white/25" />
+            <span key={i} style={{ height: `${h}%` }} className="w-full max-w-[4px] rounded-pill bg-white/25" />
           ))}
         </div>
         <div ref={fill} className="absolute inset-0 flex items-center gap-[2px]" style={{ clipPath: 'inset(0 100% 0 0)' }}>
           {heights.map((h, i) => (
-            <span key={i} style={{ height: `${h}%` }} className="w-full max-w-[4px] rounded-full bg-paper" />
+            <span key={i} style={{ height: `${h}%` }} className="w-full max-w-[4px] rounded-pill bg-paper" />
           ))}
         </div>
       </div>

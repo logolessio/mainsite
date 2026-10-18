@@ -5,8 +5,11 @@ import Link from 'next/link'
 import { Badge } from '@/components/app/table'
 import { Card, PageHeader, StatCard } from '@/components/app/ui'
 import { LockdownButton } from '@/components/admin/lockdown'
+import { ActivityFeed } from '@/components/admin/activity-feed'
 import { OverviewQueue } from '@/components/admin/overview-queue'
+import { OwnerNotes } from '@/components/admin/owner-notes'
 import { Pill } from '@/components/admin/ui'
+import { recentActivity } from '@/lib/activity'
 import { waitingChecks } from '@/lib/bio-verify'
 import { money } from '@/lib/format'
 import { SITE } from '@/lib/site'
@@ -19,7 +22,7 @@ export const metadata: Metadata = { title: 'Overview | logoless', robots: { inde
 
 export default async function Page() {
   await pageAdmin()
-  const [f, c, h, sb, inbox, st, bios] = await Promise.all([funds(), counts(), health(), paypalStatus(), newInquiryCount(), allSettings(), waitingChecks()])
+  const [f, c, h, sb, inbox, st, bios, activity] = await Promise.all([funds(), counts(), health(), paypalStatus(), newInquiryCount(), allSettings(), waitingChecks(), recentActivity(10)])
   const locked = st.payouts_paused === '1' && st.submissions_paused === '1' && st.signups_paused === '1'
   // the requests, clips and withdrawals are decided right on this page; these are the rest that need a look
   const todo = [
@@ -40,9 +43,9 @@ export default async function Page() {
         <div className="mb-6 flex flex-wrap items-center gap-2" aria-label="Also waiting">
           <span className="mr-1 text-sm text-mute">Also waiting</span>
           {todo.map((t) => (
-            <Link key={t.label} href={t.href} className="inline-flex h-9 items-center gap-2 rounded-full border border-line-strong px-4 text-sm transition-colors duration-300 hover:bg-white/[0.06]">
+            <Link key={t.label} href={t.href} className="inline-flex h-9 items-center gap-2 rounded-pill border border-line-strong px-4 text-sm transition-colors duration-300 hover:bg-white/[0.06]">
               {t.label}
-              <span className="grid h-5 min-w-5 place-items-center rounded-full border border-cyan-300/60 px-1.5 text-[11px] text-cyan-200 tabular-nums">{t.n}</span>
+              <span className="grid h-5 min-w-5 place-items-center rounded-pill border border-cyan-300/60 px-1.5 text-[11px] text-cyan-200 tabular-nums">{t.n}</span>
             </Link>
           ))}
         </div>
@@ -75,6 +78,11 @@ export default async function Page() {
         <StatCard label="Active today" value={String(c.active24h ?? 0)} note={`${c.signups24h ?? 0} new in 24 hours`} />
         <StatCard label="Members" value={String(c.users ?? 0)} note={`${c.restricted ?? 0} restricted`} />
         <StatCard label="Live campaigns" value={String(c.live ?? 0)} note={`${c.awaitingPayment ?? 0} waiting for payment`} />
+      </div>
+
+      <div className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+        <ActivityFeed items={activity} />
+        <OwnerNotes initial={st.owner_notes} />
       </div>
 
       <div className="mt-10 grid gap-4">

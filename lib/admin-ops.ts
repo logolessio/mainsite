@@ -7,6 +7,7 @@ import { SITE } from './site'
 import { db, nowSec, uid } from './db'
 import { announceCampaign } from './discord/outbound'
 import { HttpError } from './http'
+import { pinnedIds, setSetting } from './settings'
 import { isMockId } from './mock-campaigns'
 import { balances, budgetLeft, costFor, creditEarning, releasePool, startNeeded } from './ledger'
 import { allowedPayout, getCaps } from './campaign-caps'
@@ -27,6 +28,8 @@ export const campaignActionSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('resume') }),
   z.object({ action: z.literal('end'), note: z.string().max(300).optional() }),
   z.object({ action: z.literal('delete') }),
+  z.object({ action: z.literal('pin') }),
+  z.object({ action: z.literal('unpin') }),
   z.object({
     action: z.literal('edit'),
     title: z.string().trim().min(2).max(60).optional(),
@@ -117,6 +120,15 @@ export async function campaignAction(actor: Actor, ip: string | null, id: string
       await d.prepare('DELETE FROM campaigns WHERE id = ?1').bind(id).run()
       break
     }
+    case 'pin':
+    case 'unpin': {
+      // Pinned campaigns come first on the browse page. The list is kept in settings, so nothing in the campaign itself changes.
+      if (a.action === 'pin' && c.status !== 'live') throw new HttpError(409, 'Only a live campaign can be pinned.')
+      const current = await pinnedIds()
+      const next = a.action === 'pin' ? [id, ...current.filter((x) => x !== id)].slice(0, 12) : current.filter((x) => x !== id)
+      await setSetting('pinned_campaigns', JSON.stringify(next))
+      break
+    }
     case 'edit': {
       const next = {
         title: a.title ?? c.title,
@@ -136,7 +148,7 @@ export async function campaignAction(actor: Actor, ip: string | null, id: string
     }
   }
   await audit(actor, `campaign.${a.action}`, id, c.title, ip)
-  if (a.action !== 'delete') {
+  if (a.action !== 'delete' && a.action !== 'pin' && a.action !== 'unpin') {
     const { campaignChanged } = await import('./discord/campaigns')
     await campaignChanged(id)
   }

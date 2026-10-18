@@ -18,7 +18,7 @@ export function ActionLink({
     <TransitionLink
       href={href}
       className={cn(
-        'inline-flex h-10 items-center justify-center gap-2 rounded-full px-5 text-sm transition-colors',
+        'inline-flex h-10 items-center justify-center gap-2 rounded-pill px-5 text-sm transition-colors',
         variant === 'solid' ? 'bg-paper font-medium text-ink hover:bg-paper/85' : 'border border-line-strong hover:bg-paper/10',
         className,
       )}

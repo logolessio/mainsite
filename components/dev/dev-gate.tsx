@@ -11,7 +11,7 @@ export function DevGate({ email }: { email: string | null }) {
     <div className="fixed inset-0 z-[200] overflow-y-auto bg-ink">
       <div className="mx-auto flex min-h-full max-w-md flex-col items-center px-5 py-12 text-center">
         <Logo className="h-12" />
-        <p className="mt-6 inline-flex rounded-full border border-line-strong px-3.5 py-1.5 font-mono text-[11px] tracking-[0.2em] text-mute uppercase">Test site · admins only</p>
+        <p className="mt-6 inline-flex rounded-pill border border-line-strong px-3.5 py-1.5 font-mono text-[11px] tracking-[0.2em] text-mute uppercase">Test site · admins only</p>
         <h1 className="mt-5 font-display text-4xl tracking-tight">This is where we try things first.</h1>
         <p className="mt-3 text-mute">Sign in with an admin account to see what is coming. The public site is at logoless.io.</p>
         {email ? (
@@ -19,7 +19,7 @@ export function DevGate({ email }: { email: string | null }) {
             <p className="text-sm">
               Signed in as <span className="text-paper">{email}</span>, which is not an admin account.
             </p>
-            <button type="button" onClick={() => signOut({ callbackUrl: '/' })} className="mt-4 inline-flex h-11 items-center rounded-full bg-paper px-6 text-sm font-medium text-ink hover:bg-paper/85">
+            <button type="button" onClick={() => signOut({ callbackUrl: '/' })} className="mt-4 inline-flex h-11 items-center rounded-pill bg-paper px-6 text-sm font-medium text-ink hover:bg-paper/85">
               Sign out
             </button>
             <a href="https://logoless.io" className="mt-3 block text-sm text-mute underline underline-offset-4 hover:text-paper">

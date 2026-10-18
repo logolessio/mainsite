@@ -9,15 +9,13 @@ import { CampaignTile } from './campaign-tile'
 export function CampaignGrid({ campaigns }: { campaigns: Campaign[] }) {
   const { scrollEffects } = useDesign()
   return (
-    <ul data-no-copy data-kb-grid className="mx-auto grid max-w-[1200px] grid-cols-2 gap-4 [perspective:1400px] sm:grid-cols-3 md:gap-8 lg:grid-cols-4">
+    <ul data-no-copy data-kb-grid className="mx-auto grid max-w-[1200px] grid-cols-2 gap-4 sm:grid-cols-3 md:gap-8 lg:grid-cols-4">
       {campaigns.map((campaign, i) => (
         <motion.li
           key={campaign.id}
           data-kb-cell
           data-tour={i === 0 ? 'tile' : undefined}
           data-campaign={i === 0 ? campaign.id : undefined}
-          className={!scrollEffects && i < 12 ? 'tile-rise' : undefined}
-          style={!scrollEffects && i < 12 ? { animationDelay: `${(i % 4) * 55 + Math.floor(i / 4) * 70}ms` } : undefined}
           initial={scrollEffects ? 'hidden' : false}
           whileInView={scrollEffects ? 'show' : undefined}
           viewport={{ once: true, margin: '0px 0px -8% 0px' }}

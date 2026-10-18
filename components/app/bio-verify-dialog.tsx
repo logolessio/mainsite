@@ -102,37 +102,37 @@ function Dialog({ platform, handle, onClose, onChange }: { platform: P; handle: 
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[90] grid place-items-center overflow-y-auto bg-black/75 p-4" onClick={onClose}>
-      <motion.div ref={box} role="dialog" aria-modal="true" aria-label={`Verify ${LABEL[platform]}`} initial={{ opacity: 0, y: 24, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.98, transition: { duration: 0.16 } }} transition={SPRING_POP} onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-[28px] border border-white/12 bg-gradient-to-b from-[#17171b] to-[#0b0b0d] p-6 md:p-8">
+      <motion.div ref={box} role="dialog" aria-modal="true" aria-label={`Verify ${LABEL[platform]}`} initial={{ opacity: 0, y: 24, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.98, transition: { duration: 0.16 } }} transition={SPRING_POP} onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-[calc(28px*var(--round,1))] border border-white/12 bg-gradient-to-b from-[#17171b] to-[#0b0b0d] p-6 md:p-8">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="grid size-12 place-items-center rounded-full border border-line"><BrandIcon name={platform} className="size-6" /></span>
+            <span className="grid size-12 place-items-center rounded-pill border border-line"><BrandIcon name={platform} className="size-6" /></span>
             <div className="min-w-0">
               <h2 className="font-display text-2xl">Verify {LABEL[platform]}</h2>
               <p className="truncate text-sm text-mute">@{handle}</p>
             </div>
           </div>
-          <button type="button" aria-label="Close" onClick={onClose} className="grid size-9 place-items-center rounded-full hover:bg-white/10"><X className="size-4" /></button>
+          <button type="button" aria-label="Close" onClick={onClose} className="grid size-9 place-items-center rounded-pill hover:bg-white/10"><X className="size-4" /></button>
         </div>
 
         {phase.kind === 'verified' ? (
           <div className="mt-8 text-center">
-            <span className="mx-auto grid size-14 place-items-center rounded-full bg-emerald-400/15 text-emerald-300"><Check className="size-7" /></span>
+            <span className="mx-auto grid size-14 place-items-center rounded-pill bg-emerald-400/15 text-emerald-300"><Check className="size-7" /></span>
             <p className="mt-5 text-lg">@{handle} is verified</p>
-            <p className="mx-auto mt-2 max-w-xs text-sm text-mute">Clips from this account can now be checked automatically. You can take the code out of your bio.</p>
-            <button type="button" onClick={onClose} className="mt-7 inline-flex h-12 w-full items-center justify-center rounded-full bg-paper text-[15px] font-medium text-ink transition-colors hover:bg-paper/85">Done</button>
+            <p className="mx-auto mt-2 max-w-xs text-sm text-mute">Submissions from this account can now be checked automatically. You can take the code out of your bio.</p>
+            <button type="button" onClick={onClose} className="mt-7 inline-flex h-12 w-full items-center justify-center rounded-pill bg-paper text-[15px] font-medium text-ink transition-colors hover:bg-paper/85">Done</button>
           </div>
         ) : phase.kind === 'waiting' ? (
           <div className="mt-8 text-center">
             <p className="text-lg">Waiting for the team</p>
             <p className="mx-auto mt-2 max-w-xs text-sm text-mute">Someone will look at your bio and you will get a notification. Leave the code in your bio until then.</p>
             <p className="mt-5 inline-block rounded-xl border border-line-strong bg-ink/70 px-4 py-2 font-mono text-sm select-all">{code}</p>
-            <button type="button" onClick={onClose} className="mt-7 inline-flex h-12 w-full items-center justify-center rounded-full border border-white/25 text-[15px] transition-colors hover:bg-white/10">Close</button>
+            <button type="button" onClick={onClose} className="mt-7 inline-flex h-12 w-full items-center justify-center rounded-pill border border-white/25 text-[15px] transition-colors hover:bg-white/10">Close</button>
           </div>
         ) : (
           <>
             <ol className="mt-6 grid gap-5 text-[15px]">
               <li className="flex gap-3">
-                <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full border border-line-strong text-xs">1</span>
+                <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-pill border border-line-strong text-xs">1</span>
                 <div className="min-w-0 flex-1">
                   <p>Put this code in your bio</p>
                   <div className="mt-3 flex items-center gap-2">
@@ -145,7 +145,7 @@ function Dialog({ platform, handle, onClose, onChange }: { platform: P; handle: 
                 </div>
               </li>
               <li className="flex gap-3">
-                <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full border border-line-strong text-xs">2</span>
+                <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-pill border border-line-strong text-xs">2</span>
                 <div className="min-w-0 flex-1">
                   <p>Save it, then check</p>
                   <p className="mt-1 text-sm text-mute">It can take a minute for the platform to show the new bio.</p>
@@ -163,11 +163,11 @@ function Dialog({ platform, handle, onClose, onChange }: { platform: P; handle: 
             {platform === 'instagram' && phase.kind === 'ready' && <p className="mt-5 text-sm text-mute">Instagram does not let a website read profiles, so a person on our team will check this one. Try the check first, or ask us straight away once the code is in your bio.</p>}
 
             <div className="mt-6 grid gap-2.5">
-              <button type="button" onClick={run} disabled={busy || !code} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-paper text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
+              <button type="button" onClick={run} disabled={busy || !code} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-pill bg-paper text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
                 {phase.kind === 'checking' && <Loader2 aria-hidden="true" className="size-4 animate-spin" />} Check my bio
               </button>
               {canAsk && (
-                <button type="button" onClick={ask} disabled={busy} className={cn('inline-flex h-12 w-full items-center justify-center rounded-full border border-white/25 text-[15px] transition-colors hover:bg-white/10 disabled:opacity-40')}>
+                <button type="button" onClick={ask} disabled={busy} className={cn('inline-flex h-12 w-full items-center justify-center rounded-pill border border-white/25 text-[15px] transition-colors hover:bg-white/10 disabled:opacity-40')}>
                   Ask the team to check it
                 </button>
               )}

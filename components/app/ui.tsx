@@ -64,11 +64,11 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
       aria-checked={checked}
       aria-label={label}
       onClick={() => onChange(!checked)}
-      className={cn('relative h-7 w-12 shrink-0 rounded-full border transition-colors', checked ? 'border-paper bg-paper' : 'border-line-strong bg-ink')}
+      className={cn('relative h-7 w-12 shrink-0 rounded-pill border transition-colors', checked ? 'border-paper bg-paper' : 'border-line-strong bg-ink')}
     >
       <span
         aria-hidden="true"
-        className={cn('absolute top-[3px] left-[3px] size-5 rounded-full transition-all duration-200', checked ? 'translate-x-5 bg-ink' : 'translate-x-0 bg-mute')}
+        className={cn('absolute top-[3px] left-[3px] size-5 rounded-pill transition-all duration-200', checked ? 'translate-x-5 bg-ink' : 'translate-x-0 bg-mute')}
       />
     </button>
   )
@@ -80,7 +80,7 @@ export function ActionButton({ className, ...p }: React.ButtonHTMLAttributes<HTM
     <button
       {...rest}
       className={cn(
-        'inline-flex h-10 items-center justify-center gap-2 rounded-full px-5 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40',
+        'inline-flex h-10 items-center justify-center gap-2 rounded-pill px-5 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40',
         variant === 'solid' && 'bg-paper font-medium text-ink hover:bg-paper/85',
         variant === 'ghost' && 'bg-white/[0.06] text-paper hover:bg-white/[0.11]',
         variant === 'danger' && 'bg-signal/10 text-signal hover:bg-signal/20',

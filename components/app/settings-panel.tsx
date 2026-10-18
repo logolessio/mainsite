@@ -70,7 +70,7 @@ export function SettingsPanel({ role }: { role: 'clipper' | 'brand' }) {
 function Row({ icon, title, body, href, cta }: { icon: React.ReactNode; title: string; body: string; href?: string; cta?: string }) {
   return (
     <li className="flex flex-wrap items-center gap-4 py-4 first:pt-0 last:pb-0">
-      <span className="grid size-10 shrink-0 place-items-center rounded-full border border-line text-mute">{icon}</span>
+      <span className="grid size-10 shrink-0 place-items-center rounded-pill border border-line text-mute">{icon}</span>
       <span className="min-w-0 flex-1">
         <span className="block font-medium">{title}</span>
         <span className="block truncate text-sm text-mute">{body}</span>

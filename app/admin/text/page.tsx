@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { HERO_VARIANTS_DEFAULT, HERO_VARIANTS_KEY } from '@/lib/copy-key'
 import { db } from '@/lib/db'
 import { pageAdmin } from '@/lib/user'
+import { SectionTabs } from '@/components/app/section-tabs'
 
 export const metadata: Metadata = { title: 'Site text | logoless', robots: { index: false } }
 
@@ -45,16 +46,17 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
   ])
   const total = pages.results.reduce((a, p) => a + p.n, 0)
   const edited = pages.results.reduce((a, p) => a + (p.edited ?? 0), 0)
-  const chip = (on: boolean) => cn('inline-flex h-9 items-center rounded-full border px-4 text-sm transition-colors duration-300', on ? 'border-white/[0.14] bg-white/[0.08] text-paper' : 'border-transparent text-paper/55 hover:text-paper')
+  const chip = (on: boolean) => cn('inline-flex h-9 items-center rounded-pill border px-4 text-sm transition-colors duration-300', on ? 'border-white/[0.14] bg-white/[0.08] text-paper' : 'border-transparent text-paper/55 hover:text-paper')
 
   return (
     <>
+      <SectionTabs group="site" />
       <PageHeader title="Site text" sub="Every sentence on the site, grouped by page. You can also click “Edit text” in the corner of any page and click the words themselves." actions={<ScanSite />} />
 
       <form className="mb-4 flex flex-wrap items-center gap-2" action="/admin/text">
-        <input name="q" defaultValue={q} placeholder="Search all text" aria-label="Search all text" className="h-11 w-full rounded-full border border-line-strong bg-ink/80 px-5 text-sm focus:outline-none sm:w-96" />
+        <input name="q" defaultValue={q} placeholder="Search all text" aria-label="Search all text" className="h-11 w-full rounded-pill border border-line-strong bg-ink/80 px-5 text-sm focus:outline-none sm:w-96" />
         {pg && <input type="hidden" name="page" value={pg} />}
-        <button className="h-11 rounded-full bg-paper px-6 text-sm font-medium text-ink">Search</button>
+        <button className="h-11 rounded-pill bg-paper px-6 text-sm font-medium text-ink">Search</button>
       </form>
       <div className="mb-8 flex flex-wrap items-center gap-1.5">
         <Link href="/admin/text" className={chip(!browsing)}>

@@ -253,7 +253,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
         <div className="mx-auto grid w-full max-w-[1180px] gap-10 px-5 pt-6 pb-40 md:grid-cols-[250px_1fr] md:px-10 md:pt-12">
           {/* ---------- the rail ---------- */}
           <aside className="hidden md:block">
-            <nav aria-label="Setup steps" className="glass-liquid sticky top-28 rounded-[2rem] p-3 backdrop-blur-xl">
+            <nav aria-label="Setup steps" className="glass-liquid sticky top-28 rounded-[calc(2rem*var(--round,1))] p-3 backdrop-blur-xl">
               {CHAPTERS.map((c) => (
                 <div key={c} className="mb-2 last:mb-0">
                   <p className="px-3 pt-2 pb-1 text-[11px] font-medium text-mute">{c}</p>
@@ -263,9 +263,9 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                     const done = i < step || (campaign && i < idx('done') && i !== step)
                     const locked = i > reached || (Boolean(campaign) && i < idx('fund') && i !== step && step >= idx('fund'))
                     return (
-                      <button key={s.id} type="button" disabled={locked || busy} onClick={() => go(i)} aria-current={active ? 'step' : undefined} className={cn('group relative flex h-10 w-full items-center gap-3 rounded-full px-3 text-left text-sm transition-colors', active ? 'text-paper' : locked ? 'text-mute/50' : 'text-mute hover:text-paper')}>
-                        {active && <motion.span layoutId="wizard-pill" transition={{ type: 'spring', stiffness: 420, damping: 34 }} className="absolute inset-0 rounded-full bg-white/[0.14] shadow-[inset_0_1px_0_rgb(255_255_255/0.22)]" />}
-                        <span className={cn('relative grid size-5 shrink-0 place-items-center rounded-full border text-[10px]', done ? 'border-paper bg-paper text-ink' : active ? 'border-paper' : 'border-line-strong')}>{done ? <Check className="size-3" /> : i}</span>
+                      <button key={s.id} type="button" disabled={locked || busy} onClick={() => go(i)} aria-current={active ? 'step' : undefined} className={cn('group relative flex h-10 w-full items-center gap-3 rounded-pill px-3 text-left text-sm transition-colors', active ? 'text-paper' : locked ? 'text-mute/50' : 'text-mute hover:text-paper')}>
+                        {active && <motion.span layoutId="wizard-pill" transition={{ type: 'spring', stiffness: 420, damping: 34 }} className="absolute inset-0 rounded-pill bg-white/[0.14] shadow-[inset_0_1px_0_rgb(255_255_255/0.22)]" />}
+                        <span className={cn('relative grid size-5 shrink-0 place-items-center rounded-pill border text-[10px]', done ? 'border-paper bg-paper text-ink' : active ? 'border-paper' : 'border-line-strong')}>{done ? <Check className="size-3" /> : i}</span>
                         <span className="relative truncate">{s.title}</span>
                       </button>
                     )
@@ -284,11 +284,11 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
               <motion.section key={current.id} custom={dir} initial={{ opacity: 0, x: 40 * dir }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 * dir }} transition={{ duration: 0.38, ease: EASE_OUT }} className="max-w-2xl">
                 {current.id === 'hello' && (
                   <>
-                    <Ask sub="This page is yours. In a few minutes you'll set up your artist page, pick what to promote and launch a campaign that pays clippers per view.">{`Hey ${artistName}.`}</Ask>
+                    <Ask sub="This page is yours. In a few minutes you'll set up your artist page, pick what to promote and launch a campaign that pays creators per view.">{`Hey ${artistName}.`}</Ask>
                     <div className="grid gap-3 sm:grid-cols-3">
                       {[
                         { icon: Users, t: 'Your page', d: 'A public artist profile at logoless.io/@you.' },
-                        { icon: Megaphone, t: 'Your campaign', d: 'Say what to clip and what you can spend.' },
+                        { icon: Megaphone, t: 'Your campaign', d: 'Say what to create and what you can spend.' },
                         { icon: Wallet, t: 'Your funds', d: 'Add money any time. Pay only for verified views.' },
                       ].map((c, i) => (
                         <Rise key={c.t} i={i}>
@@ -308,7 +308,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
 
                 {current.id === 'you' && (
                   <>
-                    <Ask sub="This is how you appear to fans and to the clippers working your campaign.">What should we call you?</Ask>
+                    <Ask sub="This is how you appear to fans and to the creators working your campaign.">What should we call you?</Ask>
                     <div className="grid gap-5">
                       <Rise i={0}>
                         <BigInput label="Artist or brand name" value={data.stageName ?? ''} maxLength={40} onChange={(e) => set({ stageName: e.target.value })} placeholder="Your name on the page" autoFocus />
@@ -332,7 +332,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
 
                 {current.id === 'sound' && (
                   <>
-                    <Ask sub="Clippers pick campaigns they believe in. A clear sound and a one-line pitch help the right people find you.">Tell us about your sound.</Ask>
+                    <Ask sub="Creators pick campaigns they believe in. A clear sound and a one-line pitch help the right people find you.">Tell us about your sound.</Ask>
                     <div className="grid gap-6">
                       <Rise i={0}>
                         <Label hint={`${data.genres?.length ?? 0}/3`}>Pick up to three genres</Label>
@@ -391,7 +391,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                               <Plus className="size-4" /> Add another
                             </span>
                             {MORE_LINKS.filter((p) => !extra.includes(p)).map((p) => (
-                              <button key={p} type="button" onClick={() => setExtra((e) => [...e, p])} className="inline-flex h-9 items-center gap-2 rounded-full border border-line-strong px-4 text-sm text-mute transition-colors hover:border-paper/50 hover:text-paper">
+                              <button key={p} type="button" onClick={() => setExtra((e) => [...e, p])} className="inline-flex h-9 items-center gap-2 rounded-pill border border-line-strong px-4 text-sm text-mute transition-colors hover:border-paper/50 hover:text-paper">
                                 <BrandIcon name={p} className="size-3.5" /> {label(p)}
                               </button>
                             ))}
@@ -446,10 +446,10 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
 
                 {current.id === 'brief' && (
                   <>
-                    <Ask sub="This is the brief clippers see. The clearer it is, the better the clips.">What should clippers make?</Ask>
+                    <Ask sub="This is the brief creators see. The clearer it is, the better the submissions.">What should creators make?</Ask>
                     <div className="grid gap-6">
                       <Rise i={0}>
-                        <Label>Where should clips be posted?</Label>
+                        <Label>Where should submissions be posted?</Label>
                         <div className="flex flex-wrap gap-2">
                           {PLATFORMS.map((p) => {
                             const on = Boolean(data.platforms?.includes(p.id))
@@ -462,13 +462,13 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                         </div>
                       </Rise>
                       <Rise i={1}>
-                        <BigArea label="The vibe and the goal" hint={`${(data.summary ?? '').length}/1100`} value={data.summary ?? ''} maxLength={1100} rows={5} onChange={(e) => set({ summary: e.target.value })} placeholder="What is the song about, who is it for, and what feeling should the clips give?" />
+                        <BigArea label="The vibe and the goal" hint={`${(data.summary ?? '').length}/1100`} value={data.summary ?? ''} maxLength={1100} rows={5} onChange={(e) => set({ summary: e.target.value })} placeholder="What is the song about, who is it for, and what feeling should the submissions give?" />
                       </Rise>
                       <Rise i={2}>
-                        <BigArea label="Clip ideas" hint="One per line" value={data.clipThis ?? ''} rows={4} maxLength={1000} onChange={(e) => set({ clipThis: e.target.value })} placeholder="The chorus" />
+                        <BigArea label="Submission ideas" hint="One per line" value={data.clipThis ?? ''} rows={4} maxLength={1000} onChange={(e) => set({ clipThis: e.target.value })} placeholder="The chorus" />
                         <div className="mt-3 flex flex-wrap gap-2">
                           {IDEAS.filter((x) => !lines(data.clipThis).includes(x)).map((x) => (
-                            <button key={x} type="button" onClick={() => set({ clipThis: [...lines(data.clipThis), x].join('\n') })} className="inline-flex h-8 items-center gap-1.5 rounded-full border border-line-strong px-3 text-xs text-mute transition-colors hover:border-paper/50 hover:text-paper">
+                            <button key={x} type="button" onClick={() => set({ clipThis: [...lines(data.clipThis), x].join('\n') })} className="inline-flex h-8 items-center gap-1.5 rounded-pill border border-line-strong px-3 text-xs text-mute transition-colors hover:border-paper/50 hover:text-paper">
                               <Plus className="size-3" /> {x}
                             </button>
                           ))}
@@ -478,7 +478,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                         <BigArea label="Off-limits" hint="One per line · optional" value={data.offLimits ?? ''} rows={3} maxLength={1000} onChange={(e) => set({ offLimits: e.target.value })} placeholder="No explicit lyrics on screen" />
                       </Rise>
                       <Rise i={4}>
-                        <BigInput label="Link to clip-able footage" hint="Drive, Dropbox… optional" value={data.assetsUrl ?? ''} maxLength={300} onChange={(e) => set({ assetsUrl: e.target.value })} placeholder="https://" inputMode="url" />
+                        <BigInput label="Link to footage creators can use" hint="Drive, Dropbox… optional" value={data.assetsUrl ?? ''} maxLength={300} onChange={(e) => set({ assetsUrl: e.target.value })} placeholder="https://" inputMode="url" />
                       </Rise>
                     </div>
                   </>
@@ -486,7 +486,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
 
                 {current.id === 'money' && (
                   <>
-                    <Ask sub="Clippers earn for every 1,000 verified views, paid from your balance as they earn. You never pay more than the budget plus our fee.">How much do you want to spend?</Ask>
+                    <Ask sub="Creators earn for every 1,000 verified views, paid from your balance as they earn. You never pay more than the budget plus our fee.">How much do you want to spend?</Ask>
                     <div className="grid gap-7">
                       <Rise i={0}>
                         <Label hint={`Minimum ${usd(SITE.minInviteBudgetUsd)}`}>Total budget</Label>
@@ -502,7 +502,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                         </div>
                       </Rise>
                       <Rise i={1}>
-                        <Label hint="USD per 1,000 views">What clippers earn</Label>
+                        <Label hint="USD per 1,000 views">What creators earn</Label>
                         <div className="flex flex-wrap gap-2">
                           {RATE_PRESETS.map((r) => (
                             <Chip key={r} on={rate === r} onClick={() => set({ rate: String(r) })}>
@@ -515,14 +515,14 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                         </div>
                       </Rise>
                       <Rise i={2}>
-                        <motion.div layout className="relative overflow-hidden rounded-[2rem] border border-line-strong bg-white/[0.04] p-6 md:p-8">
+                        <motion.div layout className="relative overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-white/[0.04] p-6 md:p-8">
                           <p className="text-xs tracking-wide text-mute">Your budget can buy up to</p>
                           <p className="mt-2 font-display text-5xl font-medium tabular-nums md:text-7xl">
                             <CountUp key={estimate} value={estimate.toLocaleString('en-US')} />
                           </p>
                           <p className="mt-1 text-lg text-mute">verified views</p>
                           <p className="mt-5 text-sm leading-relaxed text-mute">
-                            {usd(budget || 0)} at {usd(rate || 0)} per 1,000 views. Clippers earn all of it. Our {SITE.platformFeePct}% fee is added on top, so you pay {usd((budget || 0) * (1 + SITE.platformFeePct / 100))} in all.
+                            {usd(budget || 0)} at {usd(rate || 0)} per 1,000 views. Creators earn all of it. Our {SITE.platformFeePct}% fee is added on top, so you pay {usd((budget || 0) * (1 + SITE.platformFeePct / 100))} in all.
                           </p>
                         </motion.div>
                       </Rise>
@@ -539,14 +539,14 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                     <ol className="grid gap-3">
                       {[
                         ['You fund the campaign', 'Your budget is the most this campaign can ever pay. Money leaves your balance only for views we verify.'],
-                        ['We launch it', 'After your payment we check the brief and put the campaign live for clippers.'],
-                        ['Clippers post clips', 'They cut your music into clips and post them on TikTok, Instagram and YouTube.'],
-                        ['We verify and pay', 'We check real views on each platform. Clippers are paid from your balance. You can turn down off-brief clips.'],
+                        ['We launch it', 'After your payment we check the brief and put the campaign live for creators.'],
+                        ['Creators post content', 'They cut your music into submissions and post them on TikTok, Instagram and YouTube.'],
+                        ['We verify and pay', 'We check real views on each platform. Creators are paid from your balance. You can turn down off-brief submissions.'],
                         ['Top up any time', 'Running well? Add more funds to the same campaign in two clicks.'],
                       ].map(([t, d], i) => (
                         <Rise key={t} i={i}>
                           <li className="flex gap-4 rounded-3xl border border-line bg-white/[0.03] p-5">
-                            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-paper font-mono text-sm text-ink">{i + 1}</span>
+                            <span className="grid size-8 shrink-0 place-items-center rounded-pill bg-paper font-mono text-sm text-ink">{i + 1}</span>
                             <span>
                               <span className="block text-lg">{t}</span>
                               <span className="mt-0.5 block text-sm leading-relaxed text-mute">{d}</span>
@@ -573,7 +573,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                   <>
                     <Ask sub="Last look. Nothing is charged yet. Next you can fund it, or leave it for later.">Ready to make it real?</Ask>
                     <Rise i={0}>
-                      <div className="overflow-hidden rounded-[2rem] border border-line-strong bg-white/[0.04]">
+                      <div className="overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-white/[0.04]">
                         <div className="flex items-center gap-5 p-5 md:p-6">
                           <div className="size-24 shrink-0 overflow-hidden rounded-2xl bg-white/10">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -610,17 +610,17 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                   <>
                     <Ask sub="Your campaign is created. Fund it and our team launches it. Until it is paid and launched, nobody can see it.">{flash === 'cancelled' ? 'No problem. Whenever you are ready.' : 'Fund your campaign.'}</Ask>
                     <Rise i={0}>
-                      <div className="rounded-[2rem] border border-line-strong bg-white/[0.04] p-6 md:p-8">
+                      <div className="rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-white/[0.04] p-6 md:p-8">
                         <p className="text-xs tracking-wide text-mute">{campaign.title}</p>
                         <p className="mt-2 font-display text-6xl font-medium tabular-nums md:text-7xl">{money(costFor(campaign.budgetCents))}</p>
                         <p className="mt-2 text-sm text-mute">
-                          {money(campaign.budgetCents)} for clippers + {money(feeFor(campaign.budgetCents))} fee ({SITE.platformFeePct}%, added on top)
+                          {money(campaign.budgetCents)} for creators + {money(feeFor(campaign.budgetCents))} fee ({SITE.platformFeePct}%, added on top)
                         </p>
                         <ul className="mt-6 grid gap-3 text-sm text-mute">
                           {[
-                            [CreditCard, balance === null ? 'Paid from your logoless balance as clippers earn. You add money to it with PayPal, and we cover PayPal\'s fees.' : `Your balance is ${money(balance)}. ${balance >= startNeeded(campaign.budgetCents) ? 'It covers the start. Nothing is charged until clippers earn.' : `Add ${money(startNeeded(campaign.budgetCents) - balance)} or more with PayPal first.`}`],
-                            [ShieldCheck, 'Clippers earn the whole budget, only for verified views. Our fee is on top, never taken from them.'],
-                            [Sparkles, 'It goes live as soon as you start it. Clippers only get paid for views we verify.'],
+                            [CreditCard, balance === null ? 'Paid from your logoless balance as creators earn. You add money to it with PayPal, and we cover PayPal\'s fees.' : `Your balance is ${money(balance)}. ${balance >= startNeeded(campaign.budgetCents) ? 'It covers the start. Nothing is charged until creators earn.' : `Add ${money(startNeeded(campaign.budgetCents) - balance)} or more with PayPal first.`}`],
+                            [ShieldCheck, 'Creators earn the whole budget, only for verified views. Our fee is on top, never taken from them.'],
+                            [Sparkles, 'It goes live as soon as you start it. Creators only get paid for views we verify.'],
                           ].map(([Ic, t], i) => {
                             const I = Ic as typeof CreditCard
                             return (
@@ -632,15 +632,15 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                         </ul>
                         <div className="mt-8 flex flex-wrap items-center gap-3">
                           {balance !== null && balance < startNeeded(campaign.budgetCents) ? (
-                            <button type="button" onClick={addFunds} disabled={busy} className="inline-flex h-14 items-center gap-2 rounded-full bg-paper px-8 text-base font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:opacity-50">
+                            <button type="button" onClick={addFunds} disabled={busy} className="inline-flex h-14 items-center gap-2 rounded-pill bg-paper px-8 text-base font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:opacity-50">
                               {busy ? <Loader2 className="size-5 animate-spin" /> : <Wallet className="size-5" />} Add {money(Math.max(1000, Math.ceil((startNeeded(campaign.budgetCents) - balance) / 100) * 100))} with PayPal
                             </button>
                           ) : (
-                            <button type="button" onClick={pay} disabled={busy || balance === null} className="inline-flex h-14 items-center gap-2 rounded-full bg-paper px-8 text-base font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:opacity-50">
+                            <button type="button" onClick={pay} disabled={busy || balance === null} className="inline-flex h-14 items-center gap-2 rounded-pill bg-paper px-8 text-base font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:opacity-50">
                               {busy ? <Loader2 className="size-5 animate-spin" /> : <CreditCard className="size-5" />} Start the campaign
                             </button>
                           )}
-                          <button type="button" onClick={() => go(idx('done'))} className="h-14 rounded-full px-6 text-mute transition-colors hover:text-paper">
+                          <button type="button" onClick={() => go(idx('done'))} className="h-14 rounded-pill px-6 text-mute transition-colors hover:text-paper">
                             I will do this later
                           </button>
                         </div>
@@ -656,7 +656,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                     <div className="relative z-10 grid gap-3 sm:grid-cols-2">
                       {[
                         { href: '/brand', icon: Megaphone, t: 'Your dashboard', d: 'Campaigns, spend and reach at a glance.' },
-                        { href: '/brand/submissions', icon: Users, t: 'Clips', d: 'See every clip made for you and turn down off-brief ones.' },
+                        { href: '/brand/submissions', icon: Users, t: 'Submissions', d: 'See every submission made for you and turn down off-brief ones.' },
                         { href: '/brand/billing', icon: Wallet, t: 'Funding', d: 'Add more money to a campaign any time.' },
                         { href: `/@${data.handle}`, icon: ExternalLink, t: 'Your public page', d: `logoless.io/@${data.handle}` },
                       ].map((c, i) => (
@@ -674,7 +674,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                     </div>
                     {campaign?.status === 'awaiting_payment' && (
                       <Rise i={5} className="relative z-10 mt-6">
-                        <button type="button" onClick={() => go(idx('fund'))} className="inline-flex h-12 items-center gap-2 rounded-full bg-paper px-6 text-sm font-medium text-ink transition-colors hover:bg-paper/85">
+                        <button type="button" onClick={() => go(idx('fund'))} className="inline-flex h-12 items-center gap-2 rounded-pill bg-paper px-6 text-sm font-medium text-ink transition-colors hover:bg-paper/85">
                           <CreditCard className="size-4" /> Fund {campaign.title}
                         </button>
                       </Rise>
@@ -695,17 +695,17 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
         {/* ---------- the floating controls ---------- */}
         {showFooter && (
           <div className="pointer-events-none fixed inset-x-0 bottom-5 z-30 flex justify-center px-4">
-            <div className="glass-liquid pointer-events-auto flex items-center gap-2 rounded-full p-1.5 backdrop-blur-xl">
-              <button type="button" onClick={back} disabled={step === 0 || busy} aria-label="Back" className="grid size-12 place-items-center rounded-full text-mute transition-colors hover:bg-white/10 hover:text-paper disabled:opacity-30">
+            <div className="glass-liquid pointer-events-auto flex items-center gap-2 rounded-pill p-1.5 backdrop-blur-xl">
+              <button type="button" onClick={back} disabled={step === 0 || busy} aria-label="Back" className="grid size-12 place-items-center rounded-pill text-mute transition-colors hover:bg-white/10 hover:text-paper disabled:opacity-30">
                 <ChevronLeft className="size-5" />
               </button>
-              <button type="button" onClick={next} disabled={!valid[current.id] || busy} className="inline-flex h-12 min-w-44 items-center justify-center gap-2 rounded-full bg-paper px-7 text-[15px] font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40">
+              <button type="button" onClick={next} disabled={!valid[current.id] || busy} className="inline-flex h-12 min-w-44 items-center justify-center gap-2 rounded-pill bg-paper px-7 text-[15px] font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40">
                 {busy && <Loader2 className="size-4 animate-spin" />}
                 {current.id === 'hello' ? 'Let’s go' : current.id === 'review' ? 'Create my campaign' : current.id === 'look' ? 'Create my page' : 'Continue'}
                 {!busy && <ArrowRight className="size-4" />}
               </button>
               <span className="hidden px-3 text-xs text-mute sm:block">
-                or press <kbd className="rounded-full bg-white/[0.08] px-2 py-0.5 font-mono">Enter</kbd>
+                or press <kbd className="rounded-pill bg-white/[0.08] px-2 py-0.5 font-mono">Enter</kbd>
               </span>
             </div>
           </div>
@@ -732,8 +732,8 @@ function Backdrop({ step }: { step: number }) {
   const hue = useMemo(() => [0, 18, 38, 58, 78, 100][Math.min(5, Math.floor(step / 2))], [step])
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-      <motion.div className="absolute -top-1/4 left-1/4 size-[60rem] rounded-full opacity-[0.16] blur-3xl" animate={{ x: [0, 80, -40, 0], y: [0, 40, 80, 0], background: `radial-gradient(closest-side, hsl(${210 + hue} 12% 70%), transparent)` }} transition={{ x: { duration: 22, repeat: Infinity }, y: { duration: 26, repeat: Infinity }, background: { duration: 1.2 } }} />
-      <motion.div className="absolute right-0 bottom-0 size-[48rem] rounded-full opacity-[0.12] blur-3xl" animate={{ x: [0, -60, 40, 0], y: [0, -50, 20, 0], background: `radial-gradient(closest-side, hsl(${260 + hue} 10% 65%), transparent)` }} transition={{ x: { duration: 28, repeat: Infinity }, y: { duration: 24, repeat: Infinity }, background: { duration: 1.2 } }} />
+      <motion.div className="absolute -top-1/4 left-1/4 size-[60rem] rounded-pill opacity-[0.16] blur-3xl" animate={{ x: [0, 80, -40, 0], y: [0, 40, 80, 0], background: `radial-gradient(closest-side, hsl(${210 + hue} 12% 70%), transparent)` }} transition={{ x: { duration: 22, repeat: Infinity }, y: { duration: 26, repeat: Infinity }, background: { duration: 1.2 } }} />
+      <motion.div className="absolute right-0 bottom-0 size-[48rem] rounded-pill opacity-[0.12] blur-3xl" animate={{ x: [0, -60, 40, 0], y: [0, -50, 20, 0], background: `radial-gradient(closest-side, hsl(${260 + hue} 10% 65%), transparent)` }} transition={{ x: { duration: 28, repeat: Infinity }, y: { duration: 24, repeat: Infinity }, background: { duration: 1.2 } }} />
       <div className="absolute inset-0 [background-image:radial-gradient(rgb(255_255_255/0.07)_1px,transparent_1px)] [background-size:28px_28px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" />
     </div>
   )

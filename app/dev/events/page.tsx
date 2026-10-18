@@ -9,7 +9,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Log
   await pageDev()
   return (
     <>
-      <SectionTabs group="dev" />
+      <SectionTabs group="system" />
       <LogsView sp={await searchParams} base="/dev/events" canExport={false} />
     </>
   )

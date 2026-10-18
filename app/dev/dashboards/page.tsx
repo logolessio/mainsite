@@ -14,13 +14,13 @@ export default async function Page() {
     { id: 'creator', title: 'Creator', note: 'What a creator sees: balance, submissions, earnings, profile and the set-up guide.', href: '/dashboard' },
     { id: 'brand', title: 'Brand', note: 'What a brand sees: views chart, campaigns, the one balance, and starting or pausing a campaign.', href: '/brand' },
         { id: 'admin', title: 'Admin', note: 'Money, people, campaigns, submissions, payouts and the tools to act on all of them. The owner dashboard opens here.', href: '/admin' },
-    { id: 'dev', title: 'Developer', note: 'Vitals, design switches, feature pushes and events.', href: '/dev' },
+    { id: 'dev', title: 'System', note: 'Health, logs, settings and keys.', href: '/admin/system' },
     { id: 'site', title: 'The site', note: 'The public front page, as a visitor sees it.', href: SITE_URL_FOR_STAFF },
     { id: 'onboarding', title: 'Onboarding', note: 'The sign-up flow as a stranger sees it. A dry run: nothing is saved.', href: '/onboarding?preview=1' },
   ]
   return (
     <>
-      <SectionTabs group="dev" />
+      <SectionTabs group="site" />
       <PageHeader title="Dashboards" sub="Preview every dashboard and screen size without signing in as anyone else." />
       <DashboardPreview items={items} />
     </>

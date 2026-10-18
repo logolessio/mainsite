@@ -78,7 +78,7 @@ export function ToolsMenu() {
 
   if (hidden)
     return (
-      <button type="button" onClick={() => setHidden(false)} className={`fixed ${corner} z-[70] inline-flex h-9 items-center gap-1.5 rounded-full border border-line-strong bg-surface/90 px-3 text-xs text-mute hover:text-paper`}>
+      <button type="button" onClick={() => setHidden(false)} className={`fixed ${corner} z-[70] inline-flex h-9 items-center gap-1.5 rounded-pill border border-line-strong bg-surface/90 px-3 text-xs text-mute hover:text-paper`}>
         <Eye className="size-3.5" /> Back to admin view
       </button>
     )
@@ -129,7 +129,7 @@ export function ToolsMenu() {
             initial={{ opacity: 0, y: 14, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.3, ease: EASE_OUT } }}
             exit={{ opacity: 0, y: 8, scale: 0.98, transition: { duration: 0.15 } }}
-            className="absolute bottom-14 left-0 max-h-[78dvh] w-[min(360px,calc(100vw-2rem))] origin-bottom-left overflow-y-auto rounded-[26px] border border-line-strong bg-surface/95 p-3 shadow-[0_30px_70px_-20px_rgb(0_0_0/0.95)] backdrop-blur"
+            className="absolute bottom-14 left-0 max-h-[78dvh] w-[min(360px,calc(100vw-2rem))] origin-bottom-left overflow-y-auto rounded-[calc(26px*var(--round,1))] border border-line-strong bg-surface/95 p-3 shadow-[0_30px_70px_-20px_rgb(0_0_0/0.95)] backdrop-blur"
           >
             <div className="flex items-center justify-between px-2 pt-1 pb-2">
               <p className="font-display text-xl">Tools</p>
@@ -158,7 +158,7 @@ export function ToolsMenu() {
                   <button key={href} type="button" onClick={() => go(href)} className="relative flex flex-col items-center gap-1 rounded-xl border border-line px-1 py-2.5 text-[11px] transition-colors hover:bg-paper/10">
                     <Icon className="size-4" />
                     {label}
-                    {n > 0 && <span className="absolute top-1 right-1 grid min-w-4 place-items-center rounded-full bg-paper px-1 text-[9px] leading-4 font-semibold text-ink">{n}</span>}
+                    {n > 0 && <span className="absolute top-1 right-1 grid min-w-4 place-items-center rounded-pill bg-paper px-1 text-[9px] leading-4 font-semibold text-ink">{n}</span>}
                   </button>
                 ))}
               </div>
@@ -170,7 +170,7 @@ export function ToolsMenu() {
                 className="relative mt-2"
               >
                 <Search className="absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-mute" />
-                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a person…" className="h-9 w-full rounded-full border border-line-strong bg-ink/80 pr-3 pl-9 text-xs focus:outline-none" />
+                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a person…" className="h-9 w-full rounded-pill border border-line-strong bg-ink/80 pr-3 pl-9 text-xs focus:outline-none" />
               </form>
             </Group>
 
@@ -182,8 +182,8 @@ export function ToolsMenu() {
                     <li key={k}>
                       <button type="button" disabled={!pulse} onClick={() => flip(k, !on)} className={cn('flex w-full items-center justify-between rounded-xl border px-3 py-2 text-xs transition-colors', on ? 'border-signal/60 bg-signal/10 text-signal' : 'border-line hover:bg-paper/10')}>
                         {label}
-                        <span className={cn('relative h-5 w-9 rounded-full', on ? 'bg-paper' : 'bg-line-strong')}>
-                          <span className={cn('absolute top-0.5 size-4 rounded-full bg-paper transition-all', on ? 'left-[18px]' : 'left-0.5')} />
+                        <span className={cn('relative h-5 w-9 rounded-pill', on ? 'bg-paper' : 'bg-line-strong')}>
+                          <span className={cn('absolute top-0.5 size-4 rounded-pill bg-paper transition-all', on ? 'left-[18px]' : 'left-0.5')} />
                         </span>
                       </button>
                     </li>
@@ -197,13 +197,13 @@ export function ToolsMenu() {
                 {CHECKS.map(([id, label]) => {
                   const r = checks[id]
                   return (
-                    <span key={id} className="inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-1 text-[11px]">
-                      {r === 'run' ? <Loader2 className="size-3 animate-spin" /> : r === true ? <CheckCircle2 className="size-3 text-emerald-300" /> : r === false ? <XCircle className="size-3 text-signal" /> : <span className="size-3 rounded-full border border-line-strong" />}
+                    <span key={id} className="inline-flex items-center gap-1.5 rounded-pill border border-line px-2.5 py-1 text-[11px]">
+                      {r === 'run' ? <Loader2 className="size-3 animate-spin" /> : r === true ? <CheckCircle2 className="size-3 text-emerald-300" /> : r === false ? <XCircle className="size-3 text-signal" /> : <span className="size-3 rounded-pill border border-line-strong" />}
                       {label}
                     </span>
                   )
                 })}
-                <button type="button" onClick={runChecks} className="ml-auto inline-flex h-8 items-center gap-1 rounded-full bg-paper px-3 text-xs font-medium text-ink hover:bg-paper/85">Run</button>
+                <button type="button" onClick={runChecks} className="ml-auto inline-flex h-8 items-center gap-1 rounded-pill bg-paper px-3 text-xs font-medium text-ink hover:bg-paper/85">Run</button>
               </div>
             </Group>
 
@@ -228,7 +228,7 @@ export function ToolsMenu() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-label="Admin tools"
-        className={cn('inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm shadow-lg transition-colors', editing ? 'border-paper bg-paper text-ink' : 'border-line-strong bg-surface text-paper hover:bg-raised')}
+        className={cn('inline-flex h-11 items-center gap-2 rounded-pill border px-4 text-sm shadow-lg transition-colors', editing ? 'border-paper bg-paper text-ink' : 'border-line-strong bg-surface text-paper hover:bg-raised')}
       >
         {open ? <X className="size-4" /> : <Wrench className="size-4" />}
         {editing ? 'Editing text' : 'Tools'}

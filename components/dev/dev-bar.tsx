@@ -26,12 +26,12 @@ export function DevBar() {
   return (
     <>
       <div className="fixed right-4 bottom-4 z-[150] flex items-center gap-2 max-md:bottom-[8.75rem]">
-        <span className="glass-liquid hidden items-center gap-2 rounded-full px-4 py-2.5 font-mono text-[11px] tracking-[0.18em] text-mute uppercase sm:inline-flex">
+        <span className="glass-liquid hidden items-center gap-2 rounded-pill px-4 py-2.5 font-mono text-[11px] tracking-[0.18em] text-mute uppercase sm:inline-flex">
           <FlaskConical className="size-3.5" /> Dev site
         </span>
-        <button type="button" onClick={() => setOpen(true)} className="inline-flex h-12 items-center gap-2 rounded-full bg-paper px-6 text-[15px] font-medium text-ink shadow-[0_20px_50px_-12px_rgb(0_0_0/0.9)] transition-all hover:bg-paper/85 active:scale-95">
+        <button type="button" onClick={() => setOpen(true)} className="inline-flex h-12 items-center gap-2 rounded-pill bg-paper px-6 text-[15px] font-medium text-ink shadow-[0_20px_50px_-12px_rgb(0_0_0/0.9)] transition-all hover:bg-paper/85 active:scale-95">
           <Rocket className="size-4" /> push
-          {waiting !== null && waiting > 0 && <span aria-label={`${waiting} features not live yet`} className="grid min-w-5 place-items-center rounded-full bg-ink px-1.5 text-[11px] leading-5 text-paper">{waiting}</span>}
+          {waiting !== null && waiting > 0 && <span aria-label={`${waiting} features not live yet`} className="grid min-w-5 place-items-center rounded-pill bg-ink px-1.5 text-[11px] leading-5 text-paper">{waiting}</span>}
         </button>
       </div>
       <AnimatePresence>

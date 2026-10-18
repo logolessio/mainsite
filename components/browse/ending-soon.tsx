@@ -17,7 +17,7 @@ export function EndingSoon({ campaigns }: { campaigns: Campaign[] }) {
     <section aria-label="Ending soon" className="mx-auto mb-8 flex max-w-[1300px] flex-wrap items-center justify-center gap-2 text-[15px]">
       <span className="mr-1 text-mute">Ending soon</span>
       {list.map((c) => (
-        <TransitionLink key={c.id} href={`/campaign/${c.id}`} className="inline-flex h-9 items-center gap-2 rounded-full border border-line-strong px-4 transition-colors hover:border-paper/60 hover:bg-paper/[0.05]">
+        <TransitionLink key={c.id} href={`/campaign/${c.id}`} className="inline-flex h-9 items-center gap-2 rounded-pill border border-line-strong px-4 transition-colors hover:border-paper/60 hover:bg-paper/[0.05]">
           {c.title}
           <span className="text-mute tabular-nums">{c.budgetLeftPct}% left</span>
         </TransitionLink>

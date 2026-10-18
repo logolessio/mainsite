@@ -12,7 +12,7 @@ import { Badge } from './table'
 import { ActionButton, Card, Toggle } from './ui'
 
 const ACCOUNTS: { name: SocialPlatform; label: string; body: string }[] = [
-  { name: 'tiktok', label: 'TikTok', body: 'The account you post clips from.' },
+  { name: 'tiktok', label: 'TikTok', body: 'The account you post content from.' },
   { name: 'youtube', label: 'YouTube', body: 'Your channel for Shorts and long-form.' },
   { name: 'instagram', label: 'Instagram', body: 'Where your Reels live.' },
 ]
@@ -78,7 +78,7 @@ export function AccountsPanel() {
             const verified = st?.status === 'verified'
             return (
               <li key={a.name} className="flex flex-wrap items-center gap-4 py-4 first:pt-0 last:pb-0">
-                <span className="grid size-11 shrink-0 place-items-center rounded-full border border-line"><BrandIcon name={a.name as BrandName} className="size-5" /></span>
+                <span className="grid size-11 shrink-0 place-items-center rounded-pill border border-line"><BrandIcon name={a.name as BrandName} className="size-5" /></span>
                 <span className="min-w-0 flex-1 basis-40">
                   <span className="block font-medium">{a.label}</span>
                   <span className="block truncate text-sm text-mute">{l ? `@${usernameOf(a.name, l.url).replace(/^https?:\/\/[^/]+\/@?/, '')}` : a.body}</span>
@@ -105,10 +105,10 @@ export function AccountsPanel() {
             <p className="text-[15px]">Show these on my public profile</p>
             <p className="text-sm text-mute">Off by default. Only the accounts above are ever shown.</p>
           </div>
-          <Toggle label="Show clipping accounts on my public profile" checked={shown} onChange={setVisible} />
+          <Toggle label="Show creator accounts on my public profile" checked={shown} onChange={setVisible} />
         </div>
         <p className="mt-5 border-t border-line pt-4 text-xs leading-relaxed text-mute">
-          These are the accounts you post from. Verify one by putting a short code in its bio: verified accounts get a tick on your public page, and clips from them can be checked automatically instead of waiting for a person. Only submit clips you posted yourself. You choose above whether the public can see them.</p>
+          These are the accounts you post from. Verify one by putting a short code in its bio: verified accounts get a tick on your public page, and submissions from them can be checked automatically instead of waiting for a person. Only submit content you posted yourself. You choose above whether the public can see them.</p>
       </Card>
       <BioVerifyDialog
         platform={verifying}

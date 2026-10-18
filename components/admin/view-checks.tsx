@@ -52,7 +52,7 @@ export function ViewChecks() {
             </p>
           )}
         </div>
-        <button type="button" onClick={run} disabled={busy} className="inline-flex h-9 items-center gap-2 rounded-full border border-line-strong px-4 text-sm transition-colors hover:bg-paper/10 disabled:opacity-40">
+        <button type="button" onClick={run} disabled={busy} className="inline-flex h-9 items-center gap-2 rounded-pill border border-line-strong px-4 text-sm transition-colors hover:bg-paper/10 disabled:opacity-40">
           {busy ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />} Check now
         </button>
       </div>

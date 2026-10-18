@@ -21,6 +21,8 @@ export type Campaign = {
   /** The most one clip can earn, and the most one clipper can earn in this campaign, in dollars. Missing means no limit. */
   capPerPost?: number
   capPerUser?: number
+  /** Pinned to the top of the browse page by the owner. */
+  pinned?: boolean
 }
 
 export const campaigns: Campaign[] = [
@@ -36,7 +38,7 @@ export const campaigns: Campaign[] = [
     budget: 50000,
     endsOn: 'Oct 30',
     summary:
-      'New single out Friday. We want the hook in front of as many people as possible: clip the performance video, the studio session, or use the track under your own edits.',
+      'New single out Friday. We want the hook in front of as many people as possible: cut up the performance video, the studio session, or use the track under your own edits.',
     clipThis: [
       'The chorus drop at 0:42 is the moment',
       'Studio session footage from the drive folder',
@@ -87,7 +89,7 @@ export const campaigns: Campaign[] = [
       'Vertical crops with facecam on top',
     ],
     offLimits: [
-      'Clips older than 30 days',
+      'Videos older than 30 days',
       'Sponsor segments',
       'Anything from private Discord calls',
     ],
@@ -124,7 +126,7 @@ export const campaigns: Campaign[] = [
     budget: 20000,
     endsOn: 'Dec 01',
     summary:
-      'Our new deck line drops this month. Clip the team edit, or film your own session with a Parkline deck in shot.',
+      'Our new deck line drops this month. Cut the team edit, or film your own session with a Parkline deck in shot.',
     clipThis: [
       'Tricks from the official team edit',
       'Your own skate footage with the deck visible',
@@ -166,7 +168,7 @@ export const campaigns: Campaign[] = [
       'Guest stories with a clear payoff',
       'Burned-in captions, always',
     ],
-    offLimits: ['Out-of-context edits that change meaning', 'Clips over 90 seconds', 'Ad reads'],
+    offLimits: ['Out-of-context edits that change meaning', 'Videos over 90 seconds', 'Ad reads'],
   },
   {
     id: 'one-beam',
@@ -180,7 +182,7 @@ export const campaigns: Campaign[] = [
     budget: 28000,
     endsOn: 'Nov 28',
     summary:
-      'The tour is live. Clip crowd footage, fan-shot moments and the opening light cue. Make people wish they were there.',
+      'The tour is live. Cut crowd footage, fan-shot moments and the opening light cue. Make people wish they were there.',
     clipThis: ['Crowd shots from any date', 'The opening light cue', 'Fan reactions after the show'],
     offLimits: ['Full songs longer than 60s', 'Footage from the VIP area', 'Ticket resale links'],
   },

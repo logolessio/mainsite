@@ -16,7 +16,7 @@ export function CampaignEditor({ c }: { c: C }) {
   const [error, setError] = useState('')
   if (!open)
     return (
-      <button type="button" onClick={() => setOpen(true)} className="inline-flex h-9 items-center rounded-full border border-line-strong px-4 text-xs hover:bg-paper/10">
+      <button type="button" onClick={() => setOpen(true)} className="inline-flex h-9 items-center rounded-pill border border-line-strong px-4 text-xs hover:bg-paper/10">
         Edit
       </button>
     )

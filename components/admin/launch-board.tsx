@@ -49,9 +49,9 @@ function Ring({ percent, tone }: { percent: number; tone: string }) {
 }
 
 function StateIcon({ s }: { s: Item['state'] }) {
-  if (s === 'done') return <span className="grid size-7 shrink-0 place-items-center rounded-full bg-emerald-400/15 text-emerald-300"><Check className="size-4" /></span>
-  if (s === 'warn') return <span className="grid size-7 shrink-0 place-items-center rounded-full bg-amber-300/15 text-amber-300"><AlertTriangle className="size-4" /></span>
-  return <span className="grid size-7 shrink-0 place-items-center rounded-full border border-line-strong text-mute"><Circle className="size-3" /></span>
+  if (s === 'done') return <span className="grid size-7 shrink-0 place-items-center rounded-pill bg-emerald-400/15 text-emerald-300"><Check className="size-4" /></span>
+  if (s === 'warn') return <span className="grid size-7 shrink-0 place-items-center rounded-pill bg-amber-300/15 text-amber-300"><AlertTriangle className="size-4" /></span>
+  return <span className="grid size-7 shrink-0 place-items-center rounded-pill border border-line-strong text-mute"><Circle className="size-3" /></span>
 }
 
 export function LaunchBoard({ r }: { r: Readiness }) {
@@ -95,8 +95,8 @@ export function LaunchBoard({ r }: { r: Readiness }) {
 
   return (
     <>
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE_OUT }} className="relative mb-8 overflow-hidden rounded-[2rem] border border-line-strong bg-black/45 p-6 md:p-10">
-        <div aria-hidden="true" className="pointer-events-none absolute -top-1/2 -right-1/4 size-[40rem] rounded-full bg-[radial-gradient(closest-side,rgb(243_242_238/0.09),transparent)]" />
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE_OUT }} className="relative mb-8 overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-black/45 p-6 md:p-10">
+        <div aria-hidden="true" className="pointer-events-none absolute -top-1/2 -right-1/4 size-[40rem] rounded-pill bg-[radial-gradient(closest-side,rgb(243_242_238/0.09),transparent)]" />
         <div className="relative flex flex-col items-center gap-8 md:flex-row md:items-center md:gap-12">
           <Ring percent={r.percent} tone={tone} />
           <div className="min-w-0 flex-1 text-center md:text-left">
@@ -107,7 +107,7 @@ export function LaunchBoard({ r }: { r: Readiness }) {
               <Badge tone="good">{r.counts.done} done</Badge>
               {r.counts.warn > 0 && <Badge tone="warn">{r.counts.warn} to check</Badge>}
               <Badge tone={r.counts.todo ? 'bad' : 'neutral'}>{r.counts.todo} to do</Badge>
-              <button type="button" onClick={recheck} className="inline-flex h-7 items-center gap-1.5 rounded-full border border-line-strong px-3 text-xs text-mute transition-colors hover:text-paper">
+              <button type="button" onClick={recheck} className="inline-flex h-7 items-center gap-1.5 rounded-pill border border-line-strong px-3 text-xs text-mute transition-colors hover:text-paper">
                 <RefreshCw className={cn('size-3', refreshing && 'animate-spin')} /> Check again
               </button>
               <span className="self-center text-xs text-mute">Checked {when(r.checkedAt)}</span>
@@ -122,7 +122,7 @@ export function LaunchBoard({ r }: { r: Readiness }) {
             {next.map((i, n) => (
               <li key={i.id}>
                 <button type="button" onClick={() => jump(i.id)} className="group flex w-full items-center gap-4 rounded-2xl border border-line bg-white/[0.02] px-4 py-3 text-left transition-colors hover:border-paper/40 hover:bg-white/[0.05]">
-                  <span className="grid size-7 shrink-0 place-items-center rounded-full bg-paper font-mono text-xs text-ink">{n + 1}</span>
+                  <span className="grid size-7 shrink-0 place-items-center rounded-pill bg-paper font-mono text-xs text-ink">{n + 1}</span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-[15px]">{i.title}</span>
                     {i.detail && <span className="block truncate text-xs text-mute">{i.detail}</span>}
@@ -137,7 +137,7 @@ export function LaunchBoard({ r }: { r: Readiness }) {
 
       <div className="mt-8 flex flex-wrap items-center gap-2">
         {FILTERS.map((f) => (
-          <button key={f.id} type="button" onClick={() => setFilter(f.id)} aria-pressed={filter === f.id} className={cn('inline-flex h-9 items-center rounded-full border px-4 text-sm transition-colors', filter === f.id ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
+          <button key={f.id} type="button" onClick={() => setFilter(f.id)} aria-pressed={filter === f.id} className={cn('inline-flex h-9 items-center rounded-pill border px-4 text-sm transition-colors', filter === f.id ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
             {f.label}
           </button>
         ))}
@@ -156,7 +156,7 @@ export function LaunchBoard({ r }: { r: Readiness }) {
                 <h2 className="font-display text-2xl md:text-3xl">{g}</h2>
                 <div className="flex items-center gap-3 text-sm text-mute">
                   {done}/{all.length}
-                  <span className="hidden h-1.5 w-28 overflow-hidden rounded-full bg-white/10 sm:block"><span className="block h-full rounded-full bg-paper transition-[width] duration-700" style={{ width: `${(done / all.length) * 100}%` }} /></span>
+                  <span className="hidden h-1.5 w-28 overflow-hidden rounded-pill bg-white/10 sm:block"><span className="block h-full rounded-pill bg-paper transition-[width] duration-700" style={{ width: `${(done / all.length) * 100}%` }} /></span>
                 </div>
               </div>
               <ul className="overflow-hidden rounded-3xl border border-line bg-black/45">
@@ -186,7 +186,7 @@ export function LaunchBoard({ r }: { r: Readiness }) {
                                 <ol className="grid gap-2 text-sm text-mute">
                                   {i.how.map((h, n) => (
                                     <li key={n} className="flex gap-3">
-                                      <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border border-line-strong font-mono text-[10px]">{n + 1}</span>
+                                      <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-pill border border-line-strong font-mono text-[10px]">{n + 1}</span>
                                       <span>{h}</span>
                                     </li>
                                   ))}
@@ -194,12 +194,12 @@ export function LaunchBoard({ r }: { r: Readiness }) {
                               )}
                               <div className="flex flex-wrap gap-2">
                                 {i.href && (
-                                  <a href={i.href} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line-strong px-4 text-xs transition-colors hover:bg-white/10">
+                                  <a href={i.href} className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-line-strong px-4 text-xs transition-colors hover:bg-white/10">
                                     {i.hrefLabel ?? 'Open'} <ArrowUpRight className="size-3.5" />
                                   </a>
                                 )}
                                 {i.manual && (
-                                  <button type="button" disabled={busy === i.id} onClick={() => toggle(i)} className={cn('inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-xs font-medium transition-colors disabled:opacity-50', i.state === 'done' ? 'border border-line-strong text-mute hover:text-paper' : 'bg-paper text-ink hover:bg-paper/85')}>
+                                  <button type="button" disabled={busy === i.id} onClick={() => toggle(i)} className={cn('inline-flex h-9 items-center gap-1.5 rounded-pill px-4 text-xs font-medium transition-colors disabled:opacity-50', i.state === 'done' ? 'border border-line-strong text-mute hover:text-paper' : 'bg-paper text-ink hover:bg-paper/85')}>
                                     {busy === i.id ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
                                     {i.state === 'done' ? 'Mark as not done' : 'I have done this'}
                                   </button>

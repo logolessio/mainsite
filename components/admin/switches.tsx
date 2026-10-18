@@ -59,7 +59,7 @@ export function NumberSetting({ k, label, hint, cents }: { k: string; label: str
       </div>
       <div className="flex items-center gap-2">
         <span className="text-sm text-mute">$</span>
-        <input value={v} onChange={(e) => setV(e.target.value)} inputMode="numeric" className="h-9 w-28 rounded-full border border-line-strong bg-ink/80 px-3 text-right text-sm focus:outline-none" aria-label={label} />
+        <input value={v} onChange={(e) => setV(e.target.value)} inputMode="numeric" className="h-9 w-28 rounded-pill border border-line-strong bg-ink/80 px-3 text-right text-sm focus:outline-none" aria-label={label} />
         <button
           type="button"
           onClick={async () => {
@@ -76,7 +76,7 @@ export function NumberSetting({ k, label, hint, cents }: { k: string; label: str
               setMsg(e instanceof Error ? e.message : 'Could not save.')
             }
           }}
-          className="h-9 rounded-full border border-line-strong px-4 text-xs hover:bg-paper/10"
+          className="h-9 rounded-pill border border-line-strong px-4 text-xs hover:bg-paper/10"
         >
           Save
         </button>

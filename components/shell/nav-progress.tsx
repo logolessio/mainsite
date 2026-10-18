@@ -1,36 +1,37 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { useTransitions } from './transition-provider'
 
 /**
- * A hairline along the top that starts moving the moment you press a link and finishes when the new page is there, so a slow
- * moment never looks like nothing happened.
+ * A hairline along the top that starts moving once a page has been asked for and is taking a moment, and finishes when the new
+ * page is there. A page that arrives at once never shows it, and the old page stays exactly as it was until the new one is ready,
+ * so a slow moment never looks like nothing happened and a fast one never flashes.
  */
 export function NavProgress() {
-  const { phase } = useTransitions()
-  const pathname = usePathname()
+  const { pending } = useTransitions()
   const [on, setOn] = useState(false)
   const [finishing, setFinishing] = useState(false)
-  const was = useRef(false)
+  const shown = useRef(false)
 
   useEffect(() => {
-    if (phase === 'exiting') {
-      was.current = true
-      setFinishing(false)
-      setOn(true)
+    if (pending) {
+      // only if it is still waiting after a moment
+      const t = window.setTimeout(() => {
+        shown.current = true
+        setFinishing(false)
+        setOn(true)
+      }, 160)
+      return () => window.clearTimeout(t)
     }
-  }, [phase])
-  useEffect(() => {
-    if (!was.current) return
-    // the page arrived (the path changed): run to the end, then fade away
-    was.current = false
+    if (!shown.current) return
+    // the page arrived: run to the end, then fade away
+    shown.current = false
     setFinishing(true)
     const t = window.setTimeout(() => (setOn(false), setFinishing(false)), 380)
     return () => window.clearTimeout(t)
-  }, [pathname])
+  }, [pending])
 
   return (
     <AnimatePresence>

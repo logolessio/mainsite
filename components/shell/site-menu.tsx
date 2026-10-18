@@ -75,7 +75,7 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
                         className="group flex items-center gap-3 py-1 font-display text-[2.2rem] leading-[1.1] tracking-[-0.035em]"
                       >
                         <T>{l.label}</T>
-                        <span aria-hidden="true" className={cn('size-2 rounded-full bg-paper transition-transform duration-300', active ? 'scale-100' : 'scale-0')} />
+                        <span aria-hidden="true" className={cn('size-2 rounded-pill bg-paper transition-transform duration-300', active ? 'scale-100' : 'scale-0')} />
                       </TransitionLink>
                     </li>
                   )
@@ -98,8 +98,8 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
 
             <div className="mt-auto pt-10">
               {user?.signedIn ? <ProfilePill user={user} onClose={onClose} onTour={onTour} /> : (
-                <div className="overflow-hidden rounded-[28px] border border-line bg-white/[0.03] p-5">
-                  <TransitionLink href="/onboarding" onClick={onClose} className="inline-flex h-14 w-full items-center justify-center rounded-full bg-paper text-[17px] font-medium text-ink transition-colors hover:bg-paper/85">
+                <div className="overflow-hidden rounded-[calc(28px*var(--round,1))] border border-line bg-white/[0.03] p-5">
+                  <TransitionLink href="/onboarding" onClick={onClose} className="inline-flex h-14 w-full items-center justify-center rounded-pill bg-paper text-[17px] font-medium text-ink transition-colors hover:bg-paper/85">
                     Get started
                   </TransitionLink>
                   <TransitionLink href="/login" onClick={onClose} className="mt-3 block py-1 text-center text-[15px] text-mute transition-colors hover:text-paper">
@@ -145,20 +145,20 @@ function ProfilePill({ user, onClose, onTour }: { user: Extract<NavUser, { signe
   const p = user.profile
   const banner = p.bannerKind === 'image' ? `center/cover url(${p.banner})` : p.bannerKind === 'color' ? p.banner : (BANNER_PRESETS.find((b) => b.id === p.banner)?.css ?? BANNER_PRESETS[0].css)
   const stats: [string, string][] = [
-    ['Clips', compact(user.stats.clips)],
+    ['Submissions', compact(user.stats.clips)],
     ['Views', compact(user.stats.views)],
     [user.stats.brandCents > 0 ? 'Balance' : 'Earned', dollars(user.stats.brandCents > 0 ? user.stats.brandCents : user.stats.earnedCents)],
   ]
-  const chip = 'inline-flex h-8 items-center rounded-full bg-white/[0.06] px-3.5 text-[13px] text-paper/80 transition-colors hover:bg-white/[0.12] hover:text-paper'
+  const chip = 'inline-flex h-8 items-center rounded-pill bg-white/[0.06] px-3.5 text-[13px] text-paper/80 transition-colors hover:bg-white/[0.12] hover:text-paper'
   return (
-    <div className="overflow-hidden rounded-[30px] border border-white/[0.09] bg-[#0b0b0d] shadow-[0_30px_60px_-30px_rgb(0_0_0/0.9)]">
+    <div className="overflow-hidden rounded-[calc(30px*var(--round,1))] border border-white/[0.09] bg-[#0b0b0d] shadow-[0_30px_60px_-30px_rgb(0_0_0/0.9)]">
       <div className="relative h-[84px]" style={{ background: banner }}>
         <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/10 to-[#0b0b0d]" />
       </div>
       <div className="relative px-5 pb-5">
         <div className="-mt-9 flex items-end justify-between gap-3">
           <Avatar src={p.avatar} name={p.displayName} size={68} className="border-[4px] border-[#0b0b0d]" />
-          <TransitionLink href="/dashboard" onClick={onClose} className="mb-1 inline-flex h-9 items-center gap-1.5 rounded-full bg-paper pr-3 pl-4 text-[13px] font-medium text-ink transition-colors hover:bg-paper/85">
+          <TransitionLink href="/dashboard" onClick={onClose} className="mb-1 inline-flex h-9 items-center gap-1.5 rounded-pill bg-paper pr-3 pl-4 text-[13px] font-medium text-ink transition-colors hover:bg-paper/85">
             Dashboard <ArrowUpRight aria-hidden="true" className="size-3.5" />
           </TransitionLink>
         </div>
@@ -172,7 +172,7 @@ function ProfilePill({ user, onClose, onTour }: { user: Extract<NavUser, { signe
         </div>
         <p className="mt-1.5 text-[13px] text-mute">@{p.handle}</p>
 
-        <dl className="mt-5 grid grid-cols-3 divide-x divide-white/[0.07] rounded-[1.1rem] bg-white/[0.035] py-3.5">
+        <dl className="mt-5 grid grid-cols-3 divide-x divide-white/[0.07] rounded-[calc(1.1rem*var(--round,1))] bg-white/[0.035] py-3.5">
           {stats.map(([k, v]) => (
             <div key={k} className="px-4">
               <dd className="font-display text-[1.3rem] leading-none tabular-nums">{v}</dd>

@@ -9,7 +9,7 @@ export default function Page() {
   return (
     <>
       <SectionTabs group="settings" />
-      <PageHeader title="Notifications" sub="Payments, clip decisions, new badges and campaign news, newest first." />
+      <PageHeader title="Notifications" sub="Payments, submission decisions, new badges and campaign news, newest first." />
       <NotificationsPage />
     </>
   )

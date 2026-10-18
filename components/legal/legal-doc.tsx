@@ -145,7 +145,7 @@ export function LegalDocView({ doc }: { doc: LegalDoc }) {
                 <section id={id} className="group/sec scroll-mt-28 border-t border-line py-12 first:border-t-0 first:pt-0 md:py-16">
                   <div className="flex items-start gap-5">
                     <h2 className="flex-1 font-display text-3xl leading-[1.05] md:text-5xl">{s.h}</h2>
-                    <button type="button" onClick={() => copy(id)} aria-label={`Copy link to ${s.h}`} className="mt-2 grid size-9 shrink-0 place-items-center rounded-full text-mute opacity-0 transition-all group-hover/sec:opacity-100 hover:bg-paper/10 hover:text-paper focus-visible:opacity-100">
+                    <button type="button" onClick={() => copy(id)} aria-label={`Copy link to ${s.h}`} className="mt-2 grid size-9 shrink-0 place-items-center rounded-pill text-mute opacity-0 transition-all group-hover/sec:opacity-100 hover:bg-paper/10 hover:text-paper focus-visible:opacity-100">
                       {copied === id ? <Check className="size-4" /> : <Link2 className="size-4" />}
                     </button>
                   </div>

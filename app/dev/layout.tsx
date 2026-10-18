@@ -8,7 +8,7 @@ export const metadata = { title: 'Developer | logoless', robots: { index: false,
 export default async function Layout({ children }: { children: React.ReactNode }) {
   const session = await requireSession('dev')
   return (
-    <AppFrame area="Owner" items={staffItems(session?.user?.roles ?? ['admin', 'dev'])}>
+    <AppFrame area="Owner" roles={session?.user?.roles ?? ['admin', 'dev']} items={staffItems(session?.user?.roles ?? ['admin', 'dev'])}>
       {children}
     </AppFrame>
   )

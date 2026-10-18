@@ -39,7 +39,7 @@ export function ReviewControls({ id, status, views, rateCents }: { id: string; s
             data-key="v"
             data-key-label="Set the views"
             inputMode="numeric"
-            className="h-9 w-32 rounded-full border border-line-strong bg-ink/80 px-3 text-right text-xs focus:outline-none"
+            className="h-9 w-32 rounded-pill border border-line-strong bg-ink/80 px-3 text-right text-xs focus:outline-none"
             aria-label="Verified views"
           />
           <button
@@ -49,7 +49,7 @@ export function ReviewControls({ id, status, views, rateCents }: { id: string; s
             data-key="a"
             data-key-label={status === 'pending' ? 'Approve' : 'Update'}
             aria-keyshortcuts="a"
-            className="inline-flex h-9 items-center gap-1.5 rounded-full bg-paper px-4 text-xs font-medium text-ink hover:bg-paper/85 disabled:opacity-40"
+            className="inline-flex h-9 items-center gap-1.5 rounded-pill bg-paper px-4 text-xs font-medium text-ink hover:bg-paper/85 disabled:opacity-40"
           >
             {busy && <Loader2 className="size-3 animate-spin" />}
             {status === 'pending' ? (gross > 0 ? `Approve + pay $${(gross / 100).toFixed(2)}` : 'Approve') : gross > 0 ? `Pay $${(gross / 100).toFixed(2)}` : 'Update views'}

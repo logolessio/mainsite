@@ -10,10 +10,11 @@ export const SETTING_DEFAULTS = {
   design_font_mono: '0', // older switch: 1 = Geist Mono is the main typeface (design_font replaces it)
   mock_public: '0', // 1 = mock campaigns (made up by an admin to try the site) are shown to everyone, not just the team
   design_font: 'inter', // the typeface for the whole site (an id from lib/fonts.ts)
-  design_cover_zoom: '0', // 1 = campaign covers zoom in on hover
+  owner_notes: '', // the private notepad on the owner overview
+  pinned_campaigns: '[]', // ids of live campaigns the owner pinned to the top of the browse page (a JSON list)
+  design_roundness: '100', // how round the whole site is, 0 to 150 (100 is the standard look; see lib/roundness.ts)
   design_cover_border: '0', // 1 = the thin border around campaign covers
   design_cover_bar: '0', // 1 = the bar along the bottom of a cover showing how much budget is left
-  design_cover_info: '0', // 1 = payout rate, platforms and budget on the cover (off: only the name and the play button)
   design_scroll_effects: '0', // 1 = sections fade and slide in as you scroll
   design_liquid_loader: '0', // 1 = the white liquid fill behind the onboarding loader
   bg_dots: '0', // 1 = show the rolling dot landscape behind the site (off by default)
@@ -50,4 +51,14 @@ export async function setSetting(key: SettingKey, value: string) {
     .prepare('INSERT INTO settings (key, value, updated_at) VALUES (?1, ?2, ?3) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at')
     .bind(key, value, nowSec())
     .run()
+}
+
+/** The ids of the campaigns pinned to the top of the browse page, newest pin first. */
+export async function pinnedIds(): Promise<string[]> {
+  try {
+    const v = JSON.parse(await getSetting('pinned_campaigns'))
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
+  } catch {
+    return []
+  }
 }

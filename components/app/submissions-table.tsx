@@ -97,10 +97,10 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
     <div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: 'Clips', value: String(rows.length), note: `${counts.approved} approved` },
+          { label: 'Submissions', value: String(rows.length), note: `${counts.approved} approved` },
           { label: 'In review', value: String(counts.pending), note: 'Waiting on checks' },
-          { label: 'Verified views', value: views.toLocaleString(), note: 'Across all clips' },
-          { label: 'Earned', value: usd(earned), note: 'From these clips' },
+          { label: 'Verified views', value: views.toLocaleString(), note: 'Across all submissions' },
+          { label: 'Earned', value: usd(earned), note: 'From these submissions' },
         ].map((t) => (
           <div key={t.label} className="rounded-3xl border border-line bg-black/45 p-6">
             <p className="text-sm text-mute">{t.label}</p>
@@ -111,10 +111,10 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
       </div>
 
       <div className="mt-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div role="tablist" aria-label="Filter clips" className="glass-liquid inline-flex w-fit flex-wrap rounded-full p-1">
+        <div role="tablist" aria-label="Filter submissions" className="glass-liquid inline-flex w-fit flex-wrap rounded-pill p-1">
           {FILTERS.map((f) => (
-            <button key={f.id} role="tab" type="button" aria-selected={filter === f.id} tabIndex={filter === f.id ? 0 : -1} onClick={() => pick<Filter>('ll:subs:filter', setFilter)(f.id)} className="relative h-9 rounded-full px-4 text-sm">
-              {filter === f.id && <motion.span layoutId="clip-filter" transition={{ duration: 0.3, ease: EASE_OUT }} className="absolute inset-0 rounded-full bg-paper" />}
+            <button key={f.id} role="tab" type="button" aria-selected={filter === f.id} tabIndex={filter === f.id ? 0 : -1} onClick={() => pick<Filter>('ll:subs:filter', setFilter)(f.id)} className="relative h-9 rounded-pill px-4 text-sm">
+              {filter === f.id && <motion.span layoutId="clip-filter" transition={{ duration: 0.3, ease: EASE_OUT }} className="absolute inset-0 rounded-pill bg-paper" />}
               <span className={cn('relative transition-colors', filter === f.id ? 'text-ink' : 'text-mute hover:text-paper')}>
                 {f.label} <span className="tabular-nums opacity-60">{counts[f.id]}</span>
               </span>
@@ -122,16 +122,16 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
           ))}
         </div>
         <div className="flex items-center gap-3">
-          <label className="glass-liquid relative block flex-1 rounded-full md:w-60 md:flex-none">
+          <label className="glass-liquid relative block flex-1 rounded-pill md:w-60 md:flex-none">
             <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-mute" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Escape' && setQ('')} type="search" enterKeyHint="search" placeholder="Search submissions" aria-label="Search submissions" className="h-10 w-full rounded-full bg-transparent pr-9 pl-10 text-sm outline-none placeholder:text-mute [&::-webkit-search-cancel-button]:hidden" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Escape' && setQ('')} type="search" enterKeyHint="search" placeholder="Search submissions" aria-label="Search submissions" className="h-10 w-full rounded-pill bg-transparent pr-9 pl-10 text-sm outline-none placeholder:text-mute [&::-webkit-search-cancel-button]:hidden" />
             {q && (
-              <button type="button" aria-label="Clear search" onClick={() => setQ('')} className="absolute top-1/2 right-2 grid size-7 -translate-y-1/2 place-items-center rounded-full text-mute hover:text-paper">
+              <button type="button" aria-label="Clear search" onClick={() => setQ('')} className="absolute top-1/2 right-2 grid size-7 -translate-y-1/2 place-items-center rounded-pill text-mute hover:text-paper">
                 <X aria-hidden="true" className="size-3.5" />
               </button>
             )}
           </label>
-          <label className="glass-liquid relative inline-grid h-10 cursor-pointer items-center rounded-full has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-paper/60">
+          <label className="glass-liquid relative inline-grid h-10 cursor-pointer items-center rounded-pill has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-paper/60">
             <span className="sr-only">Sort by</span>
             <span aria-hidden="true" className="px-4 text-sm whitespace-nowrap text-mute">
               {SORTS.find((x) => x.id === sort)?.label}
@@ -144,9 +144,9 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
               ))}
             </select>
           </label>
-          <div className="glass-liquid inline-flex rounded-full p-1">
+          <div className="glass-liquid inline-flex rounded-pill p-1">
             {([['cards', LayoutGrid, 'Cards'], ['table', Rows3, 'Table']] as const).map(([id, Ico, label]) => (
-              <button key={id} type="button" aria-label={label} aria-pressed={view === id} onClick={() => pick<'cards' | 'table'>('ll:subs:view', setView)(id)} className={cn('grid size-8 place-items-center rounded-full transition-colors', view === id ? 'bg-paper text-ink' : 'text-mute hover:text-paper')}>
+              <button key={id} type="button" aria-label={label} aria-pressed={view === id} onClick={() => pick<'cards' | 'table'>('ll:subs:view', setView)(id)} className={cn('grid size-8 place-items-center rounded-pill transition-colors', view === id ? 'bg-paper text-ink' : 'text-mute hover:text-paper')}>
                 <Ico className="size-4" />
               </button>
             ))}
@@ -157,16 +157,16 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
       <p role="status" className="sr-only">{shown.length} of {rows.length} shown</p>
       <div className="mt-6">
         {view === 'table' ? (
-          <DataTable columns={cols} rows={shown} empty={<div className="px-6 py-12 text-center text-mute">No clips match.</div>} />
+          <DataTable columns={cols} rows={shown} empty={<div className="px-6 py-12 text-center text-mute">No submissions match.</div>} />
         ) : shown.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-line-strong px-6 py-14 text-center text-mute">No clips match. Try another filter or search.</div>
+          <div className="rounded-3xl border border-dashed border-line-strong px-6 py-14 text-center text-mute">No submissions match. Try another filter or search.</div>
         ) : (
           <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <AnimatePresence initial={false} mode="popLayout">
               {shown.map((r, i) => (
                 <motion.li key={r.id} data-kb-row layout="position" initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.45, delay: Math.min(i, 8) * 0.035, ease: EASE_OUT }} whileHover={{ y: -3 }} className="group flex flex-col rounded-3xl border border-line bg-black/45 p-6 transition-colors hover:border-line-strong">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="rounded-full bg-white/[0.06] px-3 py-1 text-xs text-mute">{r.platform}</span>
+                    <span className="rounded-pill bg-white/[0.06] px-3 py-1 text-xs text-mute">{r.platform}</span>
                     <Badge tone={TONE[r.status]}>{r.status === 'pending' ? 'in review' : r.status}</Badge>
                   </div>
                   <h2 className="mt-5 line-clamp-2 min-h-[3.2rem] text-lg leading-snug font-medium tracking-tight">{r.campaign}</h2>
@@ -181,8 +181,8 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
                       <dd className="mt-1 font-display text-2xl leading-none font-medium tabular-nums">{usd(r.earned)}</dd>
                     </div>
                   </dl>
-                  <a href={r.url} target="_blank" rel="noopener noreferrer nofollow" data-key="o" data-key-label="Open the clip" aria-keyshortcuts="o" className="mt-6 inline-flex items-center gap-1.5 text-sm text-mute transition-colors group-hover:text-paper">
-                    Open the clip <ArrowUpRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  <a href={r.url} target="_blank" rel="noopener noreferrer nofollow" data-key="o" data-key-label="Open the submission" aria-keyshortcuts="o" className="mt-6 inline-flex items-center gap-1.5 text-sm text-mute transition-colors group-hover:text-paper">
+                    Open the submission <ArrowUpRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   </a>
                 </motion.li>
               ))}

@@ -330,7 +330,7 @@ export function Keyboard() {
       <AnimatePresence>
         {help && (
           <motion.div key="help" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} onMouseDown={() => setHelp(false)} className="fixed inset-0 z-[260] grid place-items-center overflow-y-auto bg-black/65 p-4">
-            <motion.div ref={box} role="dialog" aria-modal="true" aria-labelledby="kb-title" initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, transition: { duration: 0.12 } }} transition={SPRING_POP} onMouseDown={(e) => e.stopPropagation()} className="my-8 w-full max-w-2xl rounded-[28px] border border-line-strong bg-[#0b0b0d] p-6 md:p-8">
+            <motion.div ref={box} role="dialog" aria-modal="true" aria-labelledby="kb-title" initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, transition: { duration: 0.12 } }} transition={SPRING_POP} onMouseDown={(e) => e.stopPropagation()} className="my-8 w-full max-w-2xl rounded-[calc(28px*var(--round,1))] border border-line-strong bg-[#0b0b0d] p-6 md:p-8">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 id="kb-title" className="font-display text-3xl">
@@ -338,7 +338,7 @@ export function Keyboard() {
                   </h2>
                   <p className="mt-1.5 text-sm text-mute">What works on this page. Letters stay quiet while you type.</p>
                 </div>
-                <button type="button" onClick={() => setHelp(false)} aria-label="Close the shortcut list" className="grid size-10 shrink-0 place-items-center rounded-full border border-line text-paper/70 hover:text-paper">
+                <button type="button" onClick={() => setHelp(false)} aria-label="Close the shortcut list" className="grid size-10 shrink-0 place-items-center rounded-pill border border-line text-paper/70 hover:text-paper">
                   <span aria-hidden="true">✕</span>
                 </button>
               </div>

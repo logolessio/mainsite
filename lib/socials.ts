@@ -39,7 +39,7 @@ export const MAX_LINKS = 16
 /** What the site starts with until the owner changes it: the five socials it already had, and two doors into the site. */
 export const DEFAULT_LINKS: LinkItem[] = [
   { id: 'site', platform: 'website', label: 'logoless.io', url: SITE.url, footer: false, page: true },
-  { id: 'earn', platform: 'website', label: 'Start earning from clips', url: `${SITE.url}/onboarding?role=clipper`, footer: false, page: true },
+  { id: 'earn', platform: 'website', label: 'Start earning from submissions', url: `${SITE.url}/onboarding?role=clipper`, footer: false, page: true },
   { id: 'launch', platform: 'website', label: 'Launch a campaign', url: `${SITE.url}/onboarding?role=brand`, footer: false, page: true },
   { id: 'discord', platform: 'discord', label: 'Join the Discord', url: SITE.social.discord, footer: true, page: true },
   { id: 'x', platform: 'x', label: 'X', url: SITE.social.x, footer: true, page: true },

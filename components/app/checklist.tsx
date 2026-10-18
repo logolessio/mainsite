@@ -14,7 +14,7 @@ export function Checklist({ items }: { items: CheckItem[] }) {
           <TransitionLink href={it.href} className="group flex items-center gap-4 py-3.5">
             <span
               className={cn(
-                'grid size-8 shrink-0 place-items-center rounded-full border text-xs',
+                'grid size-8 shrink-0 place-items-center rounded-pill border text-xs',
                 it.done ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute',
               )}
             >

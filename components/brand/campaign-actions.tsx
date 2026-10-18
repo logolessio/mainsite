@@ -81,12 +81,12 @@ export function CampaignActions({ c }: { c: CampaignInfo }) {
               <Input aria-label="Budget cap in dollars" inputMode="numeric" value={budget} onChange={(e) => setBudget(e.target.value.replace(/\D/g, '').slice(0, 7))} className="h-9 w-24" />
             </label>
             <label className="flex items-center gap-1 text-xs text-mute">
-              Per clip $
-              <Input aria-label="Most one clip can earn, in dollars" inputMode="numeric" value={perPost} placeholder="none" onChange={(e) => setPerPost(e.target.value.replace(/\D/g, '').slice(0, 6))} className="h-9 w-20" />
+              Per submission $
+              <Input aria-label="Most one submission can earn, in dollars" inputMode="numeric" value={perPost} placeholder="none" onChange={(e) => setPerPost(e.target.value.replace(/\D/g, '').slice(0, 6))} className="h-9 w-20" />
             </label>
             <label className="flex items-center gap-1 text-xs text-mute">
-              Per clipper $
-              <Input aria-label="Most one clipper can earn, in dollars" inputMode="numeric" value={perUser} placeholder="none" onChange={(e) => setPerUser(e.target.value.replace(/\D/g, '').slice(0, 6))} className="h-9 w-20" />
+              Per creator $
+              <Input aria-label="Most one creator can earn, in dollars" inputMode="numeric" value={perUser} placeholder="none" onChange={(e) => setPerUser(e.target.value.replace(/\D/g, '').slice(0, 6))} className="h-9 w-20" />
             </label>
           </div>
           <ActionButton type="submit" disabled={Boolean(busy)} className="h-9">
@@ -123,7 +123,7 @@ export function MoveBudget({ campaigns }: { campaigns: { id: string; title: stri
   const [error, setError] = useState('')
   const [done, setDone] = useState('')
   if (campaigns.length < 2) return null
-  const select = 'h-11 rounded-full border border-line-strong bg-ink/80 px-4 text-sm'
+  const select = 'h-11 rounded-pill border border-line-strong bg-ink/80 px-4 text-sm'
   return (
     <div className="mb-6">
       {!open ? (
@@ -132,7 +132,7 @@ export function MoveBudget({ campaigns }: { campaigns: { id: string; title: stri
         </button>
       ) : (
         <form
-          className="flex flex-wrap items-center gap-3 rounded-[1.4rem] border border-line p-4"
+          className="flex flex-wrap items-center gap-3 rounded-[calc(1.4rem*var(--round,1))] border border-line p-4"
           onSubmit={async (e) => {
             e.preventDefault()
             setBusy(true)

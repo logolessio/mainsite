@@ -52,7 +52,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ r
 
   return (
     <>
-      <PageHeader title="Campaigns" sub="Every campaign draws from your one balance as clippers earn. Pause, start or change a budget any time." actions={<ActionLink href="/brand/campaigns/new">New campaign</ActionLink>} />
+      <PageHeader title="Campaigns" sub="Every campaign draws from your one balance as creators earn. Pause, start or change a budget any time." actions={<ActionLink href="/brand/campaigns/new">New campaign</ActionLink>} />
       {q.requested && <p role="status" className="mb-4 rounded-2xl border border-line-strong px-4 py-3 text-sm">Sent. We read every new campaign. Once it is approved it goes live as soon as your balance covers the start.</p>}
       <MoveBudget campaigns={movable} />
       {rows.length === 0 ? (
@@ -62,7 +62,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ r
           {rows.map((r) => {
             const pct = r.budget_cents > 0 ? Math.min(100, Math.round((r.spent / r.budget_cents) * 100)) : 0
             return (
-              <li key={r.id} className="flex flex-wrap items-center gap-x-6 gap-y-4 rounded-[1.6rem] border border-line bg-white/[0.02] p-4 pr-6 sm:flex-nowrap">
+              <li key={r.id} className="flex flex-wrap items-center gap-x-6 gap-y-4 rounded-[calc(1.6rem*var(--round,1))] border border-line bg-white/[0.02] p-4 pr-6 sm:flex-nowrap">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={r.cover_url} alt="" className="size-20 shrink-0 rounded-2xl object-cover" />
                 <div className="min-w-0 flex-1">
@@ -71,11 +71,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ r
                     <Badge tone={CAMPAIGN_STATUS[r.status]?.tone ?? 'neutral'}>{CAMPAIGN_STATUS[r.status]?.brand ?? r.status}</Badge>
                   </p>
                   {r.admin_note && !['live', 'paused'].includes(r.status) && <p className="mt-0.5 text-xs text-mute">{r.admin_note}</p>}
-                  <div className="mt-3 h-1.5 max-w-md overflow-hidden rounded-full bg-white/10" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Share of the budget paid out">
-                    <div className="h-full rounded-full bg-paper" style={{ width: `${pct}%` }} />
+                  <div className="mt-3 h-1.5 max-w-md overflow-hidden rounded-pill bg-white/10" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Share of the budget paid out">
+                    <div className="h-full rounded-pill bg-paper" style={{ width: `${pct}%` }} />
                   </div>
                   <p className="mt-2 text-sm text-mute tabular-nums">
-                    {applyWording(`${usd(r.spent)} of ${usd(r.budget_cents)} paid to clippers · ${r.views.toLocaleString()} views · ${r.clips} ${r.clips === 1 ? 'clip' : 'clips'}`)}
+                    {applyWording(`${usd(r.spent)} of ${usd(r.budget_cents)} paid to creators · ${r.views.toLocaleString()} views · ${r.clips} ${r.clips === 1 ? 'clip' : 'clips'}`)}
                   </p>
                 </div>
                 <CampaignActions c={{ id: r.id, title: r.title, status: r.status, budget: Math.round(r.budget_cents / 100), spent: r.spent, poolCents: r.pool, adminPaused: r.paused_by === 'admin', capPerPost: (caps[r.id]?.perPostCents ?? 0) / 100, capPerUser: (caps[r.id]?.perUserCents ?? 0) / 100 }} />

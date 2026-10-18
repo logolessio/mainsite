@@ -15,7 +15,7 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center px-6 py-14 text-center">
       {icon && (
-        <span className="grid size-12 place-items-center rounded-full bg-white/[0.05]">
+        <span className="grid size-12 place-items-center rounded-pill bg-white/[0.05]">
           <Icon name={icon} aria-hidden="true" className="size-5 text-mute" />
         </span>
       )}
@@ -76,5 +76,5 @@ const TONES = {
 }
 
 export function Badge({ children, tone = 'neutral' }: { children: React.ReactNode; tone?: keyof typeof TONES }) {
-  return <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-xs leading-none font-medium', TONES[tone])}>{children}</span>
+  return <span className={cn('inline-flex items-center rounded-pill px-2.5 py-1 text-xs leading-none font-medium', TONES[tone])}>{children}</span>
 }

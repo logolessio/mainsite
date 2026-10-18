@@ -11,7 +11,7 @@ export default async function Page() {
   const b = await balances(user.id)
   return (
     <>
-      <PageHeader title="New campaign" sub="One short page. Nothing is charged: clippers are paid from your balance as they earn." />
+      <PageHeader title="New campaign" sub="One short page. Nothing is charged: creators are paid from your balance as they earn." />
       <CampaignWizard balanceCents={b.brand} />
     </>
   )

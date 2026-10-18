@@ -16,10 +16,10 @@ export function GlassSearch({ value, onChange, resultCount, className }: Props) 
   const { reduced } = useMotionPrefs()
 
   return (
-    <div data-tour="search" className={cn('glass relative isolate overflow-hidden rounded-full', className)}>
+    <div data-tour="search" className={cn('glass relative isolate overflow-hidden rounded-pill', className)}>
       <motion.span
         aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 -z-10 h-24 w-40 -translate-y-1/2 rounded-full bg-paper/20 blur-2xl"
+        className="pointer-events-none absolute top-1/2 -z-10 h-24 w-40 -translate-y-1/2 rounded-pill bg-paper/20 blur-2xl"
         initial={{ left: '-10%' }}
         animate={reduced ? { left: '20%' } : { left: ['-10%', '75%', '-10%'], scale: [1, 1.25, 1] }}
         transition={reduced ? { duration: 0 } : { duration: 9, repeat: Infinity, ease: 'easeInOut' }}
@@ -45,7 +45,7 @@ export function GlassSearch({ value, onChange, resultCount, className }: Props) 
             type="button"
             onClick={() => onChange('')}
             aria-label="Clear search"
-            className="grid size-10 place-items-center rounded-full text-mute transition-colors hover:bg-paper/10 hover:text-paper"
+            className="grid size-10 place-items-center rounded-pill text-mute transition-colors hover:bg-paper/10 hover:text-paper"
           >
             <X className="size-4" />
           </button>

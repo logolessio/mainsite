@@ -70,13 +70,13 @@ export function Toaster() {
             onDragEnd={(_, i) => (i.offset.y > 40 || i.velocity.y > 400) && drop(t.id)}
             onPointerEnter={() => timers.current.get(t.id) && clearTimeout(timers.current.get(t.id))}
             onPointerLeave={() => arm(t.id, 1600)}
-            className="pointer-events-auto flex max-w-[min(26rem,100%)] items-center gap-3 rounded-full border border-line-strong bg-[#101012] py-2.5 pr-2.5 pl-4 text-[15px] shadow-[0_18px_40px_-14px_rgb(0_0_0/0.85)]"
+            className="pointer-events-auto flex max-w-[min(26rem,100%)] items-center gap-3 rounded-pill border border-line-strong bg-[#101012] py-2.5 pr-2.5 pl-4 text-[15px] shadow-[0_18px_40px_-14px_rgb(0_0_0/0.85)]"
           >
-            <span className={cn('grid size-6 shrink-0 place-items-center rounded-full', t.tone === 'error' ? 'bg-signal/15 text-signal' : t.tone === 'info' ? 'bg-white/10 text-paper' : 'bg-emerald-400/15 text-emerald-300')}>
+            <span className={cn('grid size-6 shrink-0 place-items-center rounded-pill', t.tone === 'error' ? 'bg-signal/15 text-signal' : t.tone === 'info' ? 'bg-white/10 text-paper' : 'bg-emerald-400/15 text-emerald-300')}>
               {t.tone === 'error' ? <CircleAlert aria-hidden="true" className="size-3.5" /> : <Check aria-hidden="true" className="size-3.5" />}
             </span>
             <span className="min-w-0 flex-1">{t.text}</span>
-            <button type="button" aria-label="Dismiss" onClick={() => drop(t.id)} className="grid size-7 shrink-0 place-items-center rounded-full text-mute transition-colors hover:bg-white/10 hover:text-paper">
+            <button type="button" aria-label="Dismiss" onClick={() => drop(t.id)} className="grid size-7 shrink-0 place-items-center rounded-pill text-mute transition-colors hover:bg-white/10 hover:text-paper">
               <X aria-hidden="true" className="size-3.5" />
             </button>
           </motion.div>

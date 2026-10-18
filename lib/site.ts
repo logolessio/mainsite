@@ -38,13 +38,13 @@ export const NAV_LINKS = [
   { label: 'For brands', href: '/for-brands' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'About', href: '/about' },
-  { label: 'Questions', href: '/faq' },
+  { label: "That's why its called a Q&A :)", href: '/faq' },
 ]
 
 export const LEGAL_LINKS = [
   { label: 'Terms of Service', href: '/legal/terms' },
   { label: 'Privacy Policy', href: '/legal/privacy' },
-  { label: 'Clipper Terms', href: '/legal/clipper-terms' },
+  { label: 'Creator Terms', href: '/legal/clipper-terms' },
   { label: 'Brand Terms', href: '/legal/brand-terms' },
   { label: 'Campaign Rules', href: '/legal/campaign-rules' },
   { label: 'Acceptable Use', href: '/legal/acceptable-use' },
@@ -67,7 +67,7 @@ export const FOOTER = {
   Company: [
     { label: 'About', href: '/about' },
     { label: 'Case studies', href: '/case-studies' },
-    { label: 'Questions', href: '/faq' },
+    { label: "That's why its called a Q&A :)", href: '/faq' },
     { label: 'Contact', href: '/contact' },
     { label: 'Report', href: '/report' },
   ],

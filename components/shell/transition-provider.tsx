@@ -11,6 +11,8 @@ type Phase = 'idle' | 'exiting'
 
 type TransitionContextValue = {
   phase: Phase
+  /** A page has been asked for and has not arrived yet. */
+  pending: boolean
   navigate: (href: string) => void
   expand: (campaign: Campaign) => void
   /** Navigates while the cover art of campaign `id` glides from where it is to where it lands. */
@@ -28,14 +30,22 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
   // the page we are leaving, or null. Derived against the current path, so the new page never inherits the fade.
   const [leaving, setLeaving] = useState<string | null>(null)
   const phase: Phase = leaving === pathname ? 'exiting' : 'idle'
+  const [pending, setPending] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // whoever is waiting for a page to arrive (a view transition) is told as soon as the path changes
   const waiting = useRef<((path: string) => void)[]>([])
   useEffect(() => {
     setLeaving(null)
+    setPending(false)
     waiting.current.splice(0).forEach((w) => w(pathname))
   }, [pathname])
+  // never leave the progress line running if a page never came (a query-only change, or a failed request)
+  useEffect(() => {
+    if (!pending) return
+    const t = setTimeout(() => setPending(false), 9000)
+    return () => clearTimeout(t)
+  }, [pending])
 
   // a navigation that keeps the same path (only the query changes) must not leave the page faded
   useEffect(() => {
@@ -58,6 +68,7 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
         return
       }
       if (!confirmLeave()) return // there is work in the page that has not been saved
+      if (target !== pathname) setPending(true)
       if (reduced) {
         router.push(href)
         return
@@ -163,7 +174,7 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
     [morph, router],
   )
 
-  const value = useMemo(() => ({ phase, navigate, expand, morph }), [phase, navigate, expand, morph])
+  const value = useMemo(() => ({ phase, pending, navigate, expand, morph }), [phase, pending, navigate, expand, morph])
 
   return <TransitionContext.Provider value={value}>{children}</TransitionContext.Provider>
 }

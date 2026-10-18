@@ -7,7 +7,7 @@ import { featureOn } from '@/lib/features'
 import { CONTAINER } from '@/lib/layout'
 import { avatarSrc } from '@/lib/looks'
 
-export const metadata: Metadata = { title: 'Leaderboard | logoless', description: 'The clippers bringing in the most verified views.' }
+export const metadata: Metadata = { title: 'Leaderboard | logoless', description: 'The creators bringing in the most verified views.' }
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ p?: string }> }) {
   await connection()

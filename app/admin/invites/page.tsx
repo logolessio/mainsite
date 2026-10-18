@@ -102,8 +102,8 @@ export default async function Page() {
                   )}
                   {r.note && <p className="mt-1 text-xs text-amber-300/90">Note: {r.note}</p>}
                   {r.user_id && !r.campaign_id && (
-                    <div className="mt-3 h-1.5 w-full max-w-sm overflow-hidden rounded-full bg-white/10" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
-                      <div className="h-full rounded-full bg-paper" style={{ width: `${pct}%` }} />
+                    <div className="mt-3 h-1.5 w-full max-w-sm overflow-hidden rounded-pill bg-white/10" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+                      <div className="h-full rounded-pill bg-paper" style={{ width: `${pct}%` }} />
                     </div>
                   )}
                 </div>

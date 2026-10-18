@@ -15,7 +15,7 @@ export function LinksPage({ links, tagline }: { links: LinkItem[]; tagline: stri
   const [hot, setHot] = useState<string | null>(null)
   return (
     <main className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[460px] flex-col items-center px-5 pt-16 pb-12 md:pt-24">
-      <motion.div initial={{ opacity: 0, y: 14, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.8, ease: EASE }} className="flex flex-col items-center text-center">
+      <motion.div initial={false} className="flex flex-col items-center text-center">
         <Logo className="h-20 md:h-24" />
         <h1 className="mt-6 font-display text-4xl leading-none tracking-[-0.04em] md:text-5xl">logoless</h1>
         <p className="mt-3 text-[17px] text-paper/55">{tagline}</p>
@@ -26,17 +26,17 @@ export function LinksPage({ links, tagline }: { links: LinkItem[]; tagline: stri
           const lit = hot === l.id
           const main = i === 0
           return (
-            <motion.li key={l.id} className="min-w-0" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.18 + i * 0.055, ease: EASE }}>
+            <motion.li key={l.id} className="min-w-0" initial={false}>
               <a
                 href={l.url}
                 {...(l.url.startsWith('https://logoless.io') ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
                 onPointerEnter={(e) => e.pointerType !== 'touch' && setHot(l.id)}
                 onFocus={() => setHot(l.id)}
                 onBlur={() => setHot(null)}
-                className={cn('group relative flex h-16 items-center gap-4 overflow-hidden rounded-full px-3 pr-6 transition-[transform,color] duration-300 active:scale-[0.985]', main ? 'bg-paper text-ink' : 'border border-line-strong text-paper')}
+                className={cn('group relative flex h-16 items-center gap-4 overflow-hidden rounded-pill px-3 pr-6 transition-[transform,color] duration-300 active:scale-[0.985]', main ? 'bg-paper text-ink' : 'border border-line-strong text-paper')}
               >
-                {!main && <motion.span aria-hidden="true" initial={false} animate={{ opacity: lit ? 1 : 0 }} transition={{ duration: lit ? 0.28 : 0.45, ease: 'easeOut' }} className="pointer-events-none absolute inset-0 rounded-full bg-white/[0.08]" />}
-                <span className={cn('relative grid size-10 shrink-0 place-items-center rounded-full', main ? 'bg-ink/[0.07]' : 'bg-white/[0.06]')}>{l.platform === 'website' ? <Globe aria-hidden="true" className="size-[18px]" /> : <BrandIcon name={l.platform} className="size-[18px]" />}</span>
+                {!main && <motion.span aria-hidden="true" initial={false} animate={{ opacity: lit ? 1 : 0 }} transition={{ duration: lit ? 0.28 : 0.45, ease: 'easeOut' }} className="pointer-events-none absolute inset-0 rounded-pill bg-white/[0.08]" />}
+                <span className={cn('relative grid size-10 shrink-0 place-items-center rounded-pill', main ? 'bg-ink/[0.07]' : 'bg-white/[0.06]')}>{l.platform === 'website' ? <Globe aria-hidden="true" className="size-[18px]" /> : <BrandIcon name={l.platform} className="size-[18px]" />}</span>
                 <span className="relative min-w-0 flex-1 truncate text-[17px]">{l.label}</span>
                 <ArrowUpRight aria-hidden="true" className={cn('relative size-5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5', main ? 'text-ink/50' : 'text-paper/40')} />
               </a>
@@ -45,7 +45,7 @@ export function LinksPage({ links, tagline }: { links: LinkItem[]; tagline: stri
         })}
       </ul>
 
-      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.6 }} className="mt-auto pt-14 text-sm text-paper/30">
+      <motion.p initial={false} className="mt-auto pt-14 text-sm text-paper/30">
         logoless.io
       </motion.p>
     </main>

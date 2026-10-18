@@ -52,7 +52,7 @@ export function StreetLab() {
         </h1>
         <p className="st-caption">Cut it. Post it. Get paid per 1,000 views. Nothing else matters.</p>
         <div className="st-cta">
-          <a className="st-btn st-btn-y">START CLIPPING</a>
+          <a className="st-btn st-btn-y">START CREATING</a>
           <a className="st-btn st-btn-m">LAUNCH A CAMPAIGN</a>
         </div>
       </section>
@@ -60,7 +60,7 @@ export function StreetLab() {
       <div className="st-ticker" aria-hidden="true">
         <div>
           {Array.from({ length: 2 }).map((_, k) => (
-            <span key={k}>POST ★ CLIP ★ GET PAID ★ NO LOGOS ★ ONLY REAL VIEWS ★ POST ★ CLIP ★ GET PAID ★ NO LOGOS ★ ONLY REAL VIEWS ★&nbsp;</span>
+            <span key={k}>POST ★ CREATE ★ GET PAID ★ NO LOGOS ★ ONLY REAL VIEWS ★ POST ★ CREATE ★ GET PAID ★ NO LOGOS ★ ONLY REAL VIEWS ★&nbsp;</span>
           ))}
         </div>
       </div>

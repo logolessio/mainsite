@@ -11,7 +11,7 @@ export default async function Page() {
   await pageDev()
   return (
     <>
-      <SectionTabs group="dev" />
+      <SectionTabs group="site" />
       <PageHeader title="Features" sub="Everything on the dev site is switched on there so you can try it. Choose what goes to logoless.io, and undo it any time." />
       <div className="grid max-w-3xl gap-8">
         <PushPanel />

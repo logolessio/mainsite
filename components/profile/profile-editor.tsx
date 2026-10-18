@@ -183,16 +183,16 @@ export function ProfileEditor() {
       <ProfileTheme dot={f.dotColor} />
       <div className="min-w-0">
         {/* ---------- the tab bar ---------- */}
-        <div className="glass-liquid sticky top-[84px] z-20 mx-auto mb-6 w-fit max-w-full rounded-full">
+        <div className="glass-liquid sticky top-[84px] z-20 mx-auto mb-6 w-fit max-w-full rounded-pill">
         <div role="tablist" aria-label="Profile sections" className="no-scrollbar flex justify-center gap-1 overflow-x-auto overflow-y-hidden p-1.5">
           {tabs.map((t) => {
             const on = tab === t.id
             return (
-              <button key={t.id} type="button" role="tab" aria-selected={on} onClick={() => setTab(t.id)} className={cn('relative inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm transition-colors', on ? 'text-ink' : 'text-mute hover:text-paper', t.id === 'preview' && 'xl:hidden')}>
-                {on && <motion.span layoutId="profile-tab" transition={{ type: 'spring', stiffness: 420, damping: 34 }} className="absolute inset-0 rounded-full bg-paper" />}
+              <button key={t.id} type="button" role="tab" aria-selected={on} onClick={() => setTab(t.id)} className={cn('relative inline-flex h-10 shrink-0 items-center gap-2 rounded-pill px-4 text-sm transition-colors', on ? 'text-ink' : 'text-mute hover:text-paper', t.id === 'preview' && 'xl:hidden')}>
+                {on && <motion.span layoutId="profile-tab" transition={{ type: 'spring', stiffness: 420, damping: 34 }} className="absolute inset-0 rounded-pill bg-paper" />}
                 <t.icon className="relative size-4" />
                 <span className="relative">{t.label}</span>
-                {t.badge ? <span className={cn('relative rounded-full px-1.5 font-mono text-[10px]', on ? 'bg-ink/10' : 'bg-white/10')}>{t.badge}</span> : null}
+                {t.badge ? <span className={cn('relative rounded-pill px-1.5 font-mono text-[10px]', on ? 'bg-ink/10' : 'bg-white/10')}>{t.badge}</span> : null}
               </button>
             )
           })}
@@ -200,12 +200,12 @@ export function ProfileEditor() {
         </div>
 
         <AnimatePresence mode="wait" initial={false}>
-          <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22, ease: EASE_OUT }} className={cn(tab !== 'preview' && 'rounded-[2rem] border border-line bg-[#0a0a0b] p-5 sm:p-7')}>
+          <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22, ease: EASE_OUT }} className={cn(tab !== 'preview' && 'rounded-[calc(2rem*var(--round,1))] border border-line bg-[#0a0a0b] p-5 sm:p-7')}>
             {/* ================= PROFILE ================= */}
             {tab === 'profile' && (
               <div className="grid gap-7">
                 <div className="flex items-center gap-5">
-                  <button type="button" onClick={() => avatarInput.current?.click()} className="group relative grid size-24 shrink-0 place-items-center overflow-hidden rounded-full border border-line-strong bg-raised" aria-label="Change profile picture">
+                  <button type="button" onClick={() => avatarInput.current?.click()} className="group relative grid size-24 shrink-0 place-items-center overflow-hidden rounded-pill border border-line-strong bg-raised" aria-label="Change profile picture">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     {f.avatar ? <img src={f.avatar} alt="" className="size-full object-cover" referrerPolicy="no-referrer" /> : <Camera className="size-6 text-mute" />}
                     <span className="absolute inset-0 grid place-items-center bg-ink/60 opacity-0 transition-opacity group-hover:opacity-100">{busy === 'avatar' ? <Loader2 className="size-5 animate-spin" /> : <Camera className="size-5" />}</span>
@@ -252,11 +252,11 @@ export function ProfileEditor() {
                           {!loaded.discordImport ? (
                             <p className="rounded-xl border border-line bg-ink/60 p-3 text-xs text-mute">This is not switched on yet.</p>
                           ) : !loaded.discordLinked ? (
-                            <a href="/api/discord/connect?back=/dashboard/profile" className="inline-flex h-10 items-center rounded-full bg-paper px-5 text-sm font-medium text-ink hover:bg-paper/85">
+                            <a href="/api/discord/connect?back=/dashboard/profile" className="inline-flex h-10 items-center rounded-pill bg-paper px-5 text-sm font-medium text-ink hover:bg-paper/85">
                               Connect Discord first
                             </a>
                           ) : (
-                            <ActionButton onClick={importDiscord} disabled={busy === 'discord'} className="rounded-full">
+                            <ActionButton onClick={importDiscord} disabled={busy === 'discord'} className="rounded-pill">
                               {busy === 'discord' ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Import from my Discord
                             </ActionButton>
                           )}
@@ -322,7 +322,7 @@ export function ProfileEditor() {
               <div className="mt-10 grid gap-8 border-t border-line pt-10">
                 <Group title="Card effect" hint="Moves over your whole card">
                   <div className="grid gap-5">
-                    <button type="button" onClick={() => set('cardEffect', 'none')} aria-pressed={f.cardEffect === 'none'} className={cn('flex h-11 items-center gap-2 justify-self-start rounded-full border px-4 text-sm transition-colors', f.cardEffect === 'none' ? 'border-paper bg-paper/10' : 'border-line text-mute hover:text-paper')}>
+                    <button type="button" onClick={() => set('cardEffect', 'none')} aria-pressed={f.cardEffect === 'none'} className={cn('flex h-11 items-center gap-2 justify-self-start rounded-pill border px-4 text-sm transition-colors', f.cardEffect === 'none' ? 'border-paper bg-paper/10' : 'border-line text-mute hover:text-paper')}>
                       <Ban className="size-4" /> No effect
                     </button>
                     {EFFECT_GROUPS.map((g) => (
@@ -374,16 +374,16 @@ export function ProfileEditor() {
         {/* ---------- save bar ---------- */}
         <div className="sticky bottom-4 z-20 mt-5 rounded-3xl border border-line-strong bg-surface/95 p-2.5">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pl-1.5">
-            <ActionButton data-hotkey-save onClick={save} disabled={saving || !dirty} className="rounded-full">
+            <ActionButton data-hotkey-save onClick={save} disabled={saving || !dirty} className="rounded-pill">
               {saving && <Loader2 className="size-4 animate-spin" />} Save profile
             </ActionButton>
             {dirty && (
-              <button type="button" onClick={discard} className="inline-flex h-10 items-center gap-1.5 rounded-full px-3 text-sm text-mute hover:text-paper">
+              <button type="button" onClick={discard} className="inline-flex h-10 items-center gap-1.5 rounded-pill px-3 text-sm text-mute hover:text-paper">
                 <Undo2 className="size-4" /> Discard
               </button>
             )}
             <span className="flex items-center gap-2 text-xs text-mute">
-              <span className={cn('size-2 rounded-full', dirty ? 'bg-amber-300' : 'bg-emerald-400')} />
+              <span className={cn('size-2 rounded-pill', dirty ? 'bg-amber-300' : 'bg-emerald-400')} />
               {dirty ? 'Unsaved changes' : 'All saved'}
             </span>
             <a href={`/@${f.handle}`} className="ml-auto pr-2 text-sm text-mute hover:text-paper">View public page</a>
@@ -433,7 +433,7 @@ function PreviewPane({ f, previewLinks }: { f: ProfileView; previewLinks: { plat
         <span>Live preview</span>
         <span>Example numbers</span>
       </p>
-      <div className="relative overflow-hidden rounded-[28px] border border-line bg-black">
+      <div className="relative overflow-hidden rounded-[calc(28px*var(--round,1))] border border-line bg-black">
         <MiniDots color={f.dotColor} />
         <div className="relative flex justify-center px-4 py-8">
           <ProfileCard
@@ -455,9 +455,9 @@ function Swatches({ label, value, options, onChange }: { label: string; value: s
       <p className="font-mono text-xs text-mute">{label}</p>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {options.map((c) => (
-          <button key={c} type="button" onClick={() => onChange(c)} aria-label={c} aria-pressed={value.toLowerCase() === c} className={cn('size-8 rounded-full border-2 transition-transform hover:scale-110', value.toLowerCase() === c ? 'border-paper' : 'border-transparent')} style={{ background: c }} />
+          <button key={c} type="button" onClick={() => onChange(c)} aria-label={c} aria-pressed={value.toLowerCase() === c} className={cn('size-8 rounded-pill border-2 transition-transform hover:scale-110', value.toLowerCase() === c ? 'border-paper' : 'border-transparent')} style={{ background: c }} />
         ))}
-        <label className="relative grid size-8 cursor-pointer place-items-center overflow-hidden rounded-full border border-dashed border-line-strong text-[10px] text-mute">
+        <label className="relative grid size-8 cursor-pointer place-items-center overflow-hidden rounded-pill border border-dashed border-line-strong text-[10px] text-mute">
           +
           <input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="absolute inset-0 cursor-pointer opacity-0" aria-label={`Custom ${label}`} />
         </label>
@@ -481,7 +481,7 @@ function Slider({ label, hint, value, onChange }: { label: string; hint: string;
         max={100}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="mt-2 h-2 w-full cursor-pointer appearance-none rounded-full bg-line-strong accent-white [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-paper [&::-webkit-slider-thumb]:shadow-[0_0_0_4px_rgb(255_255_255/0.12)]"
+        className="mt-2 h-2 w-full cursor-pointer appearance-none rounded-pill bg-line-strong accent-white [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-pill [&::-webkit-slider-thumb]:bg-paper [&::-webkit-slider-thumb]:shadow-[0_0_0_4px_rgb(255_255_255/0.12)]"
       />
     </label>
   )
@@ -501,9 +501,9 @@ function Visibility({ show, onChange }: { show: ShowMap; onChange: (s: ShowMap) 
     <div>
       <div className="flex flex-wrap items-center gap-2">
         <span className="mr-1 font-mono text-xs text-mute">{shown} of {total} public</span>
-        <button type="button" onClick={() => setAll(() => true)} className="h-8 rounded-full border border-line-strong px-3.5 text-xs hover:bg-paper/10">Show all</button>
-        <button type="button" onClick={() => setAll((_k, def) => def)} className="h-8 rounded-full border border-line-strong px-3.5 text-xs hover:bg-paper/10">Recommended</button>
-        <button type="button" onClick={() => setAll(() => false)} className="h-8 rounded-full border border-line-strong px-3.5 text-xs hover:bg-paper/10">Hide all</button>
+        <button type="button" onClick={() => setAll(() => true)} className="h-8 rounded-pill border border-line-strong px-3.5 text-xs hover:bg-paper/10">Show all</button>
+        <button type="button" onClick={() => setAll((_k, def) => def)} className="h-8 rounded-pill border border-line-strong px-3.5 text-xs hover:bg-paper/10">Recommended</button>
+        <button type="button" onClick={() => setAll(() => false)} className="h-8 rounded-pill border border-line-strong px-3.5 text-xs hover:bg-paper/10">Hide all</button>
       </div>
       <div className="mt-4 grid gap-5">
         {SHOW_GROUPS.map((g) => (
@@ -523,7 +523,7 @@ function Visibility({ show, onChange }: { show: ShowMap; onChange: (s: ShowMap) 
                     onClick={() => onChange({ ...show, [o.key]: !on } as ShowMap)}
                     className={cn('group flex items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition-all active:scale-[0.98]', on ? 'border-paper/60 bg-paper/[0.09]' : 'border-line bg-transparent opacity-60 hover:opacity-100')}
                   >
-                    <span className={cn('grid size-9 shrink-0 place-items-center rounded-full transition-colors', on ? 'bg-paper text-ink' : 'bg-line text-mute')}>
+                    <span className={cn('grid size-9 shrink-0 place-items-center rounded-pill transition-colors', on ? 'bg-paper text-ink' : 'bg-line text-mute')}>
                       {on ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
                     </span>
                     <span className="min-w-0">

@@ -4,7 +4,11 @@ import type { AppNavItem } from '@/components/app/nav-types'
 export const OWNER_URL = process.env.NODE_ENV === 'production' ? 'https://owner.logoless.io' : ''
 export const SITE_URL_FOR_STAFF = process.env.NODE_ENV === 'production' ? 'https://logoless.io' : '/'
 
-// Everything the owner uses day to day has its own place in the sidebar, grouped under a small heading.
+// Nine places in all. The six under "Run" are the daily work, in the order the work arrives. The three under "Manage" are each a
+// small hub: the pages that belong together sit behind the tabs at the top of the page (see components/app/section-tabs.tsx).
+//   Site         Design, Text, Links, then Features, Previews and Dashboards for developers
+//   Communicate  Broadcast, Email, Discord (what comes IN is the Inbox)
+//   System       Health, Logs, Events, Audit, Settings, Keys, Security, API, Apps
 const ADMIN: AppNavItem[] = [
   { key: 'o', label: 'Overview', href: '/admin', icon: 'LayoutDashboard', exact: true, section: 'Run' },
   { key: 'c', label: 'Campaigns', href: '/admin/campaigns', icon: 'Megaphone', match: ['/admin/launch', '/admin/invites'], section: 'Run' },
@@ -12,19 +16,25 @@ const ADMIN: AppNavItem[] = [
   { key: 'p', label: 'Payouts', href: '/admin/payouts', icon: 'Banknote', section: 'Run' },
   { key: 'u', label: 'People', href: '/admin/people', icon: 'Users', match: ['/admin/users'], section: 'Run' },
   { key: 'i', label: 'Inbox', href: '/admin/inbox', icon: 'Mail', section: 'Run' },
-  { key: 'd', label: 'Discord', href: '/admin/discord', icon: 'Discord', section: 'Communicate' },
-  { key: 'm', label: 'Email', href: '/admin/email', icon: 'Send', section: 'Communicate' },
-  { key: 'b', label: 'Broadcast', href: '/admin/broadcast', icon: 'Megaphone', section: 'Communicate' },
-  { key: 'x', label: 'Site text', href: '/admin/text', icon: 'FileCheck2', section: 'Site' },
-  { key: 'l', label: 'Socials and links', href: '/admin/socials', icon: 'Link2', section: 'Site' },
-  { key: 'y', label: 'System', href: '/admin/logs', icon: 'BarChart3', match: ['/admin/audit', '/admin/keys', '/admin/settings', '/admin/security', '/admin/api', '/admin/developers'], section: 'System' },
+  { key: 'w', label: 'Site', href: '/admin/design', icon: 'Palette', match: ['/admin/text', '/admin/socials', '/admin/previews', '/admin/push', '/dev/design', '/dev/features', '/dev/previews', '/dev/dashboards'], section: 'Manage' },
+  { key: 'm', label: 'Communicate', href: '/admin/broadcast', icon: 'Send', match: ['/admin/email', '/admin/discord'], section: 'Manage' },
+  { key: 'y', label: 'System', href: '/admin/system', icon: 'Activity', match: ['/admin/logs', '/admin/audit', '/admin/keys', '/admin/settings', '/admin/security', '/admin/api', '/admin/developers', '/dev/events'], section: 'Manage' },
 ]
 
-const DEV: AppNavItem[] = [{ key: 'v', label: 'Developer', href: '/dev', icon: 'Code2', match: ['/dev/design', '/dev/dashboards', '/dev/features', '/dev/events', '/dev/previews'], section: 'System' }]
+// Someone who is a developer but not an admin only has the developer tools.
+const DEV_ONLY: AppNavItem[] = [
+  { key: 'f', label: 'Features', href: '/dev/features', icon: 'Rocket', section: 'Developer' },
+  { key: 'v', label: 'Previews', href: '/dev/previews', icon: 'Eye', section: 'Developer' },
+  { key: 'd', label: 'Dashboards', href: '/dev/dashboards', icon: 'LayoutGrid', section: 'Developer' },
+  { key: 'e', label: 'Events', href: '/dev/events', icon: 'Activity', section: 'Developer' },
+]
 
-/** One sidebar for the whole owner dashboard: the admin sections, then the developer section, as the person's roles allow. */
+/** One sidebar for the whole owner dashboard, as the person's roles allow. */
 export function staffItems(roles: readonly string[]): AppNavItem[] {
-  const admin = roles.includes('admin')
-  const dev = roles.includes('dev')
-  return [...(admin ? ADMIN : []), ...(dev ? DEV : [])]
+  if (roles.includes('admin')) return ADMIN
+  if (roles.includes('dev')) return DEV_ONLY
+  return []
 }
+
+/** Where the owner dashboard opens for someone with these roles. */
+export const staffHome = (roles: readonly string[]) => (roles.includes('admin') || roles.length === 0 ? '/admin' : '/dev/features')

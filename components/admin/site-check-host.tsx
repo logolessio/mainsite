@@ -33,7 +33,7 @@ export function SiteCheckHost() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 10 }}
           role="status"
-          className="fixed bottom-20 left-4 z-[160] w-[min(22rem,calc(100vw-2rem))] rounded-[1.4rem] border border-line-strong bg-ink/95 p-4 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.95)] backdrop-blur"
+          className="fixed bottom-20 left-4 z-[160] w-[min(22rem,calc(100vw-2rem))] rounded-[calc(1.4rem*var(--round,1))] border border-line-strong bg-ink/95 p-4 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.95)] backdrop-blur"
         >
           <div className="flex items-center gap-2 text-sm">
             {!r ? <Loader2 className="size-4 animate-spin" /> : r.ok ? <CheckCircle2 className="size-4 text-emerald-300" /> : <XCircle className="size-4 text-signal" />}

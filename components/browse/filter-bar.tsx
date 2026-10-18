@@ -23,7 +23,7 @@ const PLATFORMS: { key: Platform; label: string }[] = [
 
 const pill = (on: boolean) =>
   cn(
-    'inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs transition-colors',
+    'inline-flex h-8 items-center gap-1.5 rounded-pill px-3 text-xs transition-colors',
     on ? 'bg-paper text-ink' : 'text-mute hover:text-paper',
   )
 
@@ -51,10 +51,8 @@ export function FilterBar({
   return (
     <motion.div
       data-tour="filters"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.45, ease: EASE_OUT }}
-      className="glass-liquid mx-auto mb-10 flex w-fit max-w-full flex-wrap items-center justify-center gap-1 rounded-[26px] p-1.5 md:mb-14 md:rounded-full md:px-3"
+      initial={false}
+      className="glass-liquid mx-auto mb-10 flex w-fit max-w-full flex-wrap items-center justify-center gap-1 rounded-[calc(26px*var(--round,1))] p-1.5 md:mb-14 md:rounded-pill md:px-3"
     >
       <div role="group" aria-label="Category" className="flex flex-wrap justify-center gap-0.5">
         {categories.map((c) => (
@@ -84,7 +82,7 @@ export function FilterBar({
       </div>
       <span aria-hidden="true" className="mx-1 hidden h-4 w-px bg-line-strong md:block" />
       {/* the visible text decides the width, so the bar is only as wide as its choices; the real select sits invisibly on top */}
-      <label className="group/sort relative inline-grid h-8 cursor-pointer items-center rounded-full has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-paper/60">
+      <label className="group/sort relative inline-grid h-8 cursor-pointer items-center rounded-pill has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-paper/60">
         <span className="sr-only">Sort by</span>
         <span aria-hidden="true" className="px-3 text-xs whitespace-nowrap text-mute transition-colors group-hover/sort:text-paper">
           {SORTS.find((x) => x.key === sort)?.label}
@@ -98,7 +96,7 @@ export function FilterBar({
         </select>
       </label>
       {active && (
-        <button type="button" onClick={onClear} aria-label="Clear filters" className="grid size-8 place-items-center rounded-full text-mute transition-colors hover:text-paper">
+        <button type="button" onClick={onClear} aria-label="Clear filters" className="grid size-8 place-items-center rounded-pill text-mute transition-colors hover:text-paper">
           <X aria-hidden="true" className="size-3.5" />
         </button>
       )}

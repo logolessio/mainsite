@@ -115,25 +115,25 @@ export function TextEditor() {
       <AnimatePresence>
         {target && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[80] grid place-items-center bg-black/70 px-4">
-            <motion.div initial={{ y: 12, scale: 0.98 }} animate={{ y: 0, scale: 1 }} className="w-full max-w-lg rounded-[28px] border border-line-strong bg-surface p-5">
+            <motion.div initial={{ y: 12, scale: 0.98 }} animate={{ y: 0, scale: 1 }} className="w-full max-w-lg rounded-[calc(28px*var(--round,1))] border border-line-strong bg-surface p-5">
               <div className="flex items-center justify-between">
                 <p className="font-display text-2xl">Edit text</p>
-                <button type="button" aria-label="Close" onClick={() => setTarget(null)} className="grid size-9 place-items-center rounded-full hover:bg-paper/10">
+                <button type="button" aria-label="Close" onClick={() => setTarget(null)} className="grid size-9 place-items-center rounded-pill hover:bg-paper/10">
                   <X className="size-4" />
                 </button>
               </div>
               <label className="mt-4 block font-mono text-xs text-mute" htmlFor="te-v">New wording</label>
               <textarea id="te-v" value={value} onChange={(e) => setValue(e.target.value)} rows={4} maxLength={2000} className="mt-1.5 w-full rounded-2xl border border-line-strong bg-ink/80 p-3 text-sm focus:outline-none" />
               <label className="mt-3 block font-mono text-xs text-mute" htmlFor="te-r">Why are you changing it? (optional, saved in the log)</label>
-              <input id="te-r" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} className="mt-1.5 h-10 w-full rounded-full border border-line-strong bg-ink/80 px-4 text-sm focus:outline-none" />
+              <input id="te-r" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} className="mt-1.5 h-10 w-full rounded-pill border border-line-strong bg-ink/80 px-4 text-sm focus:outline-none" />
               {target.current !== target.original && <p className="mt-3 text-xs text-mute">Original: {target.original}</p>}
               {error && <p role="alert" className="mt-3 text-sm text-signal">{error}</p>}
               <div className="mt-5 flex flex-wrap items-center gap-2">
-                <button type="button" disabled={busy || !value.trim() || value === target.current} onClick={() => send('save')} className="inline-flex h-10 items-center gap-2 rounded-full bg-paper px-5 text-sm font-medium text-ink disabled:opacity-40">
+                <button type="button" disabled={busy || !value.trim() || value === target.current} onClick={() => send('save')} className="inline-flex h-10 items-center gap-2 rounded-pill bg-paper px-5 text-sm font-medium text-ink disabled:opacity-40">
                   {busy && <Loader2 className="size-4 animate-spin" />} Save
                 </button>
                 {target.current !== target.original && (
-                  <button type="button" disabled={busy} onClick={() => send('reset')} className="inline-flex h-10 items-center gap-2 rounded-full border border-line-strong px-4 text-sm hover:bg-paper/10">
+                  <button type="button" disabled={busy} onClick={() => send('reset')} className="inline-flex h-10 items-center gap-2 rounded-pill border border-line-strong px-4 text-sm hover:bg-paper/10">
                     <RotateCcw className="size-4" /> Back to original
                   </button>
                 )}

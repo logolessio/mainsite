@@ -67,7 +67,7 @@ export function DashboardView({ campaigns, ended = [], startTour }: { campaigns:
       .filter(
         (c) => !q || [c.title, c.creator, c.type, ...c.platforms].some((field) => field.toLowerCase().includes(q)),
       )
-      .sort((a, b) => (sort === 'rate' ? b.ratePer1k - a.ratePer1k : sort === 'budget' ? b.budget - a.budget : end(a) - end(b)))
+      .sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || (sort === 'rate' ? b.ratePer1k - a.ratePer1k : sort === 'budget' ? b.budget - a.budget : end(a) - end(b)))
   }, [campaigns, deferred, category, platforms, sort])
 
   // a campaign that has closed is not listed, but if someone searches for it, say that it ended and how long ago
@@ -92,20 +92,18 @@ export function DashboardView({ campaigns, ended = [], startTour }: { campaigns:
     <>
       <section aria-labelledby="hero-title" className="mx-auto flex max-w-3xl flex-col items-center pt-14 pb-12 text-center md:pt-24 md:pb-16">
         <h1 id="hero-title" className="font-display text-[clamp(2.6rem,7vw,5.2rem)] leading-[0.98]">
-          Get paid for the clips you cut.
+          Your views have value.
         </h1>
-        <p className="mt-6 max-w-md text-lg leading-relaxed text-paper/60">Join a campaign, post your clip, and earn for every 1,000 verified views.</p>
+        <p className="mt-6 max-w-md text-lg leading-relaxed text-paper/60">Join a campaign, post your content, and earn for every 1,000 verified views.</p>
         {!signedIn && (
-          <TransitionLink href="/onboarding" className="mt-9 inline-flex h-12 items-center rounded-full bg-paper px-8 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85">
+          <TransitionLink href="/onboarding" className="mt-9 inline-flex h-12 items-center rounded-pill bg-paper px-8 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85">
             Get started
           </TransitionLink>
         )}
       </section>
 
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.35, ease: EASE_OUT }}
+        initial={false}
         className="sticky top-[76px] z-20 mx-auto mb-3 max-w-3xl md:mb-4"
       >
         <GlassSearch value={query} onChange={setQuery} resultCount={results.length} />
@@ -131,11 +129,11 @@ export function DashboardView({ campaigns, ended = [], startTour }: { campaigns:
 
       <section id="campaigns" aria-label="Campaigns" className="scroll-mt-40">
         {results.length > 0 ? (
-          <div className="island mx-auto max-w-[1300px] rounded-[40px] bg-[#0a0a0c] p-4 sm:p-6 md:rounded-[52px] md:p-10">
+          <div className="island mx-auto max-w-[1300px] rounded-[calc(40px*var(--round,1))] bg-[#0a0a0c] p-4 sm:p-6 md:rounded-[calc(52px*var(--round,1))] md:p-10">
             <CampaignGrid campaigns={results} />
           </div>
         ) : (
-          <div className="mx-auto max-w-xl rounded-[28px] border border-dashed border-line-strong px-6 py-20 text-center">
+          <div className="mx-auto max-w-xl rounded-[calc(28px*var(--round,1))] border border-dashed border-line-strong px-6 py-20 text-center">
             {gone.length > 0 ? (
               <>
                 <p className="font-display text-3xl">that campaign has ended</p>

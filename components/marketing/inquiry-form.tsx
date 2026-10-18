@@ -53,14 +53,14 @@ export function InquiryForm({ kind, target = '', topic: initialTopic }: { kind: 
     const path = `/inquiry/${sent.id}${sent.signedIn ? '' : `?t=${sent.token}`}`
     const full = typeof window === 'undefined' ? path : `${window.location.origin}${path}`
     return (
-      <div role="status" className="rounded-[2rem] border border-line p-8 md:p-10">
-        <span className="grid size-11 place-items-center rounded-full bg-paper text-ink">
+      <div role="status" className="rounded-[calc(2rem*var(--round,1))] border border-line p-8 md:p-10">
+        <span className="grid size-11 place-items-center rounded-pill bg-paper text-ink">
           <Check className="size-5" />
         </span>
         <p className="mt-6 font-display text-4xl">{kind === 'report' ? 'Report sent' : 'Message sent'}</p>
         <p className="mt-3 max-w-md text-lg text-mute">A person on the team will read it. We usually reply within two business days, and the reply appears on the page below.</p>
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          <Link href={path} className="inline-flex h-12 items-center rounded-full bg-paper px-7 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85">
+          <Link href={path} className="inline-flex h-12 items-center rounded-pill bg-paper px-7 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85">
             Open the conversation
           </Link>
           {!sent.signedIn && (
@@ -75,7 +75,7 @@ export function InquiryForm({ kind, target = '', topic: initialTopic }: { kind: 
                   /* the link is on the page anyway */
                 }
               }}
-              className="inline-flex h-12 items-center gap-2 rounded-full border border-line-strong px-6 text-[15px] transition-colors hover:bg-paper/[0.06]"
+              className="inline-flex h-12 items-center gap-2 rounded-pill border border-line-strong px-6 text-[15px] transition-colors hover:bg-paper/[0.06]"
             >
               {copied ? <Check className="size-4 text-emerald-500" /> : <Copy className="size-4" />} Copy the link
             </button>

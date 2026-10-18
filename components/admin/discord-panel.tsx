@@ -21,7 +21,7 @@ type Status = {
 
 type AccessLine = { label: string; ok: boolean; note: string }
 const input = 'h-10 w-full rounded-xl border border-line-strong bg-ink/80 px-3 font-mono text-xs outline-none focus:border-paper'
-const btn = 'inline-flex h-10 items-center justify-center gap-2 rounded-full px-5 text-sm transition-colors disabled:opacity-40'
+const btn = 'inline-flex h-10 items-center justify-center gap-2 rounded-pill px-5 text-sm transition-colors disabled:opacity-40'
 const ghost = `${btn} border border-line-strong hover:bg-paper/10`
 const solid = `${btn} bg-paper font-medium text-ink hover:bg-paper/85`
 
@@ -119,7 +119,7 @@ export function DiscordPanel() {
           ['server', 'Server'],
           ['messages', 'Messages'],
         ] as const).map(([id, label]) => (
-          <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`inline-flex h-10 items-center rounded-full px-5 text-sm transition-colors ${tab === id ? 'bg-paper text-ink' : 'border border-line-strong text-mute hover:text-paper'}`}>
+          <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`inline-flex h-10 items-center rounded-pill px-5 text-sm transition-colors ${tab === id ? 'bg-paper text-ink' : 'border border-line-strong text-mute hover:text-paper'}`}>
             {label}
           </button>
         ))}
@@ -141,7 +141,7 @@ export function DiscordPanel() {
             <span className="text-paper">2.</span> Set the <b>Interactions Endpoint URL</b> to:
             <span className="mt-1.5 flex items-center gap-2">
               <code className="rounded-lg bg-white/[0.06] px-2.5 py-1.5 text-xs text-paper">{s.endpoint}</code>
-              <button type="button" aria-label="Copy" className="grid size-8 place-items-center rounded-full border border-line-strong hover:bg-paper/10" onClick={() => navigator.clipboard.writeText(s.endpoint).then(() => (setCopied(true), setTimeout(() => setCopied(false), 1500)))}>
+              <button type="button" aria-label="Copy" className="grid size-8 place-items-center rounded-pill border border-line-strong hover:bg-paper/10" onClick={() => navigator.clipboard.writeText(s.endpoint).then(() => (setCopied(true), setTimeout(() => setCopied(false), 1500)))}>
                 {copied ? <CheckCircle2 className="size-4 text-emerald-300" /> : <Copy className="size-4" />}
               </button>
             </span>
@@ -221,13 +221,13 @@ export function DiscordPanel() {
             <li key={n} className="flex flex-wrap items-center gap-2">
               <input aria-label="Artist name" className={`${input} max-w-[14rem] font-sans`} value={a.name} onChange={(e) => set({ artists: cfg.artists.map((x, k) => (k === n ? { ...x, name: e.target.value } : x)) })} placeholder="Artist name" />
               <input aria-label="Channel ID" className={`${input} max-w-[16rem]`} inputMode="numeric" value={a.channel} onChange={(e) => set({ artists: cfg.artists.map((x, k) => (k === n ? { ...x, channel: digits(e.target.value) } : x)) })} placeholder="Channel ID" />
-              <button type="button" aria-label="Remove" className="grid size-8 place-items-center rounded-full text-mute hover:bg-white/[0.07] hover:text-paper" onClick={() => set({ artists: cfg.artists.filter((_, k) => k !== n) })}>
+              <button type="button" aria-label="Remove" className="grid size-8 place-items-center rounded-pill text-mute hover:bg-white/[0.07] hover:text-paper" onClick={() => set({ artists: cfg.artists.filter((_, k) => k !== n) })}>
                 <X className="size-4" />
               </button>
             </li>
           ))}
         </ul>
-        <button type="button" className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-full border border-line-strong px-4 text-xs hover:bg-paper/10" onClick={() => set({ artists: [...cfg.artists, { name: '', channel: '' }] })}>
+        <button type="button" className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-pill border border-line-strong px-4 text-xs hover:bg-paper/10" onClick={() => set({ artists: [...cfg.artists, { name: '', channel: '' }] })}>
           <Plus className="size-3.5" /> Add an artist
         </button>
       </Card>
@@ -254,13 +254,13 @@ export function DiscordPanel() {
                   <span className="text-sm text-mute">From $</span>
                   <input aria-label="Earned dollars" className={`${input} w-28`} inputMode="numeric" value={t.minUsd} onChange={(e) => set({ roles: { ...cfg.roles, tiers: cfg.roles.tiers.map((x, k) => (k === n ? { ...x, minUsd: Number(digits(e.target.value)) || 0 } : x)) } })} />
                   <input aria-label="Role ID" className={`${input} max-w-[16rem]`} inputMode="numeric" value={t.role} onChange={(e) => set({ roles: { ...cfg.roles, tiers: cfg.roles.tiers.map((x, k) => (k === n ? { ...x, role: digits(e.target.value) } : x)) } })} placeholder="Role ID" />
-                  <button type="button" aria-label="Remove" className="grid size-8 place-items-center rounded-full text-mute hover:bg-white/[0.07] hover:text-paper" onClick={() => set({ roles: { ...cfg.roles, tiers: cfg.roles.tiers.filter((_, k) => k !== n) } })}>
+                  <button type="button" aria-label="Remove" className="grid size-8 place-items-center rounded-pill text-mute hover:bg-white/[0.07] hover:text-paper" onClick={() => set({ roles: { ...cfg.roles, tiers: cfg.roles.tiers.filter((_, k) => k !== n) } })}>
                     <X className="size-4" />
                   </button>
                 </li>
               ))}
             </ul>
-            <button type="button" className="mt-2 inline-flex h-9 items-center gap-1.5 rounded-full border border-line-strong px-4 text-xs hover:bg-paper/10" onClick={() => set({ roles: { ...cfg.roles, tiers: [...cfg.roles.tiers, { minUsd: 100, role: '' }] } })}>
+            <button type="button" className="mt-2 inline-flex h-9 items-center gap-1.5 rounded-pill border border-line-strong px-4 text-xs hover:bg-paper/10" onClick={() => set({ roles: { ...cfg.roles, tiers: [...cfg.roles.tiers, { minUsd: 100, role: '' }] } })}>
               <Plus className="size-3.5" /> Add an earnings role
             </button>
           </div>
@@ -336,7 +336,7 @@ export function DiscordPanel() {
         <div className="flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-2 text-sm text-mute">
             Send to
-            <select value={to} onChange={(e) => setTo(e.target.value as 'logs' | 'me')} className="h-10 rounded-full border border-line-strong bg-ink/80 px-4 text-sm text-paper outline-none focus:border-paper">
+            <select value={to} onChange={(e) => setTo(e.target.value as 'logs' | 'me')} className="h-10 rounded-pill border border-line-strong bg-ink/80 px-4 text-sm text-paper outline-none focus:border-paper">
               <option value="logs">The team log channel</option>
               <option value="me">My direct messages</option>
             </select>
@@ -348,7 +348,7 @@ export function DiscordPanel() {
         </div>
         <div role="tablist" aria-label="Kinds of message" className="mt-6 flex flex-wrap gap-2">
           {Array.from(new Set(s.samples.map((x) => x.group))).map((g) => (
-            <button key={g} type="button" role="tab" aria-selected={group === g} onClick={() => setGroup(g)} className={`inline-flex h-9 items-center rounded-full px-4 text-sm transition-colors ${group === g ? 'bg-paper text-ink' : 'border border-line-strong text-mute hover:text-paper'}`}>
+            <button key={g} type="button" role="tab" aria-selected={group === g} onClick={() => setGroup(g)} className={`inline-flex h-9 items-center rounded-pill px-4 text-sm transition-colors ${group === g ? 'bg-paper text-ink' : 'border border-line-strong text-mute hover:text-paper'}`}>
               {g}
             </button>
           ))}
@@ -358,7 +358,7 @@ export function DiscordPanel() {
             <li key={x.id} className="grid gap-3">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-[15px]">{x.label}</p>
-                <button type="button" disabled={Boolean(busy)} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line-strong px-4 text-xs transition-colors hover:bg-paper/10 disabled:opacity-40" onClick={() => run(`sample-${x.id}`, async () => { const j = (await sendSample(x.id)) as { where?: string }; return `Sent “${x.label}” to ${j.where}.` })}>
+                <button type="button" disabled={Boolean(busy)} className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-line-strong px-4 text-xs transition-colors hover:bg-paper/10 disabled:opacity-40" onClick={() => run(`sample-${x.id}`, async () => { const j = (await sendSample(x.id)) as { where?: string }; return `Sent “${x.label}” to ${j.where}.` })}>
                   {busy === `sample-${x.id}` && <Loader2 className="size-3.5 animate-spin" />} Send to {to === 'me' ? 'me' : 'the log channel'}
                 </button>
               </div>

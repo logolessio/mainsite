@@ -11,7 +11,7 @@ export function Bars({ data, field, label, color = '#f3f2ee' }: { data: Point[];
   const bw = data.length ? Math.min(34, Math.max(2, (w - gap * (data.length - 1)) / data.length)) : 0
   const offset = data.length ? (w - (bw * data.length + gap * (data.length - 1))) / 2 : 0
   return (
-    <figure className="rounded-[22px] border border-line bg-surface/70 p-4">
+    <figure className="rounded-[calc(22px*var(--round,1))] border border-line bg-surface/70 p-4">
       <figcaption className="flex items-baseline justify-between gap-3">
         <span className="font-mono text-xs text-mute">{label}</span>
         <span className="font-display text-2xl leading-none">{total.toLocaleString()}</span>
@@ -45,7 +45,7 @@ export function Bars({ data, field, label, color = '#f3f2ee' }: { data: Point[];
 export function Ranked({ title, rows, unit = '', extra }: { title: string; rows: { label: string | number | null; n: number | string | null; [k: string]: unknown }[]; unit?: string; extra?: (r: Record<string, unknown>) => string }) {
   const max = Math.max(1, ...rows.map((r) => Number(r.n ?? 0)))
   return (
-    <section className="rounded-[22px] border border-line bg-surface/70 p-4">
+    <section className="rounded-[calc(22px*var(--round,1))] border border-line bg-surface/70 p-4">
       <h2 className="font-mono text-xs text-mute">{title}</h2>
       {rows.length === 0 ? (
         <p className="mt-4 text-xs text-mute">Nothing yet.</p>

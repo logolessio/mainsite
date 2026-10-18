@@ -18,7 +18,7 @@ type Move = { id: string; kind: string; amount_cents: number; created_at: number
 
 const KIND: Record<string, { label: string; tone: 'good' | 'neutral' | 'warn' }> = {
   topup: { label: 'Added with PayPal', tone: 'good' },
-  earning_spend: { label: 'Paid to clippers', tone: 'neutral' },
+  earning_spend: { label: 'Paid to creators', tone: 'neutral' },
   campaign_spend: { label: 'Put into a campaign', tone: 'neutral' },
   pool_release: { label: 'Returned from a campaign', tone: 'good' },
   refund: { label: 'Refunded', tone: 'warn' },
@@ -45,7 +45,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
 
   return (
     <>
-      <PageHeader title="Balance" sub="One balance for all your campaigns. Clippers are paid out of it as they earn, and we cover PayPal's fees on every deposit." />
+      <PageHeader title="Balance" sub="One balance for all your campaigns. Creators are paid out of it as they earn, and we cover PayPal's fees on every deposit." />
       {q.paypal === 'return' && q.token && <CaptureOnReturn orderId={q.token} />}
       {q.funded && (
         <p role="status" className="mb-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/[0.05] px-4 py-3 text-sm">
@@ -75,7 +75,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
                   <div>
                     <p className="text-lg">{w.title} is approved</p>
                     <p className="mt-1 text-sm text-mute">
-                      {b.brand >= need ? 'Your balance covers the start. Nothing is charged until clippers earn.' : `Add ${money(need - b.brand)} or more first. Up to ${money(costFor(w.budget_cents))} can be spent in total, only as clippers earn.`}
+                      {b.brand >= need ? 'Your balance covers the start. Nothing is charged until creators earn.' : `Add ${money(need - b.brand)} or more first. Up to ${money(costFor(w.budget_cents))} can be spent in total, only as creators earn.`}
                     </p>
                   </div>
                   <PayCampaignButton id={w.id} />
@@ -95,7 +95,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
           { key: 'c', header: 'Campaign', render: (r) => r.title ?? '' },
           { key: 'a', header: 'Amount', render: (r) => <span className={r.amount_cents < 0 ? 'text-mute' : ''}>{r.amount_cents < 0 ? '-' : '+'}{money(Math.abs(r.amount_cents))}</span>, className: 'text-right tabular-nums' },
         ]}
-        empty={<EmptyState icon="CreditCard" title="Nothing yet" body="Money you add with PayPal, and what clippers are paid, appears here." />}
+        empty={<EmptyState icon="CreditCard" title="Nothing yet" body="Money you add with PayPal, and what creators are paid, appears here." />}
       />
     </>
   )

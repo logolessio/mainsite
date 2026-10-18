@@ -66,7 +66,7 @@ export function AutoCalm() {
   if (!told) return null
   return (
     <div role="status" className="fixed right-4 bottom-4 z-[160] w-[min(24rem,calc(100vw-2rem))] rounded-3xl border border-line-strong bg-ink p-5 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.6)]">
-      <button type="button" aria-label="Dismiss" onClick={() => setTold(false)} className="absolute top-3 right-3 grid size-8 place-items-center rounded-full text-mute hover:bg-white/10">
+      <button type="button" aria-label="Dismiss" onClick={() => setTold(false)} className="absolute top-3 right-3 grid size-8 place-items-center rounded-pill text-mute hover:bg-white/10">
         <X className="size-4" />
       </button>
       <p className="pr-8 text-[15px] font-medium">Calm mode is on</p>

@@ -46,14 +46,14 @@ function Body({ text, className = '' }: { text: string; className?: string }) {
 function EmbedView({ e }: { e: Embed }) {
   const bar = `#${(e.color ?? 0xf3f2ee).toString(16).padStart(6, '0')}`
   return (
-    <div className="grid max-w-[520px] gap-2 rounded-[4px] border-l-4 bg-[#2b2d31] p-3 pr-4 text-[0.875rem] leading-[1.35] text-[#dbdee1]" style={{ borderLeftColor: bar }}>
+    <div className="grid max-w-[520px] gap-2 rounded-[calc(4px*var(--round,1))] border-l-4 bg-[#2b2d31] p-3 pr-4 text-[0.875rem] leading-[1.35] text-[#dbdee1]" style={{ borderLeftColor: bar }}>
       <div className="flex gap-3">
         <div className="min-w-0 flex-1 grid gap-1.5">
           {e.author && (
             <p className="flex items-center gap-2 text-[0.8rem] font-semibold text-[#f2f3f5]">
               {e.author.icon_url && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={local(e.author.icon_url)} alt="" className="size-6 rounded-full" />
+                <img src={local(e.author.icon_url)} alt="" className="size-6 rounded-pill" />
               )}
               {e.author.name}
             </p>
@@ -98,7 +98,7 @@ export function MessagePreview({ message }: { message: Message }) {
       {m.components?.map((r, n) => (
         <div key={n} className="flex flex-wrap gap-2">
           {r.components.map((c, k) => (
-            <span key={k} className="inline-flex h-8 items-center rounded-[3px] bg-[#4e5058] px-4 text-[0.875rem] font-medium text-white">
+            <span key={k} className="inline-flex h-8 items-center rounded-[calc(3px*var(--round,1))] bg-[#4e5058] px-4 text-[0.875rem] font-medium text-white">
               {c.label}
               {c.url && <span aria-hidden="true" className="ml-1.5 text-[0.7rem]">↗</span>}
             </span>

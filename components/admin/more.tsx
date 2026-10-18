@@ -10,7 +10,7 @@ export function More({ label = 'Details', openLabel, children, className }: { la
   const id = useId()
   return (
     <div className={className}>
-      <button type="button" aria-expanded={open} aria-controls={id} onClick={() => setOpen((v) => !v)} className="inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm text-paper/55 transition-colors hover:bg-white/[0.06] hover:text-paper">
+      <button type="button" aria-expanded={open} aria-controls={id} onClick={() => setOpen((v) => !v)} className="inline-flex h-8 items-center gap-1.5 rounded-pill px-3 text-sm text-paper/55 transition-colors hover:bg-white/[0.06] hover:text-paper">
         {open ? (openLabel ?? 'Hide') : label}
         <ChevronDown aria-hidden="true" className={cn('size-4 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]', open && 'rotate-180')} />
       </button>

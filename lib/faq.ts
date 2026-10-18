@@ -5,89 +5,89 @@ export type Faq = { q: string; a: string }
 const fee = SITE.platformFeePct
 const example = (1000 + (1000 * fee) / 100).toLocaleString()
 
-export const FAQ: Record<'Clippers' | 'Brands' | 'Money' | 'Account', Faq[]> = {
-  Clippers: [
+export const FAQ: Record<'Creators' | 'Brands' | 'Money' | 'Account', Faq[]> = {
+  Creators: [
     {
       q: 'How do I get paid?',
-      a: `Each campaign pays a set rate for every 1,000 verified views your approved clips get. As soon as an earning is confirmed it is yours to withdraw to your PayPal, once your balance is $${SITE.minPayoutUsd} or more. Pick any PayPal email, press withdraw, and it is sent. We pay PayPal's fees, so the full amount arrives.`,
+      a: `Each campaign pays a set rate for every 1,000 views you content gets. Your earnings clear instantly, then you can withdraw them to your PayPal once your balance is $${SITE.minPayoutUsd} or more. Add your PayPal email in your dashboard to withdraw. We pay PayPal's transaction fees, so the full amount arrives straight into your pocket.`,
     },
     {
       q: 'Do I need a lot of followers?',
-      a: "No. Campaigns pay for views, not audience size. A few campaigns add their own requirements, and they're listed in the brief.",
+      a: "No. Campaigns pay for views, not audience size. A few campaigns add their own requirements, and they're listed in the brief. Of-course having followers will mean its easier to get views but everyone has to start somewhere and this is a great way to get paid even if you aren't that big at the moment.",
     },
     {
       q: 'Which platforms can I post on?',
-      a: 'TikTok, YouTube (Shorts and longer videos) and Instagram Reels. Each campaign says which ones it accepts.',
+      a: 'TikTok, YouTube (Shorts and longer videos) and Instagram Reels. Each campaign says which ones it accepts. We are also planning to add more platforms as this site develops (please remind me to update this if it becomes outdated, thx).',
     },
     {
       q: 'When do my views count?',
-      a: "Once we've approved your clip against the brief, we look up its views on the platform and pay for the verified ones. We check again while the campaign is running, so a clip that keeps growing keeps earning.",
+      a: "Once we've approved your clip against the description and requirements of the campaign, we look up its views on the platform and pay for the verified ones. We check again every 2 hours while the campaign is running, so a clip that keeps growing keeps earning. This also means you can submit your clip just after you post it (at zero views), if it gains views, we automatically check and you get paid for it (we will notify you).",
     },
     {
       q: 'How do I prove an account is mine?',
       a: "Add the account to your profile, press Verify, and put the short code we give you in that account's bio. We read its public page to see the code, or for a site that will not let us (Instagram, for example) a person on our team checks it by hand. A verified account gets a tick on your public page, and clips from it can be approved automatically. Clips from other accounts are looked at by a person. You can take the code out of your bio once you are verified.",
     },
     {
-      q: 'Why was my clip rejected?',
-      a: "Usually it broke a rule in the brief, used something that's off limits, or the views didn't look genuine. The reason is shown on the clip. If you think we got it wrong, ask for a person to look again from the clip page.",
+      q: 'Why was my submission rejected?',
+      a: "Usually it broke a rule in the campaign rules or description, used something that's off limits, or the views didn't look genuine. The reason is shown on the clip. If you think we got it wrong, you can request for a member of staff to review it in your dashboard (in the 'submissions' page).",
     },
     {
       q: 'Does it cost anything to join?',
-      a: 'No. Clippers never pay to join or to submit a clip, and the platform fee is never taken from what you earn.',
+      a: "Of course not. Creators never pay to join or to submit a clip, and the platform fee is never taken from what you earn (that's what makes us awesome).",
     },
     {
       q: 'How do I start?',
-      a: 'Sign up, pick a username and a picture, and you land in your dashboard. The Getting set up page there walks you through the rest: link the accounts you clip from, add a PayPal email and open a campaign you like.',
+      a: 'Sign up, pick a username and create your profile, and you land in your dashboard. The Getting set up page there walks you through the rest: linking the accounts you upload from, setting up payouts with PayPal and picking a campaign you like.',
     },
     {
       q: 'Can I clip for more than one campaign at once?',
-      a: 'Yes, as many as you like. Each clip is for one campaign. If you post the same moment for two campaigns, submit it to both, as long as each brief allows it.',
+      a: 'Yes, as many as you like. You can also submit as many times as you like for each campaign (some may have restrictions, please check). We encourage to join as many campaigns as you can as that will maximize your earnings.',
     },
     {
       q: 'What happens if a campaign runs out of budget?',
-      a: 'Views are paid until the campaign budget is used up. When it is nearly gone you will see it on the campaign, and clips submitted after it ends are not paid.',
+      a: "Views are paid until the campaign budget is used up. When it's nearly gone you will receive a notification, and submissions stop earning money once there is no more money left. You will receive a full summary of the campaign once it ends through your preferred method of contact (discord, email, etc...).",
     },
     {
-      q: 'Can I use music or footage from the campaign?',
-      a: 'Use what the brief gives you and nothing it forbids. The campaign page lists what is provided and what is off limits. When in doubt, ask before you post.',
+      q: 'What music or footage do I use in my campaign?',
+      a: "Use what the brief gives you and nothing it forbids. All details for what you should and shouldn't include in your submission can be seen in the campaign details. Also follow the general campaign rules.",
     },
     {
       q: 'Do I have to show my accounts on my profile?',
-      a: 'No. You choose whether your clipping accounts are public. Brands only ever see the handle and the links of the clips you submit to their campaign.',
+      a: 'No. You choose whether your linked accounts are public. Brands only ever see the handle and the links of the clips you submit to their campaign. You can choose what is seen on your profile within your dashboard.',
     },
     {
       q: 'What are badges?',
-      a: 'Small marks beside your name for things you have done: your first clip, your first payday, a million views. Most are plain black and white. The legendary ones are gold and in colour, and only a few people will ever have them.',
+      a: 'These are the small icons next to your name on your profile. There are a variety of different ones you can get, ranging in rarity, quality and colour. You can view all your badges in your dashboard.',
     },
     {
-      q: 'How long does a clip take to be checked?',
-      a: 'Most are checked within seconds. Anything that needs a person is looked at as soon as we can, usually within a day. You are told when it is decided.',
+      q: 'How long does a submission take to be checked?',
+      a: 'Most are checked within seconds. Any submissions that need human review are usually accepted within a day or two. We try to be as quick as we can with these reviews but please be patient.',
     },
     {
-      q: 'Can I delete a clip I submitted?',
-      a: 'You can ask us to remove it from a campaign. Views already paid for stay paid. Contact us from the clip page and we will do it.',
+      q: 'Can I delete a submission?',
+      a: 'You can ask us to remove it from a campaign. Views already paid for stay paid. Contact us from the submissions page and we will do it.',
     },
   ],
   Brands: [
     {
-      q: 'How does a campaign work?',
-      a: "You add money to your account once, then start a campaign with a brief, a rate per 1,000 views and a budget cap. Clippers join, post and submit. We check their clips and views, and you only pay for what's verified. The money comes out of your account balance as clippers earn it.",
+      q: 'How does creating a campaign work?',
+      a: "You add as much money to your account as you like, whenever you like, then start a campaign with rules and a description, a rate per 1,000 views and a budget cap. Creators join, post and submit. We check their clips and views through human and automatic processes, and you only pay for what's verified. The money comes out of your account balance as creators earn it.",
     },
     {
       q: 'What does logoless cost?',
-      a: `There's no subscription. Clippers keep everything a campaign pays them. Brands pay our ${fee}% fee on top of what clippers earn, so $1,000 of payouts costs $${example}. We also pay PayPal's fees on your deposit, so every dollar you add is a dollar you can spend. The pricing page has the full breakdown.`,
+      a: `There's no subscription or sign up fees for creators. Creators keep everything a campaign pays them. Brands pay our ${fee}% fee on top of what creators earn, so $1,000 of payouts costs $${example}. We also pay PayPal's fees on your deposit, so every dollar you add is a dollar you can actually spend. The pricing page has the full breakdown so check that out.`,
     },
     {
-      q: 'How do you stop fake views?',
-      a: "Our team reviews every clip and checks the view count on the platform itself, then checks again while the campaign runs. Views that don't look genuine are rejected and never paid for.",
+      q: 'How do we stop fake views?',
+      a: "Our automatic system reviews every submission and checks the view count on the platform itself, then checks again while the campaign runs. Views that don't look genuine are rejected and never paid for. Creators do have the right to request a human opinion on rejected submissions.",
     },
     {
-      q: 'Can I turn down clips?',
-      a: "Yes. If a clip isn't right for your campaign you can turn it down from your dashboard before it's paid. We handle the final approval and the payment.",
+      q: 'Can I turn down submissions?',
+      a: "Yes. If a submission isn't right for your campaign you can turn it down from your dashboard before it's paid. We handle the final approval and the payment.",
     },
     {
-      q: 'How do I add money?',
-      a: "Open Balance in your dashboard and press Add funds. Pay with PayPal and the whole amount lands in your account straight away. It is one balance for all your campaigns, not a pot per campaign.",
+      q: 'How can I add funds to my account?',
+      a: "Open Balance in your dashboard and press Add funds. Pay with PayPal and the whole amount lands in your account straight away. It is one balance for all your campaigns, not a pot per campaign. We cover submissions leaving Logoless, not entering.",
     },
     {
       q: 'Can I get unspent money back?',
@@ -95,27 +95,27 @@ export const FAQ: Record<'Clippers' | 'Brands' | 'Money' | 'Account', Faq[]> = {
     },
     {
       q: 'Do I have to fund each campaign separately?',
-      a: "No. You keep one balance and every campaign draws from it as clippers earn. Each campaign has a budget cap, so one campaign can never spend more than you decided.",
+      a: "No. You keep one balance and every campaign draws from it as creators earn. Each campaign has a budget cap, so one campaign can never spend more than you decided.",
     },
     {
       q: 'Can I pause a campaign?',
-      a: 'Yes, any time, from the Campaigns page. A paused campaign stops accepting clips and stops spending. Start it again when you are ready. Nothing is lost.',
+      a: 'Yes, any time, from the Campaigns page. A paused campaign stops accepting submissions and stops spending and distributing money. Start it again when you are ready. No money is lost during this process.',
     },
     {
       q: 'Can I move money between campaigns?',
-      a: 'Yes. Raise the budget cap on one campaign and lower it on another. The money was never locked into a campaign, so there is nothing to transfer, just caps to change.',
+      a: 'Yes. Raise the budget cap on one campaign and lower it on another. Your money is never locked into a campaign, so there is nothing to transfer, just caps to change.',
     },
     {
       q: 'What happens if my balance runs out?',
-      a: 'Your campaigns pause by themselves before they would overspend, and we tell you. Add funds and start them again. Clippers are never left unpaid for clips we already approved.',
+      a: 'Your campaigns pause by themselves before they would overspend, and we tell you. Add funds and start them again. Creators are never left unpaid for clips we already approved.',
     },
     {
       q: 'How fast can I launch?',
-      a: 'Write the brief, set the rate and the cap, and press start. If your balance covers it and the brief is fine, it can be live in minutes. A person reads every new brief first.',
+      a: 'Write the brief, set the rate and the cap, and press start. If your balance covers it and the brief is fine, it can be live in minutes. A person reads every new brief and approves the campaign first.',
     },
     {
-      q: 'Who owns the clips?',
-      a: 'The clippers post them on their own accounts. You get the right to use the clips for the campaign as the brand terms describe. The brand terms page has the details.',
+      q: 'Who owns the submissions?',
+      a: 'The creators post them on their own accounts. You get the right to use the clips for the campaign as the brand terms describe. The brand terms page has the details.',
     },
     {
       q: 'Will I get an invoice?',
@@ -125,11 +125,11 @@ export const FAQ: Record<'Clippers' | 'Brands' | 'Money' | 'Account', Faq[]> = {
   Money: [
     {
       q: 'Who pays PayPal fees?',
-      a: "We do. PayPal charges for taking a payment and for sending one. We cover both, in full, on every deposit and every withdrawal. Brands are credited what they add, and clippers receive what they withdraw.",
+      a: "We do. PayPal charges for taking a payment and for sending one. We cover both, in full, on every deposit and every withdrawal. Brands are credited what they add, and creators receive what they withdraw.",
     },
     {
       q: `What is the ${fee}% fee?`,
-      a: `It is how logoless is paid. Brands pay ${fee}% on top of what clippers earn, so $1,000 of payouts costs $${example}. It is never taken out of a clipper's earnings.`,
+      a: `It is how Logoless is paid. Brands pay ${fee}% on top of what creators earn per withdraw, so $1,000 of payouts costs $${example}. It is never taken out of a creators earnings.`,
     },
     {
       q: 'How long until I can withdraw?',

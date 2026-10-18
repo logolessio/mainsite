@@ -61,7 +61,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
   const joined = new Date(view.joinedAt * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   const badges = view.show.badges ? view.badges.map((id) => BADGE_BY_ID[id]).filter(Boolean) : []
   const statRows: [string, React.ReactNode][] = []
-  if (stats.clips !== undefined) statRows.push(['Clips', <Count key="c" to={stats.clips} />])
+  if (stats.clips !== undefined) statRows.push(['Submissions', <Count key="c" to={stats.clips} />])
   if (stats.views !== undefined) statRows.push(['Views', <Count key="v" to={stats.views} />])
   if (stats.earnedCents !== undefined) statRows.push(['Earned', <Count key="e" to={Math.floor(stats.earnedCents / 100)} prefix="$" />])
   if (stats.campaigns !== undefined) statRows.push(['Campaigns', <Count key="m" to={stats.campaigns} />])
@@ -71,10 +71,8 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
   const card = (
     <motion.article
       aria-label={`${view.displayName}'s profile`}
-      initial={{ opacity: 0, y: 36, scale: 0.93, filter: 'blur(14px)' }}
-      animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-      transition={{ duration: 0.95, ease: EASE_OUT }}
-      className={cn('relative w-[min(440px,calc(100vw-2rem))] overflow-hidden rounded-[22px] border border-white/10 text-paper shadow-[0_40px_90px_-30px_rgb(0_0_0/0.95),0_0_0_1px_rgb(0_0_0/0.4)]', className)}
+      initial={false}
+      className={cn('relative w-[min(440px,calc(100vw-2rem))] overflow-hidden rounded-[calc(22px*var(--round,1))] border border-white/10 text-paper shadow-[0_40px_90px_-30px_rgb(0_0_0/0.95),0_0_0_1px_rgb(0_0_0/0.4)]', className)}
       style={{
         ['--card' as string]: '#0f1012',
         background: `linear-gradient(165deg, color-mix(in srgb, ${view.accent} 34%, #101113) 0%, color-mix(in srgb, ${view.accent2} 24%, #0b0b0c) 100%)`,
@@ -94,8 +92,8 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
         style={{ top: 'calc(100% - 48px)' }}
         className="absolute left-4 z-20"
       >
-        <div className="relative size-[96px] rounded-full ring-[7px] ring-[var(--card)]" style={{ boxShadow: `0 0 0 7px var(--card), 0 0 40px -6px ${view.accent}` }}>
-          <div className="size-full overflow-hidden rounded-full bg-raised">
+        <div className="relative size-[96px] rounded-pill ring-[7px] ring-[var(--card)]" style={{ boxShadow: `0 0 0 7px var(--card), 0 0 40px -6px ${view.accent}` }}>
+          <div className="size-full overflow-hidden rounded-pill bg-raised">
             {view.avatar ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={view.avatar} alt="" width={96} height={96} referrerPolicy="no-referrer" className="size-full object-cover" />
@@ -106,9 +104,9 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
           {view.show.status && (
             <span
               title={view.online ? 'Online' : 'Offline'}
-              className={cn('absolute right-0 bottom-0 size-6 rounded-full border-[5px] border-[var(--card)]', view.online ? 'bg-[#23a55a]' : 'bg-[#80848e]')}
+              className={cn('absolute right-0 bottom-0 size-6 rounded-pill border-[5px] border-[var(--card)]', view.online ? 'bg-[#23a55a]' : 'bg-[#80848e]')}
             >
-              {view.online && <span aria-hidden="true" className="absolute inset-0 animate-ping rounded-full bg-[#23a55a]/60" />}
+              {view.online && <span aria-hidden="true" className="absolute inset-0 animate-ping rounded-pill bg-[#23a55a]/60" />}
             </span>
           )}
         </div>
@@ -179,7 +177,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
           )}
 
           {showLinks && (
-            <Section title="Clipping accounts">
+            <Section title="Creator accounts">
               <ul className="flex flex-wrap gap-2">
                 {links.map((l) => {
                   const Tag = (preview ? 'span' : 'a') as 'a'
@@ -193,7 +191,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
                     >
                       <span aria-hidden="true" className="absolute inset-y-0 -left-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-[220%]" />
                       <BrandIcon name={l.platform} className="relative size-5" />
-                      {l.verified && <BadgeCheck aria-hidden="true" className="absolute right-0.5 bottom-0.5 size-3.5 rounded-full bg-black text-emerald-300" />}
+                      {l.verified && <BadgeCheck aria-hidden="true" className="absolute right-0.5 bottom-0.5 size-3.5 rounded-pill bg-black text-emerald-300" />}
                     </Tag>
                   </li>
                   )
@@ -220,7 +218,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
       {preview ? (
         card
       ) : (
-        <Tilt3D max={4.5} perspective={1600} className="rounded-[22px]">
+        <Tilt3D max={4.5} perspective={1600} className="rounded-[calc(22px*var(--round,1))]">
           <div className="animate-float">{card}</div>
         </Tilt3D>
       )}

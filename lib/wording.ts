@@ -1,3 +1,6 @@
+import { norm } from './copy-key'
+import { VERBATIM } from './verbatim'
+
 /**
  * The site's wording: "clipper" is now "creator", and "clip" is "submission" or "content". The swap happens when text is shown,
  * never in the saved text, so every sentence an admin has edited stays exactly as they wrote it (see components/shell/copy-provider).
@@ -41,8 +44,10 @@ const RULES: Rule[] = [
   [new RegExp(`${WORD}(clip)(s?)${END}`, 'gi'), (_m, w, s) => keep(w, 'submission') + s],
 ]
 
+const HAND_WRITTEN = new Set(VERBATIM.map(norm))
+
 export function applyWording(text: string): string {
-  if (!/clip/i.test(text)) return text
+  if (!/clip/i.test(text) || HAND_WRITTEN.has(norm(text))) return text
   let out = text
   for (const [re, fn] of RULES) out = out.replace(re, fn as (...a: string[]) => string)
   return out

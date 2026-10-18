@@ -7,7 +7,7 @@ import { FAQ } from '@/lib/faq'
 
 export const metadata: Metadata = {
   title: 'Questions | logoless',
-  description: 'Short answers for clippers and brands: how you get paid, what it costs and how clips are checked.',
+  description: 'Short answers for creators and brands: how you get paid, what it costs and how submissions are checked.',
   alternates: { canonical: '/faq' },
 }
 
@@ -22,8 +22,8 @@ const LD = {
 export default function Page() {
   return (
     <main>
-      <Breadcrumbs trail={[{ name: 'Questions' }]} />
-      <PageHero eyebrow="Questions" title="Questions, answered" lede="Pick a side, or search for what you need." />
+      <Breadcrumbs trail={[{ name: "That's why its called a Q&A :)" }]} />
+      <PageHero eyebrow="That's why its called a Q&A :)" title="Questions, answered" lede="If the answers your looking for aren't here, feel free to contact us." />
       <Section className="pt-0 md:pt-0">
         <FaqTabs />
       </Section>

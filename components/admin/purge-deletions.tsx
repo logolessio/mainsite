@@ -28,7 +28,7 @@ export function PurgeDeletions({ waiting, due }: { waiting: number; due: number 
           setMsg(res?.ok ? `Removed ${j?.removed ?? 0}.${j?.failed?.length ? ` Could not remove: ${j.failed.join('; ')}` : ''}` : (j?.error ?? 'Failed.'))
           router.refresh()
         }}
-        className="inline-flex h-9 items-center gap-1.5 rounded-full border border-signal/50 px-4 text-xs text-signal hover:bg-signal/10 disabled:opacity-40"
+        className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-signal/50 px-4 text-xs text-signal hover:bg-signal/10 disabled:opacity-40"
       >
         {busy && <Loader2 className="size-3 animate-spin" />} Delete accounts now
       </button>

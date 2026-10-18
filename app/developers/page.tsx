@@ -11,7 +11,7 @@ import { ISSUER, SCOPES } from '@/lib/oauth'
 
 export const metadata: Metadata = {
   title: 'Developers: Sign in with logoless',
-  description: 'Add Sign in with logoless to your site or app. Standard OAuth 2.0 and OpenID Connect, with profile, email and clipping stats if the person agrees.',
+  description: 'Add Sign in with logoless to your site or app. Standard OAuth 2.0 and OpenID Connect, with profile, email and creator stats if the person agrees.',
   alternates: { canonical: '/developers' },
 }
 
@@ -46,12 +46,12 @@ export default async function Page() {
       </PageHero>
 
       <section className={`${CONTAINER} pb-16`}>
-        <div className="grid gap-px overflow-hidden rounded-[2rem] border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-px overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
           {[
             ['A real identity', 'One account per person, with a stable id that is different for every app, so apps cannot compare notes.'],
             ['Profile', 'Name, @handle, picture and a link to the public profile.'],
             ['Email, if they agree', 'With a flag that says whether it was verified.'],
-            ['Clipping stats, if they agree', 'Clips, verified views and the badges they show. Never earnings, balances or PayPal.'],
+            ['Creator stats, if they agree', 'Submissions, verified views and the badges they show. Never earnings, balances or PayPal.'],
           ].map(([t, b]) => (
             <div key={t} className="bg-ink p-6">
               <p className="font-display text-xl tracking-[-0.02em]">{t}</p>
@@ -147,7 +147,7 @@ Revoke      ${ISSUER}/api/oauth/revoke`}</Code>
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-xs text-mute">Ask only for what you need. Anything more makes people say no. The stats scope adds a <code>logoless:stats</code> claim with clips, views, campaigns and badges.</p>
+            <p className="mt-3 text-xs text-mute">Ask only for what you need. Anything more makes people say no. The stats scope adds a <code>logoless:stats</code> claim with submissions, views, campaigns and badges.</p>
           </div>
         </div>
 
@@ -202,7 +202,7 @@ const challenge = base64url(
       </section>
 
       <section className={`${CONTAINER} pb-28`}>
-        <div className="rounded-[2rem] border border-line-strong p-8 text-center md:p-14">
+        <div className="rounded-[calc(2rem*var(--round,1))] border border-line-strong p-8 text-center md:p-14">
           <h2 className="font-display text-4xl tracking-[-0.035em] md:text-5xl">Ready when you are</h2>
           <p className="mx-auto mt-3 max-w-xl text-paper/60">It takes two minutes to get a client id.</p>
           <div className="mt-7 flex justify-center">

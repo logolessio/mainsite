@@ -49,7 +49,7 @@ export function InviteWelcome({ name, slug, state, email, lockedTo, admin }: Pro
   return (
     <div className="fixed inset-0 z-[80] overflow-y-auto bg-ink text-paper">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-        <motion.div className="absolute -top-1/3 left-1/2 size-[70rem] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgb(243_242_238/0.22),transparent)] blur-3xl" animate={{ scale: [1, 1.12, 1], opacity: [0.5, 0.8, 0.5] }} transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }} />
+        <motion.div className="absolute -top-1/3 left-1/2 size-[70rem] -translate-x-1/2 rounded-pill bg-[radial-gradient(closest-side,rgb(243_242_238/0.22),transparent)] blur-3xl" animate={{ scale: [1, 1.12, 1], opacity: [0.5, 0.8, 0.5] }} transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }} />
         <div className="absolute inset-0 [background-image:radial-gradient(rgb(255_255_255/0.08)_1px,transparent_1px)] [background-size:28px_28px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" />
       </div>
       <Confetti count={26} />
@@ -61,7 +61,7 @@ export function InviteWelcome({ name, slug, state, email, lockedTo, admin }: Pro
 
         <div className="my-auto w-full py-12">
           {admin && (
-            <p className="mx-auto mb-8 inline-block rounded-full border border-amber-300/40 bg-amber-300/10 px-4 py-2 text-xs text-amber-200">
+            <p className="mx-auto mb-8 inline-block rounded-pill border border-amber-300/40 bg-amber-300/10 px-4 py-2 text-xs text-amber-200">
               Admin preview: this is what {name} sees. Admins cannot claim a link.
             </p>
           )}
@@ -78,13 +78,13 @@ export function InviteWelcome({ name, slug, state, email, lockedTo, admin }: Pro
             ))}
           </h1>
           <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.7, ease: EASE_OUT }} className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-mute md:text-xl">
-            Set up your artist page, launch a campaign and let clippers turn your music into views. It takes about five minutes.
+            Set up your artist page, launch a campaign and let creators turn your music into views. It takes about five minutes.
           </motion.p>
 
           <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.9, ease: EASE_OUT }} className="mt-10 flex flex-col items-center gap-3">
             {state === 'signedOut' ? (
               <>
-                <a href={`/signup?next=${next}`} className="inline-flex h-14 items-center gap-2 rounded-full bg-paper px-9 text-base font-medium text-ink transition-all hover:bg-paper/85 active:scale-95">
+                <a href={`/signup?next=${next}`} className="inline-flex h-14 items-center gap-2 rounded-pill bg-paper px-9 text-base font-medium text-ink transition-all hover:bg-paper/85 active:scale-95">
                   Create my account <ArrowRight className="size-5" />
                 </a>
                 <a href={`/login?next=${next}`} className="text-sm text-mute underline underline-offset-4 transition-colors hover:text-paper">
@@ -92,12 +92,12 @@ export function InviteWelcome({ name, slug, state, email, lockedTo, admin }: Pro
                 </a>
               </>
             ) : admin ? (
-              <a href="/admin/invites" className="inline-flex h-14 items-center gap-2 rounded-full border border-line-strong px-9 text-base transition-colors hover:bg-white/10">
+              <a href="/admin/invites" className="inline-flex h-14 items-center gap-2 rounded-pill border border-line-strong px-9 text-base transition-colors hover:bg-white/10">
                 Back to artist links
               </a>
             ) : (
               <>
-                <button type="button" onClick={claim} disabled={busy} className="inline-flex h-14 items-center gap-2 rounded-full bg-paper px-9 text-base font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:opacity-60">
+                <button type="button" onClick={claim} disabled={busy} className="inline-flex h-14 items-center gap-2 rounded-pill bg-paper px-9 text-base font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:opacity-60">
                   {busy ? <Loader2 className="size-5 animate-spin" /> : null} Yes, this is me <ArrowRight className="size-5" />
                 </button>
                 <p className="text-sm text-mute">

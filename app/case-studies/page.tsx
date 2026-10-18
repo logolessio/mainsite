@@ -22,12 +22,12 @@ export default function Page() {
         title="What every case study shows"
         items={[
           { title: 'The brief', body: 'What the artist or brand asked for, and the rate they set.' },
-          { title: 'The results', body: 'Clips submitted, verified views and what the campaign cost.' },
-          { title: 'The clips', body: 'The best clips, with permission from the people who made them.' },
+          { title: 'The results', body: 'Submissions made, verified views and what the campaign cost.' },
+          { title: 'The submissions', body: 'The best submissions, with permission from the people who made them.' },
         ]}
       />
       <CtaBand title="Want to be in the first one?" href="/contact" label="Talk to us" />
-      <Related links={[{ href: '/for-brands', label: 'For brands' }, { href: '/pricing', label: 'Pricing' }, { href: '/faq', label: 'Questions' }]} />
+      <Related links={[{ href: '/for-brands', label: 'For brands' }, { href: '/pricing', label: 'Pricing' }, { href: '/faq', label: "That's why its called a Q&A :)" }]} />
     </main>
   )
 }

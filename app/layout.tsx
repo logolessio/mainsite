@@ -16,6 +16,7 @@ import { getAnnouncement } from '@/lib/announcement'
 import { featureState } from '@/lib/features'
 import { effectiveFont, fontById } from '@/lib/fonts'
 import { getOverrides } from '@/lib/copy'
+import { parseRoundness, roundnessVars } from '@/lib/roundness'
 import { allSettings } from '@/lib/settings'
 import { getLinks } from '@/lib/socials-db'
 import { getSession } from '@/lib/session'
@@ -23,8 +24,9 @@ import { SITE } from '@/lib/site'
 import './globals.css'
 
 // Every typeface the dev dashboard can switch the site to. Only the one in use is downloaded: the others are declared but not preloaded.
+// The standard look is Gloock for headers and titles with Inter for everything else, so those two are preloaded and the rest wait until they are chosen.
 const inter = Inter({ subsets: ['latin'], variable: '--font-f-inter', display: 'swap' })
-const tight = Inter_Tight({ subsets: ['latin'], weight: ['300', '400', '500', '600'], variable: '--font-f-inter-tight', display: 'swap' })
+const tight = Inter_Tight({ subsets: ['latin'], weight: ['300', '400', '500', '600'], variable: '--font-f-inter-tight', display: 'swap', preload: false })
 const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-mono-face' })
 const geist = Geist({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-geist' })
 const dmSans = DM_Sans({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-dm-sans' })
@@ -56,7 +58,7 @@ const wix = Wix_Madefor_Display({ subsets: ['latin'], display: 'swap', preload: 
 const syne = Syne({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-syne' })
 const newsreader = Newsreader({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-newsreader' })
 const youngSerif = Young_Serif({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-young-serif' })
-const gloock = Gloock({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-gloock' })
+const gloock = Gloock({ subsets: ['latin'], display: 'swap', weight: '400', variable: '--font-f-gloock' })
 const bodoni = Bodoni_Moda({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-bodoni' })
 const martian = Martian_Mono({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-martian' })
 const dmMono = DM_Mono({ subsets: ['latin'], display: 'swap', preload: false, weight: ['300', '400', '500'], variable: '--font-f-dm-mono' })
@@ -107,7 +109,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       suppressHydrationWarning
       data-font={font.id === 'inter' ? undefined : font.id}
       data-kind={font.id === 'inter' ? undefined : font.kind}
-      style={{ '--font-body': `var(${font.body})`, '--font-display-face': `var(${font.display})` } as React.CSSProperties}
+      style={{ '--font-body': `var(${font.body})`, '--font-display-face': `var(${font.display})`, ...roundnessVars(parseRoundness(design.design_roundness)) } as React.CSSProperties}
       className={`${FONT_CLASSES} bg-ink`}
     >
       <head>
@@ -116,9 +118,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body className="antialiased">
         <SkipLink />
         <FeaturesProvider dev={fs.dev} on={fs.on}>
-          <DesignProvider value={{ coverZoom: design.design_cover_zoom === '1', coverBorder: design.design_cover_border === '1', coverBar: design.design_cover_bar === '1', coverInfo: design.design_cover_info === '1', scrollEffects: design.design_scroll_effects === '1', liquidLoader: design.design_liquid_loader === '1' }}>
+          <DesignProvider value={{ coverBorder: design.design_cover_border === '1', coverBar: design.design_cover_bar === '1', scrollEffects: design.design_scroll_effects === '1', liquidLoader: design.design_liquid_loader === '1' }}>
           <CopyProvider overrides={overrides} isAdmin={isAdmin}>
-            <AppShell announcement={announcement} dots={design.bg_dots === '1'} links={links}>{blocked ? <DevGate email={session?.user?.email ?? null} /> : children}</AppShell>
+            <AppShell announcement={announcement} dots={design.bg_dots === '1'} links={links} signedIn={Boolean(session?.user?.email)}>{blocked ? <DevGate email={session?.user?.email ?? null} /> : children}</AppShell>
             <AutoCopy />
             {isAdmin && <TextEditor />}
             {isAdmin && <SecretDialogHost />}

@@ -15,7 +15,7 @@ const CHANNELS = [
   { id: 'other', label: 'Somewhere else', icon: AtSign },
 ] as const
 
-const field = 'h-11 w-full rounded-full border border-line-strong bg-ink/80 px-4 text-sm placeholder:text-mute focus:border-paper/60 focus:outline-none'
+const field = 'h-11 w-full rounded-pill border border-line-strong bg-ink/80 px-4 text-sm placeholder:text-mute focus:border-paper/60 focus:outline-none'
 
 /** Makes a private link. The address is built from the name as you type, and you can change it. */
 export function InviteForm() {
@@ -91,7 +91,7 @@ export function InviteForm() {
           <span className="font-mono text-xs text-mute">How did you contact them?</span>
           <div className="mt-2 flex flex-wrap gap-2">
             {CHANNELS.map((c) => (
-              <button key={c.id} type="button" onClick={() => setChannel(c.id)} aria-pressed={channel === c.id} className={cn('inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm transition-colors', channel === c.id ? 'border-paper bg-paper/10' : 'border-line-strong text-mute hover:text-paper')}>
+              <button key={c.id} type="button" onClick={() => setChannel(c.id)} aria-pressed={channel === c.id} className={cn('inline-flex h-10 items-center gap-2 rounded-pill border px-4 text-sm transition-colors', channel === c.id ? 'border-paper bg-paper/10' : 'border-line-strong text-mute hover:text-paper')}>
                 <c.icon className="size-4" /> {c.label}
               </button>
             ))}
@@ -125,7 +125,7 @@ export function InviteForm() {
         </label>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button disabled={!ready || busy} className="inline-flex h-11 items-center gap-2 rounded-full bg-paper px-6 text-sm font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
+          <button disabled={!ready || busy} className="inline-flex h-11 items-center gap-2 rounded-pill bg-paper px-6 text-sm font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
             {busy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} Make their link
           </button>
           {finalSlug && !problem && <span className="text-sm text-mute">logoless.io/<span className="text-paper">{finalSlug}</span></span>}
@@ -141,7 +141,7 @@ export function InviteForm() {
             <div className="mt-4 flex flex-wrap gap-2">
               <CopyButton text={made.url} label="Copy link" />
               <CopyButton text={dmText(made.name, made.url)} label="Copy a message to send" />
-              <button type="button" onClick={() => setMade(null)} className="h-9 rounded-full px-3 text-xs text-mute hover:text-paper">Dismiss</button>
+              <button type="button" onClick={() => setMade(null)} className="h-9 rounded-pill px-3 text-xs text-mute hover:text-paper">Dismiss</button>
             </div>
           </motion.div>
         )}

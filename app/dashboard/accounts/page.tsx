@@ -9,7 +9,7 @@ export default function Page() {
   return (
     <>
       <SectionTabs group="profile" />
-      <PageHeader title="Linked accounts" sub="We read public view counts on clips you submit. We never post for you." />
+      <PageHeader title="Linked accounts" sub="We read public view counts on content you submit. We never post for you." />
       <AccountsPanel />
     </>
   )

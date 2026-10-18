@@ -107,7 +107,7 @@ export function Reels({ campaigns }: { campaigns: Campaign[] }) {
       <div className="pointer-events-none absolute right-4 top-1/2 hidden -translate-y-1/2 flex-col gap-2 md:flex">
         {campaigns.map((c, i) => (
           <button key={c.id} type="button" onClick={() => go(i)} aria-label={`Go to ${c.title}`} className="pointer-events-auto grid size-4 place-items-center">
-            <span className={cn('block rounded-full bg-paper transition-all', i === active ? 'h-6 w-1.5' : 'size-1.5 opacity-30 hover:opacity-70')} />
+            <span className={cn('block rounded-pill bg-paper transition-all', i === active ? 'h-6 w-1.5' : 'size-1.5 opacity-30 hover:opacity-70')} />
           </button>
         ))}
       </div>
@@ -118,7 +118,7 @@ export function Reels({ campaigns }: { campaigns: Campaign[] }) {
           type="button"
           onClick={() => setSound((s) => !s)}
           aria-pressed={sound}
-          className="glass-liquid pointer-events-auto inline-flex h-11 items-center gap-2 rounded-full px-4 text-sm"
+          className="glass-liquid pointer-events-auto inline-flex h-11 items-center gap-2 rounded-pill px-4 text-sm"
         >
           {sound ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
           {sound ? 'Sound on' : 'Tap for sound'}
@@ -141,11 +141,11 @@ function Slide({ c, i, total, on, near, playing, onPlay, refEl }: { c: Campaign;
       <div className="absolute inset-0 bg-gradient-to-b from-ink/40 via-transparent to-ink" />
 
       <div className={cn('relative z-10 flex w-full max-w-5xl flex-col items-center gap-7 transition-all duration-700 ease-out md:flex-row md:gap-16', on ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0')}>
-        <button type="button" onClick={onPlay} aria-label={playing ? `Pause ${c.title}` : `Play ${c.title}`} className="group relative aspect-square w-[min(66vw,40dvh)] shrink-0 overflow-hidden rounded-[28px] border border-white/15 shadow-[0_40px_120px_-30px_rgba(0,0,0,0.9)] transition-transform duration-500 hover:scale-[1.02] md:w-[min(34vw,52dvh)] md:rounded-[36px]">
+        <button type="button" onClick={onPlay} aria-label={playing ? `Pause ${c.title}` : `Play ${c.title}`} className="group relative aspect-square w-[min(66vw,40dvh)] shrink-0 overflow-hidden rounded-[calc(28px*var(--round,1))] border border-white/15 shadow-[0_40px_120px_-30px_rgba(0,0,0,0.9)] transition-transform duration-500 hover:scale-[1.02] md:w-[min(34vw,52dvh)] md:rounded-[calc(36px*var(--round,1))]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={c.cover} alt="" className={cn('size-full object-cover transition-transform duration-[2000ms]', playing && 'scale-110')} />
           <span className="absolute inset-0 grid place-items-center bg-black/0 transition-colors group-hover:bg-black/25">
-            <span className={cn('grid size-16 place-items-center rounded-full bg-paper text-ink transition-all', playing ? 'scale-90 opacity-0 group-hover:opacity-100' : 'scale-100 opacity-95')}>
+            <span className={cn('grid size-16 place-items-center rounded-pill bg-paper text-ink transition-all', playing ? 'scale-90 opacity-0 group-hover:opacity-100' : 'scale-100 opacity-95')}>
               {playing ? <Pause className="size-6 fill-ink" /> : <Play className="size-6 translate-x-0.5 fill-ink" />}
             </span>
           </span>
@@ -172,8 +172,8 @@ function Slide({ c, i, total, on, near, playing, onPlay, refEl }: { c: Campaign;
           </p>
 
           <div className="mt-6 flex items-center justify-center gap-3 md:justify-start">
-            <TransitionLink href={`/campaign/${c.id}`} className="group inline-flex h-12 items-center gap-2 rounded-full bg-paper px-6 text-sm font-medium text-ink transition-colors hover:bg-paper/85">
-              Clip this <ArrowUpRight className="size-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+            <TransitionLink href={`/campaign/${c.id}`} className="group inline-flex h-12 items-center gap-2 rounded-pill bg-paper px-6 text-sm font-medium text-ink transition-colors hover:bg-paper/85">
+              Create this <ArrowUpRight className="size-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
             </TransitionLink>
             <FavoriteButton id={c.id} className="size-12" />
             <span className="ml-1 flex items-center gap-2 text-mute">
@@ -197,9 +197,9 @@ function Slide({ c, i, total, on, near, playing, onPlay, refEl }: { c: Campaign;
 /** Little bars that dance while a track plays. Pure CSS, no audio analysis. */
 function Equalizer() {
   return (
-    <span aria-hidden className="absolute bottom-3 left-3 flex h-5 items-end gap-0.5 rounded-full bg-black/55 px-2.5 py-1.5 backdrop-blur">
+    <span aria-hidden className="absolute bottom-3 left-3 flex h-5 items-end gap-0.5 rounded-pill bg-black/55 px-2.5 py-1.5 backdrop-blur">
       {[0, 1, 2, 3].map((n) => (
-        <span key={n} className="w-0.5 origin-bottom rounded-full bg-paper" style={{ height: '100%', animation: `reel-eq ${0.7 + n * 0.17}s ease-in-out ${n * 0.1}s infinite alternate` }} />
+        <span key={n} className="w-0.5 origin-bottom rounded-pill bg-paper" style={{ height: '100%', animation: `reel-eq ${0.7 + n * 0.17}s ease-in-out ${n * 0.1}s infinite alternate` }} />
       ))}
     </span>
   )

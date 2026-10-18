@@ -10,7 +10,7 @@ import { SectionTabs } from '@/components/app/section-tabs'
 
 export const metadata: Metadata = { title: 'Previews | logoless', robots: { index: false } }
 
-const btn = 'inline-flex h-10 items-center justify-center rounded-full border border-line-strong px-5 text-sm transition-colors hover:border-paper hover:bg-white/[0.06]'
+const btn = 'inline-flex h-10 items-center justify-center rounded-pill border border-line-strong px-5 text-sm transition-colors hover:border-paper hover:bg-white/[0.06]'
 
 function Row({ title, body, children }: { title: string; body: string; children: React.ReactNode }) {
   return (
@@ -30,7 +30,7 @@ export default async function Page() {
   const first = (await liveCampaigns())[0]
   return (
     <>
-      <SectionTabs group="dev" />
+      <SectionTabs group="site" />
       <PageHeader title="Previews" sub="Walk through what visitors see. Everything here is a dry run, so nothing is saved, sent or paid." />
       <div className="grid max-w-4xl gap-6">
         <Card title="Getting started">
@@ -57,6 +57,11 @@ export default async function Page() {
             </Row>
             <Row title="Where do you post?" body="Jumps straight to the optional step for TikTok, YouTube and Instagram.">
               <Link href="/onboarding?preview=1&step=accounts" className={btn}>
+                Open
+              </Link>
+            </Row>
+            <Row title="Prove they are yours" body="The step after sign-up where each account is confirmed with a code in its bio. Nothing is requested in a preview.">
+              <Link href="/onboarding?preview=1&step=verify" className={btn}>
                 Open
               </Link>
             </Row>

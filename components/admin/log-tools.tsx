@@ -12,7 +12,7 @@ export function CleanupLogs() {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <span className="text-sm text-mute">Delete activity log rows older than</span>
-      <input value={days} onChange={(e) => setDays(e.target.value.replace(/\D/g, ''))} inputMode="numeric" className="h-9 w-20 rounded-full border border-line-strong bg-ink/80 px-3 text-center text-sm focus:outline-none" aria-label="Days" />
+      <input value={days} onChange={(e) => setDays(e.target.value.replace(/\D/g, ''))} inputMode="numeric" className="h-9 w-20 rounded-pill border border-line-strong bg-ink/80 px-3 text-center text-sm focus:outline-none" aria-label="Days" />
       <span className="text-sm text-mute">days</span>
       <button
         type="button"
@@ -27,7 +27,7 @@ export function CleanupLogs() {
           setMsg(res?.ok ? `Deleted ${j?.deleted ?? 0} rows.` : (j?.error ?? 'Failed.'))
           router.refresh()
         }}
-        className="inline-flex h-9 items-center gap-1.5 rounded-full border border-signal/50 px-4 text-xs text-signal hover:bg-signal/10 disabled:opacity-40"
+        className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-signal/50 px-4 text-xs text-signal hover:bg-signal/10 disabled:opacity-40"
       >
         {busy && <Loader2 className="size-3 animate-spin" />} Delete
       </button>

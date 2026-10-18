@@ -125,10 +125,10 @@ export function PayoutsPanel() {
                       onClick={() => setPick(e)}
                       className={cn('flex h-12 min-w-0 flex-1 items-center gap-3 rounded-2xl border px-4 text-left text-[15px] transition-colors', pick === e ? 'border-paper bg-white/[0.06]' : 'border-line-strong text-paper/80 hover:border-paper/50')}
                     >
-                      <span className={cn('grid size-5 shrink-0 place-items-center rounded-full border', pick === e ? 'border-paper bg-paper text-ink' : 'border-line-strong')}>{pick === e && <Check className="size-3" />}</span>
+                      <span className={cn('grid size-5 shrink-0 place-items-center rounded-pill border', pick === e ? 'border-paper bg-paper text-ink' : 'border-line-strong')}>{pick === e && <Check className="size-3" />}</span>
                       <span className="truncate">{e}</span>
                     </button>
-                    <button type="button" onClick={() => remove(e)} aria-label={`Remove ${e}`} className="grid size-10 shrink-0 place-items-center rounded-full text-mute transition-colors hover:bg-white/[0.07] hover:text-paper">
+                    <button type="button" onClick={() => remove(e)} aria-label={`Remove ${e}`} className="grid size-10 shrink-0 place-items-center rounded-pill text-mute transition-colors hover:bg-white/[0.07] hover:text-paper">
                       <X className="size-4" />
                     </button>
                   </div>
@@ -171,11 +171,11 @@ export function PayoutsPanel() {
             </ActionButton>
             {available >= minCents && (
               <div className="flex basis-full flex-wrap gap-2" role="group" aria-label="Quick amounts">
-                <button type="button" aria-pressed={!amount.trim()} onClick={() => setAmount('')} className={cn('h-9 rounded-full border px-4 text-sm transition-colors', !amount.trim() ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
+                <button type="button" aria-pressed={!amount.trim()} onClick={() => setAmount('')} className={cn('h-9 rounded-pill border px-4 text-sm transition-colors', !amount.trim() ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
                   All
                 </button>
                 {[10, 25, 50, 100].filter((v) => v * 100 >= minCents && v * 100 < available).map((v) => (
-                  <button key={v} type="button" aria-pressed={amount === String(v)} onClick={() => setAmount(String(v))} className={cn('h-9 rounded-full border px-4 text-sm transition-colors', amount === String(v) ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
+                  <button key={v} type="button" aria-pressed={amount === String(v)} onClick={() => setAmount(String(v))} className={cn('h-9 rounded-pill border px-4 text-sm transition-colors', amount === String(v) ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
                     ${v}
                   </button>
                 ))}

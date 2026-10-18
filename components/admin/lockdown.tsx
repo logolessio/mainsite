@@ -34,7 +34,7 @@ export function LockdownButton({ locked }: { locked: boolean }) {
   }
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <button type="button" onClick={flip} disabled={busy} className={`inline-flex h-10 items-center gap-2 rounded-full border px-5 text-sm transition-colors disabled:opacity-40 ${locked ? 'border-paper bg-paper text-ink hover:bg-paper/85' : 'border-signal/50 text-signal hover:bg-signal/10'}`}>
+      <button type="button" onClick={flip} disabled={busy} className={`inline-flex h-10 items-center gap-2 rounded-pill border px-5 text-sm transition-colors disabled:opacity-40 ${locked ? 'border-paper bg-paper text-ink hover:bg-paper/85' : 'border-signal/50 text-signal hover:bg-signal/10'}`}>
         {busy ? <Loader2 className="size-4 animate-spin" /> : <ShieldAlert className="size-4" />} {locked ? 'Lift lockdown' : 'Lock everything down'}
       </button>
       {error && <span role="alert" className="text-sm text-signal">{error}</span>}

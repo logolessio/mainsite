@@ -61,7 +61,7 @@ export const DEFAULT_DATA: OnboardingData = {
 }
 
 export const NICHES = ['Music', 'Streamers', 'Podcasts', 'Sports', 'Gaming', 'Comedy', 'Fashion', 'Brands & products', 'Film & TV', 'Education']
-export const STYLES = ['Fan edits', 'Live-stream highlights', 'Cinematic', 'Meme / comedy', 'Lyric & visualiser', 'Captioned talking clips']
+export const STYLES = ['Fan edits', 'Live-stream highlights', 'Cinematic', 'Meme / comedy', 'Lyric & visualiser', 'Captioned talking videos']
 export const GOALS = ['Promote a release', 'Grow a streamer', 'Launch a product', 'Drive event ticket sales', 'Build brand awareness', 'Test content ideas']
 export const INDUSTRIES = ['Music label or artist', 'Streamer or creator', 'Podcast', 'Sports or events', 'Consumer brand', 'Agency', 'Other']
 export const BUDGETS = ['Under $500', '$500 – $2,500', '$2,500 – $10,000', '$10,000+']

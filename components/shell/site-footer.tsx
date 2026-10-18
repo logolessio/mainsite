@@ -26,7 +26,7 @@ export function SiteFooter({ links = [] }: { links?: LinkItem[] }) {
           <Reveal className="md:col-span-4">
             <Logo className="h-12 md:h-14" />
             <p className="mt-8 max-w-xs text-[15px] leading-relaxed text-paper/50">
-              <T>Brands, artists and streamers fund a brief. Clippers cut it, post it and are paid for every verified view.</T>
+              <T>views have value.</T>
             </p>
             <div className="mt-8 flex items-center gap-5 text-paper/50">
               {links.filter((l) => l.footer).map((l) => (
@@ -100,8 +100,8 @@ export function SiteFooter({ links = [] }: { links?: LinkItem[] }) {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Feature id="status-page">
-              <TransitionLink href="/status" className="inline-flex h-10 items-center gap-2 rounded-full border border-line-strong px-4 text-sm text-paper/60 transition-colors hover:text-paper">
-                <span className="size-2 rounded-full bg-emerald-400" /> System status
+              <TransitionLink href="/status" className="inline-flex h-10 items-center gap-2 rounded-pill border border-line-strong px-4 text-sm text-paper/60 transition-colors hover:text-paper">
+                <span className="size-2 rounded-pill bg-emerald-400" /> System status
               </TransitionLink>
             </Feature>
           </div>

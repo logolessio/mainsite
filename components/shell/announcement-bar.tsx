@@ -27,7 +27,7 @@ export function AnnouncementBar({ text, href }: { text: string; href: string }) 
   const cls = 'flex min-w-0 items-center gap-2 pl-5 text-sm hover:text-paper'
   return (
     <div role="region" aria-label="Announcement" className="pointer-events-none fixed inset-x-0 bottom-[5.25rem] z-[65] flex justify-center px-4 lg:bottom-5">
-      <div className="glass-liquid pointer-events-auto flex h-12 max-w-[min(38rem,100%)] items-center gap-1 rounded-full pr-2 backdrop-blur-xl">
+      <div className="glass-liquid pointer-events-auto flex h-12 max-w-[min(38rem,100%)] items-center gap-1 rounded-pill pr-2 backdrop-blur-xl">
         {href ? (
           href.startsWith('/') ? (
             <TransitionLink href={href} className={cls}>{inner}<span aria-hidden="true">→</span></TransitionLink>
@@ -48,7 +48,7 @@ export function AnnouncementBar({ text, href }: { text: string; href: string }) 
             }
             setGone(true)
           }}
-          className="ml-2 grid size-8 shrink-0 place-items-center rounded-full text-mute hover:bg-white/10 hover:text-paper"
+          className="ml-2 grid size-8 shrink-0 place-items-center rounded-pill text-mute hover:bg-white/10 hover:text-paper"
         >
           <X className="size-4" />
         </button>

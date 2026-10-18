@@ -27,7 +27,7 @@ export function InviteBlocked({ kind, slug, hint }: { kind: keyof typeof COPY; s
         <p className="mt-4 leading-relaxed text-mute">{c.body}</p>
         {hint && <p className="mt-3 text-sm text-mute">Expected: <span className="text-paper">{hint}</span></p>}
         {kind !== 'off' && (
-          <button type="button" onClick={() => signOut({ callbackUrl: `/login?next=${encodeURIComponent(`/${slug}`)}` })} className="mt-8 inline-flex h-12 items-center rounded-full bg-paper px-7 text-sm font-medium text-ink transition-colors hover:bg-paper/85">
+          <button type="button" onClick={() => signOut({ callbackUrl: `/login?next=${encodeURIComponent(`/${slug}`)}` })} className="mt-8 inline-flex h-12 items-center rounded-pill bg-paper px-7 text-sm font-medium text-ink transition-colors hover:bg-paper/85">
             Sign out and try another account
           </button>
         )}

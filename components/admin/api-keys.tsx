@@ -25,7 +25,7 @@ async function call(data: object) {
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [done, setDone] = useState(false)
   return (
-    <button type="button" className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line-strong px-4 text-xs hover:bg-paper/10" onClick={() => navigator.clipboard.writeText(text).then(() => (setDone(true), setTimeout(() => setDone(false), 1800)))}>
+    <button type="button" className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-line-strong px-4 text-xs hover:bg-paper/10" onClick={() => navigator.clipboard.writeText(text).then(() => (setDone(true), setTimeout(() => setDone(false), 1800)))}>
       {done ? <Check className="size-3.5 text-emerald-300" /> : <Copy className="size-3.5" />} {done ? 'Copied' : label}
     </button>
   )
@@ -81,12 +81,12 @@ export function ApiKeys({ base, prompt }: { base: string; prompt: string }) {
     <div className="grid max-w-4xl gap-6">
       <Card title="Keys" sub="A key lets another tool, like a dashboard built in Base44, do your admin work from anywhere. It cannot send money, ban or delete people, change roles or change site-wide switches.">
         {fresh && (
-          <div className="mb-6 rounded-[1.4rem] border border-emerald-400/30 bg-emerald-400/[0.05] p-4">
+          <div className="mb-6 rounded-[calc(1.4rem*var(--round,1))] border border-emerald-400/30 bg-emerald-400/[0.05] p-4">
             <p className="text-sm">Copy this key now. It is shown once and cannot be shown again.</p>
             <p className="mt-3 break-all rounded-xl bg-black/40 p-3 font-mono text-xs">{fresh}</p>
             <div className="mt-3 flex gap-2">
               <CopyButton text={fresh} label="Copy the key" />
-              <button type="button" className="h-9 rounded-full px-4 text-xs text-mute hover:text-paper" onClick={() => setFresh(null)}>
+              <button type="button" className="h-9 rounded-pill px-4 text-xs text-mute hover:text-paper" onClick={() => setFresh(null)}>
                 I saved it
               </button>
             </div>
@@ -102,7 +102,7 @@ export function ApiKeys({ base, prompt }: { base: string; prompt: string }) {
                   <p className="text-sm">{k.name} <span className="font-mono text-xs text-mute">lgk_{k.id}_…</span></p>
                   <p className="text-xs text-mute">{k.scopes.join(' · ')} · made {ago(k.createdAt)} · last used {ago(k.lastUsed)}</p>
                 </div>
-                <button type="button" disabled={busy === k.id} onClick={() => revoke(k.id)} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-signal/50 px-4 text-xs text-signal hover:bg-signal/10 disabled:opacity-40">
+                <button type="button" disabled={busy === k.id} onClick={() => revoke(k.id)} className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-signal/50 px-4 text-xs text-signal hover:bg-signal/10 disabled:opacity-40">
                   {busy === k.id ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />} Revoke
                 </button>
               </li>
@@ -134,7 +134,7 @@ export function ApiKeys({ base, prompt }: { base: string; prompt: string }) {
             </ul>
           </fieldset>
           <div>
-            <button type="button" disabled={busy === 'make' || name.trim().length < 2 || pick.length === 0} onClick={make} className="inline-flex h-11 items-center gap-2 rounded-full bg-paper px-6 text-sm font-medium text-ink hover:bg-paper/85 disabled:opacity-40">
+            <button type="button" disabled={busy === 'make' || name.trim().length < 2 || pick.length === 0} onClick={make} className="inline-flex h-11 items-center gap-2 rounded-pill bg-paper px-6 text-sm font-medium text-ink hover:bg-paper/85 disabled:opacity-40">
               {busy === 'make' ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} Make the key
             </button>
           </div>

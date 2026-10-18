@@ -50,7 +50,7 @@ export function InquiryThread({ id, token, subject, first, firstAt, target, init
     <div className="grid gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="font-display text-3xl leading-tight md:text-4xl">{subject}</p>
-        <span className={cn('rounded-full border px-3 py-1 text-xs', state === 'closed' ? 'border-line text-mute' : 'border-paper/50')}>{state === 'closed' ? 'Closed' : state === 'new' ? 'Sent' : 'Open'}</span>
+        <span className={cn('rounded-pill border px-3 py-1 text-xs', state === 'closed' ? 'border-line text-mute' : 'border-paper/50')}>{state === 'closed' ? 'Closed' : state === 'new' ? 'Sent' : 'Open'}</span>
       </div>
       {target && <p className="text-sm text-mute">About: <span className="break-all text-paper/80">{target}</span></p>}
       <ul className="grid gap-3">
@@ -74,7 +74,7 @@ export function InquiryThread({ id, token, subject, first, firstAt, target, init
             </p>
           )}
           <div className="flex flex-wrap items-center gap-3">
-            <button type="button" onClick={send} disabled={busy || text.trim().length < 2} className="inline-flex h-12 items-center gap-2 rounded-full bg-paper px-7 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
+            <button type="button" onClick={send} disabled={busy || text.trim().length < 2} className="inline-flex h-12 items-center gap-2 rounded-pill bg-paper px-7 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
               {busy && <Loader2 className="size-4 animate-spin" />} Send
             </button>
             {admin && (

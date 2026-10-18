@@ -42,7 +42,7 @@ export default async function Page() {
 
   return (
     <>
-      <PageHeader title="Earnings" sub="What your clips have earned, your PayPal emails, and withdrawing. We cover PayPal's fees." />
+      <PageHeader title="Earnings" sub="What your submissions have earned, your PayPal emails, and withdrawing. We cover PayPal's fees." />
       <div className="mb-6">
         <PayoutsPanel />
       </div>
@@ -69,7 +69,7 @@ export default async function Page() {
         ))}
         <Tile className="p-6 md:col-span-6 xl:col-span-12">
           <h2 className="mb-6 text-base font-medium tracking-tight">Earnings over time</h2>
-          {events.length === 0 ? <EmptyState icon="CircleDollarSign" title="No earnings yet" body="Your chart will appear here once your first clip is verified." /> : <EarningsChart events={events} now={now} />}
+          {events.length === 0 ? <EmptyState icon="CircleDollarSign" title="No earnings yet" body="Your chart will appear here once your first submission is verified." /> : <EarningsChart events={events} now={now} />}
         </Tile>
       </Bento>
 
@@ -82,7 +82,7 @@ export default async function Page() {
             { key: 'c', header: 'Campaign', render: (r) => r.title ?? r.note ?? '-' },
             { key: 'a', header: 'Amount', render: (r) => <span className={r.amount_cents < 0 ? 'text-mute' : ''}>{usd(r.amount_cents)}</span>, className: 'text-right tabular-nums' },
           ]}
-          empty={<EmptyState title="Ledger is empty" body="Approved clips and withdrawals will be listed here." />}
+          empty={<EmptyState title="Ledger is empty" body="Approved submissions and withdrawals will be listed here." />}
         />
       </Card>
     </>

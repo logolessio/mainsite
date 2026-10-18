@@ -63,7 +63,7 @@ export function AdminButton({
   }
 
   const cls = cn(
-    'inline-flex h-9 items-center justify-center gap-1.5 rounded-full px-4 text-xs transition-colors disabled:opacity-40',
+    'inline-flex h-9 items-center justify-center gap-1.5 rounded-pill px-4 text-xs transition-colors disabled:opacity-40',
     variant === 'solid' && 'bg-paper font-medium text-ink hover:bg-paper/85',
     variant === 'ghost' && 'border border-line-strong hover:bg-paper/10',
     variant === 'danger' && 'border border-signal/50 text-signal hover:bg-signal/10',
@@ -80,7 +80,7 @@ export function AdminButton({
             onChange={(e) => setText(e.target.value)}
             placeholder={ask.label}
             maxLength={280}
-            className="h-9 w-56 rounded-full border border-line-strong bg-ink/80 px-3 text-xs focus:outline-none"
+            className="h-9 w-56 rounded-pill border border-line-strong bg-ink/80 px-3 text-xs focus:outline-none"
           />
           <button type="button" disabled={busy || (ask.required && text.trim().length < 3)} onClick={() => run({ [ask.key ?? 'note']: text.trim() })} className={cls}>
             {busy && <Loader2 className="size-3 animate-spin" />} Confirm
@@ -103,7 +103,7 @@ export function AdminButton({
 
 export function Pill({ label, value, note, tone = 'neutral' }: { label: string; value: string; note?: string; tone?: 'neutral' | 'good' }) {
   return (
-    <div className={cn('flex min-w-0 flex-1 flex-col justify-center rounded-[40px] border px-7 py-5', tone === 'good' ? 'border-emerald-400/30 bg-emerald-400/[0.04]' : 'border-line-strong bg-surface/80')}>
+    <div className={cn('flex min-w-0 flex-1 flex-col justify-center rounded-[calc(40px*var(--round,1))] border px-7 py-5', tone === 'good' ? 'border-emerald-400/30 bg-emerald-400/[0.04]' : 'border-line-strong bg-surface/80')}>
       <p className="font-mono text-xs text-mute">{label}</p>
       <p className="mt-1 font-display text-5xl leading-none md:text-6xl">{value}</p>
       {note && <p className="mt-2 text-xs text-mute">{note}</p>}

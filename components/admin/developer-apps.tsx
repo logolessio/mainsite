@@ -10,15 +10,15 @@ export function DeveloperApps({ apps }: { apps: A[] }) {
   return (
     <ul className="grid max-w-4xl gap-3">
       {apps.map((a) => (
-        <li key={a.id} className="grid gap-3 rounded-[1.6rem] border border-line bg-white/[0.02] p-5">
+        <li key={a.id} className="grid gap-3 rounded-[calc(1.6rem*var(--round,1))] border border-line bg-white/[0.02] p-5">
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-lg">{a.name}</p>
             {a.verified && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-line-strong px-2.5 py-0.5 text-[11px]">
+              <span className="inline-flex items-center gap-1 rounded-pill border border-line-strong px-2.5 py-0.5 text-[11px]">
                 <BadgeCheck className="size-3.5" /> Checked
               </span>
             )}
-            {a.suspended && <span className="rounded-full border border-signal/50 px-2.5 py-0.5 text-[11px] text-signal">Switched off</span>}
+            {a.suspended && <span className="rounded-pill border border-signal/50 px-2.5 py-0.5 text-[11px] text-signal">Switched off</span>}
             <span className="text-xs text-mute">{a.type === 'confidential' ? 'Server app' : 'Browser or phone app'}</span>
           </div>
           <p className="text-xs text-mute">

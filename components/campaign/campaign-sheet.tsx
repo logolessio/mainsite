@@ -9,6 +9,7 @@ import { FadeImg } from '@/components/ui/fade-img'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 import { type Campaign, usd } from '@/lib/campaigns'
 import { SITE } from '@/lib/site'
+import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { PreviewPlayer } from './preview-player'
 import { SubmitFlow } from './submit-flow'
@@ -31,14 +32,14 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
   const root = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
 
-  // s submits, f favourites and p plays: the keys for the three things you do on a campaign
+  // s submits, f favourites, p plays and c copies the link: the keys for what you do on a campaign
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return
       const t = e.target as HTMLElement | null
       if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return
       const k = e.key.toLowerCase()
-      if (k !== 's' && k !== 'f' && k !== 'p') return
+      if (k !== 's' && k !== 'f' && k !== 'p' && k !== 'c') return
       const el = root.current?.querySelector<HTMLElement>(`[data-key="${k}"]`)
       if (el && !(el as HTMLButtonElement).disabled) {
         e.preventDefault()
@@ -68,6 +69,16 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
     }
   }, [inline])
 
+  const copyLink = async () => {
+    const url = `${window.location.origin}/campaign/${campaign.id}`
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.ok('Campaign link copied')
+    } catch {
+      toast.error('Could not copy. The address is on the campaign page.')
+    }
+  }
+
   const heading = (
     <div className="min-w-0">
       <p className="text-sm text-white/50">{campaign.type}</p>
@@ -76,7 +87,7 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
     </div>
   )
   const cover = (
-    <div className="aspect-square overflow-hidden rounded-[1.75rem] bg-white/10 max-md:size-24 max-md:shrink-0 max-md:rounded-3xl">
+    <div className="aspect-square overflow-hidden rounded-[calc(1.75rem*var(--round,1))] bg-white/10 max-md:size-24 max-md:shrink-0 max-md:rounded-3xl">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <FadeImg src={campaign.cover} alt={`Cover of ${campaign.title} by ${campaign.creator}`} className="size-full scale-[1.07] object-cover" />
     </div>
@@ -111,7 +122,7 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
       </dl>
       {(campaign.capPerPost || campaign.capPerUser) && (
         <p className="-mt-1 text-center text-[12.5px] text-white/50">
-          Up to {[campaign.capPerPost ? `${usd(campaign.capPerPost)} per clip` : '', campaign.capPerUser ? `${usd(campaign.capPerUser)} per clipper` : ''].filter(Boolean).join(' · ')}
+          Up to {[campaign.capPerPost ? `${usd(campaign.capPerPost)} per submission` : '', campaign.capPerUser ? `${usd(campaign.capPerUser)} per creator` : ''].filter(Boolean).join(' · ')}
         </p>
       )}
 
@@ -132,7 +143,7 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
       </section>
 
       <div className="grid gap-4 sm:grid-cols-2 sm:gap-6">
-        {list('Clip this', campaign.clipThis)}
+        {list('Create this', campaign.clipThis)}
         {list('Not allowed', campaign.offLimits)}
       </div>
 
@@ -145,14 +156,18 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
         <Link href={`/report?about=campaign&ref=${encodeURIComponent(`${campaign.title} by ${campaign.creator}`)}`} onClick={onClose} className="text-white/80 underline underline-offset-4">
           Report
         </Link>
+        {' · '}
+        <button type="button" onClick={copyLink} data-key="c" data-key-label="Copy the campaign link" aria-keyshortcuts="c" className="text-white/80 underline underline-offset-4">
+          Copy link
+        </button>
       </p>
     </div>
   )
 
   return (
-    <div ref={root} data-kb-keys style={scale < 1 ? { transform: `scale(${scale})` } : undefined} className={cn('island relative w-full max-w-[1000px] rounded-[2.5rem] bg-[#0b0b0d] p-5 text-white md:p-8', inline && 'mx-auto')}>
+    <div ref={root} data-kb-keys style={scale < 1 ? { transform: `scale(${scale})` } : undefined} className={cn('island relative w-full max-w-[1000px] rounded-[calc(2.5rem*var(--round,1))] bg-[#0b0b0d] p-5 text-white md:p-8', inline && 'mx-auto')}>
       {view === 'details' && onClose && (
-        <button type="button" aria-label="Close" onClick={onClose} className="absolute top-4 right-4 z-10 grid size-10 place-items-center rounded-full text-white/60 transition-colors hover:bg-white/10 hover:text-white md:top-6 md:right-6">
+        <button type="button" aria-label="Close" onClick={onClose} className="absolute top-4 right-4 z-10 grid size-10 place-items-center rounded-pill text-white/60 transition-colors hover:bg-white/10 hover:text-white md:top-6 md:right-6">
           <X className="size-5" />
         </button>
       )}
@@ -179,11 +194,11 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
       {view === 'details' && (
         <div className="mt-5">
           {signedIn ? (
-            <button type="button" onClick={() => setView('submit')} data-key="s" data-key-label="Submit content" aria-keyshortcuts="s" className="h-14 w-full rounded-full bg-white text-[16px] font-medium text-black transition-colors hover:bg-white/85">
+            <button type="button" onClick={() => setView('submit')} data-key="s" data-key-label="Submit content" aria-keyshortcuts="s" className="h-14 w-full rounded-pill bg-white text-[16px] font-medium text-black transition-colors hover:bg-white/85">
               Submit content
             </button>
           ) : (
-            <Link href="/login" data-key="s" data-key-label="Log in to submit" aria-keyshortcuts="s" className="inline-flex h-14 w-full items-center justify-center rounded-full bg-white text-[16px] font-medium text-black transition-colors hover:bg-white/85">
+            <Link href="/login" data-key="s" data-key-label="Log in to submit" aria-keyshortcuts="s" className="inline-flex h-14 w-full items-center justify-center rounded-pill bg-white text-[16px] font-medium text-black transition-colors hover:bg-white/85">
               Log in to submit content
             </Link>
           )}

@@ -79,7 +79,7 @@ export function BigArea({ label, hint, className, ...p }: { label: string; hint?
 
 export function Chip({ on, onClick, children, disabled }: { on: boolean; onClick: () => void; children: React.ReactNode; disabled?: boolean }) {
   return (
-    <button type="button" aria-pressed={on} disabled={disabled} onClick={onClick} className={cn('inline-flex h-12 items-center gap-2 rounded-full border px-5 text-[15px] transition-all duration-200 active:scale-95 disabled:opacity-40', on ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:border-paper/50 hover:text-paper')}>
+    <button type="button" aria-pressed={on} disabled={disabled} onClick={onClick} className={cn('inline-flex h-12 items-center gap-2 rounded-pill border px-5 text-[15px] transition-all duration-200 active:scale-95 disabled:opacity-40', on ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:border-paper/50 hover:text-paper')}>
       {on && <Check className="size-4" />}
       {children}
     </button>
@@ -100,13 +100,13 @@ export function UploadTile({ label, hint, preview, round, busy, onFile, error }:
           const f = e.dataTransfer.files?.[0]
           if (f) onFile(f)
         }}
-        className={cn('group relative grid cursor-pointer place-items-center overflow-hidden border border-dashed border-line-strong bg-white/[0.03] transition-colors hover:border-paper/60 hover:bg-white/[0.06]', round ? 'size-44 rounded-full' : 'size-44 rounded-[2rem] sm:size-56')}
+        className={cn('group relative grid cursor-pointer place-items-center overflow-hidden border border-dashed border-line-strong bg-white/[0.03] transition-colors hover:border-paper/60 hover:bg-white/[0.06]', round ? 'size-44 rounded-pill' : 'size-44 rounded-[calc(2rem*var(--round,1))] sm:size-56')}
       >
         {preview && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={preview} alt="" className="absolute inset-0 size-full object-cover" />
         )}
-        <span className={cn('relative z-10 flex flex-col items-center gap-2 px-4 text-center text-sm', preview ? 'rounded-full bg-black/60 px-4 py-2 opacity-0 backdrop-blur transition-opacity group-hover:opacity-100' : 'text-mute')}>
+        <span className={cn('relative z-10 flex flex-col items-center gap-2 px-4 text-center text-sm', preview ? 'rounded-pill bg-black/60 px-4 py-2 opacity-0 backdrop-blur transition-opacity group-hover:opacity-100' : 'text-mute')}>
           {busy ? <Loader2 className="size-6 animate-spin" /> : <ImagePlus className="size-6" />}
           {busy ? 'Uploading…' : preview ? 'Change' : hint}
         </span>

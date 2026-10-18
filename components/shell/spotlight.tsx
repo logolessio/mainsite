@@ -102,18 +102,18 @@ export function Spotlight() {
   let lastGroup = ''
   return (
     <>
-      {showPill && <button type="button" onClick={() => setOpen(true)} aria-label="Search" className={cn('glass-liquid fixed z-[55] hidden h-11 items-center gap-3 rounded-full pr-2 pl-4 text-sm text-mute backdrop-blur-xl transition-colors hover:text-paper lg:flex', admin ? 'bottom-3.5 left-28' : 'bottom-5 left-5')}>
+      {showPill && <button type="button" onClick={() => setOpen(true)} aria-label="Search" className={cn('glass-liquid fixed z-[55] hidden h-11 items-center gap-3 rounded-pill pr-2 pl-4 text-sm text-mute backdrop-blur-xl transition-colors hover:text-paper lg:flex', admin ? 'bottom-3.5 left-28' : 'bottom-5 left-5')}>
           <Search className="size-4" /> Search
-          <kbd className="rounded-full bg-white/[0.08] px-2.5 py-1 font-mono text-[11px]">⌘K</kbd>
+          <kbd className="rounded-pill bg-white/[0.08] px-2.5 py-1 font-mono text-[11px]">⌘K</kbd>
         </button>}
       <AnimatePresence>
         {open && (
           <motion.div key="s" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="fixed inset-0 z-[130] flex items-start justify-center bg-black/65 px-4 pt-[14vh] backdrop-blur-sm" onMouseDown={() => setOpen(false)}>
-            <motion.div ref={box} role="dialog" aria-modal="true" aria-label="Search" initial={{ opacity: 0, y: -16, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }} transition={{ duration: 0.25, ease: EASE_OUT }} onMouseDown={(e) => e.stopPropagation()} onKeyDown={onKey} className="w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/15 bg-[#0c0c0f]/95 shadow-[0_50px_110px_-30px_rgb(0_0_0/0.95)] backdrop-blur-xl">
+            <motion.div ref={box} role="dialog" aria-modal="true" aria-label="Search" initial={{ opacity: 0, y: -16, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }} transition={{ duration: 0.25, ease: EASE_OUT }} onMouseDown={(e) => e.stopPropagation()} onKeyDown={onKey} className="w-full max-w-xl overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-white/15 bg-[#0c0c0f]/95 shadow-[0_50px_110px_-30px_rgb(0_0_0/0.95)] backdrop-blur-xl">
               <div className="flex items-center gap-3 border-b border-line px-5">
                 <Search aria-hidden="true" className="size-5 text-mute" />
                 <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search campaigns, artists and pages" aria-label="Search" className="h-16 flex-1 bg-transparent text-lg outline-none placeholder:text-mute" />
-                <button type="button" aria-label="Close" onClick={() => setOpen(false)} className="grid size-8 place-items-center rounded-full text-mute hover:bg-white/10"><X className="size-4" /></button>
+                <button type="button" aria-label="Close" onClick={() => setOpen(false)} className="grid size-8 place-items-center rounded-pill text-mute hover:bg-white/10"><X className="size-4" /></button>
               </div>
               <ul role="listbox" className="max-h-[52vh] overflow-y-auto p-2">
                 {camps === null && <li className="px-4 py-8 text-center text-sm text-mute">Loading…</li>}

@@ -15,7 +15,7 @@ export const metadata: Metadata = { title: 'Sign in with logoless', robots: { in
 
 const Problem = ({ text }: { text: string }) => (
   <main className={`${CONTAINER} grid min-h-dvh place-items-center py-24`}>
-    <div className="max-w-md rounded-[2rem] border border-line-strong p-8 text-center">
+    <div className="max-w-md rounded-[calc(2rem*var(--round,1))] border border-line-strong p-8 text-center">
       <h1 className="font-display text-3xl tracking-[-0.03em]">We could not continue</h1>
       <p className="mt-3 text-mute">{text}</p>
       <p className="mt-5 text-sm text-mute">Nothing was shared. Go back to the app and try again.</p>

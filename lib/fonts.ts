@@ -9,12 +9,13 @@ export type FontDef = {
   note: string
   /** The CSS variable holding this font's family (set by next/font in app/layout.tsx). */
   body: string
-  /** The headline face. Most fonts use the same one; the standard look pairs Inter with Inter Tight for headlines. */
+  /** The headline face. Most fonts use the same one; the standard look pairs Inter with Gloock for headlines and titles. */
   display: string
 }
 
 export const FONTS: FontDef[] = [
-  { id: 'inter', label: 'Inter', kind: 'sans', note: 'The standard look', body: '--font-f-inter', display: '--font-f-inter-tight' },
+  { id: 'inter', label: 'Inter with Gloock headlines', kind: 'sans', note: 'The standard look: Gloock for headers and titles, Inter for everything else', body: '--font-f-inter', display: '--font-f-gloock' },
+  { id: 'inter-tight', label: 'Inter Tight headlines', kind: 'sans', note: 'The earlier look: Inter Tight for headlines, Inter for the rest', body: '--font-f-inter', display: '--font-f-inter-tight' },
   { id: 'bricolage', label: 'Bricolage Grotesque', kind: 'sans', note: 'Characterful and editorial', body: '--font-f-bricolage', display: '--font-f-bricolage' },
   { id: 'funnel', label: 'Funnel', kind: 'sans', note: 'Sleek and sharp', body: '--font-f-funnel-sans', display: '--font-f-funnel-display' },
   { id: 'hanken', label: 'Hanken Grotesk', kind: 'sans', note: 'Quiet and precise', body: '--font-f-hanken', display: '--font-f-hanken' },

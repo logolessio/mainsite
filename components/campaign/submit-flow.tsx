@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, Check, Loader2, X } from 'lucide-react'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { PLATFORM_LABEL } from '@/components/brand-icon'
+import { BrandIcon, PLATFORM_LABEL } from '@/components/brand-icon'
 import { useNavUser } from '@/components/shell/nav-user'
 import { type Campaign, type Platform, usd } from '@/lib/campaigns'
 import { EASE_OUT } from '@/lib/layout'
@@ -116,12 +116,12 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
       if (res.status === 401) {
         setStep('preview')
         setPhase(0)
-        return setError('Log in to submit a clip.')
+        return setError('Log in to submit content.')
       }
       if (!res.ok || !j.status) {
         setStep('preview')
         setPhase(0)
-        return setError(j.error ?? 'Could not submit that clip.')
+        return setError(j.error ?? 'Could not submit that content.')
       }
       setResult(j as Result)
       setPhase(2)
@@ -161,11 +161,11 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
         )}
         <div className="flex gap-1.5" aria-hidden="true">
           {STEPS.map((s, i) => (
-            <span key={s} className={cn('h-1 w-8 rounded-full transition-colors', i <= idx ? 'bg-white' : 'bg-white/20')} />
+            <span key={s} className={cn('h-1 w-8 rounded-pill transition-colors', i <= idx ? 'bg-white' : 'bg-white/20')} />
           ))}
         </div>
         {onClose ? (
-          <button type="button" aria-label="Close" onClick={onClose} className="grid size-9 place-items-center rounded-full text-white/60 hover:bg-white/10 hover:text-white">
+          <button type="button" aria-label="Close" onClick={onClose} className="grid size-9 place-items-center rounded-pill text-white/60 hover:bg-white/10 hover:text-white">
             <X className="size-4" />
           </button>
         ) : (
@@ -180,10 +180,10 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
               <h2 className="font-display text-3xl md:text-4xl">Make a free account first</h2>
               <p className="mt-3 max-w-sm text-white/55">It takes a minute, and you come straight back here to paste your link.</p>
               <div className="mt-8 grid w-full max-w-sm gap-3">
-                <Link href={`/onboarding?role=clipper`} className="inline-flex h-14 items-center justify-center rounded-full bg-white text-[16px] font-medium text-black transition-colors hover:bg-white/85">
+                <Link href={`/onboarding?role=clipper`} className="inline-flex h-14 items-center justify-center rounded-pill bg-white text-[16px] font-medium text-black transition-colors hover:bg-white/85">
                   Get started
                 </Link>
-                <Link href={`/login?next=${encodeURIComponent(`/campaign/${campaign.id}`)}`} className="inline-flex h-14 items-center justify-center rounded-full border border-white/25 text-[16px] transition-colors hover:bg-white/10">
+                <Link href={`/login?next=${encodeURIComponent(`/campaign/${campaign.id}`)}`} className="inline-flex h-14 items-center justify-center rounded-pill border border-white/25 text-[16px] transition-colors hover:bg-white/10">
                   I already have an account
                 </Link>
               </div>
@@ -231,13 +231,13 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
                   autoCorrect="off"
                   spellCheck={false}
                   autoComplete="off"
-                  className="h-14 w-full rounded-full border border-white/25 bg-transparent px-6 text-center text-[16px] outline-none placeholder:text-white/35 focus:border-white" />
+                  className="h-14 w-full rounded-pill border border-white/25 bg-transparent px-6 text-center text-[16px] outline-none placeholder:text-white/35 focus:border-white" />
                 {error && (
                   <p role="alert" className="mt-3 text-sm text-red-400">
                     {error}
                   </p>
                 )}
-                <button type="submit" disabled={!url.trim()} className="mt-5 h-14 w-full rounded-full bg-white text-[16px] font-medium text-black transition-colors hover:bg-white/85 disabled:opacity-40">
+                <button type="submit" disabled={!url.trim()} className="mt-5 h-14 w-full rounded-pill bg-white text-[16px] font-medium text-black transition-colors hover:bg-white/85 disabled:opacity-40">
                   Preview it
                 </button>
               </form>
@@ -256,12 +256,12 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
                   )}
                 </div>
                 <div className="grid content-start gap-3 text-[15px]">
-                  {[
+                  {([
                     ['Campaign', campaign.title],
                     ['Artist', campaign.creator],
-                    ['Platform', PLATFORM_LABEL[platform]],
+                    ['Platform', <span key="platform" className="inline-flex items-center gap-2"><BrandIcon name={platform} className="size-4" />{PLATFORM_LABEL[platform]}</span>],
                     ['Rate', `${usd(campaign.ratePer1k, 2)} per 1,000 views`],
-                  ].map(([k, v]) => (
+                  ] as [string, React.ReactNode][]).map(([k, v]) => (
                     <div key={k} className="flex justify-between gap-4 border-b border-white/10 pb-2.5">
                       <span className="text-white/50">{k}</span>
                       <span className="text-right">{v}</span>
@@ -282,7 +282,7 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
                   )}
                 </p>
               )}
-              <button type="button" onClick={submit} disabled={busy} className="mt-7 h-14 w-full max-w-sm rounded-full bg-white text-[16px] font-medium text-black transition-colors hover:bg-white/85 disabled:opacity-50">
+              <button type="button" onClick={submit} disabled={busy} className="mt-7 h-14 w-full max-w-sm rounded-pill bg-white text-[16px] font-medium text-black transition-colors hover:bg-white/85 disabled:opacity-50">
                 Submit
               </button>
             </>
@@ -290,7 +290,7 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
 
           {step === 'checking' && (
             <>
-              <h2 className="font-display text-3xl md:text-4xl">{phase < 2 ? 'Checking your clip' : result?.status === 'approved' ? 'Success' : result?.status === 'declined' ? 'We couldn’t approve it' : 'Waiting for a person'}</h2>
+              <h2 className="font-display text-3xl md:text-4xl">{phase < 2 ? 'Checking your submission' : result?.status === 'approved' ? 'Success' : result?.status === 'declined' ? 'We couldn’t approve it' : 'Waiting for a person'}</h2>
               <ol className="relative mt-8 flex w-full max-w-sm items-start justify-between" aria-label="Progress">
                 <span aria-hidden="true" className="absolute top-[15px] right-4 left-4 border-t-2 border-dashed border-white/25" />
                 <motion.span aria-hidden="true" className="absolute top-[15px] left-4 border-t-2 border-dashed border-white" initial={{ width: '0%' }} animate={{ width: phase === 0 ? '0%' : phase === 1 ? 'calc(50% - 1rem)' : 'calc(100% - 2rem)' }} transition={{ duration: 0.8, ease: EASE_OUT }} />
@@ -300,7 +300,7 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
                   { label: phase === 2 ? (result?.status === 'approved' ? 'Approved' : result?.status === 'declined' ? 'Declined' : 'Human review') : 'Status', done: phase === 2 },
                 ].map((n, i) => (
                   <li key={i} className="relative flex w-24 flex-col items-center gap-3 text-[13px]">
-                    <span className={cn('grid size-8 place-items-center rounded-full border-2 bg-[#0b0b0d] transition-colors', n.done ? (i === 2 && result?.status === 'declined' ? 'border-red-400 text-red-400' : 'border-white bg-white text-black') : 'border-white/30')}>
+                    <span className={cn('grid size-8 place-items-center rounded-pill border-2 bg-[#0b0b0d] transition-colors', n.done ? (i === 2 && result?.status === 'declined' ? 'border-red-400 text-red-400' : 'border-white bg-white text-black') : 'border-white/30')}>
                       {n.working ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : n.done ? (i === 2 && result?.status === 'declined' ? <X className="size-4" aria-hidden="true" /> : <Check className="size-4" aria-hidden="true" />) : null}
                     </span>
                     <span className={cn(n.done || n.working ? 'text-white' : 'text-white/45')}>{n.label}</span>
@@ -313,7 +313,7 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
                   <ul className="grid gap-2 text-left text-[14px]">
                     {result.checks.map((c) => (
                       <li key={c.id} className="flex items-start gap-3">
-                        <span className={cn('mt-1.5 size-2 shrink-0 rounded-full', c.state === 'pass' ? 'bg-emerald-400' : c.state === 'fail' ? 'bg-red-400' : 'bg-white/35')} aria-hidden="true" />
+                        <span className={cn('mt-1.5 size-2 shrink-0 rounded-pill', c.state === 'pass' ? 'bg-emerald-400' : c.state === 'fail' ? 'bg-red-400' : 'bg-white/35')} aria-hidden="true" />
                         <span>
                           {c.label}
                           {c.note && <span className="block text-white/45">{c.note}</span>}
@@ -322,12 +322,12 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
                     ))}
                   </ul>
                   <p className="mt-4 text-[14px] leading-relaxed text-white/70">
-                    {result.status === 'approved' && 'Your clip is approved. Its views are checked while the campaign runs, and you are paid for the verified ones. You can follow it in your dashboard.'}
-                    {result.status === 'review' && 'Your clip is pending. A person on our team will look at it soon. You can see where it is in your dashboard.'}
+                    {result.status === 'approved' && 'Your submission is approved. Its views are checked while the campaign runs, and you are paid for the verified ones. You can follow it in your dashboard.'}
+                    {result.status === 'review' && 'Your submission is pending. A person on our team will look at it soon. You can see where it is in your dashboard.'}
                     {result.status === 'declined' && (result.reason ?? 'The link did not lead to a video.')}
                   </p>
                   <div className="mt-4 grid gap-2.5">
-                    <Link href="/dashboard/submissions" className="inline-flex h-12 items-center justify-center rounded-full bg-white text-[15px] font-medium text-black hover:bg-white/85">
+                    <Link href="/dashboard/submissions" className="inline-flex h-12 items-center justify-center rounded-pill bg-white text-[15px] font-medium text-black hover:bg-white/85">
                       See it in Submissions
                     </Link>
                     {result.status !== 'declined' && (
@@ -341,7 +341,7 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
                           setPhase(0)
                           setStep('link')
                         }}
-                        className="h-12 rounded-full border border-white/25 text-[15px] hover:bg-white/10"
+                        className="h-12 rounded-pill border border-white/25 text-[15px] hover:bg-white/10"
                       >
                         Submit another to this campaign
                       </button>
@@ -356,13 +356,13 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
                           setPhase(0)
                           setStep('link')
                         }}
-                        className="h-12 rounded-full border border-white/25 text-[15px] hover:bg-white/10"
+                        className="h-12 rounded-pill border border-white/25 text-[15px] hover:bg-white/10"
                       >
                         Try a different link
                       </button>
                     )}
                     {result.status === 'declined' && asked !== 'done' && (
-                      <button type="button" onClick={askForReview} disabled={asked === 'busy'} className="h-12 rounded-full border border-white/25 text-[15px] hover:bg-white/10 disabled:opacity-50">
+                      <button type="button" onClick={askForReview} disabled={asked === 'busy'} className="h-12 rounded-pill border border-white/25 text-[15px] hover:bg-white/10 disabled:opacity-50">
                         {asked === 'busy' ? 'Sending…' : 'Ask a person to look at it'}
                       </button>
                     )}

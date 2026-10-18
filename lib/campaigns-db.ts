@@ -2,6 +2,7 @@ import type { Campaign, Platform } from './campaigns'
 import { shortDate } from './campaign-input'
 import { allCaps, getCaps } from './campaign-caps'
 import { db } from './db'
+import { pinnedIds } from './settings'
 import { isMockId, mockVisible, NOT_MOCK } from './mock-campaigns'
 
 export type CampaignRow = {
@@ -73,8 +74,9 @@ export async function liveCampaigns(): Promise<Campaign[]> {
       /* no earnings yet: every campaign shows as full */
     }
     const caps = await allCaps().catch(() => ({}) as Awaited<ReturnType<typeof allCaps>>)
+    const pinned = new Set(await pinnedIds())
     return rows.map((r) => {
-      const c = withCaps(toCampaign(r), caps[r.id])
+      const c = { ...withCaps(toCampaign(r), caps[r.id]), ...(pinned.has(r.id) ? { pinned: true } : {}) }
       const net = spent.get(r.id)
       return net === undefined || r.budget_cents <= 0 ? c : { ...c, budgetLeftPct: Math.max(0, Math.min(100, Math.round(((r.budget_cents - net) / r.budget_cents) * 100))) }
     })

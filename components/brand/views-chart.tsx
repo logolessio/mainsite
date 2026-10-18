@@ -52,9 +52,9 @@ export function ViewsChart({ series, today }: { series: Day[]; today: string }) 
             {shown ? `verified views on ${shown.d}` : 'verified views'} · ${((shown ? shown.spent : spent) / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })} spent
           </p>
         </div>
-        <div className="flex gap-1 rounded-full border border-line p-1" role="tablist" aria-label="Range">
+        <div className="flex gap-1 rounded-pill border border-line p-1" role="tablist" aria-label="Range">
           {RANGES.map((r) => (
-            <button key={r.id} type="button" role="tab" aria-selected={range === r.id} onClick={() => setRange(r.id)} className={cn('h-8 rounded-full px-3.5 text-[13px] transition-colors', range === r.id ? 'bg-paper text-ink' : 'text-mute hover:text-paper')}>
+            <button key={r.id} type="button" role="tab" aria-selected={range === r.id} onClick={() => setRange(r.id)} className={cn('h-8 rounded-pill px-3.5 text-[13px] transition-colors', range === r.id ? 'bg-paper text-ink' : 'text-mute hover:text-paper')}>
               {r.label}
             </button>
           ))}

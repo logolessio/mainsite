@@ -106,8 +106,8 @@ export function AchievementsView() {
   return (
     <div>
       {/* ---------- the overview ---------- */}
-      <motion.section initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE_OUT }} className="relative overflow-hidden rounded-[2rem] border border-line-strong bg-[#0a0a0b] p-6 md:p-8">
-        <div aria-hidden="true" className="pointer-events-none absolute -top-1/2 -right-1/4 size-[36rem] rounded-full bg-[radial-gradient(closest-side,rgb(185_166_255/0.12),transparent)]" />
+      <motion.section initial={false} className="relative overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-[#0a0a0b] p-6 md:p-8">
+        <div aria-hidden="true" className="pointer-events-none absolute -top-1/2 -right-1/4 size-[36rem] rounded-pill bg-[radial-gradient(closest-side,rgb(185_166_255/0.12),transparent)]" />
         <div className="relative grid gap-8 lg:grid-cols-[auto_1fr]">
           <div className="flex items-center gap-6">
             <Ring value={count} total={BADGES.length} />
@@ -121,7 +121,7 @@ export function AchievementsView() {
                   const got = BADGES.filter((b) => b.rarity === r && b.id in data.unlocked).length
                   return (
                     <li key={r} className="flex items-center gap-2 text-xs">
-                      <span className="size-2 rounded-full" style={{ background: RARITY_STYLE[r].glow.replace(/0\.\d+\)/, '1)') }} />
+                      <span className="size-2 rounded-pill" style={{ background: RARITY_STYLE[r].glow.replace(/0\.\d+\)/, '1)') }} />
                       <span className={cn('w-16', RARITY_STYLE[r].text)}>{RARITY_STYLE[r].label}</span>
                       <span className="font-mono text-mute tabular-nums">{got}/{total}</span>
                     </li>
@@ -166,14 +166,14 @@ export function AchievementsView() {
       {/* ---------- filters ---------- */}
       <div className="mt-8 flex flex-wrap items-center gap-2">
         {(['all', 'unlocked', 'locked'] as const).map((f) => (
-          <button key={f} type="button" onClick={() => setFilter(f)} aria-pressed={filter === f} className={cn('relative inline-flex h-9 items-center rounded-full px-4 text-sm capitalize transition-colors', filter === f ? 'text-ink' : 'text-mute hover:text-paper')}>
-            {filter === f && <motion.span layoutId="ach-filter" transition={{ type: 'spring', stiffness: 420, damping: 34 }} className="absolute inset-0 rounded-full bg-paper" />}
+          <button key={f} type="button" onClick={() => setFilter(f)} aria-pressed={filter === f} className={cn('relative inline-flex h-9 items-center rounded-pill px-4 text-sm capitalize transition-colors', filter === f ? 'text-ink' : 'text-mute hover:text-paper')}>
+            {filter === f && <motion.span layoutId="ach-filter" transition={{ type: 'spring', stiffness: 420, damping: 34 }} className="absolute inset-0 rounded-pill bg-paper" />}
             <span className="relative">{f}</span>
           </button>
         ))}
         <span className="mx-2 hidden h-5 w-px bg-line-strong sm:block" />
         {(['any', ...RARITIES] as const).map((r) => (
-          <button key={r} type="button" onClick={() => setRarity(r)} aria-pressed={rarity === r} className={cn('inline-flex h-9 items-center rounded-full border px-3.5 text-xs transition-colors', rarity === r ? 'border-paper bg-paper/10 text-paper' : 'border-line-strong text-mute hover:text-paper')}>
+          <button key={r} type="button" onClick={() => setRarity(r)} aria-pressed={rarity === r} className={cn('inline-flex h-9 items-center rounded-pill border px-3.5 text-xs transition-colors', rarity === r ? 'border-paper bg-paper/10 text-paper' : 'border-line-strong text-mute hover:text-paper')}>
             {r === 'any' ? 'Every rarity' : RARITY_STYLE[r].label}
           </button>
         ))}
@@ -187,12 +187,12 @@ export function AchievementsView() {
             const on = data.equipped.includes(b.id)
             const R = RARITY_STYLE[b.rarity]
             return (
-              <motion.li key={b.id} layout initial={{ opacity: 0, y: 18, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.94 }} transition={{ delay: Math.min(i * 0.03, 0.4), duration: 0.5, ease: EASE_OUT }}>
-                <Tilt3D max={7} glare={false} className="rounded-[1.75rem]">
+              <motion.li key={b.id} layout initial={false} exit={{ opacity: 0, scale: 0.94 }} transition={{ delay: Math.min(i * 0.03, 0.4), duration: 0.5, ease: EASE_OUT }}>
+                <Tilt3D max={7} glare={false} className="rounded-[calc(1.75rem*var(--round,1))]">
                   <button
                     type="button"
                     onClick={() => setOpen(b)}
-                    className={cn('group relative flex w-full flex-col items-center overflow-hidden rounded-[1.75rem] border bg-[#0b0b0d] px-3 pt-6 pb-4 text-center transition-colors', got ? R.ring : 'border-line', on && 'ring-1 ring-paper/70')}
+                    className={cn('group relative flex w-full flex-col items-center overflow-hidden rounded-[calc(1.75rem*var(--round,1))] border bg-[#0b0b0d] px-3 pt-6 pb-4 text-center transition-colors', got ? R.ring : 'border-line', on && 'ring-1 ring-paper/70')}
                   >
                     {got && <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-2/3" style={{ background: `radial-gradient(70% 70% at 50% 28%, ${R.glow}, transparent)` }} />}
                     <span className="relative">
@@ -201,7 +201,7 @@ export function AchievementsView() {
                     <span className="relative mt-3 text-[15px] leading-tight font-medium">{b.name}</span>
                     <span className={cn('relative mt-1 text-[10px]', got ? R.text : 'text-mute')}>{R.label}</span>
                     <span className="relative mt-2 line-clamp-2 min-h-8 text-xs leading-snug text-mute">{b.how}</span>
-                    <span className={cn('relative mt-3 inline-flex h-7 items-center gap-1 rounded-full px-3 text-[11px]', on ? 'bg-paper text-ink' : got ? 'bg-white/[0.07] text-paper' : 'bg-transparent text-mute')}>
+                    <span className={cn('relative mt-3 inline-flex h-7 items-center gap-1 rounded-pill px-3 text-[11px]', on ? 'bg-paper text-ink' : got ? 'bg-white/[0.07] text-paper' : 'bg-transparent text-mute')}>
                       {on ? <><Check className="size-3" /> On your profile</> : got ? 'Unlocked' : `${b.points} points`}
                     </span>
                   </button>
@@ -231,10 +231,10 @@ export function AchievementsView() {
                   animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: EASE_OUT } }}
                   exit={{ opacity: 0, y: 12, scale: 0.97, transition: { duration: 0.18 } }}
                   onClick={(e) => e.stopPropagation()}
-                  className="relative w-full max-w-sm overflow-hidden rounded-[2rem] border border-line-strong bg-[#0b0b0d] p-6 text-center"
+                  className="relative w-full max-w-sm overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-[#0b0b0d] p-6 text-center"
                 >
                   <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-72" style={{ background: `radial-gradient(60% 60% at 50% 38%, ${R.glow}, transparent)` }} />
-                  <button type="button" aria-label="Close" onClick={() => setOpen(null)} className="absolute top-4 right-4 z-10 grid size-9 place-items-center rounded-full hover:bg-white/10">
+                  <button type="button" aria-label="Close" onClick={() => setOpen(null)} className="absolute top-4 right-4 z-10 grid size-9 place-items-center rounded-pill hover:bg-white/10">
                     <X className="size-4" />
                   </button>
                   <Tilt3D max={12} glare={false} className="relative mx-auto w-fit">
@@ -245,7 +245,7 @@ export function AchievementsView() {
                   <p className="relative mx-auto mt-2 max-w-[18rem] text-sm leading-relaxed text-mute">{b.how}</p>
                   <p className="relative mt-3 text-xs text-mute">{got ? `Unlocked ${when(data.unlocked[b.id])}` : 'Not unlocked yet'}</p>
                   {got ? (
-                    <button type="button" disabled={saving} onClick={() => toggle(b)} className={cn('relative mt-5 inline-flex h-11 items-center gap-2 rounded-full px-6 text-sm font-medium transition-colors disabled:opacity-50', on ? 'border border-line-strong hover:bg-white/10' : 'bg-paper text-ink hover:bg-paper/85')}>
+                    <button type="button" disabled={saving} onClick={() => toggle(b)} className={cn('relative mt-5 inline-flex h-11 items-center gap-2 rounded-pill px-6 text-sm font-medium transition-colors disabled:opacity-50', on ? 'border border-line-strong hover:bg-white/10' : 'bg-paper text-ink hover:bg-paper/85')}>
                       {saving && <Loader2 className="size-4 animate-spin" />}
                       {on ? 'Remove from my profile' : 'Show on my profile'}
                     </button>

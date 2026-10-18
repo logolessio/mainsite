@@ -32,7 +32,7 @@ export default async function Page() {
 
   return (
     <>
-      <PageHeader title={`Welcome back, ${first}`} sub="Your balance, your clips and anything that needs doing." />
+      <PageHeader title={`Welcome back, ${first}`} sub="Your balance, your submissions and anything that needs doing." />
 
       <SetupBanner steps={steps} guide="/dashboard/setup" />
 
@@ -43,7 +43,7 @@ export default async function Page() {
           <p className="mt-6 font-display text-6xl leading-none tracking-[-0.045em] tabular-nums md:text-[4.5rem]">
             <CountUp value={usd(b.available)} />
           </p>
-          <p className="mt-5 text-[15px] text-paper/50">{b.available > 0 ? 'Ready when you are.' : 'Earnings land here once your clips are approved.'}</p>
+          <p className="mt-5 text-[15px] text-paper/50">{b.available > 0 ? 'Ready when you are.' : 'Earnings land here once your submissions are approved.'}</p>
           {b.pending > 0 && <p className="mt-1 text-[15px] text-paper/50">{usd(b.pending)} more is still being confirmed.</p>}
           <div className="mt-6 flex flex-wrap gap-2">
             <ActionLink href="/dashboard/earnings#withdraw">Withdraw</ActionLink>
@@ -54,7 +54,7 @@ export default async function Page() {
         </div>
         {[
           { label: 'Total earned', value: usd(b.earned), note: 'Everything you have earned so far' },
-          { label: 'Verified views', value: (views?.v ?? 0).toLocaleString(), note: `${clips} ${clips === 1 ? 'clip' : 'clips'} submitted` },
+          { label: 'Verified views', value: (views?.v ?? 0).toLocaleString(), note: `${clips} ${clips === 1 ? 'submission' : 'submissions'}` },
         ].map((f) => (
           <div key={f.label} className="border-t border-line pt-5">
             <p className="text-[15px] text-paper/50">{f.label}</p>
@@ -68,15 +68,15 @@ export default async function Page() {
 
       <EarnGoal />
 
-        <section aria-label="Recent clips" className="mt-16">
+        <section aria-label="Recent submissions" className="mt-16">
           <div className="flex items-end justify-between border-b border-line pb-4">
-            <h2 className="font-display text-3xl tracking-[-0.03em]">Recent clips</h2>
+            <h2 className="font-display text-3xl tracking-[-0.03em]">Recent submissions</h2>
             <TransitionLink href="/dashboard/submissions" className="text-[15px] text-paper/60 underline underline-offset-4 transition-colors hover:text-paper">
               View all
             </TransitionLink>
           </div>
           {recent.results.length === 0 ? (
-            <EmptyState icon="Clapperboard" title="No clips yet" body="Join a campaign, post your clip and submit the link. It will show up here." action={<ActionLink href="/">Browse campaigns</ActionLink>} />
+            <EmptyState icon="Clapperboard" title="No submissions yet" body="Join a campaign, post your content and submit the link. It will show up here." action={<ActionLink href="/">Browse campaigns</ActionLink>} />
           ) : (
             <ul>
               {recent.results.map((r) => (

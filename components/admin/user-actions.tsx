@@ -17,7 +17,7 @@ async function post(id: string, data: object) {
 
 const input = 'h-11 w-full rounded-2xl border border-line-strong bg-ink/80 px-4 text-sm outline-none focus:border-paper'
 const label = 'mb-1.5 block text-xs text-mute'
-const btn = 'inline-flex h-10 items-center justify-center gap-2 rounded-full bg-paper px-5 text-sm font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40'
+const btn = 'inline-flex h-10 items-center justify-center gap-2 rounded-pill bg-paper px-5 text-sm font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40'
 
 function useAction(id: string) {
   const router = useRouter()
@@ -147,13 +147,13 @@ export function Recognise({ id, verified }: { id: string; verified: boolean }) {
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-sm text-mute">{verified ? 'Verified.' : 'Not verified yet.'}</span>
         {!verified && (
-          <button type="button" disabled={busy} className="inline-flex h-9 items-center rounded-full border border-line-strong px-4 text-xs hover:bg-paper/10 disabled:opacity-40" onClick={() => run({ action: 'verify' }, () => 'Marked as verified.')}>
+          <button type="button" disabled={busy} className="inline-flex h-9 items-center rounded-pill border border-line-strong px-4 text-xs hover:bg-paper/10 disabled:opacity-40" onClick={() => run({ action: 'verify' }, () => 'Marked as verified.')}>
             Mark as verified
           </button>
         )}
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <select aria-label="Badge" className="h-10 rounded-full border border-line-strong bg-ink/80 px-4 text-sm" value={badge} onChange={(e) => setBadge(e.target.value)}>
+        <select aria-label="Badge" className="h-10 rounded-pill border border-line-strong bg-ink/80 px-4 text-sm" value={badge} onChange={(e) => setBadge(e.target.value)}>
           {BADGES.map((b) => (
             <option key={b.id} value={b.id}>
               {b.name} ({b.rarity})
@@ -163,7 +163,7 @@ export function Recognise({ id, verified }: { id: string; verified: boolean }) {
         <button type="button" disabled={busy} className={btn} onClick={() => run({ action: 'badge', badge, on: true }, () => 'Badge given.')}>
           Give
         </button>
-        <button type="button" disabled={busy} className="inline-flex h-10 items-center rounded-full border border-line-strong px-5 text-sm hover:bg-paper/10 disabled:opacity-40" onClick={() => run({ action: 'badge', badge, on: false }, () => 'Badge taken away.')}>
+        <button type="button" disabled={busy} className="inline-flex h-10 items-center rounded-pill border border-line-strong px-5 text-sm hover:bg-paper/10 disabled:opacity-40" onClick={() => run({ action: 'badge', badge, on: false }, () => 'Badge taken away.')}>
           Take away
         </button>
       </div>

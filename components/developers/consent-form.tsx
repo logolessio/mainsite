@@ -42,7 +42,7 @@ export function ConsentForm({ app, person, scope, already, params, retry }: Cons
   }
 
   return (
-    <div className="mx-auto w-full max-w-md rounded-[2rem] border border-line-strong bg-[#0b0b0d] p-7 md:p-9">
+    <div className="mx-auto w-full max-w-md rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-[#0b0b0d] p-7 md:p-9">
       <p className="text-center text-sm text-mute">Sign in with logoless</p>
       <h1 className="mt-3 text-center font-display text-3xl leading-tight tracking-[-0.03em]">
         {app.name} <span className="text-mute">wants to know it is you</span>
@@ -95,10 +95,10 @@ export function ConsentForm({ app, person, scope, already, params, retry }: Cons
         </p>
       )}
       <div className="mt-6 grid grid-cols-2 gap-3">
-        <button type="button" disabled={Boolean(busy)} onClick={() => decide('deny')} className="inline-flex h-12 items-center justify-center rounded-full border border-line-strong text-[15px] transition-colors hover:bg-paper/10 disabled:opacity-40">
+        <button type="button" disabled={Boolean(busy)} onClick={() => decide('deny')} className="inline-flex h-12 items-center justify-center rounded-pill border border-line-strong text-[15px] transition-colors hover:bg-paper/10 disabled:opacity-40">
           Cancel
         </button>
-        <button type="button" disabled={Boolean(busy)} onClick={() => decide('allow')} className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-paper text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
+        <button type="button" disabled={Boolean(busy)} onClick={() => decide('allow')} className="inline-flex h-12 items-center justify-center gap-2 rounded-pill bg-paper text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
           {busy === 'allow' && <Loader2 className="size-4 animate-spin" />} Allow
         </button>
       </div>

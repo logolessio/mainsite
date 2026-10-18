@@ -48,7 +48,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           {prof ? (
             <ProfileCard view={prof.view} stats={{ clips: stats.clips, views: stats.views, earnedCents: stats.earnedCents, campaigns: stats.campaigns }} links={links} isOwner={false} />
           ) : (
-            <p className="w-[min(440px,calc(100vw-2rem))] rounded-[22px] border border-line p-8 text-sm text-mute">This person has not set up a profile yet.</p>
+            <p className="w-[min(440px,calc(100vw-2rem))] rounded-[calc(22px*var(--round,1))] border border-line p-8 text-sm text-mute">This person has not set up a profile yet.</p>
           )}
         </div>
         <div className="grid max-w-2xl gap-6">

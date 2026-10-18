@@ -22,19 +22,19 @@ export function ClipperCalculator() {
     <Feature id="calculators">
       <section aria-label="Earnings calculator" className="mx-auto mt-24 max-w-5xl px-5 md:mt-32">
         <Reveal y={24}>
-          <p className="text-xs text-mute">Try it</p>
-          <h2 className="mt-4 font-display text-4xl tracking-tight md:text-6xl">What could a clip earn?</h2>
+          <p className="text-xs text-mute">Try it for yourself</p>
+          <h2 className="mt-4 font-display text-4xl tracking-tight md:text-6xl">What could a submission earn?</h2>
         </Reveal>
         <Reveal y={24} delay={0.1} className="mt-8">
-          <div className="grid gap-8 rounded-[2rem] border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] p-6 md:p-10 lg:grid-cols-2">
+          <div className="grid gap-8 rounded-[calc(2rem*var(--round,1))] border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] p-6 md:p-10 lg:grid-cols-2">
             <div>
               <p className="text-[11px] text-mute">Verified views</p>
               <p className="mt-3 font-display text-6xl tabular-nums">{views.toLocaleString()}</p>
-              <input type="range" min={0} max={VIEW_STOPS.length - 1} value={vi} onChange={(e) => setVi(Number(e.target.value))} aria-label="Number of views" className="mt-6 h-2 w-full cursor-pointer appearance-none rounded-full bg-white/15 accent-white [&::-webkit-slider-thumb]:size-6 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-paper" />
+              <input type="range" min={0} max={VIEW_STOPS.length - 1} value={vi} onChange={(e) => setVi(Number(e.target.value))} aria-label="Number of views" className="mt-6 h-2 w-full cursor-pointer appearance-none rounded-pill bg-white/15 accent-white [&::-webkit-slider-thumb]:size-6 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-pill [&::-webkit-slider-thumb]:bg-paper" />
               <p className="mt-6 text-[11px] text-mute">Paid per 1,000 views</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {RATES.map((r) => (
-                  <button key={r} type="button" onClick={() => setRate(r)} aria-pressed={rate === r} className={cn('h-11 rounded-full border px-5 text-sm transition-colors', rate === r ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
+                  <button key={r} type="button" onClick={() => setRate(r)} aria-pressed={rate === r} className={cn('h-11 rounded-pill border px-5 text-sm transition-colors', rate === r ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
                     ${r}
                   </button>
                 ))}
@@ -67,19 +67,19 @@ export function BrandCalculator() {
     <Feature id="calculators">
       <section aria-label="Budget calculator" className="mx-auto mt-24 max-w-5xl px-5 md:mt-32">
         <Reveal y={24}>
-          <p className="text-xs text-mute">Try it</p>
+          <p className="text-xs text-mute">Try it for yourself</p>
           <h2 className="mt-4 font-display text-4xl tracking-tight md:text-6xl">What will my budget buy?</h2>
         </Reveal>
         <Reveal y={24} delay={0.1} className="mt-8">
-          <div className="grid gap-8 rounded-[2rem] border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] p-6 md:p-10 lg:grid-cols-2">
+          <div className="grid gap-8 rounded-[calc(2rem*var(--round,1))] border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] p-6 md:p-10 lg:grid-cols-2">
             <div>
               <p className="text-[11px] text-mute">Your budget</p>
               <p className="mt-3 font-display text-6xl tabular-nums">${budget.toLocaleString()}</p>
-              <input type="range" min={0} max={BUDGETS.length - 1} value={bi} onChange={(e) => setBi(Number(e.target.value))} aria-label="Budget" className="mt-6 h-2 w-full cursor-pointer appearance-none rounded-full bg-white/15 accent-white [&::-webkit-slider-thumb]:size-6 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-paper" />
+              <input type="range" min={0} max={BUDGETS.length - 1} value={bi} onChange={(e) => setBi(Number(e.target.value))} aria-label="Budget" className="mt-6 h-2 w-full cursor-pointer appearance-none rounded-pill bg-white/15 accent-white [&::-webkit-slider-thumb]:size-6 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-pill [&::-webkit-slider-thumb]:bg-paper" />
               <p className="mt-6 text-[11px] text-mute">Paid per 1,000 views</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {RATES.map((r) => (
-                  <button key={r} type="button" onClick={() => setRate(r)} aria-pressed={rate === r} className={cn('h-11 rounded-full border px-5 text-sm transition-colors', rate === r ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
+                  <button key={r} type="button" onClick={() => setRate(r)} aria-pressed={rate === r} className={cn('h-11 rounded-pill border px-5 text-sm transition-colors', rate === r ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
                     ${r}
                   </button>
                 ))}
@@ -89,7 +89,7 @@ export function BrandCalculator() {
               <p className="text-[11px] text-mute">It buys up to</p>
               <p className="mt-3 font-display text-6xl tabular-nums md:text-7xl">{views.toLocaleString()}</p>
               <p className="mt-1 text-lg text-mute">verified views</p>
-              <p className="mt-6 text-sm leading-relaxed text-mute">{applyWording(`Clippers earn the whole $${budget.toLocaleString()}. We add our ${SITE.platformFeePct}% fee on top ($${fee.toLocaleString()} here), so you pay $${total.toLocaleString()} in all, and anything you don't spend can be refunded.`)}</p>
+              <p className="mt-6 text-sm leading-relaxed text-mute">{applyWording(`Creators earn the whole $${budget.toLocaleString()}. We add our ${SITE.platformFeePct}% fee on top ($${fee.toLocaleString()} here), so you pay $${total.toLocaleString()} in all, and anything you don't spend can be refunded.`)}</p>
             </div>
           </div>
         </Reveal>

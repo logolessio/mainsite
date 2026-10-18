@@ -25,13 +25,13 @@ import { Toaster } from './toaster'
 import { CampaignModalProvider } from '@/components/campaign/campaign-modal'
 import type { LinkItem } from '@/lib/socials'
 
-export function AppShell({ children, announcement = null, dots = false, links = [] }: { children: React.ReactNode; announcement?: { text: string; href: string } | null; dots?: boolean; links?: LinkItem[] }) {
+export function AppShell({ children, announcement = null, dots = false, links = [], signedIn }: { children: React.ReactNode; announcement?: { text: string; href: string } | null; dots?: boolean; links?: LinkItem[]; signedIn?: boolean }) {
   const calm = useSyncExternalStore(subscribeCalm, getCalm, () => false)
   return (
     <MotionConfig reducedMotion={calm ? 'always' : 'user'}>
       <TransitionProvider>
         <PreviewProvider>
-        <NavUserProvider>
+        <NavUserProvider signedIn={signedIn}>
         <CampaignModalProvider>
         <NavProgress />
         <Toaster />

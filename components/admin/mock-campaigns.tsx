@@ -17,7 +17,7 @@ const PLATFORMS = [
 ]
 const input = 'h-11 w-full rounded-2xl border border-line-strong bg-ink/80 px-4 text-sm outline-none focus:border-paper'
 const label = 'mb-1.5 block text-xs text-mute'
-const btn = 'inline-flex h-10 items-center justify-center gap-2 rounded-full px-5 text-sm transition-colors disabled:opacity-40'
+const btn = 'inline-flex h-10 items-center justify-center gap-2 rounded-pill px-5 text-sm transition-colors disabled:opacity-40'
 
 async function call(data: object) {
   const res = await fetch('/api/admin/mock', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) })
@@ -92,7 +92,7 @@ export function MockCampaigns({ rows, publicOn }: { rows: MockRow[]; publicOn: b
 
       {open && (
         <form
-          className="grid gap-5 rounded-[1.6rem] border border-line p-5"
+          className="grid gap-5 rounded-[calc(1.6rem*var(--round,1))] border border-line p-5"
           onSubmit={(e) => {
             e.preventDefault()
             void run('create', async () => {
@@ -145,7 +145,7 @@ export function MockCampaigns({ rows, publicOn }: { rows: MockRow[]; publicOn: b
               {PLATFORMS.map((p) => {
                 const on = f.platforms.includes(p.id)
                 return (
-                  <button key={p.id} type="button" aria-pressed={on} onClick={() => set('platforms', on ? f.platforms.filter((x) => x !== p.id) : [...f.platforms, p.id])} className={cn('h-10 rounded-full border px-4 text-sm transition-colors', on ? 'border-paper bg-paper/10' : 'border-line-strong text-mute hover:text-paper')}>
+                  <button key={p.id} type="button" aria-pressed={on} onClick={() => set('platforms', on ? f.platforms.filter((x) => x !== p.id) : [...f.platforms, p.id])} className={cn('h-10 rounded-pill border px-4 text-sm transition-colors', on ? 'border-paper bg-paper/10' : 'border-line-strong text-mute hover:text-paper')}>
                     {p.label}
                   </button>
                 )
@@ -185,7 +185,7 @@ export function MockCampaigns({ rows, publicOn }: { rows: MockRow[]; publicOn: b
               <Link href={`/campaign/${r.id}`} className="text-sm text-mute underline underline-offset-4 hover:text-paper">
                 Open
               </Link>
-              <button type="button" aria-label={`Delete ${r.title}`} disabled={Boolean(busy)} className="grid size-9 place-items-center rounded-full text-mute transition-colors hover:bg-signal/10 hover:text-signal disabled:opacity-40" onClick={() => run(`del-${r.id}`, async () => { await call({ action: 'delete', id: r.id }); return `Deleted ${r.title}.` })}>
+              <button type="button" aria-label={`Delete ${r.title}`} disabled={Boolean(busy)} className="grid size-9 place-items-center rounded-pill text-mute transition-colors hover:bg-signal/10 hover:text-signal disabled:opacity-40" onClick={() => run(`del-${r.id}`, async () => { await call({ action: 'delete', id: r.id }); return `Deleted ${r.title}.` })}>
                 <Trash2 className="size-4" />
               </button>
             </li>

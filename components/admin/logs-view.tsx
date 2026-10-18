@@ -34,13 +34,13 @@ export async function LogsView({ sp, base, canExport }: { sp: LogsSP; base: stri
       <PageHeader title={base.startsWith('/dev') ? 'Events' : 'Logs'} sub="Every request, page view, sign-in, security event and money movement on the site. Visitors are counted by a salted hash, never a raw address." />
       <div className="mb-6 flex flex-wrap items-center gap-2">
         {((canExport ? ['overview', 'events', 'export'] : ['overview', 'events']) as ('overview' | 'events' | 'export')[]).map((t) => (
-          <a key={t} href={href(base, sp, { tab: t, p: undefined })} className={cn('inline-flex h-10 items-center rounded-full border px-5 text-sm capitalize', tab === t ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
+          <a key={t} href={href(base, sp, { tab: t, p: undefined })} className={cn('inline-flex h-10 items-center rounded-pill border px-5 text-sm capitalize', tab === t ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
             {t === 'overview' ? 'Stats' : t}
           </a>
         ))}
         <span className="mx-2 hidden h-5 w-px bg-line-strong sm:block" />
         {RANGES.map((r) => (
-          <a key={r.id} href={href(base, sp, { range: r.id, p: undefined })} className={cn('inline-flex h-9 items-center rounded-full border px-4 text-xs', range === r.id ? 'border-paper bg-paper/10' : 'border-line text-mute hover:text-paper')}>
+          <a key={r.id} href={href(base, sp, { range: r.id, p: undefined })} className={cn('inline-flex h-9 items-center rounded-pill border px-4 text-xs', range === r.id ? 'border-paper bg-paper/10' : 'border-line text-mute hover:text-paper')}>
             {r.label}
           </a>
         ))}
@@ -54,7 +54,7 @@ export async function LogsView({ sp, base, canExport }: { sp: LogsSP; base: stri
 }
 
 const Tile = ({ k, v, note, small }: { k: string; v: string | number; note?: string; small?: boolean }) => (
-  <div className="rounded-[22px] border border-line bg-surface/70 p-4">
+  <div className="rounded-[calc(22px*var(--round,1))] border border-line bg-surface/70 p-4">
     <p className="font-mono text-[11px] text-mute">{k}</p>
     <p className={cn('mt-2 font-display leading-none', small ? 'text-3xl' : 'text-4xl')}>{v}</p>
     {note && <p className="mt-1.5 text-[11px] text-mute">{note}</p>}
@@ -189,13 +189,13 @@ async function Events({ sp, since, base }: { sp: LogsSP; since: number; base: st
       <form action={base} className="mb-4 flex flex-wrap items-center gap-2">
         <input type="hidden" name="tab" value="events" />
         <input type="hidden" name="range" value={sp.range ?? '7d'} />
-        <input name="q" defaultValue={sp.q} placeholder="Search path, name, detail" className="h-10 w-64 rounded-full border border-line-strong bg-ink/80 px-4 text-sm focus:outline-none" />
-        <input name="actor" defaultValue={sp.actor} placeholder="Person (email)" className="h-10 w-52 rounded-full border border-line-strong bg-ink/80 px-4 text-sm focus:outline-none" />
-        <select name="kind" defaultValue={sp.kind ?? ''} className="h-10 rounded-full border border-line-strong bg-ink/80 px-4 text-sm">
+        <input name="q" defaultValue={sp.q} placeholder="Search path, name, detail" className="h-10 w-64 rounded-pill border border-line-strong bg-ink/80 px-4 text-sm focus:outline-none" />
+        <input name="actor" defaultValue={sp.actor} placeholder="Person (email)" className="h-10 w-52 rounded-pill border border-line-strong bg-ink/80 px-4 text-sm focus:outline-none" />
+        <select name="kind" defaultValue={sp.kind ?? ''} className="h-10 rounded-pill border border-line-strong bg-ink/80 px-4 text-sm">
           <option value="">All kinds</option>
           {KINDS.map((k) => <option key={k} value={k}>{k}</option>)}
         </select>
-        <select name="status" defaultValue={sp.status ?? ''} className="h-10 rounded-full border border-line-strong bg-ink/80 px-4 text-sm">
+        <select name="status" defaultValue={sp.status ?? ''} className="h-10 rounded-pill border border-line-strong bg-ink/80 px-4 text-sm">
           <option value="">Any status</option>
           <option value="bad">Failed (400+)</option>
           <option value="200">200</option>
@@ -203,11 +203,11 @@ async function Events({ sp, since, base }: { sp: LogsSP; since: number; base: st
           <option value="403">403</option>
           <option value="500">500</option>
         </select>
-        <button className="h-10 rounded-full bg-paper px-5 text-sm font-medium text-ink">Filter</button>
+        <button className="h-10 rounded-pill bg-paper px-5 text-sm font-medium text-ink">Filter</button>
         <a href={href(base, { ...sp, tab: 'export' }, { tab: 'export' })} className="text-sm text-mute underline underline-offset-4 hover:text-paper">Export this view</a>
       </form>
       <p className="mb-3 text-xs text-mute">{total.toLocaleString()} events match.</p>
-      <div className="overflow-x-auto rounded-[22px] border border-line">
+      <div className="overflow-x-auto rounded-[calc(22px*var(--round,1))] border border-line">
         <table className="w-full min-w-[1000px] text-left text-xs">
           <thead className="bg-surface text-mute">
             <tr>
@@ -248,7 +248,7 @@ function ExportTab({ sp, range }: { sp: LogsSP; range: Range }) {
     <div className="grid gap-6">
       <Card title="Everything">
         <p className="text-sm text-mute">One JSON file with every table below (up to 250,000 rows each). People’s emails are inside, so keep it somewhere safe. Each export is written to the audit log.</p>
-        <a href={`/api/admin/export?${qs({ dataset: 'all', format: 'json' })}`} className="mt-4 inline-flex h-11 items-center rounded-full bg-paper px-6 text-sm font-medium text-ink hover:bg-paper/85">Download everything (JSON)</a>
+        <a href={`/api/admin/export?${qs({ dataset: 'all', format: 'json' })}`} className="mt-4 inline-flex h-11 items-center rounded-pill bg-paper px-6 text-sm font-medium text-ink hover:bg-paper/85">Download everything (JSON)</a>
       </Card>
       <Card title="One table at a time">
         <ul className="divide-y divide-line">
@@ -259,8 +259,8 @@ function ExportTab({ sp, range }: { sp: LogsSP; range: Range }) {
                 <p className="text-xs text-mute">{e.note ?? e.cols.split(',').slice(0, 6).join(', ').replace(/\s+/g, ' ') + '…'}</p>
               </div>
               <div className="flex gap-2">
-                <a href={`/api/admin/export?${qs({ dataset: e.id, format: 'csv' })}`} className="inline-flex h-9 items-center rounded-full border border-line-strong px-4 text-xs hover:bg-paper/10">CSV</a>
-                <a href={`/api/admin/export?${qs({ dataset: e.id, format: 'json' })}`} className="inline-flex h-9 items-center rounded-full border border-line-strong px-4 text-xs hover:bg-paper/10">JSON</a>
+                <a href={`/api/admin/export?${qs({ dataset: e.id, format: 'csv' })}`} className="inline-flex h-9 items-center rounded-pill border border-line-strong px-4 text-xs hover:bg-paper/10">CSV</a>
+                <a href={`/api/admin/export?${qs({ dataset: e.id, format: 'json' })}`} className="inline-flex h-9 items-center rounded-pill border border-line-strong px-4 text-xs hover:bg-paper/10">JSON</a>
               </div>
             </li>
           ))}

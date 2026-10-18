@@ -150,13 +150,13 @@ export function CampaignWizard({ balanceCents = 0 }: { balanceCents?: number }) 
           </Field>
 
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Pay per 1,000 views" hint="What clippers earn.">
+            <Field label="Pay per 1,000 views" hint="What creators earn.">
               <span className="relative block">
                 <span className="pointer-events-none absolute inset-y-0 left-4 grid place-items-center text-mute">$</span>
                 <Input inputMode="decimal" value={d.rate} onChange={(e) => set('rate', e.target.value.replace(/[^0-9.]/g, ''))} className="pl-8" />
               </span>
             </Field>
-            <Field label="Budget cap" hint={`The most this campaign can pay clippers. Minimum $${SITE.minCampaignBudgetUsd}.`}>
+            <Field label="Budget cap" hint={`The most this campaign can pay creators. Minimum $${SITE.minCampaignBudgetUsd}.`}>
               <span className="relative block">
                 <span className="pointer-events-none absolute inset-y-0 left-4 grid place-items-center text-mute">$</span>
                 <Input inputMode="numeric" value={d.budget} onChange={(e) => set('budget', e.target.value.replace(/\D/g, '').slice(0, 6))} className="pl-8" />
@@ -187,7 +187,7 @@ export function CampaignWizard({ balanceCents = 0 }: { balanceCents?: number }) 
                   {PLATFORMS.map((p) => {
                     const on = d.platforms.includes(p)
                     return (
-                      <button key={p} type="button" aria-pressed={on} onClick={() => set('platforms', on ? d.platforms.filter((x) => x !== p) : [...d.platforms, p])} className={cn('inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm transition-colors', on ? 'border-paper bg-paper/10' : 'border-line-strong text-mute hover:text-paper')}>
+                      <button key={p} type="button" aria-pressed={on} onClick={() => set('platforms', on ? d.platforms.filter((x) => x !== p) : [...d.platforms, p])} className={cn('inline-flex h-11 items-center gap-2 rounded-pill border px-4 text-sm transition-colors', on ? 'border-paper bg-paper/10' : 'border-line-strong text-mute hover:text-paper')}>
                         <BrandIcon name={p} className="size-4" />
                         {p === 'youtube' ? 'YouTube' : p === 'tiktok' ? 'TikTok' : 'Instagram'}
                       </button>
@@ -196,20 +196,20 @@ export function CampaignWizard({ balanceCents = 0 }: { balanceCents?: number }) 
                 </div>
               </fieldset>
               <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Most one clip can earn" hint="Optional. Stops a single viral clip taking the whole budget.">
+                <Field label="Most one submission can earn" hint="Optional. Stops a single viral submission taking the whole budget.">
                   <span className="relative block">
                     <span className="pointer-events-none absolute inset-y-0 left-4 grid place-items-center text-mute">$</span>
                     <Input inputMode="numeric" value={d.capPerPost} placeholder="No limit" onChange={(e) => set('capPerPost', e.target.value.replace(/\D/g, '').slice(0, 6))} className="pl-8" />
                   </span>
                 </Field>
-                <Field label="Most one clipper can earn" hint="Optional. Spreads the budget across more people.">
+                <Field label="Most one creator can earn" hint="Optional. Spreads the budget across more people.">
                   <span className="relative block">
                     <span className="pointer-events-none absolute inset-y-0 left-4 grid place-items-center text-mute">$</span>
                     <Input inputMode="numeric" value={d.capPerUser} placeholder="No limit" onChange={(e) => set('capPerUser', e.target.value.replace(/\D/g, '').slice(0, 6))} className="pl-8" />
                   </span>
                 </Field>
               </div>
-              <Field label="Clip this" hint="One idea per line.">
+              <Field label="Create this" hint="One idea per line.">
                 <Textarea value={d.clipThis} onChange={(e) => set('clipThis', e.target.value)} rows={3} />
               </Field>
               <Field label="Off limits" hint="One rule per line.">
@@ -223,7 +223,7 @@ export function CampaignWizard({ balanceCents = 0 }: { balanceCents?: number }) 
       <div className="grid gap-4 lg:sticky lg:top-24">
         <Card title="What it costs">
           <p className="text-sm leading-relaxed text-mute">
-            Nothing up front. At {usd(rate)} per 1,000 views, {usd(budget)} pays for up to <span className="text-paper">{maxViews.toLocaleString()}</span> verified views. Clippers keep all of it. Our {SITE.platformFeePct}% fee comes on top, so the most this can ever cost is <span className="text-paper">{usd(total)}</span>, taken from your balance only as clippers earn.
+            Nothing up front. At {usd(rate)} per 1,000 views, {usd(budget)} pays for up to <span className="text-paper">{maxViews.toLocaleString()}</span> verified views. Creators keep all of it. Our {SITE.platformFeePct}% fee comes on top, so the most this can ever cost is <span className="text-paper">{usd(total)}</span>, taken from your balance only as creators earn.
           </p>
           <p className="mt-4 text-sm text-mute">
             Balance: <span className="text-paper tabular-nums">{usd(balance)}</span>.{' '}

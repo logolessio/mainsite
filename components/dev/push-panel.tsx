@@ -62,7 +62,7 @@ export function PushPanel({ onClose }: { onClose?: () => void }) {
   const chosen = [...pick]
 
   return (
-    <div className="flex max-h-[min(46rem,88dvh)] w-full flex-col overflow-hidden rounded-[2rem] border border-white/15 bg-[#0c0c0f] shadow-[0_50px_120px_-30px_rgb(0_0_0/0.95)]">
+    <div className="flex max-h-[min(46rem,88dvh)] w-full flex-col overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-white/15 bg-[#0c0c0f] shadow-[0_50px_120px_-30px_rgb(0_0_0/0.95)]">
       <div className="flex items-start justify-between gap-4 border-b border-line px-6 pt-6 pb-4">
         <div>
           <p className="flex items-center gap-2 font-mono text-[11px] tracking-[0.2em] text-mute uppercase"><Rocket className="size-3.5" /> Dev to live</p>
@@ -70,15 +70,15 @@ export function PushPanel({ onClose }: { onClose?: () => void }) {
           <p className="mt-1 text-sm text-mute">Tick what you want on the live site, then push. Nothing here changes the live site until you press the button, and every push can be undone.</p>
         </div>
         {onClose && (
-          <button type="button" aria-label="Close" onClick={onClose} className="grid size-9 shrink-0 place-items-center rounded-full hover:bg-white/10">
+          <button type="button" aria-label="Close" onClick={onClose} className="grid size-9 shrink-0 place-items-center rounded-pill hover:bg-white/10">
             <X className="size-4" />
           </button>
         )}
       </div>
       <div className="flex gap-1 px-6 pt-3">
         {(['features', 'history'] as const).map((t) => (
-          <button key={t} type="button" onClick={() => setTab(t)} className={cn('relative inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm capitalize transition-colors', tab === t ? 'text-ink' : 'text-mute hover:text-paper')}>
-            {tab === t && <motion.span layoutId="push-tab" transition={{ type: 'spring', stiffness: 420, damping: 34 }} className="absolute inset-0 rounded-full bg-paper" />}
+          <button key={t} type="button" onClick={() => setTab(t)} className={cn('relative inline-flex h-9 items-center gap-1.5 rounded-pill px-4 text-sm capitalize transition-colors', tab === t ? 'text-ink' : 'text-mute hover:text-paper')}>
+            {tab === t && <motion.span layoutId="push-tab" transition={{ type: 'spring', stiffness: 420, damping: 34 }} className="absolute inset-0 rounded-pill bg-paper" />}
             <span className="relative inline-flex items-center gap-1.5">{t === 'history' && <History className="size-3.5" />}{t}</span>
           </button>
         ))}
@@ -103,7 +103,7 @@ export function PushPanel({ onClose }: { onClose?: () => void }) {
                         <div className="min-w-0 flex-1">
                           <button type="button" onClick={() => toggle(r.id)} className="flex flex-wrap items-center gap-2 text-left">
                             <span className="text-[15px] font-medium">{r.name}</span>
-                            <span className="rounded-full border border-line-strong px-2 py-0.5 text-[10px] text-mute">{r.category}</span>
+                            <span className="rounded-pill border border-line-strong px-2 py-0.5 text-[10px] text-mute">{r.category}</span>
                           </button>
                           <p className="mt-1 text-sm leading-relaxed text-mute">{r.description}</p>
                           <a href={r.path} className="mt-2 inline-flex items-center gap-1 text-xs text-mute underline underline-offset-4 hover:text-paper">
@@ -122,9 +122,9 @@ export function PushPanel({ onClose }: { onClose?: () => void }) {
               <ul className="grid gap-2">
                 {live.map((r) => (
                   <li key={r.id} className="flex items-center gap-3 rounded-2xl border border-emerald-400/25 bg-emerald-400/[0.04] px-4 py-3">
-                    <span className="size-2 shrink-0 rounded-full bg-emerald-400" />
+                    <span className="size-2 shrink-0 rounded-pill bg-emerald-400" />
                     <span className="min-w-0 flex-1 text-sm">{r.name}</span>
-                    <button type="button" disabled={busy} onClick={() => send('undo', [r.id])} className="inline-flex h-8 items-center gap-1.5 rounded-full border border-line-strong px-3.5 text-xs transition-colors hover:bg-white/10 disabled:opacity-50">
+                    <button type="button" disabled={busy} onClick={() => send('undo', [r.id])} className="inline-flex h-8 items-center gap-1.5 rounded-pill border border-line-strong px-3.5 text-xs transition-colors hover:bg-white/10 disabled:opacity-50">
                       <Undo2 className="size-3.5" /> Undo
                     </button>
                   </li>
@@ -138,11 +138,11 @@ export function PushPanel({ onClose }: { onClose?: () => void }) {
             {log.length === 0 && <li className="text-sm text-mute">No pushes yet.</li>}
             {log.map((l, i) => (
               <li key={i} className="flex flex-wrap items-center gap-3 rounded-2xl border border-line px-4 py-3">
-                <span className={cn('rounded-full px-2.5 py-0.5 text-[11px] font-medium', l.action === 'push' ? 'bg-emerald-400/15 text-emerald-300' : 'bg-white/10 text-mute')}>{l.action === 'push' ? 'Pushed' : 'Undone'}</span>
+                <span className={cn('rounded-pill px-2.5 py-0.5 text-[11px] font-medium', l.action === 'push' ? 'bg-emerald-400/15 text-emerald-300' : 'bg-white/10 text-mute')}>{l.action === 'push' ? 'Pushed' : 'Undone'}</span>
                 <span className="min-w-0 flex-1 text-sm">{l.ids.map(name).join(', ')}</span>
                 <span className="font-mono text-[11px] text-mute">{ago(l.at)} · {l.by.split('@')[0]}</span>
                 {l.action === 'push' && (
-                  <button type="button" disabled={busy} onClick={() => send('undo', l.ids)} className="inline-flex h-8 items-center gap-1.5 rounded-full border border-line-strong px-3.5 text-xs hover:bg-white/10 disabled:opacity-50">
+                  <button type="button" disabled={busy} onClick={() => send('undo', l.ids)} className="inline-flex h-8 items-center gap-1.5 rounded-pill border border-line-strong px-3.5 text-xs hover:bg-white/10 disabled:opacity-50">
                     <Undo2 className="size-3.5" /> Undo this push
                   </button>
                 )}
@@ -163,15 +163,15 @@ export function PushPanel({ onClose }: { onClose?: () => void }) {
         {tab === 'features' && (
           <div className="flex flex-wrap items-center gap-3">
             {!confirm ? (
-              <button type="button" disabled={chosen.length === 0 || busy} onClick={() => setConfirm(true)} className="inline-flex h-12 items-center gap-2 rounded-full bg-paper px-7 text-[15px] font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:opacity-40">
+              <button type="button" disabled={chosen.length === 0 || busy} onClick={() => setConfirm(true)} className="inline-flex h-12 items-center gap-2 rounded-pill bg-paper px-7 text-[15px] font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:opacity-40">
                 <Rocket className="size-4" /> Push {chosen.length > 0 ? `${chosen.length} feature${chosen.length > 1 ? 's' : ''}` : 'to live'}
               </button>
             ) : (
               <>
-                <button type="button" disabled={busy} onClick={() => send('push', chosen)} className="inline-flex h-12 items-center gap-2 rounded-full bg-paper px-7 text-[15px] font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:opacity-50">
+                <button type="button" disabled={busy} onClick={() => send('push', chosen)} className="inline-flex h-12 items-center gap-2 rounded-pill bg-paper px-7 text-[15px] font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:opacity-50">
                   {busy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Yes, make {chosen.length === 1 ? 'it' : 'them'} live now
                 </button>
-                <button type="button" onClick={() => setConfirm(false)} className="h-12 rounded-full px-4 text-sm text-mute hover:text-paper">Cancel</button>
+                <button type="button" onClick={() => setConfirm(false)} className="h-12 rounded-pill px-4 text-sm text-mute hover:text-paper">Cancel</button>
               </>
             )}
             <p className="text-xs text-mute">{confirm ? 'Real visitors will see it straight away.' : 'You can undo any push in one click.'}</p>

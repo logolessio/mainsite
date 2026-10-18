@@ -39,7 +39,7 @@ export function FontPicker({ current }: { current: string }) {
   return (
     <div className="grid gap-6">
       {/* the big preview: what the chosen font looks like in real use */}
-      <section aria-label="Preview" className="overflow-hidden rounded-[2rem] border border-line-strong bg-white/[0.03]">
+      <section aria-label="Preview" className="overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-white/[0.03]">
         <div className="p-7 md:p-10" style={{ fontFamily: family(sel.body) }}>
           <p className="text-[13px] text-paper/50">
             {sel.label} · {sel.note}
@@ -61,7 +61,7 @@ export function FontPicker({ current }: { current: string }) {
                 <p className="mt-1.5 text-[13px] text-paper/50">{k}</p>
               </div>
             ))}
-            <span className="inline-flex h-11 items-center rounded-full bg-paper px-6 text-[15px] font-medium text-ink">Start earning</span>
+            <span className="inline-flex h-11 items-center rounded-pill bg-paper px-6 text-[15px] font-medium text-ink">Start earning</span>
           </div>
           <p className="mt-7 break-words text-sm leading-relaxed text-paper/40">ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789 &amp; ! ? @ # $ %</p>
         </div>
@@ -73,7 +73,7 @@ export function FontPicker({ current }: { current: string }) {
               type="button"
               disabled={busy || applied === sel.id}
               onClick={() => apply(sel)}
-              className="inline-flex h-11 items-center gap-2 rounded-full bg-paper px-6 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:bg-white/10 disabled:text-paper/50"
+              className="inline-flex h-11 items-center gap-2 rounded-pill bg-paper px-6 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:bg-white/10 disabled:text-paper/50"
             >
               {busy ? <Loader2 className="size-4 animate-spin" /> : applied === sel.id ? <Check className="size-4" /> : null}
               {applied === sel.id ? 'In use' : 'Use on the whole site'}
@@ -83,9 +83,9 @@ export function FontPicker({ current }: { current: string }) {
       </section>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-1 rounded-full border border-line p-1" role="tablist" aria-label="Kind of font">
+        <div className="flex gap-1 rounded-pill border border-line p-1" role="tablist" aria-label="Kind of font">
           {KINDS.map((k) => (
-            <button key={k.id} role="tab" type="button" aria-selected={kind === k.id} onClick={() => setKind(k.id)} className={cn('h-9 rounded-full px-4 text-sm transition-colors', kind === k.id ? 'bg-paper text-ink' : 'text-mute hover:text-paper')}>
+            <button key={k.id} role="tab" type="button" aria-selected={kind === k.id} onClick={() => setKind(k.id)} className={cn('h-9 rounded-pill px-4 text-sm transition-colors', kind === k.id ? 'bg-paper text-ink' : 'text-mute hover:text-paper')}>
               {k.label}
             </button>
           ))}
@@ -107,7 +107,7 @@ export function FontPicker({ current }: { current: string }) {
                 type="button"
                 aria-pressed={isPreview}
                 onClick={() => setPreview(f.id)}
-                className={cn('group relative flex h-full w-full flex-col rounded-[1.6rem] border p-5 text-left transition-colors', isPreview ? 'border-paper bg-white/[0.05]' : 'border-line hover:border-line-strong hover:bg-white/[0.02]')}
+                className={cn('group relative flex h-full w-full flex-col rounded-[calc(1.6rem*var(--round,1))] border p-5 text-left transition-colors', isPreview ? 'border-paper bg-white/[0.05]' : 'border-line hover:border-line-strong hover:bg-white/[0.02]')}
               >
                 <span className="text-[3.4rem] leading-none tracking-[-0.03em]" style={{ fontFamily: family(f.display), fontWeight: f.kind === 'mono' ? 500 : 400 }} aria-hidden="true">
                   Aa
@@ -124,7 +124,7 @@ export function FontPicker({ current }: { current: string }) {
                 <span className="absolute top-4 right-4 flex items-center gap-2 text-[11px] text-paper/45">
                   {f.kind}
                   {isApplied && (
-                    <span className="inline-flex h-6 items-center gap-1 rounded-full bg-paper px-2.5 text-ink">
+                    <span className="inline-flex h-6 items-center gap-1 rounded-pill bg-paper px-2.5 text-ink">
                       <Check className="size-3" aria-hidden="true" /> In use
                     </span>
                   )}

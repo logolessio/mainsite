@@ -95,7 +95,7 @@ export default async function Page() {
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.6fr_1fr]">
         <Card title="Campaigns" action={<Link href="/brand/campaigns" className="text-sm text-mute underline underline-offset-4 hover:text-paper">See all</Link>}>
           {camps.results.length === 0 ? (
-            <EmptyState icon="Megaphone" title="No campaigns yet" body="Write a short brief, set a rate and a budget, and clippers start posting." action={<ActionLink href="/brand/campaigns/new">New campaign</ActionLink>} />
+            <EmptyState icon="Megaphone" title="No campaigns yet" body="Write a short brief, set a rate and a budget, and creators start posting." action={<ActionLink href="/brand/campaigns/new">New campaign</ActionLink>} />
           ) : (
             <ul className="divide-y divide-line">
               {camps.results.map((c) => {
@@ -106,8 +106,8 @@ export default async function Page() {
                     <img src={c.cover_url} alt="" className="size-12 shrink-0 rounded-xl object-cover" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[15px]">{c.title}</p>
-                      <div className="mt-1.5 h-1 max-w-[12rem] overflow-hidden rounded-full bg-white/10">
-                        <div className="h-full rounded-full bg-paper" style={{ width: `${pct}%` }} />
+                      <div className="mt-1.5 h-1 max-w-[12rem] overflow-hidden rounded-pill bg-white/10">
+                        <div className="h-full rounded-pill bg-paper" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
                     <span className="hidden text-sm text-mute tabular-nums sm:block">{c.views.toLocaleString()} views</span>
@@ -121,7 +121,7 @@ export default async function Page() {
 
         <Card title="Balance">
           <p className="font-display text-5xl leading-none tracking-[-0.04em] tabular-nums">{money(b.brand)}</p>
-          <p className="mt-3 text-sm leading-relaxed text-mute">One balance for every campaign. Clippers are paid out of it as they earn. We cover PayPal&apos;s fees.</p>
+          <p className="mt-3 text-sm leading-relaxed text-mute">One balance for every campaign. Creators are paid out of it as they earn. We cover PayPal&apos;s fees.</p>
           <div className="mt-5 flex flex-wrap gap-2">
             <ActionLink href="/brand/balance#add-funds">Add funds</ActionLink>
             <ActionLink href="/brand/balance" variant="ghost">History</ActionLink>

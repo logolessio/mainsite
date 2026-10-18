@@ -8,8 +8,6 @@ type Req = { id: string; title: string; creator: string; budget_cents: number; r
 type Clip = { id: string; title: string; url: string; platform: string; handle: string | null; email: string }
 type Pay = { id: string; amount_cents: number; email: string; review_reason: string | null }
 
-const Empty = ({ children }: { children: string }) => <p className="py-3 text-sm text-mute">{children}</p>
-
 /** What needs a decision right now, with the buttons to make it. No need to open another page for the usual ones. */
 export async function OverviewQueue() {
   const d = await db()
@@ -28,12 +26,21 @@ export async function OverviewQueue() {
       .first<{ n: number }>(),
   ])
 
+  // A queue with nothing in it takes no room: only what needs a decision is drawn big, and the empty ones are named in one quiet line.
+  const quiet = [reqs.results.length === 0 && 'campaign requests', clips.results.length === 0 && 'submissions', pays.results.length === 0 && 'withdrawals'].filter(Boolean) as string[]
+  const nothing = quiet.length === 3
+
   return (
-    <div className="mt-6 grid gap-6 xl:grid-cols-2">
-      <Card title="Campaign requests" sub="Accept it and, if the brand's balance covers the start, it goes live straight away.">
-        {reqs.results.length === 0 ? (
-          <Empty>Nothing waiting.</Empty>
-        ) : (
+    <div className="mt-6">
+      {quiet.length > 0 && (
+        <p className="mb-5 flex items-center gap-2.5 rounded-2xl border border-line px-5 py-4 text-[15px] text-mute">
+          <span aria-hidden="true" className="size-2 shrink-0 rounded-pill bg-emerald-400" />
+          {nothing ? 'All clear. Nothing needs a decision right now.' : `Nothing waiting in ${quiet.join(', ').replace(/, ([^,]*)$/, ' or $1')}.`}
+        </p>
+      )}
+      <div className="grid gap-6 xl:grid-cols-2">
+      {reqs.results.length > 0 && <Card title="Campaign requests" sub="Accept it and, if the brand's balance covers the start, it goes live straight away.">
+        {(
           <ul className="divide-y divide-line">
             {reqs.results.map((r) => (
               <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
@@ -49,11 +56,11 @@ export async function OverviewQueue() {
             ))}
           </ul>
         )}
-      </Card>
+      </Card>}
 
-      <Card
-        title="Clips to review"
-        sub="Approve or decline. Setting views (and so paying) is done clip by clip on the Clips page."
+      {clips.results.length > 0 && <Card
+        title="Submissions to review"
+        sub="Approve or decline. Setting views (and so paying) is done one by one on the Submissions page."
         action={
           (trusted?.n ?? 0) > 0 ? (
             <AdminButton url="/api/admin/submissions/bulk" data={{ action: 'approve_trusted' }} confirm={`Approve all ${trusted?.n} waiting clips from people with no extra checks, on live campaigns?`}>
@@ -62,9 +69,7 @@ export async function OverviewQueue() {
           ) : undefined
         }
       >
-        {clips.results.length === 0 ? (
-          <Empty>Nothing waiting.</Empty>
-        ) : (
+        {(
           <ul className="divide-y divide-line">
             {clips.results.map((c) => (
               <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
@@ -80,13 +85,11 @@ export async function OverviewQueue() {
             ))}
           </ul>
         )}
-        <Link href="/admin/submissions" className="mt-3 inline-block text-sm text-mute underline underline-offset-4 hover:text-paper">All clips</Link>
-      </Card>
+        <Link href="/admin/submissions" className="mt-3 inline-block text-sm text-mute underline underline-offset-4 hover:text-paper">All submissions</Link>
+      </Card>}
 
-      <Card title="Withdrawals being checked" sub="Sending one moves real money, so it asks for your admin password.">
-        {pays.results.length === 0 ? (
-          <Empty>Nothing waiting.</Empty>
-        ) : (
+      {pays.results.length > 0 && <Card title="Withdrawals being checked" sub="Sending one moves real money, so it asks for your admin password.">
+        {(
           <ul className="divide-y divide-line">
             {pays.results.map((p) => (
               <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
@@ -102,7 +105,8 @@ export async function OverviewQueue() {
             ))}
           </ul>
         )}
-      </Card>
+      </Card>}
+      </div>
     </div>
   )
 }

@@ -43,8 +43,8 @@ function buildSlides(r: Recap): Slide[] {
         body: (
           <>
             <Kicker>Your recap</Kicker>
-            <Big>Your story starts with one clip.</Big>
-            <Sub>Pick a campaign you would actually clip, post it, and come back. This page fills in as you earn.</Sub>
+            <Big>Your story starts with one submission.</Big>
+            <Sub>Pick a campaign you would actually make content for, post it, and come back. This page fills in as you earn.</Sub>
             <Cta href="/">Find a campaign</Cta>
           </>
         ),
@@ -58,7 +58,7 @@ function buildSlides(r: Recap): Slide[] {
       body: (
         <>
           <Kicker>Your recap</Kicker>
-          <Big>{r.name}, here is your clipping story.</Big>
+          <Big>{r.name}, here is your creator story.</Big>
           {since && <Sub>Since {since}</Sub>}
         </>
       ),
@@ -72,7 +72,7 @@ function buildSlides(r: Recap): Slide[] {
           <Huge>
             <Num to={r.earnedCents} format={usd} />
           </Huge>
-          <Sub>{r.earnedCents > 0 ? 'From posting other people’s music, streams and brands. That is the whole job.' : 'Approved clips turn into earnings here.'}</Sub>
+          <Sub>{r.earnedCents > 0 ? 'From posting other people’s music, streams and brands. That is the whole job.' : 'Approved submissions turn into earnings here.'}</Sub>
         </>
       ),
     },
@@ -81,7 +81,7 @@ function buildSlides(r: Recap): Slide[] {
       hue: 205,
       body: (
         <>
-          <Kicker>Your clips were watched</Kicker>
+          <Kicker>Your submissions were watched</Kicker>
           <Huge>
             <Num to={r.views} format={(n) => Math.round(n).toLocaleString()} />
           </Huge>
@@ -98,7 +98,7 @@ function buildSlides(r: Recap): Slide[] {
           <Huge>
             <Num to={r.clips} format={(n) => String(Math.round(n))} />
           </Huge>
-          <Sub>{r.clips === 1 ? 'clip' : 'clips'}, and {r.approved} {r.approved === 1 ? 'was' : 'were'} approved.</Sub>
+          <Sub>{r.clips === 1 ? 'submission' : 'submissions'}, and {r.approved} {r.approved === 1 ? 'was' : 'were'} approved.</Sub>
           <Ring pct={rate} />
         </>
       ),
@@ -112,7 +112,7 @@ function buildSlides(r: Recap): Slide[] {
         <>
           <Kicker>Your biggest campaign</Kicker>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={r.top.cover} alt="" className="mx-auto mt-6 size-44 rounded-[28px] border border-white/15 object-cover shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)] md:size-56" />
+          <img src={r.top.cover} alt="" className="mx-auto mt-6 size-44 rounded-[calc(28px*var(--round,1))] border border-white/15 object-cover shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)] md:size-56" />
           <Big small>{r.top.title}</Big>
           <Sub>
             {r.top.creator} · {usd(r.top.earnedCents)} earned · {r.top.views.toLocaleString()} views
@@ -126,7 +126,7 @@ function buildSlides(r: Recap): Slide[] {
       hue: 46,
       body: (
         <>
-          <Kicker>Your best clip</Kicker>
+          <Kicker>Your best submission</Kicker>
           <Huge>
             <Num to={r.best.views} format={(n) => Math.round(n).toLocaleString()} />
           </Huge>
@@ -174,7 +174,7 @@ const Big = ({ children, small }: { children: React.ReactNode; small?: boolean }
 const Huge = ({ children }: { children: React.ReactNode }) => <p className="mt-4 font-display text-[18vw] leading-[0.9] tracking-tight md:text-[10rem]">{children}</p>
 const Sub = ({ children }: { children: React.ReactNode }) => <p className="mx-auto mt-5 max-w-md text-lg text-paper/65">{children}</p>
 const Cta = ({ href, children }: { href: string; children: React.ReactNode }) => (
-  <a href={href} className="group mt-9 inline-flex h-14 items-center gap-2 rounded-full bg-paper px-8 text-base font-medium text-ink transition-colors hover:bg-paper/85">
+  <a href={href} className="group mt-9 inline-flex h-14 items-center gap-2 rounded-pill bg-paper px-8 text-base font-medium text-ink transition-colors hover:bg-paper/85">
     {children} <ArrowUpRight className="size-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
   </a>
 )
@@ -253,14 +253,14 @@ export function RecapStory({ recap }: { recap: Recap }) {
       <div className="absolute inset-x-0 top-0 z-30 px-4 pt-4 md:px-8 md:pt-6">
         <div className="flex gap-1.5">
           {slides.map((x, n) => (
-            <div key={x.id} className="h-1 flex-1 overflow-hidden rounded-full bg-white/20">
+            <div key={x.id} className="h-1 flex-1 overflow-hidden rounded-pill bg-white/20">
               {n < i || (n === i && (reduced || last)) ? <div className="h-full w-full bg-paper" /> : n === i ? <div ref={bar} className="h-full w-full origin-left scale-x-0 bg-paper" /> : null}
             </div>
           ))}
         </div>
         <div className="mt-3 flex items-center justify-between">
           <span className="font-mono text-xs text-paper/60">logoless · recap</span>
-          <button type="button" onClick={close} aria-label="Close recap" className="pointer-events-auto grid size-10 place-items-center rounded-full bg-black/40 backdrop-blur hover:bg-black/60">
+          <button type="button" onClick={close} aria-label="Close recap" className="pointer-events-auto grid size-10 place-items-center rounded-pill bg-black/40 backdrop-blur hover:bg-black/60">
             <X className="size-4" />
           </button>
         </div>

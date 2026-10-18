@@ -55,21 +55,21 @@ export default async function Page() {
                       {r.display_name ?? `@${r.handle}`}
                     </a>
                   ) : (
-                    'A clipper'
+                    'A creator'
                   )}
                   <span className="text-sm text-mute">on {r.campaign}</span>
                   <Badge tone={r.status === 'approved' ? 'good' : r.status === 'rejected' ? 'bad' : 'warn'}>{r.status === 'pending' ? 'waiting for a check' : r.status}</Badge>
                 </p>
                 <p className="mt-1 text-xs text-mute">
-                  {r.platform} · posted {when(r.created_at)} · {r.views_verified.toLocaleString()} verified views · {money(r.earned_cents)} paid to the clipper
+                  {r.platform} · posted {when(r.created_at)} · {r.views_verified.toLocaleString()} verified views · {money(r.earned_cents)} paid to the creator
                 </p>
                 {r.reject_reason && <p className="mt-1 text-xs text-mute">Reason given: {r.reject_reason}</p>}
                 <a href={r.url} target="_blank" rel="noopener noreferrer nofollow" className="mt-1 inline-block max-w-full truncate text-sm underline underline-offset-4 hover:text-paper">
-                  Watch the clip
+                  Watch the submission
                 </a>
               </div>
               {r.status !== 'rejected' && r.views_verified === 0 && (
-                <AdminButton variant="danger" url={`/api/brand/submissions/${r.id}`} data={{ action: 'reject' }} ask={{ label: 'Why? The clipper will see this', key: 'reason', required: true }}>
+                <AdminButton variant="danger" url={`/api/brand/submissions/${r.id}`} data={{ action: 'reject' }} ask={{ label: 'Why? The creator will see this', key: 'reason', required: true }}>
                   Turn down
                 </AdminButton>
               )}
@@ -81,16 +81,16 @@ export default async function Page() {
 
   return (
     <>
-      <PageHeader title="Submissions" sub="Every clip made for your campaigns. We check the real views before anyone is paid, and you can turn down anything off-brief." />
+      <PageHeader title="Submissions" sub="Every submission made for your campaigns. We check the real views before anyone is paid, and you can turn down anything off-brief." />
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Clips made" value={String(rows.length)} />
+        <StatCard label="Submissions made" value={String(rows.length)} />
         <StatCard label="Waiting for a check" value={String(pending.length)} />
         <StatCard label="Verified views" value={views.toLocaleString()} />
       </div>
       <h2 className="mt-10 mb-4 font-display text-2xl">Waiting for a check</h2>
       {list(pending, 'Nothing waiting')}
       <h2 className="mt-10 mb-4 font-display text-2xl">Everything else</h2>
-      {list(rows.filter((r) => r.status !== 'pending'), 'No other clips yet')}
+      {list(rows.filter((r) => r.status !== 'pending'), 'No other submissions yet')}
     </>
   )
 }

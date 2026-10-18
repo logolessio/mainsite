@@ -37,11 +37,11 @@ export function TextRow({ item }: { item: Item }) {
           {error && <p role="alert" className="text-xs text-signal">{error}</p>}
         </div>
         <div className="flex gap-2">
-          <button type="button" disabled={busy || !changed || !v.trim()} onClick={() => send('save')} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-paper px-4 text-xs font-medium text-ink disabled:opacity-30">
+          <button type="button" disabled={busy || !changed || !v.trim()} onClick={() => send('save')} className="inline-flex h-9 items-center gap-1.5 rounded-pill bg-paper px-4 text-xs font-medium text-ink disabled:opacity-30">
             {busy && <Loader2 className="size-3 animate-spin" />} Save
           </button>
           {item.override !== null && (
-            <button type="button" disabled={busy} onClick={() => send('reset')} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line-strong px-3 text-xs hover:bg-paper/10" title="Back to the original wording">
+            <button type="button" disabled={busy} onClick={() => send('reset')} className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-line-strong px-3 text-xs hover:bg-paper/10" title="Back to the original wording">
               <RotateCcw className="size-3" /> Original
             </button>
           )}
@@ -69,11 +69,11 @@ export function HeroVariantsEditor({ value, isDefault }: { value: string; isDefa
     <div>
       <textarea value={v} onChange={(e) => setV(e.target.value)} rows={10} className="w-full rounded-2xl border border-line-strong bg-ink/80 p-3 text-sm focus:outline-none" aria-label="Hero texts, one per line" />
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <button type="button" disabled={busy || v.trim() === value.trim()} onClick={() => send('save')} className="inline-flex h-9 items-center gap-1.5 rounded-full bg-paper px-4 text-xs font-medium text-ink disabled:opacity-30">
+        <button type="button" disabled={busy || v.trim() === value.trim()} onClick={() => send('save')} className="inline-flex h-9 items-center gap-1.5 rounded-pill bg-paper px-4 text-xs font-medium text-ink disabled:opacity-30">
           {busy && <Loader2 className="size-3 animate-spin" />} Save list
         </button>
         {!isDefault && (
-          <button type="button" disabled={busy} onClick={() => send('reset')} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line-strong px-3 text-xs hover:bg-paper/10">
+          <button type="button" disabled={busy} onClick={() => send('reset')} className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-line-strong px-3 text-xs hover:bg-paper/10">
             <RotateCcw className="size-3" /> Original list
           </button>
         )}
@@ -109,7 +109,7 @@ export function ScanSite() {
     setTimeout(() => setState(''), 3000)
   }
   return (
-    <button type="button" disabled={Boolean(state) && state !== 'Done'} onClick={run} className="inline-flex h-10 items-center rounded-full border border-line-strong px-5 text-sm hover:bg-paper/10 disabled:opacity-60">
+    <button type="button" disabled={Boolean(state) && state !== 'Done'} onClick={run} className="inline-flex h-10 items-center rounded-pill border border-line-strong px-5 text-sm hover:bg-paper/10 disabled:opacity-60">
       {state || 'Scan the site for text'}
     </button>
   )

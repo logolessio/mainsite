@@ -13,7 +13,7 @@ import { type QuickAction, actionsFor, scoreOf } from '@/lib/quick-actions'
 import { cn } from '@/lib/utils'
 import type { AppNavItem } from './nav-types'
 
-type Row = { key: string; group: 'Recent' | 'Do' | 'Go to' | 'Campaigns'; label: string; icon: IconName | null; hint: string; keys: string; kbd?: string; cover?: string; run: () => void }
+type Row = { key: string; group: 'Recent' | 'Do' | 'Go to' | 'Campaigns' | 'People'; label: string; icon: IconName | null; hint: string; keys: string; kbd?: string; cover?: string; run: () => void }
 type Camp = { id: string; title: string; creator: string; type: string; cover: string; rate: number }
 
 /**
@@ -26,6 +26,8 @@ export function Palette({ open, onClose, items, area, onLogout, recents, handle,
   const [i, setI] = useState(0)
   const [note, setNote] = useState('')
   const [camps, setCamps] = useState<Camp[] | null>(null)
+  // the owner's search also looks through people and campaigns on the server, as the letters are typed
+  const [ownerHits, setOwnerHits] = useState<{ q: string; hits: { kind: 'person' | 'campaign'; id: string; label: string; sub: string; href: string }[] }>({ q: '', hits: [] })
   const input = useRef<HTMLInputElement>(null)
   const box = useDialog<HTMLDivElement>(open, onClose, { initial: 'none' })
 
@@ -75,14 +77,15 @@ export function Palette({ open, onClose, items, area, onLogout, recents, handle,
             { key: 'st', group: 'Do', label: `Find “${t}” in the site text`, icon: 'FileCheck2', hint: '', keys: t, run: () => navigate(`/admin/text?q=${encodeURIComponent(t)}`) },
           ]
         : []
+    const live: Row[] = area === 'Owner' && ownerHits.q === t ? ownerHits.hits.map((h) => ({ key: `o:${h.kind}:${h.id}`, group: h.kind === 'person' ? ('People' as const) : ('Campaigns' as const), label: h.label, icon: h.kind === 'person' ? ('Users' as IconName) : ('Megaphone' as IconName), hint: h.sub, keys: '', run: () => navigate(h.href) })) : []
     const hits = all
       .map((r) => ({ r, s: scoreOf(`${r.label} ${r.keys}`, t) }))
       .filter((x) => x.s > 0) // only what matches; the small bonus below just puts actions ahead of pages on a tie
       .map((x) => ({ ...x, s: x.s + (x.r.group === 'Do' ? 0.5 : 0) }))
       .sort((a, b) => b.s - a.s)
       .map((x) => x.r)
-    return [...hits, ...found, ...search]
-  }, [items, q, area, navigate, onLogout, recents, handle, onHelp, camps])
+    return [...hits, ...live, ...found, ...search]
+  }, [items, q, area, navigate, onLogout, recents, handle, onHelp, camps, ownerHits])
 
   useEffect(() => {
     if (open && camps === null) fetch('/api/search').then((r) => r.json()).then((j: { campaigns?: Camp[] }) => setCamps(j.campaigns ?? [])).catch(() => setCamps([]))
@@ -94,6 +97,17 @@ export function Palette({ open, onClose, items, area, onLogout, recents, handle,
     }
   }, [open])
   useEffect(() => setI(0), [q])
+  useEffect(() => {
+    const t = q.trim()
+    if (!open || area !== 'Owner' || t.length < 2) return
+    const timer = window.setTimeout(() => {
+      fetch(`/api/admin/search?q=${encodeURIComponent(t)}`)
+        .then((r) => (r.ok ? r.json() : { hits: [] }))
+        .then((j: { hits?: { kind: 'person' | 'campaign'; id: string; label: string; sub: string; href: string }[] }) => setOwnerHits({ q: t, hits: j.hits ?? [] }))
+        .catch(() => {})
+    }, 160)
+    return () => window.clearTimeout(timer)
+  }, [q, open, area])
   useEffect(() => {
     if (!note) return
     const t = window.setTimeout(() => (setNote(''), onClose()), 900)
@@ -160,7 +174,7 @@ export function Palette({ open, onClose, items, area, onLogout, recents, handle,
                 enterKeyHint="go"
                 className="h-14 flex-1 bg-transparent text-base outline-none placeholder:text-mute"
               />
-              <button type="button" aria-label="Close" onClick={onClose} className="grid size-8 place-items-center rounded-full text-mute hover:bg-white/10">
+              <button type="button" aria-label="Close" onClick={onClose} className="grid size-8 place-items-center rounded-pill text-mute hover:bg-white/10">
                 <X className="size-4" />
               </button>
             </div>

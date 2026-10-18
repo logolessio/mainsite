@@ -32,14 +32,16 @@ export type NavUser =
       }
     }
 
-type Ctx = { user: NavUser | null; refresh: () => void; setUnread: (n: number) => void }
-const NavUserContext = createContext<Ctx>({ user: null, refresh: () => {}, setUnread: () => {} })
+/** `hint` is what the server already knows (is someone signed in), so the bar can draw the right buttons before the details arrive. */
+type Ctx = { user: NavUser | null; hint: boolean | undefined; refresh: () => void; setUnread: (n: number) => void }
+const NavUserContext = createContext<Ctx>({ user: null, hint: undefined, refresh: () => {}, setUnread: () => {} })
 export const useNavUser = () => useContext(NavUserContext)
 
 export const NAV_USER_REFRESH = 'logoless:nav-user'
 
-export function NavUserProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<NavUser | null>(null)
+export function NavUserProvider({ children, signedIn }: { children: React.ReactNode; signedIn?: boolean }) {
+  // someone who is not signed in needs nothing fetched to be drawn
+  const [user, setUser] = useState<NavUser | null>(signedIn === false ? { signedIn: false } : null)
   const pathname = usePathname()
 
   const refresh = useCallback(() => {
@@ -66,7 +68,7 @@ export function NavUserProvider({ children }: { children: React.ReactNode }) {
   }, [refresh])
 
   const setUnread = useCallback((n: number) => setUser((u) => (u && u.signedIn ? { ...u, unread: n } : u)), [])
-  const value = useMemo(() => ({ user, refresh, setUnread }), [user, refresh, setUnread])
+  const value = useMemo(() => ({ user, hint: signedIn, refresh, setUnread }), [user, signedIn, refresh, setUnread])
   return <NavUserContext.Provider value={value}>{children}</NavUserContext.Provider>
 }
 
@@ -78,7 +80,7 @@ export function Avatar({ src, name, size = 40, className }: { src: string | null
   const initial = (name.trim()[0] ?? '?').toUpperCase()
   return (
     <span
-      className={cn('relative grid shrink-0 place-items-center overflow-hidden rounded-full border border-line-strong bg-raised font-medium', className)}
+      className={cn('relative grid shrink-0 place-items-center overflow-hidden rounded-pill border border-line-strong bg-raised font-medium', className)}
       style={{ width: size, height: size, fontSize: size * 0.4 }}
     >
       {src && !failed ? (
@@ -102,7 +104,7 @@ export function NavUserActions({ onNavigate, menuOpen = false }: { onNavigate?: 
         href="/dashboard"
         data-tour="get-started"
         onClick={onNavigate}
-        className="inline-flex h-11 items-center rounded-full bg-paper px-4 text-sm font-medium text-ink transition-colors hover:bg-paper/85 md:px-5"
+        className="inline-flex h-11 items-center rounded-pill bg-paper px-4 text-sm font-medium text-ink transition-colors hover:bg-paper/85 md:px-5"
       >
         Dashboard
       </TransitionLink>
@@ -128,7 +130,7 @@ function ProfileIcon({ onNavigate, menuOpen }: { onNavigate?: () => void; menuOp
   return (
     // the preview is for a mouse or the keyboard only, and never while the menu is open (the menu already shows you)
     <div className="relative" onPointerEnter={(e) => e.pointerType === 'mouse' && show()} onPointerLeave={(e) => e.pointerType === 'mouse' && hide()} onFocus={(e) => (e.target as HTMLElement).matches(':focus-visible') && show()} onBlur={hide}>
-      <TransitionLink href={`/@${p.handle}`} onClick={onNavigate} aria-label={`Your profile, @${p.handle}`} className="block rounded-full">
+      <TransitionLink href={`/@${p.handle}`} onClick={onNavigate} aria-label={`Your profile, @${p.handle}`} className="block rounded-pill">
         <Avatar src={p.avatar} name={p.displayName} size={44} />
       </TransitionLink>
       <AnimatePresence>
@@ -140,7 +142,7 @@ function ProfileIcon({ onNavigate, menuOpen }: { onNavigate?: () => void; menuOp
             transition={{ duration: 0.22, ease: EASE_OUT }}
             className="absolute top-full right-0 z-50 w-72 pt-3"
           >
-            <div className="glass-liquid rounded-[26px] shadow-[0_30px_60px_-20px_rgb(0_0_0/0.9)]">
+            <div className="glass-liquid rounded-[calc(26px*var(--round,1))] shadow-[0_30px_60px_-20px_rgb(0_0_0/0.9)]">
               <div className="h-20" style={{ background: bannerCss(p.banner, p.bannerKind) }} />
               <div className="px-4 pb-4">
                 <Avatar src={p.avatar} name={p.displayName} size={56} className="-mt-9 border-2 border-surface" />
@@ -157,7 +159,7 @@ function ProfileIcon({ onNavigate, menuOpen }: { onNavigate?: () => void; menuOp
                 <TransitionLink
                   href={`/@${p.handle}`}
                   onClick={onNavigate}
-                  className="mt-4 flex h-9 items-center justify-center rounded-full border border-line-strong text-sm transition-colors hover:bg-paper/10"
+                  className="mt-4 flex h-9 items-center justify-center rounded-pill border border-line-strong text-sm transition-colors hover:bg-paper/10"
                 >
                   View profile
                 </TransitionLink>

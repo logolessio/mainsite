@@ -21,28 +21,28 @@ export function DashboardPreview({ items }: { items: PreviewItem[] }) {
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex flex-wrap gap-1 rounded-full border border-line p-1" role="tablist" aria-label="Dashboard">
+        <div className="flex flex-wrap gap-1 rounded-pill border border-line p-1" role="tablist" aria-label="Dashboard">
           {items.map((i) => (
-            <button key={i.id} role="tab" type="button" aria-selected={active === i.id} onClick={() => setActive(i.id)} className={cn('h-9 rounded-full px-4 text-sm transition-colors', active === i.id ? 'bg-paper text-ink' : 'text-mute hover:text-paper')}>
+            <button key={i.id} role="tab" type="button" aria-selected={active === i.id} onClick={() => setActive(i.id)} className={cn('h-9 rounded-pill px-4 text-sm transition-colors', active === i.id ? 'bg-paper text-ink' : 'text-mute hover:text-paper')}>
               {i.title}
             </button>
           ))}
         </div>
-        <div className="flex gap-1 rounded-full border border-line p-1" role="group" aria-label="Screen size">
+        <div className="flex gap-1 rounded-pill border border-line p-1" role="group" aria-label="Screen size">
           {SIZES.map((x) => (
-            <button key={x.id} type="button" aria-pressed={size === x.id} aria-label={x.label} onClick={() => setSize(x.id)} className={cn('grid size-9 place-items-center rounded-full transition-colors', size === x.id ? 'bg-paper text-ink' : 'text-mute hover:text-paper')}>
+            <button key={x.id} type="button" aria-pressed={size === x.id} aria-label={x.label} onClick={() => setSize(x.id)} className={cn('grid size-9 place-items-center rounded-pill transition-colors', size === x.id ? 'bg-paper text-ink' : 'text-mute hover:text-paper')}>
               <x.icon className="size-4" />
             </button>
           ))}
         </div>
         {item && (
-          <a href={item.href} target="_blank" rel="noreferrer" className="ml-auto inline-flex h-10 items-center gap-2 rounded-full border border-line-strong px-4 text-sm hover:bg-paper/10">
+          <a href={item.href} target="_blank" rel="noreferrer" className="ml-auto inline-flex h-10 items-center gap-2 rounded-pill border border-line-strong px-4 text-sm hover:bg-paper/10">
             Open in full <ExternalLink className="size-4" />
           </a>
         )}
       </div>
       {item && <p className="mt-3 text-sm text-mute">{item.note}</p>}
-      <div className="mt-5 overflow-auto rounded-[1.6rem] border border-line bg-black/40 p-4">
+      <div className="mt-5 overflow-auto rounded-[calc(1.6rem*var(--round,1))] border border-line bg-black/40 p-4">
         <div style={{ width: s.w * scale, height: s.h * scale }} className="mx-auto">
           {item && (
             <iframe

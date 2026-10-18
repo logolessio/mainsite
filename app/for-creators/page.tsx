@@ -13,7 +13,7 @@ import { SITE } from '@/lib/site'
 
 export const metadata: Metadata = {
   title: 'Get paid for your content | logoless',
-  description: 'Join a campaign, post a clip on your own account and earn for every 1,000 verified views. No follower minimum, no fee to join.',
+  description: 'Join a campaign, post content on your own account and earn for every 1,000 verified views. No follower minimum, no fee to join.',
   alternates: { canonical: '/for-creators' },
 }
 
@@ -23,18 +23,18 @@ export default async function Page() {
   return (
     <main>
       <Breadcrumbs trail={[{ name: 'For creators' }]} />
-      <PageHero eyebrow="For creators" title="Get paid for your clips" lede="Pick a campaign, post a clip on your own account, and earn for every 1,000 views we verify. No followers needed and no fee to join.">
+      <PageHero eyebrow="For creators" title="Get paid for your content" lede="Pick one of our many campaigns, get the resources to post, we verify your content and then you get paid for your views. No followers or fees needed to join.">
         <PillLink href="/onboarding?role=clipper">Start earning</PillLink>
       </PageHero>
 
-      <CoverStrip campaigns={live} heading="Live right now" browse={false} />
+      <CoverStrip campaigns={live} heading="Browse our active campaigns." browse={false} />
 
       <Steps
-        title="How it works"
+        title="How we work"
         steps={[
-          { title: 'Join a campaign', body: 'Choose one you like. There is no application.' },
-          { title: 'Post your clip', body: 'Post it on your own TikTok, YouTube or Instagram, then paste the link.' },
-          { title: 'Get paid', body: `We check the clip and its views. Once your balance is $${SITE.minPayoutUsd}, withdraw it.` },
+          { title: 'Join a campaign', body: 'Choose from many high-quality campaigns that we offer.' },
+          { title: 'Post your content', body: 'Post the content on any allowed platforms the campaign accepts, then submit and we verify your media with our automated systems and real human-intelligence :)' },
+          { title: 'Get paid', body: `Once your content has been verified, you can withdraw your cash via PayPal and get paid as soon and as frequently as you like. We do have a ${SITE.minPayoutUsd}USD minimum due to PayPal transaction fees (otherwise you would hardly get paid anything).` },
         ]}
       />
       <FeePromise audience="clippers" />
@@ -43,12 +43,12 @@ export default async function Page() {
         title="Good to know"
         items={[
           { title: 'It costs nothing', body: "Joining and submitting are free, and you keep everything a campaign pays you. Brands pay our fee on top, and we cover PayPal's fees too." },
-          { title: 'You keep your accounts', body: 'Clips stay on your own channels. We only read the view counts.' },
-          { title: 'Rejections have reasons', body: "If we turn a clip down, you'll see why." },
+          { title: 'You keep your views', body: 'All content is yours to keep and post on your own accounts. We just track your views.' },
+          { title: 'Rejections have reasons', body: "If we turn your submission down, you'll see why." },
         ]}
       />
       <CtaBand title="Ready to start?" href="/onboarding?role=clipper" label="Start earning" />
-      <Related links={[{ href: '/pricing', label: 'Pricing' }, { href: '/faq', label: 'Questions' }, { href: '/for-brands', label: 'For brands' }]} />
+      <Related links={[{ href: '/pricing', label: 'Pricing' }, { href: '/faq', label: "That's why its called a Q&A :)" }, { href: '/for-brands', label: 'For brands' }]} />
     </main>
   )
 }

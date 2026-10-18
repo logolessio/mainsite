@@ -61,7 +61,7 @@ export function BroadcastForm() {
         <legend className="mb-2 text-sm text-mute">Who</legend>
         <div className="flex flex-wrap gap-2" role="radiogroup">
           {AUDIENCES.map((a) => (
-            <button key={a.id} type="button" role="radio" aria-checked={audience === a.id} onClick={() => setAudience(a.id)} className={cn('h-10 rounded-full border px-4 text-sm transition-colors', audience === a.id ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
+            <button key={a.id} type="button" role="radio" aria-checked={audience === a.id} onClick={() => setAudience(a.id)} className={cn('h-10 rounded-pill border px-4 text-sm transition-colors', audience === a.id ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
               {a.label}
             </button>
           ))}
@@ -95,7 +95,7 @@ export function BroadcastForm() {
         </select>
       </div>
       <div className="flex flex-wrap items-center gap-4">
-        <button type="submit" disabled={busy || title.trim().length < 3 || (audience === 'one' && !to)} className="inline-flex h-12 items-center gap-2 rounded-full bg-paper px-7 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
+        <button type="submit" disabled={busy || title.trim().length < 3 || (audience === 'one' && !to)} className="inline-flex h-12 items-center gap-2 rounded-pill bg-paper px-7 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
           {busy ? <Loader2 className="size-4 animate-spin" /> : <Megaphone className="size-4" />} Send
         </button>
         {msg && (

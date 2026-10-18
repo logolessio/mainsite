@@ -55,7 +55,7 @@ export function Diagnostics({ checks }: { checks: Check[] }) {
                 </ul>
               )}
             </div>
-            <button type="button" disabled={busy !== null} onClick={() => run(c.id)} className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line-strong px-4 text-xs hover:bg-paper/10 disabled:opacity-40">
+            <button type="button" disabled={busy !== null} onClick={() => run(c.id)} className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-line-strong px-4 text-xs hover:bg-paper/10 disabled:opacity-40">
               {busy === c.id && <Loader2 className="size-3 animate-spin" />} Run test
             </button>
           </li>

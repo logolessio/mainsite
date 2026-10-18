@@ -11,7 +11,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
   const roles = session?.user?.roles ?? ['admin', 'dev']
   if (!roles.includes('admin') && !roles.includes('dev')) notFound()
   return (
-    <AppFrame area="Owner" items={staffItems(roles)}>
+    <AppFrame area="Owner" roles={roles} items={staffItems(roles)}>
       {children}
     </AppFrame>
   )

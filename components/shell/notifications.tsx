@@ -15,7 +15,7 @@ export type Note = { id: string; kind: string; title: string; body: string; href
 /** Each kind of news has its own colour and symbol, so you can tell what it is before you read it. */
 const KIND: Record<string, { icon: LucideIcon; hue: number; label: string }> = {
   badge: { icon: Award, hue: 268, label: 'Badges' },
-  submission: { icon: Clapperboard, hue: 200, label: 'Clips' },
+  submission: { icon: Clapperboard, hue: 200, label: 'Submissions' },
   payout: { icon: Banknote, hue: 146, label: 'Payouts' },
   earning: { icon: BadgeDollarSign, hue: 46, label: 'Earnings' },
   campaign: { icon: Megaphone, hue: 24, label: 'Campaigns' },
@@ -48,7 +48,7 @@ function dayLabel(t: number) {
 export function NoteTile({ n }: { n: Note }) {
   const b = n.kind === 'badge' ? BADGES.find((x) => n.title.includes(x.name)) : null
   if (b) return <span className="grid size-10 shrink-0 place-items-center"><BadgeArt badge={b} size={40} animated={false} /></span>
-  return <span aria-hidden="true" className={cn('mt-[7px] size-2 shrink-0 rounded-full', n.read_at ? 'bg-transparent' : 'bg-paper')} />
+  return <span aria-hidden="true" className={cn('mt-[7px] size-2 shrink-0 rounded-pill', n.read_at ? 'bg-transparent' : 'bg-paper')} />
 }
 
 /** The feed itself, used by the bell and by the full page. */
@@ -120,13 +120,13 @@ export function NotificationFeed({ notes, setNotes, onOpen, compact = false }: {
                         {inner}
                       </button>
                     )}
-                    <span className="absolute top-2 right-2 hidden items-center gap-0.5 rounded-full bg-[#0d0d10]/90 p-0.5 backdrop-blur group-hover/n:flex group-focus-within/n:flex" style={{ top: 6 }}>
+                    <span className="absolute top-2 right-2 hidden items-center gap-0.5 rounded-pill bg-[#0d0d10]/90 p-0.5 backdrop-blur group-hover/n:flex group-focus-within/n:flex" style={{ top: 6 }}>
                       {!n.read_at && (
-                        <button type="button" aria-label="Mark as read" onClick={() => read(n)} className="grid size-6 place-items-center rounded-full text-mute hover:bg-white/10 hover:text-paper">
+                        <button type="button" aria-label="Mark as read" onClick={() => read(n)} className="grid size-6 place-items-center rounded-pill text-mute hover:bg-white/10 hover:text-paper">
                           <Check className="size-3.5" />
                         </button>
                       )}
-                      <button type="button" aria-label="Dismiss" onClick={() => remove(n)} className="grid size-6 place-items-center rounded-full text-mute hover:bg-white/10 hover:text-signal">
+                      <button type="button" aria-label="Dismiss" onClick={() => remove(n)} className="grid size-6 place-items-center rounded-pill text-mute hover:bg-white/10 hover:text-signal">
                         <X className="size-3.5" />
                       </button>
                     </span>
@@ -145,7 +145,7 @@ export function EmptyFeed({ unreadOnly }: { unreadOnly?: boolean }) {
   return (
     <div className="grid place-items-center px-6 py-14 text-center">
       <p className="font-display text-xl">{unreadOnly ? 'All caught up' : 'Nothing yet'}</p>
-      <p className="mt-1 max-w-[16rem] text-sm text-mute">{unreadOnly ? 'You have read everything. Nice.' : 'Payments, clip decisions, new badges and campaign news will show up here.'}</p>
+      <p className="mt-1 max-w-[16rem] text-sm text-mute">{unreadOnly ? 'You have read everything. Nice.' : 'Payments, submission decisions, new badges and campaign news will show up here.'}</p>
     </div>
   )
 }
@@ -209,14 +209,14 @@ export function NotificationBell({ onNavigate, align = 'right' }: { onNavigate?:
 
   return (
     <div ref={wrap} className="relative">
-      <button type="button" aria-label={unread ? `Notifications, ${unread} unread` : 'Notifications'} aria-expanded={open} onClick={() => setOpen((v) => !v)} className="glass-liquid grid size-11 place-items-center rounded-full transition-transform active:scale-95">
+      <button type="button" aria-label={unread ? `Notifications, ${unread} unread` : 'Notifications'} aria-expanded={open} onClick={() => setOpen((v) => !v)} className="glass-liquid grid size-11 place-items-center rounded-pill transition-transform active:scale-95">
         <motion.span key={unread} animate={unread ? { rotate: [0, -16, 14, -10, 6, 0] } : {}} transition={{ duration: 0.7, ease: 'easeInOut' }} className="grid origin-top place-items-center">
           <Bell className="size-[18px]" />
         </motion.span>
       </button>
       {/* The badge sits outside the glass button: the glass clips anything that pokes past its edge. */}
       {unread > 0 && (
-        <motion.span key={unread} initial={{ scale: 0.4 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 18 }} aria-hidden="true" className="pointer-events-none absolute -top-1 -right-1 z-10 grid min-w-5 place-items-center rounded-full bg-paper px-1 text-[10px] leading-5 font-semibold text-ink ring-2 ring-ink">
+        <motion.span key={unread} initial={{ scale: 0.4 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 18 }} aria-hidden="true" className="pointer-events-none absolute -top-1 -right-1 z-10 grid min-w-5 place-items-center rounded-pill bg-paper px-1 text-[10px] leading-5 font-semibold text-ink ring-2 ring-ink">
           {unread > 9 ? '9+' : unread}
         </motion.span>
       )}
@@ -227,32 +227,32 @@ export function NotificationBell({ onNavigate, align = 'right' }: { onNavigate?:
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.98 }}
             transition={{ duration: 0.26, ease: EASE_OUT }}
-            className={cn('absolute top-full z-50 mt-3 flex max-h-[min(34rem,78dvh)] w-[min(25rem,calc(100vw-1.5rem))] origin-top-right flex-col overflow-hidden rounded-[28px] border border-white/15 bg-[#0d0d10]/[0.98] shadow-[0_40px_90px_-20px_rgb(0_0_0/0.95)] backdrop-blur-xl', align === 'right' ? 'right-0' : 'left-0 origin-top-left')}
+            className={cn('absolute top-full z-50 mt-3 flex max-h-[min(34rem,78dvh)] w-[min(25rem,calc(100vw-1.5rem))] origin-top-right flex-col overflow-hidden rounded-[calc(28px*var(--round,1))] border border-white/15 bg-[#0d0d10]/[0.98] shadow-[0_40px_90px_-20px_rgb(0_0_0/0.95)] backdrop-blur-xl', align === 'right' ? 'right-0' : 'left-0 origin-top-left')}
           >
             <div className="relative px-5 pt-5 pb-3">
               <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(60%_100%_at_30%_0%,rgb(185_166_255/0.16),transparent)]" />
               <div className="relative flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <p className="font-display text-xl">Notifications</p>
-                  {unread > 0 && <span className="rounded-full bg-paper px-2 py-0.5 font-mono text-[10px] font-semibold text-ink">{unread} new</span>}
+                  {unread > 0 && <span className="rounded-pill bg-paper px-2 py-0.5 font-mono text-[10px] font-semibold text-ink">{unread} new</span>}
                 </div>
                 <div className="flex items-center gap-1">
                   {unread > 0 && (
-                    <button type="button" onClick={markAll} aria-label="Mark all as read" title="Mark all as read" className="grid size-8 place-items-center rounded-full text-mute transition-colors hover:bg-white/10 hover:text-paper">
+                    <button type="button" onClick={markAll} aria-label="Mark all as read" title="Mark all as read" className="grid size-8 place-items-center rounded-pill text-mute transition-colors hover:bg-white/10 hover:text-paper">
                       <CheckCheck className="size-4" />
                     </button>
                   )}
                   {notes && notes.length > 0 && (
-                    <button type="button" onClick={() => (confirm ? (clear(), setConfirm(false)) : setConfirm(true))} aria-label={confirm ? 'Confirm clear all' : 'Clear all'} title="Clear all" className={cn('grid h-8 place-items-center rounded-full px-2 text-mute transition-colors hover:bg-white/10', confirm ? 'bg-signal/15 text-signal' : 'hover:text-paper')}>
+                    <button type="button" onClick={() => (confirm ? (clear(), setConfirm(false)) : setConfirm(true))} aria-label={confirm ? 'Confirm clear all' : 'Clear all'} title="Clear all" className={cn('grid h-8 place-items-center rounded-pill px-2 text-mute transition-colors hover:bg-white/10', confirm ? 'bg-signal/15 text-signal' : 'hover:text-paper')}>
                       {confirm ? <span className="text-[11px] font-medium">Clear all?</span> : <Trash2 className="size-4" />}
                     </button>
                   )}
                 </div>
               </div>
-              <div className="relative mt-3 inline-flex rounded-full bg-white/[0.06] p-1">
+              <div className="relative mt-3 inline-flex rounded-pill bg-white/[0.06] p-1">
                 {(['all', 'unread'] as const).map((t) => (
-                  <button key={t} type="button" onClick={() => setTab(t)} className={cn('relative h-7 rounded-full px-4 text-xs capitalize transition-colors', tab === t ? 'text-ink' : 'text-mute hover:text-paper')}>
-                    {tab === t && <motion.span layoutId="notif-tab" transition={{ type: 'spring', stiffness: 420, damping: 34 }} className="absolute inset-0 rounded-full bg-paper" />}
+                  <button key={t} type="button" onClick={() => setTab(t)} className={cn('relative h-7 rounded-pill px-4 text-xs capitalize transition-colors', tab === t ? 'text-ink' : 'text-mute hover:text-paper')}>
+                    {tab === t && <motion.span layoutId="notif-tab" transition={{ type: 'spring', stiffness: 420, damping: 34 }} className="absolute inset-0 rounded-pill bg-paper" />}
                     <span className="relative">{t}</span>
                   </button>
                 ))}
@@ -263,8 +263,8 @@ export function NotificationBell({ onNavigate, align = 'right' }: { onNavigate?:
                 <ul className="grid gap-2 px-4 py-3" aria-label="Loading">
                   {[0, 1, 2].map((i) => (
                     <li key={i} className="flex animate-pulse items-center gap-3 rounded-2xl p-3">
-                      <span className="size-11 rounded-[14px] bg-white/[0.06]" />
-                      <span className="grid flex-1 gap-2"><span className="h-3 w-2/3 rounded-full bg-white/[0.07]" /><span className="h-2.5 w-1/2 rounded-full bg-white/[0.05]" /></span>
+                      <span className="size-11 rounded-[calc(14px*var(--round,1))] bg-white/[0.06]" />
+                      <span className="grid flex-1 gap-2"><span className="h-3 w-2/3 rounded-pill bg-white/[0.07]" /><span className="h-2.5 w-1/2 rounded-pill bg-white/[0.05]" /></span>
                     </li>
                   ))}
                 </ul>

@@ -51,7 +51,7 @@ export function FavoriteButton({ id, className }: { id: string; className?: stri
       aria-keyshortcuts="f"
       aria-label={on ? 'Remove from favourites' : 'Add to favourites'}
       title={signedIn || !known ? (on ? 'Favourited: we will tell you when it changes' : 'Favourite to get updates') : 'Log in to favourite'}
-      className={cn('grid size-9 place-items-center rounded-full border border-line-strong transition-colors hover:bg-paper/10', className)}
+      className={cn('grid size-9 place-items-center rounded-pill border border-line-strong transition-colors hover:bg-paper/10', className)}
     >
       <motion.span key={String(on)} initial={on ? { scale: 0.6 } : false} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 600, damping: 14 }} className="grid place-items-center">
         <Heart className={cn('size-4 transition-colors', on && 'fill-paper text-paper')} />

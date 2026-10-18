@@ -45,12 +45,12 @@ export default async function CampaignPage({ params, searchParams }: Props) {
         <Breadcrumbs trail={[{ name: 'Campaigns', href: '/' }, { name: gone.title }]} />
         <div className="mx-auto flex max-w-md flex-col items-center px-4 pt-16 pb-32 text-center md:pt-24">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={gone.cover} alt="" className="size-40 rounded-[2rem] object-cover opacity-60 grayscale" />
+          <img src={gone.cover} alt="" className="size-40 rounded-[calc(2rem*var(--round,1))] object-cover opacity-60 grayscale" />
           <h1 className="mt-8 font-display text-4xl tracking-[-0.03em]">{gone.title}</h1>
           <p className="mt-2 text-mute">by {gone.creator}</p>
           <p className="mt-8 text-xl">This campaign ended {agoText(gone.endedAt)}.</p>
           <p className="mt-2 text-[15px] text-mute">It is no longer taking submissions. There are more campaigns to try.</p>
-          <TransitionLink href="/" className="mt-8 inline-flex h-12 items-center rounded-full bg-paper px-7 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85">
+          <TransitionLink href="/" className="mt-8 inline-flex h-12 items-center rounded-pill bg-paper px-7 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85">
             See live campaigns
           </TransitionLink>
         </div>
@@ -69,7 +69,7 @@ export default async function CampaignPage({ params, searchParams }: Props) {
       <div className="px-4 pt-8 pb-16 md:pt-12">
         <CampaignSheet campaign={campaign} leftPct={leftPct} preview={dry} inline />
       </div>
-      <Related links={[{ href: '/', label: 'All campaigns' }, { href: '/for-creators', label: 'How creators earn' }, { href: '/faq', label: 'Questions' }]} />
+      <Related links={[{ href: '/', label: 'All campaigns' }, { href: '/for-creators', label: 'How creators earn' }, { href: '/faq', label: "That's why its called a Q&A :)" }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
     </main>
   )

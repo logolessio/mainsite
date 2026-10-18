@@ -24,10 +24,10 @@ export function SiteNav() {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const { navigate } = useTransitions()
-  const { user } = useNavUser()
+  const { user, hint } = useNavUser()
   const board = useFeature('leaderboard')
   const reels = useFeature('reels')
-  const links = [...NAV_LINKS, ...(reels ? [{ label: 'Reels', href: '/reels' }] : []), ...(board ? [{ label: 'Leaderboard', href: '/leaderboard' }] : []), user?.signedIn ? { label: 'Dashboard', href: '/dashboard' } : { label: 'Log in', href: '/login' }]
+  const links = [...NAV_LINKS, ...(reels ? [{ label: 'Reels', href: '/reels' }] : []), ...(board ? [{ label: 'Leaderboard', href: '/leaderboard' }] : []), (user ? user.signedIn : hint) ? { label: 'Dashboard', href: '/dashboard' } : { label: 'Log in', href: '/login' }]
   const toggleRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -76,17 +76,21 @@ export function SiteNav() {
           <div className="pointer-events-auto flex items-center gap-2 md:gap-3">
             {user?.signedIn ? (
               <NavUserActions onNavigate={() => setOpen(false)} menuOpen={open} />
+            ) : user === null && hint ? (
+              // the server knows someone is signed in; the bell and picture arrive in a moment, so their places are kept and nothing jumps
+              <>
+                <span aria-hidden="true" className="size-11" />
+                <TransitionLink href="/dashboard" data-tour="get-started" onClick={() => setOpen(false)} className="inline-flex h-11 items-center rounded-pill bg-paper px-4 text-sm font-medium text-ink transition-colors hover:bg-paper/85 md:px-5">
+                  Dashboard
+                </TransitionLink>
+                <span aria-hidden="true" className="size-11" />
+              </>
             ) : (
               <TransitionLink
                 href="/onboarding"
                 data-tour="get-started"
                 onClick={() => setOpen(false)}
-                aria-hidden={user === null}
-                tabIndex={user === null ? -1 : undefined}
-                className={cn(
-                  'inline-flex h-11 items-center rounded-full bg-paper px-5 text-sm font-medium text-ink transition-all hover:bg-paper/85',
-                  user === null && 'pointer-events-none opacity-0',
-                )}
+                className="inline-flex h-11 items-center rounded-pill bg-paper px-5 text-sm font-medium text-ink transition-colors hover:bg-paper/85"
               >
                 Get started
               </TransitionLink>
@@ -99,7 +103,7 @@ export function SiteNav() {
               aria-controls="site-menu"
               aria-label={open ? 'Close menu' : 'Open menu'}
               onClick={() => setOpen((v) => !v)}
-              className="grid size-11 place-items-center rounded-full bg-[#1a1a1d] transition-colors hover:bg-[#242428]"
+              className="grid size-11 place-items-center rounded-pill bg-[#1a1a1d] transition-colors hover:bg-[#242428]"
             >
               <MenuGlyph open={open} />
             </button>
@@ -117,9 +121,9 @@ function MenuGlyph({ open }: { open: boolean }) {
   // three lines that cross into an X
   return (
     <span aria-hidden="true" className="relative block h-[14px] w-5">
-      <motion.span animate={open ? { top: 6, rotate: 45 } : { top: 0, rotate: 0 }} transition={t} className="absolute left-0 block h-[1.5px] w-5 rounded-full bg-paper" />
-      <motion.span animate={open ? { opacity: 0, scaleX: 0.2 } : { opacity: 1, scaleX: 1 }} transition={{ duration: 0.18 }} className="absolute top-[6px] left-0 block h-[1.5px] w-5 rounded-full bg-paper" />
-      <motion.span animate={open ? { top: 6, rotate: -45 } : { top: 12, rotate: 0 }} transition={t} className="absolute left-0 block h-[1.5px] w-5 rounded-full bg-paper" />
+      <motion.span animate={open ? { top: 6, rotate: 45 } : { top: 0, rotate: 0 }} transition={t} className="absolute left-0 block h-[1.5px] w-5 rounded-pill bg-paper" />
+      <motion.span animate={open ? { opacity: 0, scaleX: 0.2 } : { opacity: 1, scaleX: 1 }} transition={{ duration: 0.18 }} className="absolute top-[6px] left-0 block h-[1.5px] w-5 rounded-pill bg-paper" />
+      <motion.span animate={open ? { top: 6, rotate: -45 } : { top: 12, rotate: 0 }} transition={t} className="absolute left-0 block h-[1.5px] w-5 rounded-pill bg-paper" />
     </span>
   )
 }

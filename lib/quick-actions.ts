@@ -43,9 +43,12 @@ export const OWNER_ACTIONS: QuickAction[] = [
   { id: 'mail', label: 'Send an email', icon: 'Send', href: '/admin/email', keys: 'email resend test message', hint: 'Do' },
   { id: 'announce', label: 'Post an announcement', icon: 'Megaphone', href: '/admin/broadcast', keys: 'broadcast notice banner message everyone', hint: 'Do' },
   { id: 'discord', label: 'Discord', icon: 'Discord', href: '/admin/discord', keys: 'bot server roles channels test', hint: 'Do' },
+  { id: 'design', label: 'Change how the site looks', icon: 'Palette', href: '/admin/design', keys: 'design roundness rounded corners font typeface gloock inter look theme slider', hint: 'Do' },
   { id: 'text', label: 'Edit site text', icon: 'FileCheck2', href: '/admin/text', keys: 'copy words wording edit text', hint: 'Do' },
-  { id: 'push', label: 'Push a feature live', icon: 'Rocket', href: '/admin/push', keys: 'features release dev flags publish', hint: 'Do' },
-  { id: 'logs', label: 'Logs and health', icon: 'BarChart3', href: '/admin/logs', keys: 'errors events system status health', hint: 'Do' },
+  { id: 'links', label: 'Edit socials and links', icon: 'Link2', href: '/admin/socials', keys: 'social accounts footer links page tiktok instagram discord', hint: 'Do' },
+  { id: 'push', label: 'Push a feature live', icon: 'Rocket', href: '/dev/features', keys: 'features release dev flags publish', hint: 'Do' },
+  { id: 'health', label: 'System health', icon: 'Activity', href: '/admin/system', keys: 'errors status health slow services money checks', hint: 'Do' },
+  { id: 'logs', label: 'Logs and events', icon: 'BarChart3', href: '/admin/logs', keys: 'errors events requests page views security', hint: 'Do' },
   HELP,
 ]
 

@@ -76,18 +76,18 @@ export function EmailStudio({ adminEmail, from, previews }: { adminEmail: string
 
   return (
     <div className="grid gap-6">
-      <section className="overflow-hidden rounded-[28px] border border-line bg-surface/70">
+      <section className="overflow-hidden rounded-[calc(28px*var(--round,1))] border border-line bg-surface/70">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4">
           <div>
             <h2 className="font-display text-2xl">The emails</h2>
             <p className="text-xs text-mute">This is exactly what members receive. Pick one, check it, send yourself a test.</p>
           </div>
-          <div className="flex items-center gap-1 rounded-full border border-line p-1" role="group" aria-label="Preview width">
+          <div className="flex items-center gap-1 rounded-pill border border-line p-1" role="group" aria-label="Preview width">
             {[
               { v: false, icon: <MonitorSmartphone className="size-4" />, label: 'Desktop' },
               { v: true, icon: <Smartphone className="size-4" />, label: 'Phone' },
             ].map((o) => (
-              <button key={o.label} type="button" onClick={() => setPhone(o.v)} aria-pressed={phone === o.v} className={cn('inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs transition-colors', phone === o.v ? 'bg-paper text-ink' : 'text-mute hover:text-paper')}>
+              <button key={o.label} type="button" onClick={() => setPhone(o.v)} aria-pressed={phone === o.v} className={cn('inline-flex h-8 items-center gap-1.5 rounded-pill px-3 text-xs transition-colors', phone === o.v ? 'bg-paper text-ink' : 'text-mute hover:text-paper')}>
                 {o.icon}
                 {o.label}
               </button>
@@ -97,7 +97,7 @@ export function EmailStudio({ adminEmail, from, previews }: { adminEmail: string
 
         <div className="flex flex-wrap gap-2 border-b border-line px-5 py-3" role="tablist" aria-label="Email type">
           {previews.map((p) => (
-            <button key={p.id} type="button" role="tab" aria-selected={sel === p.id} onClick={() => setSel(p.id)} className={cn('h-9 rounded-full border px-4 text-sm transition-colors', sel === p.id ? 'border-paper bg-paper/10' : 'border-line text-mute hover:text-paper')}>
+            <button key={p.id} type="button" role="tab" aria-selected={sel === p.id} onClick={() => setSel(p.id)} className={cn('h-9 rounded-pill border px-4 text-sm transition-colors', sel === p.id ? 'border-paper bg-paper/10' : 'border-line text-mute hover:text-paper')}>
               {p.label}
             </button>
           ))}
@@ -121,8 +121,8 @@ export function EmailStudio({ adminEmail, from, previews }: { adminEmail: string
             <p className="font-display text-xl leading-tight">{cur.label}</p>
             <p className="mt-1 text-sm text-mute">{cur.hint}</p>
             <label className="mt-5 block font-mono text-xs text-mute" htmlFor="email-to">Send a test to</label>
-            <input id="email-to" value={to} onChange={(e) => setTo(e.target.value)} type="email" className="mt-1.5 h-11 w-full rounded-full border border-line-strong bg-ink/80 px-4 text-sm focus:outline-none" />
-            <button type="button" disabled={busy !== null} onClick={send} className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-paper text-sm font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-50">
+            <input id="email-to" value={to} onChange={(e) => setTo(e.target.value)} type="email" className="mt-1.5 h-11 w-full rounded-pill border border-line-strong bg-ink/80 px-4 text-sm focus:outline-none" />
+            <button type="button" disabled={busy !== null} onClick={send} className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-pill bg-paper text-sm font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-50">
               {busy === 'send' ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />} Send test
             </button>
             <p className="mt-3 text-xs leading-snug text-mute">The test is labelled [TEST], uses a fake code (123456) and creates nothing.</p>
@@ -130,7 +130,7 @@ export function EmailStudio({ adminEmail, from, previews }: { adminEmail: string
         </div>
       </section>
 
-      <section className="rounded-[28px] border border-line bg-surface/70 p-5">
+      <section className="rounded-[calc(28px*var(--round,1))] border border-line bg-surface/70 p-5">
         <h2 className="font-display text-2xl">Full code round trip</h2>
         <p className="mt-1 text-sm text-mute">Stores a real code (hashed), emails it to {adminEmail}, then checks what you type. It tests the whole path without creating an account.</p>
 
@@ -143,7 +143,7 @@ export function EmailStudio({ adminEmail, from, previews }: { adminEmail: string
             const state = step > i ? 'done' : step === i ? 'now' : 'todo'
             return (
               <li key={s.n} className={cn('rounded-2xl border p-4 transition-colors', state === 'now' ? 'border-paper bg-paper/[0.06]' : state === 'done' ? 'border-emerald-400/40 bg-emerald-400/[0.05]' : 'border-line opacity-80')}>
-                <span className={cn('grid size-7 place-items-center rounded-full text-xs font-semibold', state === 'done' ? 'bg-emerald-300 text-ink' : state === 'now' ? 'bg-paper text-ink' : 'bg-line-strong text-mute')}>{state === 'done' ? <Check className="size-4" /> : s.n}</span>
+                <span className={cn('grid size-7 place-items-center rounded-pill text-xs font-semibold', state === 'done' ? 'bg-emerald-300 text-ink' : state === 'now' ? 'bg-paper text-ink' : 'bg-line-strong text-mute')}>{state === 'done' ? <Check className="size-4" /> : s.n}</span>
                 <p className="mt-3 text-sm">{s.title}</p>
                 <p className="text-xs text-mute">{s.body}</p>
               </li>
@@ -152,13 +152,13 @@ export function EmailStudio({ adminEmail, from, previews }: { adminEmail: string
         </ol>
 
         <div className="mt-5 flex flex-wrap items-center gap-2">
-          <button type="button" disabled={busy !== null} onClick={startCode} className="inline-flex h-11 items-center gap-2 rounded-full bg-paper px-6 text-sm font-medium text-ink hover:bg-paper/85 disabled:opacity-50">
+          <button type="button" disabled={busy !== null} onClick={startCode} className="inline-flex h-11 items-center gap-2 rounded-pill bg-paper px-6 text-sm font-medium text-ink hover:bg-paper/85 disabled:opacity-50">
             {busy === 'code' ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />} {step === 0 ? 'Send me a code' : 'Start again'}
           </button>
           {step === 1 && (
             <form onSubmit={(e) => { e.preventDefault(); if (code.length === 6) checkCode() }} className="flex items-center gap-2">
-              <input autoFocus value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="000000" aria-label="Code from the email" className="h-11 w-40 rounded-full border border-line-strong bg-ink/80 text-center font-mono text-lg tracking-[0.3em] focus:outline-none" />
-              <button type="submit" disabled={code.length !== 6 || busy !== null} className="inline-flex h-11 items-center gap-2 rounded-full border border-line-strong px-5 text-sm hover:bg-paper/10 disabled:opacity-50">
+              <input autoFocus value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="000000" aria-label="Code from the email" className="h-11 w-40 rounded-pill border border-line-strong bg-ink/80 text-center font-mono text-lg tracking-[0.3em] focus:outline-none" />
+              <button type="submit" disabled={code.length !== 6 || busy !== null} className="inline-flex h-11 items-center gap-2 rounded-pill border border-line-strong px-5 text-sm hover:bg-paper/10 disabled:opacity-50">
                 {busy === 'check' && <Loader2 className="size-4 animate-spin" />} Check
               </button>
             </form>
@@ -200,7 +200,7 @@ export function StatusButton({ id }: { id: string }) {
           setBusy(false)
         }
       }}
-      className="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1 text-xs text-mute transition-colors hover:text-paper"
+      className="inline-flex items-center gap-1.5 rounded-pill border border-line px-3 py-1 text-xs text-mute transition-colors hover:text-paper"
     >
       {busy ? <Loader2 className="size-3 animate-spin" /> : <RefreshCw className="size-3" />}
       {state ?? 'Check delivery'}

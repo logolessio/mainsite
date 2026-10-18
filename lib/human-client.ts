@@ -37,7 +37,7 @@ export async function ensureHuman(): Promise<void> {
   overlay.setAttribute('role', 'dialog')
   overlay.setAttribute('aria-label', 'Checking that you are human')
   const card = document.createElement('div')
-  card.className = 'w-full max-w-sm rounded-[28px] border border-white/15 bg-[#09090a] p-6 text-center'
+  card.className = 'w-full max-w-sm rounded-[calc(28px*var(--round,1))] border border-white/15 bg-[#09090a] p-6 text-center'
   const h = document.createElement('p')
   h.className = 'font-display text-2xl'
   h.textContent = 'One quick check'

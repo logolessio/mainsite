@@ -8,7 +8,7 @@ export function SetupBanner({ steps, guide }: { steps: SetupStep[]; guide: strin
   const next = needed.find((s) => !s.done)
   if (!next) return null
   return (
-    <section aria-label="Finish setting up" className="mb-14 rounded-[2rem] border border-line-strong bg-black/45 p-6 md:p-8">
+    <section aria-label="Finish setting up" className="mb-14 rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-black/45 p-6 md:p-8">
       <div className="flex items-center justify-between gap-4">
         <p className="text-[15px] text-paper/55">Finish setting up</p>
         <p className="text-[15px] text-paper/55 tabular-nums">
@@ -17,7 +17,7 @@ export function SetupBanner({ steps, guide }: { steps: SetupStep[]; guide: strin
       </div>
       <div className="mt-3 flex gap-1.5" role="progressbar" aria-valuemin={0} aria-valuemax={needed.length} aria-valuenow={done} aria-label="Set-up steps done">
         {needed.map((s) => (
-          <span key={s.id} className={s.done ? 'h-1.5 flex-1 rounded-full bg-paper' : 'h-1.5 flex-1 rounded-full bg-white/12'} />
+          <span key={s.id} className={s.done ? 'h-1.5 flex-1 rounded-pill bg-paper' : 'h-1.5 flex-1 rounded-pill bg-white/12'} />
         ))}
       </div>
       <h2 className="mt-6 font-display text-3xl leading-[1.05] tracking-[-0.03em] md:text-4xl">{next.title}</h2>

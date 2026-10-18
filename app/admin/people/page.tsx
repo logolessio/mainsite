@@ -96,20 +96,20 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
       <PageHeader title="People" sub="Everyone on logoless. Open a person for their whole profile and every action: roles, messages, extra checks, balance and removal." />
       <PurgeDeletions waiting={waiting.length} due={waiting.filter((a) => a <= t - 30 * 86400).length} />
       <form action="/admin/people" className="mb-4 flex flex-wrap items-center gap-2">
-        <input name="q" defaultValue={q} placeholder="Search name, handle or email" aria-label="Search people" className="h-11 w-full rounded-full border border-line-strong bg-ink/80 px-5 text-sm focus:outline-none sm:w-80" />
+        <input name="q" defaultValue={q} placeholder="Search name, handle or email" aria-label="Search people" className="h-11 w-full rounded-pill border border-line-strong bg-ink/80 px-5 text-sm focus:outline-none sm:w-80" />
         {f && <input type="hidden" name="f" value={f} />}
         {view === 'cards' && <input type="hidden" name="v" value="cards" />}
-        <button className="h-11 rounded-full bg-paper px-6 text-sm font-medium text-ink">Search</button>
+        <button className="h-11 rounded-pill bg-paper px-6 text-sm font-medium text-ink">Search</button>
       </form>
       <div className="mb-6 flex flex-wrap items-center gap-1.5">
         {FILTERS.map((x) => (
-          <a key={x.id} href={link({ f: x.id })} aria-current={f === x.id ? 'true' : undefined} className={cn('inline-flex h-9 items-center rounded-full border px-4 text-sm transition-colors duration-300', f === x.id ? 'border-white/[0.14] bg-white/[0.08] text-paper' : 'border-transparent text-paper/55 hover:text-paper')}>
+          <a key={x.id} href={link({ f: x.id })} aria-current={f === x.id ? 'true' : undefined} className={cn('inline-flex h-9 items-center rounded-pill border px-4 text-sm transition-colors duration-300', f === x.id ? 'border-white/[0.14] bg-white/[0.08] text-paper' : 'border-transparent text-paper/55 hover:text-paper')}>
             {x.label}
           </a>
         ))}
-        <span className="ml-auto inline-flex rounded-full border border-line p-0.5 text-sm">
+        <span className="ml-auto inline-flex rounded-pill border border-line p-0.5 text-sm">
           {(['list', 'cards'] as const).map((v) => (
-            <a key={v} href={link({ v: v === 'cards' ? 'cards' : '' })} aria-current={view === v ? 'true' : undefined} className={cn('inline-flex h-8 items-center rounded-full px-4 capitalize transition-colors duration-300', view === v ? 'bg-white/[0.1] text-paper' : 'text-paper/55 hover:text-paper')}>
+            <a key={v} href={link({ v: v === 'cards' ? 'cards' : '' })} aria-current={view === v ? 'true' : undefined} className={cn('inline-flex h-8 items-center rounded-pill px-4 capitalize transition-colors duration-300', view === v ? 'bg-white/[0.1] text-paper' : 'text-paper/55 hover:text-paper')}>
               {v === 'cards' ? 'Profiles' : 'List'}
             </a>
           ))}
@@ -135,9 +135,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
                 <Link data-kb-focus href={`/admin/people/${p.id}`} className="group flex items-center gap-4 px-5 py-4 transition-colors duration-300 hover:bg-white/[0.04]">
                   {p.avatar ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.avatar} alt="" className="size-11 shrink-0 rounded-full object-cover" />
+                    <img src={p.avatar} alt="" className="size-11 shrink-0 rounded-pill object-cover" />
                   ) : (
-                    <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full bg-white/[0.06] text-sm">{p.name.slice(0, 1).toUpperCase()}</span>
+                    <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-pill bg-white/[0.06] text-sm">{p.name.slice(0, 1).toUpperCase()}</span>
                   )}
                   <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-center gap-x-2 gap-y-1">

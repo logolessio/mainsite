@@ -59,7 +59,7 @@ export function ContactCard() {
               >
                 <span className="flex items-center gap-2.5">
                   {icons.map((Ic, n) => (
-                    <span key={n} className={cn('grid size-11 place-items-center rounded-full transition-colors', on ? 'bg-paper text-ink' : 'bg-white/[0.07] text-paper/80 group-hover:bg-white/[0.11]')}>
+                    <span key={n} className={cn('grid size-11 place-items-center rounded-pill transition-colors', on ? 'bg-paper text-ink' : 'bg-white/[0.07] text-paper/80 group-hover:bg-white/[0.11]')}>
                       <Ic />
                     </span>
                   ))}
@@ -69,7 +69,7 @@ export function ContactCard() {
                   <span className="mt-0.5 block text-xs text-mute">{o.hint}</span>
                 </span>
                 {on && (
-                  <span aria-hidden="true" className="absolute top-3 right-3 grid size-5 place-items-center rounded-full bg-paper text-ink">
+                  <span aria-hidden="true" className="absolute top-3 right-3 grid size-5 place-items-center rounded-pill bg-paper text-ink">
                     <Check className="size-3" />
                   </span>
                 )}

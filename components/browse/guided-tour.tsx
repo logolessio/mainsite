@@ -69,7 +69,7 @@ export const CAMPAIGN_STEPS: Step[] = [
   {
     target: '[data-tour="cc-preview"]',
     title: 'Hear it first',
-    body: 'Play the preview to get a feel for the track before you decide to clip it.',
+    body: 'Play the preview to get a feel for the track before you decide to use it.',
     icon: Headphones,
     radius: 999,
     pad: 8,
@@ -77,7 +77,7 @@ export const CAMPAIGN_STEPS: Step[] = [
   {
     target: '[data-tour="cc-brief"]',
     title: 'The brief',
-    body: 'What the campaign is about and the kind of clip the brand wants to see.',
+    body: 'What the campaign is about and the kind of submission the brand wants to see.',
     icon: BookOpen,
     radius: 24,
     pad: 8,
@@ -85,14 +85,14 @@ export const CAMPAIGN_STEPS: Step[] = [
   {
     target: '[data-tour="cc-rules"]',
     title: 'Do this, not that',
-    body: 'Ideas worth clipping, and the off-limits list that gets a clip rejected.',
+    body: 'Ideas worth making, and the off-limits list that gets a submission rejected.',
     icon: ListChecks,
     radius: 24,
     pad: 8,
   },
   {
     target: '[data-tour="cc-submit"]',
-    title: 'Submit your clip',
+    title: 'Submit your content',
     body: 'Post it on your own account, then paste the link here. Once approved, every verified view earns.',
     icon: Send,
     radius: 24,
@@ -370,7 +370,7 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
         className="absolute top-0 left-0 w-[min(400px,calc(100vw-32px))] will-change-transform"
         style={{ transform: 'translate3d(-9999px, 0, 0)' }}
       >
-        <div className="liquid-glass overflow-hidden rounded-[28px]">
+        <div className="liquid-glass overflow-hidden rounded-[calc(28px*var(--round,1))]">
           <div className="p-7 pb-5">
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
@@ -383,7 +383,7 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
                 className="min-h-[150px]"
               >
                 <div className="flex items-center justify-between">
-                  <span className="grid size-11 place-items-center rounded-full bg-white/12 shadow-[inset_0_1px_0_rgb(255_255_255/0.4)]">
+                  <span className="grid size-11 place-items-center rounded-pill bg-white/12 shadow-[inset_0_1px_0_rgb(255_255_255/0.4)]">
                     <step.icon className="size-5" />
                   </span>
                   <p className="text-[11px] text-white/60">
@@ -408,7 +408,7 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
                   initial={false}
                   animate={{ width: i === index ? 20 : 6, opacity: i <= index ? 1 : 0.3 }}
                   transition={{ duration: 0.4, ease: EASE_OUT }}
-                  className="h-1.5 rounded-full bg-white"
+                  className="h-1.5 rounded-pill bg-white"
                 />
               ))}
             </div>
@@ -418,7 +418,7 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
                 aria-label="Previous step"
                 disabled={index === 0}
                 onClick={() => setIndex((i) => i - 1)}
-                className="grid size-11 place-items-center rounded-full bg-white/12 shadow-[inset_0_1px_0_rgb(255_255_255/0.35)] transition-colors hover:bg-white/20 disabled:opacity-30"
+                className="grid size-11 place-items-center rounded-pill bg-white/12 shadow-[inset_0_1px_0_rgb(255_255_255/0.35)] transition-colors hover:bg-white/20 disabled:opacity-30"
               >
                 <ArrowLeft className="size-4" />
               </button>
@@ -426,7 +426,7 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
                 ref={nextBtn}
                 type="button"
                 onClick={advance}
-                className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-6 text-sm font-medium text-black transition-transform hover:scale-[1.03] active:scale-95"
+                className="inline-flex h-11 items-center gap-2 rounded-pill bg-white px-6 text-sm font-medium text-black transition-transform hover:scale-[1.03] active:scale-95"
               >
                 {step.cta ?? (last ? 'Done' : 'Next')}
                 <ArrowRight className="size-4" />
@@ -435,7 +435,7 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
           </div>
         </div>
         <div className="mt-3 flex items-center justify-center gap-4 text-xs text-white/60">
-          <button type="button" onClick={onClose} className="rounded-full px-3 py-1 transition-colors hover:text-white">
+          <button type="button" onClick={onClose} className="rounded-pill px-3 py-1 transition-colors hover:text-white">
             Skip tour
           </button>
         </div>

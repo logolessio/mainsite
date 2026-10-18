@@ -222,13 +222,13 @@ export type ProfileLink = { platform: LinkPlatform; url: string }
 /** Which parts of a profile strangers can see. Each defaults to the value below. */
 export const SHOW_OPTIONS = [
   { key: 'badges', label: 'Equipped badges', hint: 'Up to five from your achievements', on: true },
-  { key: 'clips', label: 'Clips submitted', hint: 'How many clips you have posted', on: true },
+  { key: 'clips', label: 'Submissions made', hint: 'How many submissions you have posted', on: true },
   { key: 'views', label: 'Views generated', hint: 'Total verified views', on: false },
   { key: 'earnings', label: 'Total earned', hint: 'Your lifetime earnings', on: false },
   { key: 'campaigns', label: 'Campaigns clipped', hint: 'How many campaigns you have joined', on: false },
   { key: 'joined', label: 'Join date', hint: 'When you created your account', on: true },
   { key: 'country', label: 'Country', hint: 'Shown as a country code', on: false },
-  { key: 'links', label: 'Clipping accounts', hint: 'Show the TikTok, YouTube and Instagram accounts you clip from', on: false },
+  { key: 'links', label: 'Creator accounts', hint: 'Show the TikTok, YouTube and Instagram accounts you post from', on: false },
   { key: 'status', label: 'Online status', hint: 'A green dot when you are on logoless', on: true },
 ] as const
 export type ShowKey = (typeof SHOW_OPTIONS)[number]['key']

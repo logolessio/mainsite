@@ -69,8 +69,8 @@ export function SecretDialogHost() {
   if (!ask || typeof document === 'undefined') return null
   return createPortal(
     <div className="fixed inset-0 z-[300] grid place-items-center bg-black/70 px-4" onMouseDown={() => close(null)} role="presentation">
-      <form ref={box} onSubmit={submit} onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Admin password" className="w-full max-w-sm rounded-[2rem] border border-line-strong bg-ink p-7">
-        <span className="grid size-11 place-items-center rounded-full bg-paper text-ink">
+      <form ref={box} onSubmit={submit} onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Admin password" className="w-full max-w-sm rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-ink p-7">
+        <span className="grid size-11 place-items-center rounded-pill bg-paper text-ink">
           <Lock className="size-5" />
         </span>
         <p className="mt-5 font-display text-3xl leading-tight">{isSet === false ? 'Make your admin password' : 'Enter your admin password'}</p>
@@ -79,8 +79,8 @@ export function SecretDialogHost() {
         </p>
         {isSet !== null && (
           <div className="mt-5 grid gap-3">
-            <input ref={input} type="password" autoComplete={isSet ? 'current-password' : 'new-password'} value={pw} onChange={(e) => setPw(e.target.value)} placeholder={isSet ? 'Admin password' : 'New password (10+ characters)'} className="h-12 w-full rounded-full border border-line-strong bg-transparent px-5 outline-none focus:border-paper" />
-            {isSet === false && <input type="password" autoComplete="new-password" value={again} onChange={(e) => setAgain(e.target.value)} placeholder="Type it again" className="h-12 w-full rounded-full border border-line-strong bg-transparent px-5 outline-none focus:border-paper" />}
+            <input ref={input} type="password" autoComplete={isSet ? 'current-password' : 'new-password'} value={pw} onChange={(e) => setPw(e.target.value)} placeholder={isSet ? 'Admin password' : 'New password (10+ characters)'} className="h-12 w-full rounded-pill border border-line-strong bg-transparent px-5 outline-none focus:border-paper" />
+            {isSet === false && <input type="password" autoComplete="new-password" value={again} onChange={(e) => setAgain(e.target.value)} placeholder="Type it again" className="h-12 w-full rounded-pill border border-line-strong bg-transparent px-5 outline-none focus:border-paper" />}
           </div>
         )}
         {error && (
@@ -89,7 +89,7 @@ export function SecretDialogHost() {
           </p>
         )}
         <div className="mt-6 flex items-center gap-3">
-          <button type="submit" disabled={busy || isSet === null || !pw} className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-paper text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
+          <button type="submit" disabled={busy || isSet === null || !pw} className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-pill bg-paper text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
             {busy && <Loader2 className="size-4 animate-spin" />} {isSet === false ? 'Save and continue' : 'Continue'}
           </button>
           <button type="button" onClick={() => close(null)} className="h-12 px-4 text-sm text-mute hover:text-paper">

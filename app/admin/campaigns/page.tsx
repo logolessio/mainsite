@@ -13,7 +13,7 @@ import { Card, PageHeader } from '@/components/app/ui'
 import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
 import { type CampaignRow } from '@/lib/campaigns-db'
 import { db } from '@/lib/db'
-import { getSetting } from '@/lib/settings'
+import { getSetting, pinnedIds } from '@/lib/settings'
 import { pageAdmin } from '@/lib/user'
 
 export const metadata: Metadata = { title: 'Campaigns | logoless', robots: { index: false } }
@@ -45,6 +45,7 @@ export default async function Page() {
   ).results
   const mocks = rows.filter((r) => r.id.startsWith('mock-'))
   const mockPublic = (await getSetting('mock_public')) === '1'
+  const pins = new Set(await pinnedIds())
   const samples = rows.filter((r) => r.admin_note === 'sample').length
 
   const tabs: TabbedItem[] = VIEWS.map((v) => {
@@ -99,6 +100,7 @@ export default async function Page() {
                       )}
                       {c.status === 'live' && (
                         <>
+                          <AdminButton url={`/api/admin/campaigns/${c.id}`} data={{ action: pins.has(c.id) ? 'unpin' : 'pin' }} hotkey="t">{pins.has(c.id) ? 'Unpin' : 'Pin to top'}</AdminButton>
                           <AdminButton url={`/api/admin/campaigns/${c.id}`} data={{ action: 'pause' }} hotkey="p" ask={{ label: 'Reason (optional)' }}>Pause</AdminButton>
                           <AdminButton variant="danger" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'end' }} confirm="End this campaign? It stops taking clips.">End</AdminButton>
                         </>

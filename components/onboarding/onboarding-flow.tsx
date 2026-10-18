@@ -12,11 +12,12 @@ import { useMotionPrefs, useMounted } from '@/hooks/use-motion-prefs'
 import { type Provider, type Role, signInWithProvider, signUpWithEmail } from '@/lib/auth'
 import { uploadImage } from '@/lib/image-client'
 import { LookPicker } from '@/components/profile/look-picker'
+import { VerifyAccounts } from './verify-accounts'
 import { avatarCss, bannerCss, lookById, lookFor, lookKey } from '@/lib/looks'
 import { checkHandleAvailable, resendEmailCode, verifyEmailCode } from '@/lib/onboarding'
 import { cn } from '@/lib/utils'
 
-type Id = 'welcome' | 'role' | 'method' | 'email' | 'password' | 'code' | 'paypal' | 'name' | 'handle' | 'pictures' | 'accounts' | 'happy' | 'saving' | 'hello' | 'tour' | 'done'
+type Id = 'welcome' | 'role' | 'method' | 'email' | 'password' | 'code' | 'paypal' | 'name' | 'handle' | 'pictures' | 'accounts' | 'happy' | 'saving' | 'verify' | 'hello' | 'tour' | 'done'
 
 type Data = {
   role: Role | null
@@ -38,10 +39,11 @@ type St = 'idle' | 'checking' | 'ok' | 'bad'
 type Verdict = { ok: boolean; msg: string } | null
 
 const HANDLE_RE = /^[a-z0-9_]{3,20}$/
+const VERIFIABLE = ['tiktok', 'youtube', 'instagram']
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const SETTLE_MS = 5200 // "setting things up" always takes a moment: it is part of the welcome, not a delay
 
-const primary = 'inline-flex h-14 items-center justify-center rounded-full bg-paper px-10 text-[17px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-30'
+const primary = 'inline-flex h-14 items-center justify-center rounded-pill bg-paper px-10 text-[17px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-30'
 const quiet = 'text-[15px] text-mute underline underline-offset-4 transition-colors hover:text-paper'
 
 const wait = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms))
@@ -131,12 +133,12 @@ function StatusIcon({ st }: { st: St }) {
           </motion.span>
         )}
         {st === 'ok' && (
-          <motion.span key="o" initial={{ opacity: 0, scale: 0.3, rotate: -40 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ type: 'spring', stiffness: 480, damping: 18 }} className="grid size-6 place-items-center rounded-full bg-emerald-500 text-white">
+          <motion.span key="o" initial={{ opacity: 0, scale: 0.3, rotate: -40 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ type: 'spring', stiffness: 480, damping: 18 }} className="grid size-6 place-items-center rounded-pill bg-emerald-500 text-white">
             <Check className="size-4" strokeWidth={3} />
           </motion.span>
         )}
         {st === 'bad' && (
-          <motion.span key="b" initial={{ opacity: 0, scale: 0.3 }} animate={{ opacity: 1, scale: 1, x: [0, -4, 4, -3, 3, 0] }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} className="grid size-6 place-items-center rounded-full bg-red-500 text-white">
+          <motion.span key="b" initial={{ opacity: 0, scale: 0.3 }} animate={{ opacity: 1, scale: 1, x: [0, -4, 4, -3, 3, 0] }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} className="grid size-6 place-items-center rounded-pill bg-red-500 text-white">
             <X className="size-4" strokeWidth={3} />
           </motion.span>
         )}
@@ -182,8 +184,8 @@ function ProfilePill({ data, onAvatar, onBanner, busy }: { data: Data; onAvatar?
   const look = lookById(data.lookId) ?? lookFor(data.handle || data.name || 'x')
   const letter = (data.name.trim()[0] ?? data.handle[0] ?? '').toUpperCase()
   return (
-    <div className="flex w-fit max-w-full items-center gap-3 rounded-[2rem] border border-line-strong p-3 [--h:clamp(5.5rem,22vw,7.5rem)]">
-      <button type="button" disabled={!editable} onClick={onAvatar} aria-label="Profile picture" style={data.avatarUrl ? undefined : { background: avatarCss(look) }} className={cn('relative grid size-[var(--h)] shrink-0 place-items-center overflow-hidden rounded-full outline-none', editable && 'transition-transform hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-paper/60')}>
+    <div className="flex w-fit max-w-full items-center gap-3 rounded-[calc(2rem*var(--round,1))] border border-line-strong p-3 [--h:clamp(5.5rem,22vw,7.5rem)]">
+      <button type="button" disabled={!editable} onClick={onAvatar} aria-label="Profile picture" style={data.avatarUrl ? undefined : { background: avatarCss(look) }} className={cn('relative grid size-[var(--h)] shrink-0 place-items-center overflow-hidden rounded-pill outline-none', editable && 'transition-transform hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-paper/60')}>
         {data.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={data.avatarUrl} alt="Your profile picture" className="size-full object-cover" />
@@ -198,7 +200,7 @@ function ProfilePill({ data, onAvatar, onBanner, busy }: { data: Data; onAvatar?
           </span>
         )}
       </button>
-      <button type="button" disabled={!editable} onClick={onBanner} aria-label="Banner" style={data.bannerUrl ? undefined : { background: bannerCss(look) }} className={cn('relative grid h-[var(--h)] shrink-0 aspect-video place-items-center overflow-hidden rounded-[1.4rem] outline-none', editable && 'transition-transform hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-paper/60')}>
+      <button type="button" disabled={!editable} onClick={onBanner} aria-label="Banner" style={data.bannerUrl ? undefined : { background: bannerCss(look) }} className={cn('relative grid h-[var(--h)] shrink-0 aspect-video place-items-center overflow-hidden rounded-[calc(1.4rem*var(--round,1))] outline-none', editable && 'transition-transform hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-paper/60')}>
         {data.bannerUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={data.bannerUrl} alt="Your banner" className="size-full object-cover" />
@@ -231,8 +233,8 @@ function LiquidFill() {
           <path d={wave} fill="currentColor" />
         </svg>
         <div className="absolute inset-0 overflow-hidden bg-[linear-gradient(180deg,#ffffff_0%,#f6f8ff_45%,#e3eaff_100%)]">
-          <span className="liquid-drift-a absolute -top-[10%] -left-[10%] size-[70vmax] rounded-full bg-[radial-gradient(closest-side,rgb(255_255_255),transparent)]" />
-          <span className="liquid-drift-b absolute -right-[15%] bottom-[-20%] size-[60vmax] rounded-full bg-[radial-gradient(closest-side,rgb(196_214_255/0.8),transparent)]" />
+          <span className="liquid-drift-a absolute -top-[10%] -left-[10%] size-[70vmax] rounded-pill bg-[radial-gradient(closest-side,rgb(255_255_255),transparent)]" />
+          <span className="liquid-drift-b absolute -right-[15%] bottom-[-20%] size-[60vmax] rounded-pill bg-[radial-gradient(closest-side,rgb(196_214_255/0.8),transparent)]" />
         </div>
       </motion.div>
     </motion.div>
@@ -285,7 +287,7 @@ function MiniDash({ role, onFinish }: { role: Role; onFinish: () => void }) {
   const last = i === items.length - 1
   return (
     <div className="w-full max-w-xl">
-      <div className="grid overflow-hidden rounded-[2rem] border border-line-strong sm:grid-cols-[11rem_1fr]">
+      <div className="grid overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-line-strong sm:grid-cols-[11rem_1fr]">
         <ul className="grid gap-1 border-b border-line-strong p-3 sm:border-r sm:border-b-0" aria-label="Dashboard sections">
           {items.map((it, n) => (
             <li key={it.label}>
@@ -318,7 +320,7 @@ function MiniDash({ role, onFinish }: { role: Role; onFinish: () => void }) {
   )
 }
 
-const STEP_ORDER: Id[] = ['welcome', 'role', 'method', 'email', 'password', 'code', 'paypal', 'name', 'handle', 'pictures', 'accounts', 'happy', 'saving', 'hello', 'tour', 'done']
+const STEP_ORDER: Id[] = ['welcome', 'role', 'method', 'email', 'password', 'code', 'paypal', 'name', 'handle', 'pictures', 'accounts', 'happy', 'saving', 'verify', 'hello', 'tour', 'done']
 
 /**
  * `preview` is an admin's dry run: it starts as a stranger would (signed out), every question works, and nothing is sent to the
@@ -343,7 +345,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
   const [tick, setTick] = useState(0) // which reassuring line to show while things are set up
   const [copied, setCopied] = useState(false)
   const [picking, setPicking] = useState<string | null>(null) // which sign-in card was pressed
-  const [data, setData] = useState<Data>({ role: initialRole ?? (startAt !== 'welcome' ? 'clipper' : null), email: sessionUser?.email ?? '', paypal: '', name: sessionUser?.name || (startAt !== 'welcome' ? 'Luna Ray' : ''), handle: startAt !== 'welcome' ? 'luna_ray' : '', avatarKey: null, avatarUrl: null, bannerKey: null, bannerUrl: null, lookId: startAt !== 'welcome' ? lookFor('luna_ray').id : '', linked: {} })
+  const [data, setData] = useState<Data>({ role: initialRole ?? (startAt !== 'welcome' ? 'clipper' : null), email: sessionUser?.email ?? '', paypal: '', name: sessionUser?.name || (startAt !== 'welcome' ? 'Luna Ray' : ''), handle: startAt !== 'welcome' ? 'luna_ray' : '', avatarKey: null, avatarUrl: null, bannerKey: null, bannerUrl: null, lookId: startAt !== 'welcome' ? lookFor('luna_ray').id : '', linked: startAt === 'verify' ? { tiktok: 'luna_ray', youtube: '@lunaray', instagram: 'luna.ray' } : {} })
   const [signedIn, setSignedIn] = useState(Boolean(sessionUser))
   const [verifyMode, setVerifyMode] = useState(false) // the code step is proving a signed-in account, not finishing an email sign-up
   const avatarInput = useRef<HTMLInputElement>(null)
@@ -402,6 +404,8 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
         return 'Are you happy with how it looks?'
       case 'saving':
         return 'Setting things up.'
+      case 'verify':
+        return 'Prove they are yours.'
       case 'hello':
         return `Welcome, ${first}.`
       case 'tour':
@@ -418,6 +422,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
     handle: 'This is your address on logoless. Letters, numbers and underscores.',
     pictures: 'Pick a ready-made look, or tap the circle and the wide part to upload your own. You can change it any time.',
     accounts: 'Add the accounts you post from, so we can match your submissions to you. Skip it if you like: it is in your dashboard when you are ready.',
+    verify: 'Put a short code in each bio and we confirm the account is yours. Submissions from verified accounts are checked automatically.',
     saving: 'This only takes a moment.',
     hello: 'Your profile page is ready.',
   }
@@ -581,7 +586,8 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       return setId('happy')
     }
     setReady(false)
-    setId('hello')
+    // creators who added accounts are asked to prove them with a code in the bio, right away while the accounts are fresh in mind
+    setId(!brand && VERIFIABLE.some((p) => (data.linked[p] ?? '').trim()) ? 'verify' : 'hello')
   }
 
   useEffect(() => {
@@ -614,9 +620,9 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       <AnimatePresence>{id === 'saving' && !reduced && liquidLoader && <LiquidFill key="liquid" />}</AnimatePresence>
       <div aria-hidden="true" className="fixed top-0 left-0 z-[70] h-[2px] bg-paper transition-[width] duration-700 ease-out" style={{ width: `${progress * 100}%` }} />
       {preview && (
-        <div className="fixed top-4 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-3 rounded-full border border-line-strong bg-ink/90 py-1.5 pr-1.5 pl-4 text-[13px] text-mute backdrop-blur">
+        <div className="fixed top-4 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-3 rounded-pill border border-line-strong bg-ink/90 py-1.5 pr-1.5 pl-4 text-[13px] text-mute backdrop-blur">
           Preview. Nothing here is saved.
-          <Link href="/admin/previews" className="inline-flex h-8 items-center rounded-full bg-paper px-4 text-ink">
+          <Link href="/admin/previews" className="inline-flex h-8 items-center rounded-pill bg-paper px-4 text-ink">
             Exit
           </Link>
         </div>
@@ -643,8 +649,8 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
               {id === 'role' && (
                 <SplitChoice
                   options={[
-                    { label: 'Creator', hint: 'Cut clips and get paid for every view', onClick: () => choose('clipper') },
-                    { label: 'Brand', hint: 'Launch a campaign and reach clippers', onClick: () => choose('brand') },
+                    { label: 'Creator', hint: 'Cut content and get paid for every view', onClick: () => choose('clipper') },
+                    { label: 'Brand', hint: 'Launch a campaign and reach creators', onClick: () => choose('brand') },
                   ]}
                 />
               )}
@@ -653,9 +659,9 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                 <>
                   <div className="grid w-full max-w-md gap-3">
                     {([
-                      { key: 'google', title: 'Continue with Google', sub: 'One tap, no password to remember', icon: <BrandIcon name="google" className="size-6" />, run: () => provider('google') },
-                      { key: 'discord', title: 'Continue with Discord', sub: 'Use the account you already have', icon: <BrandIcon name="discord" className="size-6" />, run: () => provider('discord') },
-                      { key: 'email', title: 'Use your email', sub: 'We send a code to check it is you', icon: <Mail className="size-6" />, run: () => go('email') },
+                      { key: 'google', title: 'Continue with Google', sub: 'You probably already have this.', icon: <BrandIcon name="google" className="size-6" />, run: () => provider('google') },
+                      { key: 'discord', title: 'Continue with Discord', sub: 'Easiest for those in our server.', icon: <BrandIcon name="discord" className="size-6" />, run: () => provider('discord') },
+                      { key: 'email', title: 'Use your email', sub: 'Works with any email.', icon: <Mail className="size-6" />, run: () => go('email') },
                     ]).map((m) => {
                       const mine = busy && picking === m.key
                       return (
@@ -667,14 +673,14 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                             setPicking(m.key)
                             void m.run()
                           }}
-                          className={cn('group flex w-full items-center gap-4 rounded-[1.7rem] border border-line-strong p-3.5 pr-5 text-left outline-none transition-[transform,border-color,background-color,opacity] duration-300 hover:-translate-y-0.5 hover:border-paper/70 hover:bg-paper/[0.05] focus-visible:ring-2 focus-visible:ring-paper/60 active:translate-y-0 active:scale-[0.99]', busy && !mine && 'opacity-35')}
+                          className={cn('group flex w-full items-center gap-4 rounded-[calc(1.7rem*var(--round,1))] border border-line-strong p-3.5 pr-5 text-left outline-none transition-[transform,border-color,background-color,opacity] duration-300 hover:-translate-y-0.5 hover:border-paper/70 hover:bg-paper/[0.05] focus-visible:ring-2 focus-visible:ring-paper/60 active:translate-y-0 active:scale-[0.99]', busy && !mine && 'opacity-35')}
                         >
-                          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-paper text-ink">{m.icon}</span>
+                          <span className="grid size-12 shrink-0 place-items-center rounded-pill bg-paper text-ink">{m.icon}</span>
                           <span className="min-w-0 flex-1">
                             <span className="block text-[17px] font-medium leading-tight">{mine ? `Opening ${m.key === 'google' ? 'Google' : 'Discord'}` : m.title}</span>
                             <span className="mt-0.5 block text-sm text-mute">{m.sub}</span>
                           </span>
-                          <span className="grid size-9 shrink-0 place-items-center rounded-full border border-line-strong transition-colors duration-300 group-hover:border-paper group-hover:bg-paper group-hover:text-ink">
+                          <span className="grid size-9 shrink-0 place-items-center rounded-pill border border-line-strong transition-colors duration-300 group-hover:border-paper group-hover:bg-paper group-hover:text-ink">
                             {mine ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
                           </span>
                         </button>
@@ -782,7 +788,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                       ['youtube', 'YouTube', '@channel'],
                       ['instagram', 'Instagram', '@username'],
                     ] as const).map(([key, label, ph]) => (
-                      <label key={key} className="flex h-14 items-center gap-3 rounded-full border border-line-strong px-5 focus-within:border-paper">
+                      <label key={key} className="flex h-14 items-center gap-3 rounded-pill border border-line-strong px-5 focus-within:border-paper">
                         <BrandIcon name={key} className="size-5 shrink-0 text-mute" />
                         <span className="sr-only">{label}</span>
                         <input
@@ -821,12 +827,14 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                 </>
               )}
 
+              {id === 'verify' && <VerifyAccounts linked={data.linked} preview={preview} onDone={() => go('hello')} buttonClass={primary} />}
+
               {id === 'hello' && (
                 <>
                   <p className="text-[15px] text-mute">This is where people find you</p>
-                  <div className="mt-4 flex items-center gap-2 rounded-full border border-line-strong py-2 pr-2 pl-6 text-[17px]">
+                  <div className="mt-4 flex items-center gap-2 rounded-pill border border-line-strong py-2 pr-2 pl-6 text-[17px]">
                     <span className="font-mono">{profileUrl}</span>
-                    <button type="button" onClick={copy} aria-label="Copy the address" className="grid size-10 place-items-center rounded-full text-mute transition-colors hover:bg-paper/10 hover:text-paper">
+                    <button type="button" onClick={copy} aria-label="Copy the address" className="grid size-10 place-items-center rounded-pill text-mute transition-colors hover:bg-paper/10 hover:text-paper">
                       {copied ? <Check className="size-4 text-emerald-500" /> : <Copy className="size-4" />}
                     </button>
                   </div>
@@ -876,7 +884,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
         )}
       </div>
 
-      {canBack && id !== 'saving' && id !== 'hello' && id !== 'tour' && id !== 'done' && id !== 'happy' && (
+      {canBack && id !== 'saving' && id !== 'verify' && id !== 'hello' && id !== 'tour' && id !== 'done' && id !== 'happy' && (
         <button type="button" onClick={back} className="fixed bottom-6 left-1/2 -translate-x-1/2 text-[15px] text-mute transition-colors hover:text-paper">
           Back
         </button>

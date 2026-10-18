@@ -31,7 +31,7 @@ const item = {
 
 const COPY: Record<Mode, { title: string; sub: string }> = {
   login: { title: 'log in', sub: 'Welcome back.' },
-  signup: { title: 'create account', sub: 'Free for clippers. It takes about a minute.' },
+  signup: { title: 'create account', sub: 'Free for creators. It takes about a minute.' },
   forgot: { title: 'reset password', sub: "We'll email you a code so you can choose a new one." },
 }
 
@@ -152,7 +152,7 @@ export function AuthCard({ mode }: { mode: Mode }) {
 
   return (
     <motion.div
-      initial="hidden"
+      initial={false}
       animate="show"
       variants={{ show: { transition: { staggerChildren: 0.05, delayChildren: 0.1 } } }}
       className="w-full max-w-[440px] rounded-2xl border border-line bg-surface/80 p-7 md:p-9"
@@ -179,7 +179,7 @@ export function AuthCard({ mode }: { mode: Mode }) {
                 <div className="mt-2 grid grid-cols-2 gap-px overflow-hidden rounded-3xl bg-line">
                   {(['clipper', 'brand'] as Role[]).map((r) => (
                     <button key={r} type="button" aria-pressed={role === r} onClick={() => setRole(r)} className={cn('h-12 text-sm transition-colors', role === r ? 'bg-paper text-ink' : 'bg-ink text-mute hover:text-paper')}>
-                      {r === 'clipper' ? 'Clipper' : 'Brand / creator'}
+                      {r === 'clipper' ? 'Creator' : 'Brand / creator'}
                     </button>
                   ))}
                 </div>
@@ -245,7 +245,7 @@ export function AuthCard({ mode }: { mode: Mode }) {
                     I agree to the{' '}
                     <TransitionLink href="/legal/terms" className="text-paper underline underline-offset-2">Terms</TransitionLink>,{' '}
                     <TransitionLink href={role === 'brand' ? '/legal/brand-terms' : '/legal/clipper-terms'} className="text-paper underline underline-offset-2">
-                      {role === 'brand' ? 'Brand Terms' : 'Clipper Terms'}
+                      {role === 'brand' ? 'Brand Terms' : 'Creator Terms'}
                     </TransitionLink>{' '}
                     and{' '}
                     <TransitionLink href="/legal/privacy" className="text-paper underline underline-offset-2">Privacy Policy</TransitionLink>, and I am 16 or older.
@@ -271,7 +271,7 @@ export function AuthCard({ mode }: { mode: Mode }) {
             }}
             className="mt-7 text-center"
           >
-            <span className="mx-auto grid size-14 place-items-center rounded-full border border-line-strong">
+            <span className="mx-auto grid size-14 place-items-center rounded-pill border border-line-strong">
               <MailCheck className="size-6" />
             </span>
             <input
@@ -287,7 +287,7 @@ export function AuthCard({ mode }: { mode: Mode }) {
               }}
               aria-label="6-digit code"
               placeholder="000000"
-              className="mx-auto mt-6 block h-14 w-56 rounded-full border border-line-strong bg-ink/60 text-center font-mono text-2xl tracking-[0.5em] placeholder:text-mute/50 focus:border-paper/60 focus:outline-none"
+              className="mx-auto mt-6 block h-14 w-56 rounded-pill border border-line-strong bg-ink/60 text-center font-mono text-2xl tracking-[0.5em] placeholder:text-mute/50 focus:border-paper/60 focus:outline-none"
             />
             {mode === 'forgot' && (
               <div className="mt-5 text-left">
@@ -355,7 +355,7 @@ function Meter({ level }: { level: number }) {
     <span className="mt-2 flex items-center gap-2" aria-live="polite">
       <span className="grid flex-1 grid-cols-4 gap-1">
         {[0, 1, 2, 3].map((i) => (
-          <span key={i} className={cn('h-1 rounded-full transition-colors', i < level ? (level >= 3 ? 'bg-emerald-300' : level === 2 ? 'bg-amber-300' : 'bg-signal') : 'bg-line-strong')} />
+          <span key={i} className={cn('h-1 rounded-pill transition-colors', i < level ? (level >= 3 ? 'bg-emerald-300' : level === 2 ? 'bg-amber-300' : 'bg-signal') : 'bg-line-strong')} />
         ))}
       </span>
       <span className="w-14 text-right text-[11px] text-mute">{labels[level]}</span>
@@ -365,7 +365,7 @@ function Meter({ level }: { level: number }) {
 
 function ProviderButton({ children, ...p }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <button type="button" {...p} className="flex h-12 w-full items-center justify-center gap-3 rounded-full border border-line-strong text-sm transition-colors hover:border-paper/40 hover:bg-paper/5 disabled:opacity-50">
+    <button type="button" {...p} className="flex h-12 w-full items-center justify-center gap-3 rounded-pill border border-line-strong text-sm transition-colors hover:border-paper/40 hover:bg-paper/5 disabled:opacity-50">
       {children}
     </button>
   )

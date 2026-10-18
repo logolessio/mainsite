@@ -42,11 +42,11 @@ function Go({ href, children, ...rest }: { href: string; children: React.ReactNo
 function Badge({ c, lit }: { c?: NavCounts[string]; lit?: boolean }) {
   if (!c || (!c.n && !c.dot)) return null
   return c.n ? (
-    <span aria-label={`${c.n} waiting`} className={cn('relative ml-auto grid h-5 min-w-5 place-items-center rounded-full border px-1.5 text-[11px] tabular-nums transition-colors duration-300', lit ? 'border-cyan-300/60 text-cyan-200' : 'border-white/20 text-paper/55')}>
+    <span aria-label={`${c.n} waiting`} className={cn('relative ml-auto grid h-5 min-w-5 place-items-center rounded-pill border px-1.5 text-[11px] tabular-nums transition-colors duration-300', lit ? 'border-cyan-300/60 text-cyan-200' : 'border-white/20 text-paper/55')}>
       {c.n > 99 ? '99+' : c.n}
     </span>
   ) : (
-    <span aria-label="Something to do" className={cn('relative ml-auto size-2 rounded-full transition-colors duration-300', lit ? 'bg-cyan-300' : 'bg-emerald-400')} />
+    <span aria-label="Something to do" className={cn('relative ml-auto size-2 rounded-pill transition-colors duration-300', lit ? 'bg-cyan-300' : 'bg-emerald-400')} />
   )
 }
 
@@ -61,10 +61,10 @@ function SideLink({ it, n, active, lit, c, hint, onEnter }: { it: AppNavItem; n:
       aria-current={active ? 'page' : undefined}
       onPointerEnter={(e) => e.pointerType !== 'touch' && onEnter()}
       onFocus={onEnter}
-      className={cn('group relative flex h-10 items-center gap-3 rounded-full px-4 text-[15px] transition-colors duration-[450ms]', lit ? 'text-paper duration-[250ms]' : active ? 'text-paper/75' : 'text-paper/50')}
+      className={cn('group relative flex h-10 items-center gap-3 rounded-pill px-4 text-[15px] transition-colors duration-[450ms]', lit ? 'text-paper duration-[250ms]' : active ? 'text-paper/75' : 'text-paper/50')}
     >
-      <motion.span aria-hidden="true" initial={false} animate={{ opacity: lit ? 1 : 0, scale: lit ? 1 : 0.97 }} transition={{ duration: lit ? 0.28 : 0.45, ease: [0.22, 1, 0.36, 1] }} className="pointer-events-none absolute inset-0 rounded-full bg-white/[0.07]" />
-      <motion.span aria-hidden="true" initial={false} animate={{ opacity: lit ? 1 : 0 }} transition={{ duration: lit ? 0.34 : 0.45, delay: lit ? 0.07 : 0, ease: 'easeOut' }} className="pointer-events-none absolute inset-0 rounded-full border border-white/[0.14]" />
+      <motion.span aria-hidden="true" initial={false} animate={{ opacity: lit ? 1 : 0, scale: lit ? 1 : 0.97 }} transition={{ duration: lit ? 0.28 : 0.45, ease: [0.22, 1, 0.36, 1] }} className="pointer-events-none absolute inset-0 rounded-pill bg-white/[0.07]" />
+      <motion.span aria-hidden="true" initial={false} animate={{ opacity: lit ? 1 : 0 }} transition={{ duration: lit ? 0.34 : 0.45, delay: lit ? 0.07 : 0, ease: 'easeOut' }} className="pointer-events-none absolute inset-0 rounded-pill border border-white/[0.14]" />
       <Icon name={it.icon} aria-hidden="true" className="relative size-[18px] shrink-0" />
       <span className="relative">{it.label}</span>
       <Badge c={c} lit={lit} />
@@ -168,35 +168,34 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
         </nav>
         <div className="shrink-0 border-t border-line p-3">
           {showOwner && (
-            <Go href={ownerHref} className="flex h-10 items-center gap-3 rounded-full px-4 text-[15px] text-paper/50 transition-colors duration-[450ms] hover:bg-white/[0.07] hover:text-paper hover:duration-[250ms]">
+            <Go href={ownerHref} className="flex h-10 items-center gap-3 rounded-pill px-4 text-[15px] text-paper/50 transition-colors duration-[450ms] hover:bg-white/[0.07] hover:text-paper hover:duration-[250ms]">
               <ShieldCheck aria-hidden="true" className="size-[18px]" /> Owner dashboard
             </Go>
           )}
-          <Go href={siteHref} className="flex h-10 items-center gap-3 rounded-full px-4 text-[15px] text-paper/50 transition-colors duration-[450ms] hover:bg-white/[0.07] hover:text-paper hover:duration-[250ms]">
+          <Go href={siteHref} className="flex h-10 items-center gap-3 rounded-pill px-4 text-[15px] text-paper/50 transition-colors duration-[450ms] hover:bg-white/[0.07] hover:text-paper hover:duration-[250ms]">
             <ArrowUpRight aria-hidden="true" className="size-[18px]" /> Back to the site
           </Go>
         </div>
-        {signedIn && (
-          <div className="shrink-0 p-3">
-            <div className="flex items-center gap-3 rounded-2xl border border-line bg-white/[0.03] p-3">
-              <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full border border-line-strong bg-white/[0.05] text-sm">
-                {signedIn.profile.avatar ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={signedIn.profile.avatar} alt="" className="size-full object-cover" />
-                ) : (
-                  initial
-                )}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] leading-tight">{name || 'You'}</span>
-                <span className="block truncate text-[13px] text-paper/45">@{signedIn.profile.handle}</span>
-              </span>
-              <button type="button" onClick={logout} aria-label="Log out" title="Log out" className="grid size-9 shrink-0 place-items-center rounded-full text-paper/50 transition-colors hover:bg-white/[0.07] hover:text-paper">
-                <LogOut aria-hidden="true" className="size-4" />
-              </button>
-            </div>
+        {/* the card is drawn at once, empty, and filled in when the details arrive, so the sidebar never grows a piece after loading */}
+        <div className="shrink-0 p-3">
+          <div className="flex items-center gap-3 rounded-2xl border border-line bg-white/[0.03] p-3">
+            <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-pill border border-line-strong bg-white/[0.05] text-sm">
+              {signedIn?.profile.avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={signedIn.profile.avatar} alt="" className="size-full object-cover" />
+              ) : signedIn ? (
+                initial
+              ) : null}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block h-[1.2em] truncate text-[15px] leading-tight">{signedIn ? name || 'You' : ''}</span>
+              <span className="block h-[1.2em] truncate text-[13px] text-paper/45">{signedIn ? `@${signedIn.profile.handle}` : ''}</span>
+            </span>
+            <button type="button" onClick={logout} aria-label="Log out" title="Log out" className="grid size-9 shrink-0 place-items-center rounded-pill text-paper/50 transition-colors hover:bg-white/[0.07] hover:text-paper">
+              <LogOut aria-hidden="true" className="size-4" />
+            </button>
           </div>
-        )}
+        </div>
       </aside>
 
       {/* ---------- top bar ---------- */}
@@ -212,22 +211,22 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
             <span className="text-paper">{current.label}</span>
           </p>
         </div>
-        <button type="button" onClick={() => setPalette(true)} className="mx-6 hidden h-11 w-full max-w-md items-center gap-3 rounded-full border border-line bg-white/[0.03] px-5 text-left text-[15px] text-paper/45 transition-colors hover:border-line-strong hover:text-paper md:flex">
+        <button type="button" onClick={() => setPalette(true)} className="mx-6 hidden h-11 w-full max-w-md items-center gap-3 rounded-pill border border-line bg-white/[0.03] px-5 text-left text-[15px] text-paper/45 transition-colors hover:border-line-strong hover:text-paper md:flex">
           <Search aria-hidden="true" className="size-4" />
           <span className="flex-1">Search, or do something</span>
           <kbd className="rounded-md border border-line px-1.5 py-0.5 font-mono text-[11px]">/</kbd>
         </button>
         <div className="flex items-center gap-2">
           {primary && (
-            <TransitionLink href={primary.href} aria-label={primary.label} className="hidden h-10 items-center gap-2 rounded-full bg-paper px-5 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 md:inline-flex">
+            <TransitionLink href={primary.href} aria-label={primary.label} className="hidden h-10 items-center gap-2 rounded-pill bg-paper px-5 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 md:inline-flex">
               <Plus aria-hidden="true" className="size-4" /> {primary.label}
             </TransitionLink>
           )}
-          <button type="button" onClick={() => setPalette(true)} aria-label="Search or jump" aria-keyshortcuts="/" className="grid size-10 place-items-center rounded-full border border-line text-paper/60 transition-colors hover:text-paper md:hidden">
+          <button type="button" onClick={() => setPalette(true)} aria-label="Search or jump" aria-keyshortcuts="/" className="grid size-10 place-items-center rounded-pill border border-line text-paper/60 transition-colors hover:text-paper md:hidden">
             <Search aria-hidden="true" className="size-4" />
           </button>
           {primary && (
-            <TransitionLink href={primary.href} aria-label={primary.label} className="grid size-10 place-items-center rounded-full bg-paper text-ink md:hidden">
+            <TransitionLink href={primary.href} aria-label={primary.label} className="grid size-10 place-items-center rounded-pill bg-paper text-ink md:hidden">
               <Plus aria-hidden="true" className="size-4" />
             </TransitionLink>
           )}
@@ -240,7 +239,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
             The old page dims while the next one loads, and the new one eases in from that same dim, so nothing ever flashes. */}
         <motion.div
           key={pathname}
-          initial={reduced || (typeof document !== 'undefined' && document.documentElement.dataset.vtPage === '1') ? false : { opacity: 0.35, y: 8 }}
+          initial={false}
           animate={phase === 'exiting' ? { opacity: 0.35, y: 0 } : { opacity: 1, y: 0 }}
           transition={phase === 'exiting' ? { duration: 0.14, ease: 'easeOut' } : { duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
           className="page-root mx-auto max-w-[1160px]"
@@ -256,9 +255,9 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
           return (
             <TransitionLink key={it.href} href={it.href} aria-current={active ? 'page' : undefined} className={cn('flex h-16 flex-1 flex-col items-center justify-center gap-1 text-[11px] transition-colors', active ? 'text-paper' : 'text-paper/45')}>
               <span className="relative">
-                {active && <motion.span layoutId="tab-marker" aria-hidden="true" transition={SPRING_GLIDE} className="absolute -top-[13px] left-1/2 h-[3px] w-8 -translate-x-1/2 rounded-full bg-paper" />}
+                {active && <motion.span layoutId="tab-marker" aria-hidden="true" transition={SPRING_GLIDE} className="absolute -top-[13px] left-1/2 h-[3px] w-8 -translate-x-1/2 rounded-pill bg-paper" />}
                 <Icon name={it.icon} aria-hidden="true" className="size-5" />
-                {(counts[it.href]?.n || counts[it.href]?.dot) && <span aria-hidden="true" className="absolute -top-1 -right-2 grid h-4 min-w-4 place-items-center rounded-full bg-paper px-1 text-[10px] font-medium text-ink">{counts[it.href]?.n ? (counts[it.href]!.n! > 9 ? '9+' : counts[it.href]!.n) : ''}</span>}
+                {(counts[it.href]?.n || counts[it.href]?.dot) && <span aria-hidden="true" className="absolute -top-1 -right-2 grid h-4 min-w-4 place-items-center rounded-pill bg-paper px-1 text-[10px] font-medium text-ink">{counts[it.href]?.n ? (counts[it.href]!.n! > 9 ? '9+' : counts[it.href]!.n) : ''}</span>}
               </span>
               <span className="max-w-full truncate px-1">{it.label}</span>
             </TransitionLink>
@@ -275,7 +274,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
           <motion.div key="more" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-50 flex flex-col bg-ink/90 backdrop-blur-2xl md:hidden">
             <div className="flex h-[72px] shrink-0 items-center justify-between border-b border-line px-5">
               <p className="text-[15px] text-paper/45">{area}</p>
-              <button type="button" aria-label="Close" onClick={() => setMore(false)} className="grid size-10 place-items-center rounded-full border border-line text-paper/70">
+              <button type="button" aria-label="Close" onClick={() => setMore(false)} className="grid size-10 place-items-center rounded-pill border border-line text-paper/70">
                 <X aria-hidden="true" className="size-4" />
               </button>
             </div>
