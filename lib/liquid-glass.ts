@@ -41,16 +41,17 @@ function radiusOf(glass: HTMLElement): number {
 function configure(glass: HTMLElement, look: Look) {
   const radius = radiusOf(glass)
   const config: Look = {
-    refraction: 0.6,
-    chromAberration: 0.05,
-    edgeHighlight: 0.45,
-    specular: 0.3,
-    fresnel: 0.9,
-    opacity: 0.97,
-    brightness: 0.02,
-    shadowOpacity: 0.4,
-    shadowSpread: 16,
-    shadowOffsetY: 10,
+    // dark glass like the CSS glass: a soft bend at the edges, a thin light edge, a quiet shadow
+    refraction: 0.4,
+    chromAberration: 0.03,
+    edgeHighlight: 0.32,
+    specular: 0,
+    fresnel: 0.5,
+    opacity: 0.9,
+    brightness: 0,
+    shadowOpacity: 0.5,
+    shadowSpread: 14,
+    shadowOffsetY: 12,
     ...look,
     cornerRadius: radius,
     zRadius: Math.max(6, Math.min(look.zRadius ?? 14, Math.min(glass.offsetHeight, glass.offsetWidth) / 2)),

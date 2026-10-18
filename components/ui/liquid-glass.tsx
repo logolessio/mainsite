@@ -40,6 +40,7 @@ export function LiquidGlass({
     <div ref={root} className={cn('lg-root relative', rounded, rootClassName)}>
       <span aria-hidden="true" className="lg-scene" />
       <Tag ref={glass} className={cn('glass-liquid lg-glass', className)} {...rest}>
+        <span aria-hidden="true" className="lg-light" />
         {children}
       </Tag>
     </div>

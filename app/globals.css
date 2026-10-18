@@ -292,30 +292,71 @@
 .lg-root {
   isolation: isolate;
 }
-/* what the glass sits on, drawn only so the shader has something to bend: a little lighter than the page, with its grid */
+/* what the glass sits on, drawn only so the shader has something to bend: the same dark body the CSS glass has */
 .lg-scene {
   position: absolute;
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  background:
-    linear-gradient(rgb(255 255 255 / 0.045) 1px, transparent 1px) 0 0 / 36px 36px,
-    linear-gradient(90deg, rgb(255 255 255 / 0.045) 1px, transparent 1px) 0 0 / 36px 36px,
-    radial-gradient(130% 160% at 15% 0%, rgb(70 70 76), rgb(18 18 20));
+  background: linear-gradient(180deg, rgb(30 30 33), rgb(14 14 16));
 }
 .lg-glass {
   border-radius: inherit;
 }
-/* once the shader is drawing, it draws the body, rim and shadow; the CSS ones step aside */
+/* once the shader is drawing, it draws the body, the thin light edge and the shadow; the CSS ones step aside.
+   The glass's moving light and its diagonal sheen (::before and ::after of .glass-liquid) stay, above the shader, so the glass
+   still looks like the rest of the site. */
 .lg-glass.lg-on {
   overflow: visible;
   background: transparent;
   border-color: transparent;
   box-shadow: none;
 }
+.lg-glass.lg-on > canvas {
+  z-index: -2 !important;
+}
 .lg-glass.lg-on::before,
 .lg-glass.lg-on::after {
   display: none;
+}
+/* the same moving light and diagonal sheen as .glass-liquid, in a layer of their own that is clipped to the glass (the shader's
+   shadow has to be free to spill out of the glass, so the glass itself no longer clips) */
+.lg-light {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.lg-glass.lg-on > .lg-light {
+  display: block;
+}
+.lg-light::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 55%;
+  height: 190%;
+  border-radius: 9999px;
+  background: rgb(243 242 238 / 0.2);
+  filter: blur(26px);
+  transform: translate(-45%, -50%);
+  animation: glass-drift 9s ease-in-out infinite;
+}
+.lg-light::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 20%, rgb(255 255 255 / 0.07) 38%, transparent 52%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lg-light::before {
+    animation: none;
+    transform: translate(35%, -50%);
+  }
 }
 .lg-glass input,
 .lg-glass textarea,
