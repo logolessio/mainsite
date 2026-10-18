@@ -1,7 +1,7 @@
 'use client'
 
 import { FadeImg } from '@/components/ui/fade-img'
-import { CoverSlide } from '@/components/browse/cover-slide'
+import { COVER_IMG, COVER_LIFT, CoverSlide } from '@/components/browse/cover-slide'
 import { Reveal } from '@/components/motion/reveal'
 import { TransitionLink } from '@/components/shell/transition-link'
 import type { Campaign } from '@/lib/campaigns'
@@ -24,9 +24,9 @@ export function CoverStrip({ campaigns, heading = 'Browse our active campaigns.'
       <ul className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-5 md:gap-x-5">
         {shown.map((c, i) => (
           <Reveal key={c.id} as="li" delay={Math.min(i, 4) * 0.06}>
-            <TransitionLink href={`/campaign/${c.id}`} aria-label={`${c.title} by ${c.creator}`} className="group/tile block">
-              <span className="relative block aspect-square overflow-hidden rounded-3xl bg-surface">
-                <FadeImg src={c.cover} alt="" loading="lazy" className="size-full scale-[1.07] object-cover" />
+            <TransitionLink href={`/campaign/${c.id}`} aria-label={`${c.title} by ${c.creator}`} className={`group/tile block rounded-3xl shadow-[0_14px_30px_-18px_rgb(0_0_0/0.9)] ${COVER_LIFT}`}>
+              <span className="relative block aspect-square overflow-hidden rounded-[inherit] bg-surface">
+                <FadeImg src={c.cover} alt="" loading="lazy" className={`size-full scale-[1.07] object-cover ${COVER_IMG}`} />
                 <CoverSlide title={c.title} creator={c.creator} rate={c.ratePer1k} />
               </span>
             </TransitionLink>
