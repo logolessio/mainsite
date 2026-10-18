@@ -1,8 +1,15 @@
-# logoless for Mac
+# logoless for Mac and iPhone
 
 A native Mac app for logoless.io, written in SwiftUI for macOS 26. It is not a web view: every screen is drawn natively from the site's JSON, and
 it looks and works like the site (black, Gloock headings, paper-white pills) with real Liquid Glass (`glassEffect`) on everything that floats:
 the top bar, the search, the filters and tabs, the menu, the bell, the buttons.
+
+## iPhone and iPad
+
+The same project builds for iOS 26 (pick an iPhone or "Any iOS Device" as the destination in Xcode). On a phone the layout turns into one
+column like the mobile site: the same top bar, a two-column cover grid, and the dashboard's bottom bar (Overview, Submissions, Earnings, Profile,
+More) as a floating Liquid Glass capsule. To run it on a real iPhone, set a development team under Signing & Capabilities. Everything under
+`Logoless/` is shared; `Core/Platform.swift` holds the few Mac/iPhone differences, and `\.compact` (width under 760) switches the layouts.
 
 ## Open it
 

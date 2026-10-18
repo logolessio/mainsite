@@ -2,6 +2,7 @@ import SwiftUI
 
 struct EarningsPage: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.compact) private var compact
     @State private var email = ""
     @State private var amount = ""
     @State private var busy = false
@@ -26,7 +27,7 @@ struct EarningsPage: View {
                             Text("Withdraw to PayPal").font(.display(26)).foregroundStyle(Color.paper)
                             Text("We pay PayPal's fees. Whatever you withdraw is what arrives. From \(Money.cents(e.minPayoutCents)).").font(.system(size: 13.5)).foregroundStyle(.mute)
                         }
-                        HStack(alignment: .bottom, spacing: 14) {
+                        (compact ? AnyLayout(VStackLayout(alignment: .leading, spacing: 14)) : AnyLayout(HStackLayout(alignment: .bottom, spacing: 14))) {
                             VStack(alignment: .leading, spacing: 8) {
                                 Eyebrow("Send it to")
                                 HStack(spacing: 8) {
@@ -39,7 +40,7 @@ struct EarningsPage: View {
                             }
                             VStack(alignment: .leading, spacing: 8) {
                                 Eyebrow("Amount")
-                                SiteField(prompt: "All (\(Money.cents(e.balances.available)))", text: $amount).frame(width: 190)
+                                SiteField(prompt: "All (\(Money.cents(e.balances.available)))", text: $amount).frame(width: compact ? nil : 190)
                             }
                             PaperPill("Withdraw", busy: busy) { confirming = true }.disabled(!canWithdraw)
                         }
@@ -51,7 +52,7 @@ struct EarningsPage: View {
                     Button("Cancel", role: .cancel) {}
                 } message: { Text("It is sent to that PayPal address.") }
 
-                HStack(spacing: 14) {
+                SiteGrid(columns: compact ? 2 : (e.balances.pending > 0 ? 4 : 3), spacing: 14) {
                     StatCard(label: "Lifetime earned", value: Money.cents(e.balances.earned))
                     StatCard(label: "Available", value: Money.cents(e.balances.available), note: "Ready to withdraw")
                     if e.balances.pending > 0 { StatCard(label: "Pending", value: Money.cents(e.balances.pending), note: "Being confirmed") }

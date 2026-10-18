@@ -2,6 +2,7 @@ import SwiftUI
 
 struct OverviewPage: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.compact) private var compact
 
     var body: some View {
         let h = app.home
@@ -9,10 +10,10 @@ struct OverviewPage: View {
             ErrorLine(text: app.failures["home"]) { Task { await app.load(.overview) } }
             if let h {
                 // the money, as three plain figures under hairlines
-                HStack(alignment: .top, spacing: 40) {
+                (compact ? AnyLayout(VStackLayout(alignment: .leading, spacing: 30)) : AnyLayout(HStackLayout(alignment: .top, spacing: 40))) {
                     VStack(alignment: .leading, spacing: 0) {
                         figureHead("Available to withdraw", strong: true)
-                        Text(Money.cents(h.balances.available)).font(.display(76)).foregroundStyle(Color.paper).lineLimit(1).minimumScaleFactor(0.5).padding(.top, 22).contentTransition(.numericText())
+                        Text(Money.cents(h.balances.available)).font(.display(compact ? 60 : 76)).foregroundStyle(Color.paper).lineLimit(1).minimumScaleFactor(0.5).padding(.top, 22).contentTransition(.numericText())
                         Text(h.balances.available > 0 ? "Ready when you are." : "Earnings land here once your submissions are approved.").font(.system(size: 14)).foregroundStyle(.mute).padding(.top, 16)
                         if h.balances.pending > 0 { Text("\(Money.cents(h.balances.pending)) more is still being confirmed.").font(.system(size: 14)).foregroundStyle(.mute).padding(.top, 3) }
                         HStack(spacing: 10) {
@@ -58,7 +59,7 @@ struct OverviewPage: View {
     private func figure(_ label: String, _ value: String, _ note: String) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             figureHead(label)
-            Text(value).font(.display(60)).foregroundStyle(Color.paper).lineLimit(1).minimumScaleFactor(0.5).padding(.top, 22)
+            Text(value).font(.display(compact ? 48 : 60)).foregroundStyle(Color.paper).lineLimit(1).minimumScaleFactor(0.5).padding(.top, 22)
             Text(note).font(.system(size: 14)).foregroundStyle(.mute).padding(.top, 16)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -87,8 +88,8 @@ struct SubmissionRow: View {
             .contentShape(Rectangle())
             .onTapGesture { app.open(campaignID: submission.campaignId) }
             .contextMenu {
-                Button("Open Post", systemImage: "arrow.up.right.square") { if let u = URL(string: submission.url) { NSWorkspace.shared.open(u) } }
-                Button("Copy Link", systemImage: "link") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(submission.url, forType: .string) }
+                Button("Open Post", systemImage: "arrow.up.right.square") { if let u = URL(string: submission.url) { Platform.open(u) } }
+                Button("Copy Link", systemImage: "link") { Platform.copy(submission.url) }
                 Button("Show Campaign", systemImage: "square.grid.2x2") { app.open(campaignID: submission.campaignId) }
             }
             Rectangle().fill(Color.line).frame(height: 1)
@@ -98,6 +99,7 @@ struct SubmissionRow: View {
 
 struct SubmissionsPage: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.compact) private var compact
     @State private var filter = "all"
     @State private var query = ""
     @State private var newest = true
@@ -113,27 +115,27 @@ struct SubmissionsPage: View {
     var body: some View {
         DashPageFrame(page: .submissions, subtitle: "Every submission you've submitted and where it stands. YouTube and TikTok views are checked about every two hours while a campaign is running.") {
             ErrorLine(text: app.failures["submissions"]) { Task { await app.load(.submissions) } }
-            HStack(spacing: 14) {
+            SiteGrid(columns: compact ? 2 : 4, spacing: 14) {
                 StatCard(label: "Submissions", value: String(app.submissions.count), note: "\(count("approved")) approved")
                 StatCard(label: "In review", value: String(count("pending")), note: "Waiting on checks")
                 StatCard(label: "Verified views", value: app.submissions.reduce(0) { $0 + $1.views }.formatted(), note: "Across all submissions")
                 StatCard(label: "Earned", value: Money.cents(app.submissions.reduce(0) { $0 + $1.earnedCents }), note: "From these submissions")
             }
-            HStack(spacing: 12) {
+            (compact ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12)) : AnyLayout(HStackLayout(spacing: 12))) {
                 GlassTabs(items: [("all", "All \(count("all"))"), ("approved", "Approved \(count("approved"))"), ("pending", "In review \(count("pending"))"), ("rejected", "Rejected \(count("rejected"))")], selection: $filter, compact: true)
-                Spacer()
+                if !compact { Spacer() }
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass").font(.system(size: 12)).foregroundStyle(.mute)
                     TextField("Search submissions", text: $query).textFieldStyle(.plain).font(.system(size: 13))
                 }
-                .padding(.horizontal, 14).frame(width: 230, height: 36).pane(Capsule())
+                .padding(.horizontal, 14).frame(width: compact ? nil : 230, height: 36).frame(maxWidth: compact ? .infinity : nil).pane(Capsule())
                 Button { withAnimation(.smooth) { newest.toggle() } } label: { Text(newest ? "Newest" : "Oldest").font(.system(size: 12.5)).foregroundStyle(Color.paper.opacity(0.8)).padding(.horizontal, 14).frame(height: 36).contentShape(Capsule()) }
                     .buttonStyle(.plain).pane(Capsule(), interactive: true)
             }
             if shown.isEmpty && app.failures["submissions"] == nil {
                 EmptyNote(symbol: "film.stack", title: filter == "all" ? "Nothing submitted" : "Nothing here", message: filter == "all" ? "Content you submit to campaigns will appear here with its review status." : nil)
             } else {
-                SiteGrid(columns: 3, spacing: 16) {
+                SiteGrid(columns: compact ? 1 : 3, spacing: 16) {
                     ForEach(shown) { s in SubmissionCard(submission: s) }
                 }
             }
@@ -167,10 +169,10 @@ struct SubmissionCard: View {
         .background(Color.white.opacity(0.03), in: RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: Radius.card, style: .continuous).strokeBorder(Color.line))
         .contentShape(Rectangle())
-        .onTapGesture { if let u = URL(string: submission.url) { NSWorkspace.shared.open(u) } }
+        .onTapGesture { if let u = URL(string: submission.url) { Platform.open(u) } }
         .contextMenu {
-            Button("Open Post", systemImage: "arrow.up.right.square") { if let u = URL(string: submission.url) { NSWorkspace.shared.open(u) } }
-            Button("Copy Link", systemImage: "link") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(submission.url, forType: .string) }
+            Button("Open Post", systemImage: "arrow.up.right.square") { if let u = URL(string: submission.url) { Platform.open(u) } }
+            Button("Copy Link", systemImage: "link") { Platform.copy(submission.url) }
             Button("Show Campaign", systemImage: "square.grid.2x2") { app.open(campaignID: submission.campaignId) }
         }
     }

@@ -3,6 +3,7 @@ import SwiftUI
 /// The bar that floats over every page of the site: the mark on the left; the bell, Dashboard, you and the menu on the right.
 struct SiteBar: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.compact) private var compact
 
     var body: some View {
         HStack(spacing: 10) {
@@ -11,13 +12,13 @@ struct SiteBar: View {
             }
             .buttonStyle(.plain)
             .help("Home")
-            .padding(.leading, 78)
+            .padding(.leading, compact ? 14 : 78)
 
             Spacer(minLength: 12)
 
             if app.isSignedIn {
                 GlassCircle(symbol: "bell", dot: app.unread > 0, help: "Notifications") { withAnimation(.smooth(duration: 0.25)) { app.showBell.toggle(); app.showMenu = false } }
-                PaperPill("Dashboard", height: 40) { app.go(.dash(.overview)) }
+                PaperPill("Dashboard", height: compact ? 38 : 40) { app.go(.dash(.overview)) }
                 Button { app.go(.dash(.profile)) } label: { Avatar(url: app.me?.avatarURL, name: app.me?.profile?.displayName ?? "L", size: 40) }
                     .buttonStyle(.plain)
                     .help("Your profile")
@@ -27,8 +28,8 @@ struct SiteBar: View {
             }
             GlassCircle(symbol: app.showMenu ? "xmark" : "line.3.horizontal", help: app.showMenu ? "Close the menu" : "Menu") { withAnimation(.smooth(duration: 0.3)) { app.showMenu.toggle(); app.showBell = false } }
         }
-        .padding(.trailing, 24)
-        .padding(.top, 14)
+        .padding(.trailing, compact ? 14 : 24)
+        .padding(.top, compact ? 6 : 14)
         .frame(height: 70, alignment: .top)
     }
 }

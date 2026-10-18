@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProfilePage: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.compact) private var compact
     @State private var name = ""
     @State private var bio = ""
     @State private var saved: Bool?
@@ -14,8 +15,8 @@ struct ProfilePage: View {
     var body: some View {
         DashPageFrame(page: .profile, subtitle: "How you appear to brands and other creators.") {
             if let p {
-                HStack(spacing: 24) {
-                    Avatar(url: app.me?.avatarURL, name: p.displayName, size: 96)
+                (compact ? AnyLayout(VStackLayout(alignment: .leading, spacing: 16)) : AnyLayout(HStackLayout(spacing: 24))) {
+                    Avatar(url: app.me?.avatarURL, name: p.displayName, size: compact ? 72 : 96)
                     VStack(alignment: .leading, spacing: 6) {
                         Text(p.displayName).font(.display(38)).foregroundStyle(Color.paper)
                         Text("@\(p.handle)").font(.system(size: 15)).foregroundStyle(.mute)
@@ -23,8 +24,8 @@ struct ProfilePage: View {
                             Text("\(s.clips) \(s.clips == 1 ? "submission" : "submissions") · \(s.views.compact) views · \(Money.cents(s.earnedCents)) earned").font(.system(size: 13.5)).foregroundStyle(.faint)
                         }
                     }
-                    Spacer()
-                    GhostPill("View public profile", symbol: "arrow.up.right", height: 40) { NSWorkspace.shared.open(Config.base.appendingPathComponent("u/\(p.handle)")) }
+                    if !compact { Spacer() }
+                    GhostPill("View public profile", symbol: "arrow.up.right", height: 40) { Platform.open(Config.base.appendingPathComponent("u/\(p.handle)")) }
                 }
                 .padding(28)
                 .frame(maxWidth: .infinity)
@@ -47,9 +48,9 @@ struct ProfilePage: View {
                         }
                     }
                 }
-                HStack(spacing: 12) {
-                    GhostPill("Handle, picture and look on logoless.io", symbol: "safari", height: 40) { NSWorkspace.shared.open(Config.base.appendingPathComponent("dashboard/profile")) }
-                    GhostPill("Linked accounts", symbol: "link", height: 40) { NSWorkspace.shared.open(Config.base.appendingPathComponent("dashboard/accounts")) }
+                (compact ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12)) : AnyLayout(HStackLayout(spacing: 12))) {
+                    GhostPill("Handle, picture and look on logoless.io", symbol: "safari", height: 40) { Platform.open(Config.base.appendingPathComponent("dashboard/profile")) }
+                    GhostPill("Linked accounts", symbol: "link", height: 40) { Platform.open(Config.base.appendingPathComponent("dashboard/accounts")) }
                 }
             } else {
                 ProgressView().controlSize(.large).frame(maxWidth: .infinity).padding(.vertical, 80)
@@ -74,12 +75,13 @@ struct ProfilePage: View {
 
 struct AchievementsPage: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.compact) private var compact
 
     var body: some View {
         DashPageFrame(page: .achievements, subtitle: app.achievements.map { "\($0.badges.filter(\.unlocked).count) of \($0.badges.count) unlocked · \($0.points) points" } ?? "Things you have done on logoless.") {
             ErrorLine(text: app.failures["achievements"]) { Task { await app.load(.achievements) } }
             if let a = app.achievements {
-                SiteGrid(columns: 3, spacing: 14) {
+                SiteGrid(columns: compact ? 1 : 3, spacing: 14) {
                     ForEach(a.badges.sorted { ($0.unlocked ? 0 : 1, -$0.points) < ($1.unlocked ? 0 : 1, -$1.points) }) { b in
                         VStack(alignment: .leading, spacing: 10) {
                             HStack {
@@ -111,6 +113,7 @@ struct AchievementsPage: View {
 
 struct SavedPage: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.compact) private var compact
     private var saved: [Campaign] { app.campaigns.filter { app.favorites.contains($0.id) } }
 
     var body: some View {
@@ -119,7 +122,7 @@ struct SavedPage: View {
                 EmptyNote(symbol: "heart", title: "Nothing saved yet", message: "Press the heart on a campaign to keep it here.")
                 PaperPill("Browse campaigns") { app.go(.home) }.frame(maxWidth: .infinity)
             } else {
-                SiteGrid(columns: 3, spacing: 28) {
+                SiteGrid(columns: compact ? 2 : 3, spacing: compact ? 16 : 28) {
                     ForEach(saved) { c in Button { app.open(c) } label: { CampaignCard(campaign: c) }.buttonStyle(.plain) }
                 }
             }
@@ -129,6 +132,7 @@ struct SavedPage: View {
 
 struct SettingsPage: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.compact) private var compact
 
     var body: some View {
         DashPageFrame(page: .settings, subtitle: "Your account, and how logoless reaches you.") {
@@ -140,8 +144,8 @@ struct SettingsPage: View {
                     }
                     row("This app talks to", Config.base.host ?? "logoless.io")
                     row("Version", Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")
-                    HStack(spacing: 12) {
-                        GhostPill("Password, email and delete account", symbol: "safari", height: 40) { NSWorkspace.shared.open(Config.base.appendingPathComponent("dashboard/settings")) }
+                    (compact ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12)) : AnyLayout(HStackLayout(spacing: 12))) {
+                        GhostPill("Password, email and delete account", symbol: "safari", height: 40) { Platform.open(Config.base.appendingPathComponent("dashboard/settings")) }
                         GhostPill("Sign out", symbol: "rectangle.portrait.and.arrow.right", height: 40) { Task { await app.signOut() } }
                         GhostPill("Show the welcome tour", symbol: "sparkles", height: 40) { app.replayOnboarding() }
                     }
@@ -171,7 +175,7 @@ struct NotificationsPage: View {
             } else {
                 VStack(spacing: 0) {
                     ForEach(app.notifications) { n in
-                        Button { Task { await app.markRead(n) }; if let u = n.url { NSWorkspace.shared.open(u) } } label: {
+                        Button { Task { await app.markRead(n) }; if let u = n.url { Platform.open(u) } } label: {
                             HStack(alignment: .top, spacing: 14) {
                                 Circle().fill(n.isRead ? Color.clear : Color.paper).frame(width: 8, height: 8).padding(.top, 7)
                                 VStack(alignment: .leading, spacing: 4) {

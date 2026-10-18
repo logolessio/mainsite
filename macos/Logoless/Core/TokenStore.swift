@@ -5,7 +5,7 @@ import Security
 /// file inside the app's own sandbox folder (readable only by this app and this user). The old file-based Keychain is not used: for an
 /// app without a developer signature it asks for the login password after every update and freezes the app until it is answered.
 enum TokenStore {
-    private static let service = "io.logoless.mac"
+    private static let service = "io.logoless.app"
     private static var account: String { Config.base.host ?? "logoless.io" }
 
     private static var file: URL {

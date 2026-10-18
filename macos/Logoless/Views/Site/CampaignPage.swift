@@ -3,98 +3,136 @@ import SwiftUI
 /// A campaign's own page: the cover and the audio, the facts, the brief, and the button to submit.
 struct CampaignPage: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.compact) private var compact
     let campaign: Campaign
     @State private var submitting = false
     @State private var copied = false
 
     var body: some View {
         SiteScroll {
-            VStack(alignment: .leading, spacing: 30) {
-                breadcrumbs.padding(.top, 78)
+            VStack(alignment: .leading, spacing: compact ? 20 : 30) {
+                breadcrumbs.padding(.top, compact ? 62 : 78)
 
                 VStack(spacing: 0) {
-                    HStack(alignment: .top, spacing: 44) {
-                        VStack(spacing: 16) {
-                            RemoteImage(url: campaign.coverURL, seed: campaign.id)
-                                .aspectRatio(1, contentMode: .fit)
-                                .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-                                .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous).strokeBorder(Color.white.opacity(0.08)))
-                                .shadow(color: .black.opacity(0.5), radius: 26, y: 18)
-                            PlayerPill(campaign: campaign)
-                        }
-                        .frame(width: 400)
-
-                        VStack(alignment: .leading, spacing: 16) {
-                            HStack(alignment: .top) {
-                                Text(campaign.kind).font(.system(size: 14)).foregroundStyle(.mute)
-                                Spacer()
-                                Button { Task { await app.toggleSaved(campaign) } } label: {
-                                    Image(systemName: app.isSaved(campaign) ? "heart.fill" : "heart").font(.system(size: 15)).foregroundStyle(app.isSaved(campaign) ? Color.paper : Color.paper.opacity(0.7)).frame(width: 36, height: 36).contentShape(Circle())
-                                }
-                                .buttonStyle(.plain).pane(Circle(), interactive: true).help(app.isSaved(campaign) ? "Remove from saved" : "Save this campaign")
-                            }
-                            Text(campaign.title).font(.display(50)).foregroundStyle(Color.paper).lineLimit(3).minimumScaleFactor(0.6).fixedSize(horizontal: false, vertical: true)
-                            Text("by \(campaign.creator)").font(.system(size: 17)).foregroundStyle(.mute)
-
-                            HStack(spacing: 12) {
-                                factTile("You earn", "$" + String(format: "%.2f", campaign.ratePer1k), "per 1,000 views")
-                                factTile("Budget", campaign.budget > 0 ? Money.compact(campaign.budget) : "Open", campaign.budgetLeftPct.map { "\($0)% left" } ?? (campaign.budget > 0 ? "total" : "no cap"))
-                                factTile("Ends", campaign.endsOn.isEmpty ? "Open" : campaign.endsOn, "deadline")
-                            }
-                            .padding(.top, 4)
-
-                            HStack(spacing: 16) {
-                                ForEach(campaign.platforms, id: \.self) { p in
-                                    HStack(spacing: 7) { PlatformMark(platform: p, size: 14); Text(p.platformName).font(.system(size: 14)) }.foregroundStyle(Color.paper.opacity(0.85))
-                                }
-                            }
-                            .padding(.top, 2)
-
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("The brief").font(.system(size: 13)).foregroundStyle(.mute)
-                                Text(campaign.summary.isEmpty ? "No brief yet." : campaign.summary).font(.system(size: 16)).foregroundStyle(Color.paper.opacity(0.92)).lineSpacing(4).fixedSize(horizontal: false, vertical: true)
-                            }
-                            .padding(.top, 6)
-
-                            HStack(alignment: .top, spacing: 26) {
-                                bullets("Create this", campaign.clipThis)
-                                bullets("Not allowed", campaign.offLimits)
-                            }
-
-                            if campaign.capPerPost != nil || campaign.capPerUser != nil {
-                                Text([campaign.capPerPost.map { "One submission can earn up to $\(Money.plain($0))." }, campaign.capPerUser.map { "One creator can earn up to $\(Money.plain($0)) here." }].compactMap { $0 }.joined(separator: " "))
-                                    .font(.system(size: 13)).foregroundStyle(.mute)
-                            }
-
-                            HStack(spacing: 6) {
-                                Text("Earnings can be withdrawn as soon as they are confirmed, from $10.").font(.system(size: 13)).foregroundStyle(.mute)
-                            }
-                            HStack(spacing: 14) {
-                                link("Campaign rules") { NSWorkspace.shared.open(Config.base.appendingPathComponent("legal/campaign-rules")) }
-                                link("Report") { NSWorkspace.shared.open(Config.base.appendingPathComponent("report")) }
-                                link(copied ? "Copied" : "Copy link") {
-                                    NSPasteboard.general.clearContents()
-                                    NSPasteboard.general.setString(campaign.pageURL.absoluteString, forType: .string)
-                                    copied = true
-                                    Task { try? await Task.sleep(for: .seconds(2)); copied = false }
-                                }
-                            }
-                        }
-                    }
+                    if compact { phoneLayout } else { wideLayout }
                     PaperPill("Submit content", height: 54, fullWidth: true) { if app.isSignedIn { submitting = true } else { Task { await app.signIn() } } }
-                        .padding(.top, 32)
+                        .padding(.top, compact ? 24 : 32)
                 }
-                .padding(32)
-                .background(Color.white.opacity(0.025), in: RoundedRectangle(cornerRadius: Radius.panel, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: Radius.panel, style: .continuous).strokeBorder(Color.line))
+                .padding(compact ? 18 : 32)
+                .background(Color.white.opacity(0.025), in: RoundedRectangle(cornerRadius: compact ? 28 : Radius.panel, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: compact ? 28 : Radius.panel, style: .continuous).strokeBorder(Color.line))
             }
-            .padding(.horizontal, 40)
+            .padding(.horizontal, compact ? 16 : 40)
             .padding(.bottom, 80)
             .frame(maxWidth: 1120)
             .frame(maxWidth: .infinity)
         }
         .sheet(isPresented: $submitting) { SubmitSheet(campaign: campaign) }
         .onDisappear { if app.player.playingID == campaign.id { app.player.stop() } }
+    }
+
+    // MARK: layouts
+
+    private var wideLayout: some View {
+        HStack(alignment: .top, spacing: 44) {
+            VStack(spacing: 16) {
+                cover(radius: 28)
+                PlayerPill(campaign: campaign)
+            }
+            .frame(width: 400)
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(alignment: .top) { Text(campaign.kind).font(.system(size: 14)).foregroundStyle(.mute); Spacer(); saveButton }
+                Text(campaign.title).font(.display(50)).foregroundStyle(Color.paper).lineLimit(3).minimumScaleFactor(0.6).fixedSize(horizontal: false, vertical: true)
+                Text("by \(campaign.creator)").font(.system(size: 17)).foregroundStyle(.mute)
+                facts.padding(.top, 4)
+                details
+            }
+        }
+    }
+
+    private var phoneLayout: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .top, spacing: 16) {
+                cover(radius: 22).frame(width: 116)
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(alignment: .top) { Text(campaign.kind).font(.system(size: 13)).foregroundStyle(.mute); Spacer(); saveButton }
+                    Text(campaign.title).font(.display(30)).foregroundStyle(Color.paper).lineLimit(3).minimumScaleFactor(0.6).fixedSize(horizontal: false, vertical: true)
+                    Text("by \(campaign.creator)").font(.system(size: 15)).foregroundStyle(.mute)
+                }
+            }
+            facts
+            HStack(spacing: 14) { platforms }
+            PlayerPill(campaign: campaign)
+            brief
+            HStack(alignment: .top, spacing: 18) { bullets("Create this", campaign.clipThis); bullets("Not allowed", campaign.offLimits) }
+            footnote
+        }
+    }
+
+    private var details: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 16) { platforms }.padding(.top, 2)
+            brief.padding(.top, 6)
+            HStack(alignment: .top, spacing: 26) { bullets("Create this", campaign.clipThis); bullets("Not allowed", campaign.offLimits) }
+            footnote
+        }
+    }
+
+    // MARK: pieces
+
+    private func cover(radius: CGFloat) -> some View {
+        RemoteImage(url: campaign.coverURL, seed: campaign.id)
+            .aspectRatio(1, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(Color.white.opacity(0.08)))
+            .shadow(color: .black.opacity(0.5), radius: 26, y: 18)
+    }
+
+    private var saveButton: some View {
+        Button { Task { await app.toggleSaved(campaign) } } label: {
+            Image(systemName: app.isSaved(campaign) ? "heart.fill" : "heart").font(.system(size: 15)).foregroundStyle(app.isSaved(campaign) ? Color.paper : Color.paper.opacity(0.7)).frame(width: 36, height: 36).contentShape(Circle())
+        }
+        .buttonStyle(.plain).pane(Circle(), interactive: true).help(app.isSaved(campaign) ? "Remove from saved" : "Save this campaign")
+    }
+
+    private var facts: some View {
+        HStack(spacing: compact ? 8 : 12) {
+            factTile("You earn", "$" + String(format: "%.2f", campaign.ratePer1k), "per 1,000 views")
+            factTile("Budget", campaign.budget > 0 ? Money.compact(campaign.budget) : "Open", campaign.budgetLeftPct.map { "\($0)% left" } ?? (campaign.budget > 0 ? "total" : "no cap"))
+            factTile("Ends", campaign.endsOn.isEmpty ? "Open" : campaign.endsOn, "deadline")
+        }
+    }
+
+    @ViewBuilder private var platforms: some View {
+        ForEach(campaign.platforms, id: \.self) { p in
+            HStack(spacing: 7) { PlatformMark(platform: p, size: 14); Text(p.platformName).font(.system(size: 14)) }.foregroundStyle(Color.paper.opacity(0.85))
+        }
+    }
+
+    private var brief: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("The brief").font(.system(size: 13)).foregroundStyle(.mute)
+            Text(campaign.summary.isEmpty ? "No brief yet." : campaign.summary).font(.system(size: 16)).foregroundStyle(Color.paper.opacity(0.92)).lineSpacing(4).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var footnote: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if campaign.capPerPost != nil || campaign.capPerUser != nil {
+                Text([campaign.capPerPost.map { "One submission can earn up to $\(Money.plain($0))." }, campaign.capPerUser.map { "One creator can earn up to $\(Money.plain($0)) here." }].compactMap { $0 }.joined(separator: " "))
+                    .font(.system(size: 13)).foregroundStyle(.mute)
+            }
+            Text("Earnings can be withdrawn as soon as they are confirmed, from $10.").font(.system(size: 13)).foregroundStyle(.mute)
+            HStack(spacing: 14) {
+                link("Campaign rules") { Platform.open(Config.base.appendingPathComponent("legal/campaign-rules")) }
+                link("Report") { Platform.open(Config.base.appendingPathComponent("report")) }
+                link(copied ? "Copied" : "Copy link") {
+                    Platform.copy(campaign.pageURL.absoluteString)
+                    copied = true
+                    Task { try? await Task.sleep(for: .seconds(2)); copied = false }
+                }
+            }
+        }
     }
 
     private var breadcrumbs: some View {
@@ -119,8 +157,8 @@ struct CampaignPage: View {
     private func factTile(_ label: String, _ value: String, _ note: String) -> some View {
         VStack(spacing: 6) {
             Text(label).font(.system(size: 12)).foregroundStyle(.mute)
-            Text(value).font(.display(26)).foregroundStyle(Color.paper).lineLimit(1).minimumScaleFactor(0.6)
-            Text(note).font(.system(size: 11)).foregroundStyle(.faint)
+            Text(value).font(.display(compact ? 22 : 26)).foregroundStyle(Color.paper).lineLimit(1).minimumScaleFactor(0.6)
+            Text(note).font(.system(size: 11)).foregroundStyle(.faint).multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)

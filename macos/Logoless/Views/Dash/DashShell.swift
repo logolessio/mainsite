@@ -1,35 +1,130 @@
 import SwiftUI
 
-/// The dashboard: the website's own rail on the left (this is the only place the app has one), a header, and the page.
+/// The dashboard: on a wide window the website's own rail on the left (the only place the app has one); on a phone a bar at the bottom.
 struct DashShell: View {
     @Environment(AppModel.self) private var app
+    @Environment(\.compact) private var compact
     let page: DashPage
 
     var body: some View {
-        HStack(spacing: 0) {
-            Rail(page: page).frame(width: 250)
-            Rectangle().fill(Color.line).frame(width: 1).ignoresSafeArea()
+        if compact {
             VStack(spacing: 0) {
-                DashHeader(page: page)
-                Group {
-                    if !app.isSignedIn { SignInPrompt() }
-                    else {
-                        switch page {
-                        case .overview: OverviewPage()
-                        case .submissions: SubmissionsPage()
-                        case .earnings: EarningsPage()
-                        case .profile: ProfilePage()
-                        case .achievements: AchievementsPage()
-                        case .saved: SavedPage()
-                        case .settings: SettingsPage()
-                        case .notifications: NotificationsPage()
-                        case .queue: QueuePage()
-                        }
-                    }
+                CompactHeader()
+                pageBody
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) { DashTabBar(page: page) }
+        } else {
+            HStack(spacing: 0) {
+                Rail(page: page).frame(width: 250)
+                Rectangle().fill(Color.line).frame(width: 1).ignoresSafeArea()
+                VStack(spacing: 0) {
+                    DashHeader(page: page)
+                    pageBody
                 }
-                
             }
         }
+    }
+
+    @ViewBuilder private var pageBody: some View {
+        if !app.isSignedIn { SignInPrompt() }
+        else {
+            switch page {
+            case .overview: OverviewPage()
+            case .submissions: SubmissionsPage()
+            case .earnings: EarningsPage()
+            case .profile: ProfilePage()
+            case .achievements: AchievementsPage()
+            case .saved: SavedPage()
+            case .settings: SettingsPage()
+            case .notifications: NotificationsPage()
+            case .queue: QueuePage()
+            }
+        }
+    }
+}
+
+/// On a phone: the mark on the left; search, find a campaign and the bell on the right.
+private struct CompactHeader: View {
+    @Environment(AppModel.self) private var app
+    var body: some View {
+        HStack(spacing: 10) {
+            Button { app.go(.home) } label: { Image("Mark").renderingMode(.template).resizable().scaledToFit().frame(width: 46, height: 34).foregroundStyle(Color.paper) }.buttonStyle(.plain)
+            Spacer()
+            GlassCircle(symbol: "magnifyingglass", size: 40, help: "Search") { app.showJump = true }
+            Button { app.go(.home) } label: { Image(systemName: "plus").font(.system(size: 16, weight: .semibold)).foregroundStyle(.black).frame(width: 40, height: 40).contentShape(Circle()) }
+                .buttonStyle(.plain).pane(Circle(), tint: Color.paper.opacity(0.95), interactive: true).help("Find a campaign")
+            GlassCircle(symbol: "bell", size: 40, dot: app.unread > 0, help: "Notifications") { app.go(.dash(.notifications)) }
+        }
+        .padding(.horizontal, 16).padding(.vertical, 8)
+        .overlay(alignment: .bottom) { Rectangle().fill(Color.line).frame(height: 1) }
+    }
+}
+
+/// On a phone: the site's bottom bar, on Liquid Glass.
+private struct DashTabBar: View {
+    @Environment(AppModel.self) private var app
+    let page: DashPage
+    @State private var more = false
+
+    private let items: [DashPage] = [.overview, .submissions, .earnings, .profile]
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(items) { i in tab(i.title, i.symbol, on: i == page.rail) { app.go(.dash(i)) } }
+            tab("More", "ellipsis", on: [.settings, .queue].contains(page.rail)) { more = true }
+        }
+        .padding(6)
+        .pane(Capsule())
+        .padding(.horizontal, 14).padding(.bottom, 4)
+        .sheet(isPresented: $more) { MoreSheet(page: page) }
+    }
+
+    private func tab(_ title: String, _ symbol: String, on: Bool, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 3) {
+                Image(systemName: symbol).font(.system(size: 17))
+                Text(title).font(.system(size: 10, weight: .medium)).lineLimit(1).minimumScaleFactor(0.8)
+            }
+            .foregroundStyle(on ? Color.black : Color.paper.opacity(0.65))
+            .frame(maxWidth: .infinity).frame(height: 50)
+            .background(on ? Color.paper : .clear, in: Capsule())
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// The rest of the dashboard on a phone.
+private struct MoreSheet: View {
+    @Environment(AppModel.self) private var app
+    @Environment(\.dismiss) private var dismiss
+    let page: DashPage
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("More").font(.display(32)).foregroundStyle(Color.paper).padding(.bottom, 10)
+            row("Settings", "gearshape") { app.go(.dash(.settings)) }
+            row("Notifications", "bell") { app.go(.dash(.notifications)) }
+            row("Saved", "heart") { app.go(.dash(.saved)) }
+            row("Achievements", "rosette") { app.go(.dash(.achievements)) }
+            if app.isAdmin { row("Owner queue", "checklist") { app.go(.dash(.queue)) } }
+            Rectangle().fill(Color.line).frame(height: 1).padding(.vertical, 6)
+            row("Back to the site", "arrow.up.left") { app.go(.home) }
+            row("Sign out", "rectangle.portrait.and.arrow.right") { Task { await app.signOut() } }
+            Spacer(minLength: 0)
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color.black)
+        .presentationDetents([.medium, .large])
+    }
+
+    private func row(_ t: String, _ symbol: String, _ action: @escaping () -> Void) -> some View {
+        Button { dismiss(); action() } label: {
+            HStack(spacing: 14) { Image(systemName: symbol).frame(width: 24); Text(t).font(.system(size: 17)); Spacer() }
+                .foregroundStyle(Color.paper).frame(height: 46).contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -147,18 +242,19 @@ struct DashPageFrame<Content: View>: View {
     var subtitle: String?
     @ViewBuilder var content: Content
     @Environment(AppModel.self) private var app
+    @Environment(\.compact) private var compact
 
     var body: some View {
         SiteScroll {
             VStack(alignment: .leading, spacing: 28) {
-                PageTitle(title: title ?? page.title, subtitle: subtitle).padding(.top, 34)
+                PageTitle(title: title ?? page.title, subtitle: subtitle).padding(.top, compact ? 22 : 34)
                 if page.tabs.count > 1 {
                     GlassTabs(items: page.tabs.map { ($0, $0.title) }, selection: Binding(get: { page }, set: { app.go(.dash($0)) }))
                 }
                 content
             }
-            .padding(.horizontal, 48)
-            .padding(.bottom, 60)
+            .padding(.horizontal, compact ? 18 : 48)
+            .padding(.bottom, compact ? 90 : 60)
             .frame(maxWidth: 1120, alignment: .leading)
             .frame(maxWidth: .infinity)
         }

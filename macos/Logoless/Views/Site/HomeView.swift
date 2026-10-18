@@ -13,6 +13,7 @@ struct HomeView: View {
     @State private var platform: String?
     @State private var sort = CampaignSort.featured
     @FocusState private var searching: Bool
+    @Environment(\.compact) private var compact
 
     private var kinds: [String] { ["All"] + Array(Set(app.campaigns.map(\.kind))).sorted() }
 
@@ -33,17 +34,17 @@ struct HomeView: View {
     private var hero: some View {
         VStack(spacing: 22) {
             Text("Your views\nhave value.")
-                .font(.display(84))
+                .font(.display(compact ? 46 : 84))
                 .multilineTextAlignment(.center)
                 .lineSpacing(-6)
                 .foregroundStyle(Color.paper)
-            Text("Join a campaign, post your content, and earn for\nevery 1,000 verified views.")
-                .font(.system(size: 16))
+            Text(compact ? "Join a campaign, post your content, and earn for every 1,000 verified views." : "Join a campaign, post your content, and earn for\nevery 1,000 verified views.")
+                .font(.system(size: compact ? 15 : 16))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.mute)
         }
-        .padding(.top, 74)
-        .padding(.bottom, 44)
+        .padding(.top, compact ? 56 : 74)
+        .padding(.bottom, compact ? 28 : 44)
     }
 
     var body: some View {
@@ -63,12 +64,12 @@ struct HomeView: View {
                     }
                 }
             }
-            .padding(.horizontal, 40)
+            .padding(.horizontal, compact ? 16 : 40)
             .padding(.bottom, 80)
             .frame(maxWidth: 1240)
             .frame(maxWidth: .infinity)
         }
-        .onExitCommand { searching = false; query = "" }
+        .onExit { searching = false; query = "" }
     }
 
     private var searchBar: some View {
@@ -80,14 +81,18 @@ struct HomeView: View {
                 .focused($searching)
             Text("\(app.campaigns.count) live").font(.system(size: 11, design: .monospaced)).foregroundStyle(.faint)
         }
-        .padding(.horizontal, 22)
-        .frame(height: 58)
+        .padding(.horizontal, compact ? 18 : 22)
+        .frame(height: compact ? 52 : 58)
         .frame(maxWidth: 700)
         .pane(Capsule())
         .frame(maxWidth: .infinity)
     }
 
-    private var filters: some View {
+    @ViewBuilder private var filters: some View {
+        if compact { ScrollView(.horizontal, showsIndicators: false) { filterRow.padding(.horizontal, 2) } } else { filterRow }
+    }
+
+    private var filterRow: some View {
         HStack(spacing: 14) {
             GlassTabs(items: kinds.map { ($0, $0) }, selection: $kind, compact: true)
             HStack(spacing: 4) {
@@ -124,7 +129,7 @@ struct HomeView: View {
         } else if shown.isEmpty {
             EmptyNote(symbol: "magnifyingglass", title: query.isEmpty ? "Nothing open here yet" : "Nothing matches that", message: query.isEmpty ? "New campaigns appear as soon as they go live." : "Try another word, or clear the search.")
         } else {
-            SiteGrid(columns: 4, spacing: 34) {
+            SiteGrid(columns: compact ? 2 : 4, spacing: compact ? 16 : 34) {
                 ForEach(shown) { c in
                     Button { app.open(c) } label: { CampaignCard(campaign: c) }.buttonStyle(.plain)
                 }

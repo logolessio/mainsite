@@ -13,6 +13,16 @@ struct ShellView: View {
     }
 
     var body: some View {
+        GeometryReader { geo in
+            shell.environment(\.compact, geo.size.width < 760)
+        }
+        #if os(macOS)
+        .frame(minWidth: Snap.flat ? 0 : 1000, minHeight: Snap.flat ? 0 : 660)
+        #endif
+        .preferredColorScheme(.dark)
+    }
+
+    private var shell: some View {
         ZStack(alignment: .top) {
             SiteBackground()
 
@@ -45,13 +55,15 @@ struct ShellView: View {
             if app.showOnboarding { OnboardingView(start: app.onboardingStart).transition(.opacity).zIndex(10) }
         }
         .animation(.smooth(duration: 0.25), value: app.showJump)
+        #if os(macOS)
         .background(WindowChrome())
+        #endif
         .task { await app.start() }
-        #if DEBUG
+        #if DEBUG && os(macOS)
         .task { await DebugSnapshots.run(app) }
         #endif
         .onOpenURL { url in Task { await app.finishSignIn(url) } }
-        .onExitCommand {
+        .onExit {
             if app.showJump { app.showJump = false }
             else if app.showMenu || app.showBell { withAnimation(.smooth(duration: 0.25)) { app.showMenu = false; app.showBell = false } }
             else { app.back() }
@@ -59,8 +71,6 @@ struct ShellView: View {
         .alert("logoless", isPresented: Binding(get: { app.banner != nil }, set: { if !$0 { app.banner = nil } })) {
             Button("OK", role: .cancel) {}
         } message: { Text(app.banner ?? "") }
-        .frame(minWidth: 1000, minHeight: 660)
-        .preferredColorScheme(.dark)
     }
 
     private var missing: some View {
@@ -72,6 +82,7 @@ struct ShellView: View {
     }
 }
 
+#if os(macOS)
 /// Lets the page run under the title bar: the window's buttons float over the black, and the window moves when dragged by it.
 struct WindowChrome: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {
@@ -88,3 +99,4 @@ struct WindowChrome: NSViewRepresentable {
     }
     func updateNSView(_ nsView: NSView, context: Context) {}
 }
+#endif

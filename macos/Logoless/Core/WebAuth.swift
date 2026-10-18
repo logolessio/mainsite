@@ -1,5 +1,5 @@
-import AppKit
 import AuthenticationServices
+import SwiftUI
 
 /// Shows the website's own sign-in in a system sheet and returns the address it hands back (logoless://auth?code=...).
 /// The app never sees a password; Google, Discord and email sign-in all happen on the website.
@@ -41,6 +41,10 @@ final class WebAuth: NSObject, ASWebAuthenticationPresentationContextProviding {
     func cancel() { session?.cancel() }
 
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+        #if os(macOS)
         NSApp.keyWindow ?? NSApp.windows.first(where: { $0.isVisible }) ?? ASPresentationAnchor()
+        #else
+        (UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap(\.windows).first(where: \.isKeyWindow)) ?? ASPresentationAnchor()
+        #endif
     }
 }

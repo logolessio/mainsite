@@ -18,7 +18,7 @@ struct QuickJump: View {
         for c in app.campaigns where !q.isEmpty && "\(c.title) \(c.creator)".lowercased().contains(q) {
             out.append(Hit(id: "c-\(c.id)", title: c.title, subtitle: c.creator, symbol: "square.grid.2x2") { app.open(c) })
         }
-        if q.isEmpty { out.append(Hit(id: "web", title: "Open logoless.io", subtitle: "In your browser", symbol: "safari") { NSWorkspace.shared.open(Config.base) }) }
+        if q.isEmpty { out.append(Hit(id: "web", title: "Open logoless.io", subtitle: "In your browser", symbol: "safari") { Platform.open(Config.base) }) }
         return Array(out.prefix(9))
     }
 
@@ -54,13 +54,14 @@ struct QuickJump: View {
                 }
                 .padding(8)
             }
-            .frame(width: 560)
+            .frame(maxWidth: 560)
+            .padding(.horizontal, 16)
             .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
             .shadow(color: .black.opacity(0.5), radius: 40, y: 20)
             .padding(.top, 90)
         }
         .onAppear { focused = true; query = "" }
-        .onExitCommand { close() }
+        .onExit { close() }
     }
 
     private func choose(_ h: Hit) { close(); h.go() }

@@ -21,7 +21,8 @@ struct SubmitSheet: View {
             }
         }
         .padding(30)
-        .frame(width: 520)
+        .frame(maxWidth: 520)
+        .frame(maxHeight: .infinity, alignment: .top)
         .background(Color.black)
         .onAppear { if platform.isEmpty { platform = campaign.platforms.first ?? "tiktok" } }
     }
@@ -45,7 +46,7 @@ struct SubmitSheet: View {
 
             HStack(spacing: 10) {
                 SiteField(prompt: "Link to your post", text: $link).onSubmit { Task { await send() } }
-                GhostPill("Paste", height: 46) { if let s = NSPasteboard.general.string(forType: .string) { link = s.trimmingCharacters(in: .whitespacesAndNewlines) } }
+                GhostPill("Paste", height: 46) { if let s = Platform.paste() { link = s.trimmingCharacters(in: .whitespacesAndNewlines) } }
             }
             ErrorLine(text: error)
 

@@ -33,7 +33,7 @@ struct MenuPanel: View {
             Text("More").font(.system(size: 11)).foregroundStyle(.mute).padding(.top, 30).padding(.bottom, 10)
             SiteGrid(columns: 2, spacing: 12) {
                 ForEach(more, id: \.0) { m in
-                    Button { NSWorkspace.shared.open(Config.base.appendingPathComponent(m.1)); app.showMenu = false } label: { Text(m.0).font(.system(size: 15)).foregroundStyle(Color.paper.opacity(0.8)) }.buttonStyle(.plain)
+                    Button { Platform.open(Config.base.appendingPathComponent(m.1)); app.showMenu = false } label: { Text(m.0).font(.system(size: 15)).foregroundStyle(Color.paper.opacity(0.8)) }.buttonStyle(.plain)
                 }
             }
             Spacer(minLength: 24)
@@ -41,9 +41,9 @@ struct MenuPanel: View {
         }
         .padding(.horizontal, 34)
         .padding(.bottom, 26)
-        .frame(width: 440)
+        .frame(maxWidth: 440)
         .frame(maxHeight: .infinity, alignment: .topLeading)
-        .pane(UnevenRoundedRectangle(topLeadingRadius: 34, bottomLeadingRadius: 34, bottomTrailingRadius: 0, topTrailingRadius: 0, style: .continuous))
+        .pane(UnevenRoundedRectangle(topLeadingRadius: 34, bottomLeadingRadius: 34, bottomTrailingRadius: 0, topTrailingRadius: 0, style: .continuous), tint: Color.black.opacity(0.55))
     }
 
     @ViewBuilder private var account: some View {
@@ -80,7 +80,7 @@ struct MenuPanel: View {
     }
 
     private func choose(_ i: Item) {
-        if let path = i.path { NSWorkspace.shared.open(Config.base.appendingPathComponent(path)); app.showMenu = false }
+        if let path = i.path { Platform.open(Config.base.appendingPathComponent(path)); app.showMenu = false }
         else { app.go(.home) }
     }
 }
@@ -104,7 +104,7 @@ struct BellPanel: View {
                 SiteScroll {
                     VStack(spacing: 0) {
                         ForEach(app.notifications.prefix(8)) { n in
-                            Button { Task { await app.markRead(n) }; if let u = n.url { NSWorkspace.shared.open(u) } } label: {
+                            Button { Task { await app.markRead(n) }; if let u = n.url { Platform.open(u) } } label: {
                                 HStack(alignment: .top, spacing: 12) {
                                     Circle().fill(n.isRead ? Color.clear : Color.paper).frame(width: 7, height: 7).padding(.top, 6)
                                     VStack(alignment: .leading, spacing: 3) {
@@ -125,8 +125,9 @@ struct BellPanel: View {
             Divider().overlay(Color.line)
             Button { app.go(.dash(.notifications)) } label: { Text("See all").font(.system(size: 13)).foregroundStyle(Color.paper.opacity(0.8)).frame(maxWidth: .infinity).padding(.vertical, 14).contentShape(Rectangle()) }.buttonStyle(.plain)
         }
-        .frame(width: 380)
-        .pane(RoundedRectangle(cornerRadius: 26, style: .continuous))
+        .frame(maxWidth: 380)
+        .padding(.horizontal, 0)
+        .pane(RoundedRectangle(cornerRadius: 26, style: .continuous), tint: Color.black.opacity(0.5))
         .shadow(color: .black.opacity(0.5), radius: 30, y: 16)
     }
 }

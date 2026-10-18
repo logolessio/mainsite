@@ -18,7 +18,7 @@ struct PaperPill: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 if busy { ProgressView().controlSize(.small).tint(.black) } else if let symbol { Image(systemName: symbol).font(.system(size: height > 40 ? 14 : 12, weight: .semibold)) }
-                Text(title)
+                Text(title).lineLimit(1).fixedSize()
             }
             .font(.system(size: height > 40 ? 15 : 13, weight: .medium))
             .foregroundStyle(Color.black)

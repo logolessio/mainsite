@@ -35,6 +35,12 @@ extension Font {
     static func display(_ size: CGFloat) -> Font { .custom("Gloock", size: size) }
 }
 
+private struct CompactKey: EnvironmentKey { static let defaultValue = false }
+extension EnvironmentValues {
+    /// True on a phone or a narrow window: one column, a bottom bar instead of the rail.
+    var compact: Bool { get { self[CompactKey.self] } set { self[CompactKey.self] = newValue } }
+}
+
 enum Radius {
     static let card: CGFloat = 22
     static let panel: CGFloat = 32
@@ -95,10 +101,11 @@ struct Eyebrow: View {
 struct PageTitle: View {
     let title: String
     var subtitle: String?
+    @Environment(\.compact) private var compact
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(title).font(.display(64)).foregroundStyle(Color.paper).lineLimit(1).minimumScaleFactor(0.5)
-            if let subtitle { Text(subtitle).font(.system(size: 16)).foregroundStyle(.mute).fixedSize(horizontal: false, vertical: true).frame(maxWidth: 560, alignment: .leading) }
+            Text(title).font(.display(compact ? 40 : 64)).foregroundStyle(Color.paper).lineLimit(compact ? 2 : 1).minimumScaleFactor(0.5)
+            if let subtitle { Text(subtitle).font(.system(size: compact ? 15 : 16)).foregroundStyle(.mute).fixedSize(horizontal: false, vertical: true).frame(maxWidth: 560, alignment: .leading) }
             Rectangle().fill(Color.line).frame(height: 1).padding(.top, 14)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -161,11 +168,11 @@ struct CoverFill: View {
 @MainActor
 final class ImageCache {
     static let shared = ImageCache()
-    private let cache = NSCache<NSURL, NSImage>()
-    func image(_ url: URL) -> NSImage? { cache.object(forKey: url as NSURL) }
-    func load(_ url: URL) async -> NSImage? {
+    private let cache = NSCache<NSURL, PlatformImage>()
+    func image(_ url: URL) -> PlatformImage? { cache.object(forKey: url as NSURL) }
+    func load(_ url: URL) async -> PlatformImage? {
         if let i = image(url) { return i }
-        guard let (data, res) = try? await URLSession.shared.data(from: url), (res as? HTTPURLResponse)?.statusCode == 200, let img = NSImage(data: data) else { return nil }
+        guard let (data, res) = try? await URLSession.shared.data(from: url), (res as? HTTPURLResponse)?.statusCode == 200, let img = PlatformImage(data: data) else { return nil }
         cache.setObject(img, forKey: url as NSURL)
         return img
     }
@@ -175,13 +182,13 @@ final class ImageCache {
 struct RemoteImage: View {
     let url: URL?
     var seed = ""
-    @State private var loaded: NSImage?
+    @State private var loaded: PlatformImage?
 
     var body: some View {
         ZStack {
             CoverFill(seed: seed.isEmpty ? (url?.absoluteString ?? "x") : seed)
             if let img = loaded ?? url.flatMap({ ImageCache.shared.image($0) }) {
-                Image(nsImage: img).resizable().scaledToFill().transition(.opacity)
+                Image(platform: img).resizable().scaledToFill().transition(.opacity)
             }
         }
         .clipped()

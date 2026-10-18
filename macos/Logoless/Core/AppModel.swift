@@ -1,4 +1,3 @@
-import AppKit
 import CryptoKit
 import Observation
 import SwiftUI
@@ -105,7 +104,11 @@ final class AppModel {
 
     private static let onboardedKey = "onboarded.v1"
 
+    private var started = false
+
     func start() async {
+        guard !started else { return } // the window can ask more than once (a new window, a picture of the screen)
+        started = true
         showOnboarding = !UserDefaults.standard.bool(forKey: Self.onboardedKey)
         #if DEBUG
         if ProcessInfo.processInfo.environment["LOGOLESS_ONBOARDING"] != nil { showOnboarding = true }
@@ -219,7 +222,7 @@ final class AppModel {
         struct Body: Encodable { let code: String; let verifier: String; let device: String }
         struct Reply: Decodable { let token: String }
         do {
-            let r: Reply = try await api.post("/api/app/token", Body(code: code, verifier: pending.verifier, device: Host.current().localizedName ?? "Mac"))
+            let r: Reply = try await api.post("/api/app/token", Body(code: code, verifier: pending.verifier, device: Platform.deviceName))
             TokenStore.save(r.token)
             api.token = r.token
             banner = nil
@@ -411,7 +414,7 @@ final class AppModel {
         case .campaign(let id): path = "/campaign/\(id)"
         case .dash(let p): path = p.webPath
         }
-        NSWorkspace.shared.open(Config.base.appendingPathComponent(path))
+        Platform.open(Config.base.appendingPathComponent(path))
     }
 
     // MARK: while the app is open
@@ -422,14 +425,14 @@ final class AppModel {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(60))
                 guard let self, !Task.isCancelled else { return }
-                if NSApp.isActive { await self.refreshMe(); if self.isAdmin { await self.loadStaff() } }
+                if Platform.isActive { await self.refreshMe(); if self.isAdmin { await self.loadStaff() } }
             }
         }
     }
 
     private func updateBadge() {
         let n = isSignedIn ? unread + (isAdmin ? (staff?.pendingSubmissions ?? 0) : 0) : 0
-        NSApp?.dockTile.badgeLabel = n > 0 ? String(n) : nil
+        Platform.setBadge(n)
     }
 
     // MARK: helpers

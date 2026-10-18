@@ -1,4 +1,4 @@
-#if DEBUG
+#if DEBUG && os(macOS)
 import AppKit
 import SwiftUI
 
@@ -12,6 +12,8 @@ enum DebugSnapshots {
         try? FileManager.default.createDirectory(atPath: folder, withIntermediateDirectories: true)
         try? await Task.sleep(for: .seconds(6))
         Snap.flat = true
+        let dims = (ProcessInfo.processInfo.environment["LOGOLESS_SNAPSHOT_SIZE"] ?? "1280x820").split(separator: "x").compactMap { Double($0) }
+        let size = CGSize(width: dims.first ?? 1280, height: dims.last ?? 820)
         for item in list.split(separator: ",").map(String.init) {
             app.showMenu = false; app.showBell = false; app.showOnboarding = false
             if item == "signin" { await app.signIn(); print("SIGNIN phase=\(app.isSignedIn ? "signedIn" : "signedOut") me=\(app.me?.profile?.handle ?? "-") tokenSaved=\(TokenStore.load() != nil)"); continue }
@@ -24,7 +26,7 @@ enum DebugSnapshots {
             await app.loadCurrent()
             await preload(app)
             try? await Task.sleep(for: .milliseconds(400))
-            let r = ImageRenderer(content: ShellView().environment(app).frame(width: 1280, height: 820, alignment: .top).clipped())
+            let r = ImageRenderer(content: ShellView().environment(app).frame(width: size.width, height: size.height, alignment: .top).clipped())
             r.scale = 1
             if let img = r.nsImage, let tiff = img.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff) {
                 try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: "\(folder)/\(item.replacingOccurrences(of: ":", with: "-")).png"))
