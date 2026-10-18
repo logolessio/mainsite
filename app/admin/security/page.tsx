@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { SecurityForm } from '@/components/admin/security-form'
-import { SectionTabs } from '@/components/app/section-tabs'
 import { Card, PageHeader } from '@/components/app/ui'
 import { adminSecretSet } from '@/lib/admin-secret'
 import { pageAdmin } from '@/lib/user'
@@ -12,7 +11,6 @@ export default async function Page() {
   const isSet = await adminSecretSet(admin.id)
   return (
     <>
-      <SectionTabs group="system" />
       <PageHeader title="Security" sub="Your admin password. It is asked for before anything that could hurt the company." />
       <div className="grid max-w-3xl gap-6">
         <Card title={isSet ? 'Change your admin password' : 'Set your admin password'}>

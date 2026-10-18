@@ -9,7 +9,6 @@ import { HERO_VARIANTS_DEFAULT, HERO_VARIANTS_KEY } from '@/lib/copy-key'
 import { db } from '@/lib/db'
 import { pendingEdits } from '@/lib/text-pending'
 import { pageAdmin } from '@/lib/user'
-import { SectionTabs } from '@/components/app/section-tabs'
 
 export const metadata: Metadata = { title: 'Site text | logoless', robots: { index: false } }
 
@@ -52,7 +51,6 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
 
   return (
     <>
-      <SectionTabs group="site" />
       <PageHeader title="Site text" sub="Every sentence on the site, grouped by page. You can also click “Edit text” in the corner of any page and click the words themselves." actions={<ScanSite />} />
 
       <p className="mb-6 flex items-start gap-2.5 rounded-2xl border border-line px-5 py-4 text-[15px] text-mute">

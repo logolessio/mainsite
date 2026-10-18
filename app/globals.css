@@ -762,6 +762,25 @@ main:focus {
     mix-blend-mode: normal;
   }
 }
+/* the pages of one menu cross-fade in place: no rise, no drop */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-vt-page][data-vt-tab]::view-transition-old(page) {
+    animation: vt-fade-out 0.16s ease both;
+  }
+  html[data-vt-page][data-vt-tab]::view-transition-new(page) {
+    animation: vt-fade-in 0.32s ease 0.04s both;
+  }
+}
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+}
 @keyframes vt-page-out {
   to {
     opacity: 0;

@@ -10,7 +10,6 @@ import { readLive, requestHost } from '@/lib/features'
 import { money } from '@/lib/format'
 import { overview, sinceFor } from '@/lib/log-stats'
 import { pageAdmin } from '@/lib/user'
-import { SectionTabs } from '@/components/app/section-tabs'
 
 export const metadata: Metadata = { title: 'System | logoless', robots: { index: false } }
 
@@ -25,7 +24,6 @@ export default async function Page() {
   const bad = [...h.filter((x) => x.state !== 'ok').map((x) => x.label), ...checks.filter((x) => !x.ok).map((x) => x.label)]
   return (
     <>
-      <SectionTabs group="system" />
       <PageHeader
         title="System health"
         sub={bad.length ? `${bad.length} thing${bad.length > 1 ? 's' : ''} to look at: ${bad.join(', ')}.` : 'Everything is healthy.'}

@@ -3,7 +3,6 @@ import { PageHeader } from '@/components/app/ui'
 import { DashboardPreview, type PreviewItem } from '@/components/dev/dashboard-preview'
 import { SITE_URL_FOR_STAFF } from '@/lib/staff-nav'
 import { pageDev } from '@/lib/user'
-import { SectionTabs } from '@/components/app/section-tabs'
 
 export const metadata: Metadata = { title: 'Dashboards | logoless', robots: { index: false } }
 
@@ -20,7 +19,6 @@ export default async function Page() {
   ]
   return (
     <>
-      <SectionTabs group="site" />
       <PageHeader title="Dashboards" sub="Preview every dashboard and screen size without signing in as anyone else." />
       <DashboardPreview items={items} />
     </>

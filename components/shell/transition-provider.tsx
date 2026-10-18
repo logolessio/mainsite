@@ -4,6 +4,7 @@ import { useReducedMotion } from 'framer-motion'
 import { usePathname, useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { appArea } from '@/lib/app-areas'
+import { menuOf } from '@/lib/section-groups'
 import { confirmLeave } from '@/hooks/use-unsaved-guard'
 import type { Campaign } from '@/lib/campaigns'
 
@@ -69,6 +70,11 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
       }
       if (!confirmLeave()) return // there is work in the page that has not been saved
       if (target !== pathname) setPending(true)
+      // Going into or out of a dashboard (or between dashboards) has no animation at all: the whole screen changes, so it simply changes.
+      if (appArea(pathname) !== appArea(target)) {
+        router.push(href)
+        return
+      }
       if (reduced) {
         router.push(href)
         return
@@ -80,6 +86,9 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
       const html = document.documentElement
       if (doc.startViewTransition && target !== pathname && html.dataset.vt !== '1' && html.dataset.vtPage !== '1' && !html.classList.contains('calm')) {
         html.dataset.vtPage = '1'
+        // moving between the pages of one menu (Profile, Achievements...) is a plain cross-fade, with no rise
+        const menu = menuOf(pathname)
+        if (menu && menu === menuOf(target)) html.dataset.vtTab = '1'
         let arrived = false
         let pushed = false
         const go = () => {
@@ -107,7 +116,10 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
         run.ready?.catch(() => {})
         run.updateCallbackDone?.catch(() => {})
         window.setTimeout(go, 700) // if the browser has not got round to starting the transition (the tab is in the background), just go
-        const clear = () => delete html.dataset.vtPage
+        const clear = () => {
+          delete html.dataset.vtPage
+          delete html.dataset.vtTab
+        }
         run.finished.catch(() => {}).finally(clear)
         window.setTimeout(clear, 2600) // never leave the flag set if the browser lost track of the transition
         return

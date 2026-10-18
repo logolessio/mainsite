@@ -8,7 +8,6 @@ import { PREVIEWS } from '@/lib/email-templates'
 import { when } from '@/lib/format'
 import { pageAdmin } from '@/lib/user'
 import { cn } from '@/lib/utils'
-import { SectionTabs } from '@/components/app/section-tabs'
 
 export const metadata: Metadata = { title: 'Email | logoless', robots: { index: false } }
 
@@ -44,7 +43,6 @@ export default async function Page() {
 
   return (
     <>
-      <SectionTabs group="talk" />
       <PageHeader title="Email" sub="Check that email works, see exactly what members receive, and send yourself a test of each one." />
       <div className="grid max-w-5xl gap-6">
         <ul className="grid gap-3 sm:grid-cols-3">

@@ -19,6 +19,7 @@ import { Palette } from './palette'
 import { setKeyMap } from '@/lib/keys'
 import { PRIMARY } from './primary'
 import { useNavCounts } from './use-nav-counts'
+import { RouteTabs } from './section-tabs'
 import type { NavCounts } from '@/lib/nav-counts'
 
 /**
@@ -235,6 +236,8 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
       </header>
 
       <main tabIndex={-1} className="px-5 pt-10 pb-32 md:px-10 md:pt-14 md:pb-24">
+        {/* the page's menu (Profile, Achievements...) is part of the shell, not of the page: it stays put while the page under it changes */}
+        <RouteTabs />
         {/* only the page changes between pages: the sidebar and the bars stay exactly where they are.
             The old page dims while the next one loads, and the new one eases in from that same dim, so nothing ever flashes. */}
         <motion.div

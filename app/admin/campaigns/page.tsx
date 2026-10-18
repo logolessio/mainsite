@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { SectionTabs } from '@/components/app/section-tabs'
 import { AdminButton } from '@/components/admin/ui'
 import { Disclosure } from '@/components/admin/disclosure'
 import { More } from '@/components/admin/more'
@@ -137,7 +136,6 @@ export default async function Page() {
 
   return (
     <>
-      <SectionTabs group="campaigns" />
       <PageHeader title="Campaigns" sub="Accept a request, wait for the artist to pay, then launch. Nothing goes live until it is paid." />
       <Tabbed tabs={tabs} initial={first} />
       <Disclosure className="mt-10" title="Testing tools" sub="Made-up campaigns to try the site with, and a clean-up for the sample campaigns.">

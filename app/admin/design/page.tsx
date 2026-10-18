@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { ResetDesign } from '@/components/admin/reset-design'
 import { Roundness } from '@/components/admin/roundness'
 import { Switch } from '@/components/admin/switches'
-import { SectionTabs } from '@/components/app/section-tabs'
 import { Card, PageHeader } from '@/components/app/ui'
 import { FontPicker } from '@/components/dev/font-picker'
 import { effectiveFont } from '@/lib/fonts'
@@ -28,7 +27,6 @@ export default async function Page() {
   const on = (k: keyof typeof s) => s[k] === '1'
   return (
     <>
-      <SectionTabs group="site" />
       <PageHeader title="Design" sub="How the whole site looks. Every change shows for everyone straight away." actions={<ResetDesign />} />
 
       <H2 sub="Buttons, fields, cards and pictures, all at once. The samples below follow the slider as you drag it.">Roundness</H2>

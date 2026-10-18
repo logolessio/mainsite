@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { SectionTabs } from '@/components/app/section-tabs'
 import { Diagnostics } from '@/components/admin/diagnostics'
 import { Badge } from '@/components/app/table'
 import { Card, PageHeader } from '@/components/app/ui'
@@ -26,7 +25,6 @@ export default async function Page() {
   const h = await health()
   return (
     <>
-      <SectionTabs group="system" />
       <PageHeader title="Keys and tests" sub="See what is set up and test it. Secret values are never shown here and cannot be changed from here: to change one, edit it in Cloudflare (Settings, Variables and Secrets)." />
       <div className="grid max-w-4xl gap-6">
         <Card title="What is set up">

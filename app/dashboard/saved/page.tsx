@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { SectionTabs } from '@/components/app/section-tabs'
 import { notFound } from 'next/navigation'
 import { ActionLink } from '@/components/app/action-link'
 import { EmptyState } from '@/components/app/table'
@@ -24,7 +23,6 @@ export default async function Page() {
   ).results.map(toCampaign)
   return (
     <>
-      <SectionTabs group="profile" />
       <PageHeader title="Saved campaigns" sub="Campaigns you've hearted that are still live. Heart one to hear when it changes." actions={<ActionLink href="/">Find more</ActionLink>} />
       {rows.length === 0 ? (
         <EmptyState icon="Megaphone" title="Nothing saved yet" body="Open a campaign and press the heart. It will wait for you here." action={<ActionLink href="/">Browse campaigns</ActionLink>} />

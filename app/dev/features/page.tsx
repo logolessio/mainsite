@@ -3,7 +3,6 @@ import { PageHeader } from '@/components/app/ui'
 import { AnnouncementEditor } from '@/components/dev/announcement-editor'
 import { PushPanel } from '@/components/dev/push-panel'
 import { pageDev } from '@/lib/user'
-import { SectionTabs } from '@/components/app/section-tabs'
 
 export const metadata: Metadata = { title: 'Features | logoless', robots: { index: false } }
 
@@ -11,7 +10,6 @@ export default async function Page() {
   await pageDev()
   return (
     <>
-      <SectionTabs group="site" />
       <PageHeader title="Features" sub="Everything on the dev site is switched on there so you can try it. Choose what goes to logoless.io, and undo it any time." />
       <div className="grid max-w-3xl gap-8">
         <PushPanel />
