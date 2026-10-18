@@ -1,3 +1,4 @@
+import 'package:flutter/painting.dart' show Color;
 import 'config.dart';
 
 int _i(dynamic v) => v is num ? v.toInt() : int.tryParse('$v') ?? 0;
@@ -287,4 +288,42 @@ class Money {
   }
 
   static String grouped(int n) => n.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (m) => ',');
+}
+
+/// The ready-made "looks" (lib/looks.ts on the site): a gradient picture and a matching banner.
+class Look {
+  const Look(this.id, this.name, this.light, this.mid, this.dark);
+  final String id, name;
+  final Color light, mid, dark;
+}
+
+class Looks {
+  static const all = [
+    Look('ember', 'Ember', Color(0xFFFF7A45), Color(0xFF8F2410), Color(0xFF140605)),
+    Look('ocean', 'Ocean', Color(0xFF3CC0E0), Color(0xFF0D4F73), Color(0xFF02080F)),
+    Look('dusk', 'Dusk', Color(0xFFC77BEA), Color(0xFF40237A), Color(0xFF0B0B1E)),
+    Look('forest', 'Forest', Color(0xFF7FD18A), Color(0xFF175A30), Color(0xFF030A05)),
+    Look('rose', 'Rose', Color(0xFFFF82B0), Color(0xFF701845), Color(0xFF120309)),
+    Look('sand', 'Sand', Color(0xFFEFD39A), Color(0xFF8F5F2E), Color(0xFF1A1008)),
+    Look('violet', 'Violet', Color(0xFF8D9BFF), Color(0xFF2F349A), Color(0xFF06061A)),
+    Look('mono', 'Mono', Color(0xFFE4E4E8), Color(0xFF505058), Color(0xFF050505)),
+  ];
+
+  static Look? byId(String id) {
+    for (final l in all) {
+      if (l.id == id) return l;
+    }
+    return null;
+  }
+
+  /// The same look for the same seed, every time (the site's hash).
+  static Look forSeed(String seed) {
+    var h = 0;
+    for (final u in seed.codeUnits) {
+      h = (h * 31 + u) & 0xFFFFFFFF;
+    }
+    return all[h % all.length];
+  }
+
+  static String key(String id) => 'g:$id';
 }

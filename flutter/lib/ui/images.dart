@@ -1,4 +1,6 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../core/models.dart';
 import 'theme.dart';
 
 /// A soft colour from a name, shown while a picture loads.
@@ -31,31 +33,47 @@ class RemoteImage extends StatelessWidget {
       ]);
 }
 
+/// A look drawn as a picture: a soft glow over a gradient, with the person's first letter on an avatar.
+class LookArt extends StatelessWidget {
+  const LookArt(this.look, {super.key, this.banner = false, this.letter});
+  final Look look;
+  final bool banner;
+  final String? letter;
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(builder: (context, c) {
+        final s = c.biggest.shortestSide.isFinite ? math.max(c.maxWidth.isFinite ? c.maxWidth : 100, c.maxHeight.isFinite ? c.maxHeight : 100) : 100.0;
+        return Stack(fit: StackFit.expand, children: [
+          DecoratedBox(decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topLeft, end: banner ? Alignment.bottomRight : const Alignment(0.4, 1), colors: [look.mid, look.dark]))),
+          DecoratedBox(decoration: BoxDecoration(gradient: RadialGradient(center: banner ? const Alignment(-0.76, -1) : const Alignment(-0.5, -0.7), radius: banner ? 0.75 * s / (c.maxWidth.isFinite && c.maxWidth > 0 ? c.maxWidth : s) : 0.95, colors: [look.light, look.light.withValues(alpha: 0)]))),
+          if (!banner && letter != null && letter!.isNotEmpty) Center(child: Text(letter!.substring(0, 1).toUpperCase(), style: body((c.maxHeight.isFinite ? c.maxHeight : 100) * 0.46, color: Colors.white.withValues(alpha: 0.92), weight: 600))),
+        ]);
+      });
+}
+
 class Avatar extends StatelessWidget {
   const Avatar({super.key, required this.url, required this.name, this.size = 36});
   final Uri? url;
   final String name;
   final double size;
 
-  /// The ready-made looks (/api/look/...) are vector pictures; they are drawn here as the same dark gradient with the first letter.
-  bool get _isLook => url?.path.startsWith('/api/look/') == true;
-  String get _letter {
-    final l = url?.queryParameters['l'];
-    final s = (l != null && l.isNotEmpty) ? l : name;
-    return s.isEmpty ? '?' : s.substring(0, 1).toUpperCase();
+  /// The ready-made looks (/api/look/ID?l=L) are drawn here from the look's colours, as the site draws them.
+  (Look, String)? get _look {
+    final u = url;
+    if (u == null || !u.path.startsWith('/api/look/')) return null;
+    final id = u.path.substring('/api/look/'.length);
+    final l = u.queryParameters['l'];
+    return (Looks.byId(id) ?? Looks.forSeed(name), (l != null && l.isNotEmpty) ? l : (name.isEmpty ? '?' : name.substring(0, 1)));
   }
 
   @override
-  Widget build(BuildContext context) => Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white.withValues(alpha: 0.15))),
-        clipBehavior: Clip.antiAlias,
-        child: (url != null && !_isLook)
-            ? RemoteImage(url, seed: name)
-            : DecoratedBox(
-                decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF505058), Color(0xFF050505)])),
-                child: Center(child: Text(_letter, style: body(size * 0.46, color: Colors.white.withValues(alpha: 0.92), weight: 600))),
-              ),
-      );
+  Widget build(BuildContext context) {
+    final look = _look;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white.withValues(alpha: 0.15))),
+      clipBehavior: Clip.antiAlias,
+      child: look != null ? LookArt(look.$1, letter: look.$2) : (url != null ? RemoteImage(url, seed: name) : LookArt(Looks.forSeed(name), letter: name.isEmpty ? '?' : name.substring(0, 1))),
+    );
+  }
 }

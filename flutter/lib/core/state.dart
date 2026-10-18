@@ -63,6 +63,8 @@ class AppState extends ChangeNotifier {
   final List<AppRoute> _history = [];
   bool showJump = false, showMenu = false, showBell = false, showOnboarding = false;
   int onboardingStart = 0;
+  String? onboardingRole;
+  bool liquidLoader = false;
 
   // who they are
   Phase phase = Phase.starting;
@@ -119,6 +121,7 @@ class AppState extends ChangeNotifier {
     if (devToken.isNotEmpty) token = devToken;
     api.token = token;
     _changed();
+    unawaited(loadConfig());
     final list = loadCampaigns();
     if (token != null) {
       await refreshMe();
@@ -178,9 +181,47 @@ class AppState extends ChangeNotifier {
     _changed();
   }
 
-  void replayOnboarding() {
+  void replayOnboarding() => beginOnboarding();
+
+  /// Plays the site's onboarding from the top (a link such as /onboarding?role=brand lands here).
+  void beginOnboarding({String? role}) {
+    onboardingStart = 0;
+    onboardingRole = role;
     showOnboarding = true;
     _changed();
+  }
+
+  /// Has this account been through onboarding already (on this or another device)?
+  Future<bool> onboardingDone() async {
+    try {
+      final r = await api.get('/api/app/v1/onboarding') as Map;
+      return r['done'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> loadConfig() async {
+    try {
+      final c = await api.get('/api/app/v1/config') as Map;
+      liquidLoader = c['liquidLoader'] == true;
+      _changed();
+    } catch (_) {}
+  }
+
+  /// A page of the site: the app's own screen for it, or (on Android and Windows) the page in the browser.
+  void goPage(String path) {
+    final bare = path.split(RegExp(r'[?#]')).first;
+    if (bare == '/' || bare.isEmpty) return go(const AppRoute.home());
+    final m = RegExp(r'^/campaign/([^/]+)/?$').firstMatch(bare);
+    if (m != null) return go(AppRoute.campaign(m.group(1)!));
+    final d = RegExp(r'^/dashboard(?:/([a-z]+))?/?$').firstMatch(bare);
+    if (d != null) {
+      final n = d.group(1);
+      final page = n == null || n == 'overview' ? DashPage.overview : n == 'payouts' ? DashPage.earnings : DashPage.values.where((p) => p.name == n && p != DashPage.queue).firstOrNull;
+      if (page != null) return go(AppRoute.dash(page));
+    }
+    unawaited(openPath(path));
   }
 
   Future<bool?> handleAvailable(String h) async {

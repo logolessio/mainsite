@@ -66,8 +66,8 @@ void main() {
   testWidgets('profile desktop', (t) => shoot(t, 'profile_desktop', desk, sample(route: const AppRoute.dash(DashPage.profile))));
   testWidgets('queue desktop', (t) => shoot(t, 'queue_desktop', desk, sample(route: const AppRoute.dash(DashPage.queue))));
   testWidgets('menu desktop', (t) => shoot(t, 'menu_desktop', desk, sample(), after: (s) => s.showMenu = true));
-  for (final i in [0, 1, 2, 3, 4, 5, 6]) {
-    testWidgets('onboarding $i phone', (t) => shoot(t, 'onboarding_${i}_phone', phone, sample(onboarding: true, step: i), wait: const Duration(milliseconds: 1600)));
-    testWidgets('onboarding $i desktop', (t) => shoot(t, 'onboarding_${i}_desktop', desk, sample(onboarding: true, step: i), wait: const Duration(milliseconds: 1600)));
+  for (final i in [1, 2, 6, 7, 9, 10, 13, 14]) {
+    testWidgets('onboarding $i phone', (t) => shoot(t, 'onboarding_${i}_phone', phone, sample(onboarding: true, step: i), wait: const Duration(milliseconds: 1800)));
+    testWidgets('onboarding $i desktop', (t) => shoot(t, 'onboarding_${i}_desktop', desk, sample(onboarding: true, step: i), wait: const Duration(milliseconds: 1800)));
   }
 }

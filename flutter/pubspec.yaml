@@ -19,6 +19,8 @@ dependencies:
   crypto: any
   intl: any
   audioplayers: any
+  file_selector: ^1.1.0
+  image: ^4.12.0
 
 dev_dependencies:
   flutter_test:

@@ -10,7 +10,8 @@ works like logoless.io (black, Gloock headings, paper-white pills, frosted glass
   campaign pages with the audio player, Submit content, the slide-in menu and the bell.
 - The dashboard: Overview, Submissions, Earnings (withdraw to PayPal), Profile (with Achievements and Saved), Settings (with Notifications), and the
   owner's Queue. A left rail on a wide window (Windows), a bottom bar on a phone (Android).
-- First launch: a welcome tour (what logoless is, how it pays, sign in, profile, PayPal). Settings -> "Show the welcome tour" plays it again.
+- First launch: the site's own onboarding, step for step (a line typed out in large type, Creator or Brand, "Log in with logoless" opening the sign-in window, the email code if needed, PayPal, name, username, a look or your own pictures, the accounts you post from, "Are you happy", setting up, bio verification, tour, done). The app opens straight into it; an account that has finished it (here or elsewhere) skips it. Settings -> "Show the welcome tour" plays it again.
+- Pages that have no screen of their own (pricing, for brands, the brand dashboard...) open in the browser here; the Mac and iPhone apps show them inside the app.
 - Ctrl+K jumps to any page or campaign. Esc closes what floats or goes back (the Android back button does the same).
 
 ## Signing in

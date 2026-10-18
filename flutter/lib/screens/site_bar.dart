@@ -27,7 +27,7 @@ class SiteBar extends StatelessWidget {
         ] else if (app.phase != Phase.starting) ...[
           GhostPill('Log in', height: 40, onTap: app.signIn),
           const SizedBox(width: 10),
-          PaperPill('Get started', busy: app.signingIn, height: 40, onTap: app.signIn),
+          PaperPill('Get started', busy: app.signingIn, height: 40, onTap: app.beginOnboarding),
         ],
         const SizedBox(width: 10),
         GlassCircle(app.showMenu ? Icons.close_rounded : Icons.menu_rounded, tooltip: app.showMenu ? 'Close the menu' : 'Menu', onTap: () => app.setOverlay(menu: !app.showMenu, bell: false)),

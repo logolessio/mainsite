@@ -32,13 +32,13 @@ class MenuPanel extends StatelessWidget {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 for (final (label, path) in _main)
                   Press(
-                    onTap: () => path == null ? app.go(const AppRoute.home()) : app.openPath(path),
+                    onTap: () => path == null ? app.go(const AppRoute.home()) : app.goPage(path),
                     child: Padding(padding: const EdgeInsets.symmetric(vertical: 2), child: Text(path == null && app.route.isHome ? '$label •' : label, style: display(36))),
                   ),
                 const SizedBox(height: 30),
                 Text('More', style: body(11, color: C.mute)),
                 const SizedBox(height: 10),
-                Wrap(runSpacing: 12, children: [for (final (label, path) in _more) SizedBox(width: 170, child: Press(onTap: () => app.openPath(path), child: Text(label, style: body(15, color: C.paper.withValues(alpha: 0.8)))))]),
+                Wrap(runSpacing: 12, children: [for (final (label, path) in _more) SizedBox(width: 170, child: Press(onTap: () => app.goPage(path), child: Text(label, style: body(15, color: C.paper.withValues(alpha: 0.8)))))]),
                 const SizedBox(height: 36),
                 _account(app),
               ]),
@@ -53,7 +53,7 @@ class MenuPanel extends StatelessWidget {
     final p = app.me?.profile;
     if (!app.isSignedIn || p == null) {
       return Column(children: [
-        PaperPill('Get started', height: 54, full: true, onTap: app.signIn),
+        PaperPill('Get started', height: 54, full: true, onTap: () { app.setOverlay(menu: false); app.beginOnboarding(); }),
         const SizedBox(height: 12),
         Center(child: Press(onTap: app.signIn, child: Text('Log in', style: body(15, color: C.mute)))),
       ]);
