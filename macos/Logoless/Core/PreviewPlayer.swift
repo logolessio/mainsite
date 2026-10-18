@@ -1,5 +1,8 @@
 import AVFoundation
 import Observation
+#if os(iOS)
+import UIKit
+#endif
 
 /// Plays a campaign's short audio preview. One at a time.
 @MainActor @Observable
@@ -15,6 +18,10 @@ final class PreviewPlayer {
         if playingID == id { stop(); return }
         stop()
         guard let url else { return }
+        #if os(iOS)
+        try? AVAudioSession.sharedInstance().setCategory(.playback) // a preview plays even with the silent switch on
+        try? AVAudioSession.sharedInstance().setActive(true)
+        #endif
         let item = AVPlayerItem(url: url)
         let p = AVPlayer(playerItem: item)
         player = p
