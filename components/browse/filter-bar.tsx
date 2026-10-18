@@ -6,6 +6,7 @@ import { BrandIcon } from '@/components/brand-icon'
 import type { Platform } from '@/lib/campaigns'
 import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
+import { LiquidGlass } from '@/components/ui/liquid-glass'
 
 export type SortKey = 'rate' | 'ending' | 'budget'
 
@@ -49,10 +50,13 @@ export function FilterBar({
   onClear: () => void
 }) {
   return (
-    <motion.div
+    <LiquidGlass
+      as={motion.div}
       data-tour="filters"
       initial={false}
-      className="glass-liquid mx-auto mb-10 flex w-fit max-w-full flex-wrap items-center justify-center gap-1 rounded-[calc(26px*var(--round,1))] p-1.5 md:mb-14 md:rounded-pill md:px-3"
+      rootClassName="mx-auto mb-10 w-fit max-w-full md:mb-14"
+      rounded="rounded-[calc(26px*var(--round,1))] md:rounded-pill"
+      className="flex flex-wrap items-center justify-center gap-1 p-1.5 md:px-3"
     >
       <div role="group" aria-label="Category" className="flex flex-wrap justify-center gap-0.5">
         {categories.map((c) => (
@@ -100,6 +104,6 @@ export function FilterBar({
           <X aria-hidden="true" className="size-3.5" />
         </button>
       )}
-    </motion.div>
+    </LiquidGlass>
   )
 }

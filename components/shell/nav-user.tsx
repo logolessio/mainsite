@@ -10,6 +10,7 @@ import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
 import { NotificationBell } from './notifications'
 import { TransitionLink } from './transition-link'
+import { LiquidGlass } from '@/components/ui/liquid-glass'
 
 export type NavUser =
   | { signedIn: false }
@@ -147,8 +148,8 @@ function ProfileIcon({ onNavigate, menuOpen }: { onNavigate?: () => void; menuOp
             transition={{ duration: 0.22, ease: EASE_OUT }}
             className="absolute top-full right-0 z-50 w-72 pt-3"
           >
-            <div className="glass-liquid rounded-[calc(26px*var(--round,1))] shadow-[0_30px_60px_-20px_rgb(0_0_0/0.9)]">
-              <div className="h-20" style={{ background: bannerCss(p.banner, p.bannerKind) }} />
+            <LiquidGlass rounded="rounded-[calc(26px*var(--round,1))]" look={{ zRadius: 22 }}>
+              <div className="h-20 rounded-t-[inherit]" style={{ background: bannerCss(p.banner, p.bannerKind) }} />
               <div className="px-4 pb-4">
                 <Avatar src={p.avatar} name={p.displayName} size={56} className="-mt-9 border-2 border-surface" />
                 <div className="mt-2 flex items-center gap-1.5">
@@ -169,7 +170,7 @@ function ProfileIcon({ onNavigate, menuOpen }: { onNavigate?: () => void; menuOp
                   View profile
                 </TransitionLink>
               </div>
-            </div>
+            </LiquidGlass>
           </motion.div>
         )}
       </AnimatePresence>

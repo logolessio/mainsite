@@ -1,9 +1,8 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { Search, X } from 'lucide-react'
-import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 import { cn } from '@/lib/utils'
+import { LiquidGlass } from '@/components/ui/liquid-glass'
 
 type Props = {
   value: string
@@ -13,17 +12,8 @@ type Props = {
 }
 
 export function GlassSearch({ value, onChange, resultCount, className }: Props) {
-  const { reduced } = useMotionPrefs()
-
   return (
-    <div data-tour="search" className={cn('glass relative isolate overflow-hidden rounded-pill', className)}>
-      <motion.span
-        aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 -z-10 h-24 w-40 -translate-y-1/2 rounded-pill bg-paper/20 blur-2xl"
-        initial={{ left: '-10%' }}
-        animate={reduced ? { left: '20%' } : { left: ['-10%', '75%', '-10%'], scale: [1, 1.25, 1] }}
-        transition={reduced ? { duration: 0 } : { duration: 9, repeat: Infinity, ease: 'easeInOut' }}
-      />
+    <LiquidGlass data-tour="search" rootClassName={cn('relative', className)} look={{ zRadius: 18 }}>
       <label htmlFor="campaign-search" className="sr-only">
         Search campaigns
       </label>
@@ -56,6 +46,6 @@ export function GlassSearch({ value, onChange, resultCount, className }: Props) 
       <p className="sr-only" aria-live="polite">
         {value ? `${resultCount} campaigns match ${value}` : ''}
       </p>
-    </div>
+    </LiquidGlass>
   )
 }

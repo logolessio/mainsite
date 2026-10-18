@@ -288,6 +288,42 @@
   }
 }
 
+/* ---------- real liquid glass (components/ui/liquid-glass.tsx, lib/liquid-glass.ts) ---------- */
+.lg-root {
+  isolation: isolate;
+}
+/* what the glass sits on, drawn only so the shader has something to bend: a little lighter than the page, with its grid */
+.lg-scene {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(rgb(255 255 255 / 0.045) 1px, transparent 1px) 0 0 / 36px 36px,
+    linear-gradient(90deg, rgb(255 255 255 / 0.045) 1px, transparent 1px) 0 0 / 36px 36px,
+    radial-gradient(130% 160% at 15% 0%, rgb(70 70 76), rgb(18 18 20));
+}
+.lg-glass {
+  border-radius: inherit;
+}
+/* once the shader is drawing, it draws the body, rim and shadow; the CSS ones step aside */
+.lg-glass.lg-on {
+  overflow: visible;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+.lg-glass.lg-on::before,
+.lg-glass.lg-on::after {
+  display: none;
+}
+.lg-glass input,
+.lg-glass textarea,
+.lg-glass select {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* Liquid glass, used only on the tour card (one blurred layer at a time keeps the page fast). */
 .liquid-glass {
   position: relative;

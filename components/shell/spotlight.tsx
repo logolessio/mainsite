@@ -12,6 +12,7 @@ import { useDialog } from '@/hooks/use-dialog'
 import { useFeature } from './features-provider'
 import { useNavUser } from './nav-user'
 import { useTransitions } from './transition-provider'
+import { LiquidGlass } from '@/components/ui/liquid-glass'
 
 type C = { id: string; title: string; creator: string; type: string; cover: string; rate: number }
 type Row = { key: string; label: string; sub: string; group: 'Campaigns' | 'Pages'; href: string; cover?: string }
@@ -102,10 +103,10 @@ export function Spotlight() {
   let lastGroup = ''
   return (
     <>
-      {showPill && <button type="button" onClick={() => setOpen(true)} aria-label="Search" className={cn('glass-liquid fixed z-[55] hidden h-11 items-center gap-3 rounded-pill pr-2 pl-4 text-sm text-mute backdrop-blur-xl transition-colors hover:text-paper lg:flex', admin ? 'bottom-3.5 left-28' : 'bottom-5 left-5')}>
+      {showPill && <LiquidGlass as="button" type="button" onClick={() => setOpen(true)} aria-label="Search" rootClassName={cn('fixed z-[55] hidden lg:block', admin ? 'bottom-3.5 left-28' : 'bottom-5 left-5')} className="flex h-11 items-center gap-3 pr-2 pl-4 text-sm text-mute transition-colors hover:text-paper" look={{ zRadius: 12 }}>
           <Search className="size-4" /> Search
           <kbd className="rounded-pill bg-white/[0.08] px-2.5 py-1 font-mono text-[11px]">⌘K</kbd>
-        </button>}
+        </LiquidGlass>}
       <AnimatePresence>
         {open && (
           <motion.div key="s" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="fixed inset-0 z-[130] flex items-start justify-center bg-black/65 px-4 pt-[14vh] backdrop-blur-sm" onMouseDown={() => setOpen(false)}>

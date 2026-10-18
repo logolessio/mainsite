@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { isInvitePath } from '@/lib/invite-shared'
 import { useFeature } from './features-provider'
 import { TransitionLink } from './transition-link'
+import { LiquidGlass } from '@/components/ui/liquid-glass'
 
 const key = (t: string) => `ann:${t.length}:${[...t].reduce((a, c) => (a * 31 + c.charCodeAt(0)) | 0, 7)}`
 const HIDDEN = ['/dashboard', '/brand', '/admin', '/onboarding', '/@', '/u/']
@@ -27,7 +28,7 @@ export function AnnouncementBar({ text, href }: { text: string; href: string }) 
   const cls = 'flex min-w-0 items-center gap-2 pl-5 text-sm hover:text-paper'
   return (
     <div role="region" aria-label="Announcement" className="pointer-events-none fixed inset-x-0 bottom-[5.25rem] z-[65] flex justify-center px-4 lg:bottom-5">
-      <div className="glass-liquid pointer-events-auto flex h-12 max-w-[min(38rem,100%)] items-center gap-1 rounded-pill pr-2 backdrop-blur-xl">
+      <LiquidGlass rootClassName="pointer-events-auto max-w-[min(38rem,100%)]" className="flex h-12 items-center gap-1 pr-2" look={{ zRadius: 12 }}>
         {href ? (
           href.startsWith('/') ? (
             <TransitionLink href={href} className={cls}>{inner}<span aria-hidden="true">→</span></TransitionLink>
@@ -52,7 +53,7 @@ export function AnnouncementBar({ text, href }: { text: string; href: string }) 
         >
           <X className="size-4" />
         </button>
-      </div>
+      </LiquidGlass>
     </div>
   )
 }

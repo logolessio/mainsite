@@ -5,6 +5,7 @@ import { FlaskConical, Rocket } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { EASE_OUT } from '@/lib/layout'
 import { PushPanel } from './push-panel'
+import { LiquidGlass } from '@/components/ui/liquid-glass'
 
 /** A small pill in the corner of the dev site. Press it to choose features and push them to logoless.io. */
 export function DevBar() {
@@ -26,9 +27,9 @@ export function DevBar() {
   return (
     <>
       <div className="fixed right-4 bottom-4 z-[150] flex items-center gap-2 max-md:bottom-[8.75rem]">
-        <span className="glass-liquid hidden items-center gap-2 rounded-pill px-4 py-2.5 font-mono text-[11px] tracking-[0.18em] text-mute uppercase sm:inline-flex">
+        <LiquidGlass as="span" rootClassName="hidden sm:block" className="inline-flex items-center gap-2 px-4 py-2.5 font-mono text-[11px] tracking-[0.18em] text-mute uppercase" look={{ zRadius: 10 }}>
           <FlaskConical className="size-3.5" /> Dev site
-        </span>
+        </LiquidGlass>
         <button type="button" onClick={() => setOpen(true)} className="inline-flex h-12 items-center gap-2 rounded-pill bg-paper px-6 text-[15px] font-medium text-ink shadow-[0_20px_50px_-12px_rgb(0_0_0/0.9)] transition-all hover:bg-paper/85 active:scale-95">
           <Rocket className="size-4" /> push
           {waiting !== null && waiting > 0 && <span aria-label={`${waiting} features not live yet`} className="grid min-w-5 place-items-center rounded-pill bg-ink px-1.5 text-[11px] leading-5 text-paper">{waiting}</span>}

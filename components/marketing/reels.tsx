@@ -8,6 +8,7 @@ import { usePreview } from '@/components/shell/preview-provider'
 import { TransitionLink } from '@/components/shell/transition-link'
 import type { Campaign } from '@/lib/campaigns'
 import { cn } from '@/lib/utils'
+import { LiquidGlass } from '@/components/ui/liquid-glass'
 
 const usd = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 })}`
 const compact = (n: number) => (n >= 1000 ? `$${(n / 1000).toLocaleString('en-US', { maximumFractionDigits: 1 })}k` : usd(n))
@@ -114,15 +115,18 @@ export function Reels({ campaigns }: { campaigns: Campaign[] }) {
 
       {/* sound + hints */}
       <div className="pointer-events-none absolute inset-x-0 bottom-5 flex items-end justify-between px-4 md:px-8">
-        <button
+        <LiquidGlass
+          as="button"
           type="button"
           onClick={() => setSound((s) => !s)}
           aria-pressed={sound}
-          className="glass-liquid pointer-events-auto inline-flex h-11 items-center gap-2 rounded-pill px-4 text-sm"
+          rootClassName="pointer-events-auto inline-flex"
+          className="inline-flex h-11 items-center gap-2 px-4 text-sm"
+          look={{ zRadius: 12 }}
         >
           {sound ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
           {sound ? 'Sound on' : 'Tap for sound'}
-        </button>
+        </LiquidGlass>
         <p className="hidden text-xs text-mute md:block">
           <kbd className="rounded border border-line px-1.5 py-0.5 font-mono">↑</kbd> <kbd className="rounded border border-line px-1.5 py-0.5 font-mono">↓</kbd> to move · <kbd className="rounded border border-line px-1.5 py-0.5 font-mono">M</kbd> sound
         </p>

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
 import { Badge, type Column, DataTable } from './table'
+import { LiquidGlass } from '@/components/ui/liquid-glass'
 
 export type SubmissionRow = {
   id: string
@@ -111,7 +112,7 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
       </div>
 
       <div className="mt-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div role="tablist" aria-label="Filter submissions" className="glass-liquid inline-flex w-fit flex-wrap rounded-pill p-1">
+        <LiquidGlass role="tablist" aria-label="Filter submissions" rootClassName="w-fit" className="inline-flex flex-wrap p-1" look={{ zRadius: 10 }}>
           {FILTERS.map((f) => (
             <button key={f.id} role="tab" type="button" aria-selected={filter === f.id} tabIndex={filter === f.id ? 0 : -1} onClick={() => pick<Filter>('ll:subs:filter', setFilter)(f.id)} className="relative h-9 rounded-pill px-4 text-sm">
               {filter === f.id && <motion.span layoutId="clip-filter" transition={{ duration: 0.3, ease: EASE_OUT }} className="absolute inset-0 rounded-pill bg-paper" />}
@@ -120,9 +121,9 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
               </span>
             </button>
           ))}
-        </div>
+        </LiquidGlass>
         <div className="flex items-center gap-3">
-          <label className="glass-liquid relative block flex-1 rounded-pill md:w-60 md:flex-none">
+          <LiquidGlass as="label" rootClassName="flex-1 md:w-60 md:flex-none" className="relative block" look={{ zRadius: 10 }}>
             <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-mute" />
             <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === 'Escape' && setQ('')} type="search" enterKeyHint="search" placeholder="Search submissions" aria-label="Search submissions" className="h-10 w-full rounded-pill bg-transparent pr-9 pl-10 text-sm outline-none placeholder:text-mute [&::-webkit-search-cancel-button]:hidden" />
             {q && (
@@ -130,8 +131,8 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
                 <X aria-hidden="true" className="size-3.5" />
               </button>
             )}
-          </label>
-          <label className="glass-liquid relative inline-grid h-10 cursor-pointer items-center rounded-pill has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-paper/60">
+          </LiquidGlass>
+          <LiquidGlass as="label" rootClassName="inline-grid" className="relative inline-grid h-10 cursor-pointer items-center has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-paper/60" look={{ zRadius: 10 }}>
             <span className="sr-only">Sort by</span>
             <span aria-hidden="true" className="px-4 text-sm whitespace-nowrap text-mute">
               {SORTS.find((x) => x.id === sort)?.label}
@@ -143,14 +144,14 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
                 </option>
               ))}
             </select>
-          </label>
-          <div className="glass-liquid inline-flex rounded-pill p-1">
+          </LiquidGlass>
+          <LiquidGlass rootClassName="inline-flex" className="inline-flex p-1" look={{ zRadius: 10 }}>
             {([['cards', LayoutGrid, 'Cards'], ['table', Rows3, 'Table']] as const).map(([id, Ico, label]) => (
               <button key={id} type="button" aria-label={label} aria-pressed={view === id} onClick={() => pick<'cards' | 'table'>('ll:subs:view', setView)(id)} className={cn('grid size-8 place-items-center rounded-pill transition-colors', view === id ? 'bg-paper text-ink' : 'text-mute hover:text-paper')}>
                 <Ico className="size-4" />
               </button>
             ))}
-          </div>
+          </LiquidGlass>
         </div>
       </div>
 

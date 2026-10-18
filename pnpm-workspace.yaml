@@ -10,3 +10,4 @@ allowBuilds:
   workerd: true
   inotify: false
   pnpm: false
+  '@ybouane/liquidglass': false

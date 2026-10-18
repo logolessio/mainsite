@@ -33,6 +33,7 @@ import { bannerStyle, ProfileCard } from './profile-card'
 import { LookPicker } from './look-picker'
 import { MiniDots } from './mini-dots'
 import { ProfileTheme } from './profile-theme'
+import { LiquidGlass } from '@/components/ui/liquid-glass'
 
 type Loaded = { profile: ProfileView; unlocked: string[]; discordImport: boolean; discordLinked: boolean }
 
@@ -183,7 +184,7 @@ export function ProfileEditor() {
       <ProfileTheme dot={f.dotColor} />
       <div className="min-w-0">
         {/* ---------- the tab bar ---------- */}
-        <div className="glass-liquid sticky top-[84px] z-20 mx-auto mb-6 w-fit max-w-full rounded-pill">
+        <LiquidGlass rootClassName="sticky top-[84px] z-20 mx-auto mb-6 w-fit max-w-full" look={{ zRadius: 12 }}>
         <div role="tablist" aria-label="Profile sections" className="no-scrollbar flex justify-center gap-1 overflow-x-auto overflow-y-hidden p-1.5">
           {tabs.map((t) => {
             const on = tab === t.id
@@ -197,7 +198,7 @@ export function ProfileEditor() {
             )
           })}
         </div>
-        </div>
+        </LiquidGlass>
 
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22, ease: EASE_OUT }} className={cn(tab !== 'preview' && 'rounded-[calc(2rem*var(--round,1))] border border-line bg-[#0a0a0b] p-5 sm:p-7')}>

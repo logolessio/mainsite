@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { LiquidGlass } from '@/components/ui/liquid-glass'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
@@ -75,7 +76,7 @@ export function GlassTabs({ tabs, value, onChange, label, className }: { tabs: G
   // The glass light is a tall, moving pseudo-element. If the scroller were the glass itself, that light would count as
   // scrollable overflow and a scrollbar would flash in and out. So the glass clips, and a plain inner row scrolls.
   return (
-    <div className={cn('glass-liquid mx-auto w-fit max-w-full rounded-pill', className)}>
+    <LiquidGlass rootClassName={cn('mx-auto w-fit max-w-full', className)} look={{ zRadius: 12 }}>
       <div ref={row} role={onChange ? 'tablist' : 'navigation'} {...(onChange ? {} : { 'data-kb-tabs': '' })} aria-label={label} className="no-scrollbar relative flex items-center gap-1 overflow-x-auto overflow-y-hidden p-1.5">
         {spot && from && (
           <motion.span
@@ -118,7 +119,7 @@ export function GlassTabs({ tabs, value, onChange, label, className }: { tabs: G
           )
         })}
       </div>
-    </div>
+    </LiquidGlass>
   )
 }
 

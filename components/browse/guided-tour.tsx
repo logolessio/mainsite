@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom'
 import { useTransitions } from '@/components/shell/transition-provider'
 import { useMotionPrefs, useMounted } from '@/hooks/use-motion-prefs'
 import { EASE_OUT } from '@/lib/layout'
+import { LiquidGlass } from '@/components/ui/liquid-glass'
 
 type Step = {
   target?: string
@@ -370,7 +371,7 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
         className="absolute top-0 left-0 w-[min(400px,calc(100vw-32px))] will-change-transform"
         style={{ transform: 'translate3d(-9999px, 0, 0)' }}
       >
-        <div className="liquid-glass overflow-hidden rounded-[calc(28px*var(--round,1))]">
+        <LiquidGlass rounded="rounded-[calc(28px*var(--round,1))]" look={{ zRadius: 26 }}>
           <div className="p-7 pb-5">
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
@@ -433,7 +434,7 @@ function TourLayer({ steps, onClose }: { steps: Step[]; onClose: () => void }) {
               </button>
             </div>
           </div>
-        </div>
+        </LiquidGlass>
         <div className="mt-3 flex items-center justify-center gap-4 text-xs text-white/60">
           <button type="button" onClick={onClose} className="rounded-pill px-3 py-1 transition-colors hover:text-white">
             Skip tour

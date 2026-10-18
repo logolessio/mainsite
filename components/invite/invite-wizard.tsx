@@ -15,6 +15,7 @@ import { buildLink, LINK_PLATFORMS, USERNAME_LINKS } from '@/lib/profile-style'
 import { SITE } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import { Ask, BigArea, BigInput, Chip, Confetti, Label, Rise, UploadTile } from './bits'
+import { LiquidGlass } from '@/components/ui/liquid-glass'
 
 type Campaign = { id: string; title: string; status: string; budgetCents: number } | null
 type Props = {
@@ -253,7 +254,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
         <div className="mx-auto grid w-full max-w-[1180px] gap-10 px-5 pt-6 pb-40 md:grid-cols-[250px_1fr] md:px-10 md:pt-12">
           {/* ---------- the rail ---------- */}
           <aside className="hidden md:block">
-            <nav aria-label="Setup steps" className="glass-liquid sticky top-28 rounded-[calc(2rem*var(--round,1))] p-3 backdrop-blur-xl">
+            <LiquidGlass as="nav" aria-label="Setup steps" rootClassName="sticky top-28" rounded="rounded-[calc(2rem*var(--round,1))]" className="p-3" look={{ zRadius: 24 }}>
               {CHAPTERS.map((c) => (
                 <div key={c} className="mb-2 last:mb-0">
                   <p className="px-3 pt-2 pb-1 text-[11px] font-medium text-mute">{c}</p>
@@ -272,7 +273,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                   })}
                 </div>
               ))}
-            </nav>
+            </LiquidGlass>
           </aside>
 
           {/* ---------- the step ---------- */}
@@ -695,7 +696,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
         {/* ---------- the floating controls ---------- */}
         {showFooter && (
           <div className="pointer-events-none fixed inset-x-0 bottom-5 z-30 flex justify-center px-4">
-            <div className="glass-liquid pointer-events-auto flex items-center gap-2 rounded-pill p-1.5 backdrop-blur-xl">
+            <LiquidGlass rootClassName="pointer-events-auto" className="flex items-center gap-2 p-1.5" look={{ zRadius: 14 }}>
               <button type="button" onClick={back} disabled={step === 0 || busy} aria-label="Back" className="grid size-12 place-items-center rounded-pill text-mute transition-colors hover:bg-white/10 hover:text-paper disabled:opacity-30">
                 <ChevronLeft className="size-5" />
               </button>
@@ -707,7 +708,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
               <span className="hidden px-3 text-xs text-mute sm:block">
                 or press <kbd className="rounded-pill bg-white/[0.08] px-2 py-0.5 font-mono">Enter</kbd>
               </span>
-            </div>
+            </LiquidGlass>
           </div>
         )}
       </div>

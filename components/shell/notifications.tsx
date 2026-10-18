@@ -9,6 +9,7 @@ import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
 import { useNavUser } from './nav-user'
 import { TransitionLink } from './transition-link'
+import { LiquidGlass } from '@/components/ui/liquid-glass'
 
 export type Note = { id: string; kind: string; title: string; body: string; href: string | null; read_at: number | null; created_at: number }
 
@@ -209,11 +210,11 @@ export function NotificationBell({ onNavigate, align = 'right' }: { onNavigate?:
 
   return (
     <div ref={wrap} className="relative">
-      <button type="button" aria-label={unread ? `Notifications, ${unread} unread` : 'Notifications'} aria-expanded={open} onClick={() => setOpen((v) => !v)} className="glass-liquid grid size-11 place-items-center rounded-pill transition-transform active:scale-95">
+      <LiquidGlass as="button" type="button" aria-label={unread ? `Notifications, ${unread} unread` : 'Notifications'} aria-expanded={open} onClick={() => setOpen((v) => !v)} className="grid size-11 place-items-center transition-transform active:scale-95" look={{ zRadius: 12 }}>
         <motion.span key={unread} animate={unread ? { rotate: [0, -16, 14, -10, 6, 0] } : {}} transition={{ duration: 0.7, ease: 'easeInOut' }} className="grid origin-top place-items-center">
           <Bell className="size-[18px]" />
         </motion.span>
-      </button>
+      </LiquidGlass>
       {/* The badge sits outside the glass button: the glass clips anything that pokes past its edge. */}
       {unread > 0 && (
         <motion.span key={unread} initial={{ scale: 0.4 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 18 }} aria-hidden="true" className="pointer-events-none absolute -top-1 -right-1 z-10 grid min-w-5 place-items-center rounded-pill bg-paper px-1 text-[10px] leading-5 font-semibold text-ink ring-2 ring-ink">
