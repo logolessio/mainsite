@@ -13,7 +13,8 @@ async function appSession() {
   let header: string | null
   try {
     header = (await headers()).get('authorization')
-  } catch {
+  } catch (e) {
+    if ((e as { digest?: string } | null)?.digest === 'DYNAMIC_SERVER_USAGE') throw e // Next's own signal that this page has to be rendered per request
     return undefined // not inside a request
   }
   const m = /^Bearer (\S+)$/.exec(header ?? '')

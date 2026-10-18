@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Toggle } from '@/components/app/ui'
-import { ROLES, type Role } from '@/lib/roles'
+import { ROLES, type Role } from '@/lib/roles-shared'
 import { runSiteCheck } from '@/lib/site-check-client'
 import { askAdminSecret } from './secret-dialog'
 
