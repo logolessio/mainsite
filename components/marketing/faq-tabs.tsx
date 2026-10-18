@@ -28,7 +28,7 @@ export function FaqTabs() {
   return (
     <div>
       <div className="flex flex-col items-center gap-5 border-b border-line pb-8">
-        <GlassTabs label="FAQ audience" value={tab} onChange={(t) => setTab(t as Tab)} tabs={(['All', ...groups] as Tab[]).map((t) => ({ id: t, label: t }))}  />
+        <GlassTabs label="FAQ audience tabs" value={tab} onChange={(t) => setTab(t as Tab)} tabs={(['All', ...groups] as Tab[]).map((t) => ({ id: t, label: t }))}  />
         <label className="block w-full max-w-md">
           <span className="sr-only">Search the questions</span>
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the questions" className="h-12 w-full rounded-pill border border-line-strong bg-transparent px-5 text-[15px] outline-none transition-colors placeholder:text-paper/35 focus:border-paper" />

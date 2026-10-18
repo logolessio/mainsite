@@ -86,4 +86,5 @@ export const RETIRED_EDITS: Record<string, string> = {
   "c_ccd2ac038ae4f4c8": "How do we stop fake views?",
   "c_f193783314148dcc": "How does creating a campaign work?",
   "c_95aabc738fe4f74c": "Why was my submission rejected?",
+  "c_5f9275d79c80bd82": "FAQ audience tabs",
 }
