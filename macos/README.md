@@ -1,26 +1,38 @@
 # logoless for Mac
 
-A native Mac app for logoless.io, written in SwiftUI. The pages are the site itself (in a web view), and the window around them is
-native macOS 26 Liquid Glass: a floating glass sidebar, a glass toolbar, and a floating glass bar at the bottom (built with
-`GlassEffectContainer` and `glassEffect`, so the pills melt into each other as you move between places).
+A native Mac app for logoless.io, written in SwiftUI for macOS 26. It is not a web view: every screen is drawn natively from the site's JSON, and
+it looks and works like the site (black, Gloock headings, paper-white pills) with real Liquid Glass (`glassEffect`) on everything that floats:
+the top bar, the search, the filters and tabs, the menu, the bell, the buttons.
 
 ## Open it
 
-Open `Logoless.xcodeproj` in Xcode and press Run. Or run `./build.sh`, which writes `build/Logoless.app` (drag it to Applications).
-It is signed to run on this Mac only; to share it, set a development team under Signing & Capabilities.
+Open `Logoless.xcodeproj` in Xcode and press Run, or run `./build.sh`, which writes `build/Logoless.app`. It is signed to run on this Mac only;
+to share it, set a development team under Signing & Capabilities. Needs macOS 26 or later.
 
-Needs macOS 26 or later.
+## How it is laid out (like the site)
 
-## What is in it
+- **Site**: a floating top bar (the mark, the bell, Dashboard, you, the menu), the home page (the promise, a search that pins as you scroll,
+  filters, every campaign as its cover with the slide-up hover), a campaign page (cover and audio, the facts, the brief, Submit content), and the
+  slide-in menu.
+- **Dashboard** (the only place with a rail, as on the site): Overview, Submissions, Earnings, Profile (with Achievements and Saved), Settings
+  (with Notifications). Owners also get Queue: approve or decline submissions and held withdrawals.
+- **First launch**: a short welcome (what logoless is, how it pays), then sign in or create an account, a profile, and a PayPal email. Every step
+  can be skipped. Settings -> "Show the welcome tour" plays it again.
+- Keys: ⌘K jump to anything, ⌘1 to ⌘8 places, ⌘[ back, ⌘R refresh, ⇧⌘O open this page on logoless.io, Esc closes what floats or goes back.
 
-- **Sidebar**: Browse, Creator, Brand, Owner (owner.logoless.io) and Help. It follows the page you are on.
-- **Glass bar**: Discover, Dashboard, Earnings, Profile.
-- **Toolbar**: back, forward, the site's own search (also ⌘K), reload, copy link, open in the browser.
-- **Menus and keys**: ⌘[ ⌘] back and forward, ⌘R reload, ⌘1 to ⌘5 jump to Campaigns, Dashboard, Earnings, Profile, Settings, ⌘F find, ⌘+ ⌘- ⌘0 zoom.
-- Sign-in is kept between launches. Pages on logoless.io, its owner and dev sites, and the sign-in and payment pages (Google, Discord, PayPal) open
-  inside the app; any other link opens in your browser. File uploads, "leave without saving?" prompts and exports (downloads go to Downloads) work.
+## Signing in
+
+The app never sees a password. "Sign in" opens logoless.io/app/connect in a system sheet (Google, Discord, email all work there). The site hands
+back a one-use code; the app swaps it (with a PKCE secret it kept) for a token at `/api/app/token`, and sends it as `Authorization: Bearer lgl_...`.
+The token is kept in the data-protection Keychain, or in a private file in the app's sandbox folder when the app is not signed for the Keychain.
+Signing out revokes it on the server. See `lib/app-auth.ts` on the site.
 
 ## Files
 
-`Logoless/` holds the Swift sources (`Site.swift` is the map of places, `Browser.swift` the web view and what the interface needs from it,
-`QuickBar.swift` the glass bar). Xcode picks up any file you add to that folder.
+`Logoless/Core` (API client, models, app state, sign-in), `Logoless/Components` (theme, glass controls), `Logoless/Views` (Site, Dash, Onboarding).
+Xcode picks up any file added to those folders.
+
+## Testing against a local site
+
+Debug builds read `LOGOLESS_BASE` (for example `http://localhost:3111`) and `LOGOLESS_TOKEN` from the environment. `LOGOLESS_SNAPSHOT="home,dash:overview"`
+draws pages into pictures in the app's temporary folder and quits (glass is drawn flat there). `LOGOLESS_ONBOARDING=1` forces the welcome tour.

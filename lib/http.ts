@@ -57,6 +57,8 @@ export function route<A extends unknown[]>(fn: (...args: A) => Promise<Response>
  * (Session cookies are also SameSite=Lax, which is the second layer.)
  */
 export function assertSameOrigin(req: Request) {
+  // The Mac app signs in with a token it sends itself. A browser cannot be made to attach one to a request from another site, so there is nothing to forge.
+  if (/^Bearer lgl_[0-9a-f]{48}$/.test(req.headers.get('authorization') ?? '')) return
   const origin = req.headers.get('origin')
   if (origin) {
     let host = ''
