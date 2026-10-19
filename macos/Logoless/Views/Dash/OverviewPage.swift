@@ -13,7 +13,7 @@ struct OverviewPage: View {
                 (compact ? AnyLayout(VStackLayout(alignment: .leading, spacing: 30)) : AnyLayout(HStackLayout(alignment: .top, spacing: 40))) {
                     VStack(alignment: .leading, spacing: 0) {
                         figureHead("Available to withdraw", strong: true)
-                        Text(Money.cents(h.balances.available)).font(.display(compact ? 60 : 76)).foregroundStyle(Color.paper).lineLimit(1).minimumScaleFactor(0.5).padding(.top, 22).contentTransition(.numericText())
+                        Text(Money.cents(h.balances.available)).font(.display(compact ? 60 : 76)).foregroundStyle(Color.paper).lineLimit(1).minimumScaleFactor(0.5).contentTransition(.numericText()).animation(Motion.ease(0.7), value: h.balances.available).padding(.top, 22).contentTransition(.numericText())
                         Text(h.balances.available > 0 ? "Ready when you are." : "Earnings land here once your submissions are approved.").font(.system(size: 14)).foregroundStyle(.mute).padding(.top, 16)
                         if h.balances.pending > 0 { Text("\(Money.cents(h.balances.pending)) more is still being confirmed.").font(.system(size: 14)).foregroundStyle(.mute).padding(.top, 3) }
                         HStack(spacing: 10) {
@@ -59,7 +59,7 @@ struct OverviewPage: View {
     private func figure(_ label: String, _ value: String, _ note: String) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             figureHead(label)
-            Text(value).font(.display(compact ? 48 : 60)).foregroundStyle(Color.paper).lineLimit(1).minimumScaleFactor(0.5).padding(.top, 22)
+            Text(value).font(.display(compact ? 48 : 60)).foregroundStyle(Color.paper).lineLimit(1).minimumScaleFactor(0.5).contentTransition(.numericText()).animation(Motion.ease(0.7), value: value).padding(.top, 22)
             Text(note).font(.system(size: 14)).foregroundStyle(.mute).padding(.top, 16)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

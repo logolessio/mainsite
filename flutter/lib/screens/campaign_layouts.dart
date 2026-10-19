@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import '../core/models.dart';
 import '../ui/images.dart';
 import '../ui/theme.dart';
+import '../ui/motion.dart';
 import 'campaign_card.dart';
+
+/// Each cover arrives a few hundredths of a second after the one before it.
+double _arrival(int i) => 0.34 + (i % 8) * 0.045;
 
 /// The campaigns as the Design page lays them out (the same five as the website): a grid of four (the standard look), large covers, compact
 /// covers, a magazine style mosaic where some covers are twice the size, or one row per campaign with the details beside the cover.
@@ -13,7 +17,8 @@ Widget campaignSliver({required String layout, required List<Campaign> list, req
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 760),
           child: Column(children: [
-            for (final c in list) Padding(padding: const EdgeInsets.only(bottom: 12), child: CampaignRow(campaign: c, compact: compact, onTap: () => onOpen(c))),
+            for (final (i, c) in list.indexed)
+              Reveal(id: 'row-${c.id}', delay: _arrival(i), rise: 12, child: Padding(padding: const EdgeInsets.only(bottom: 12), child: CampaignRow(campaign: c, compact: compact, onTap: () => onOpen(c)))),
           ]),
         ),
       ),
@@ -32,7 +37,7 @@ Widget campaignSliver({required String layout, required List<Campaign> list, req
     final gap = switch (layout) { 'compact' => compact ? 10.0 : 20.0, 'large' => compact ? 20.0 : 40.0, _ => compact ? 16.0 : 34.0 };
     return SliverGrid(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: cols, mainAxisSpacing: gap, crossAxisSpacing: gap),
-      delegate: SliverChildBuilderDelegate((context, i) => CampaignCard(campaign: list[i], onTap: () => onOpen(list[i])), childCount: list.length),
+      delegate: SliverChildBuilderDelegate((context, i) => Reveal(id: 'card-${list[i].id}', delay: _arrival(i), rise: 16, child: CampaignCard(campaign: list[i], onTap: () => onOpen(list[i]))), childCount: list.length),
     );
   });
 }
@@ -70,7 +75,7 @@ class _Mosaic extends StatelessWidget {
               rows = rows < row + span ? row + span : rows;
               final side = cw * span + gap * (span - 1);
               final item = list[i];
-              placed.add(Positioned(left: col * (cw + gap), top: row * (cw + gap), width: side, height: side, child: CampaignCard(campaign: item, onTap: () => onOpen(item))));
+              placed.add(Positioned(left: col * (cw + gap), top: row * (cw + gap), width: side, height: side, child: Reveal(id: 'card-${item.id}', delay: _arrival(i), rise: 16, child: CampaignCard(campaign: item, onTap: () => onOpen(item)))));
               done = true;
             }
             if (!done) row++;

@@ -7,32 +7,45 @@ struct CampaignCollection: View {
     @Environment(AppModel.self) private var app
     @Environment(\.compact) private var compact
 
+    /// Each one arrives a few hundredths after the one before it, and never replays when it is scrolled out of sight and back.
+    private func arrival(_ i: Int) -> Double { 0.34 + Double(i % 8) * 0.045 }
+    private var items: [(offset: Int, element: Campaign)] { Array(campaigns.enumerated()) }
+
     var body: some View {
         let layout = app.design.layout
-        switch layout {
-        case "list":
-            VStack(spacing: 12) {
-                ForEach(campaigns) { c in
-                    Button { app.open(c) } label: { CampaignRow(campaign: c) }.buttonStyle(.plain)
+        Group {
+            switch layout {
+            case "list":
+                VStack(spacing: 12) {
+                    ForEach(items, id: \.element.id) { i, c in
+                        Button { app.open(c) } label: { CampaignRow(campaign: c) }.buttonStyle(PressScale(scale: 0.985))
+                            .reveal(arrival(i), rise: 12, key: "row-\(c.id)")
+                            .transition(.opacity.combined(with: .scale(scale: 0.97)))
+                    }
                 }
-            }
-            .frame(maxWidth: 760)
-            .frame(maxWidth: .infinity)
-        case "mosaic":
-            MosaicLayout(columns: compact ? 2 : 4, spacing: compact ? 16 : 34) {
-                ForEach(campaigns) { c in
-                    Button { app.open(c) } label: { CampaignCard(campaign: c) }.buttonStyle(.plain)
+                .frame(maxWidth: 760)
+                .frame(maxWidth: .infinity)
+            case "mosaic":
+                MosaicLayout(columns: compact ? 2 : 4, spacing: compact ? 16 : 34) {
+                    ForEach(items, id: \.element.id) { i, c in
+                        Button { app.open(c) } label: { CampaignCard(campaign: c) }.buttonStyle(PressScale())
+                            .reveal(arrival(i), rise: 16, key: "card-\(c.id)")
+                    }
                 }
-            }
-        default:
-            let columns = layout == "large" ? (compact ? 1 : 3) : layout == "compact" ? (compact ? 3 : 6) : (compact ? 2 : 4)
-            let spacing: CGFloat = layout == "compact" ? (compact ? 10 : 20) : layout == "large" ? (compact ? 20 : 40) : (compact ? 16 : 34)
-            SiteGrid(columns: columns, spacing: spacing) {
-                ForEach(campaigns) { c in
-                    Button { app.open(c) } label: { CampaignCard(campaign: c) }.buttonStyle(.plain)
+            default:
+                let columns = layout == "large" ? (compact ? 1 : 3) : layout == "compact" ? (compact ? 3 : 6) : (compact ? 2 : 4)
+                let spacing: CGFloat = layout == "compact" ? (compact ? 10 : 20) : layout == "large" ? (compact ? 20 : 40) : (compact ? 16 : 34)
+                SiteGrid(columns: columns, spacing: spacing) {
+                    ForEach(items, id: \.element.id) { i, c in
+                        Button { app.open(c) } label: { CampaignCard(campaign: c) }.buttonStyle(PressScale())
+                            .reveal(arrival(i), rise: 16, key: "card-\(c.id)")
+                            .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                    }
                 }
             }
         }
+        // searching and filtering: the covers that stay glide to their new places, the others fade away or in
+        .animation(Motion.page, value: campaigns.map(\.id))
     }
 }
 

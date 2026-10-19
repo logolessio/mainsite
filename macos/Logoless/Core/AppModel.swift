@@ -179,7 +179,7 @@ final class AppModel {
 
     func finishOnboarding() {
         UserDefaults.standard.set(true, forKey: Self.onboardedKey)
-        withAnimation(.smooth(duration: 0.4)) { showOnboarding = false }
+        withAnimation(Motion.ease(0.6)) { showOnboarding = false }
         route = .home
     }
 
@@ -413,8 +413,7 @@ final class AppModel {
         history.append(route)
         if history.count > 40 { history.removeFirst() }
         showMenu = false; showBell = false; showJump = false
-        if r.isDash != route.isDash { route = r } // entering or leaving the dashboard is instant, as on the website
-        else { withAnimation(.easeInOut(duration: 0.22)) { route = r } }
+        withAnimation(Motion.page) { route = r }
         Task { await loadCurrent() }
     }
 
@@ -422,7 +421,7 @@ final class AppModel {
         if case .page = route, webBack?() == true { return }
         guard let last = history.popLast() else { return }
         showMenu = false; showBell = false
-        if last.isDash != route.isDash { route = last } else { withAnimation(.easeInOut(duration: 0.22)) { route = last } }
+        withAnimation(Motion.page) { route = last }
     }
 
     var canGoBack: Bool { !history.isEmpty }
@@ -479,7 +478,7 @@ final class AppModel {
     func beginOnboarding(role: String? = nil) {
         onboardingStart = 0
         onboardingRole = role
-        withAnimation(.smooth(duration: 0.4)) { showOnboarding = true }
+        withAnimation(Motion.ease(0.6)) { showOnboarding = true }
     }
 
     /// Has this account been through onboarding already (on this or another device)?

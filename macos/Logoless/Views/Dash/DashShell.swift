@@ -25,7 +25,14 @@ struct DashShell: View {
         }
     }
 
-    @ViewBuilder private var pageBody: some View {
+    /// Only the page changes when you move about the dashboard: the rail and the header stay put, and the page rises in as the old one leaves.
+    private var pageBody: some View {
+        ZStack { currentPage.id(page).transition(Motion.pageIn) }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .animation(Motion.page, value: page)
+    }
+
+    @ViewBuilder private var currentPage: some View {
         if !app.isSignedIn { SignInPrompt() }
         else {
             switch page {
@@ -65,6 +72,7 @@ private struct DashTabBar: View {
     @Environment(AppModel.self) private var app
     let page: DashPage
     @State private var more = false
+    @Namespace private var glide
 
     private let items: [DashPage] = [.overview, .submissions, .earnings, .profile]
 
@@ -87,10 +95,10 @@ private struct DashTabBar: View {
             }
             .foregroundStyle(on ? Color.black : Color.paper.opacity(0.65))
             .frame(maxWidth: .infinity).frame(height: 50)
-            .background(on ? Color.paper : .clear, in: Capsule())
+            .background { if on { Capsule().fill(Color.paper).matchedGeometryEffect(id: "tab", in: glide) } }
             .contentShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressScale(scale: 0.95))
     }
 }
 
@@ -133,6 +141,7 @@ private struct Rail: View {
     @Environment(AppModel.self) private var app
     let page: DashPage
 
+    @Namespace private var glide
     private var group: String { page == .queue ? "Owner" : "Creator" }
     private var items: [DashPage] { page == .queue ? [.queue] : [.overview, .submissions, .earnings, .profile, .settings] }
 
@@ -155,11 +164,16 @@ private struct Rail: View {
                         }
                         .foregroundStyle(on ? Color.paper : Color.paper.opacity(0.6))
                         .padding(.horizontal, 12).frame(height: 40)
-                        .background(on ? Color.white.opacity(0.07) : .clear, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(on ? Color.white.opacity(0.12) : .clear))
+                        .background {
+                            if on {
+                                RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.white.opacity(0.07))
+                                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.white.opacity(0.12)))
+                                    .matchedGeometryEffect(id: "rail", in: glide)
+                            }
+                        }
                         .contentShape(Rectangle())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(PressScale(scale: 0.98))
                 }
             }
             Spacer()

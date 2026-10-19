@@ -38,10 +38,12 @@ struct HomeView: View {
                 .multilineTextAlignment(.center)
                 .lineSpacing(-6)
                 .foregroundStyle(Color.paper)
+                .reveal(0.02, rise: 18, key: "home-title")
             Text(compact ? "Join a campaign, post your content, and earn for every 1,000 verified views." : "Join a campaign, post your content, and earn for\nevery 1,000 verified views.")
                 .font(.system(size: compact ? 15 : 16))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.mute)
+                .reveal(0.12, rise: 14, key: "home-lede")
         }
         .padding(.top, compact ? 56 : 74)
         .padding(.bottom, compact ? 28 : 44)
@@ -86,10 +88,14 @@ struct HomeView: View {
         .frame(maxWidth: 700)
         .pane(Capsule())
         .frame(maxWidth: .infinity)
+        .reveal(0.2, rise: 12, key: "home-search")
     }
 
     @ViewBuilder private var filters: some View {
-        if compact { ScrollView(.horizontal, showsIndicators: false) { filterRow.padding(.horizontal, 2) } } else { filterRow }
+        Group {
+            if compact { ScrollView(.horizontal, showsIndicators: false) { filterRow.padding(.horizontal, 2) } } else { filterRow }
+        }
+        .reveal(0.28, rise: 12, key: "home-filters")
     }
 
     private var filterRow: some View {
@@ -98,7 +104,7 @@ struct HomeView: View {
             HStack(spacing: 4) {
                 ForEach(["tiktok", "youtube", "instagram"], id: \.self) { p in
                     let on = platform == p
-                    Button { withAnimation(.smooth(duration: 0.25)) { platform = on ? nil : p } } label: {
+                    Button { withAnimation(Motion.quick) { platform = on ? nil : p } } label: {
                         PlatformMark(platform: p, size: 14)
                             .foregroundStyle(on ? Color.black : Color.paper.opacity(0.7))
                             .frame(width: 32, height: 28)
@@ -125,7 +131,7 @@ struct HomeView: View {
         if let e = app.failures["campaigns"] {
             ErrorLine(text: e) { Task { await app.loadCampaigns() } }
         } else if !app.loadedCampaigns {
-            ProgressView().controlSize(.large).frame(maxWidth: .infinity).padding(.vertical, 80)
+            SkeletonCovers(columns: compact ? 2 : 4, spacing: compact ? 16 : 34)
         } else if shown.isEmpty {
             EmptyNote(symbol: "magnifyingglass", title: query.isEmpty ? "Nothing open here yet" : "Nothing matches that", message: query.isEmpty ? "New campaigns appear as soon as they go live." : "Try another word, or clear the search.")
         } else {

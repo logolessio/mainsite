@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/state.dart';
 import '../ui/glass.dart';
+import '../ui/motion.dart';
 import '../ui/theme.dart';
 import 'campaign_layouts.dart';
 
@@ -52,18 +53,18 @@ class _HomePageState extends State<HomePage> {
         child: Padding(
           padding: EdgeInsets.fromLTRB(pad, (compact ? 56 : 74) + MediaQuery.paddingOf(context).top, pad, compact ? 28 : 44),
           child: Column(children: [
-            Text('Your views\nhave value.', textAlign: TextAlign.center, style: display(compact ? 46 : 84, height: 0.98)),
+            Reveal(id: 'home-title', delay: 0.02, rise: 18, child: Text('Your views\nhave value.', textAlign: TextAlign.center, style: display(compact ? 46 : 84, height: 0.98))),
             SizedBox(height: compact ? 16 : 22),
-            Text(compact ? 'Join a campaign, post your content, and earn for every 1,000 verified views.' : 'Join a campaign, post your content, and earn for\nevery 1,000 verified views.', textAlign: TextAlign.center, style: body(compact ? 15 : 16, color: C.mute, height: 1.5)),
+            Reveal(id: 'home-lede', delay: 0.12, child: Text(compact ? 'Join a campaign, post your content, and earn for every 1,000 verified views.' : 'Join a campaign, post your content, and earn for\nevery 1,000 verified views.', textAlign: TextAlign.center, style: body(compact ? 15 : 16, color: C.mute, height: 1.5))),
           ]),
         ),
       ),
-      SliverPersistentHeader(pinned: true, delegate: _SearchHeader(child: _searchBar(app, compact), height: compact ? 66 : 74)),
-      SliverToBoxAdapter(child: Padding(padding: EdgeInsets.fromLTRB(pad, 18, pad, 40), child: _filters(kinds, compact))),
+      SliverPersistentHeader(pinned: true, delegate: _SearchHeader(child: Reveal(id: 'home-search', delay: 0.2, rise: 12, child: _searchBar(app, compact)), height: compact ? 66 : 74)),
+      SliverToBoxAdapter(child: Padding(padding: EdgeInsets.fromLTRB(pad, 18, pad, 40), child: Reveal(id: 'home-filters', delay: 0.28, rise: 12, child: _filters(kinds, compact)))),
       if (app.failures['campaigns'] != null)
         SliverToBoxAdapter(child: Padding(padding: EdgeInsets.symmetric(horizontal: pad), child: ErrorLine(app.failures['campaigns'], retry: app.loadCampaigns)))
       else if (!app.loadedCampaigns)
-        const SliverToBoxAdapter(child: Spinner())
+        SliverPadding(padding: EdgeInsets.fromLTRB(pad, 0, pad, 90), sliver: SliverToBoxAdapter(child: SkeletonCovers(columns: compact ? 2 : 4, gap: compact ? 16 : 34)))
       else if (list.isEmpty)
         SliverToBoxAdapter(child: EmptyNote(Icons.search, q.isEmpty ? 'Nothing open here yet' : 'Nothing matches that', message: q.isEmpty ? 'New campaigns appear as soon as they go live.' : 'Try another word, or clear the search.'))
       else

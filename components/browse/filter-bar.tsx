@@ -1,6 +1,7 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useId } from 'react'
 import { X } from 'lucide-react'
 import { BrandIcon } from '@/components/brand-icon'
 import type { Platform } from '@/lib/campaigns'
@@ -22,11 +23,11 @@ const PLATFORMS: { key: Platform; label: string }[] = [
   { key: 'instagram', label: 'Instagram' },
 ]
 
-const pill = (on: boolean) =>
-  cn(
-    'inline-flex h-8 items-center gap-1.5 rounded-pill px-3 text-xs transition-colors',
-    on ? 'bg-paper text-ink' : 'text-mute hover:text-paper',
-  )
+/** A chip is only its text and its shape; the white pill behind the chosen one is drawn by the group and slides to it. */
+const chip = (on: boolean) =>
+  cn('relative inline-flex h-8 items-center gap-1.5 rounded-pill px-3 text-xs transition-colors duration-300', on ? 'text-ink' : 'text-mute hover:text-paper')
+
+const SLIDE = { type: 'spring', stiffness: 520, damping: 38, mass: 0.8 } as const
 
 export function FilterBar({
   categories,
@@ -49,6 +50,7 @@ export function FilterBar({
   active: boolean
   onClear: () => void
 }) {
+  const group = useId()
   return (
     <LiquidGlass
       as={motion.div}
@@ -60,8 +62,9 @@ export function FilterBar({
     >
       <div role="group" aria-label="Category" className="flex flex-wrap justify-center gap-0.5">
         {categories.map((c) => (
-          <button key={c} type="button" aria-pressed={category === c} onClick={() => onCategory(c)} className={pill(category === c)}>
-            {c}
+          <button key={c} type="button" aria-pressed={category === c} onClick={() => onCategory(c)} className={chip(category === c)}>
+            {category === c && <motion.span layoutId={`${group}-category`} transition={SLIDE} aria-hidden="true" className="absolute inset-0 rounded-pill bg-paper" />}
+            <span className="relative">{c}</span>
           </button>
         ))}
       </div>
@@ -77,9 +80,12 @@ export function FilterBar({
               aria-label={p.label}
               title={p.label}
               onClick={() => onPlatform(p.key)}
-              className={cn(pill(on), 'w-8 justify-center px-0')}
+              className={cn(chip(on), 'w-8 justify-center px-0')}
             >
-              <BrandIcon name={p.key} className="size-3.5" />
+              <AnimatePresence initial={false}>
+                {on && <motion.span key="bg" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} transition={SLIDE} aria-hidden="true" className="absolute inset-0 rounded-pill bg-paper" />}
+              </AnimatePresence>
+              <BrandIcon name={p.key} className="relative size-3.5" />
             </button>
           )
         })}

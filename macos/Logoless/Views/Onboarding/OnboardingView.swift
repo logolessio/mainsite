@@ -66,7 +66,7 @@ struct OnboardingView: View {
                     VStack(spacing: 0) {
                         content(size: size, width: geo.size.width)
                             .id(id)
-                            .transition(.opacity)
+                            .transition(Motion.stepIn)
                         if !error.isEmpty && ![.pictures, .method].contains(id) && !isTextStep { Text(error).font(.system(size: 14)).foregroundStyle(redSignal).padding(.top, 24).multilineTextAlignment(.center) }
                     }
                     .frame(maxWidth: 672)
@@ -78,7 +78,7 @@ struct OnboardingView: View {
                     .blendMode(id == .saving && app.liquidLoader && !reduce ? .difference : .normal)
                 }
                 .scrollIndicators(.hidden)
-                .animation(.easeInOut(duration: 0.16), value: id)
+                .animation(Motion.ease(0.5), value: id)
 
                 // the thin line along the top
                 VStack(spacing: 0) {
@@ -288,14 +288,14 @@ struct OnboardingView: View {
         Platform.tap(.step)
         if id != .welcome { trail.append(id) }
         ready = false; error = ""; forced = nil; text = initial; verdict = (.idle, ""); judging?.cancel()
-        withAnimation(.easeInOut(duration: 0.16)) { id = next }
+        withAnimation(Motion.ease(0.5)) { id = next }
     }
 
     private func back() {
         guard let prev = trail.last, canBack else { return }
         trail.removeLast()
         ready = false; error = ""; forced = nil; text = ""; verdict = (.idle, "")
-        withAnimation(.easeInOut(duration: 0.16)) { id = prev }
+        withAnimation(Motion.ease(0.5)) { id = prev }
     }
 
     private func afterAuth(_ role: Role?) -> Id { role == .brand ? .name : .paypal }
@@ -473,11 +473,11 @@ struct OnboardingView: View {
         if let failed {
             if !trail.isEmpty { trail.removeLast() }
             ready = false; error = failed
-            withAnimation { id = .happy }
+            withAnimation(Motion.ease(0.5)) { id = .happy }
             return
         }
         ready = false
         let verifiable = !brand && ["tiktok", "youtube", "instagram"].contains { !(data.linked[$0] ?? "").trimmingCharacters(in: .whitespaces).isEmpty }
-        withAnimation(.easeInOut(duration: 0.16)) { id = verifiable ? .verify : .hello }
+        withAnimation(Motion.ease(0.5)) { id = verifiable ? .verify : .hello }
     }
 }

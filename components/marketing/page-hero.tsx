@@ -32,7 +32,7 @@ export function PageHero({
         <div className="md:col-span-6 md:col-start-6">
           {lede && (
             <Reveal delay={0.45}>
-              <p className="max-w-lg text-pretty text-xl leading-[1.4] text-paper/70 md:text-2xl"><LinkedLede text={lede} /></p>
+              <p className="max-w-[30rem] text-pretty text-lg leading-[1.55] text-paper/65 md:text-[1.375rem]"><LinkedLede text={lede} /></p>
             </Reveal>
           )}
           {children && (

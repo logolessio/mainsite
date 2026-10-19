@@ -91,7 +91,7 @@ struct GlassTabs<ID: Hashable>: View {
         HStack(spacing: 2) {
             ForEach(items, id: \.id) { item in
                 let on = item.id == selection
-                Button { withAnimation(.smooth(duration: 0.32)) { selection = item.id } } label: {
+                Button { withAnimation(Motion.ease(0.42)) { selection = item.id } } label: {
                     Text(item.label)
                         .font(.system(size: compact ? 12.5 : 14.5, weight: on ? .medium : .regular))
                         .foregroundStyle(on ? Color.black : Color.paper.opacity(0.65))
@@ -117,6 +117,7 @@ struct StatCard: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(label).font(.system(size: 13)).foregroundStyle(.mute)
             Text(value).font(.display(30)).foregroundStyle(Color.paper).lineLimit(1).minimumScaleFactor(0.6)
+                .contentTransition(.numericText()).animation(Motion.ease(0.7), value: value)
             if let note { Text(note).font(.system(size: 12)).foregroundStyle(.faint) }
         }
         .padding(20)

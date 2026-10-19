@@ -17,7 +17,7 @@ struct SiteBar: View {
             Spacer(minLength: 12)
 
             if app.isSignedIn {
-                GlassCircle(symbol: "bell", dot: app.unread > 0, help: "Notifications") { withAnimation(.smooth(duration: 0.25)) { app.showBell.toggle(); app.showMenu = false } }
+                GlassCircle(symbol: "bell", dot: app.unread > 0, help: "Notifications") { withAnimation(Motion.panel) { app.showBell.toggle(); app.showMenu = false } }
                 PaperPill("Dashboard", height: compact ? 38 : 40) { app.go(.dash(.overview)) }
                 Button { app.go(.dash(.profile)) } label: { Avatar(url: app.me?.avatarURL, name: app.me?.profile?.displayName ?? "L", size: 40) }
                     .buttonStyle(.plain)
@@ -26,7 +26,7 @@ struct SiteBar: View {
                 GhostPill("Log in", height: 40) { Task { await app.signIn() } }
                 PaperPill("Get started", busy: app.signingIn, height: 40) { app.beginOnboarding() }
             }
-            GlassCircle(symbol: app.showMenu ? "xmark" : "line.3.horizontal", help: app.showMenu ? "Close the menu" : "Menu") { withAnimation(.smooth(duration: 0.3)) { app.showMenu.toggle(); app.showBell = false } }
+            GlassCircle(symbol: app.showMenu ? "xmark" : "line.3.horizontal", help: app.showMenu ? "Close the menu" : "Menu") { withAnimation(Motion.panel) { app.showMenu.toggle(); app.showBell = false } }
         }
         .padding(.trailing, compact ? 14 : 24)
         .padding(.top, compact ? 6 : 14)

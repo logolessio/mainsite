@@ -256,11 +256,11 @@
   width: 55%;
   height: 190%;
   border-radius: 9999px;
-  background: rgb(243 242 238 / 0.2);
+  background: rgb(243 242 238 / 0.12);
   filter: blur(26px);
   pointer-events: none;
-  transform: translate(-45%, -50%);
-  animation: glass-drift 9s ease-in-out infinite;
+  /* the light used to drift across the glass, which showed as a white shape sliding over the search bar on every load: it now stays put */
+  transform: translate(-30%, -50%);
 }
 .glass-liquid::after {
   content: '';
@@ -271,21 +271,6 @@
   pointer-events: none;
   background: linear-gradient(115deg, transparent 20%, rgb(255 255 255 / 0.07) 38%, transparent 52%);
 }
-}
-@keyframes glass-drift {
-  0%,
-  100% {
-    transform: translate(-45%, -50%) scale(1);
-  }
-  50% {
-    transform: translate(125%, -50%) scale(1.25);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .glass-liquid::before {
-    animation: none;
-    transform: translate(35%, -50%);
-  }
 }
 
 /* ---------- real liquid glass (components/ui/liquid-glass.tsx, lib/liquid-glass.ts) ---------- */
@@ -341,22 +326,15 @@
   width: 55%;
   height: 190%;
   border-radius: 9999px;
-  background: rgb(243 242 238 / 0.2);
+  background: rgb(243 242 238 / 0.12);
   filter: blur(26px);
-  transform: translate(-45%, -50%);
-  animation: glass-drift 9s ease-in-out infinite;
+  transform: translate(-30%, -50%);
 }
 .lg-light::after {
   content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(115deg, transparent 20%, rgb(255 255 255 / 0.07) 38%, transparent 52%);
-}
-@media (prefers-reduced-motion: reduce) {
-  .lg-light::before {
-    animation: none;
-    transform: translate(35%, -50%);
-  }
 }
 .lg-glass input,
 .lg-glass textarea,
@@ -660,6 +638,19 @@ li {
 html:not([data-font]) .font-display {
   font-weight: 400;
   letter-spacing: -0.015em;
+}
+/* Gloock is drawn with its letters close already. Pulling them tighter still (the headlines used to ask for -0.03em to -0.05em) closed the
+   gap between words ("Terms ofService"). The apps set it at its natural spacing, which reads far more premium, so the site does the same:
+   no pulling in, and a touch of air between the words. Small headings that are really labels are left alone. */
+html:not([data-font]) :is(.font-display, h1, h2, h3, h4, h5, h6):not([class*='text-xs']):not([class*='text-sm']):not([class*='text-[10']):not([class*='text-[11']):not([class*='text-[12']):not([class*='text-[13']):not([class*='text-[14']) {
+  letter-spacing: -0.004em;
+  word-spacing: 0.06em;
+  font-kerning: normal;
+  font-feature-settings: 'kern', 'liga', 'calt';
+}
+/* with the letters no longer pulled in, headlines asking for a line height under 1 (0.9 to 0.98) let a descender touch the line below: they get 1 */
+html:not([data-font]) :is(.font-display, h1, h2, h3)[class*='leading-[0.9'] {
+  line-height: 1;
 }
 html[data-font='inter-tight'] .font-display {
   font-weight: 400;

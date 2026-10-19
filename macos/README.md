@@ -44,6 +44,12 @@ back a one-use code; the app swaps it (with a PKCE secret it kept) for a token a
 The token is kept in the data-protection Keychain, or in a private file in the app's sandbox folder when the app is not signed for the Keychain.
 Signing out revokes it on the server. See `lib/app-auth.ts` on the site.
 
+## Motion
+
+`Components/Motion.swift` is the one set of motion: the site's easing for everything (`Motion.ease`, `.quick`, `.page`), a settle-without-wobble spring for panels, `reveal()` for things that arrive in order (and never replay when scrolled back), `PressScale`, shimmer skeletons instead of spinners.
+A page change is a single calm move (the old page fades while the new one rises), moving about the dashboard changes only the page (the rail's highlight glides), and figures settle with a numeric transition.
+The Android and Windows app has the same in `flutter/lib/ui/motion.dart`.
+
 ## Following the Design page
 
 `GET /api/app/v1/config` carries the site's Design choices that matter to the apps, and the Home page follows them: the campaign **layout**

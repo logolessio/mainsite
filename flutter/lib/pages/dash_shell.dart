@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../core/state.dart';
 import '../ui/glass.dart';
 import '../ui/images.dart';
+import '../ui/motion.dart';
 import '../ui/theme.dart';
 import 'earnings_page.dart';
 import 'overview_page.dart';
@@ -19,7 +20,15 @@ class DashShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
     final compact = isCompact(context);
-    final body = !app.isSignedIn ? const SignInPrompt() : _page(page);
+    // only the page changes when you move about the dashboard: the rail and the header stay put, and the page rises in as the old one leaves
+    final body = AnimatedSwitcher(
+      duration: Motion.page,
+      reverseDuration: const Duration(milliseconds: 200),
+      switchInCurve: Motion.ease,
+      transitionBuilder: Motion.pageIn,
+      layoutBuilder: (cur, prev) => Motion.stack(cur, prev),
+      child: KeyedSubtree(key: ValueKey(page), child: !app.isSignedIn ? const SignInPrompt() : _page(page)),
+    );
     if (compact) {
       return Column(children: [
         SafeArea(bottom: false, child: _CompactHeader()),
@@ -70,23 +79,53 @@ class _Rail extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Padding(padding: const EdgeInsets.only(left: 6, bottom: 26), child: Press(onTap: () => app.go(const AppRoute.home()), child: Image.asset('assets/images/mark.png', width: 50, height: 38, color: C.paper))),
         Padding(padding: const EdgeInsets.only(left: 10, bottom: 10), child: Text(page == DashPage.queue ? 'Owner' : 'Creator', style: body(12, color: C.mute))),
-        for (final i in items)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Press(
-              onTap: () => app.go(AppRoute.dash(i)),
-              child: Container(
-                height: 40,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(color: i == page.rail ? Colors.white.withValues(alpha: 0.07) : Colors.transparent, borderRadius: BorderRadius.circular(14), border: Border.all(color: i == page.rail ? Colors.white.withValues(alpha: 0.12) : Colors.transparent)),
-                child: Row(children: [
-                  Icon(_icons[i], size: 17, color: i == page.rail ? C.paper : C.paper.withValues(alpha: 0.6)),
-                  const SizedBox(width: 12),
-                  Text(i.title, style: body(14.5, color: i == page.rail ? C.paper : C.paper.withValues(alpha: 0.6))),
-                ]),
+        // the highlight is one shape that glides from item to item
+        SizedBox(
+          height: items.length * 44.0,
+          child: Stack(children: [
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 420),
+              curve: Motion.ease,
+              top: (items.indexOf(page.rail).clamp(0, items.length)) * 44.0,
+              left: 0,
+              right: 0,
+              height: 40,
+              child: AnimatedOpacity(
+                duration: Motion.quick,
+                opacity: items.contains(page.rail) ? 1 : 0,
+                child: Container(decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.07), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.white.withValues(alpha: 0.12)))),
               ),
             ),
-          ),
+            Column(children: [
+              for (final i in items)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Press(
+                    onTap: () => app.go(AppRoute.dash(i)),
+                    child: SizedBox(
+                      height: 40,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Row(children: [
+                          TweenAnimationBuilder<Color?>(
+                            tween: ColorTween(end: i == page.rail ? C.paper : C.paper.withValues(alpha: 0.6)),
+                            duration: Motion.quick,
+                            builder: (_, c, __) => Icon(_icons[i], size: 17, color: c),
+                          ),
+                          const SizedBox(width: 12),
+                          TweenAnimationBuilder<Color?>(
+                            tween: ColorTween(end: i == page.rail ? C.paper : C.paper.withValues(alpha: 0.6)),
+                            duration: Motion.quick,
+                            builder: (_, c, __) => Text(i.title, style: body(14.5, color: c ?? C.paper)),
+                          ),
+                        ]),
+                      ),
+                    ),
+                  ),
+                ),
+            ]),
+          ]),
+        ),
         const Spacer(),
         if (app.isAdmin && page != DashPage.queue) _foot('Owner dashboard', Icons.shield_outlined, () => app.go(const AppRoute.dash(DashPage.queue))),
         _foot('Back to the site', Icons.north_west_rounded, () => app.go(const AppRoute.home())),
@@ -186,10 +225,25 @@ class _TabBar extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
         child: Glass(
           padding: const EdgeInsets.all(6),
-          child: Row(children: [
-            for (final i in _items) Expanded(child: _tab(i.title, _icons[i]!, i == page.rail, () => app.go(AppRoute.dash(i)))),
-            Expanded(child: _tab('More', Icons.more_horiz_rounded, page.rail == DashPage.settings || page == DashPage.queue, () => _more(context, app))),
-          ]),
+          child: LayoutBuilder(builder: (context, c) {
+            final w = c.maxWidth / (_items.length + 1);
+            final moreOn = page.rail == DashPage.settings || page == DashPage.queue;
+            final at = _items.contains(page.rail) ? _items.indexOf(page.rail) : _items.length;
+            return Stack(children: [
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 420),
+                curve: Motion.ease,
+                left: at * w,
+                width: w,
+                height: 50,
+                child: AnimatedOpacity(duration: Motion.quick, opacity: _items.contains(page.rail) || moreOn ? 1 : 0, child: Container(decoration: BoxDecoration(color: C.paper, borderRadius: BorderRadius.circular(999)))),
+              ),
+              Row(children: [
+                for (final i in _items) Expanded(child: _tab(i.title, _icons[i]!, i == page.rail, () => app.go(AppRoute.dash(i)))),
+                Expanded(child: _tab('More', Icons.more_horiz_rounded, moreOn, () => _more(context, app))),
+              ]),
+            ]);
+          }),
         ),
       ),
     );
@@ -197,14 +251,12 @@ class _TabBar extends StatelessWidget {
 
   Widget _tab(String t, IconData icon, bool on, VoidCallback onTap) => Press(
         onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 260),
+        child: SizedBox(
           height: 50,
-          decoration: BoxDecoration(color: on ? C.paper : Colors.transparent, borderRadius: BorderRadius.circular(999)),
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(icon, size: 18, color: on ? Colors.black : C.paper.withValues(alpha: 0.65)),
+            TweenAnimationBuilder<Color?>(tween: ColorTween(end: on ? Colors.black : C.paper.withValues(alpha: 0.65)), duration: Motion.quick, builder: (_, c, __) => Icon(icon, size: 18, color: c)),
             const SizedBox(height: 3),
-            FittedBox(fit: BoxFit.scaleDown, child: Text(t, style: body(10, color: on ? Colors.black : C.paper.withValues(alpha: 0.65), weight: 500))),
+            FittedBox(fit: BoxFit.scaleDown, child: TweenAnimationBuilder<Color?>(tween: ColorTween(end: on ? Colors.black : C.paper.withValues(alpha: 0.65)), duration: Motion.quick, builder: (_, c, __) => Text(t, style: body(10, color: c ?? C.paper, weight: 500)))),
           ]),
         ),
       );

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/state.dart';
 import '../pages/dash_shell.dart';
 import '../ui/background.dart';
+import '../ui/motion.dart';
 import '../ui/theme.dart';
 import 'bell_panel.dart';
 import 'campaign_page.dart';
@@ -46,18 +47,57 @@ class Shell extends StatelessWidget {
               const SiteBackground(),
               Positioned.fill(
                 child: AnimatedSwitcher(
-                  duration: app.route.isDash && app.route.isDash ? const Duration(milliseconds: 200) : Duration.zero,
-                  child: KeyedSubtree(key: ValueKey(app.route.key), child: _page(app)),
+                  duration: Motion.page,
+                  reverseDuration: const Duration(milliseconds: 200),
+                  switchInCurve: Motion.ease,
+                  transitionBuilder: Motion.pageIn,
+                  layoutBuilder: (cur, prev) => Motion.stack(cur, prev),
+                  child: KeyedSubtree(key: ValueKey(app.route.isDash ? 'dash' : app.route.key), child: _page(app)),
                 ),
               ),
               if (!app.route.isDash) const Positioned(top: 0, left: 0, right: 0, child: SafeArea(bottom: false, child: SiteBar())),
-              if (app.showMenu || app.showBell)
-                Positioned.fill(child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => app.setOverlay(menu: false, bell: false), child: AnimatedContainer(duration: const Duration(milliseconds: 250), color: Colors.black.withValues(alpha: app.showMenu ? 0.45 : 0.001)))),
-              if (app.showMenu) const Positioned(top: 0, bottom: 0, right: 0, child: MenuPanel()),
-              if (app.showBell) const Positioned(top: 0, right: 0, child: SafeArea(child: Padding(padding: EdgeInsets.only(top: 56, right: 14, left: 14), child: BellPanel()))),
-              if (app.showJump) const Positioned.fill(child: QuickJump()),
+              Positioned.fill(
+                child: Presence(
+                  show: app.showMenu || app.showBell,
+                  duration: const Duration(milliseconds: 360),
+                  child: GestureDetector(behavior: HitTestBehavior.opaque, onTap: () => app.setOverlay(menu: false, bell: false), child: ColoredBox(color: Colors.black.withValues(alpha: app.showMenu ? 0.45 : 0.001))),
+                ),
+              ),
+              Positioned(
+                top: 0,
+                bottom: 0,
+                right: 0,
+                child: Presence(
+                  show: app.showMenu,
+                  builder: (c, a) => FadeTransition(opacity: a, child: SlideTransition(position: Tween(begin: const Offset(0.35, 0), end: Offset.zero).animate(a), child: c)),
+                  child: const MenuPanel(),
+                ),
+              ),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 56, right: 14, left: 14),
+                    child: Presence(
+                      show: app.showBell,
+                      duration: const Duration(milliseconds: 320),
+                      builder: (c, a) => FadeTransition(opacity: a, child: ScaleTransition(scale: Tween(begin: 0.94, end: 1.0).animate(a), alignment: Alignment.topRight, child: c)),
+                      child: const BellPanel(),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned.fill(
+                child: Presence(
+                  show: app.showJump,
+                  duration: const Duration(milliseconds: 320),
+                  builder: (c, a) => FadeTransition(opacity: a, child: ScaleTransition(scale: Tween(begin: 0.97, end: 1.0).animate(a), alignment: Alignment.topCenter, child: c)),
+                  child: const QuickJump(),
+                ),
+              ),
               if (app.banner != null) Positioned(left: 16, right: 16, bottom: 20, child: SafeArea(child: _Banner(app.banner!, () { app.banner = null; app.setOverlay(); }))),
-              if (app.showOnboarding) Positioned.fill(child: Onboarding(start: app.onboardingStart)),
+              Positioned.fill(child: Presence(show: app.showOnboarding, duration: const Duration(milliseconds: 600), child: Onboarding(start: app.onboardingStart))),
             ]),
           ),
         ),

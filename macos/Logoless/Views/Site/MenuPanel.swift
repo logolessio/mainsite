@@ -29,7 +29,7 @@ struct MenuPanel: View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: 0) {
-                    ForEach(main, id: \.1) { item in
+                    ForEach(Array(main.enumerated()), id: \.element.1) { n, item in
                         Button { app.goPage(item.1) } label: {
                             HStack(spacing: 12) {
                                 Text(item.0).font(.display(35)).foregroundStyle(Color.paper).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
@@ -41,11 +41,12 @@ struct MenuPanel: View {
                         .buttonStyle(.plain)
                         .opacity(hover != nil && hover != item.1 ? 0.35 : 1)
                         .onHover { hover = $0 ? item.1 : (hover == item.1 ? nil : hover) }
+                        .reveal(0.10 + Double(n) * 0.05, rise: 14)
                     }
                 }
-                .animation(.easeOut(duration: 0.3), value: hover)
+                .animation(Motion.quick, value: hover)
 
-                Text("More").font(.system(size: 12)).foregroundStyle(Color.mute.opacity(0.7)).padding(.top, 28).padding(.bottom, 8)
+                Text("More").font(.system(size: 12)).foregroundStyle(Color.mute.opacity(0.7)).padding(.top, 28).padding(.bottom, 8).reveal(0.42, rise: 10)
                 LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)], alignment: .leading, spacing: 0) {
                     ForEach(more, id: \.1) { item in
                         Button { app.goPage(item.1) } label: { Text(item.0).font(.system(size: 17)).foregroundStyle(Color.paper.opacity(0.8)).padding(.vertical, 6).contentShape(Rectangle()) }.buttonStyle(.plain)
