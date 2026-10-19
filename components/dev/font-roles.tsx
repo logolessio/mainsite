@@ -2,7 +2,7 @@
 
 import { Loader2 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { BlobTabs } from '@/components/glass/blob'
+import { GlassTabs } from '@/components/ui/glass-tabs'
 import { FACES, type Face, type FontKind, type Role, ROLES, faceById } from '@/lib/fonts'
 import { toast } from '@/lib/toast'
 import { FontDial } from './font-dial'
@@ -105,7 +105,7 @@ export function FontRoles({ initial, preset }: { initial: Record<Role, string>; 
               </p>
             </div>
             <div className="flex justify-center px-6 pt-4 md:px-9">
-              <BlobTabs ariaLabel={`Kind of typeface for ${r.label}`} value={kind} onChange={(k) => setKinds((s) => ({ ...s, [r.id]: k as Kind }))} items={KINDS.map((k) => ({ id: k.id, label: k.label, aria: k.label }))} height={34} />
+              <GlassTabs compact label={`Kind of typeface for ${r.label}`} value={kind} onChange={(k) => setKinds((s) => ({ ...s, [r.id]: k as Kind }))} tabs={KINDS.map((k) => ({ id: k.id, label: k.label }))} />
             </div>
             <div className="pt-2 pb-6">
               <FontDial label={`${r.label} typeface`} faces={list} value={current && list.some((f) => f.id === current.id) ? current.id : null} onChange={(id) => choose(r.id, id)} />

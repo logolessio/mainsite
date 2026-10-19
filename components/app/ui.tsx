@@ -2,7 +2,6 @@
 
 import { CountUp } from './count-up'
 import { cn } from '@/lib/utils'
-import { GlassSwitch } from '@/components/glass/blob'
 
 export function PageHeader({
   title,
@@ -69,9 +68,22 @@ export function StatCard({ label, value, note }: { label: string; value: string;
   )
 }
 
-/** A switch whose knob is a lens of liquid glass (see components/glass/blob.tsx). */
 export function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
-  return <GlassSwitch checked={checked} onChange={onChange} ariaLabel={label} />
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={cn('relative h-7 w-12 shrink-0 rounded-pill border transition-colors', checked ? 'border-paper bg-paper' : 'border-line-strong bg-ink')}
+    >
+      <span
+        aria-hidden="true"
+        className={cn('absolute top-[3px] left-[3px] size-5 rounded-pill transition-all duration-200', checked ? 'translate-x-5 bg-ink' : 'translate-x-0 bg-mute')}
+      />
+    </button>
+  )
 }
 
 export function ActionButton({ className, ...p }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'solid' | 'ghost' | 'danger' }) {

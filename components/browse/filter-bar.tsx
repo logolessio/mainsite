@@ -1,8 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { useCallback, useLayoutEffect, useRef, useState } from 'react'
-import { BlobLens, type Rect } from '@/components/glass/blob-lens'
+import { useId } from 'react'
 import { X } from 'lucide-react'
 import { BrandIcon } from '@/components/brand-icon'
 import type { Platform } from '@/lib/campaigns'
@@ -24,9 +23,9 @@ const PLATFORMS: { key: Platform; label: string }[] = [
   { key: 'instagram', label: 'Instagram' },
 ]
 
-/** A chip is only its text and its shape; the lens of glass behind the chosen category is drawn by the group and slides to it. */
+/** A chip is only its text and its shape; the white pill behind the chosen one is drawn by the group and slides to it. */
 const chip = (on: boolean) =>
-  cn('relative inline-flex h-8 items-center gap-1.5 rounded-pill px-3 text-xs transition-colors duration-300', on ? 'text-paper' : 'text-mute hover:text-paper')
+  cn('relative inline-flex h-8 items-center gap-1.5 rounded-pill px-3 text-xs transition-colors duration-300', on ? 'text-ink' : 'text-mute hover:text-paper')
 
 const SLIDE = { type: 'spring', stiffness: 520, damping: 38, mass: 0.8 } as const
 
@@ -51,35 +50,7 @@ export function FilterBar({
   active: boolean
   onClear: () => void
 }) {
-  const row = useRef<HTMLDivElement>(null)
-  const nodes = useRef(new Map<string, HTMLButtonElement>())
-  const [rect, setRect] = useState<Rect | null>(null)
-  const [from, setFrom] = useState<Rect | null>(null)
-  const [still, setStill] = useState(false)
-  const measure = useCallback(() => {
-    const el = nodes.current.get(category)
-    return el ? { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight } : null
-  }, [category])
-  useLayoutEffect(() => {
-    const m = measure()
-    if (!m) return
-    setFrom((f) => f ?? m)
-    setRect(m)
-  }, [measure, categories])
-  // the bar wraps and resizes with the window: the lens follows at once, it does not glide through that
-  useLayoutEffect(() => {
-    const el = row.current
-    if (!el || typeof ResizeObserver === 'undefined') return
-    const ro = new ResizeObserver(() => {
-      const m = measure()
-      if (!m) return
-      setStill(true)
-      setRect(m)
-      window.setTimeout(() => setStill(false), 60)
-    })
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [measure])
+  const group = useId()
   return (
     <LiquidGlass
       as={motion.div}
@@ -89,21 +60,10 @@ export function FilterBar({
       rounded="rounded-[calc(26px*var(--round,1))] md:rounded-pill"
       className="flex flex-wrap items-center justify-center gap-1 p-1.5 md:px-3"
     >
-      <div ref={row} role="group" aria-label="Category" className="relative flex flex-wrap justify-center gap-0.5">
-        {rect && from && <BlobLens rect={rect} from={from} instant={still} soft />}
+      <div role="group" aria-label="Category" className="flex flex-wrap justify-center gap-0.5">
         {categories.map((c) => (
-          <button
-            key={c}
-            ref={(el) => {
-              if (el) nodes.current.set(c, el)
-              else nodes.current.delete(c)
-            }}
-            type="button"
-            aria-pressed={category === c}
-            onClick={() => onCategory(c)}
-            className={chip(category === c)}
-          >
-            {category === c && !rect && <span aria-hidden="true" className="absolute inset-0 rounded-pill bg-white/[0.2]" />}
+          <button key={c} type="button" aria-pressed={category === c} onClick={() => onCategory(c)} className={chip(category === c)}>
+            {category === c && <motion.span layoutId={`${group}-category`} transition={SLIDE} aria-hidden="true" className="absolute inset-0 rounded-pill bg-paper" />}
             <span className="relative">{c}</span>
           </button>
         ))}
@@ -123,7 +83,7 @@ export function FilterBar({
               className={cn(chip(on), 'w-8 justify-center px-0')}
             >
               <AnimatePresence initial={false}>
-                {on && <motion.span key="bg" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} transition={SLIDE} aria-hidden="true" className="absolute inset-0 rounded-pill bg-white/[0.22] shadow-[inset_0_1px_0_rgb(255_255_255/0.5),inset_0_0_0_1px_rgb(255_255_255/0.3)]" />}
+                {on && <motion.span key="bg" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} transition={SLIDE} aria-hidden="true" className="absolute inset-0 rounded-pill bg-paper" />}
               </AnimatePresence>
               <BrandIcon name={p.key} className="relative size-3.5" />
             </button>

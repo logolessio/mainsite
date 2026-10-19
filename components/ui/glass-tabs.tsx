@@ -1,9 +1,9 @@
 'use client'
 
+import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { BlobLens, type Rect } from '@/components/glass/blob-lens'
 import { LiquidGlass } from '@/components/ui/liquid-glass'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { EASE_OUT } from '@/lib/layout'
@@ -11,12 +11,12 @@ import { cn } from '@/lib/utils'
 
 export type GlassTab = { id: string; label: ReactNode; href?: string }
 
-type Spot = Rect
+type Spot = { left: number; width: number }
 /** Where each menu's highlight was last, so a menu that is drawn again (because the page changed) starts from there and glides on. */
 const lastSpot = new Map<string, Spot>()
 
 /**
- * A row of choices on a pane of liquid glass. The highlight is one piece that glides and stretches from one choice to the next, even
+ * A row of choices on a pane of liquid glass. The highlight is one piece that glides from one choice to the next, even
  * when the choice is another page (the menu is then drawn again, and starts from where the highlight was). It moves the moment a
  * choice is pressed, not when the next page has arrived.
  * Centre it with its wrapper (or pass `mx-0` in `className` to sit at the start). Give each tab an `href` to use it as navigation, or an `onChange` to use it as a switch.
@@ -44,7 +44,7 @@ export function GlassTabs({ tabs, value, onChange, label, className, compact }: 
   const measure = useCallback(() => {
     const el = nodes.current.get(current)
     if (!el) return null
-    return { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight }
+    return { left: el.offsetLeft, width: el.offsetWidth }
   }, [current])
 
   const first = useRef(true)
@@ -55,7 +55,7 @@ export function GlassTabs({ tabs, value, onChange, label, className, compact }: 
       first.current = false
       setFrom(lastSpot.get(label) ?? m)
     }
-    setSpot((prev) => (prev && prev.left === m.left && prev.width === m.width && prev.top === m.top ? prev : m))
+    setSpot((prev) => (prev && prev.left === m.left && prev.width === m.width ? prev : m))
     lastSpot.set(label, m)
   }, [measure, label, tabs])
 
@@ -79,15 +79,23 @@ export function GlassTabs({ tabs, value, onChange, label, className, compact }: 
   return (
     <LiquidGlass rootClassName={cn('mx-auto w-fit max-w-full', className)} look={{ zRadius: 12 }}>
       <div ref={row} role={onChange ? 'tablist' : 'navigation'} {...(onChange ? {} : { 'data-kb-tabs': '' })} aria-label={label} className={cn('no-scrollbar relative flex items-center gap-1 overflow-x-auto overflow-y-hidden', compact ? 'p-1' : 'p-1.5')}>
-        {spot && from && <BlobLens rect={spot} from={from} instant={still} />}
+        {spot && from && (
+          <motion.span
+            aria-hidden="true"
+            initial={{ x: from.left, width: from.width }}
+            animate={{ x: spot.left, width: spot.width }}
+            transition={still ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 38, mass: 0.9 }}
+            className={cn('absolute left-0 rounded-pill bg-paper', compact ? 'top-1 bottom-1' : 'top-1.5 bottom-1.5')}
+          />
+        )}
         {tabs.map((t) => {
           const on = t.id === current
           const cls = cn('relative inline-flex shrink-0 items-center rounded-pill outline-none focus-visible:ring-2 focus-visible:ring-paper/60', compact ? 'h-9 px-4 text-sm' : 'h-10 px-5 text-[15px]')
           const inner = (
             <>
               {/* before the highlight has been measured (the server's page), the chosen tab carries its own */}
-              {on && !spot && <span aria-hidden="true" className="absolute inset-0 rounded-pill bg-white/[0.22] shadow-[inset_0_1px_0_rgb(255_255_255/0.5),inset_0_0_0_1px_rgb(255_255_255/0.3)]" />}
-              <span className={cn('relative transition-colors duration-300', on ? 'text-paper' : 'text-paper/55 hover:text-paper')} style={{ transitionTimingFunction: `cubic-bezier(${EASE_OUT.join(',')})` }}>
+              {on && !spot && <span aria-hidden="true" className="absolute inset-0 rounded-pill bg-paper" />}
+              <span className={cn('relative transition-colors duration-300', on ? 'text-ink' : 'text-paper/60 hover:text-paper')} style={{ transitionTimingFunction: `cubic-bezier(${EASE_OUT.join(',')})` }}>
                 {t.label}
               </span>
             </>
