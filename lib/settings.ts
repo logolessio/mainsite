@@ -3,6 +3,11 @@ import { db, nowSec } from './db'
 
 /** Switches and limits the owner can change from the admin dashboard. Every change is written to the audit log by the caller. */
 export const SETTING_DEFAULTS = {
+  launch_on: '0', // 1 = the launch page (a countdown and a sign-up) is shown to everyone but the owners
+  launch_end: '', // when the countdown ends, in seconds since 1970 (empty = no countdown shown)
+  launch_headline: 'logoless opens soon.', // the big words above the countdown
+  launch_text: 'Reserve your username and we will email you the moment the doors open.', // the line under it
+  launch_auto: '1', // 1 = the site opens by itself when the countdown reaches zero
   payouts_paused: '0', // 1 = nobody can withdraw
   submissions_paused: '0', // 1 = no new clip submissions
   autoapprove_needs_verified: '1', // 1 = a clip is only approved by the first look when it comes from an account verified by a code in its bio; otherwise a person looks

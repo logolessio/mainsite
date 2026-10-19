@@ -13,10 +13,12 @@ import { SkipLink } from '@/components/shell/skip-link'
 import { DesignProvider } from '@/components/shell/design-provider'
 import { FeaturesProvider } from '@/components/shell/features-provider'
 import { getAnnouncement } from '@/lib/announcement'
-import { featureState } from '@/lib/features'
+import { featureState, requestHost } from '@/lib/features'
 import { headers } from 'next/headers'
 import { parseChoices } from '@/lib/design-choices'
 import { effectiveFont, faceById, fontById } from '@/lib/fonts'
+import { launchExempt, launchView } from '@/lib/launch'
+import { LaunchPage } from '@/components/launch/launch-page'
 import { getOverrides } from '@/lib/copy'
 import { parseRoundness, roundnessVars } from '@/lib/roundness'
 import { allSettings } from '@/lib/settings'
@@ -131,6 +133,9 @@ const SITE_LD = (sameAs: string[]) => ({
   ],
 })
 
+/** The reading preferences (calm mode, larger text, contrast, underlined links) are applied before the first paint, so a page never reflows after it has appeared. */
+const HEAD_SCRIPT = <script dangerouslySetInnerHTML={{ __html: "try{var c=document.documentElement.classList,l=localStorage;l.getItem('logoless:calm')==='1'&&c.add('calm');l.getItem('logoless:text')==='large'&&c.add('text-large');l.getItem('logoless:contrast')==='high'&&c.add('contrast');l.getItem('logoless:links')==='underline'&&c.add('underline-links')}catch(e){}" }} />
+
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   // Site text can be edited by the owner, so every page is built per request with the current wording.
   await connection()
@@ -155,8 +160,35 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // The dev site is for the team (admins and developers): everyone else gets a sign-in screen and nothing from behind it.
   const blocked = fs.dev && !isAdmin && !isDev
   const announcement = fs.on.announcement && !blocked ? await getAnnouncement() : null
+  const reqHeaders = await headers()
+  // The launch page: while the owners have it switched on (and the countdown has not ended and opened the site by itself), everyone but an owner
+  // sees only the countdown and the sign-up, on the public address. The owner dashboard, the dev address and owners themselves are never shut out.
+  const launch = launchView(design)
+  const host = await requestHost()
+  const shut = launch.closed && !fs.dev && !/^(owner|admin)\./i.test(host) && !isAdmin && !launchExempt(reqHeaders.get('x-path') ?? '/')
+  if (shut) {
+    return (
+      <html
+        lang="en"
+        suppressHydrationWarning
+        data-font={font.id === 'inter' ? undefined : font.id}
+        data-kind={kind}
+        data-ui={uiFace ? '1' : undefined}
+        data-figures={figuresFace ? '1' : undefined}
+        style={{ ...fontVars, ...roundnessVars(parseRoundness(design.design_roundness)) } as React.CSSProperties}
+        className={`${FONT_CLASSES} bg-ink`}
+      >
+        <head>
+{HEAD_SCRIPT}
+        </head>
+        <body className="antialiased">
+          <LaunchPage end={launch.end} headline={launch.headline} text={launch.text} signedInAs={session?.user?.email ?? null} />
+        </body>
+      </html>
+    )
+  }
   // The trailers site is a full-screen app of its own (see middleware.ts): no site chrome, and open to everyone, even on the dev address.
-  if ((await headers()).get('x-bare') === '1') {
+  if (reqHeaders.get('x-bare') === '1') {
     return (
       <html
         lang="en"
@@ -169,8 +201,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         className={`${FONT_CLASSES} bg-ink`}
       >
         <head>
-        {/* the reading preferences (calm mode, larger text, contrast, underlined links) are applied before the first paint, so a page never reflows after it has appeared */}
-        <script dangerouslySetInnerHTML={{ __html: "try{var c=document.documentElement.classList,l=localStorage;l.getItem('logoless:calm')==='1'&&c.add('calm');l.getItem('logoless:text')==='large'&&c.add('text-large');l.getItem('logoless:contrast')==='high'&&c.add('contrast');l.getItem('logoless:links')==='underline'&&c.add('underline-links')}catch(e){}" }} />
+        {HEAD_SCRIPT}
         </head>
         <body className="antialiased">{children}</body>
       </html>
@@ -188,8 +219,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       className={`${FONT_CLASSES} bg-ink`}
     >
       <head>
-        {/* the reading preferences (calm mode, larger text, contrast, underlined links) are applied before the first paint, so a page never reflows after it has appeared */}
-        <script dangerouslySetInnerHTML={{ __html: "try{var c=document.documentElement.classList,l=localStorage;l.getItem('logoless:calm')==='1'&&c.add('calm');l.getItem('logoless:text')==='large'&&c.add('text-large');l.getItem('logoless:contrast')==='high'&&c.add('contrast');l.getItem('logoless:links')==='underline'&&c.add('underline-links')}catch(e){}" }} />
+        {HEAD_SCRIPT}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_LD(links.filter((l) => l.platform !== 'website' && l.url.startsWith('https://')).map((l) => l.url))) }} />
       </head>
       <body className="antialiased">

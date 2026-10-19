@@ -40,4 +40,4 @@ export async function sendEmail(input: { to: string; subject: string; html: stri
   return { id }
 }
 
-export { accountDeletedEmail, alreadyMemberEmail, codeEmail, inviteEmail, plainMessageEmail, plainTestEmail, roleChangedEmail } from './email-templates'
+export { accountDeletedEmail, alreadyMemberEmail, codeEmail, inviteEmail, launchUpdateEmail, plainMessageEmail, plainTestEmail, roleChangedEmail } from './email-templates'

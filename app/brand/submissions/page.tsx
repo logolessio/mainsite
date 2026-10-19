@@ -30,7 +30,7 @@ export default async function Page() {
       .prepare(
         `SELECT s.id, c.title AS campaign, s.platform, s.url, s.status, s.views_verified, s.earned_cents, s.reject_reason, s.created_at, p.handle, p.display_name
          FROM submissions s JOIN campaigns c ON c.id = s.campaign_id LEFT JOIN profiles p ON p.user_id = s.user_id
-         WHERE c.brand_user_id = ?1 ORDER BY CASE s.status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END, s.created_at DESC LIMIT 200`,
+         WHERE c.brand_user_id = ?1 AND s.status != 'removed' ORDER BY CASE s.status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END, s.created_at DESC LIMIT 200`,
       )
       .bind(user.id)
       .all<Row>()

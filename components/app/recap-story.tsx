@@ -210,7 +210,7 @@ export function RecapStory({ recap }: { recap: Recap }) {
     const t0 = performance.now()
     const tick = (t: number) => {
       const p = Math.min(1, (t - t0) / SLIDE_MS)
-      if (bar.current) bar.current.style.transform = `scaleX(${p})`
+      if (bar.current) bar.current.style.width = `${p * 100}%`
       if (p >= 1) return setI((c) => Math.min(slides.length - 1, c + 1))
       raf = requestAnimationFrame(tick)
     }
@@ -218,7 +218,7 @@ export function RecapStory({ recap }: { recap: Recap }) {
     return () => cancelAnimationFrame(raf)
   }, [i, held, last, reduced, slides.length])
   useEffect(() => {
-    if (bar.current) bar.current.style.transform = reduced || last ? 'scaleX(1)' : 'scaleX(0)'
+    if (bar.current) bar.current.style.width = reduced || last ? '100%' : '0%'
   }, [i, reduced, last])
 
   useEffect(() => {
@@ -254,7 +254,8 @@ export function RecapStory({ recap }: { recap: Recap }) {
         <div className="flex gap-1.5">
           {slides.map((x, n) => (
             <div key={x.id} className="h-1 flex-1 overflow-hidden rounded-pill bg-white/20">
-              {n < i || (n === i && (reduced || last)) ? <div className="h-full w-full bg-paper" /> : n === i ? <div ref={bar} className="h-full w-full origin-left scale-x-0 bg-paper" /> : null}
+              {/* distinct keys: the running bar's width is set by hand, so it must never be reused as a finished bar (it would keep a stale width) */}
+              {n < i || (n === i && (reduced || last)) ? <div key="done" className="h-full w-full rounded-[inherit] bg-paper" /> : n === i ? <div key="now" ref={bar} className="h-full w-0 rounded-[inherit] bg-paper" /> : null}
             </div>
           ))}
         </div>

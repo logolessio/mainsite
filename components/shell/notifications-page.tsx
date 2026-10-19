@@ -1,8 +1,8 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { CheckCheck, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { GlassTabs } from '@/components/ui/glass-tabs'
 import { cn } from '@/lib/utils'
 import { EmptyFeed, NOTE_KINDS, NotificationFeed, useNoteActions, useNotes } from './notifications'
 
@@ -24,12 +24,7 @@ export function NotificationsPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-5 flex flex-wrap items-center gap-2">
-        {chips.map((c) => (
-          <button key={c.id} type="button" onClick={() => setKind(c.id)} aria-pressed={kind === c.id} className={cn('relative inline-flex h-9 items-center rounded-pill px-4 text-sm transition-colors', kind === c.id ? 'text-ink' : 'text-mute hover:text-paper')}>
-            {kind === c.id && <motion.span layoutId="notif-page-chip" transition={{ type: 'spring', stiffness: 420, damping: 34 }} className="absolute inset-0 rounded-pill bg-paper" />}
-            <span className="relative">{c.label}</span>
-          </button>
-        ))}
+        <GlassTabs compact label="Filter notifications" className="mx-0 min-w-0 shrink" tabs={chips} value={kind} onChange={setKind} />
         <span className="flex-1" />
         {unread > 0 && (
           <button type="button" onClick={markAll} className="inline-flex h-9 items-center gap-1.5 rounded-pill border border-line-strong px-4 text-xs text-mute hover:text-paper">

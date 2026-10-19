@@ -2,14 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { BlobLens, type Rect } from '@/components/glass/blob-lens'
 import { LiquidGlass } from '@/components/ui/liquid-glass'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
 
-export type GlassTab = { id: string; label: string; href?: string }
+export type GlassTab = { id: string; label: ReactNode; href?: string }
 
 type Spot = Rect
 /** Where each menu's highlight was last, so a menu that is drawn again (because the page changed) starts from there and glides on. */
@@ -19,9 +19,10 @@ const lastSpot = new Map<string, Spot>()
  * A row of choices on a pane of liquid glass. The highlight is one piece that glides and stretches from one choice to the next, even
  * when the choice is another page (the menu is then drawn again, and starts from where the highlight was). It moves the moment a
  * choice is pressed, not when the next page has arrived.
- * Centre it with its wrapper. Give each tab an `href` to use it as navigation, or an `onChange` to use it as a switch.
+ * Centre it with its wrapper (or pass `mx-0` in `className` to sit at the start). Give each tab an `href` to use it as navigation, or an `onChange` to use it as a switch.
+ * `compact` is the smaller size for a toolbar above a list.
  */
-export function GlassTabs({ tabs, value, onChange, label, className }: { tabs: GlassTab[]; value: string; onChange?: (id: string) => void; label: string; className?: string }) {
+export function GlassTabs({ tabs, value, onChange, label, className, compact }: { tabs: GlassTab[]; value: string; onChange?: (id: string) => void; label: string; className?: string; compact?: boolean }) {
   const pathname = usePathname()
   const row = useRef<HTMLDivElement>(null)
   const nodes = useRef(new Map<string, HTMLElement>())
@@ -77,11 +78,11 @@ export function GlassTabs({ tabs, value, onChange, label, className }: { tabs: G
   // scrollable overflow and a scrollbar would flash in and out. So the glass clips, and a plain inner row scrolls.
   return (
     <LiquidGlass rootClassName={cn('mx-auto w-fit max-w-full', className)} look={{ zRadius: 12 }}>
-      <div ref={row} role={onChange ? 'tablist' : 'navigation'} {...(onChange ? {} : { 'data-kb-tabs': '' })} aria-label={label} className="no-scrollbar relative flex items-center gap-1 overflow-x-auto overflow-y-hidden p-1.5">
+      <div ref={row} role={onChange ? 'tablist' : 'navigation'} {...(onChange ? {} : { 'data-kb-tabs': '' })} aria-label={label} className={cn('no-scrollbar relative flex items-center gap-1 overflow-x-auto overflow-y-hidden', compact ? 'p-1' : 'p-1.5')}>
         {spot && from && <BlobLens rect={spot} from={from} instant={still} />}
         {tabs.map((t) => {
           const on = t.id === current
-          const cls = 'relative inline-flex h-10 shrink-0 items-center rounded-pill px-5 text-[15px] outline-none focus-visible:ring-2 focus-visible:ring-paper/60'
+          const cls = cn('relative inline-flex shrink-0 items-center rounded-pill outline-none focus-visible:ring-2 focus-visible:ring-paper/60', compact ? 'h-9 px-4 text-sm' : 'h-10 px-5 text-[15px]')
           const inner = (
             <>
               {/* before the highlight has been measured (the server's page), the chosen tab carries its own */}

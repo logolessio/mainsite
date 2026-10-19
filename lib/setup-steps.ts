@@ -57,7 +57,7 @@ export async function creatorSetup(user: { id: string; email: string }): Promise
       title: 'Link and verify an account',
       short: 'Prove the TikTok, YouTube or Instagram account you post from is yours.',
       why: 'A short code in your bio proves the account is yours. Submissions from a verified account can be checked automatically, and you can show a tick on your public page.',
-      how: ['Open Profile, then Linked accounts, and add the account by its username.', 'Press Verify and copy the code.', 'Put the code in that account’s bio, save, and press Check my bio. If the site cannot read it, ask the team to check.'],
+      how: ['Open Accounts and add the account by its username.', 'Press Verify and copy the code.', 'Put the code in that account’s bio, save, and press Check my bio. If the site cannot read it, ask the team to check.'],
       done: verifiedAny,
       href: '/dashboard/accounts',
       cta: 'Verify an account',

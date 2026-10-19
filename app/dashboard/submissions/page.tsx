@@ -15,7 +15,7 @@ export default async function Page() {
     await d
       .prepare(
         `SELECT s.id, c.title AS campaign, s.platform, s.url, s.status, s.views_verified, s.earned_cents, s.created_at
-         FROM submissions s JOIN campaigns c ON c.id = s.campaign_id WHERE s.user_id = ?1 ORDER BY s.created_at DESC LIMIT 200`,
+         FROM submissions s JOIN campaigns c ON c.id = s.campaign_id WHERE s.user_id = ?1 AND s.status != 'removed' ORDER BY s.created_at DESC LIMIT 200`,
       )
       .bind(user.id)
       .all<{ id: string; campaign: string; platform: string; url: string; status: SubmissionRow['status']; views_verified: number; earned_cents: number; created_at: number }>()

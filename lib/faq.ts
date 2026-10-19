@@ -65,7 +65,7 @@ export const FAQ: Record<'Creators' | 'Brands' | 'Money' | 'Account', Faq[]> = {
     },
     {
       q: 'Can I delete a submission?',
-      a: 'You can ask us to remove it from a campaign. Views already paid for stay paid. Contact us from the submissions page and we will do it.',
+      a: 'Yes. Open your submissions, press Delete on the one you want gone, and confirm. Views that were already paid for stay paid.',
     },
   ],
   Brands: [

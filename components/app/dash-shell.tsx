@@ -245,13 +245,13 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
           </p>
         </div>
         <button type="button" onClick={() => setPalette(true)} className="mx-6 hidden h-11 w-full max-w-md items-center gap-3 rounded-pill border border-line bg-white/[0.03] px-5 text-left text-[15px] text-paper/45 transition-colors hover:border-line-strong hover:text-paper md:flex">
-          <Search aria-hidden="true" className="size-4" />
-          <span className="flex-1">Search, or do something</span>
-          <kbd className="rounded-md border border-line px-1.5 py-0.5 font-mono text-[11px]">/</kbd>
+          <Search aria-hidden="true" className="size-4 shrink-0" />
+          <span className="min-w-0 flex-1 truncate">Search, or do something</span>
+          <kbd className="shrink-0 rounded-md border border-line px-1.5 py-0.5 font-mono text-[11px]">/</kbd>
         </button>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {primary && (
-            <TransitionLink href={primary.href} aria-label={primary.label} className="hidden h-10 items-center gap-2 rounded-pill bg-paper px-5 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 md:inline-flex">
+            <TransitionLink href={primary.href} aria-label={primary.label} className="hidden h-10 shrink-0 items-center gap-2 rounded-pill bg-paper px-5 text-[15px] font-medium whitespace-nowrap text-ink transition-colors hover:bg-paper/85 md:inline-flex">
               <Plus aria-hidden="true" className="size-4" /> {primary.label}
             </TransitionLink>
           )}

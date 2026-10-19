@@ -9,7 +9,6 @@ export const GROUPS: Record<string, { label: string; items: Item[] }> = {
     items: [
       { id: 'profile', label: 'Profile', href: '/dashboard/profile' },
       { id: 'achievements', label: 'Achievements', href: '/dashboard/achievements' },
-      { id: 'accounts', label: 'Linked accounts', href: '/dashboard/accounts' },
       { id: 'saved', label: 'Saved', href: '/dashboard/saved', feature: 'saved-campaigns' },
       { id: 'recap', label: 'Recap', href: '/dashboard/recap', feature: 'recap' },
     ],
@@ -34,6 +33,7 @@ export const GROUPS: Record<string, { label: string; items: Item[] }> = {
     items: [
       { id: 'broadcast', label: 'Broadcast', href: '/admin/broadcast', staff: 'admin' },
       { id: 'email', label: 'Email', href: '/admin/email', staff: 'admin' },
+      { id: 'countdown', label: 'Launch page', href: '/admin/countdown', staff: 'admin' },
       { id: 'discord', label: 'Discord', href: '/admin/discord', staff: 'admin' },
     ],
   },

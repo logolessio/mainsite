@@ -17,7 +17,7 @@ const ADMIN: AppNavItem[] = [
   { key: 'u', label: 'People', href: '/admin/people', icon: 'Users', match: ['/admin/users'], section: 'Run' },
   { key: 'i', label: 'Inbox', href: '/admin/inbox', icon: 'Mail', section: 'Run' },
   { key: 'w', label: 'Site', href: '/admin/design', icon: 'Palette', match: ['/admin/text', '/admin/socials', '/admin/previews', '/admin/push', '/dev/design', '/dev/features', '/dev/previews', '/dev/dashboards'], section: 'Manage' },
-  { key: 'm', label: 'Communicate', href: '/admin/broadcast', icon: 'Send', match: ['/admin/email', '/admin/discord'], section: 'Manage' },
+  { key: 'm', label: 'Communicate', href: '/admin/broadcast', icon: 'Send', match: ['/admin/email', '/admin/discord', '/admin/countdown'], section: 'Manage' },
   { key: 'y', label: 'System', href: '/admin/system', icon: 'Activity', match: ['/admin/logs', '/admin/audit', '/admin/keys', '/admin/settings', '/admin/security', '/admin/api', '/admin/developers', '/dev/events'], section: 'Manage' },
 ]
 

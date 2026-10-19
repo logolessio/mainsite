@@ -788,6 +788,14 @@ html {
   outline-offset: 3px;
   box-shadow: 0 0 0 5px rgb(0 0 0 / 0.55);
 }
+/* A text field the page has deliberately given no outline of its own (its box shows focus instead, with focus-within or a border colour)
+   must not get the global ring drawn around its own, often misaligned, box. */
+input[class*='outline-none']:focus-visible,
+textarea[class*='outline-none']:focus-visible,
+select[class*='outline-none']:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
 /* A field that sits inside a rounded pill (the search bar) does not draw a ring around its own box, that looks misaligned and the offset
    animation made it jump. The whole pill gets one ring along its own curve instead, which fades in without moving. */
 input[data-bare],
@@ -1086,5 +1094,44 @@ html[data-app] [data-site-nav] {
 @keyframes tr-shimmer {
   to {
     transform: translateX(100%);
+  }
+}
+
+/* a slow light that crosses a badge (only on the badges that ask for it) */
+@keyframes badge-sweep {
+  0%,
+  55% {
+    transform: translateX(-10px) rotate(22deg);
+  }
+  100% {
+    transform: translateX(150px) rotate(22deg);
+  }
+}
+.badge-sweep {
+  transform-box: fill-box;
+  animation: badge-sweep 5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .badge-sweep {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* the launch page rises into place with plain CSS, so it is there even before the page's scripts have run */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+    filter: blur(12px);
+  }
+}
+.rise-in {
+  animation: rise-in 0.9s var(--ease-out) backwards;
+  animation-delay: var(--d, 0s);
+}
+@media (prefers-reduced-motion: reduce) {
+  .rise-in {
+    animation: none;
   }
 }

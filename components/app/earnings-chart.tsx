@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useMemo, useState } from 'react'
 import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
-import { LiquidGlass } from '@/components/ui/liquid-glass'
+import { GlassTabs } from '@/components/ui/glass-tabs'
 
 type Range = '7d' | '30d' | '12w'
 const RANGES: { id: Range; label: string }[] = [
@@ -50,14 +50,7 @@ export function EarningsChart({ events, now }: { events: [number, number][]; now
           <p className="text-sm text-mute">Earned in this range</p>
           <p className="mt-1 font-display text-4xl leading-none font-medium tracking-tight tabular-nums">{usd(total)}</p>
         </div>
-        <LiquidGlass role="tablist" aria-label="Chart range" rootClassName="inline-flex" className="inline-flex p-1" look={{ zRadius: 10 }}>
-          {RANGES.map((r) => (
-            <button key={r.id} role="tab" type="button" aria-selected={range === r.id} onClick={() => setRange(r.id)} className="relative h-9 rounded-pill px-4 text-sm">
-              {range === r.id && <motion.span layoutId="earn-range" transition={{ duration: 0.3, ease: EASE_OUT }} className="absolute inset-0 rounded-pill bg-paper" />}
-              <span className={cn('relative transition-colors', range === r.id ? 'text-ink' : 'text-mute hover:text-paper')}>{r.label}</span>
-            </button>
-          ))}
-        </LiquidGlass>
+        <GlassTabs compact label="Chart range" className="mx-0" tabs={RANGES.map((r) => ({ id: r.id, label: r.label }))} value={range} onChange={(id) => setRange(id as Range)} />
       </div>
 
       <div className="relative mt-8 h-56">

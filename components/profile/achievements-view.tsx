@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Check, Loader2, Plus, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { BadgeArt, RARITY_STYLE } from '@/components/badges/badge-art'
+import { GlassTabs } from '@/components/ui/glass-tabs'
 import { Tilt3D } from '@/components/motion/tilt'
 import { NAV_USER_REFRESH } from '@/components/shell/nav-user'
 import { BADGES, MAX_EQUIPPED, type BadgeDef, type Rarity } from '@/lib/badges-defs'
@@ -26,8 +27,8 @@ function Ring({ value, total }: { value: number; total: number }) {
         <defs>
           <linearGradient id="ach-ring" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stopColor="#ffffff" />
-            <stop offset=".5" stopColor="#b9a6ff" />
-            <stop offset="1" stopColor="#ffd45c" />
+            <stop offset=".5" stopColor="#c9c9d0" />
+            <stop offset="1" stopColor="#8f8f98" />
           </linearGradient>
         </defs>
       </svg>
@@ -165,12 +166,7 @@ export function AchievementsView() {
 
       {/* ---------- filters ---------- */}
       <div className="mt-8 flex flex-wrap items-center gap-2">
-        {(['all', 'unlocked', 'locked'] as const).map((f) => (
-          <button key={f} type="button" onClick={() => setFilter(f)} aria-pressed={filter === f} className={cn('relative inline-flex h-9 items-center rounded-pill px-4 text-sm capitalize transition-colors', filter === f ? 'text-ink' : 'text-mute hover:text-paper')}>
-            {filter === f && <motion.span layoutId="ach-filter" transition={{ type: 'spring', stiffness: 420, damping: 34 }} className="absolute inset-0 rounded-pill bg-paper" />}
-            <span className="relative">{f}</span>
-          </button>
-        ))}
+        <GlassTabs compact label="Badge filter" className="mx-0" tabs={(['all', 'unlocked', 'locked'] as const).map((f) => ({ id: f, label: <span className="capitalize">{f}</span> }))} value={filter} onChange={(id) => setFilter(id as Filter)} />
         <span className="mx-2 hidden h-5 w-px bg-line-strong sm:block" />
         {(['any', ...RARITIES] as const).map((r) => (
           <button key={r} type="button" onClick={() => setRarity(r)} aria-pressed={rarity === r} className={cn('inline-flex h-9 items-center rounded-pill border px-3.5 text-xs transition-colors', rarity === r ? 'border-paper bg-paper/10 text-paper' : 'border-line-strong text-mute hover:text-paper')}>

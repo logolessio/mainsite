@@ -231,3 +231,15 @@ export function plainMessageEmail(name: string, title: string, text: string, hre
     }),
   }
 }
+
+/** An update to the people who signed up on the launch page. `message` is plain text: blank lines start a new paragraph. Every one carries an unsubscribe link. */
+export function launchUpdateEmail(subject: string, message: string, unsubscribe: string, test = false): Mail {
+  const paras = message.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean).slice(0, 12)
+  const [first, ...rest] = paras
+  const bodyHtml = `${rest.map((p) => `<p style="margin:0 0 16px;font:400 16px/1.65 ${SANS};color:#c3c3ca">${esc(p).replace(/\n/g, '<br>')}</p>`).join('')}${button(SITE_URL, 'Open logoless')}<p style="margin:26px 0 0;font:400 12px/1.6 ${SANS};color:#6c6c75">You are getting this because you signed up on the logoless launch page. <a href="${esc(unsubscribe)}" style="color:#9a9aa3">Unsubscribe</a>.</p>`
+  return {
+    subject: `${test ? '[TEST] ' : ''}${subject}`,
+    text: `${test ? 'THIS IS A TEST from the admin panel.\n\n' : ''}${paras.join('\n\n')}\n\n${SITE_URL}\n\nUnsubscribe: ${unsubscribe}\n\nlogoless`,
+    html: layout({ preheader: first ?? subject, tag: test ? 'Test' : 'Update', title: subject, intro: first ?? '', body: bodyHtml, test }),
+  }
+}

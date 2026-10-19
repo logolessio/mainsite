@@ -2,10 +2,13 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowUpRight, LayoutGrid, Rows3, Search, X } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
+import { toast } from '@/lib/toast'
 import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
 import { Badge, type Column, DataTable } from './table'
+import { GlassTabs } from '@/components/ui/glass-tabs'
 import { LiquidGlass } from '@/components/ui/liquid-glass'
 
 export type SubmissionRow = {
@@ -29,7 +32,36 @@ const FILTERS: { id: Filter; label: string }[] = [
 ]
 const usd = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
-const cols: Column<SubmissionRow>[] = [
+/** Delete one of your own submissions. Asks once, in place. What was already paid stays paid. */
+function DeleteButton({ r, onDone, className }: { r: SubmissionRow; onDone: (id: string) => void; className?: string }) {
+  const [ask, setAsk] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const run = async () => {
+    setBusy(true)
+    const res = await fetch(`/api/me/submissions/${r.id}`, { method: 'DELETE' }).catch(() => null)
+    setBusy(false)
+    if (!res?.ok) return toast.error(((await res?.json().catch(() => ({}))) as { error?: string })?.error ?? 'Could not delete that. Try again.')
+    toast.ok(r.earned > 0 || r.views > 0 ? 'Removed. What it earned stays paid.' : 'Deleted')
+    onDone(r.id)
+  }
+  return ask ? (
+    <span role="group" aria-label="Confirm delete" className={cn('inline-flex flex-wrap items-center gap-x-3 gap-y-1 text-sm', className)}>
+      <span className="text-mute">{r.earned > 0 || r.views > 0 ? 'Remove it? Paid views stay paid.' : 'Delete it?'}</span>
+      <button type="button" disabled={busy} onClick={run} className="text-paper underline underline-offset-4 disabled:opacity-50">
+        {busy ? 'Deleting…' : 'Yes, delete'}
+      </button>
+      <button type="button" disabled={busy} onClick={() => setAsk(false)} className="text-mute underline underline-offset-4 hover:text-paper">
+        Keep
+      </button>
+    </span>
+  ) : (
+    <button type="button" onClick={() => setAsk(true)} className={cn('text-sm text-mute underline-offset-4 transition-colors hover:text-paper hover:underline', className)}>
+      Delete
+    </button>
+  )
+}
+
+const cols = (del: (id: string) => void): Column<SubmissionRow>[] => [
   { key: 'c', header: 'Campaign', render: (r) => r.campaign },
   { key: 'p', header: 'Platform', render: (r) => r.platform },
   {
@@ -44,6 +76,7 @@ const cols: Column<SubmissionRow>[] = [
   { key: 's', header: 'Status', render: (r) => <Badge tone={TONE[r.status]}>{r.status}</Badge> },
   { key: 'v', header: 'Verified views', render: (r) => r.views.toLocaleString(), className: 'text-right' },
   { key: 'e', header: 'Earned', render: (r) => usd(r.earned), className: 'text-right' },
+  { key: 'x', header: '', render: (r) => <DeleteButton r={r} onDone={del} />, className: 'text-right' },
 ]
 
 type Sort = 'new' | 'views' | 'earned'
@@ -71,7 +104,14 @@ const remember = (key: string, v: string) => {
 }
 
 /** Every clip, with filters, search, a sort, and a switch between cards and a table. Your choices are remembered. */
-export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty: React.ReactNode }) {
+export function SubmissionsTable({ rows: all, empty }: { rows: SubmissionRow[]; empty: React.ReactNode }) {
+  const router = useRouter()
+  const [gone, setGone] = useState<Set<string>>(new Set())
+  const rows = useMemo(() => all.filter((r) => !gone.has(r.id)), [all, gone])
+  const del = (id: string) => {
+    setGone((g) => new Set(g).add(id))
+    router.refresh()
+  }
   const [filter, setFilter] = useState<Filter>('all')
   const [q, setQ] = useState('')
   const [view, setView] = useState<'cards' | 'table'>('cards')
@@ -111,17 +151,8 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
         ))}
       </div>
 
-      <div className="mt-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <LiquidGlass role="tablist" aria-label="Filter submissions" rootClassName="w-fit" className="inline-flex flex-wrap p-1" look={{ zRadius: 10 }}>
-          {FILTERS.map((f) => (
-            <button key={f.id} role="tab" type="button" aria-selected={filter === f.id} tabIndex={filter === f.id ? 0 : -1} onClick={() => pick<Filter>('ll:subs:filter', setFilter)(f.id)} className="relative h-9 rounded-pill px-4 text-sm">
-              {filter === f.id && <motion.span layoutId="clip-filter" transition={{ duration: 0.3, ease: EASE_OUT }} className="absolute inset-0 rounded-pill bg-paper" />}
-              <span className={cn('relative transition-colors', filter === f.id ? 'text-ink' : 'text-mute hover:text-paper')}>
-                {f.label} <span className="tabular-nums opacity-60">{counts[f.id]}</span>
-              </span>
-            </button>
-          ))}
-        </LiquidGlass>
+      <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
+        <GlassTabs compact label="Filter submissions" className="mx-0" tabs={FILTERS.map((f) => ({ id: f.id, label: <>{f.label} <span className="tabular-nums opacity-60">{counts[f.id]}</span></> }))} value={filter} onChange={(id) => pick<Filter>('ll:subs:filter', setFilter)(id as Filter)} />
         <div className="flex items-center gap-3">
           <LiquidGlass as="label" rootClassName="flex-1 md:w-60 md:flex-none" className="relative block" look={{ zRadius: 10 }}>
             <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-mute" />
@@ -158,7 +189,7 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
       <p role="status" className="sr-only">{shown.length} of {rows.length} shown</p>
       <div className="mt-6">
         {view === 'table' ? (
-          <DataTable columns={cols} rows={shown} empty={<div className="px-6 py-12 text-center text-mute">No submissions match.</div>} />
+          <DataTable columns={cols(del)} rows={shown} empty={<div className="px-6 py-12 text-center text-mute">No submissions match.</div>} />
         ) : shown.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-line-strong px-6 py-14 text-center text-mute">No submissions match. Try another filter or search.</div>
         ) : (
@@ -182,9 +213,12 @@ export function SubmissionsTable({ rows, empty }: { rows: SubmissionRow[]; empty
                       <dd className="mt-1 font-display text-2xl leading-none font-medium tabular-nums">{usd(r.earned)}</dd>
                     </div>
                   </dl>
-                  <a href={r.url} target="_blank" rel="noopener noreferrer nofollow" data-key="o" data-key-label="Open the submission" aria-keyshortcuts="o" className="mt-6 inline-flex items-center gap-1.5 text-sm text-mute transition-colors group-hover:text-paper">
+                  <div className="mt-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                  <a href={r.url} target="_blank" rel="noopener noreferrer nofollow" data-key="o" data-key-label="Open the submission" aria-keyshortcuts="o" className="inline-flex items-center gap-1.5 text-sm text-mute transition-colors group-hover:text-paper">
                     Open the submission <ArrowUpRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   </a>
+                  <DeleteButton r={r} onDone={del} />
+                  </div>
                 </motion.li>
               ))}
             </AnimatePresence>

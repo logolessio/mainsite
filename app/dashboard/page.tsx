@@ -20,9 +20,9 @@ export default async function Page() {
   const d = await db()
   const [b, views, recent, steps] = await Promise.all([
     balances(user.id),
-    d.prepare('SELECT COALESCE(SUM(views_verified), 0) AS v, COUNT(*) AS n FROM submissions WHERE user_id = ?1').bind(user.id).first<{ v: number; n: number }>(),
+    d.prepare('SELECT COALESCE(SUM(views_verified), 0) AS v, COUNT(CASE WHEN status != \'removed\' THEN 1 END) AS n FROM submissions WHERE user_id = ?1').bind(user.id).first<{ v: number; n: number }>(),
     d
-      .prepare('SELECT s.id, s.campaign_id, s.status, s.views_verified, c.title FROM submissions s JOIN campaigns c ON c.id = s.campaign_id WHERE s.user_id = ?1 ORDER BY s.created_at DESC LIMIT 5')
+      .prepare('SELECT s.id, s.campaign_id, s.status, s.views_verified, c.title FROM submissions s JOIN campaigns c ON c.id = s.campaign_id WHERE s.user_id = ?1 AND s.status != \'removed\' ORDER BY s.created_at DESC LIMIT 5')
       .bind(user.id)
       .all<{ id: string; campaign_id: string; status: string; views_verified: number; title: string }>(),
     creatorSetup(user),
