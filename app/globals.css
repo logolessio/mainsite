@@ -1135,3 +1135,21 @@ html[data-app] [data-site-nav] {
     animation: none;
   }
 }
+
+/* a panel that is still loading: a quiet breathing block that holds the panel's height */
+.sk {
+  animation: sk-breathe 1.8s ease-in-out infinite;
+}
+@keyframes sk-breathe {
+  50% {
+    opacity: 0.5;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sk {
+    animation: none;
+  }
+}
+html.calm .sk {
+  animation: none;
+}

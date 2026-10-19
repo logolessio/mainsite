@@ -9,7 +9,7 @@ import type { State } from '@/lib/bio-verify'
 import { AddAccountDialog } from './add-account-dialog'
 import { BioVerifyDialog } from './bio-verify-dialog'
 import { Badge } from './table'
-import { ActionButton, Card, Toggle } from './ui'
+import { ActionButton, Card, PanelSkeleton, Toggle } from './ui'
 
 const ACCOUNTS: { name: SocialPlatform; label: string; body: string }[] = [
   { name: 'tiktok', label: 'TikTok', body: 'The account you post content from.' },
@@ -65,7 +65,7 @@ export function AccountsPanel() {
     }
   }
 
-  if (!links) return <p className="text-mute">{error || 'Loading…'}</p>
+  if (!links) return <PanelSkeleton heights={[250]} error={error} />
   const has = (p: string) => links.find((l) => l.platform === p)
 
   return (

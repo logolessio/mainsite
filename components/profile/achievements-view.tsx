@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Check, Loader2, Plus, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { BadgeArt, RARITY_STYLE } from '@/components/badges/badge-art'
+import { PanelSkeleton } from '@/components/app/ui'
 import { GlassTabs } from '@/components/ui/glass-tabs'
 import { Tilt3D } from '@/components/motion/tilt'
 import { NAV_USER_REFRESH } from '@/components/shell/nav-user'
@@ -99,7 +100,7 @@ export function AchievementsView() {
     [data, filter, rarity],
   )
 
-  if (!data) return <p className="text-mute">{error || 'Loading…'}</p>
+  if (!data) return <PanelSkeleton heights={[230, 60, 320]} error={error} />
   const count = Object.keys(data.unlocked).length
   const score = BADGES.filter((b) => b.id in data.unlocked).reduce((a, b) => a + b.points, 0)
   const maxScore = BADGES.reduce((a, b) => a + b.points, 0)

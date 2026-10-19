@@ -5,7 +5,7 @@ import { toast } from '@/lib/toast'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Ban, Binary, Bug, Camera, Check, ChevronDown, CircleDot, CloudRain, Download, Droplets, Eye, EyeOff, Film, Flame, Flower2, Globe, ImagePlus, Leaf, Link2, Loader2, Palette, PartyPopper, Pencil, Plus, Rocket, Search, Snowflake, Sparkles, Star, Sun, Trash2, Tv, Undo2, User, Waves, Wind, X, Zap, type LucideIcon } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ActionButton, Card, Toggle } from '@/components/app/ui'
+import { ActionButton, Card, PanelSkeleton, Toggle } from '@/components/app/ui'
 import { BrandIcon } from '@/components/brand-icon'
 import { NAV_USER_REFRESH } from '@/components/shell/nav-user'
 import { Field, Input, Select, Textarea } from '@/components/ui/fields'
@@ -162,7 +162,7 @@ export function ProfileEditor() {
   }
 
   useUnsavedGuard(Boolean(f && loaded && (pendingAvatar !== undefined || JSON.stringify(f) !== JSON.stringify(loaded.profile))))
-  if (!f || !loaded) return <p className="text-mute">{error || 'Loading your profile…'}</p>
+  if (!f || !loaded) return <PanelSkeleton heights={[64, 520]} error={error} />
 
   const previewLinks = f.links.filter((l) => CLIPPING_PLATFORMS.includes(l.platform)).map((l) => ({ platform: l.platform, href: l.url, label: meta(l.platform)?.label ?? l.platform }))
   const nameVars = { ['--na' as string]: f.accent, ['--nb' as string]: f.accent2 }

@@ -24,6 +24,18 @@ export function PageHeader({
   )
 }
 
+/** A quiet stand-in while a panel loads. It holds the height the panel will have, so nothing jumps when the real thing arrives. */
+export function PanelSkeleton({ heights = [190, 240], error }: { heights?: number[]; error?: string }) {
+  if (error) return <p className="text-mute">{error}</p>
+  return (
+    <div role="status" aria-busy="true" aria-label="Loading" className="space-y-5">
+      {heights.map((h, i) => (
+        <div key={i} className="sk rounded-3xl border border-line bg-white/[0.03]" style={{ height: h }} />
+      ))}
+    </div>
+  )
+}
+
 /**
  * A quiet panel. Tables placed inside it sit flush against its edges, so there are no boxes inside boxes.
  */
