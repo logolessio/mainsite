@@ -16,6 +16,8 @@ type Api = {
   setProfile: (p: Profile | null) => void
   toast: (text: string) => void
   toasts: Toast[]
+  /** the light way of drawing everything (simple glass, no blurs, a smaller video), chosen by the person or by the page struggling */
+  lite: boolean
 }
 
 const Ctx = createContext<Api | null>(null)
@@ -38,6 +40,64 @@ export async function api<T = unknown>(path: string, init?: { method?: string; b
 
 export const miniOf = (c: Clip): Mini => ({ id: c.id, t: c.title, p: c.poster, y: c.year, r: c.rating })
 
+const weakComputer = () => {
+  const n = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } }
+  return (n.hardwareConcurrency ?? 8) <= 4 || (n.deviceMemory ?? 8) <= 4 || n.connection?.saveData === true || matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+/**
+ * Whether this computer seems to need the light way of drawing. A computer with few cores or little memory, or one that asked for less motion,
+ * says so at once; any other is watched for a few seconds after the page has settled, and if more than a third of its frames take longer than
+ * about 34 ms it is switched over (and stays switched for this visit). Frames far apart (a hidden or background page) are not counted.
+ */
+function useStruggling(enabled: boolean, onSwitch: () => void) {
+  const [struggling, setStruggling] = useState(false)
+  const cb = useRef(onSwitch)
+  cb.current = onSwitch
+  useEffect(() => {
+    if (!enabled) return
+    try {
+      if (sessionStorage.getItem('tr-lite') === '1') return setStruggling(true)
+    } catch {
+      /* no storage: just measure */
+    }
+    if (weakComputer()) return setStruggling(true)
+    let raf = 0
+    let last = 0
+    let frames = 0
+    let slow = 0
+    const start = performance.now()
+    const tick = (t: number) => {
+      if (last) {
+        const dt = t - last
+        if (dt < 250) {
+          frames++
+          if (dt > 34) slow++
+        }
+      }
+      last = t
+      if (frames < 150 && performance.now() - start < 12000) raf = requestAnimationFrame(tick)
+      else if (frames >= 80 && slow / frames > 0.35) {
+        try {
+          sessionStorage.setItem('tr-lite', '1')
+        } catch {
+          /* fine */
+        }
+        setStruggling(true)
+        cb.current()
+      }
+    }
+    const t = setTimeout(() => {
+      raf = requestAnimationFrame(tick)
+    }, 4000)
+    return () => {
+      clearTimeout(t)
+      cancelAnimationFrame(raf)
+    }
+  }, [enabled])
+  return struggling
+}
+
 /** What every part of the site shares: who is signed in, their lists and settings, and the little toasts. Lists change at once on screen and are saved behind. */
 export function TrailersProvider({ profile: initial, children }: { profile: Profile | null; children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(initial)
@@ -52,6 +112,8 @@ export function TrailersProvider({ profile: initial, children }: { profile: Prof
   }, [])
 
   const settings = profile?.settings ?? DEFAULT_SETTINGS
+  const struggling = useStruggling(settings.perf === 'auto', () => toast('This computer seemed to be struggling, so the site switched to light mode. You can change that in Settings.'))
+  const lite = settings.perf === 'light' || (settings.perf === 'auto' && struggling)
 
   const toggle = useCallback(
     async (kind: 'like' | 'save', m: Mini) => {
@@ -94,12 +156,13 @@ export function TrailersProvider({ profile: initial, children }: { profile: Prof
       setProfile,
       toast,
       toasts,
+      lite,
     }),
-    [profile, settings, toggle, patchSettings, toast, toasts],
+    [profile, settings, toggle, patchSettings, toast, toasts, lite],
   )
   return (
     <Ctx.Provider value={value}>
-      <GlassProvider value={settings.glass}>{children}</GlassProvider>
+      <GlassProvider value={lite ? 0 : settings.glass}>{children}</GlassProvider>
     </Ctx.Provider>
   )
 }

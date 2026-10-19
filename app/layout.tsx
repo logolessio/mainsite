@@ -162,10 +162,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const announcement = fs.on.announcement && !blocked ? await getAnnouncement() : null
   const reqHeaders = await headers()
   // The launch page: while the owners have it switched on (and the countdown has not ended and opened the site by itself), everyone but an owner
-  // sees only the countdown and the sign-up, on the public address. The owner dashboard, the dev address and owners themselves are never shut out.
+  // sees only the countdown and the sign-up, on the public address. The owner dashboard, the dev address, scroll (a site of its own) and owners themselves are never shut out.
   const launch = launchView(design)
   const host = await requestHost()
-  const shut = launch.closed && !fs.dev && !/^(owner|admin)\./i.test(host) && !isAdmin && !launchExempt(reqHeaders.get('x-path') ?? '/')
+  const shut = launch.closed && !fs.dev && !/^(owner|admin|scroll)\./i.test(host) && !isAdmin && !launchExempt(reqHeaders.get('x-path') ?? '/')
   if (shut) {
     return (
       <html

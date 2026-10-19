@@ -67,7 +67,9 @@ export function assertSameOrigin(req: Request) {
     } catch {
       /* falls through to the refusal below */
     }
-    if (host !== new URL(req.url).host) throw new HttpError(403, 'Cross-site request blocked.')
+    // the address the browser used is the one that counts: the request's own address, or the Host header it came with (a browser sends the
+    // Host of the page it is on, and a page on another site cannot make it send ours)
+    if (host !== new URL(req.url).host && host !== (req.headers.get('host') ?? '').toLowerCase()) throw new HttpError(403, 'Cross-site request blocked.')
     return
   }
   const site = req.headers.get('sec-fetch-site')

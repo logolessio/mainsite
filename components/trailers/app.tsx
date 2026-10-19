@@ -7,7 +7,7 @@ import { type View, Nav } from './nav'
 import { Onboarding } from './onboarding'
 import { SettingsView } from './settings'
 import { Spotlight } from './spotlight'
-import { api, TrailersProvider } from './ctx'
+import { api, TrailersProvider, useTrailers } from './ctx'
 import { EASE, Mark, Toasts, useDesktop } from './ui'
 import { WatchView } from './watch'
 import { type Clip, type Profile } from '@/lib/trailers/types'
@@ -29,13 +29,14 @@ function ComputersOnly() {
       <Mark />
       <div className="max-w-md">
         <h1 className="font-display text-[3.2rem] leading-[1.05]">Best on a computer.</h1>
-        <p className="mt-5 text-[17px] leading-relaxed text-paper/60">Trailers is made for a big screen and a mouse or trackpad. Open it on a computer to see it properly.</p>
+        <p className="mt-5 text-[17px] leading-relaxed text-paper/60">scroll is made for a big screen and a mouse or trackpad. Open it on a computer to see it properly.</p>
       </div>
     </div>
   )
 }
 
 function Main({ profile, onRestart }: { profile: Profile; onRestart: () => void }) {
+  const { lite } = useTrailers()
   const [view, setView] = useState<View>('watch')
   const [search, setSearch] = useState(false)
   const [jump, setJump] = useState<Clip | null>(null)
@@ -64,7 +65,14 @@ function Main({ profile, onRestart }: { profile: Profile; onRestart: () => void 
       <WatchView suspended={view !== 'watch' || search} jump={jump} onJumped={() => setJump(null)} whereOpen={where} setWhereOpen={setWhere} />
       <AnimatePresence mode="wait">
         {view !== 'watch' && (
-          <motion.div key={view} initial={{ opacity: 0, y: 30, scale: 0.985, filter: 'blur(18px)' }} animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }} exit={{ opacity: 0, y: -14, filter: 'blur(10px)', transition: { duration: 0.22 } }} transition={{ duration: 0.65, ease: EASE }} className="absolute inset-0 z-30 bg-black/[0.82] backdrop-blur-[34px]">
+          <motion.div
+            key={view}
+            initial={lite ? { opacity: 0, y: 20 } : { opacity: 0, y: 30, scale: 0.985, filter: 'blur(18px)' }}
+            animate={lite ? { opacity: 1, y: 0 } : { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+            exit={lite ? { opacity: 0, transition: { duration: 0.15 } } : { opacity: 0, y: -14, filter: 'blur(10px)', transition: { duration: 0.22 } }}
+            transition={{ duration: lite ? 0.35 : 0.65, ease: EASE }}
+            className={lite ? 'absolute inset-0 z-30 bg-black/[0.96]' : 'absolute inset-0 z-30 bg-black/[0.82] backdrop-blur-[34px]'}
+          >
             {view === 'account' ? <AccountView onOpen={open} /> : <SettingsView onRestart={onRestart} />}
           </motion.div>
         )}

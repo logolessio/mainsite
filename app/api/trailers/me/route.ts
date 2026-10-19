@@ -15,7 +15,7 @@ const op = z.discriminatedUnion('op', [
   z.object({ op: z.literal('favorites'), favorites: z.array(miniS).max(8) }),
   z.object({ op: z.literal('name'), name: z.string().trim().min(1).max(40) }),
   z.object({ op: z.literal('username'), username: z.string().trim().toLowerCase().max(40) }),
-  z.object({ op: z.literal('settings'), patch: z.object({ region: z.string().max(2).optional(), sound: z.boolean().optional(), autoNext: z.boolean().optional(), ambient: z.boolean().optional(), glass: z.number().optional() }) }),
+  z.object({ op: z.literal('settings'), patch: z.object({ region: z.string().max(2).optional(), sound: z.boolean().optional(), autoNext: z.boolean().optional(), ambient: z.boolean().optional(), glass: z.number().optional(), perf: z.enum(['auto', 'light', 'full']).optional() }) }),
   z.object({ op: z.literal('reset') }),
 ])
 

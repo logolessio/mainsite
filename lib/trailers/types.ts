@@ -31,9 +31,10 @@ export type Settings = {
   autoNext: boolean // move to the next trailer when one ends
   ambient: boolean // the soft glow of the film's colours around the screen
   glass: number // 0 to 100: how strongly the glass bends what is behind it
+  perf: 'auto' | 'light' | 'full' // light: simple glass, no blurs, a smaller video (for a slower computer); auto: light only if the page struggles
 }
 
-export const DEFAULT_SETTINGS: Settings = { region: 'US', sound: true, autoNext: false, ambient: true, glass: 70 }
+export const DEFAULT_SETTINGS: Settings = { region: 'US', sound: true, autoNext: false, ambient: false, glass: 70, perf: 'auto' }
 
 export type Profile = {
   v: 1

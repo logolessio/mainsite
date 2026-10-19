@@ -108,5 +108,6 @@ export function mergeSettings(cur: Settings, patch: Partial<Settings>): Settings
     autoNext: typeof patch.autoNext === 'boolean' ? patch.autoNext : cur.autoNext,
     ambient: typeof patch.ambient === 'boolean' ? patch.ambient : cur.ambient,
     glass: typeof patch.glass === 'number' ? Math.max(0, Math.min(100, Math.round(patch.glass))) : cur.glass,
+    perf: patch.perf === 'auto' || patch.perf === 'light' || patch.perf === 'full' ? patch.perf : cur.perf,
   }
 }

@@ -1091,6 +1091,20 @@ html[data-app] [data-site-nav] {
   opacity: 1;
 }
 
+/* a very slow push-in on the film's picture while its trailer plays (a transform only, so it costs the processor nothing) */
+@keyframes tr-kb {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.07);
+  }
+}
+.tr-kb {
+  animation: tr-kb 18s linear both;
+  will-change: transform;
+}
+
 @keyframes tr-shimmer {
   to {
     transform: translateX(100%);

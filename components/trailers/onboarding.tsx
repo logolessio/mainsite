@@ -1,13 +1,12 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { signIn } from 'next-auth/react'
-import { Check, Eye, EyeOff, Search, X } from 'lucide-react'
+import { Check, Eye, EyeOff, Mail, Search, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BlobTabs } from '@/components/glass/blob'
 import { GlassSurface } from '@/components/glass/glass'
 import { BrandIcon } from '@/components/brand-icon'
-import { signInWithEmail, signInWithProvider } from '@/lib/auth'
+import { confirmSignup, resendSignupCode, signInWithEmail, signInWithProvider, signUpWithEmail } from '@/lib/auth'
 import { type Mini, type Profile, poster } from '@/lib/trailers/types'
 import { cn } from '@/lib/utils'
 import { api } from './ctx'
@@ -77,12 +76,12 @@ export function Onboarding({ signedIn, name: signedName, onDone, redo = false, c
   const [q, setQ] = useState('')
   const [results, setResults] = useState<Mini[] | null>(null)
   const [mode, setMode] = useState<'create' | 'login'>('create')
-  const [via, setVia] = useState<'form' | 'logoless'>('form')
-  const [username, setUsername] = useState('')
+  const [via, setVia] = useState<'choose' | 'email' | 'code'>('choose')
   const [password, setPassword] = useState('')
   const [email, setEmail] = useState('')
+  const [code, setCode] = useState('')
   const [show, setShow] = useState(false)
-  const [avail, setAvail] = useState<{ ok: boolean; problem?: string } | 'checking' | null>(null)
+  const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [typed, setTyped] = useState(false)
@@ -125,16 +124,6 @@ export function Onboarding({ signedIn, name: signedName, onDone, redo = false, c
     const t = setTimeout(() => api<{ results: Mini[] }>(`/api/trailers/search?q=${encodeURIComponent(term)}`).then((r) => setResults(r.results)).catch(() => setResults([])), 260)
     return () => clearTimeout(t)
   }, [q])
-
-  // is this username free?
-  useEffect(() => {
-    if (mode !== 'create' || step !== 'account') return
-    const u = username.trim().toLowerCase()
-    if (!u) return setAvail(null)
-    setAvail('checking')
-    const t = setTimeout(() => api<{ ok: boolean; problem?: string }>(`/api/trailers/signup?u=${encodeURIComponent(u)}`).then(setAvail).catch(() => setAvail(null)), 320)
-    return () => clearTimeout(t)
-  }, [username, mode, step])
 
   const toggle = useCallback((m: Mini) => setPicks((p) => (p.some((x) => x.id === m.id) ? p.filter((x) => x.id !== m.id) : p.length >= MAX ? p : [...p, m])), [])
   const shown = results ?? trending
@@ -182,18 +171,35 @@ export function Onboarding({ signedIn, name: signedName, onDone, redo = false, c
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signedIn])
 
-  const submitAccount = async () => {
+  const emailOk = /\S+@\S+\.\S+/.test(email.trim())
+  const passwordOk = mode === 'create' ? password.length >= 10 : password.length >= 1
+
+  /** Log in with an email and password, or start making an account (a six-digit code is emailed to prove the address). */
+  const submitEmail = async () => {
+    setBusy(true)
+    setError('')
+    setNote('')
+    try {
+      if (mode === 'login') {
+        await signInWithEmail(email.trim(), password)
+        await finish()
+      } else {
+        await signUpWithEmail({ email: email.trim(), password, name: name.trim() || undefined })
+        setCode('')
+        setVia('code')
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const submitCode = async () => {
     setBusy(true)
     setError('')
     try {
-      if (via === 'logoless') {
-        await signInWithEmail(email.trim(), password)
-      } else {
-        const u = username.trim().toLowerCase()
-        if (mode === 'create') await api('/api/trailers/signup', { body: { username: u, password } })
-        const r = await signIn('trailers', { username: u, password, redirect: false })
-        if (!r || r.error || r.ok === false) throw new Error(mode === 'login' ? 'That username and password do not match.' : 'Your account is made, but signing in did not work. Try logging in.')
-      }
+      await confirmSignup(email.trim(), code.trim())
       await finish()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.')
@@ -202,19 +208,31 @@ export function Onboarding({ signedIn, name: signedName, onDone, redo = false, c
     }
   }
 
+  const resend = async () => {
+    setError('')
+    try {
+      await resendSignupCode(email.trim())
+      setNote('A new code is on its way.')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong.')
+    }
+  }
+
+  /** Google and Discord are only set up for logoless.io, so on scroll the sign-in is started there and comes straight back (the cookie is shared). */
   const social = async (p: 'google' | 'discord') => {
     setBusy(true)
     setError('')
     try {
-      await signInWithProvider(p, undefined, '/trailers')
+      if (location.hostname === 'scroll.logoless.io') {
+        window.location.assign(`https://logoless.io/scroll-signin?p=${p}`)
+        return
+      }
+      await signInWithProvider(p, undefined, '/')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.')
       setBusy(false)
     }
   }
-
-  const ready = mode === 'login' ? username.trim().length >= 3 && password.length >= 1 : avail !== null && avail !== 'checking' && avail.ok && password.length >= 10
-  const logoUp = via === 'logoless' ? /\S+@\S+\.\S+/.test(email) && password.length >= 1 : ready
 
   const collage = useMemo(() => trending.slice(0, 18), [trending])
 
@@ -314,52 +332,59 @@ export function Onboarding({ signedIn, name: signedName, onDone, redo = false, c
 
           {step === 'account' && (
             <div className="flex w-full max-w-[540px] flex-col items-center">
-              <Typed text={mode === 'create' ? 'Make it yours.' : 'Welcome back.'} className="text-[clamp(2.8rem,5vw,4.6rem)] leading-[1.05]" onDone={() => setTyped(true)} />
+              <Typed text={via === 'code' ? 'Check your email.' : mode === 'create' ? 'Make it yours.' : 'Welcome back.'} className="text-[clamp(2.8rem,5vw,4.6rem)] leading-[1.05]" onDone={() => setTyped(true)} />
               <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: typed ? 1 : 0, y: typed ? 0 : 18 }} transition={{ duration: 0.7, ease: EASE }} className="mt-8 w-full">
                 <GlassSurface radius={36} className="w-full" inner="p-8">
                   <div className="relative z-10 flex flex-col gap-4">
-                    {via === 'form' ? (
+                    {via === 'choose' && (
+                      <>
+                        <p className="px-1 text-center text-[15px] text-paper/60">{mode === 'create' ? 'Choose how you want to sign in.' : 'Sign in the way you did before.'}</p>
+                        <GButton size="lg" className="w-full" disabled={busy} busy={busy} onClick={() => social('google')} icon={<BrandIcon name="google" className="size-[18px]" />}>Continue with Google</GButton>
+                        <GButton size="lg" className="w-full" disabled={busy} onClick={() => social('discord')} icon={<BrandIcon name="discord" className="size-[18px]" />}>Continue with Discord</GButton>
+                        <GButton size="lg" className="w-full" disabled={busy} onClick={() => { setVia('email'); setError('') }} icon={<Mail className="size-[18px]" aria-hidden="true" />}>Continue with email</GButton>
+                        <p role="alert" className="min-h-5 px-2 text-center text-[13.5px] text-red-300">{error}</p>
+                        <button type="button" onClick={() => { setMode(mode === 'create' ? 'login' : 'create'); setError('') }} className="self-center text-[14.5px] text-paper/55 underline decoration-paper/25 underline-offset-4 hover:text-paper">
+                          {mode === 'create' ? 'I already have an account' : 'New here? Make an account'}
+                        </button>
+                      </>
+                    )}
+
+                    {via === 'email' && (
                       <>
                         <div className="mb-2 flex justify-center">
                           <BlobTabs ariaLabel="Create an account or log in" value={mode} onChange={(v) => { setMode(v as 'create' | 'login'); setError('') }} items={[{ id: 'create', label: 'Create account', aria: 'Create an account' }, { id: 'login', label: 'Log in', aria: 'Log in' }]} height={40} />
                         </div>
                         <Field>
-                          <input data-bare value={username} onChange={(e) => setUsername(e.target.value.replace(/\s/g, '').slice(0, 20))} placeholder="Username" autoComplete="username" aria-label="Username" className={field} onKeyDown={(e) => e.key === 'Enter' && ready && submitAccount()} />
-                          {mode === 'create' && avail && (
-                            <span className="absolute top-1/2 right-5 z-10 -translate-y-1/2 text-[13px]">
-                              {avail === 'checking' ? <span className="text-paper/40">checking</span> : avail.ok ? <span className="text-emerald-300">free</span> : <span className="text-red-300">taken</span>}
-                            </span>
-                          )}
+                          <input data-bare value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email" autoComplete="email" aria-label="Email" className={field} autoFocus />
                         </Field>
-                        {mode === 'create' && avail && avail !== 'checking' && !avail.ok && avail.problem && <p className="-mt-2 px-3 text-[13px] text-red-300">{avail.problem}</p>}
                         <Field>
-                          <input data-bare value={password} onChange={(e) => setPassword(e.target.value)} type={show ? 'text' : 'password'} placeholder={mode === 'create' ? 'Password (10 or more characters)' : 'Password'} autoComplete={mode === 'create' ? 'new-password' : 'current-password'} aria-label="Password" className={cn(field, 'pr-14')} onKeyDown={(e) => e.key === 'Enter' && ready && submitAccount()} />
+                          <input data-bare value={password} onChange={(e) => setPassword(e.target.value)} type={show ? 'text' : 'password'} placeholder={mode === 'create' ? 'Password (10 or more characters)' : 'Password'} autoComplete={mode === 'create' ? 'new-password' : 'current-password'} aria-label="Password" className={cn(field, 'pr-14')} onKeyDown={(e) => e.key === 'Enter' && emailOk && passwordOk && !busy && submitEmail()} />
                           <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? 'Hide password' : 'Show password'} className="absolute top-1/2 right-3 z-10 grid size-9 -translate-y-1/2 place-items-center rounded-full text-paper/60 hover:text-paper">
                             {show ? <EyeOff className="size-[18px]" /> : <Eye className="size-[18px]" />}
                           </button>
                         </Field>
-                      </>
-                    ) : (
-                      <>
-                        <p className="px-1 text-center text-[15px] text-paper/60">Use the email and password of your logoless account.</p>
-                        <Field>
-                          <input data-bare value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email" autoComplete="email" aria-label="Email" className={field} />
-                        </Field>
-                        <Field>
-                          <input data-bare value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Password" autoComplete="current-password" aria-label="Password" className={field} onKeyDown={(e) => e.key === 'Enter' && logoUp && submitAccount()} />
-                        </Field>
+                        <p role="alert" className="min-h-5 px-2 text-center text-[13.5px] text-red-300">{error}</p>
+                        <GButton variant="primary" size="lg" className="w-full" busy={busy} disabled={busy || !emailOk || !passwordOk} onClick={submitEmail}>
+                          {mode === 'create' ? 'Send me a code' : 'Log in'}
+                        </GButton>
+                        <button type="button" onClick={() => { setVia('choose'); setError('') }} className="self-center text-[14.5px] text-paper/55 underline decoration-paper/25 underline-offset-4 hover:text-paper">Other ways to sign in</button>
                       </>
                     )}
-                    <p role="alert" className="min-h-5 px-2 text-center text-[13.5px] text-red-300">{error}</p>
-                    <GButton variant="primary" size="lg" className="w-full" busy={busy} disabled={busy || !logoUp} onClick={submitAccount}>
-                      {via === 'logoless' ? 'Log in with logoless' : mode === 'create' ? 'Create account' : 'Log in'}
-                    </GButton>
-                    <div className="my-1 flex items-center gap-4 text-[13px] text-paper/40"><span className="h-px flex-1 bg-white/12" />or<span className="h-px flex-1 bg-white/12" /></div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <GButton size="sm" disabled={busy} onClick={() => social('google')} icon={<BrandIcon name="google" className="size-4" />}>Google</GButton>
-                      <GButton size="sm" disabled={busy} onClick={() => social('discord')} icon={<BrandIcon name="discord" className="size-4" />}>Discord</GButton>
-                      <GButton size="sm" disabled={busy} onClick={() => { setVia(via === 'logoless' ? 'form' : 'logoless'); setError('') }}>{via === 'logoless' ? 'Back' : 'logoless'}</GButton>
-                    </div>
+
+                    {via === 'code' && (
+                      <>
+                        <p className="px-1 text-center text-[15px] leading-relaxed text-paper/60">We sent a six-digit code to <span className="text-paper">{email.trim()}</span>. It works for ten minutes.</p>
+                        <Field>
+                          <input data-bare value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" placeholder="000000" autoComplete="one-time-code" aria-label="Six-digit code" autoFocus className={cn(field, 'text-center font-mono text-[24px] tracking-[0.5em]')} onKeyDown={(e) => e.key === 'Enter' && code.length === 6 && !busy && submitCode()} />
+                        </Field>
+                        <p role="alert" className="min-h-5 px-2 text-center text-[13.5px] text-red-300">{error || (note && <span className="text-paper/60">{note}</span>)}</p>
+                        <GButton variant="primary" size="lg" className="w-full" busy={busy} disabled={busy || code.length !== 6} onClick={submitCode}>Create my account</GButton>
+                        <div className="flex items-center justify-center gap-6">
+                          <button type="button" onClick={() => void resend()} className="text-[14.5px] text-paper/55 underline decoration-paper/25 underline-offset-4 hover:text-paper">Send it again</button>
+                          <button type="button" onClick={() => { setVia('email'); setError(''); setNote('') }} className="text-[14.5px] text-paper/55 underline decoration-paper/25 underline-offset-4 hover:text-paper">Change the email</button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </GlassSurface>
                 <div className="mt-6 flex justify-center">

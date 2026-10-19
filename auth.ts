@@ -50,7 +50,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => ({
         return { id: email, email, name: email.split('@')[0] }
       },
     }),
-    // The trailers site (dev.logoless.io/trailers): a username and a password, nothing else. The address on the session is made up
+    // The scroll site's older username-and-password accounts (scroll.logoless.io now signs in with Google, Discord or email): a username and a password. The address on the session is made up
     // (<username>@trailers.logoless.io) and nobody is ever emailed there. See lib/trailers/store.ts.
     Credentials({
       id: 'trailers',
@@ -136,12 +136,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => ({
       if (account?.provider === 'google') return (profile as { email_verified?: boolean } | undefined)?.email_verified === true
       return true
     },
-    // After signing in, people may be sent back to the dev or admin address, but nowhere else.
+    // After signing in, people may be sent back to the dev, admin or scroll address, but nowhere else.
     redirect({ url, baseUrl }) {
       if (url.startsWith('/')) return `${baseUrl}${url}`
       try {
         const u = new URL(url)
-        if (u.origin === baseUrl || /^https:\/\/(owner|admin|dev)\.logoless\.io$/.test(u.origin)) return url
+        if (u.origin === baseUrl || /^https:\/\/(owner|admin|dev|scroll)\.logoless\.io$/.test(u.origin)) return url
       } catch {
         /* not a URL */
       }

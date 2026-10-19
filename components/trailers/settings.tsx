@@ -35,7 +35,7 @@ function Line({ title, hint, children, wide }: { title: string; hint?: string; c
 const KEYS: [string, string][] = [['↓  ↑   or   J  K', 'Next and previous trailer'], ['Space', 'Pause or play'], ['L', 'Like'], ['S', 'Save'], ['W', 'Where to watch'], ['M', 'Sound on or off'], ['F', 'Full screen'], ['⌘ K', 'Search']]
 
 export function SettingsView({ onRestart }: { onRestart: () => void }) {
-  const { profile, settings, patchSettings, setProfile, toast } = useTrailers()
+  const { profile, settings, patchSettings, setProfile, toast, lite } = useTrailers()
   const [name, setName] = useState(profile?.name ?? '')
   const [saving, setSaving] = useState(false)
   if (!profile) return null
@@ -79,8 +79,21 @@ export function SettingsView({ onRestart }: { onRestart: () => void }) {
           </Line>
         </Card>
 
-        <Card title="Glass" i={3}>
-          <Line title="How much the glass bends" hint="Drag it all the way down to turn the bending off, which is also easier on an older computer." wide>
+        <Card title="Look and speed" i={3}>
+          <Line title="Performance" hint="Light mode uses plain glass, no blurs, no slow zoom and a smaller video, so it runs smoothly on a slower computer. Automatic switches to it by itself if the page starts to stutter." wide>
+            <GlassMenu
+              label="Performance"
+              value={settings.perf}
+              width={300}
+              onChange={(v) => void patchSettings({ perf: v })}
+              options={[
+                { id: 'auto', label: 'Automatic' },
+                { id: 'light', label: 'Light (fastest)' },
+                { id: 'full', label: 'Full (best looking)' },
+              ]}
+            />
+          </Line>
+          <Line title="How much the glass bends" hint={lite ? 'Light mode is on, so the glass is drawn plainly. Choose Full above to bend it.' : 'Drag it all the way down to turn the bending off, which is also easier on an older computer.'} wide>
             <GlassSlider ariaLabel="How much the glass bends" value={settings.glass} onChange={(v) => void patchSettings({ glass: v })} />
           </Line>
         </Card>
@@ -101,7 +114,7 @@ export function SettingsView({ onRestart }: { onRestart: () => void }) {
             <GButton size="sm" onClick={onRestart}>Change them</GButton>
           </Line>
           <Line title="Sign out">
-            <GButton size="sm" onClick={() => void signOut({ callbackUrl: '/trailers' })}>Sign out</GButton>
+            <GButton size="sm" onClick={() => void signOut({ callbackUrl: '/' })}>Sign out</GButton>
           </Line>
         </Card>
 

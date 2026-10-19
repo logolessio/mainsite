@@ -18,8 +18,8 @@ export function launchView(s: Record<SettingKey, string>, now = nowSec()): Launc
   return { on, closed: on && !(auto && end !== null && now >= end), end, headline: s.launch_headline, text: s.launch_text, auto }
 }
 
-/** The pages that stay open behind the launch page: the legal pages, the unsubscribe page, and the sign-in page (so an owner is never locked out). */
-export const launchExempt = (path: string) => /^\/(legal|launch|login)(\/|$)/.test(path)
+/** The pages that stay open behind the launch page: the legal pages, the unsubscribe page, the sign-in page (so an owner is never locked out) and the page that hands scroll's Google and Discord sign-ins over. */
+export const launchExempt = (path: string) => /^\/(legal|launch|login|scroll-signin)(\/|$)/.test(path)
 
 export const normEmail = (e: string) => e.trim().toLowerCase()
 export const validEmail = (e: string) => e.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)

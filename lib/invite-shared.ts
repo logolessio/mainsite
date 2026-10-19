@@ -8,7 +8,7 @@ export const RESERVED_SLUGS = new Set([
   'forgot-password', 'how-it-works', 'legal', 'login', 'logout', 'onboarding', 'out', 'payouts', 'pricing', 'previews', 'signup', 'trust', 'u', 'welcome',
   'robots', 'sitemap', 'icon', 'apple-icon', 'favicon', 'logo', 'logoless', 'reset-password', 'verify-email', 'support', 'help', 'staff', 'root', 'static',
   'terms', 'privacy', 'settings', 'account', 'billing', 'pay', 'app', 'www', 'mail', 'email', 'dev', 'owner', 'test', 'blog', 'news', 'press', 'jobs', 'status', 'links', 'socials',
-  'security', 'invite', 'invites', 'launch', 'trailers', 'join', 'start', 'artist', 'artists', 'clipper', 'clippers', 'profile', 'profiles', 'search', 'home', 'index', 'null',
+  'security', 'invite', 'invites', 'launch', 'trailers', 'scroll', 'scroll-signin', 'join', 'start', 'artist', 'artists', 'clipper', 'clippers', 'profile', 'profiles', 'search', 'home', 'index', 'null',
   'undefined', 'official', 'developers', 'developer', 'authorize', 'token', 'userinfo', 'team', 'discord', 'stripe', 'webhook', 'webhooks', 'auth', 'oauth', 'callback',
   'report', 'inquiry', 'leaderboard', 'lab', 'case-studies', 'llms', 'reels', 'recap', 'earn-demo', 'compare', 'saved', 'health', 'manifest', 'explore', 'discover', 'trending', 'rankings', 'wrapped', 'spotlight', 'notifications', 'achievements',
 ])
