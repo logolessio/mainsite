@@ -4,12 +4,14 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { ArrowUpRight, Ellipsis, LogOut, Plus, Search, ShieldCheck, X } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { BlobLens, type Rect } from '@/components/glass/blob-lens'
 import { Icon } from '@/components/icons'
 import { Logo } from '@/components/logo'
 import { useNavUser } from '@/components/shell/nav-user'
 import { NotificationBell } from '@/components/shell/notifications'
 import { TransitionLink } from '@/components/shell/transition-link'
+import { PageEnter } from '@/components/shell/page-frame'
 import { useTransitions } from '@/components/shell/transition-provider'
 import { SPRING_GLIDE } from '@/lib/layout'
 import { OWNER_URL, SITE_URL_FOR_STAFF } from '@/lib/staff-nav'
@@ -43,29 +45,28 @@ function Go({ href, children, ...rest }: { href: string; children: React.ReactNo
 function Badge({ c, lit }: { c?: NavCounts[string]; lit?: boolean }) {
   if (!c || (!c.n && !c.dot)) return null
   return c.n ? (
-    <span aria-label={`${c.n} waiting`} className={cn('relative ml-auto grid h-5 min-w-5 place-items-center rounded-pill border px-1.5 text-[11px] tabular-nums transition-colors duration-300', lit ? 'border-cyan-300/60 text-cyan-200' : 'border-white/20 text-paper/55')}>
+    <span aria-label={`${c.n} waiting`} className={cn('pop-in relative ml-auto grid h-5 min-w-5 place-items-center rounded-pill border px-1.5 text-[11px] tabular-nums transition-colors duration-300', lit ? 'border-cyan-300/60 text-cyan-200' : 'border-white/20 text-paper/55')}>
       {c.n > 99 ? '99+' : c.n}
     </span>
   ) : (
-    <span aria-label="Something to do" className={cn('relative ml-auto size-2 rounded-pill transition-colors duration-300', lit ? 'bg-cyan-300' : 'bg-emerald-400')} />
+    <span aria-label="Something to do" className={cn('pop-in relative ml-auto size-2 rounded-pill transition-colors duration-300', lit ? 'bg-cyan-300' : 'bg-emerald-400')} />
   )
 }
 
 /**
- * One sidebar item. Its soft pill fades in when the pointer arrives and fades out a little slower when it leaves, so the highlight
- * seems to trail the pointer from one item to the next. When the pointer is away, the pill rests on the page you are on.
+ * One sidebar item. The highlight is not drawn here: it is one lens of glass held by the whole menu (see the list in DashShell) that
+ * follows the pointer from item to item, stretching as it goes, and rests on the page you are on when the pointer is away.
  */
 function SideLink({ it, n, active, lit, c, hint, onEnter }: { it: AppNavItem; n: number; active: boolean; lit: boolean; c?: NavCounts[string]; hint: boolean; onEnter: () => void }) {
   return (
     <TransitionLink
       href={it.href}
       aria-current={active ? 'page' : undefined}
+      data-side-href={it.href}
       onPointerEnter={(e) => e.pointerType !== 'touch' && onEnter()}
       onFocus={onEnter}
       className={cn('group relative flex h-10 items-center gap-3 rounded-pill px-4 text-[15px] transition-colors duration-[450ms]', lit ? 'text-paper duration-[250ms]' : active ? 'text-paper/75' : 'text-paper/50')}
     >
-      <motion.span aria-hidden="true" initial={false} animate={{ opacity: lit ? 1 : 0, scale: lit ? 1 : 0.97 }} transition={{ duration: lit ? 0.28 : 0.45, ease: [0.22, 1, 0.36, 1] }} className="pointer-events-none absolute inset-0 rounded-pill bg-white/[0.07]" />
-      <motion.span aria-hidden="true" initial={false} animate={{ opacity: lit ? 1 : 0 }} transition={{ duration: lit ? 0.34 : 0.45, delay: lit ? 0.07 : 0, ease: 'easeOut' }} className="pointer-events-none absolute inset-0 rounded-pill border border-white/[0.14]" />
       <Icon name={it.icon} aria-hidden="true" className="relative size-[18px] shrink-0" />
       <span className="relative">{it.label}</span>
       <Badge c={c} lit={lit} />
@@ -87,6 +88,11 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
   const [hot, setHot] = useState<string | null>(null) // the sidebar item the pointer (or the keyboard) is on
   const [lifted, setLifted] = useState(false) // the page has scrolled under the top bar
   const top = useRef<HTMLSpanElement>(null)
+  // the lens of glass behind the sidebar item the pointer is on (or, when it is away, the page you are on)
+  const list = useRef<HTMLUListElement>(null)
+  const [lens, setLens] = useState<Rect | null>(null)
+  const [lensFrom, setLensFrom] = useState<Rect | null>(null)
+  const [lensStill, setLensStill] = useState(false)
   const signedIn = user?.signedIn ? user : null
   // the owner dashboard holds the admin and developer pages; its "back" goes to the public site, which is a different address
   const staffArea = area === 'Owner' || area === 'Admin' || area === 'Dev'
@@ -118,6 +124,31 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
     return () => window.removeEventListener('keydown', onKey)
   }, [])
   useEffect(() => setMore(false), [pathname])
+  const litHref = hot ?? current.href
+  const measureLens = useCallback((): Rect | null => {
+    const ul = list.current
+    const el = ul?.querySelector<HTMLElement>(`[data-side-href="${CSS.escape(litHref)}"]`)
+    return el ? { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight } : null
+  }, [litHref])
+  useLayoutEffect(() => {
+    const m = measureLens()
+    if (!m) return
+    setLensFrom((f) => f ?? m)
+    setLens(m)
+  }, [measureLens, items])
+  useLayoutEffect(() => {
+    const ul = list.current
+    if (!ul || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => {
+      const m = measureLens()
+      if (!m) return
+      setLensStill(true)
+      setLens(m)
+      window.setTimeout(() => setLensStill(false), 60)
+    })
+    ro.observe(ul)
+    return () => ro.disconnect()
+  }, [measureLens])
   useEffect(() => {
     const el = top.current
     if (!el || typeof IntersectionObserver === 'undefined') return
@@ -153,7 +184,8 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
         </div>
         <p className="px-6 pt-7 pb-3 text-[13px] text-paper/40">{area}</p>
         <nav className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-3 pb-4">
-          <ul data-kb-menu className="grid gap-0.5" onPointerLeave={() => setHot(null)} onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && setHot(null)}>
+          <ul ref={list} data-kb-menu className="relative grid gap-0.5" onPointerLeave={() => setHot(null)} onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && setHot(null)}>
+            {lens && lensFrom && <BlobLens rect={lens} from={lensFrom} instant={lensStill} soft className="rounded-pill" />}
             {items.map((it, n) => {
               const active = isActive(pathname, it)
               const heading = it.section && it.section !== items[n - 1]?.section
@@ -240,15 +272,9 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
         <RouteTabs />
         {/* only the page changes between pages: the sidebar and the bars stay exactly where they are.
             The old page dims while the next one loads, and the new one eases in from that same dim, so nothing ever flashes. */}
-        <motion.div
-          key={pathname}
-          initial={false}
-          animate={phase === 'exiting' ? { opacity: 0.35, y: 0 } : { opacity: 1, y: 0 }}
-          transition={phase === 'exiting' ? { duration: 0.14, ease: 'easeOut' } : { duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          className="page-root mx-auto max-w-[1160px]"
-        >
+        <PageEnter key={pathname} exiting={phase === 'exiting'} className="page-root mx-auto max-w-[1160px]">
           {children}
-        </motion.div>
+        </PageEnter>
       </main>
 
       {/* ---------- tab bar (phones) ---------- */}

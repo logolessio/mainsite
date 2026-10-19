@@ -1,9 +1,9 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { BlobLens, type Rect } from '@/components/glass/blob-lens'
 import { LiquidGlass } from '@/components/ui/liquid-glass'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { EASE_OUT } from '@/lib/layout'
@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 
 export type GlassTab = { id: string; label: string; href?: string }
 
-type Spot = { left: number; width: number }
+type Spot = Rect
 /** Where each menu's highlight was last, so a menu that is drawn again (because the page changed) starts from there and glides on. */
 const lastSpot = new Map<string, Spot>()
 
@@ -43,7 +43,7 @@ export function GlassTabs({ tabs, value, onChange, label, className }: { tabs: G
   const measure = useCallback(() => {
     const el = nodes.current.get(current)
     if (!el) return null
-    return { left: el.offsetLeft, width: el.offsetWidth }
+    return { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight }
   }, [current])
 
   const first = useRef(true)
@@ -54,7 +54,7 @@ export function GlassTabs({ tabs, value, onChange, label, className }: { tabs: G
       first.current = false
       setFrom(lastSpot.get(label) ?? m)
     }
-    setSpot((prev) => (prev && prev.left === m.left && prev.width === m.width ? prev : m))
+    setSpot((prev) => (prev && prev.left === m.left && prev.width === m.width && prev.top === m.top ? prev : m))
     lastSpot.set(label, m)
   }, [measure, label, tabs])
 
@@ -78,23 +78,15 @@ export function GlassTabs({ tabs, value, onChange, label, className }: { tabs: G
   return (
     <LiquidGlass rootClassName={cn('mx-auto w-fit max-w-full', className)} look={{ zRadius: 12 }}>
       <div ref={row} role={onChange ? 'tablist' : 'navigation'} {...(onChange ? {} : { 'data-kb-tabs': '' })} aria-label={label} className="no-scrollbar relative flex items-center gap-1 overflow-x-auto overflow-y-hidden p-1.5">
-        {spot && from && (
-          <motion.span
-            aria-hidden="true"
-            initial={{ x: from.left, width: from.width }}
-            animate={{ x: spot.left, width: spot.width }}
-            transition={still ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 38, mass: 0.9 }}
-            className="absolute top-1.5 bottom-1.5 left-0 rounded-pill bg-paper"
-          />
-        )}
+        {spot && from && <BlobLens rect={spot} from={from} instant={still} />}
         {tabs.map((t) => {
           const on = t.id === current
           const cls = 'relative inline-flex h-10 shrink-0 items-center rounded-pill px-5 text-[15px] outline-none focus-visible:ring-2 focus-visible:ring-paper/60'
           const inner = (
             <>
               {/* before the highlight has been measured (the server's page), the chosen tab carries its own */}
-              {on && !spot && <span aria-hidden="true" className="absolute inset-0 rounded-pill bg-paper" />}
-              <span className={cn('relative transition-colors duration-300', on ? 'text-ink' : 'text-paper/60 hover:text-paper')} style={{ transitionTimingFunction: `cubic-bezier(${EASE_OUT.join(',')})` }}>
+              {on && !spot && <span aria-hidden="true" className="absolute inset-0 rounded-pill bg-white/[0.22] shadow-[inset_0_1px_0_rgb(255_255_255/0.5),inset_0_0_0_1px_rgb(255_255_255/0.3)]" />}
+              <span className={cn('relative transition-colors duration-300', on ? 'text-paper' : 'text-paper/55 hover:text-paper')} style={{ transitionTimingFunction: `cubic-bezier(${EASE_OUT.join(',')})` }}>
                 {t.label}
               </span>
             </>

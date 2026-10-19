@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Feature } from '@/components/shell/features-provider'
+import { GlassSlider } from '@/components/glass/blob'
 import { Reveal } from '@/components/motion/reveal'
 import { SITE } from '@/lib/site'
 import { applyWording } from '@/lib/wording'
@@ -30,7 +31,7 @@ export function ClipperCalculator() {
             <div>
               <p className="text-[11px] text-mute">Verified views</p>
               <p className="mt-3 font-display text-6xl tabular-nums">{views.toLocaleString()}</p>
-              <input type="range" min={0} max={VIEW_STOPS.length - 1} value={vi} onChange={(e) => setVi(Number(e.target.value))} aria-label="Number of views" className="mt-6 h-2 w-full cursor-pointer appearance-none rounded-pill bg-white/15 accent-white [&::-webkit-slider-thumb]:size-6 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-pill [&::-webkit-slider-thumb]:bg-paper" />
+              <div className="mt-4"><GlassSlider min={0} max={VIEW_STOPS.length - 1} value={vi} onChange={setVi} ariaLabel="Number of views" /></div>
               <p className="mt-6 text-[11px] text-mute">Paid per 1,000 views</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {RATES.map((r) => (
@@ -75,7 +76,7 @@ export function BrandCalculator() {
             <div>
               <p className="text-[11px] text-mute">Your budget</p>
               <p className="mt-3 font-display text-6xl tabular-nums">${budget.toLocaleString()}</p>
-              <input type="range" min={0} max={BUDGETS.length - 1} value={bi} onChange={(e) => setBi(Number(e.target.value))} aria-label="Budget" className="mt-6 h-2 w-full cursor-pointer appearance-none rounded-pill bg-white/15 accent-white [&::-webkit-slider-thumb]:size-6 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-pill [&::-webkit-slider-thumb]:bg-paper" />
+              <div className="mt-4"><GlassSlider min={0} max={BUDGETS.length - 1} value={bi} onChange={setBi} ariaLabel="Budget" /></div>
               <p className="mt-6 text-[11px] text-mute">Paid per 1,000 views</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {RATES.map((r) => (

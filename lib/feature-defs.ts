@@ -24,6 +24,7 @@ export const FEATURES: FeatureDef[] = [
   { id: 'ending-soon', name: 'Ending soon row', category: 'Discover', path: '/', description: 'A short row under the filters on the home page with the campaigns that have 25% or less of their pool left, so creators know which ones to hurry for. It stays hidden when none are close to ending.' },
   { id: 'top-creators', name: 'Top creators for brands', category: 'Trust', path: '/brand/overview', description: 'A card on the brand dashboard listing the five creators who earned the most across that brand\'s campaigns, with their views and what they were paid, so brands can see who is carrying a campaign.' },
   { id: 'earn-goal', name: 'Earnings goal', category: 'Account', path: '/dashboard/overview', description: 'Creators set a goal for the month on their dashboard and see a bar fill as they earn. The goal is private and can be changed or cleared at any time.' },
+  { id: 'trailers', name: 'Trailers: scroll movie trailers', category: 'Discover', path: '/trailers', description: 'A full-screen, computer-only site for scrolling movie trailers (from TMDB, played from YouTube): pick your favourite movies, make a username and password or sign in with Google, Discord or logoless, then like, save, share and see where to watch each one. Liquid glass all the way.' },
 ]
 
 export const FEATURE_BY_ID = Object.fromEntries(FEATURES.map((f) => [f.id, f])) as Record<string, FeatureDef>

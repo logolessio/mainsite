@@ -29,7 +29,9 @@ export function AutoCalm() {
     return () => window.removeEventListener('logoless:preview-calm', show)
   }, [])
   useEffect(() => {
-    if (hasCalmChoice()) return
+    // Calm mode used to switch itself on when a computer looked slow, which killed every animation and the glass in the middle of a visit and
+    // showed as a flicker. It is only ever a choice the person makes in Settings now.
+    if (hasCalmChoice() || true) return
     let frames = 0
     let slow = 0
     let last = 0

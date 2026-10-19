@@ -5,8 +5,9 @@ import { Switch } from '@/components/admin/switches'
 import { Card, PageHeader } from '@/components/app/ui'
 import { CoverTextDesigner, LayoutPicker } from '@/components/admin/design-choices'
 import { FontPicker } from '@/components/dev/font-picker'
+import { FontRoles } from '@/components/dev/font-roles'
 import { parseChoices } from '@/lib/design-choices'
-import { effectiveFont } from '@/lib/fonts'
+import { effectiveFont, fontById, ROLES, type Role } from '@/lib/fonts'
 import { parseRoundness } from '@/lib/roundness'
 import { allSettings } from '@/lib/settings'
 import { pageAdmin } from '@/lib/user'
@@ -35,7 +36,13 @@ export default async function Page() {
       <H2 sub="Buttons, fields, cards and pictures, all at once. The samples below follow the slider as you drag it.">Roundness</H2>
       <Roundness initial={parseRoundness(s.design_roundness)} />
 
-      <H2 sub="Gloock for headers and titles, Inter for everything else, unless you pick something else here.">Typeface</H2>
+      <H2 sub="One dial for each job. Turn a dial and the whole dashboard changes under it, so you can see it on real pages. Each stays as chosen until you press Use the preset.">Fonts by use</H2>
+      <FontRoles
+        initial={Object.fromEntries(ROLES.map((r) => [r.id, s[r.setting as keyof typeof s] ?? ''])) as Record<Role, string>}
+        preset={{ body: fontById(effectiveFont(s.design_font, s.design_font_mono)).body, display: fontById(effectiveFont(s.design_font, s.design_font_mono)).display }}
+      />
+
+      <H2 sub="Gloock for headers and titles, Inter for everything else, unless you pick something else here. A preset sets every job at once; the dials above sit on top of it.">Presets</H2>
       <FontPicker current={effectiveFont(s.design_font, s.design_font_mono)} />
 
       <H2 sub="How the campaigns are arranged on the browse page.">Layout</H2>

@@ -34,6 +34,7 @@ import { LookPicker } from './look-picker'
 import { MiniDots } from './mini-dots'
 import { ProfileTheme } from './profile-theme'
 import { LiquidGlass } from '@/components/ui/liquid-glass'
+import { GlassSlider } from '@/components/glass/blob'
 
 type Loaded = { profile: ProfileView; unlocked: string[]; discordImport: boolean; discordLinked: boolean }
 
@@ -476,14 +477,7 @@ function Slider({ label, hint, value, onChange }: { label: string; hint: string;
         <span className="text-sm">{label} <span className="text-xs text-mute">{hint}</span></span>
         <span className="font-mono text-xs text-mute tabular-nums">{value}</span>
       </span>
-      <input
-        type="range"
-        min={0}
-        max={100}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="mt-2 h-2 w-full cursor-pointer appearance-none rounded-pill bg-line-strong accent-white [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-pill [&::-webkit-slider-thumb]:bg-paper [&::-webkit-slider-thumb]:shadow-[0_0_0_4px_rgb(255_255_255/0.12)]"
-      />
+      <GlassSlider ariaLabel={label} min={0} max={100} value={value} onChange={onChange} />
     </label>
   )
 }

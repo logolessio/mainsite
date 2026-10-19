@@ -14,8 +14,9 @@ import { DesignProvider } from '@/components/shell/design-provider'
 import { FeaturesProvider } from '@/components/shell/features-provider'
 import { getAnnouncement } from '@/lib/announcement'
 import { featureState } from '@/lib/features'
+import { headers } from 'next/headers'
 import { parseChoices } from '@/lib/design-choices'
-import { effectiveFont, fontById } from '@/lib/fonts'
+import { effectiveFont, faceById, fontById } from '@/lib/fonts'
 import { getOverrides } from '@/lib/copy'
 import { parseRoundness, roundnessVars } from '@/lib/roundness'
 import { allSettings } from '@/lib/settings'
@@ -135,21 +136,60 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   await connection()
   const [overrides, session, fs, design, links] = await Promise.all([getOverrides(), getSession(), featureState(), allSettings(), getLinks()])
   const font = fontById(effectiveFont(design.design_font, design.design_font_mono))
+  // one typeface for each job (Design, Fonts by use) on top of the preset: a job left empty follows the preset
+  const headline = faceById(design.design_font_headline)
+  const bodyFace = faceById(design.design_font_body)
+  const uiFace = faceById(design.design_font_ui)
+  const figuresFace = faceById(design.design_font_figures)
+  const monoFace = faceById(design.design_font_mono_face)
+  const fontVars = {
+    '--font-body': `var(${bodyFace?.var ?? font.body})`,
+    '--font-display-face': `var(${headline?.var ?? font.display})`,
+    ...(uiFace ? { '--font-ui': `var(${uiFace.var})` } : {}),
+    ...(figuresFace ? { '--font-figures': `var(${figuresFace.var})` } : {}),
+    ...(monoFace ? { '--font-mono-pick': `var(${monoFace.var})` } : {}),
+  }
+  const kind = headline?.kind ?? (font.id === 'inter' ? undefined : font.kind)
   const isAdmin = session?.user?.role === 'admin'
   const isDev = session?.user?.roles?.includes('dev') === true
   // The dev site is for the team (admins and developers): everyone else gets a sign-in screen and nothing from behind it.
   const blocked = fs.dev && !isAdmin && !isDev
   const announcement = fs.on.announcement && !blocked ? await getAnnouncement() : null
+  // The trailers site is a full-screen app of its own (see middleware.ts): no site chrome, and open to everyone, even on the dev address.
+  if ((await headers()).get('x-bare') === '1') {
+    return (
+      <html
+        lang="en"
+        suppressHydrationWarning
+        data-font={font.id === 'inter' ? undefined : font.id}
+        data-kind={kind}
+        data-ui={uiFace ? '1' : undefined}
+        data-figures={figuresFace ? '1' : undefined}
+        style={fontVars as React.CSSProperties}
+        className={`${FONT_CLASSES} bg-ink`}
+      >
+        <head>
+        {/* the reading preferences (calm mode, larger text, contrast, underlined links) are applied before the first paint, so a page never reflows after it has appeared */}
+        <script dangerouslySetInnerHTML={{ __html: "try{var c=document.documentElement.classList,l=localStorage;l.getItem('logoless:calm')==='1'&&c.add('calm');l.getItem('logoless:text')==='large'&&c.add('text-large');l.getItem('logoless:contrast')==='high'&&c.add('contrast');l.getItem('logoless:links')==='underline'&&c.add('underline-links')}catch(e){}" }} />
+        </head>
+        <body className="antialiased">{children}</body>
+      </html>
+    )
+  }
   return (
     <html
       lang="en"
       suppressHydrationWarning
       data-font={font.id === 'inter' ? undefined : font.id}
-      data-kind={font.id === 'inter' ? undefined : font.kind}
-      style={{ '--font-body': `var(${font.body})`, '--font-display-face': `var(${font.display})`, ...roundnessVars(parseRoundness(design.design_roundness)) } as React.CSSProperties}
+      data-kind={kind}
+      data-ui={uiFace ? '1' : undefined}
+      data-figures={figuresFace ? '1' : undefined}
+      style={{ ...fontVars, ...roundnessVars(parseRoundness(design.design_roundness)) } as React.CSSProperties}
       className={`${FONT_CLASSES} bg-ink`}
     >
       <head>
+        {/* the reading preferences (calm mode, larger text, contrast, underlined links) are applied before the first paint, so a page never reflows after it has appeared */}
+        <script dangerouslySetInnerHTML={{ __html: "try{var c=document.documentElement.classList,l=localStorage;l.getItem('logoless:calm')==='1'&&c.add('calm');l.getItem('logoless:text')==='large'&&c.add('text-large');l.getItem('logoless:contrast')==='high'&&c.add('contrast');l.getItem('logoless:links')==='underline'&&c.add('underline-links')}catch(e){}" }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_LD(links.filter((l) => l.platform !== 'website' && l.url.startsWith('https://')).map((l) => l.url))) }} />
       </head>
       <body className="antialiased">

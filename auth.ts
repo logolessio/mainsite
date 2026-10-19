@@ -50,6 +50,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => ({
         return { id: email, email, name: email.split('@')[0] }
       },
     }),
+    // The trailers site (dev.logoless.io/trailers): a username and a password, nothing else. The address on the session is made up
+    // (<username>@trailers.logoless.io) and nobody is ever emailed there. See lib/trailers/store.ts.
+    Credentials({
+      id: 'trailers',
+      name: 'Username and password',
+      credentials: { username: {}, password: {} },
+      async authorize(c) {
+        const username = String(c?.username ?? '').trim().toLowerCase()
+        const password = String(c?.password ?? '')
+        if (!/^[a-z0-9._]{3,20}$/.test(username) || !password || password.length > 200) return null
+        const [{ hit }, { verifyPassword }, { credentialHash, SYNTHETIC }] = await Promise.all([import('./lib/guard'), import('./lib/password'), import('./lib/trailers/store')])
+        if ((await hit(`login:trailers:${username}`, 900)) > 10) return null
+        const ok = await verifyPassword(password, await credentialHash(username))
+        if (!ok) return null
+        return { id: `${username}${SYNTHETIC}`, email: `${username}${SYNTHETIC}`, name: username }
+      },
+    }),
     // Finishing sign-up: the six-digit code emailed to the address creates the account and signs the person in.
     Credentials({
       id: 'email-code',

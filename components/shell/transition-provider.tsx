@@ -3,8 +3,6 @@
 import { useReducedMotion } from 'framer-motion'
 import { usePathname, useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { appArea } from '@/lib/app-areas'
-import { menuOf } from '@/lib/section-groups'
 import { confirmLeave } from '@/hooks/use-unsaved-guard'
 import type { Campaign } from '@/lib/campaigns'
 
@@ -16,48 +14,51 @@ type TransitionContextValue = {
   pending: boolean
   navigate: (href: string) => void
   expand: (campaign: Campaign) => void
-  /** Navigates while the cover art of campaign `id` glides from where it is to where it lands. */
+  /** Kept for older callers: it is an ordinary navigation now (there is no shared-element morph any more). */
   morph: (href: string, id: string) => void
+  /** True once the person has moved to another page since the site opened (the first page never animates in: it is simply there). */
+  hasNavigated: () => boolean
 }
 
 const TransitionContext = createContext<TransitionContextValue | null>(null)
 
-const EXIT_MS = 170
-
+/**
+ * Changing page is one calm move: the page you are on blurs and fades away upwards while the next is on its way, and the next one
+ * rises into place out of a blur (see .page-leave and .page-enter in globals.css). Nothing else moves, there is no cross-fade of two
+ * pages on top of each other and no shared element gliding between them, so there is never a moment where the old words change into the new.
+ */
 export function TransitionProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const reduced = useReducedMotion()
-  // the page we are leaving, or null. Derived against the current path, so the new page never inherits the fade.
+  // the page we are leaving, or null. Derived against the current path, so the new page never inherits the exit.
   const [leaving, setLeaving] = useState<string | null>(null)
   const phase: Phase = leaving === pathname ? 'exiting' : 'idle'
   const [pending, setPending] = useState(false)
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // whoever is waiting for a page to arrive (a view transition) is told as soon as the path changes
-  const waiting = useRef<((path: string) => void)[]>([])
+  // has any page change happened yet? Set while rendering, so the page that has just arrived already knows it must animate in.
+  const last = useRef(pathname)
+  const moved = useRef(false)
+  if (last.current !== pathname) {
+    moved.current = true
+    last.current = pathname
+  }
+
   useEffect(() => {
     setLeaving(null)
     setPending(false)
-    waiting.current.splice(0).forEach((w) => w(pathname))
   }, [pathname])
-  // never leave the progress line running if a page never came (a query-only change, or a failed request)
+  // never leave the progress line running or the page hidden if a page never came (a query-only change, or a failed request)
   useEffect(() => {
     if (!pending) return
     const t = setTimeout(() => setPending(false), 9000)
     return () => clearTimeout(t)
   }, [pending])
-
-  // a navigation that keeps the same path (only the query changes) must not leave the page faded
   useEffect(() => {
     if (leaving === null) return
-    const t = setTimeout(() => setLeaving(null), 1500)
+    const t = setTimeout(() => setLeaving(null), 1800)
     return () => clearTimeout(t)
   }, [leaving])
-
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current)
-  }, [])
 
   const navigate = useCallback(
     (href: string) => {
@@ -69,124 +70,26 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
         return
       }
       if (!confirmLeave()) return // there is work in the page that has not been saved
-      if (target !== pathname) setPending(true)
-      // Going into or out of a dashboard (or between dashboards) has no animation at all: the whole screen changes, so it simply changes.
-      if (appArea(pathname) !== appArea(target)) {
-        router.push(href)
-        return
+      if (target !== pathname) {
+        setPending(true)
+        if (!reduced) setLeaving(pathname)
       }
-      if (reduced) {
-        router.push(href)
-        return
-      }
-
-      // Where the browser can do it, the page changes with a view transition: the old page stays up while the new one is on its way,
-      // then the two cross-fade on the graphics card. There is no wait before the click is answered and no empty moment in between.
-      const doc = document as Document & { startViewTransition?: (cb: () => Promise<void>) => { finished: Promise<unknown>; ready?: Promise<unknown>; updateCallbackDone?: Promise<unknown> } }
-      const html = document.documentElement
-      if (doc.startViewTransition && target !== pathname && html.dataset.vt !== '1' && html.dataset.vtPage !== '1' && !html.classList.contains('calm')) {
-        html.dataset.vtPage = '1'
-        // moving between the pages of one menu (Profile, Achievements...) is a plain cross-fade, with no rise
-        const menu = menuOf(pathname)
-        if (menu && menu === menuOf(target)) html.dataset.vtTab = '1'
-        let arrived = false
-        let pushed = false
-        const go = () => {
-          if (pushed) return
-          pushed = true
-          router.push(href)
-        }
-        const run = doc.startViewTransition(async () => {
-          go()
-          if (window.location.pathname === target) {
-            arrived = true
-            return
-          }
-          // wait for the new page to be in place (the path changes), but never more than a moment: a slow answer must not freeze the page
-          await new Promise<void>((resolve) => {
-            const cap = window.setTimeout(resolve, 1400)
-            waiting.current.push((now) => {
-              arrived = now === target
-              window.clearTimeout(cap)
-              resolve()
-            })
-          })
-          if (!arrived) setLeaving(pathname) // carry on with the plain fade and the progress line
-        })
-        run.ready?.catch(() => {})
-        run.updateCallbackDone?.catch(() => {})
-        window.setTimeout(go, 700) // if the browser has not got round to starting the transition (the tab is in the background), just go
-        const clear = () => {
-          delete html.dataset.vtPage
-          delete html.dataset.vtTab
-        }
-        run.finished.catch(() => {}).finally(clear)
-        window.setTimeout(clear, 2600) // never leave the flag set if the browser lost track of the transition
-        return
-      }
-
-      setLeaving(pathname)
-      if (timer.current) clearTimeout(timer.current)
-      // inside a working area the page only dims while the next one loads: no wait before going
-      if (appArea(pathname) && appArea(pathname) === appArea(target)) {
-        router.push(href)
-        return
-      }
-      timer.current = setTimeout(() => router.push(href), EXIT_MS)
+      router.push(href)
     },
     [pathname, reduced, router],
   )
 
-  // Shared-element transition: the browser keeps the cover art as one object and animates it between the two pages,
-  // while everything else cross-fades. Browsers without the View Transitions API (and reduced motion) get the plain fade.
-  const morph = useCallback(
-    (href: string, id: string) => {
-      const doc = document as Document & { startViewTransition?: (cb: () => Promise<void>) => { finished: Promise<unknown>; ready?: Promise<unknown>; updateCallbackDone?: Promise<unknown> } }
-      const sel = `[data-vt-cover="${CSS.escape(id)}"]`
-      const old = document.querySelector<HTMLElement>(sel)
-      if (reduced || !doc.startViewTransition || !old) {
-        navigate(href)
-        return
-      }
-      const target = href.split(/[?#]/)[0]
-      document.documentElement.dataset.vt = '1'
-      old.style.setProperty('view-transition-name', 'cover')
-      const run = doc.startViewTransition(async () => {
-        router.push(href)
-        await new Promise<void>((resolve) => {
-          const t0 = performance.now()
-          const poll = () => {
-            const el = document.querySelector<HTMLElement>(sel)
-            if (window.location.pathname === target && el && el !== old) {
-              old.style.removeProperty('view-transition-name')
-              el.style.setProperty('view-transition-name', 'cover')
-              return resolve()
-            }
-            if (performance.now() - t0 > 3000) return resolve()
-            window.setTimeout(poll, 40) // a timer, not rAF, so a tab in the background cannot stall the transition
-          }
-          poll()
-        })
-      })
-      run.ready?.catch(() => {})
-      run.updateCallbackDone?.catch(() => {})
-      run.finished.catch(() => {}).finally(() => {
-        delete document.documentElement.dataset.vt
-        document.querySelectorAll<HTMLElement>(sel).forEach((e) => e.style.removeProperty('view-transition-name'))
-      })
-    },
-    [navigate, reduced, router],
-  )
-
+  const morph = useCallback((href: string) => navigate(href), [navigate])
   const expand = useCallback(
     (campaign: Campaign) => {
       router.prefetch(`/campaign/${campaign.id}`)
-      morph(`/campaign/${campaign.id}`, campaign.id)
+      navigate(`/campaign/${campaign.id}`)
     },
-    [morph, router],
+    [navigate, router],
   )
+  const hasNavigated = useCallback(() => moved.current, [])
 
-  const value = useMemo(() => ({ phase, pending, navigate, expand, morph }), [phase, pending, navigate, expand, morph])
+  const value = useMemo(() => ({ phase, pending, navigate, expand, morph, hasNavigated }), [phase, pending, navigate, expand, morph, hasNavigated])
 
   return <TransitionContext.Provider value={value}>{children}</TransitionContext.Provider>
 }

@@ -8,6 +8,11 @@ export const SETTING_DEFAULTS = {
   autoapprove_needs_verified: '1', // 1 = a clip is only approved by the first look when it comes from an account verified by a code in its bio; otherwise a person looks
   views_scan_paused: '0', // 1 = the two-hourly look at the views of live submissions is switched off
   signups_paused: '0', // 1 = no new accounts
+  design_font_headline: '', // a typeface (an id from lib/fonts.ts FACES) for headlines; empty follows the preset
+  design_font_body: '', // ...for body text
+  design_font_ui: '', // ...for buttons, menus and fields
+  design_font_figures: '', // ...for big numbers
+  design_font_mono_face: '', // ...for code and small print
   design_font_mono: '0', // older switch: 1 = Geist Mono is the main typeface (design_font replaces it)
   mock_public: '0', // 1 = mock campaigns (made up by an admin to try the site) are shown to everyone, not just the team
   design_font: 'inter', // the typeface for the whole site (an id from lib/fonts.ts)

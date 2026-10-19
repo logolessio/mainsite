@@ -94,3 +94,43 @@ export const fontById = (id: string | undefined | null) => FONTS.find((f) => f.i
 
 /** The font that is in use, given the saved choice. (An older switch, "Geist Mono as the main font", still counts.) */
 export const effectiveFont = (saved: string | undefined, legacyMono: string | undefined) => (saved && saved !== DEFAULT_FONT && FONT_IDS.includes(saved) ? saved : legacyMono === '1' ? 'geist-mono' : DEFAULT_FONT)
+
+// ---------- one typeface for each job ----------
+// Design, "Fonts by use": a dial for each of these picks a single typeface, on top of the whole-site preset above. A job left on
+// "preset" follows the preset's own choice.
+
+export type Role = 'headline' | 'body' | 'ui' | 'figures' | 'mono'
+
+export type Face = { id: string; label: string; kind: FontKind; /** the CSS variable holding the family */ var: string }
+
+const PAIR_LABELS: Record<string, string> = { '--font-f-inter': 'Inter', '--font-f-inter-tight': 'Inter Tight', '--font-f-funnel-sans': 'Funnel Sans', '--font-f-funnel-display': 'Funnel Display' }
+
+/** Every single typeface the site can be set in, once each (the presets pair them up). */
+export const FACES: Face[] = (() => {
+  const seen = new Map<string, Face>()
+  const add = (v: string, label: string, kind: FontKind, id: string) => {
+    if (!seen.has(v)) seen.set(v, { id, label, kind, var: v })
+  }
+  for (const f of FONTS) {
+    if (f.body === f.display) add(f.body, f.label, f.kind, f.id)
+  }
+  for (const f of FONTS) {
+    if (f.body === f.display) continue
+    // a preset that pairs two faces: the headline face is named by the preset (the serifs), or by the small table
+    add(f.display, PAIR_LABELS[f.display] ?? f.label, f.kind === 'mono' ? 'mono' : f.kind, f.display.replace('--font-f-', ''))
+    add(f.body, PAIR_LABELS[f.body] ?? f.label, 'sans', f.body.replace('--font-f-', ''))
+  }
+  return [...seen.values()].sort((a, b) => a.label.localeCompare(b.label))
+})()
+
+export const FACE_IDS = FACES.map((f) => f.id) as [string, ...string[]]
+export const faceById = (id: string | null | undefined) => FACES.find((f) => f.id === id) ?? null
+
+export const ROLES: { id: Role; label: string; hint: string; setting: string; sample: string; cssVar: string }[] = [
+  { id: 'headline', label: 'Headlines', hint: 'The big titles and the headings of every page.', setting: 'design_font_headline', sample: 'Your views have value.', cssVar: '--font-display-face' },
+  { id: 'body', label: 'Body text', hint: 'Paragraphs, descriptions and everything that is read.', setting: 'design_font_body', sample: 'Join a campaign, post your content, and earn for every 1,000 verified views.', cssVar: '--font-body' },
+  { id: 'ui', label: 'Buttons and menus', hint: 'Buttons, tabs, menus, fields and labels.', setting: 'design_font_ui', sample: 'Start earning', cssVar: '--font-ui' },
+  { id: 'figures', label: 'Big numbers', hint: 'Balances, totals and the large figures.', setting: 'design_font_figures', sample: '$12,480.00', cssVar: '--font-figures' },
+  { id: 'mono', label: 'Code and small print', hint: 'Anything set in a monospaced face.', setting: 'design_font_mono_face', sample: 'logoless.io/@you  ·  26,000 views', cssVar: '--font-mono-pick' },
+]
+export const ROLE_SETTING_KEYS = ROLES.map((r) => r.setting) as ('design_font_headline' | 'design_font_body' | 'design_font_ui' | 'design_font_figures' | 'design_font_mono_face')[]

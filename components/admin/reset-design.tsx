@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { CHOICE_DEFAULTS } from '@/lib/design-choices'
+import { ROLE_SETTING_KEYS } from '@/lib/fonts'
 import { toast } from '@/lib/toast'
 
 // the standard look: how the site was before anything here was changed
@@ -15,6 +16,7 @@ const STANDARD: [string, string][] = [
   ['design_scroll_effects', '0'],
   ['design_liquid_loader', '0'],
   ['bg_dots', '0'],
+  ...ROLE_SETTING_KEYS.map((k): [string, string] => [k, '']),
   ...Object.entries(CHOICE_DEFAULTS),
 ]
 

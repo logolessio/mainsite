@@ -2,6 +2,7 @@
 
 import { Check, Loader2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { GlassSlider } from '@/components/glass/blob'
 import { ROUND_DEFAULT, ROUND_MAX, ROUND_MIN, ROUND_PRESETS, parseRoundness, roundnessVars } from '@/lib/roundness'
 import { cn } from '@/lib/utils'
 
@@ -77,15 +78,7 @@ export function Roundness({ initial }: { initial: number }) {
           </div>
           <label className="mt-5 block">
             <span className="sr-only">Roundness, from {ROUND_MIN} (square corners) to {ROUND_MAX} (extra round). {ROUND_DEFAULT} is the standard look.</span>
-            <input
-              type="range"
-              min={ROUND_MIN}
-              max={ROUND_MAX}
-              step={5}
-              value={value}
-              onChange={(e) => set(Number(e.target.value))}
-              className="h-2 w-full cursor-pointer appearance-none rounded-pill bg-white/15 accent-white [&::-webkit-slider-thumb]:size-6 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-pill [&::-webkit-slider-thumb]:bg-paper [&::-moz-range-thumb]:size-6 [&::-moz-range-thumb]:rounded-pill [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-paper"
-            />
+            <GlassSlider ariaLabel={`Roundness, from ${ROUND_MIN} (square corners) to ${ROUND_MAX} (extra round)`} min={ROUND_MIN} max={ROUND_MAX} step={5} value={value} onChange={(v) => set(v)} />
           </label>
           <div className="mt-2 flex justify-between text-xs text-mute" aria-hidden="true">
             <span>Square</span>

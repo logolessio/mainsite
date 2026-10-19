@@ -12,17 +12,23 @@ import { cn } from '@/lib/utils'
 export function LiquidGlass({
   as: Tag = 'div',
   rootClassName,
+  rootStyle,
   rounded = 'rounded-pill',
   className,
   look,
+  flat = false,
   children,
   ...rest
 }: {
   as?: ElementType
   rootClassName?: string
+  /** inline style for the outer element (a size, a position) */
+  rootStyle?: React.CSSProperties
   rounded?: string
   className?: string
   look?: Look
+  /** draw only the CSS glass (no shader): for small pieces that move and stretch, such as a selection lens */
+  flat?: boolean
   children?: ReactNode
   [key: string]: unknown
 }) {
@@ -31,13 +37,13 @@ export function LiquidGlass({
   const lookKey = JSON.stringify(look ?? {})
 
   useEffect(() => {
-    if (!root.current || !glass.current) return
+    if (flat || !root.current || !glass.current) return
     return attachGlass(root.current, glass.current, look ?? {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lookKey])
+  }, [lookKey, flat])
 
   return (
-    <div ref={root} className={cn('lg-root relative', rounded, rootClassName)}>
+    <div ref={root} className={cn('lg-root relative', rounded, rootClassName)} style={rootStyle}>
       <span aria-hidden="true" className="lg-scene" />
       <Tag ref={glass} className={cn('glass-liquid lg-glass', className)} {...rest}>
         <span aria-hidden="true" className="lg-light" />
