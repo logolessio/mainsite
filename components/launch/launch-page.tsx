@@ -2,12 +2,13 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { Check, Loader2 } from 'lucide-react'
-import { signIn, signOut } from 'next-auth/react'
+import { signOut } from 'next-auth/react'
 import { useEffect, useRef, useState } from 'react'
 import { GradientField } from '@/components/shell/gradient-field'
 import { LightField } from '@/components/shell/light-field'
 import { Logo } from '@/components/logo'
 import { LiquidGlass } from '@/components/ui/liquid-glass'
+import { signInWithProvider } from '@/lib/auth'
 import { cn } from '@/lib/utils'
 
 const EASE = [0.22, 1, 0.36, 1] as const
@@ -95,9 +96,15 @@ export function LaunchPage({ end, headline, text, signedInAs }: { end: number | 
     try {
       const j = await post({ email: email.trim() })
       if (j.owner) {
-        // an owner's address: straight to Google. Only an owner's account gets past this page.
+        // an owner's address: straight to Google, through the same human check and sign-in start as the login page.
+        // Only an owner's account gets past this page.
         setStep('owner')
-        await signIn('google', { callbackUrl: '/' }, { login_hint: email.trim() })
+        try {
+          await signInWithProvider('google', undefined, '/', email.trim())
+        } catch (err) {
+          setStep('email')
+          throw err
+        }
         return
       }
       setStep('handle')

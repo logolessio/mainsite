@@ -10,15 +10,15 @@ const LABEL: Record<Provider, string> = { google: 'Google', discord: 'Discord' }
 
 /**
  * Starts the real OAuth redirect. The page leaves the site, so nothing after this runs on success.
- * `callbackUrl` is where Auth.js sends the person back to afterwards.
+ * `callbackUrl` is where Auth.js sends the person back to afterwards. `hint` pre-fills the email on Google's account chooser.
  */
-export async function signInWithProvider(provider: Provider, role?: Role, callbackUrl?: string): Promise<string> {
+export async function signInWithProvider(provider: Provider, role?: Role, callbackUrl?: string, hint?: string): Promise<string> {
   const providers = (await fetch('/api/auth/providers')
     .then((r) => r.json())
     .catch(() => ({}))) as Record<string, unknown>
   if (!providers[provider]) throw new Error(`${LABEL[provider]} sign-in is not set up yet.`)
   await ensureHuman() // Cloudflare Turnstile; skipped until its keys are added
-  await signIn(provider, { callbackUrl: callbackUrl ?? (role === 'brand' ? '/brand' : '/dashboard') })
+  await signIn(provider, { callbackUrl: callbackUrl ?? (role === 'brand' ? '/brand' : '/dashboard') }, hint && provider === 'google' ? { login_hint: hint } : undefined)
   return ''
 }
 
