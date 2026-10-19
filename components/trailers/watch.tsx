@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ExternalLink, Maximize2, MonitorPlay, Pause, Play, Volume2, VolumeX } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { GlassSurface } from '@/components/glass/glass'
-import { type Clip, backdrop } from '@/lib/trailers/types'
+import { type Clip, type Credited, backdrop } from '@/lib/trailers/types'
 import { api, miniOf, useTrailers } from './ctx'
 import { Theater, TrailerPlayer } from './player'
 import { ActionRail } from './rail'
@@ -14,11 +14,13 @@ import { watchUrl } from './yt'
 
 const hours = (m: number) => (m ? `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m` : '')
 const SLIDE = 'transform 620ms cubic-bezier(0.22, 1, 0.36, 1)'
+/** How long the mouse must be still before the screen's controls fade away while a trailer plays. */
+const IDLE_MS = 3000
 
 /** A layer that carries every trailer's page and slides one page for each trailer (on the graphics chip, with a transform, not on the processor). */
-function Slide({ index, H, children }: { index: number; H: number; children: React.ReactNode }) {
+function Slide({ index, H, children, through }: { index: number; H: number; children: React.ReactNode; through?: boolean }) {
   return (
-    <div className="absolute inset-x-0 top-0 will-change-transform" style={{ transform: `translate3d(0, ${-index * H}px, 0)`, transition: SLIDE }}>
+    <div className={through ? 'pointer-events-none absolute inset-x-0 top-0 will-change-transform' : 'absolute inset-x-0 top-0 will-change-transform'} style={{ transform: `translate3d(0, ${-index * H}px, 0)`, transition: SLIDE }}>
       {children}
     </div>
   )
@@ -45,7 +47,16 @@ function Genre({ children, lite }: { children: string; lite: boolean }) {
   )
 }
 
-function Details({ clip, lite }: { clip: Clip; lite: boolean }) {
+/** A person's name under the trailer: pressing it opens their page. */
+function Name({ who, onPerson }: { who: Credited; onPerson: (id: number) => void }) {
+  return (
+    <button type="button" onClick={() => onPerson(who.id)} className="pointer-events-auto rounded-sm text-paper/80 underline decoration-paper/25 underline-offset-4 transition-colors outline-none hover:text-paper hover:decoration-paper/70 focus-visible:text-paper focus-visible:decoration-paper/70">
+      {who.name}
+    </button>
+  )
+}
+
+function Details({ clip, lite, onPerson }: { clip: Clip; lite: boolean; onPerson: (id: number) => void }) {
   return (
     <motion.div
       initial={lite ? { opacity: 0, y: 20 } : { opacity: 0, y: 36, filter: 'blur(14px)' }}
@@ -64,10 +75,20 @@ function Details({ clip, lite }: { clip: Clip; lite: boolean }) {
       {clip.tagline && <p className="mt-3 font-display text-[clamp(1.1rem,1.5vw,1.5rem)] text-paper/70 italic">{clip.tagline}</p>}
       <p className="mt-5 line-clamp-3 max-w-[600px] text-[clamp(.95rem,1.1vw,1.1rem)] leading-relaxed text-paper/70">{clip.overview}</p>
       {(clip.cast.length > 0 || clip.director) && (
-        <p className="mt-5 text-[14px] text-paper/50">
-          {clip.director && <>Directed by <span className="text-paper/80">{clip.director}</span></>}
+        <p className="mt-5 text-[14.5px] leading-relaxed text-paper/50">
+          {clip.director && <>Directed by <Name who={clip.director} onPerson={onPerson} /></>}
           {clip.director && clip.cast.length > 0 && '  ·  '}
-          {clip.cast.length > 0 && <>With <span className="text-paper/80">{clip.cast.slice(0, 3).join(', ')}</span></>}
+          {clip.cast.length > 0 && (
+            <>
+              With{' '}
+              {clip.cast.slice(0, 4).map((c, i) => (
+                <span key={c.id}>
+                  {i > 0 && ', '}
+                  <Name who={c} onPerson={onPerson} />
+                </span>
+              ))}
+            </>
+          )}
         </p>
       )}
     </motion.div>
@@ -75,7 +96,7 @@ function Details({ clip, lite }: { clip: Clip; lite: boolean }) {
 }
 
 /** What is in front of the video: light to read by, the film's glow, and the words. */
-function Front({ clip, top, H, active, ambient, lite }: { clip: Clip; top: number; H: number; active: boolean; ambient: boolean; lite: boolean }) {
+function Front({ clip, top, H, active, ambient, lite, onPerson }: { clip: Clip; top: number; H: number; active: boolean; ambient: boolean; lite: boolean; onPerson: (id: number) => void }) {
   return (
     <div className="absolute inset-x-0" style={{ top, height: H }}>
       {ambient && !lite && clip.poster && (
@@ -83,15 +104,15 @@ function Front({ clip, top, H, active, ambient, lite }: { clip: Clip; top: numbe
         // eslint-disable-next-line @next/next/no-img-element
         <img src={backdrop(clip.poster, 780)} alt="" aria-hidden="true" draggable={false} className="pointer-events-none absolute -bottom-[10%] -left-[8%] h-[85%] w-[62%] object-cover opacity-40 mix-blend-screen blur-[90px]" />
       )}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgb(0_0_0/0.86)_0%,rgb(0_0_0/0.4)_30%,transparent_58%),linear-gradient(to_right,rgb(0_0_0/0.55),transparent_55%),linear-gradient(to_bottom,rgb(0_0_0/0.5),transparent_22%)]" />
-      <div className="pointer-events-none absolute bottom-[19vh] left-[5.5vw] max-w-[min(720px,52vw)]">
-        <AnimatePresence mode="wait">{active && <Details key={clip.id} clip={clip} lite={lite} />}</AnimatePresence>
+      <div aria-hidden="true" className="tr-ui pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgb(0_0_0/0.86)_0%,rgb(0_0_0/0.4)_30%,transparent_58%),linear-gradient(to_right,rgb(0_0_0/0.55),transparent_55%),linear-gradient(to_bottom,rgb(0_0_0/0.5),transparent_22%)]" />
+      <div className="tr-ui pointer-events-none absolute bottom-[19vh] left-[5.5vw] max-w-[min(720px,52vw)]">
+        <AnimatePresence mode="wait">{active && <Details key={clip.id} clip={clip} lite={lite} onPerson={onPerson} />}</AnimatePresence>
       </div>
     </div>
   )
 }
 
-export function WatchView({ suspended, jump, onJumped, whereOpen, setWhereOpen }: { suspended: boolean; jump: Clip | null; onJumped: () => void; whereOpen: boolean; setWhereOpen: (b: boolean) => void }) {
+export function WatchView({ suspended, jump, onJumped, whereOpen, setWhereOpen, onPerson }: { suspended: boolean; jump: Clip | null; onJumped: () => void; whereOpen: boolean; setWhereOpen: (b: boolean) => void; onPerson: (id: number) => void }) {
   const { settings, liked, saved, toggle, toast, patchSettings, lite } = useTrailers()
   const [clips, setClips] = useState<Clip[]>([])
   const [index, setIndex] = useState(0)
@@ -100,6 +121,9 @@ export function WatchView({ suspended, jump, onJumped, whereOpen, setWhereOpen }
   const [paused, setPaused] = useState(false)
   const [muted, setMuted] = useState(true)
   const [stuck, setStuck] = useState(false)
+  const [playing, setPlaying] = useState(false)
+  const [signing, setSigning] = useState(false)
+  const [retry, setRetry] = useState(0)
   const [theater, setTheater] = useState(false)
   const [H, setH] = useState(800)
   const inflight = useRef(false)
@@ -197,6 +221,80 @@ export function WatchView({ suspended, jump, onJumped, whereOpen, setWhereOpen }
   )
 
   const blocked = suspended || whereOpen || theater
+
+  // Once a trailer is playing and the mouse has been still for a moment, everything but the film fades away (and the pointer with it).
+  // Any movement, press, key or scroll brings it all back, and it fades again a moment after the last one.
+  useEffect(() => {
+    const root = document.documentElement
+    if (!playing || paused || blocked || stuck) {
+      root.classList.remove('tr-idle')
+      return
+    }
+    let timer = 0
+    let lx = -1
+    let ly = -1
+    const wake = () => {
+      root.classList.remove('tr-idle')
+      window.clearTimeout(timer)
+      timer = window.setTimeout(() => root.classList.add('tr-idle'), IDLE_MS)
+    }
+    const onMove = (e: PointerEvent) => {
+      // hiding things makes the browser report the pointer again where it already was: only a real move counts
+      if (e.clientX === lx && e.clientY === ly) return
+      lx = e.clientX
+      ly = e.clientY
+      wake()
+    }
+    wake()
+    window.addEventListener('pointermove', onMove, { passive: true })
+    window.addEventListener('pointerdown', wake, { passive: true })
+    window.addEventListener('keydown', wake)
+    window.addEventListener('wheel', wake, { passive: true })
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerdown', wake)
+      window.removeEventListener('keydown', wake)
+      window.removeEventListener('wheel', wake)
+      root.classList.remove('tr-idle')
+    }
+  }, [playing, paused, blocked, stuck])
+  useEffect(() => () => document.documentElement.classList.remove('tr-idle'), [])
+
+  // A browser only lets a trailer have sound after the person has clicked or pressed a key somewhere on the page. The first time they do, the
+  // sound comes on (if they have asked for sound), so nobody has to find a button for it.
+  useEffect(() => {
+    if (!settings.sound) return
+    const on = () => setMuted(false)
+    window.addEventListener('pointerdown', on, { once: true, passive: true })
+    window.addEventListener('keydown', on, { once: true })
+    return () => {
+      window.removeEventListener('pointerdown', on)
+      window.removeEventListener('keydown', on)
+    }
+  }, [settings.sound])
+
+  // YouTube asks some people (on a VPN, an office or a shared network) to sign in before it will play anything. This opens its own sign-in in a
+  // small window. When that window is closed the player starts again. (This site's opener policy makes a browser report a cross-origin window as
+  // already closed, so the closing is only watched when it can really be seen; the "I have signed in" button always works.)
+  const signInToYouTube = useCallback(() => {
+    const url = 'https://www.youtube.com/signin?action_handle_signin=true&app=desktop&next=%2F'
+    const w = window.open(url, 'youtube-signin', 'popup=yes,width=520,height=740')
+    if (!w) {
+      window.open(url, '_blank', 'noopener,noreferrer')
+      setSigning(true)
+      return
+    }
+    setSigning(true)
+    if (w.closed) return
+    const t = window.setInterval(() => {
+      if (!w.closed) return
+      window.clearInterval(t)
+      setSigning(false)
+      setStuck(false)
+      setRetry((r) => r + 1)
+    }, 800)
+  }, [])
 
   // Scrolling: one flick of a wheel or a trackpad is one trailer, however long the momentum carries on, and one notch of a mouse wheel is one
   // trailer too. Wheels report in pixels, lines or pages depending on the browser, so everything is turned into pixels first, and a gesture only
@@ -319,6 +417,7 @@ export function WatchView({ suspended, jump, onJumped, whereOpen, setWhereOpen }
 
       {cur && (
         <TrailerPlayer
+          key={retry}
           videoKey={cur.trailer.key}
           run={!paused && !blocked}
           muted={muted}
@@ -328,20 +427,21 @@ export function WatchView({ suspended, jump, onJumped, whereOpen, setWhereOpen }
           onBroken={() => broken(cur.id)}
           onTime={onTime}
           onStuck={setStuck}
+          onPlaying={setPlaying}
         />
       )}
 
-      <Slide index={index} H={H}>
+      {/* a click anywhere on the film pauses or plays (the words above it let the click through, except the names, which are links) */}
+      <button type="button" aria-label={paused ? 'Play the trailer' : 'Pause the trailer'} onClick={() => setPaused((p) => !p)} className="absolute inset-0 cursor-default rounded-none outline-none" />
+
+      <Slide index={index} H={H} through>
         {near.map(({ c, i }) => (
-          <Front key={c.id} clip={c} top={i * H} H={H} active={i === index && !suspended} ambient={settings.ambient} lite={lite} />
+          <Front key={c.id} clip={c} top={i * H} H={H} active={i === index && !suspended} ambient={settings.ambient} lite={lite} onPerson={onPerson} />
         ))}
       </Slide>
 
-      {/* a click anywhere pauses or plays */}
-      <button type="button" aria-label={paused ? 'Play the trailer' : 'Pause the trailer'} onClick={() => setPaused((p) => !p)} className="absolute inset-0 cursor-default rounded-none outline-none" />
-
       {!suspended && (
-        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[3px] bg-white/10">
+        <div aria-hidden="true" className="tr-ui pointer-events-none absolute inset-x-0 bottom-0 h-[3px] bg-white/10">
           <div ref={bar} className="h-full w-0 bg-paper/90" />
         </div>
       )}
@@ -365,7 +465,7 @@ export function WatchView({ suspended, jump, onJumped, whereOpen, setWhereOpen }
               { id: 'watch', label: 'Where to watch', onClick: () => setWhereOpen(true) },
             ]}
           />
-          <div className="fixed top-7 right-8 z-40 flex items-center gap-3">
+          <div className="tr-ui fixed top-7 right-8 z-40 flex items-center gap-3">
             <TopButton label="Watch the trailer in a window" lite={lite} onClick={() => setTheater(true)}>
               <MonitorPlay className="size-5" />
             </TopButton>
@@ -379,28 +479,44 @@ export function WatchView({ suspended, jump, onJumped, whereOpen, setWhereOpen }
               <Maximize2 className="size-[18px]" />
             </TopButton>
           </div>
-          <div className="pointer-events-none fixed top-1/2 left-5 z-30 hidden -translate-y-1/2 flex-col items-center gap-1.5 xl:flex" aria-hidden="true">
+          <div className="tr-ui pointer-events-none fixed top-1/2 left-5 z-30 hidden -translate-y-1/2 flex-col items-center gap-1.5 xl:flex" aria-hidden="true">
             {clips.slice(Math.max(0, index - 3), index + 4).map((c) => (
               <span key={c.id} className="block w-[3px] rounded-full bg-paper transition-all duration-500" style={{ height: c.id === cur.id ? 26 : 6, opacity: c.id === cur.id ? 0.95 : 0.25 }} />
             ))}
           </div>
 
-          {/* the trailer would not start by itself: say so, and give two ways that always work */}
+          {/* the trailer would not start: say so, and give ways that work (this stays on screen, it is not one of the things that fade) */}
           <div className="pointer-events-none fixed inset-x-0 top-24 z-40 flex justify-center">
             <AnimatePresence>
               {stuck && !paused && !blocked && (
                 <motion.div initial={{ opacity: 0, y: -14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8, transition: { duration: 0.2 } }} transition={{ duration: 0.45, ease: EASE }} className="pointer-events-auto">
-                  <GlassSurface radius={34} flat className="w-fit" inner="flex items-center gap-6 py-3 pr-3 pl-7">
-                    <div className="relative z-10">
-                      <p className="text-[15px] text-paper">This trailer did not start by itself.</p>
-                      <p className="mt-0.5 text-[12.5px] text-paper/55">Your browser or YouTube is holding it back.</p>
-                    </div>
-                    <div className="relative z-10 flex items-center gap-1.5">
-                      <GButton size="sm" variant="primary" onClick={() => setTheater(true)}>Play it here</GButton>
-                      <a href={watchUrl(cur.trailer.key)} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center gap-2 rounded-full px-4 text-[14px] text-paper/85 transition-colors hover:text-paper">
-                        Open on YouTube <ExternalLink className="size-3.5" aria-hidden="true" />
-                      </a>
-                    </div>
+                  <GlassSurface radius={34} flat className="w-fit" inner="flex items-center gap-7 py-3.5 pr-3.5 pl-8">
+                    {signing ? (
+                      <>
+                        <div className="relative z-10 max-w-[380px]">
+                          <p className="text-[15px] text-paper">Finish signing in to YouTube in the other window.</p>
+                          <p className="mt-0.5 text-[12.5px] leading-snug text-paper/55">When you are done, close that window and press the button.</p>
+                        </div>
+                        <div className="relative z-10 flex items-center gap-1.5">
+                          <GButton size="sm" variant="primary" onClick={() => { setSigning(false); setStuck(false); setRetry((r) => r + 1) }}>I have signed in</GButton>
+                          <button type="button" onClick={() => setSigning(false)} className="h-10 rounded-full px-4 text-[14px] text-paper/70 transition-colors hover:text-paper">Cancel</button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="relative z-10 max-w-[380px]">
+                          <p className="text-[15px] text-paper">This trailer did not start.</p>
+                          <p className="mt-0.5 text-[12.5px] leading-snug text-paper/55">YouTube often asks for a sign-in on a VPN or a shared network. Signing in once fixes it.</p>
+                        </div>
+                        <div className="relative z-10 flex items-center gap-1.5">
+                          <GButton size="sm" variant="primary" onClick={signInToYouTube}>Sign in to YouTube</GButton>
+                          <GButton size="sm" onClick={() => setTheater(true)}>Play it here</GButton>
+                          <a href={watchUrl(cur.trailer.key)} target="_blank" rel="noopener noreferrer" className="inline-flex h-10 items-center gap-2 rounded-full px-4 text-[14px] text-paper/85 transition-colors hover:text-paper">
+                            Open on YouTube <ExternalLink className="size-3.5" aria-hidden="true" />
+                          </a>
+                        </div>
+                      </>
+                    )}
                   </GlassSurface>
                 </motion.div>
               )}

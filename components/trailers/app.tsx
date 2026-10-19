@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { AccountView } from './account'
 import { type View, Nav } from './nav'
 import { Onboarding } from './onboarding'
+import { PersonView } from './person'
 import { SettingsView } from './settings'
 import { Spotlight } from './spotlight'
 import { api, TrailersProvider, useTrailers } from './ctx'
@@ -36,11 +37,12 @@ function ComputersOnly() {
 }
 
 function Main({ profile, onRestart }: { profile: Profile; onRestart: () => void }) {
-  const { lite } = useTrailers()
+  const { lite, toast } = useTrailers()
   const [view, setView] = useState<View>('watch')
   const [search, setSearch] = useState(false)
   const [jump, setJump] = useState<Clip | null>(null)
   const [where, setWhere] = useState(false)
+  const [person, setPerson] = useState<number | null>(null)
 
   // ⌘K (or Ctrl K) opens the search from anywhere
   useEffect(() => {
@@ -48,21 +50,45 @@ function Main({ profile, onRestart }: { profile: Profile; onRestart: () => void 
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
         setSearch((s) => !s)
-      } else if (e.key === 'Escape' && view !== 'watch' && !search) setView('watch')
+      } else if (e.key === 'Escape' && person !== null && !search) setPerson(null)
+      else if (e.key === 'Escape' && view !== 'watch' && !search) setView('watch')
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [view, search])
+  }, [view, search, person])
 
   const open = useCallback((c: Clip) => {
+    setPerson(null)
     setJump(c)
     setView('watch')
   }, [])
 
+  /** A film chosen on a person's page: fetch its trailer and play it. False if it has none. */
+  const openMovie = useCallback(
+    async (id: number) => {
+      try {
+        const r = await api<{ clip: Clip }>(`/api/trailers/movie/${id}`)
+        open(r.clip)
+        return true
+      } catch (e) {
+        toast(e instanceof Error ? e.message : 'No trailer for that one.')
+        return false
+      }
+    },
+    [open, toast],
+  )
+
   void profile
   return (
     <div className="fixed inset-0 overflow-hidden bg-black text-paper">
-      <WatchView suspended={view !== 'watch' || search} jump={jump} onJumped={() => setJump(null)} whereOpen={where} setWhereOpen={setWhere} />
+      <WatchView suspended={view !== 'watch' || search || person !== null} jump={jump} onJumped={() => setJump(null)} whereOpen={where} setWhereOpen={setWhere} onPerson={setPerson} />
+      <AnimatePresence>
+        {person !== null && view === 'watch' && (
+          <motion.div key="person" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.2 } }} transition={{ duration: lite ? 0.2 : 0.4, ease: EASE }} className="absolute inset-0 z-30">
+            <PersonView id={person} onClose={() => setPerson(null)} onOpenMovie={openMovie} />
+          </motion.div>
+        )}
+      </AnimatePresence>
       <AnimatePresence mode="wait">
         {view !== 'watch' && (
           <motion.div
@@ -78,8 +104,8 @@ function Main({ profile, onRestart }: { profile: Profile; onRestart: () => void 
         )}
       </AnimatePresence>
       <Mark />
-      <Nav view={view} onChange={setView} onSearch={() => setSearch(true)} />
-      <Spotlight open={search} onClose={() => setSearch(false)} onOpen={open} onView={setView} />
+      <Nav view={view} onChange={(v) => { setPerson(null); setView(v) }} onSearch={() => setSearch(true)} />
+      <Spotlight open={search} onClose={() => setSearch(false)} onOpen={open} onView={(v) => { setPerson(null); setView(v) }} />
       <Toasts />
     </div>
   )

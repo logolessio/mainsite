@@ -36,7 +36,7 @@ export function ActionRail({ actions }: { actions: Act[] }) {
   }
 
   return (
-    <div ref={wrap} className="fixed top-1/2 right-8 z-40"
+    <div ref={wrap} className="tr-ui fixed top-1/2 right-8 z-40"
       style={{ marginTop: -((actions.length * SIZE + (actions.length - 1) * GAP + 16) / 2) }} onPointerLeave={() => { setHover(null); setDown(false) }}>
       <GlassSurface radius={37} style={{ width: SIZE + 16, height: actions.length * SIZE + (actions.length - 1) * GAP + 16 }}>
         <motion.div aria-hidden="true" className="pointer-events-none absolute left-2 z-0" style={{ y: sy, width: SIZE, height: SIZE, scaleX, scaleY, opacity: hover === null ? 0 : 1, transition: 'opacity .25s' }}>

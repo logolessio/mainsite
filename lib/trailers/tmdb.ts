@@ -1,5 +1,5 @@
 import { setting } from '../db'
-import { GENRES, type Clip, type Mini, type Where, type Provider } from './types'
+import { GENRES, type Clip, type Credit, type Mini, type PersonPage, type Where, type Provider } from './types'
 
 // The Movie Database (themoviedb.org). Everything goes through the server, so the key never reaches a browser.
 // This product uses the TMDB API but is not endorsed or certified by TMDB. Where-to-watch data is provided by JustWatch.
@@ -57,7 +57,7 @@ type Detail = Row & {
   runtime?: number
   genres?: { id: number; name: string }[]
   videos?: { results?: { key: string; site: string; type: string; official: boolean; name: string; published_at?: string; iso_639_1?: string }[] }
-  credits?: { cast?: { name: string; order: number }[]; crew?: { name: string; job: string }[] }
+  credits?: { cast?: { id: number; name: string; order: number }[]; crew?: { id: number; name: string; job: string }[] }
   release_dates?: { results?: { iso_3166_1: string; release_dates?: { certification?: string }[] }[] }
 }
 
@@ -86,8 +86,11 @@ function toClip(d: Detail): Clip | null {
     poster: d.poster_path ?? null,
     backdrop: d.backdrop_path ?? null,
     trailer,
-    cast: (d.credits?.cast ?? []).sort((a, b) => a.order - b.order).slice(0, 4).map((c) => c.name),
-    director: d.credits?.crew?.find((c) => c.job === 'Director')?.name ?? null,
+    cast: (d.credits?.cast ?? []).filter((c) => c.id && c.name).sort((a, b) => a.order - b.order).slice(0, 4).map((c) => ({ id: c.id, name: c.name })),
+    director: (() => {
+      const dir = d.credits?.crew?.find((c) => c.job === 'Director' && c.id)
+      return dir ? { id: dir.id, name: dir.name } : null
+    })(),
     cert: us ?? null,
   }
 }
@@ -95,6 +98,81 @@ function toClip(d: Detail): Clip | null {
 export async function clip(id: number): Promise<Clip | null> {
   const d = await call<Detail>(`/movie/${id}`, { append_to_response: 'videos,credits,release_dates', include_video_language: 'en,null' }, 86400)
   return d ? toClip(d) : null
+}
+
+// ---------- a person ----------
+type CreditRow = {
+  id: number
+  media_type?: string
+  title?: string
+  name?: string
+  poster_path?: string | null
+  release_date?: string
+  first_air_date?: string
+  character?: string
+  job?: string
+  vote_average?: number
+  popularity?: number
+  vote_count?: number
+  episode_count?: number
+  adult?: boolean
+}
+type PersonRaw = {
+  id: number
+  name?: string
+  profile_path?: string | null
+  known_for_department?: string
+  birthday?: string | null
+  deathday?: string | null
+  place_of_birth?: string | null
+  biography?: string
+  adult?: boolean
+  external_ids?: { imdb_id?: string | null }
+  combined_credits?: { cast?: CreditRow[]; crew?: CreditRow[] }
+}
+
+/** A person with everything they are in. A film or show they appear in more than once (acting and directing) is one line with both parts. */
+export async function person(id: number): Promise<PersonPage | null> {
+  const d = await call<PersonRaw>(`/person/${id}`, { append_to_response: 'combined_credits,external_ids' }, 86400)
+  if (!d || !d.name || d.adult) return null
+  type Row2 = Credit & { votes: number; date: string }
+  const byKey = new Map<string, Row2>()
+  const add = (c: CreditRow, part: string) => {
+    const kind = c.media_type === 'tv' ? 'tv' : c.media_type === 'movie' ? 'movie' : null
+    const title = c.title ?? c.name
+    if (!kind || !title || c.adult) return
+    const key = `${kind}:${c.id}`
+    const date = (kind === 'tv' ? c.first_air_date : c.release_date) ?? ''
+    const had = byKey.get(key)
+    if (had) {
+      if (part && !had.role.split(', ').includes(part)) had.role = had.role ? `${had.role}, ${part}` : part
+      return
+    }
+    byKey.set(key, { id: c.id, kind, t: title, p: c.poster_path ?? null, y: date.slice(0, 4), role: part, r: Math.round((c.vote_average ?? 0) * 10) / 10, eps: kind === 'tv' ? c.episode_count : undefined, votes: c.vote_count ?? 0, date })
+  }
+  for (const c of d.combined_credits?.cast ?? []) add(c, c.character ?? '')
+  for (const c of d.combined_credits?.crew ?? []) if (['Director', 'Writer', 'Screenplay', 'Creator', 'Producer', 'Executive Producer'].includes(c.job ?? '')) add(c, c.job ?? '')
+  const all = [...byKey.values()]
+  // appearances as themselves (talk shows, documentaries, archive footage) are real credits but not what a person is known for
+  const minor = (c: Row2) => /\b(self|himself|herself|themselves|archive footage|guest|cameo|host)\b/i.test(c.role)
+  // real parts first, newest first within each group
+  const order = (a: Row2, b: Row2) => Number(minor(a)) - Number(minor(b)) || (b.date || '9999').localeCompare(a.date || '9999')
+  const strip = ({ votes: _votes, date: _date, ...c }: Row2): Credit => c
+  const known = [...all].filter((c) => c.p && !minor(c)).sort((a, b) => b.votes - a.votes).slice(0, 10).map(strip)
+  return {
+    id: d.id,
+    name: d.name,
+    photo: d.profile_path ?? null,
+    dept: d.known_for_department ?? '',
+    birthday: d.birthday ?? null,
+    deathday: d.deathday ?? null,
+    place: d.place_of_birth ?? null,
+    bio: (d.biography ?? '').trim(),
+    imdb: d.external_ids?.imdb_id ? `https://www.imdb.com/name/${d.external_ids.imdb_id}/` : null,
+    known,
+    movies: all.filter((c) => c.kind === 'movie').sort(order).slice(0, 150).map(strip),
+    tv: all.filter((c) => c.kind === 'tv').sort(order).slice(0, 100).map(strip),
+  }
 }
 
 /** The genre ids a set of movies leans towards, most common first. */

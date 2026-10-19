@@ -12,7 +12,7 @@ export const EASE = [0.22, 1, 0.36, 1] as const
 /** The logoless mark, top left, on every screen. */
 export function Mark({ className }: { className?: string }) {
   return (
-    <a href="https://logoless.io" aria-label="logoless" className={cn('fixed top-7 left-8 z-[60] block', className)}>
+    <a href="https://logoless.io" aria-label="logoless" className={cn('tr-ui fixed top-7 left-8 z-[60] block', className)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/logo-sm.png" alt="logoless" width={347} height={260} className="h-[46px] w-auto" draggable={false} />
     </a>

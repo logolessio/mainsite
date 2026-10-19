@@ -8,7 +8,7 @@ import { GButton } from './ui'
 import { type YtEvent, embedUrl, listen, send, theaterUrl, watchUrl } from './yt'
 
 /** How long a trailer may take to start before we say so and offer another way to watch it. */
-const STUCK_MS = 7000
+const STUCK_MS = 5000
 
 type Props = {
   videoKey: string
@@ -25,6 +25,8 @@ type Props = {
   onTime: (time: number, duration: number) => void
   /** true when the trailer has not started after a while (YouTube asking for a check, or the browser holding autoplay back) */
   onStuck: (stuck: boolean) => void
+  /** the trailer is on screen and moving (the screen's controls may fade away) */
+  onPlaying: (playing: boolean) => void
 }
 
 /**
@@ -110,6 +112,17 @@ export function TrailerPlayer(p: Props) {
   useEffect(() => {
     if (ready) send(frame.current, p.muted ? 'mute' : 'unMute')
   }, [p.muted, ready])
+
+  useEffect(() => {
+    live.current.onPlaying(shown)
+  }, [shown])
+
+  // some browsers ignore the first request to play: ask once more if nothing has started a moment after it was asked
+  useEffect(() => {
+    if (!ready || !p.run || shown) return
+    const t = setTimeout(() => send(frame.current, 'playVideo'), 2200)
+    return () => clearTimeout(t)
+  }, [ready, p.run, p.videoKey, shown])
 
   // a hidden tab plays nothing
   useEffect(() => {

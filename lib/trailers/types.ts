@@ -17,9 +17,31 @@ export type Clip = {
   poster: string | null
   backdrop: string | null
   trailer: { key: string; name: string }
-  cast: string[]
-  director: string | null
+  cast: Credited[]
+  director: Credited | null
   cert: string | null
+}
+
+/** A person named on a movie: enough to link to their page. */
+export type Credited = { id: number; name: string }
+
+/** One film or show a person is in or made: what to draw, and their part in it. */
+export type Credit = { id: number; kind: 'movie' | 'tv'; t: string; p: string | null; y: string; role: string; r: number; eps?: number }
+
+/** A person's page: who they are, and everything they are in. */
+export type PersonPage = {
+  id: number
+  name: string
+  photo: string | null
+  dept: string
+  birthday: string | null
+  deathday: string | null
+  place: string | null
+  bio: string
+  imdb: string | null
+  known: Credit[] // the best known, for the top of the page
+  movies: Credit[] // newest first
+  tv: Credit[]
 }
 
 export type Provider = { id: number; name: string; logo: string }
@@ -52,6 +74,8 @@ export const IMG = 'https://image.tmdb.org/t/p'
 export const poster = (p: string | null | undefined, w: 185 | 342 | 500 = 342) => (p ? `${IMG}/w${w}${p}` : '')
 export const backdrop = (p: string | null | undefined, w: 780 | 1280 | 1920 = 1280) => (p ? `${IMG}/w${w}${p}` : '')
 export const logo = (p: string | null | undefined) => (p ? `${IMG}/w92${p}` : '')
+/** A person's photo (TMDB sizes people's pictures by height, not width). */
+export const portrait = (p: string | null | undefined) => (p ? `${IMG}/h632${p}` : '')
 
 export const GENRES: Record<number, string> = {
   28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy', 80: 'Crime', 99: 'Documentary', 18: 'Drama', 10751: 'Family', 14: 'Fantasy',
