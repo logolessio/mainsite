@@ -101,6 +101,12 @@ export function TrailersApp() {
   useEffect(() => {
     void load()
   }, [load])
+  // told to the boot guard in app/trailers/layout.tsx: the page has started, and has got past its loading screen
+  useEffect(() => {
+    const h = document.documentElement
+    h.setAttribute('data-scroll-state', `started; screen check ${desktop === null ? 'waiting' : desktop ? 'ok' : 'too small'}; account ${me ? 'loaded' : 'waiting'}`)
+    if (desktop !== null && me) h.setAttribute('data-scroll-ready', '1')
+  }, [desktop, me])
 
   if (desktop === null || !me) return <Splash />
   if (!desktop) return <ComputersOnly />
