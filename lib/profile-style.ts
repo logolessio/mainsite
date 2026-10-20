@@ -39,6 +39,11 @@ export const NAME_EFFECTS = [
   { id: 'toon', label: 'Toon' },
   { id: 'pop', label: 'Pop' },
   { id: 'glow', label: 'Glow' },
+  // newer ones, offered in the profile studio
+  { id: 'rainbow', label: 'Rainbow', studio: true },
+  { id: 'chrome', label: 'Chrome', studio: true },
+  { id: 'glitch', label: 'Glitch', studio: true },
+  { id: 'shimmer', label: 'Shimmer', studio: true },
 ] as const
 export type NameEffect = (typeof NAME_EFFECTS)[number]['id']
 export const NAME_EFFECT_IDS = NAME_EFFECTS.map((e) => e.id) as string[]

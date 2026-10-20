@@ -11,6 +11,7 @@ import { BADGE_BY_ID } from '@/lib/badges-defs'
 import { EASE_OUT } from '@/lib/layout'
 import { FONT_SCALE, PROFILE_FONT_CLASS } from '@/lib/profile-fonts'
 import { BANNER_PRESETS, type ProfileView } from '@/lib/profile-style'
+import { giphyImage, initialsOf, noiseLayer, tintHex } from '@/lib/profile-extras'
 import { cn } from '@/lib/utils'
 import { CardEffectLayer } from './card-effect'
 import { ProfileTheme } from './profile-theme'
@@ -42,6 +43,9 @@ function Count({ to, prefix = '' }: { to: number; prefix?: string }) {
 
 type Stats = Partial<{ clips: number; views: number; earnedCents: number; campaigns: number }>
 
+/** The parts of the card the studio preview can open for editing. */
+export type EditTarget = 'avatar' | 'banner' | 'card' | 'badges' | 'background'
+
 export type ProfileCardProps = {
   view: ProfileView
   stats: Stats
@@ -49,13 +53,55 @@ export type ProfileCardProps = {
   isOwner: boolean
   preview?: boolean
   className?: string
+  /** Show the profile studio choices (taller banners, GIFs, colour pictures, tints, text-effect controls). */
+  studio?: boolean
+  /** In the studio preview: a pencil on each part opens its controls. */
+  onEdit?: (target: EditTarget) => void
+}
+
+/** Speed 0 to 100 as an animation-length multiplier: 50 is normal, 0 is about 2.5 times slower, 100 about 3 times faster. */
+export const nameSpeed = (speed: number) => 2.5 * Math.pow(0.135, speed / 100)
+
+function Pencil2({ label, onClick, className }: { label: string; onClick: () => void; className?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation()
+        onClick()
+      }}
+      aria-label={label}
+      title={label}
+      className={cn('grid size-9 place-items-center rounded-pill border border-white/25 bg-black/65 text-white shadow-[0_6px_18px_-6px_rgb(0_0_0/0.9)] backdrop-blur-md transition-all hover:scale-110 hover:bg-black/85 focus-visible:outline-2 focus-visible:outline-white', className)}
+    >
+      <Pencil className="size-4" />
+    </button>
+  )
+}
+
+/** A picture: an uploaded or ready-made image, a GIF, or a solid colour with initials, an emoji or nothing. */
+export function AvatarFace({ view, studio, size = 96 }: { view: ProfileView; studio?: boolean; size?: number }) {
+  const a = view.extras.avatar
+  if (studio && a.kind === 'color') {
+    return (
+      <span className="relative grid size-full place-items-center overflow-hidden" style={{ background: a.color }}>
+        {a.noise > 0 && <span aria-hidden="true" className="absolute inset-0" style={{ background: noiseLayer(a.noise), mixBlendMode: 'overlay' }} />}
+        {a.glyph === 'emoji' && <span className="relative leading-none" style={{ fontSize: size * 0.46 }}>{a.emoji}</span>}
+        {a.glyph === 'initials' && <span className="relative font-semibold tracking-tight text-white [text-shadow:0_1px_6px_rgb(0_0_0/0.35)]" style={{ fontSize: size * 0.36 }}>{initialsOf(view.displayName, view.handle)}</span>}
+      </span>
+    )
+  }
+  const src = studio && a.kind === 'gif' && a.gif ? giphyImage(a.gif) : view.avatar
+  if (!src) return <span className="grid size-full place-items-center text-4xl font-medium">{view.displayName.trim()[0]?.toUpperCase() ?? '?'}</span>
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={src} alt="" width={size} height={size} referrerPolicy="no-referrer" className="size-full object-cover" />
 }
 
 /**
  * The profile, laid out like a Discord profile: banner, avatar with a status dot, a display name in a chosen font and
  * effect, badges, then an "About me" panel with member-since, stats and connections.
  */
-export function ProfileCard({ view, stats, links, isOwner, preview = false, className }: ProfileCardProps) {
+export function ProfileCard({ view, stats, links, isOwner, preview = false, className, studio = false, onEdit }: ProfileCardProps) {
   const nameFont = PROFILE_FONT_CLASS[view.font]
   const scale = FONT_SCALE[view.font] ?? 'text-[1.7rem]'
   const joined = new Date(view.joinedAt * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -66,7 +112,17 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
   if (stats.earnedCents !== undefined) statRows.push(['Earned', <Count key="e" to={Math.floor(stats.earnedCents / 100)} prefix="$" />])
   if (stats.campaigns !== undefined) statRows.push(['Campaigns', <Count key="m" to={stats.campaigns} />])
   const showLinks = view.show.links && links.length > 0
-  const nameVars = { ['--na' as string]: view.accent, ['--nb' as string]: view.accent2 }
+  const ex = view.extras
+  const nameVars = {
+    ['--na' as string]: view.accent,
+    ['--nb' as string]: view.accent2,
+    ...(studio ? { ['--nx-i' as string]: String(ex.name.intensity / 50), ['--nx-sp' as string]: String(nameSpeed(ex.name.speed)), ['--nx-ang' as string]: `${ex.name.angle}deg` } : {}),
+  }
+  const tint = studio ? ex.effectTint : undefined
+  const fxColors: [string, string] = tint ? [tintHex(view.accent, tint.color, tint.amount), tintHex(view.accent2, tint.color, tint.amount)] : [view.accent, view.accent2]
+  const gifBanner = studio && ex.banner.gif
+  const tallBanner = studio && (view.bannerKind === 'image' || gifBanner)
+  const bannerCss: React.CSSProperties = gifBanner ? { background: `center / cover no-repeat url(${giphyImage(ex.banner.gif)}), #111` } : bannerStyle(view.bannerKind, view.banner)
 
   const card = (
     <motion.article
@@ -78,13 +134,15 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
         background: `linear-gradient(165deg, color-mix(in srgb, ${view.accent} 34%, #101113) 0%, color-mix(in srgb, ${view.accent2} 24%, #0b0b0c) 100%)`,
       }}
     >
-      <CardEffectLayer effect={view.cardEffect} intensity={view.effectIntensity} speed={view.effectSpeed} colors={[view.accent, view.accent2]} />
+      <CardEffectLayer effect={view.cardEffect} intensity={view.effectIntensity} speed={view.effectSpeed} colors={fxColors} tint={tint} />
 
       {/* banner, 16 by 9 like the picture it was made from, with the avatar over its bottom edge */}
       <div className="relative">
-      <div className="relative aspect-video overflow-hidden" style={bannerStyle(view.bannerKind, view.banner)}>
+      <div className={cn('relative overflow-hidden', !tallBanner && 'aspect-video')} style={{ ...bannerCss, ...(tallBanner ? { aspectRatio: `1 / ${ex.banner.aspect}` } : {}) }}>
+        {studio && view.bannerKind === 'color' && !gifBanner && ex.banner.noise > 0 && <span aria-hidden="true" className="absolute inset-0" style={{ background: noiseLayer(ex.banner.noise), mixBlendMode: 'overlay' }} />}
         <span aria-hidden="true" className="absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/15 to-transparent [animation:banner-sheen_7s_ease-in-out_1.2s_infinite]" />
       </div>
+      {onEdit && <Pencil2 label="Edit banner" onClick={() => onEdit('banner')} className="absolute top-3 right-3 z-30" />}
       <motion.div
         initial={false}
         style={{ top: 'calc(100% - 48px)' }}
@@ -92,13 +150,9 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
       >
         <div className="relative size-[96px] rounded-pill ring-[7px] ring-[var(--card)]" style={{ boxShadow: `0 0 0 7px var(--card), 0 0 40px -6px ${view.accent}` }}>
           <div className="size-full overflow-hidden rounded-pill bg-raised">
-            {view.avatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={view.avatar} alt="" width={96} height={96} referrerPolicy="no-referrer" className="size-full object-cover" />
-            ) : (
-              <span className="grid size-full place-items-center text-4xl font-medium">{view.displayName.trim()[0]?.toUpperCase() ?? '?'}</span>
-            )}
+            <AvatarFace view={view} studio={studio} />
           </div>
+          {onEdit && <Pencil2 label="Edit profile picture" onClick={() => onEdit('avatar')} className="absolute -top-1 -right-2 z-10 size-8" />}
           {view.show.status && (
             <span
               title={view.online ? 'Online' : 'Offline'}
@@ -112,6 +166,11 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
       </div>
 
       <div className="relative z-20 px-4 pt-[62px] pb-4">
+        {onEdit && (
+          <div className="absolute top-3 right-3 flex gap-2">
+            <Pencil2 label="Edit card colours and effect" onClick={() => onEdit('card')} />
+          </div>
+        )}
         <h1 className="flex flex-wrap items-center gap-x-2.5 gap-y-1 leading-tight">
           <span
             style={nameVars}
@@ -119,6 +178,11 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
           >
             {view.displayName}
           </span>
+          {onEdit && (
+            <button type="button" onClick={() => onEdit('badges')} className="inline-flex h-6 items-center gap-1 rounded-pill border border-dashed border-white/30 px-2 text-[11px] text-white/80 hover:bg-white/10">
+              <Pencil className="size-3" /> Badges
+            </button>
+          )}
           {badges.length > 0 && (
             <span className="inline-flex items-center gap-1" aria-label="Badges">
               {badges.map((b) => (
@@ -187,7 +251,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
                     >
                       <span aria-hidden="true" className="absolute inset-y-0 -left-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-[220%]" />
                       <BrandIcon name={l.platform} className="relative size-5" />
-                      {l.verified && <BadgeCheck aria-hidden="true" className="absolute right-0.5 bottom-0.5 size-3.5 rounded-pill bg-black text-emerald-300" />}
+                      {l.verified && (!studio || ex.privacy.verifiedTicks) && <BadgeCheck aria-hidden="true" className="absolute right-0.5 bottom-0.5 size-3.5 rounded-pill bg-black text-emerald-300" />}
                     </Tag>
                   </li>
                   )

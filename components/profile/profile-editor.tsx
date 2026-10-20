@@ -150,8 +150,7 @@ export function ProfileEditor() {
       setPendingAvatar(undefined)
       window.dispatchEvent(new Event(NAV_USER_REFRESH))
       const names = res.newBadges.map((id) => BADGE_BY_ID[id]?.name).filter(Boolean)
-      setNote(names.length ? `Saved. New badge${names.length > 1 ? 's' : ''}: ${names.join(', ')}` : 'Saved')
-      setTimeout(() => setNote(''), 4500)
+      // one confirmation only: the toast that rises from the bottom
       toast.ok(names.length ? `Saved. New badge: ${names.join(', ')}` : 'Profile saved')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save.')
@@ -285,7 +284,7 @@ export function ProfileEditor() {
                 </Group>
                 <Group title="Name effect">
                   <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                    {NAME_EFFECTS.map((o) => (
+                    {NAME_EFFECTS.filter((o) => !('studio' in o)).map((o) => (
                       <button key={o.id} type="button" onClick={() => set('nameEffect', o.id)} aria-pressed={f.nameEffect === o.id} className={cn('rounded-xl border px-2 py-2.5 text-center', f.nameEffect === o.id ? 'border-paper bg-paper/10' : 'border-line hover:bg-paper/5')}>
                         <span style={nameVars} className={cn('block text-base font-bold', `nx-${o.id}`, o.id === 'gradient' && 'mx-auto w-fit')}>Aa</span>
                         <span className="block text-[11px] text-mute">{o.label}</span>
