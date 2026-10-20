@@ -15,6 +15,7 @@ import { NavUserActions, useNavUser } from './nav-user'
 import { SiteMenu } from './site-menu'
 import { useFeature } from './features-provider'
 import { useTransitions } from './transition-provider'
+import { SearchHelpButtons } from './search-help-buttons'
 
 const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin', '/owner', '/dev', '/@', '/u/', '/links']
 export const TOUR_EVENT = 'logoless:tour'
@@ -27,6 +28,8 @@ export function SiteNav() {
   const { user, hint } = useNavUser()
   const board = useFeature('leaderboard')
   const reels = useFeature('reels')
+  const findable = useFeature('command-actions')
+  const twoButtons = useFeature('smart-cta')
   const links = [...NAV_LINKS, ...(reels ? [{ label: 'Reels', href: '/reels' }] : []), ...(board ? [{ label: 'Leaderboard', href: '/leaderboard' }] : []), (user ? user.signedIn : hint) ? { label: 'Dashboard', href: '/dashboard' } : { label: 'Log in', href: '/login' }]
   const toggleRef = useRef<HTMLButtonElement>(null)
 
@@ -70,6 +73,7 @@ export function SiteNav() {
           </TransitionLink>
 
           <div className="pointer-events-auto flex items-center gap-2 md:gap-3">
+            {findable && <SearchHelpButtons />}
             {user?.signedIn ? (
               <NavUserActions onNavigate={() => setOpen(false)} menuOpen={open} />
             ) : user === null && hint ? (
@@ -82,14 +86,25 @@ export function SiteNav() {
                 <span aria-hidden="true" className="size-11" />
               </>
             ) : (
-              <TransitionLink
-                href="/onboarding"
-                data-tour="get-started"
-                onClick={() => setOpen(false)}
-                className="inline-flex h-11 items-center rounded-pill bg-paper px-5 text-sm font-medium text-ink transition-colors hover:bg-paper/85"
-              >
-                Get started
-              </TransitionLink>
+              <>
+                {twoButtons && (
+                  <TransitionLink
+                    href="/login"
+                    onClick={() => setOpen(false)}
+                    className="hidden h-11 items-center rounded-pill border border-white/15 bg-[#1a1a1d]/80 px-5 text-sm font-medium text-paper backdrop-blur-md transition-colors hover:border-white/30 hover:bg-[#242428] min-[420px]:inline-flex"
+                  >
+                    Log in
+                  </TransitionLink>
+                )}
+                <TransitionLink
+                  href="/onboarding"
+                  data-tour="get-started"
+                  onClick={() => setOpen(false)}
+                  className="inline-flex h-11 items-center rounded-pill bg-paper px-5 text-sm font-medium whitespace-nowrap text-ink transition-colors hover:bg-paper/85"
+                >
+                  Get started
+                </TransitionLink>
+              </>
             )}
             <button
               ref={toggleRef}

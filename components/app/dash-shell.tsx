@@ -9,6 +9,8 @@ import { Icon } from '@/components/icons'
 import { Logo } from '@/components/logo'
 import { useNavUser } from '@/components/shell/nav-user'
 import { NotificationBell } from '@/components/shell/notifications'
+import { useFeature } from '@/components/shell/features-provider'
+import { HelpButton } from '@/components/shell/search-help-buttons'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { PageEnter } from '@/components/shell/page-frame'
 import { useTransitions } from '@/components/shell/transition-provider'
@@ -84,6 +86,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
   const { phase } = useTransitions()
   const reduced = useReducedMotion()
   const [palette, setPalette] = useState(false)
+  const findable = useFeature('command-actions')
   const [more, setMore] = useState(false)
   const [recents, setRecents] = useState<string[]>([])
   const [hot, setHot] = useState<string | null>(null) // the sidebar item the pointer (or the keyboard) is on
@@ -233,6 +236,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
               <Plus aria-hidden="true" className="size-4" />
             </TransitionLink>
           )}
+          {findable && <HelpButton className="size-10 border border-line bg-transparent text-paper/60" />}
           <NotificationBell />
         </div>
       </header>

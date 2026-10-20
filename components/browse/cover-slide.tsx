@@ -17,17 +17,23 @@ export const COVER_LIFT = `transition-[translate,box-shadow] duration-[560ms] ${
 
 export const COVER_IMG = `transition-transform duration-[900ms] ${EASE} group-hover/tile:-translate-y-[1.5%] group-hover/tile:scale-[1.15] group-has-[:focus-visible]/tile:-translate-y-[1.5%] group-has-[:focus-visible]/tile:scale-[1.15] group-focus-visible/tile:scale-[1.15] motion-reduce:transition-none motion-reduce:group-hover/tile:translate-y-0 motion-reduce:group-hover/tile:scale-[1.07]`
 
+/** The lighter hover (with "Home page motion" switched on): a smaller lift and a gentler zoom, quicker to settle, with a soft press. */
+export const COVER_LIFT_SOFT = `transition-[translate,scale,box-shadow] duration-[420ms] ${EASE} hover:-translate-y-1 hover:shadow-[0_30px_48px_-26px_rgb(0_0_0/0.95)] active:scale-[0.985] active:duration-150 has-[:focus-visible]:-translate-y-1 motion-reduce:transition-none motion-reduce:hover:translate-y-0`
+
+export const COVER_IMG_SOFT = `transition-[scale,filter] duration-[700ms] ${EASE} group-hover/tile:scale-[1.11] group-hover/tile:brightness-[1.06] group-has-[:focus-visible]/tile:scale-[1.11] motion-reduce:transition-none motion-reduce:group-hover/tile:scale-[1.07]`
+
 const HOVER_ON = 'group-hover/tile:translate-y-0 group-hover/tile:opacity-100 group-has-[:focus-visible]/tile:translate-y-0 group-has-[:focus-visible]/tile:opacity-100 group-focus-visible/tile:translate-y-0 group-focus-visible/tile:opacity-100'
 
+// every size is multiplied by --cover-text, the visitor's own choice from the "Aa" control on the home page (1 when they never chose)
 const SIZE: Record<string, string> = {
-  s: 'text-[1.05rem] md:text-[1.15rem]',
-  m: 'text-[1.3rem] md:text-[1.45rem]',
-  l: 'text-[1.6rem] md:text-[1.95rem]',
+  s: 'text-[calc(1.05rem*var(--cover-text,1))] md:text-[calc(1.15rem*var(--cover-text,1))]',
+  m: 'text-[calc(1.3rem*var(--cover-text,1))] md:text-[calc(1.45rem*var(--cover-text,1))]',
+  l: 'text-[calc(1.6rem*var(--cover-text,1))] md:text-[calc(1.95rem*var(--cover-text,1))]',
 }
 const SIZE_UPPER: Record<string, string> = {
-  s: 'text-[0.85rem] md:text-[0.95rem]',
-  m: 'text-[1.05rem] md:text-[1.2rem]',
-  l: 'text-[1.3rem] md:text-[1.55rem]',
+  s: 'text-[calc(0.85rem*var(--cover-text,1))] md:text-[calc(0.95rem*var(--cover-text,1))]',
+  m: 'text-[calc(1.05rem*var(--cover-text,1))] md:text-[calc(1.2rem*var(--cover-text,1))]',
+  l: 'text-[calc(1.3rem*var(--cover-text,1))] md:text-[calc(1.55rem*var(--cover-text,1))]',
 }
 
 /** The font of the name on a cover: "site" is the headline face of the whole site; anything else is that typeface. */
@@ -63,7 +69,7 @@ export function CoverSlide({ title, creator, rate }: { title: string; creator: s
           {title}
         </span>
         {meta && (
-          <span className={`mt-1 block ${always ? '' : 'translate-y-2 opacity-0 motion-reduce:translate-y-0 motion-reduce:opacity-100'} truncate text-[13px] text-paper/70 transition-[translate,opacity] duration-500 ${EASE} ${on} ${always ? '' : 'group-hover/tile:[transition-delay:170ms]'}`}>
+          <span className={`mt-1 block ${always ? '' : 'translate-y-2 opacity-0 motion-reduce:translate-y-0 motion-reduce:opacity-100'} truncate text-[calc(13px*var(--cover-text,1))] text-paper/70 transition-[translate,opacity] duration-500 ${EASE} ${on} ${always ? '' : 'group-hover/tile:[transition-delay:170ms]'}`}>
             {meta}
           </span>
         )}

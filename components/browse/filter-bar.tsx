@@ -8,6 +8,8 @@ import type { Platform } from '@/lib/campaigns'
 import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
 import { LiquidGlass } from '@/components/ui/liquid-glass'
+import { useFeature } from '@/components/shell/features-provider'
+import { CoverTextControl } from './cover-text-control'
 
 export type SortKey = 'rate' | 'ending' | 'budget'
 
@@ -51,6 +53,7 @@ export function FilterBar({
   onClear: () => void
 }) {
   const group = useId()
+  const textSize = useFeature('cover-text-size')
   return (
     <LiquidGlass
       as={motion.div}
@@ -105,11 +108,33 @@ export function FilterBar({
           ))}
         </select>
       </label>
-      {active && (
-        <button type="button" onClick={onClear} aria-label="Clear filters" className="grid size-8 place-items-center rounded-pill text-mute transition-colors hover:text-paper">
-          <X aria-hidden="true" className="size-3.5" />
-        </button>
+      {textSize && (
+        <>
+          <span aria-hidden="true" className="mx-1 hidden h-4 w-px bg-line-strong md:block" />
+          <CoverTextControl />
+        </>
       )}
+      {/* the clear button's place is always kept, so nothing in the bar moves when it appears: it only fades and grows in where it stands */}
+      <span className="relative grid size-8 shrink-0 place-items-center">
+        <AnimatePresence initial={false}>
+          {active && (
+            <motion.button
+              key="clear"
+              type="button"
+              onClick={onClear}
+              aria-label="Clear filters"
+              title="Clear filters"
+              initial={{ opacity: 0, scale: 0.6, rotate: -45 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              exit={{ opacity: 0, scale: 0.6, rotate: 45 }}
+              transition={{ duration: 0.22, ease: EASE_OUT }}
+              className="absolute inset-0 grid place-items-center rounded-pill text-mute transition-colors hover:bg-white/[0.08] hover:text-paper"
+            >
+              <X aria-hidden="true" className="size-3.5" />
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </span>
     </LiquidGlass>
   )
 }
