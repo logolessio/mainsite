@@ -214,8 +214,9 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
       {preview ? (
         card
       ) : (
-        <Tilt3D max={4.5} perspective={1600} className="rounded-[calc(22px*var(--round,1))]">
-          <div className="animate-float">{card}</div>
+        // the whole tilt floats (not just the card inside it), so the light sweep that rides on the card floats with it
+        <Tilt3D max={4.5} perspective={1600} className="animate-float rounded-[calc(22px*var(--round,1))]">
+          {card}
         </Tilt3D>
       )}
       {!preview && !isOwner && (

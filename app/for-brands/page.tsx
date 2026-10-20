@@ -5,6 +5,7 @@ import { BrandCalculator } from '@/components/marketing/calculators'
 import { Principles, Steps } from '@/components/marketing/layouts'
 import { FeePromise } from '@/components/marketing/fee-promise'
 import { PageHero } from '@/components/marketing/page-hero'
+import { RolePreview } from '@/components/marketing/role-preview'
 import { PillLink } from '@/components/motion/cta'
 import { SITE } from '@/lib/site'
 
@@ -23,6 +24,7 @@ export default function Page() {
       </PageHero>
 
       <FeePromise audience="brands" />
+      <RolePreview role="brand" />
       <Steps
         title="How we work"
         steps={[

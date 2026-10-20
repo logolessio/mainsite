@@ -7,6 +7,7 @@ import { CoverStrip } from '@/components/marketing/cover-strip'
 import { Principles, Steps } from '@/components/marketing/layouts'
 import { FeePromise } from '@/components/marketing/fee-promise'
 import { PageHero } from '@/components/marketing/page-hero'
+import { RolePreview } from '@/components/marketing/role-preview'
 import { PillLink } from '@/components/motion/cta'
 import { liveCampaigns } from '@/lib/campaigns-db'
 import { SITE } from '@/lib/site'
@@ -28,6 +29,7 @@ export default async function Page() {
       </PageHero>
 
       <CoverStrip campaigns={live} heading="Browse our active campaigns." browse={false} />
+      <RolePreview role="creator" />
 
       <Steps
         title="How we work"

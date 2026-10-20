@@ -1,13 +1,15 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { TOUR_EVENT } from '@/components/shell/site-nav'
 import type { Campaign, Platform } from '@/lib/campaigns'
 import type { EndedCampaign } from '@/lib/campaigns-db'
 import { agoText } from '@/lib/time-ago'
 import { useNavUser, useSignedIn } from '@/components/shell/nav-user'
 import { TransitionLink } from '@/components/shell/transition-link'
+import { useFeature } from '@/components/shell/features-provider'
+import { BROWSE_SEARCH_EVENT } from '@/components/shell/command-palette'
 import { EASE_OUT } from '@/lib/layout'
 import { CampaignGrid } from './campaign-grid'
 import { EndingSoon } from './ending-soon'
@@ -20,6 +22,18 @@ export function DashboardView({ campaigns, ended = [], startTour }: { campaigns:
   const { user } = useNavUser()
   const signedIn = useSignedIn()
   const [tourOpen, setTourOpen] = useState(startTour)
+  const motionOn = useFeature('home-motion')
+  const smartCta = useFeature('smart-cta')
+  const reduced = useReducedMotion()
+  const hero = useRef<HTMLElement>(null)
+  // as the hero scrolls away it eases up and fades, a little slower than the page, and a soft veil gathers along the top edge
+  const { scrollY } = useScroll()
+  const { scrollYProgress: heroOut } = useScroll({ target: hero, offset: ['start start', 'end start'] })
+  const heroY = useTransform(heroOut, [0, 1], [0, -48])
+  const heroOpacity = useTransform(heroOut, [0, 0.85], [1, 0])
+  const heroScale = useTransform(heroOut, [0, 1], [1, 0.97])
+  const veil = useTransform(scrollY, [0, 140], [0, 1])
+  const heroMotion = motionOn && !reduced
   const deferred = useDeferredValue(query)
 
   const [category, setCategory] = useState('All')
@@ -77,6 +91,13 @@ export function DashboardView({ campaigns, ended = [], startTour }: { campaigns:
     return ended.filter((c) => c.title.toLowerCase().includes(q) || c.creator.toLowerCase().includes(q)).slice(0, 3)
   }, [ended, deferred])
 
+  // "Search campaigns for …" in the ⌘K box, while this page is already open
+  useEffect(() => {
+    const onSearch = (e: Event) => setQuery(String((e as CustomEvent<string>).detail ?? '').slice(0, 80))
+    window.addEventListener(BROWSE_SEARCH_EVENT, onSearch)
+    return () => window.removeEventListener(BROWSE_SEARCH_EVENT, onSearch)
+  }, [])
+
   useEffect(() => {
     const open = () => setTourOpen(true)
     window.addEventListener(TOUR_EVENT, open)
@@ -90,17 +111,31 @@ export function DashboardView({ campaigns, ended = [], startTour }: { campaigns:
 
   return (
     <>
-      <section aria-labelledby="hero-title" className="mx-auto flex max-w-3xl flex-col items-center pt-14 pb-12 text-center md:pt-24 md:pb-16">
+      {motionOn && (
+        <motion.div aria-hidden="true" style={{ opacity: veil }} className="top-veil pointer-events-none fixed inset-x-0 top-0 z-[15] h-36 bg-gradient-to-b from-ink/90 via-ink/50 to-transparent backdrop-blur-md" />
+      )}
+      <motion.section
+        ref={hero}
+        aria-labelledby="hero-title"
+        style={heroMotion ? { y: heroY, opacity: heroOpacity, scale: heroScale } : undefined}
+        className="mx-auto flex max-w-3xl origin-top flex-col items-center pt-14 pb-12 text-center md:pt-24 md:pb-16"
+      >
         <h1 id="hero-title" className="font-display text-[clamp(2.6rem,7vw,5.2rem)] leading-[0.98]">
           Your views have value.
         </h1>
         <p className="mt-6 max-w-md text-lg leading-relaxed text-paper/60">Join a campaign, post your content, and earn for every 1,000 verified views.</p>
-        {!signedIn && (
+        {!signedIn ? (
           <TransitionLink href="/onboarding" className="mt-9 inline-flex h-12 items-center rounded-pill bg-paper px-8 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85">
             Get started
           </TransitionLink>
+        ) : (
+          smartCta && (
+            <TransitionLink href="/dashboard" className="mt-9 inline-flex h-12 items-center rounded-pill bg-paper px-8 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85">
+              Dashboard
+            </TransitionLink>
+          )
         )}
-      </section>
+      </motion.section>
 
       <motion.div
         initial={false}
