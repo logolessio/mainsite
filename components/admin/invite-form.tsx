@@ -5,7 +5,9 @@ import { AtSign, Loader2, Mail, Sparkles } from 'lucide-react'
 import { BrandIcon } from '@/components/brand-icon'
 import { useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
-import { dmText, inviteUrl, slugFromName, slugProblem } from '@/lib/invite-shared'
+import { useFeature } from '@/components/shell/features-provider'
+import { clientUrl } from '@/lib/client-host'
+import { dmText, slugFromName, slugProblem } from '@/lib/invite-shared'
 import { cn } from '@/lib/utils'
 import { CopyButton } from './copy-button'
 
@@ -20,6 +22,8 @@ const field = 'h-11 w-full rounded-pill border border-line-strong bg-ink/80 px-4
 /** Makes a private link. The address is built from the name as you type, and you can change it. */
 export function InviteForm() {
   const router = useRouter()
+  // with client links on, the link is the client's own address: name.logoless.io
+  const sub = useFeature('client-links')
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
   const [touched, setTouched] = useState(false)
@@ -45,10 +49,10 @@ export function InviteForm() {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ artistName: name.trim(), slug: finalSlug, channel, handle: handle.trim() || undefined, email: email.trim() || undefined, note: note.trim() || undefined, lock }),
     }).catch(() => null)
-    const j = (await res?.json().catch(() => ({}))) as { error?: string; url?: string }
+    const j = (await res?.json().catch(() => ({}))) as { error?: string; url?: string; slug?: string }
     setBusy(false)
     if (!res?.ok || !j.url) return setError(j.error ?? 'Could not make the link.')
-    setMade({ url: j.url, name: name.trim() })
+    setMade({ url: sub && j.slug ? clientUrl(j.slug) : j.url, name: name.trim() })
     setName('')
     setSlug('')
     setTouched(false)
@@ -70,7 +74,7 @@ export function InviteForm() {
           <label className="block">
             <span className="font-mono text-xs text-mute">Their link</span>
             <span className={cn(field, 'mt-2 flex items-center gap-0 pr-2 focus-within:border-paper/60', problem && 'border-signal/60')}>
-              <span className="text-mute">logoless.io/</span>
+              {!sub && <span className="text-mute">logoless.io/</span>}
               <input
                 value={finalSlug}
                 onChange={(e) => {
@@ -82,6 +86,7 @@ export function InviteForm() {
                 aria-label="Link name"
                 className="h-full min-w-0 flex-1 bg-transparent outline-none placeholder:text-mute"
               />
+              {sub && <span className="text-mute">.logoless.io</span>}
             </span>
             {problem && <span className="mt-1.5 block text-xs text-signal">{problem}</span>}
           </label>
@@ -128,7 +133,7 @@ export function InviteForm() {
           <button disabled={!ready || busy} className="inline-flex h-11 items-center gap-2 rounded-pill bg-paper px-6 text-sm font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
             {busy ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} Make their link
           </button>
-          {finalSlug && !problem && <span className="text-sm text-mute">logoless.io/<span className="text-paper">{finalSlug}</span></span>}
+          {finalSlug && !problem && (sub ? <span className="text-sm text-mute"><span className="text-paper">{finalSlug}</span>.logoless.io</span> : <span className="text-sm text-mute">logoless.io/<span className="text-paper">{finalSlug}</span></span>)}
         </div>
         {error && <p role="alert" className="text-sm text-signal">{error}</p>}
       </form>

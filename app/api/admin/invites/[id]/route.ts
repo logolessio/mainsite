@@ -4,6 +4,8 @@ import { db } from '@/lib/db'
 import { inviteEmail, sendEmail } from '@/lib/email'
 import { ipHash, protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
+import { clientUrl } from '@/lib/client-host'
+import { featureOn } from '@/lib/features'
 import { inviteUrl } from '@/lib/invite-shared'
 import { inviteById } from '@/lib/invites'
 import { requireAdmin } from '@/lib/user'
@@ -58,7 +60,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
       const to = a.to || inv.contact_email
       if (!to) throw new HttpError(400, 'Add an email address first.')
       if (inv.status === 'revoked') throw new HttpError(409, 'This link is switched off.')
-      const mail = inviteEmail(inv.artist_name, inviteUrl(inv.slug))
+      const mail = inviteEmail(inv.artist_name, (await featureOn('client-links')) ? clientUrl(inv.slug) : inviteUrl(inv.slug))
       await sendEmail({ to, subject: mail.subject, html: mail.html, text: mail.text, template: 'invite' })
       await d.prepare('UPDATE artist_invites SET emailed_at = ?2 WHERE id = ?1').bind(id, nowSec()).run()
       break

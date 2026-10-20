@@ -7,17 +7,22 @@ import { Card, PageHeader, StatCard } from '@/components/app/ui'
 import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
 import { db } from '@/lib/db'
 import { when } from '@/lib/format'
-import { dmText, inviteUrl, STEPS } from '@/lib/invite-shared'
+import { clientUrl } from '@/lib/client-host'
+import { featureOn } from '@/lib/features'
+import { dmText, inviteUrl, REACH, stepsFor } from '@/lib/invite-shared'
+import { parseData } from '@/lib/invites'
 import type { InviteRow } from '@/lib/invites'
 import { pageAdmin } from '@/lib/user'
 
 export const metadata: Metadata = { title: 'Artist links | logoless', robots: { index: false } }
 
 type Row = InviteRow & { owner_email: string | null; owner_handle: string | null; camp_title: string | null; camp_status: string | null }
-const LAST = STEPS.length - 1
 
 export default async function Page() {
   await pageAdmin()
+  // with client links on, every link is also its own address (name.logoless.io) and runs the fuller client package
+  const pkg = await featureOn('client-links')
+  const LAST = stepsFor(pkg).length - 1
   const d = await db()
   const rows = (
     await d
@@ -35,7 +40,7 @@ export default async function Page() {
 
   return (
     <>
-      <PageHeader title="Artist links" sub="Make a private page for an artist you have spoken to. They sign in, set up their artist page, launch a campaign and fund it, all from logoless.io/their-name." />
+      <PageHeader title={pkg ? 'Client links' : 'Artist links'} sub={pkg ? 'Make a private address for an artist or client, like their-name.logoless.io. They sign in, set up their page, choose how to be reached, add funds and build their first campaign step by step, then get a tour of their dashboard.' : 'Make a private page for an artist you have spoken to. They sign in, set up their artist page, launch a campaign and fund it, all from logoless.io/their-name.'} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Links sent" value={String(rows.length)} />
         <StatCard label="Opened" value={String(opened)} note={rows.length ? `${Math.round((opened / rows.length) * 100)}% of links` : undefined} />
@@ -59,7 +64,9 @@ export default async function Page() {
           </Card>
         )}
         {rows.map((r) => {
-          const url = inviteUrl(r.slug)
+          const url = pkg ? clientUrl(r.slug) : inviteUrl(r.slug)
+          const x = parseData(r.data_json)
+          const reach = x.reachBy ? `${REACH.find((m) => m.id === x.reachBy)?.label ?? x.reachBy}${x.reachAt ? `: ${x.reachAt}` : ''}` : null
           const pct = Math.round((Math.min(r.step, LAST) / LAST) * 100)
           return (
             <Card key={r.id}>
@@ -83,8 +90,10 @@ export default async function Page() {
                     {r.email_lock ? <Badge>locked to email</Badge> : null}
                   </p>
                   <a href={`/${r.slug}`} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-sm text-paper/80 underline underline-offset-4 hover:text-paper">
-                    logoless.io/{r.slug}
+                    {pkg ? `${r.slug}.logoless.io` : `logoless.io/${r.slug}`}
                   </a>
+                  {pkg && <span className="ml-2 text-xs text-mute">also logoless.io/{r.slug}</span>}
+                  {reach && <p className="mt-1 text-xs text-paper/80">Best way to reach them: {reach}</p>}
                   <p className="mt-1.5 text-xs text-mute">
                     Made {when(r.created_at)} · {r.channel}
                     {r.contact_handle ? ` · @${r.contact_handle}` : ''}

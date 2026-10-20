@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { AddFunds } from '@/components/app/add-funds'
 import { CaptureOnReturn } from '@/components/app/capture-on-return'
+import { ClientTour } from '@/components/brand/client-tour'
 import { PayCampaignButton } from '@/components/app/pay-campaign-button'
 import { Badge, DataTable, EmptyState } from '@/components/app/table'
 import { Card, PageHeader } from '@/components/app/ui'
@@ -54,7 +55,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
       )}
       {q.cancelled && <p role="status" className="mb-4 rounded-2xl border border-line px-4 py-3 text-sm text-mute">Payment cancelled. You have not been charged.</p>}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
+      <ClientTour />
+      <div data-tour="funds" className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
         <div className="border-t border-line-strong pt-5">
           <p className="text-[15px] text-paper/50">Your balance</p>
           <p className="mt-6 font-display text-6xl leading-none tracking-[-0.045em] tabular-nums md:text-[4.5rem]">{money(b.brand)}</p>

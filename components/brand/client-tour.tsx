@@ -45,6 +45,9 @@ const writeRun = (r: Run | null) => {
   }
 }
 
+/** True while a walkthrough (or a single "show me") is under way in this tab, so other guides wait their turn. */
+export const tourRunning = () => typeof window !== 'undefined' && readRun() !== null
+
 /** Saves "seen" on the server (every device) and in this browser (in case the server cannot be reached). */
 export function rememberSeen(key: 'tour' | 'first-submission') {
   try {

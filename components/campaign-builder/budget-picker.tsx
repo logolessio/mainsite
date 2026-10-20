@@ -44,10 +44,10 @@ function InlineNumber({ value, onChange, prefix, label, decimal, width }: { valu
  * The budget, set either way round: "I want 250,000 views for $500" or "$500 at $2 per 1,000 views". The other number is worked
  * out live, with the fee and the total, and anything creators could not be paid is explained in plain words.
  */
-export function BudgetPicker({ value, onChange, minBudget = SITE.minCampaignBudgetUsd }: { value: BudgetValue; onChange: (patch: Partial<BudgetValue>) => void; minBudget?: number }) {
+export function BudgetPicker({ value, onChange, minBudget = SITE.minCampaignBudgetUsd, maxBudget = SITE.maxTopUpUsd * 10 }: { value: BudgetValue; onChange: (patch: Partial<BudgetValue>) => void; minBudget?: number; maxBudget?: number }) {
   const budget = Number(value.budget) || 0
   const plan = budgetPlan(value.mode, budget, Number(value.rate) || 0, Number(value.views) || 0)
-  const budgetErr = value.budget && (budget < minBudget || budget > SITE.maxTopUpUsd * 10) ? `Between ${usd(minBudget)} and ${usd(SITE.maxTopUpUsd * 10)}.` : ''
+  const budgetErr = value.budget && (budget < minBudget || budget > maxBudget) ? `Between ${usd(minBudget)} and ${usd(maxBudget)}.` : ''
   const fee = (budget * SITE.platformFeePct) / 100
   const ok = !plan.problem && !budgetErr
 

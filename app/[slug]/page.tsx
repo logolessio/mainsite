@@ -1,11 +1,14 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
+import { notFound, redirect } from 'next/navigation'
 import { connection } from 'next/server'
 import { InviteBlocked } from '@/components/invite/invite-blocked'
 import { InviteWelcome } from '@/components/invite/invite-welcome'
 import { InviteWizard } from '@/components/invite/invite-wizard'
 import { db, nowSec } from '@/lib/db'
-import { STEPS } from '@/lib/invite-shared'
+import { clientSlugOf } from '@/lib/client-host'
+import { featureOn } from '@/lib/features'
+import { stepsFor } from '@/lib/invite-shared'
 import { inviteBySlug, maskEmail, parseData } from '@/lib/invites'
 import { getSession } from '@/lib/session'
 import { findOrCreateUser } from '@/lib/user'
@@ -23,6 +26,14 @@ export default async function Page({ params, searchParams }: Props) {
   const { slug: raw } = await params
   const q = await searchParams
   const slug = raw.toLowerCase()
+  // on its own address (kxng.logoless.io) only while client links are switched on; otherwise the visitor goes to logoless.io/kxng
+  const pkg = await featureOn('client-links')
+  const h = await headers()
+  if (h.get('x-client-host') && !pkg) {
+    const client = clientSlugOf(h.get('host') ?? '')
+    redirect(`${client?.main ?? ''}/${slug}`)
+  }
+  const STEPS = stepsFor(pkg)
   const inv = await inviteBySlug(slug).catch(() => null)
   if (!inv) notFound()
   if (inv.status === 'revoked') return <InviteBlocked kind="off" slug={slug} />
@@ -61,6 +72,7 @@ export default async function Page({ params, searchParams }: Props) {
       initialData={parseData(inv.data_json)}
       campaign={camp ? { id: camp.id, title: camp.title, status: camp.status, budgetCents: camp.budget_cents } : null}
       flash={q.paid ? 'paid' : q.cancelled ? 'cancelled' : null}
+      pkg={pkg}
     />
   )
 }

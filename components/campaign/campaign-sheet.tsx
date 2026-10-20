@@ -22,7 +22,7 @@ export type SheetPreview = 'approved' | 'declined' | 'review'
  * the right, and one pill across the bottom that starts the submission. Nothing scrolls. In the pop-up the sheet shrinks a little
  * to fit short screens; on its own page it is simply as tall as it needs to be and shows every line.
  */
-export function CampaignSheet({ campaign, onClose, leftPct = null, inline = false, preview }: { campaign: Campaign; onClose?: () => void; leftPct?: number | null; inline?: boolean; preview?: SheetPreview }) {
+export function CampaignSheet({ campaign, onClose, leftPct = null, inline = false, preview, extra }: { campaign: Campaign; onClose?: () => void; leftPct?: number | null; inline?: boolean; preview?: SheetPreview; /** more about the campaign (music links, the official sound, the bio), on its own page */ extra?: React.ReactNode }) {
   const [view, setView] = useState<'details' | 'submit'>('details')
   const signedInNow = useSignedIn()
   const { wide } = useMotionPrefs()
@@ -146,6 +146,8 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
         {list('Create this', campaign.clipThis)}
         {list('Not allowed', campaign.offLimits)}
       </div>
+
+      {extra}
 
       <p className="text-[12.5px] leading-relaxed text-white/45">
         Earnings can be withdrawn as soon as they are confirmed, from ${SITE.minPayoutUsd}.{' '}

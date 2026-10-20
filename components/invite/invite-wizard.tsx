@@ -9,9 +9,13 @@ import { CountUp } from '@/components/app/count-up'
 import { getFinance, startDeposit } from '@/lib/finance-client'
 import { uploadImage } from '@/lib/image-client'
 import { costFor, feeFor, startNeeded } from '@/lib/ledger-math'
-import { ARTIST_COUNTRIES, BUDGET_PRESETS, CHAPTERS, COUNTRY_NAMES, estimateViews, GENRES, type InviteData, lines, RATE_PRESETS, RELEASE_KINDS, STEPS, type StepId } from '@/lib/invite-shared'
+import { ARTIST_COUNTRIES, BUDGET_PRESETS, CHAPTERS, COUNTRY_NAMES, estimateViews, GENRES, type InviteData, lines, PACKAGE_CHAPTERS, RATE_PRESETS, REACH, RELEASE_KINDS, type StepId, stepsFor } from '@/lib/invite-shared'
+import { budgetPlan, cleanLinks, soundLink, spotifyLink } from '@/lib/campaign-extras-shared'
+import { BudgetPicker } from '@/components/campaign-builder/budget-picker'
+import { ArtPicker, AudioPicker, LinkList } from '@/components/campaign-builder/music-pickers'
 import { EASE_OUT } from '@/lib/layout'
-import { buildLink, LINK_PLATFORMS, USERNAME_LINKS } from '@/lib/profile-style'
+import { buildLink, handleChars, handleProblem, LINK_PLATFORMS, USERNAME_LINKS } from '@/lib/profile-style'
+import { useFeature } from '@/components/shell/features-provider'
 import { SITE } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import { Ask, BigArea, BigInput, Chip, Confetti, Label, Rise, UploadTile } from './bits'
@@ -26,6 +30,8 @@ type Props = {
   initialData: InviteData
   campaign: Campaign
   flash: 'paid' | 'cancelled' | null
+  /** The client package (switch "client-links"): contact, funds, and a fuller first campaign. */
+  pkg?: boolean
 }
 
 const KEY_LINKS = ['spotify', 'applemusic', 'instagram', 'tiktok', 'youtube'] as const
@@ -37,11 +43,13 @@ const PLATFORMS = [
 ] as const
 const IDEAS = ['The chorus or hook', 'Behind the scenes', 'Lyric edits', 'Live performance', 'Fan reactions', 'Funny or relatable moments']
 const label = (id: string) => LINK_PLATFORMS.find((p) => p.id === id)?.label ?? id
-const idx = (id: StepId) => STEPS.findIndex((s) => s.id === id)
 const usd = (n: number) => `$${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
 const money = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
-export function InviteWizard({ slug, artistName, email, initialStep, initialData, campaign: initialCampaign, flash }: Props) {
+export function InviteWizard({ slug, artistName, email, initialStep, initialData, campaign: initialCampaign, flash, pkg = false }: Props) {
+  const STEPS = stepsFor(pkg)
+  const looseHandles = useFeature('username-punctuation')
+  const idx = (id: StepId) => STEPS.findIndex((s) => s.id === id)
   const [step, setStep] = useState(Math.min(initialStep, STEPS.length - 1))
   const [reached, setReached] = useState(Math.min(initialStep, STEPS.length - 1))
   const [dir, setDir] = useState(1)
@@ -51,6 +59,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
     budget: '500',
     rate: '2',
     platforms: ['tiktok'],
+    ...(pkg ? { budgetMode: 'views' as const, views: '250000', platforms: ['tiktok', 'instagram'] } : {}),
     ...initialData,
   }))
   const [campaign, setCampaign] = useState<Campaign>(initialCampaign)
@@ -127,16 +136,23 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
   }
   const linkCount = Object.entries(links).filter(([, v]) => v?.trim()).length
   const budget = Number(data.budget)
-  const rate = Number(data.rate)
+  // in the package the budget can be set as "X views for $Y": the rate is worked out from it, exactly as the server will
+  const plan = budgetPlan(pkg ? (data.budgetMode ?? 'views') : 'rate', budget || 0, Number(data.rate) || 0, Number(data.views) || 0)
+  const rate = plan.rate
+  const goodLinks = (list: string[] | undefined, check: typeof spotifyLink) => (list ?? []).every((l) => !l.trim() || 'url' in check(l))
   const valid: Record<StepId, boolean> = {
     hello: true,
-    you: (data.stageName ?? '').trim().length >= 2 && /^[a-z0-9_]{3,20}$/.test(data.handle ?? ''),
+    you: (data.stageName ?? '').trim().length >= 2 && (looseHandles ? handleProblem(data.handle ?? '', { loose: true, isAdmin: true }) === null : /^[a-z0-9_]{3,20}$/.test(data.handle ?? '')),
     sound: (data.genres?.length ?? 0) > 0 && (data.pitch ?? '').trim().length >= 10,
     links: linkCount > 0 && Object.keys(links).every((p) => !linkErr(p)),
     look: true,
-    release: (data.projectTitle ?? '').trim().length >= 2 && Boolean(data.projectKind),
+    release: (data.projectTitle ?? '').trim().length >= 2 && Boolean(data.projectKind) && goodLinks(data.spotify, spotifyLink),
+    contact: true,
+    funds: true,
+    audio: goodLinks(data.sounds, soundLink),
+    art: true,
     brief: (data.platforms?.length ?? 0) > 0 && (data.summary ?? '').trim().length >= 20,
-    money: budget >= SITE.minInviteBudgetUsd && budget <= SITE.maxTopUpUsd && rate >= 0.5 && rate <= 50,
+    money: budget >= SITE.minInviteBudgetUsd && budget <= SITE.maxTopUpUsd && !plan.problem,
     rules: Boolean(data.agreed),
     review: true,
     fund: true,
@@ -177,7 +193,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
   // the balance the artist has to pay from, looked up when the funding step opens
   const [balance, setBalance] = useState<number | null>(null)
   useEffect(() => {
-    if (current.id !== 'fund') return
+    if (current.id !== 'fund' && current.id !== 'funds') return
     getFinance()
       .then((f) => setBalance(f.balances.brand))
       .catch(() => setBalance(null))
@@ -201,11 +217,44 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
     setError('')
     try {
       const short = startNeeded(campaign.budgetCents) - (balance ?? 0)
-      const { url } = await startDeposit(Math.max(10, Math.ceil(short / 100)))
+      const { url } = await startDeposit(Math.max(10, Math.ceil(short / 100)), pkg ? `/${slug}` : undefined)
       window.location.href = url
     } catch (e) {
       setBusy(false)
       setError(e instanceof Error ? e.message : 'Could not open PayPal.')
+    }
+  }
+
+  // ---------- the package: adding funds before the campaign, and how to be reached ----------
+  const [topUp, setTopUp] = useState(0)
+  const depositNow = async (amount: number) => {
+    setBusy(true)
+    setError('')
+    try {
+      await persist(step)
+      const { url } = await startDeposit(amount, `/${slug}`)
+      window.location.href = url
+    } catch (e) {
+      setBusy(false)
+      setError(e instanceof Error ? e.message : 'Could not open PayPal.')
+    }
+  }
+  const [prefs, setPrefs] = useState<{ pref: string; options: { id: string; label: string; hint: string }[] } | null>(null)
+  useEffect(() => {
+    if (current.id !== 'contact' || prefs) return
+    fetch('/api/me/contact', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => j && setPrefs(j as { pref: string; options: { id: string; label: string; hint: string }[] }))
+      .catch(() => null)
+  }, [current.id, prefs])
+  const choosePref = async (pref: string) => {
+    if (!prefs) return
+    const before = prefs.pref
+    setPrefs({ ...prefs, pref })
+    const res = await fetch('/api/me/contact', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ pref }) }).catch(() => null)
+    if (!res?.ok) {
+      setPrefs({ ...prefs, pref: before })
+      setError('Could not save that. Please try again.')
     }
   }
 
@@ -255,7 +304,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
           {/* ---------- the rail ---------- */}
           <aside className="hidden md:block">
             <LiquidGlass as="nav" aria-label="Setup steps" rootClassName="sticky top-28" rounded="rounded-[calc(2rem*var(--round,1))]" className="p-3" look={{ zRadius: 24 }}>
-              {CHAPTERS.map((c) => (
+              {(pkg ? PACKAGE_CHAPTERS : CHAPTERS).map((c) => (
                 <div key={c} className="mb-2 last:mb-0">
                   <p className="px-3 pt-2 pb-1 text-[11px] font-medium text-mute">{c}</p>
                   {chapterIdx(c).map((s) => {
@@ -315,7 +364,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                         <BigInput label="Artist or brand name" value={data.stageName ?? ''} maxLength={40} onChange={(e) => set({ stageName: e.target.value })} placeholder="Your name on the page" autoFocus />
                       </Rise>
                       <Rise i={1}>
-                        <BigInput label="Your username" hint="Letters, numbers, _" prefix="logoless.io/@" value={data.handle ?? ''} maxLength={20} onChange={(e) => set({ handle: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') })} placeholder="yourname" />
+                        <BigInput label="Your username" hint={looseHandles ? 'Letters, numbers, dots, dashes, _' : 'Letters, numbers, _'} prefix="logoless.io/@" value={data.handle ?? ''} maxLength={20} onChange={(e) => set({ handle: handleChars(e.target.value, looseHandles) })} placeholder="yourname" />
                       </Rise>
                       <Rise i={2}>
                         <Label>Where are you based?</Label>
@@ -405,18 +454,85 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
 
                 {current.id === 'look' && (
                   <>
-                    <Ask sub="A good picture makes your page and your campaign look finished. Both are optional, and you can change them later.">Show us your face and your art.</Ask>
+                    {pkg ? <Ask sub="A good picture makes your page look finished. It is optional, and you can change it later. The campaign artwork comes a little later.">Show us your face.</Ask> : <Ask sub="A good picture makes your page and your campaign look finished. Both are optional, and you can change them later.">Show us your face and your art.</Ask>}
                     <div className="flex flex-wrap items-start gap-8">
                       <Rise i={0}>
                         <UploadTile label="Profile picture" hint="Drop or choose" round preview={data.avatar ? `/api/img/${data.avatar}` : null} busy={Boolean(upload.avatar)} onFile={(f) => pick('avatar', f)} />
                       </Rise>
-                      <Rise i={1}>
-                        <UploadTile label="Campaign cover art" hint="Square cover" preview={data.cover ? `/api/img/${data.cover}` : null} busy={Boolean(upload.cover)} onFile={(f) => pick('cover', f)} />
-                      </Rise>
+                      {!pkg && (
+                        <Rise i={1}>
+                          <UploadTile label="Campaign cover art" hint="Square cover" preview={data.cover ? `/api/img/${data.cover}` : null} busy={Boolean(upload.cover)} onFile={(f) => pick('cover', f)} />
+                        </Rise>
+                      )}
                     </div>
                     {upload.err && <p className="mt-4 text-sm text-signal">{upload.err}</p>}
                     <Rise i={2} className="mt-8 rounded-3xl border border-line bg-white/[0.03] p-5 text-sm text-mute">
                       <span className="text-paper">What happens next:</span> when you continue we create your page at logoless.io/@{data.handle || 'you'} with everything so far.
+                    </Rise>
+                  </>
+                )}
+
+                {current.id === 'contact' && (
+                  <>
+                    <Ask sub="How the site tells you about things that matter (a submission to look at, a campaign running low), and the best way for our team to reach you.">How should we stay in touch?</Ask>
+                    <div className="grid gap-8">
+                      <Rise i={0}>
+                        <Label>Messages from the site</Label>
+                        <div role="radiogroup" aria-label="Messages from the site" className="grid gap-2 sm:grid-cols-2">
+                          {(prefs?.options ?? []).map((o) => {
+                            const on = prefs?.pref === o.id
+                            return (
+                              <button key={o.id} type="button" role="radio" aria-checked={on} onClick={() => void choosePref(o.id)} className={cn('flex items-start gap-3 rounded-3xl border p-4 text-left transition-colors', on ? 'border-paper bg-white/[0.07]' : 'border-line-strong text-mute hover:border-paper/50 hover:text-paper')}>
+                                <span className={cn('mt-1 grid size-4 shrink-0 place-items-center rounded-pill border', on ? 'border-paper bg-paper' : 'border-line-strong')}>{on && <span className="size-1.5 rounded-pill bg-ink" />}</span>
+                                <span>
+                                  <span className="block text-[15px] text-paper">{o.label}</span>
+                                  <span className="mt-0.5 block text-sm text-mute">{o.hint}</span>
+                                </span>
+                              </button>
+                            )
+                          })}
+                          {!prefs && <p className="text-sm text-mute"><Loader2 className="mr-2 inline size-4 animate-spin" />Loading the choices</p>}
+                        </div>
+                      </Rise>
+                      <Rise i={1}>
+                        <Label hint="Optional">The best way for our team to reach you</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {REACH.map((r) => (
+                            <Chip key={r.id} on={data.reachBy === r.id} onClick={() => set({ reachBy: data.reachBy === r.id ? '' : r.id, reachAt: data.reachBy === r.id ? '' : r.id === 'email' ? email : data.reachAt ?? '' })}>
+                              {r.id !== 'email' && r.id !== 'phone' && <BrandIcon name={r.id} className="size-4" />} {r.label}
+                            </Chip>
+                          ))}
+                        </div>
+                        {data.reachBy && (
+                          <BigInput className="mt-4 max-w-md" label={REACH.find((r) => r.id === data.reachBy)?.label ?? 'Contact'} value={data.reachAt ?? ''} maxLength={120} onChange={(e) => set({ reachAt: e.target.value })} placeholder={REACH.find((r) => r.id === data.reachBy)?.placeholder} autoFocus />
+                        )}
+                      </Rise>
+                    </div>
+                  </>
+                )}
+
+                {current.id === 'funds' && (
+                  <>
+                    <Ask sub="Your campaigns are paid from one balance. Add funds now and your first campaign can start the moment it is ready. Nothing is spent until creators earn, and we cover PayPal's fees.">{flash === 'paid' ? 'Funds added. Nice.' : 'Add funds.'}</Ask>
+                    <Rise i={0}>
+                      <div className="rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-white/[0.04] p-6 md:p-8">
+                        <p className="text-xs tracking-wide text-mute">Your balance</p>
+                        <p className="mt-2 font-display text-6xl leading-none font-medium tabular-nums md:text-7xl">{balance === null ? '…' : money(balance)}</p>
+                        <div className="mt-7">
+                          <Label hint={`${usd(SITE.minTopUpUsd)} to ${usd(SITE.maxTopUpUsd)}`}>Add with PayPal</Label>
+                          <div className="flex flex-wrap gap-2">
+                            {[250, 500, 1000, 2500, 5000].map((n) => (
+                              <Chip key={n} on={topUp === n} onClick={() => setTopUp(topUp === n ? 0 : n)}>
+                                {usd(n)}
+                              </Chip>
+                            ))}
+                          </div>
+                          <button type="button" onClick={() => void depositNow(topUp)} disabled={busy || !topUp} className="mt-5 inline-flex h-14 items-center gap-2 rounded-pill bg-paper px-8 text-base font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:opacity-40">
+                            {busy ? <Loader2 className="size-5 animate-spin" /> : <Wallet className="size-5" />} {topUp ? `Add ${usd(topUp)} with PayPal` : 'Pick an amount'}
+                          </button>
+                          <p className="mt-3 text-sm text-mute">You come straight back here after paying. Prefer to wait? Continue, and you can add funds when your campaign is ready.</p>
+                        </div>
+                      </div>
                     </Rise>
                   </>
                 )}
@@ -439,9 +555,31 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                         </div>
                       </Rise>
                       <Rise i={2}>
-                        <BigInput label="Link to it" hint="Spotify, YouTube, Apple Music…" value={data.projectUrl ?? ''} maxLength={300} onChange={(e) => set({ projectUrl: e.target.value })} placeholder="https://" inputMode="url" />
+                        {pkg ? (
+                          <LinkList label="Spotify links" hint="The track, the album, your artist page" icon="spotify" values={data.spotify ?? []} onChange={(v) => set({ spotify: v })} check={spotifyLink} max={6} placeholder="https://open.spotify.com/track/…" />
+                        ) : (
+                          <BigInput label="Link to it" hint="Spotify, YouTube, Apple Music…" value={data.projectUrl ?? ''} maxLength={300} onChange={(e) => set({ projectUrl: e.target.value })} placeholder="https://" inputMode="url" />
+                        )}
                       </Rise>
                     </div>
+                  </>
+                )}
+
+                {current.id === 'audio' && (
+                  <>
+                    <Ask sub="Point creators at the official sound and the part that matters, and let them hear it. All optional, all changeable later.">Choose the audio.</Ask>
+                    <Rise i={0}>
+                      <AudioPicker sounds={data.sounds ?? []} audio={data.audio ?? ''} audioNote={data.audioNote ?? ''} onChange={(p) => set(p)} />
+                    </Rise>
+                  </>
+                )}
+
+                {current.id === 'art' && (
+                  <>
+                    <Ask sub="The album cover is what creators see first. A wide background makes the campaign page feel like yours.">The cover and the background.</Ask>
+                    <Rise i={0}>
+                      <ArtPicker cover={data.cover ?? ''} background={data.background ?? ''} title={data.projectTitle ?? ''} creator={data.stageName ?? ''} onChange={(p) => set(p)} />
+                    </Rise>
                   </>
                 )}
 
@@ -485,7 +623,19 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                   </>
                 )}
 
-                {current.id === 'money' && (
+                {current.id === 'money' && pkg && (
+                  <>
+                    <Ask sub="Creators earn for every 1,000 verified views, paid from your balance as they earn. You never pay more than the budget plus our fee.">Set the budget.</Ask>
+                    <Rise i={0}>
+                      <BudgetPicker value={{ budget: data.budget ?? '', mode: data.budgetMode ?? 'views', rate: data.rate ?? '', views: data.views ?? '' }} onChange={(p) => set({ ...(p.budget !== undefined ? { budget: p.budget } : {}), ...(p.mode ? { budgetMode: p.mode } : {}), ...(p.rate !== undefined ? { rate: p.rate } : {}), ...(p.views !== undefined ? { views: p.views } : {}) })} minBudget={SITE.minInviteBudgetUsd} maxBudget={SITE.maxTopUpUsd} />
+                    </Rise>
+                    <Rise i={1} className="mt-8">
+                      <BigInput label="End date" hint="Optional" type="date" value={data.endsOn ?? ''} onChange={(e) => set({ endsOn: e.target.value })} className="max-w-xs" />
+                    </Rise>
+                  </>
+                )}
+
+                {current.id === 'money' && !pkg && (
                   <>
                     <Ask sub="Creators earn for every 1,000 verified views, paid from your balance as they earn. You never pay more than the budget plus our fee.">How much do you want to spend?</Ask>
                     <div className="grid gap-7">
@@ -654,6 +804,20 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                   <div className="relative">
                     <Confetti />
                     <Ask sub={flash === 'paid' || campaign?.status === 'paid' || campaign?.status === 'live' ? 'Payment received. Our team is checking your brief and will launch it shortly. We’ll tell you as soon as it’s live.' : campaign ? 'Your campaign is saved and waiting for its funds. You can pay from your dashboard whenever you like.' : 'Your page is ready.'}>{flash === 'paid' ? 'You are in. Payment received.' : 'You are all set.'}</Ask>
+                    {pkg && (
+                      <Rise i={0} className="relative z-10 mb-6">
+                        <a href="/brand?tour=1" className="group flex items-center gap-5 rounded-[calc(2rem*var(--round,1))] border border-paper/40 bg-white/[0.07] p-5 transition-all hover:-translate-y-0.5 hover:bg-white/[0.1] md:p-6">
+                          <span className="grid size-14 shrink-0 place-items-center rounded-pill bg-paper text-ink">
+                            <Sparkles className="size-6" />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-xl">Take the tour of your dashboard</span>
+                            <span className="mt-0.5 block text-sm text-mute">Two minutes: where your stats are, how to edit, pause and top up a campaign, and how to review submissions.</span>
+                          </span>
+                          <ArrowRight className="size-5 shrink-0 text-mute transition-transform group-hover:translate-x-1 group-hover:text-paper" />
+                        </a>
+                      </Rise>
+                    )}
                     <div className="relative z-10 grid gap-3 sm:grid-cols-2">
                       {[
                         { href: '/brand', icon: Megaphone, t: 'Your dashboard', d: 'Campaigns, spend and reach at a glance.' },

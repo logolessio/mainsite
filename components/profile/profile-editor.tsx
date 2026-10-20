@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActionButton, Card, PanelSkeleton, Toggle } from '@/components/app/ui'
 import { BrandIcon } from '@/components/brand-icon'
 import { NAV_USER_REFRESH } from '@/components/shell/nav-user'
+import { useFeature } from '@/components/shell/features-provider'
 import { Field, Input, Select, Textarea } from '@/components/ui/fields'
 import { BADGE_BY_ID } from '@/lib/badges-defs'
 import { uploadImage } from '@/lib/image-client'
@@ -20,6 +21,7 @@ import {
   DOT_SWATCHES,
   FONT_OPTIONS,
   CLIPPING_PLATFORMS,
+  handleChars,
   LINK_PLATFORMS,
   NAME_EFFECTS,
   SHOW_OPTIONS,
@@ -49,6 +51,7 @@ const meta = (id: string) => LINK_PLATFORMS.find((p) => p.id === id)
 export function ProfileEditor() {
   const [loaded, setLoaded] = useState<Loaded | null>(null)
   const [f, setF] = useState<ProfileView | null>(null)
+  const looseHandles = useFeature('username-punctuation') // dots and dashes in usernames
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [note, setNote] = useState('')
@@ -229,7 +232,7 @@ export function ProfileEditor() {
                   />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Username" hint={`logoless.io/@${f.handle}`}><Input value={f.handle} maxLength={20} onChange={(e) => set('handle', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} /></Field>
+                  <Field label="Username" hint={looseHandles ? `logoless.io/@${f.handle} · Letters, numbers, dots, dashes and underscores` : `logoless.io/@${f.handle}`}><Input value={f.handle} maxLength={20} onChange={(e) => set('handle', handleChars(e.target.value, looseHandles))} /></Field>
                   <Field label="Pronouns (optional)"><Input value={f.pronouns} maxLength={30} placeholder="e.g. she/her" onChange={(e) => set('pronouns', e.target.value)} /></Field>
                 </div>
                 <Field label="About me" hint={`${f.bio.length}/400`}><Textarea value={f.bio} maxLength={400} rows={4} onChange={(e) => set('bio', e.target.value)} /></Field>

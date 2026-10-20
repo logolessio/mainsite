@@ -3,6 +3,7 @@ import { ActionLink } from '@/components/app/action-link'
 import { Badge, EmptyState } from '@/components/app/table'
 import { PageHeader } from '@/components/app/ui'
 import { CampaignActions, MoveBudget } from '@/components/brand/campaign-actions'
+import { ClientTour } from '@/components/brand/client-tour'
 import { allCaps } from '@/lib/campaign-caps'
 import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
 import { db } from '@/lib/db'
@@ -55,14 +56,17 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ r
       <PageHeader title="Campaigns" sub="Every campaign draws from your one balance as creators earn. Pause, start or change a budget any time." actions={<ActionLink href="/brand/campaigns/new">New campaign</ActionLink>} />
       {q.requested && <p role="status" className="mb-4 rounded-2xl border border-line-strong px-4 py-3 text-sm">Sent. We read every new campaign. Once it is approved it goes live as soon as your balance covers the start.</p>}
       <MoveBudget campaigns={movable} />
+      <ClientTour />
       {rows.length === 0 ? (
+        <div data-tour="campaigns-empty">
         <EmptyState icon="Megaphone" title="No campaigns yet" body="Write a short brief, set a rate and a budget, and we do the rest." action={<ActionLink href="/brand/campaigns/new">New campaign</ActionLink>} />
+        </div>
       ) : (
         <ul className="grid gap-3">
-          {rows.map((r) => {
+          {rows.map((r, n) => {
             const pct = r.budget_cents > 0 ? Math.min(100, Math.round((r.spent / r.budget_cents) * 100)) : 0
             return (
-              <li key={r.id} className="flex flex-wrap items-center gap-x-6 gap-y-4 rounded-[calc(1.6rem*var(--round,1))] border border-line bg-white/[0.02] p-4 pr-6 sm:flex-nowrap">
+              <li key={r.id} data-tour={n === 0 ? 'campaign' : undefined} className="flex flex-wrap items-center gap-x-6 gap-y-4 rounded-[calc(1.6rem*var(--round,1))] border border-line bg-white/[0.02] p-4 pr-6 sm:flex-nowrap">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={r.cover_url} alt="" className="size-20 shrink-0 rounded-2xl object-cover" />
                 <div className="min-w-0 flex-1">
@@ -78,7 +82,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ r
                     {applyWording(`${usd(r.spent)} of ${usd(r.budget_cents)} paid to creators · ${r.views.toLocaleString()} views · ${r.clips} ${r.clips === 1 ? 'clip' : 'clips'}`)}
                   </p>
                 </div>
+                <div data-tour={n === 0 ? 'campaign-actions' : undefined}>
                 <CampaignActions c={{ id: r.id, title: r.title, status: r.status, budget: Math.round(r.budget_cents / 100), spent: r.spent, poolCents: r.pool, adminPaused: r.paused_by === 'admin', capPerPost: (caps[r.id]?.perPostCents ?? 0) / 100, capPerUser: (caps[r.id]?.perUserCents ?? 0) / 100 }} />
+                </div>
               </li>
             )
           })}
