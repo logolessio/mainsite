@@ -31,7 +31,4 @@ tsconfig.tsbuildinfo
 # Mac app
 macos/build/
 macos/**/xcuserdata/
-scroll-mac/build/
-scroll-mac/dist/
-scroll-mac/**/xcuserdata/
 macos/**/.DS_Store
