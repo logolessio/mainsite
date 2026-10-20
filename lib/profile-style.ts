@@ -1,5 +1,6 @@
 // Shared (browser + server) definitions for profile customisation. No secrets or database code here.
 import { bannerCss, LOOKS } from './looks'
+import type { ProfileExtras } from './profile-extras'
 
 export const FONT_OPTIONS = [
   { id: 'geist', label: 'Sans', note: 'Clean' },
@@ -263,6 +264,8 @@ export type ProfileView = {
   joinedAt: number
   country: string | null
   isStaff: boolean
+  /** The profile studio choices, always complete (defaults filled in). */
+  extras: ProfileExtras
 }
 
 export type ProfileStats = { clips: number; views: number; earnedCents: number; campaigns: number }

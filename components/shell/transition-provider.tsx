@@ -3,7 +3,7 @@
 import { useReducedMotion } from 'framer-motion'
 import { usePathname, useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { confirmLeave } from '@/hooks/use-unsaved-guard'
+import { askLeave } from '@/hooks/use-unsaved-guard'
 import type { Campaign } from '@/lib/campaigns'
 
 type Phase = 'idle' | 'exiting'
@@ -69,12 +69,14 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
         else window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' })
         return
       }
-      if (!confirmLeave()) return // there is work in the page that has not been saved
-      if (target !== pathname) {
-        setPending(true)
-        if (!reduced) setLeaving(pathname)
-      }
-      router.push(href)
+      void askLeave().then((ok) => {
+        if (!ok) return // there is work in the page that has not been saved
+        if (target !== pathname) {
+          setPending(true)
+          if (!reduced) setLeaving(pathname)
+        }
+        router.push(href)
+      })
     },
     [pathname, reduced, router],
   )

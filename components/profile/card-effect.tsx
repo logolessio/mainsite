@@ -499,41 +499,79 @@ function aurora({ w, h, n, speed, a, b }: Opts): Sim {
   }
 }
 
+function glowSprite(c: Rgb, size = 64) {
+  const cv = document.createElement('canvas')
+  cv.width = cv.height = size
+  const g = cv.getContext('2d')!
+  const r = size / 2
+  const gr = g.createRadialGradient(r, r, 0, r, r, r)
+  gr.addColorStop(0, rgba(lift(c, 0.85), 1))
+  gr.addColorStop(0.08, rgba(lift(c, 0.5), 0.95))
+  gr.addColorStop(0.22, rgba(c, 0.45))
+  gr.addColorStop(0.5, rgba(c, 0.12))
+  gr.addColorStop(1, rgba(c, 0))
+  g.fillStyle = gr
+  g.fillRect(0, 0, size, size)
+  return cv
+}
+
 // ============================================================================================================
-// fireflies: each wanders on a smooth path and flashes in its own rhythm, a short bright pulse, then dark.
+// fireflies: three depths of drifting lights. Each one glides on its own smooth, lazy path with a little
+// inertia, and glows in its own rhythm: a soft swell, a short hold, a slow fade, sometimes a quick double
+// blink. Near ones are bigger and softer (out of focus), far ones are small sharp points.
 // ============================================================================================================
-function fireflies({ w, h, n, speed, a }: Opts): Sim {
-  const colour: Rgb = plain(a) ? [196, 255, 90] : mix([196, 255, 90], a, 0.5)
+function fireflies({ w, h, n, a }: Opts): Sim {
+  const colour: Rgb = plain(a) ? [206, 255, 112] : mix([206, 255, 112], a, 0.55)
+  const sprite = glowSprite(colour)
+  const warm = glowSprite(mix(colour, [255, 214, 120], 0.45))
   const k = power(n)
-  const flies = Array.from({ length: Math.max(7, Math.round(18 * k)) }, () => ({
-    x: rand(0, w), y: rand(h * 0.2, h), ph: rand(0, 100), cyc: rand(2.6, 5), on: rand(0.35, 0.7), dbl: Math.random() < 0.4, s: rand(0.9, 1.5), trail: [] as [number, number][],
-  }))
+  const count = Math.max(8, Math.round(22 * k))
+  const flies = Array.from({ length: count }, (_, i) => {
+    const z = i % 7 === 0 ? 2 : i % 3 === 0 ? 0 : 1 // 0 far, 1 mid, 2 near
+    return {
+      x: rand(0, w), y: rand(h * 0.12, h), vx: 0, vy: 0, z, seed: rand(0, 1000),
+      ph: rand(0, 20), cyc: rand(3.2, 6.5), dbl: Math.random() < 0.3, warm: Math.random() < 0.25,
+      size: z === 2 ? rand(26, 40) : z === 1 ? rand(13, 19) : rand(6, 9),
+    }
+  })
+  /** 0 to 1: rise over 0.5 s, hold, fall over 0.9 s, then dark for the rest of the cycle. */
+  const glow = (p: number, on: number) => {
+    if (p < 0.5) return Math.sin((p / 0.5) * (Math.PI / 2)) ** 2
+    if (p < 0.5 + on) return 1
+    if (p < 1.4 + on) return Math.cos(((p - 0.5 - on) / 0.9) * (Math.PI / 2)) ** 2
+    return 0
+  }
   return (ctx, dt, t) => {
     ctx.globalCompositeOperation = 'lighter'
     for (const f of flies) {
-      f.x += (vnoise(t * 0.25 + f.ph) - 0.5) * 38 * speed * dt * 2
-      f.y += (vnoise(t * 0.21 + f.ph * 2.1) - 0.5) * 30 * speed * dt * 2 - 1.5 * dt
-      if (f.x < -10) f.x = w + 10
-      if (f.x > w + 10) f.x = -10
-      if (f.y < -10) f.y = h + 10
-      if (f.y > h + 10) f.y = -10
-      const p = ((t + f.ph) % f.cyc) / f.cyc
-      let lit = 0
-      if (p < f.on / f.cyc) lit = Math.sin((p / (f.on / f.cyc)) * Math.PI)
-      else if (f.dbl && p > (f.on * 1.5) / f.cyc && p < (f.on * 2.3) / f.cyc) lit = Math.sin(((p - (f.on * 1.5) / f.cyc) / ((f.on * 0.8) / f.cyc)) * Math.PI) * 0.8
-      f.trail.push([f.x, f.y])
-      if (f.trail.length > 7) f.trail.shift()
-      if (lit < 0.03) continue
-      ctx.strokeStyle = rgba(colour, lit * 0.35)
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      f.trail.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)))
-      ctx.stroke()
-      ctx.fillStyle = rgba(colour, lit * 0.22)
-      dot(ctx, f.x, f.y, 5.5 * f.s)
-      ctx.fillStyle = rgba(lift(colour, 0.5), lit)
-      dot(ctx, f.x, f.y, 1.5 * f.s)
+      const sp = f.z === 2 ? 1.35 : f.z === 1 ? 1 : 0.6
+      // steer towards a slowly changing direction, so paths curve gently instead of jittering
+      const ang = vnoise(f.seed + t * 0.18) * TAU * 2
+      f.vx += (Math.cos(ang) * 22 * sp - f.vx) * Math.min(1, dt * 0.9)
+      f.vy += (Math.sin(ang) * 15 * sp - 4 - f.vy) * Math.min(1, dt * 0.9)
+      f.x += f.vx * dt
+      f.y += f.vy * dt
+      if (f.x < -40) f.x = w + 40
+      if (f.x > w + 40) f.x = -40
+      if (f.y < -40) f.y = h + 30
+      if (f.y > h + 40) f.y = -30
+      const time = (t + f.ph) % f.cyc
+      let lit = glow(time, 0.35)
+      if (f.dbl) lit = Math.max(lit, 0.7 * glow((time - 1.9) * 1.8, 0))
+      const flicker = 0.92 + 0.08 * Math.sin(t * 23 + f.seed)
+      const base = f.z === 0 ? 0.08 : 0.04 // a faint ember stays even when "off", so they never pop in from nothing
+      const al = Math.min(1, base + lit * flicker * (f.z === 0 ? 0.75 : 1))
+      if (al < 0.02) continue
+      const s = f.size * (0.7 + lit * 0.45)
+      ctx.globalAlpha = al * (f.z === 2 ? 0.55 : 1)
+      ctx.drawImage(f.warm ? warm : sprite, f.x - s, f.y - s, s * 2, s * 2)
+      // the light it throws: a wide, very faint halo
+      if (lit > 0.5 && f.z > 0) {
+        ctx.globalAlpha = (lit - 0.5) * 0.16
+        ctx.drawImage(sprite, f.x - s * 3, f.y - s * 3, s * 6, s * 6)
+      }
     }
+    ctx.globalAlpha = 1
     ctx.globalCompositeOperation = 'source-over'
   }
 }
@@ -935,79 +973,123 @@ function confetti({ w, h, n, speed, a, b }: Opts): Sim {
 }
 
 // ============================================================================================================
-// fireworks: rockets climb with a thin trail, burst into streaking sparks that arc under gravity and fade
-// through white, colour, then dull ember.
+// fireworks: rockets climb with a sparkling tail and burst as a peony, a ring, a gold willow that droops and
+// hangs, or a glitter shell that crackles as it fades. Built to be light: a fixed pool of sparks (never more
+// than about 320), each drawn as a single streak, and the streaks batched by colour and brightness so a whole
+// burst is a handful of draw calls instead of hundreds.
 // ============================================================================================================
-function fireworks({ w, h, n, speed, a, b }: Opts): Sim {
+function fireworks({ w, h, n, a, b }: Opts): Sim {
   const k = power(n)
-  const cols: Rgb[] = plain(a) && plain(b) ? [[255, 90, 90], [255, 200, 70], [90, 190, 255], [150, 255, 160], [220, 130, 255]] : [a, b, lift(a, 0.4), lift(b, 0.4)]
-  type R = { x: number; y: number; ty: number; vy: number; c: Rgb; trail: Pt[] }
-  type P = { x: number; y: number; vx: number; vy: number; age: number; life: number; c: Rgb; trail: Pt[]; crackle: boolean }
+  const palette: Rgb[] = plain(a) && plain(b) ? [[255, 84, 96], [255, 196, 64], [84, 186, 255], [140, 255, 150], [214, 120, 255]] : [a, b, lift(a, 0.35), lift(b, 0.35)]
+  const GOLD: Rgb = [255, 196, 110]
+  const cols = [...palette, GOLD]
+  const goldI = cols.length - 1
+  const MAX = Math.round(Math.min(320, 150 + 140 * k))
+  // spark pool: plain arrays, reused, so nothing is allocated while it runs
+  const x = new Float32Array(MAX), y = new Float32Array(MAX), vx = new Float32Array(MAX), vy = new Float32Array(MAX)
+  const age = new Float32Array(MAX), life = new Float32Array(MAX), drag = new Float32Array(MAX), tail = new Float32Array(MAX)
+  const ci = new Uint8Array(MAX), kind = new Uint8Array(MAX) // 0 normal, 1 willow, 2 glitter
+  let live = 0
+  type R = { x: number; y: number; vx: number; vy: number; ty: number; c: number; type: number }
   const rockets: R[] = []
-  const ps: P[] = []
-  let next = 0.3
-  const burst = (x: number, y: number, c: Rgb) => {
-    const ring = Math.random() < 0.4
-    const cnt = Math.round(46 + 40 * k)
+  const flashes: { x: number; y: number; t: number; c: Rgb }[] = []
+  let next = 0.4
+  const LEVELS = [0.95, 0.7, 0.45, 0.22]
+  const buckets: number[][] = Array.from({ length: cols.length * LEVELS.length + LEVELS.length }, () => [])
+
+  const add = (px: number, py: number, svx: number, svy: number, l: number, c: number, kd: number, dr: number, tl: number) => {
+    if (live >= MAX) return
+    x[live] = px; y[live] = py; vx[live] = svx; vy[live] = svy; age[live] = 0; life[live] = l; ci[live] = c; kind[live] = kd; drag[live] = dr; tail[live] = tl
+    live++
+  }
+  const burst = (r: R) => {
+    const room = MAX - live
+    if (room < 20) return
+    const cnt = Math.min(room, Math.round(36 + 34 * Math.min(1.4, k)))
+    const c = r.c
+    flashes.push({ x: r.x, y: r.y, t: 0, c: r.type === 2 ? GOLD : cols[c] })
     for (let i = 0; i < cnt; i++) {
-      const ang = (i / cnt) * TAU + rand(-0.04, 0.04)
-      const sp = ring ? 112 : rand(30, 135)
-      ps.push({ x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, age: 0, life: rand(1.2, 2.1), c: Math.random() < 0.25 ? lift(c, 0.6) : c, trail: [], crackle: Math.random() < 0.15 })
+      const ang = (i / cnt) * TAU + rand(-0.06, 0.06)
+      if (r.type === 1) add(r.x, r.y, Math.cos(ang) * 118, Math.sin(ang) * 118, rand(1.1, 1.5), c, 0, 1.6, 0.05) // ring
+      else if (r.type === 2) { const sp = rand(40, 105); add(r.x, r.y, Math.cos(ang) * sp, Math.sin(ang) * sp, rand(2.2, 3.1), goldI, 1, 2.6, 0.11) } // willow
+      else if (r.type === 3) { const sp = rand(35, 125); add(r.x, r.y, Math.cos(ang) * sp, Math.sin(ang) * sp, rand(1.3, 1.9), c, 2, 1.5, 0.04) } // glitter
+      else { const sp = 128 * Math.cbrt(Math.random()); add(r.x, r.y, Math.cos(ang) * sp, Math.sin(ang) * sp, rand(1.2, 1.8), Math.random() < 0.2 ? goldI : c, 0, 1.4, 0.055) } // peony
     }
   }
-  return (ctx, dt) => {
-    next -= dt * speed
-    if (next < 0 && rockets.length < 2) {
-      rockets.push({ x: rand(w * 0.15, w * 0.85), y: h + 4, ty: rand(h * 0.18, h * 0.5), vy: -rand(300, 380), c: cols[Math.floor(Math.random() * cols.length)], trail: [] })
-      next = rand(1.1, 2.6) / Math.max(0.4, k)
+
+  return (ctx, dt, t) => {
+    next -= dt
+    if (next < 0 && rockets.length < 2 && live < MAX * 0.7) {
+      rockets.push({ x: rand(w * 0.18, w * 0.82), y: h + 6, vx: rand(-14, 14), vy: -rand(h * 0.95, h * 1.15), ty: rand(h * 0.16, h * 0.46), c: Math.floor(Math.random() * palette.length), type: Math.floor(Math.random() * 4) })
+      next = rand(0.9, 2.2) / Math.max(0.45, k)
     }
-    ctx.lineCap = 'round'
     ctx.globalCompositeOperation = 'lighter'
+    ctx.lineCap = 'round'
+
+    // flashes: the sky lights up for a blink at each burst
+    for (let i = flashes.length - 1; i >= 0; i--) {
+      const f = flashes[i]
+      f.t += dt
+      if (f.t > 0.35) { flashes.splice(i, 1); continue }
+      const q = 1 - f.t / 0.35
+      const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, 90)
+      g.addColorStop(0, rgba(lift(f.c, 0.6), 0.32 * q * q))
+      g.addColorStop(1, rgba(f.c, 0))
+      ctx.fillStyle = g
+      ctx.fillRect(f.x - 90, f.y - 90, 180, 180)
+    }
+
+    // rockets: a bright head and a short sparkling tail
     for (let i = rockets.length - 1; i >= 0; i--) {
       const r = rockets[i]
+      r.vy += h * 0.42 * dt
+      r.x += r.vx * dt
       r.y += r.vy * dt
-      r.vy *= 1 - 0.55 * dt
-      r.x += Math.sin(r.y * 0.05) * 6 * dt
-      r.trail.push([r.x, r.y])
-      if (r.trail.length > 10) r.trail.shift()
-      if (r.y <= r.ty) {
-        burst(r.x, r.y, r.c)
-        rockets.splice(i, 1)
-        continue
-      }
-      r.trail.forEach(([x, y], j) => {
-        ctx.fillStyle = `rgba(255,226,170,${(j / r.trail.length) * 0.6})`
-        dot(ctx, x, y, 0.9)
-      })
-      ctx.fillStyle = '#fff'
-      dot(ctx, r.x, r.y, 1.3)
+      if (r.y <= r.ty || r.vy > -30) { burst(r); rockets.splice(i, 1); continue }
+      if (Math.random() < 0.6) add(r.x + rand(-1, 1), r.y + 2, rand(-10, 10), rand(10, 40), rand(0.25, 0.5), goldI, 2, 3, 0.02)
+      ctx.strokeStyle = 'rgba(255,236,200,0.9)'
+      ctx.lineWidth = 1.6
+      ctx.beginPath()
+      ctx.moveTo(r.x - r.vx * 0.03, r.y - r.vy * 0.03)
+      ctx.lineTo(r.x, r.y)
+      ctx.stroke()
     }
-    for (let i = ps.length - 1; i >= 0; i--) {
-      const p = ps[i]
-      p.age += dt
-      if (p.age > p.life) {
-        ps.splice(i, 1)
+
+    // sparks: move, then sort into colour and brightness buckets
+    for (const bk of buckets) bk.length = 0
+    for (let i = live - 1; i >= 0; i--) {
+      age[i] += dt
+      if (age[i] >= life[i]) {
+        live--
+        x[i] = x[live]; y[i] = y[live]; vx[i] = vx[live]; vy[i] = vy[live]; age[i] = age[live]; life[i] = life[live]; ci[i] = ci[live]; kind[i] = kind[live]; drag[i] = drag[live]; tail[i] = tail[live]
         continue
       }
-      p.vy += 70 * dt
-      const d = Math.exp(-1.3 * dt)
-      p.vx *= d
-      p.vy *= d
-      p.x += p.vx * dt
-      p.y += p.vy * dt
-      p.trail.push([p.x, p.y])
-      if (p.trail.length > 7) p.trail.shift()
-      const q = p.age / p.life
-      const a = (1 - q) * (p.crackle && q > 0.5 ? (Math.random() < 0.5 ? 1 : 0.1) : 1)
-      const c = q < 0.2 ? mix([255, 255, 255], p.c, q / 0.2) : mix(p.c, shade(p.c, 0.6), (q - 0.2) / 0.8)
-      for (let j = 1; j < p.trail.length; j++) {
-        ctx.strokeStyle = rgba(c, a * (j / p.trail.length))
-        ctx.lineWidth = 1.3 * (j / p.trail.length) + 0.2
-        ctx.beginPath()
-        ctx.moveTo(p.trail[j - 1][0], p.trail[j - 1][1])
-        ctx.lineTo(p.trail[j][0], p.trail[j][1])
-        ctx.stroke()
+      const d = Math.exp(-drag[i] * dt)
+      vx[i] *= d
+      vy[i] = vy[i] * d + (kind[i] === 1 ? 46 : 62) * dt
+      x[i] += vx[i] * dt
+      y[i] += vy[i] * dt
+      const q = age[i] / life[i]
+      let lv = q < 0.25 ? 0 : q < 0.5 ? 1 : q < 0.78 ? 2 : 3
+      if (kind[i] === 2 && q > 0.45) { if (hash(i * 13.7 + Math.floor(t * 24)) < 0.55) continue; lv = 0 } // glitter crackles
+      // brand-new sparks burn white-hot: they go in the extra white buckets at the end
+      const slot = q < 0.08 ? cols.length * LEVELS.length + lv : ci[i] * LEVELS.length + lv
+      buckets[slot].push(i)
+    }
+    for (let s = 0; s < buckets.length; s++) {
+      const list = buckets[s]
+      if (!list.length) continue
+      const white = s >= cols.length * LEVELS.length
+      const lv = s % LEVELS.length
+      const c = white ? ([255, 248, 236] as Rgb) : cols[Math.floor(s / LEVELS.length)]
+      ctx.strokeStyle = rgba(c, LEVELS[lv])
+      ctx.lineWidth = lv === 0 ? 1.9 : lv === 1 ? 1.6 : 1.25
+      ctx.beginPath()
+      for (const i of list) {
+        ctx.moveTo(x[i] - vx[i] * tail[i], y[i] - vy[i] * tail[i])
+        ctx.lineTo(x[i], y[i])
       }
+      ctx.stroke()
     }
     ctx.globalCompositeOperation = 'source-over'
   }
@@ -1231,62 +1313,136 @@ function film({ w, h, n, a }: Opts): Sim {
 }
 
 // ============================================================================================================
-// vhs: scanlines, a rolling brightness bar, tracking noise along the bottom, and short glitches where
-// horizontal bands tear and split into cyan and magenta.
+// vhs: a tape playing on an old TV. Fine scanlines with a faint flicker, moving tape grain, a soft rolling
+// brightness bar, the jittery head-switching strip along the bottom, a tracking band that wanders up the
+// picture now and then, short tears where bands slide sideways and split into colour, a darker CRT edge,
+// and the on-screen PLAY and tape counter.
 // ============================================================================================================
 function vhs({ w, h, n }: Opts): Sim {
   const k = power(n)
   const lines = document.createElement('canvas')
-  lines.width = 4
-  lines.height = 4
+  lines.width = 2
+  lines.height = 3
   const lg = lines.getContext('2d')!
-  lg.fillStyle = 'rgba(0,0,0,0.22)'
-  lg.fillRect(0, 0, 4, 1.4)
-  let glitch = 0
-  let next = rand(2, 5)
+  lg.fillStyle = 'rgba(0,0,0,0.28)'
+  lg.fillRect(0, 0, 2, 1)
+  // a few frames of tape grain, made once and shuffled every frame
+  const grains = Array.from({ length: 3 }, () => {
+    const c = document.createElement('canvas')
+    c.width = c.height = 96
+    const g = c.getContext('2d')!
+    const img = g.createImageData(96, 96)
+    for (let i = 0; i < img.data.length; i += 4) {
+      const v = Math.random() < 0.5 ? 255 : 0
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = v
+      img.data[i + 3] = Math.random() < 0.5 ? 26 : 0
+    }
+    g.putImageData(img, 0, 0)
+    return c
+  })
+  const edge = (ctx: CanvasRenderingContext2D) => {
+    const g = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.35, w / 2, h / 2, Math.max(w, h) * 0.75)
+    g.addColorStop(0, 'rgba(0,0,0,0)')
+    g.addColorStop(1, 'rgba(0,0,0,0.42)')
+    return g
+  }
+  let vignette: CanvasGradient | null = null
+  let tear = 0
+  let nextTear = rand(2, 4)
   let bands: { y: number; hh: number; dx: number }[] = []
+  let track = -1 // tracking band position, 0..1, or -1 when the picture is steady
+  let nextTrack = rand(4, 9)
+  const pad = (v: number) => String(Math.floor(v)).padStart(2, '0')
   return (ctx, dt, t) => {
+    vignette ??= edge(ctx)
+    // grain
+    ctx.globalAlpha = 0.35 + 0.35 * Math.min(1, k)
+    const gimg = grains[Math.floor(t * 30) % grains.length]
+    const ox = Math.floor(Math.random() * 96)
+    const oy = Math.floor(Math.random() * 96)
+    ctx.fillStyle = ctx.createPattern(gimg, 'repeat')!
+    ctx.save()
+    ctx.translate(-ox, -oy)
+    ctx.fillRect(ox, oy, w, h)
+    ctx.restore()
+    ctx.globalAlpha = 1
+    // scanlines, with a faint flicker
+    ctx.globalAlpha = 0.85 + 0.15 * Math.sin(t * 61)
     ctx.fillStyle = ctx.createPattern(lines, 'repeat')!
     ctx.fillRect(0, 0, w, h)
-    // rolling bar
-    const y = ((t * 0.09) % 1.4) * h - h * 0.2
-    const bar = ctx.createLinearGradient(0, y - 60, 0, y + 60)
+    ctx.globalAlpha = 1
+    // the soft bar that rolls down the picture
+    const by = ((t * 0.07) % 1.3) * h - h * 0.15
+    const bar = ctx.createLinearGradient(0, by - 70, 0, by + 70)
     bar.addColorStop(0, 'rgba(255,255,255,0)')
-    bar.addColorStop(0.5, 'rgba(255,255,255,0.07)')
+    bar.addColorStop(0.5, 'rgba(255,255,255,0.055)')
     bar.addColorStop(1, 'rgba(255,255,255,0)')
     ctx.fillStyle = bar
-    ctx.fillRect(0, y - 60, w, 120)
-    // tracking noise at the bottom
-    ctx.fillStyle = 'rgba(255,255,255,0.55)'
-    const base = h - 18
-    for (let i = 0; i < 14 * (0.5 + k); i++) {
-      const yy = base + Math.random() * 14
-      const x = Math.random() * w
-      ctx.fillRect(x, yy, rand(8, 70), 1)
+    ctx.fillRect(0, by - 70, w, 140)
+    // head-switching noise along the bottom: a jittery bright strip
+    const strip = 7 + 5 * Math.min(1.5, k)
+    for (let i = 0; i < 3; i++) {
+      const yy = h - strip + i * (strip / 3)
+      const off = Math.sin(t * 40 + i * 2) * 6 + rand(-4, 4)
+      ctx.fillStyle = `rgba(255,255,255,${0.12 + Math.random() * 0.14})`
+      ctx.fillRect(off, yy, w, strip / 3 - 0.6)
     }
-    // snow noise
-    ctx.fillStyle = 'rgba(255,255,255,0.35)'
-    for (let i = 0; i < 40 * k; i++) ctx.fillRect(Math.random() * w, Math.random() * h, rand(1, 3), 1)
-    next -= dt
-    if (next < 0) {
-      glitch = rand(0.12, 0.3)
-      bands = Array.from({ length: Math.round(rand(2, 5)) }, () => ({ y: rand(0, h), hh: rand(6, 38), dx: rand(-16, 16) }))
-      next = rand(3, 8) / Math.max(0.4, k)
-    }
-    if (glitch > 0) {
-      glitch -= dt
-      for (const b of bands) {
-        const off = b.dx + rand(-3, 3)
-        ctx.globalCompositeOperation = 'lighter'
-        ctx.fillStyle = 'rgba(0,255,255,0.22)'
-        ctx.fillRect(off, b.y, w, b.hh)
-        ctx.fillStyle = 'rgba(255,0,110,0.22)'
-        ctx.fillRect(-off, b.y + 2, w, b.hh)
-        ctx.globalCompositeOperation = 'source-over'
-        ctx.fillStyle = 'rgba(255,255,255,0.25)'
-        ctx.fillRect(Math.random() * w, b.y + b.hh * 0.5, rand(30, 140), 1)
+    ctx.fillStyle = 'rgba(255,255,255,0.6)'
+    for (let i = 0; i < 10 * (0.6 + k); i++) ctx.fillRect(Math.random() * w, h - strip + Math.random() * strip, rand(6, 46), 1)
+    // the tracking band: noisy streaks that drift up the picture for a few seconds
+    nextTrack -= dt
+    if (track < 0 && nextTrack < 0) track = 1.05
+    if (track >= 0) {
+      track -= dt * 0.18
+      const ty = track * h
+      ctx.fillStyle = 'rgba(255,255,255,0.08)'
+      ctx.fillRect(0, ty - 9, w, 18)
+      ctx.fillStyle = 'rgba(255,255,255,0.55)'
+      for (let i = 0; i < 26 * (0.6 + k); i++) ctx.fillRect(Math.random() * w, ty + rand(-9, 9), rand(4, 34), 1)
+      if (track < -0.05) {
+        track = -1
+        nextTrack = rand(6, 14) / Math.max(0.5, k)
       }
     }
+    // tears: bands slide sideways and split into colour for a moment
+    nextTear -= dt
+    if (nextTear < 0) {
+      tear = rand(0.1, 0.28)
+      bands = Array.from({ length: Math.round(rand(1, 4)) }, () => ({ y: rand(0, h), hh: rand(4, 26), dx: rand(-18, 18) }))
+      nextTear = rand(2.5, 7) / Math.max(0.4, k)
+    }
+    if (tear > 0) {
+      tear -= dt
+      ctx.globalCompositeOperation = 'lighter'
+      for (const b of bands) {
+        const off = b.dx + rand(-3, 3)
+        ctx.fillStyle = 'rgba(0,240,255,0.16)'
+        ctx.fillRect(off, b.y, w, b.hh)
+        ctx.fillStyle = 'rgba(255,0,120,0.16)'
+        ctx.fillRect(-off, b.y + 1.5, w, b.hh)
+      }
+      ctx.globalCompositeOperation = 'source-over'
+      ctx.fillStyle = 'rgba(255,255,255,0.05)'
+      ctx.fillRect(0, 0, w, h)
+    }
+    // CRT edge
+    ctx.fillStyle = vignette
+    ctx.fillRect(0, 0, w, h)
+    // on-screen display, as a VCR would draw it
+    const s = Math.max(10, Math.min(14, w / 30))
+    ctx.font = `600 ${s}px ui-monospace, SFMono-Regular, Menlo, monospace`
+    ctx.textBaseline = 'top'
+    ctx.shadowColor = 'rgba(255,255,255,0.7)'
+    ctx.shadowBlur = 4
+    ctx.fillStyle = `rgba(255,255,255,${0.78 + 0.12 * Math.sin(t * 9)})`
+    const jx = tear > 0 ? rand(-2, 2) : 0
+    if (Math.floor(t * 1.1) % 2 === 0 || t < 3) ctx.fillText('PLAY ▶', 14 + jx, 14)
+    const secs = t * 1 + 754
+    const label = `SP ${pad(secs / 3600)}:${pad((secs / 60) % 60)}:${pad(secs % 60)}`
+    ctx.textAlign = 'right'
+    ctx.fillText(label, w - 14 + jx, h - strip - s - 10)
+    ctx.textAlign = 'left'
+    ctx.shadowBlur = 0
   }
 }
 
@@ -1367,84 +1523,186 @@ export const SIMS: Record<Exclude<CardEffect, 'none'>, (o: Opts) => Sim> = {
 /** How many seconds an effect is run before the first frame is shown, so it is already going when the card appears. */
 const WARM: Partial<Record<Exclude<CardEffect, 'none'>, number>> = { smoke: 9, leaves: 6, petals: 5, snow: 4, rain: 2, bubbles: 5, embers: 3, fireworks: 1.2, confetti: 1.6, code: 6, fireflies: 3, rays: 0, stars: 0 }
 
-export function CardEffectLayer({ effect, intensity = 50, speed = 50, colors = ['#ffffff', '#ffffff'] }: { effect: CardEffect; intensity?: number; speed?: number; colors?: [string, string] }) {
-  const ref = useRef<HTMLCanvasElement>(null)
+type Layer = { cv: HTMLCanvasElement; ctx: CanvasRenderingContext2D; sim: Sim; w: number; h: number; t: number; intensity: number }
+
+export type EffectTint = { color: string; amount: number }
+
+/**
+ * Runs one effect on canvases that fill the parent. What it does to stay smooth and light:
+ * - The effect is warmed up off screen (on a 1 by 1 canvas), so it is already going when it appears and nothing
+ *   smears while it catches up.
+ * - A change of size (say a font finishing loading and making the card a little taller) only resizes the canvas.
+ *   The effect itself keeps running; it is only rebuilt for a big change, and then the new one fades in over the
+ *   old one. Changing the intensity also fades between the two, instead of everything jumping to new places.
+ * - Speed and tint are read live; it stops drawing when off screen or in a hidden tab, and shows one still frame
+ *   for reduced motion.
+ * `scope="page"` is for full-page overlays: fewer particles per pixel and a lower resolution.
+ */
+export function CardEffectLayer({
+  effect,
+  intensity = 50,
+  speed = 50,
+  colors = ['#ffffff', '#ffffff'],
+  tint,
+  scope = 'card',
+}: {
+  effect: CardEffect
+  intensity?: number
+  speed?: number
+  colors?: [string, string]
+  tint?: EffectTint
+  scope?: 'card' | 'page'
+}) {
+  const ref = useRef<HTMLDivElement>(null)
   const { reduced } = useMotionPrefs()
-  // Settings are read by the running loop, so moving a slider changes the effect smoothly without a restart.
-  const live = useRef({ intensity, speed })
-  live.current = { intensity, speed }
+  // Settings are read by the running loop, so moving a slider changes the effect without a restart.
+  const live = useRef({ intensity, speed, tint })
+  live.current = { intensity, speed, tint }
 
   useEffect(() => {
-    const cv = ref.current
-    if (!cv || effect === 'none') return
-    const ctx = cv.getContext('2d')
-    if (!ctx) return
+    const host = ref.current
+    if (!host || effect === 'none') return
+    const page = scope === 'page'
     const [a, b] = [rgb(colors[0]), rgb(colors[1])]
-    const st: { sim: Sim | null } = { sim: null }
-    let w = 0
-    let h = 0
-    let builtFor = -1
+    const scratch = document.createElement('canvas').getContext('2d')!
+    const layers: Layer[] = []
     let raf = 0
     let last = performance.now()
-    let t = 0
-    let visible = true
+    let onScreen = true
+    let rebuildTimer = 0
+    const timers = new Set<number>()
 
-    const build = () => {
-      const rect = cv.getBoundingClientRect()
-      w = Math.max(1, rect.width)
-      h = Math.max(1, rect.height)
-      const dpr = Math.min(2, window.devicePixelRatio || 1)
-      cv.width = Math.round(w * dpr)
-      cv.height = Math.round(h * dpr)
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      const area = (w * h) / (440 * 520)
-      const n = Math.max(2, Math.round(26 * area * (0.12 + (live.current.intensity / 100) * 2.1)))
-      builtFor = live.current.intensity
-      st.sim = SIMS[effect]({ w, h, n, speed: 1, a, b })
-      const warm = WARM[effect as Exclude<CardEffect, 'none'>] ?? 0
-      const sp0 = 0.3 + (live.current.speed / 100) * 1.7
-      for (let i = 0; i < warm * 20; i++) {
-        t += 0.05
-        st.sim(ctx, 0.05 * sp0, t * sp0)
+    const dprFor = () => Math.min(page ? 1.25 : 2, window.devicePixelRatio || 1)
+    const box = () => {
+      const r = host.getBoundingClientRect()
+      return { w: Math.max(1, r.width), h: Math.max(1, r.height) }
+    }
+    const fit = (L: Layer, w: number, h: number) => {
+      const dpr = dprFor()
+      L.cv.width = Math.round(w * dpr)
+      L.cv.height = Math.round(h * dpr)
+      L.ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    }
+    const sp = () => 0.3 + (live.current.speed / 100) * 1.7
+    const paint = (L: Layer, dt: number) => {
+      L.ctx.clearRect(0, 0, L.w + 2, L.h + 2)
+      L.t += dt
+      L.sim(L.ctx, dt, L.t)
+      const ti = live.current.tint
+      if (ti && ti.amount > 0) {
+        // a gentle wash of the tint over what was just drawn, and only over that
+        L.ctx.globalCompositeOperation = 'source-atop'
+        L.ctx.globalAlpha = Math.min(1, ti.amount / 100) * 0.55
+        L.ctx.fillStyle = ti.color
+        L.ctx.fillRect(0, 0, L.w, L.h)
+        L.ctx.globalAlpha = 1
+        L.ctx.globalCompositeOperation = 'source-over'
       }
     }
 
+    const make = (fade: boolean) => {
+      const { w, h } = box()
+      const cv = document.createElement('canvas')
+      cv.setAttribute('aria-hidden', 'true')
+      cv.style.cssText = `position:absolute;inset:0;width:100%;height:100%;border-radius:inherit;transition:opacity .5s ease;opacity:${fade ? 0 : 1}`
+      const ctx = cv.getContext('2d')
+      if (!ctx) return
+      const area = (w * h) / (440 * 520)
+      const k = live.current.intensity / 100
+      // a wider, smoother range than before: 0 is a few specks, 100 is dense
+      const n = Math.max(2, Math.round(26 * (page ? Math.min(2.6, area) : area) * (0.06 + Math.pow(k, 1.2) * 2.3)))
+      const sim = SIMS[effect as Exclude<CardEffect, 'none'>]({ w, h, n, speed: 1, a, b })
+      const L: Layer = { cv, ctx, sim, w, h, t: 0, intensity: live.current.intensity }
+      fit(L, w, h)
+      const warm = WARM[effect as Exclude<CardEffect, 'none'>] ?? 0
+      const s0 = sp()
+      for (let i = 0; i < warm * 20; i++) {
+        L.t += 0.05 * s0
+        sim(scratch, 0.05 * s0, L.t)
+      }
+      paint(L, 1 / 60)
+      host.appendChild(cv)
+      layers.push(L)
+      while (layers.length > 2) layers.shift()!.cv.remove()
+      if (fade) {
+        requestAnimationFrame(() => (cv.style.opacity = '1'))
+        const id = window.setTimeout(() => {
+          timers.delete(id)
+          while (layers.length > 1 && layers[0] !== L) layers.shift()!.cv.remove()
+        }, 520)
+        timers.add(id)
+      } else {
+        while (layers.length > 1) layers.shift()!.cv.remove()
+      }
+    }
+
+    const running = () => !reduced && onScreen && !document.hidden
     const frame = (now: number) => {
-      raf = requestAnimationFrame(frame)
+      raf = 0
       const dt = Math.min(0.05, (now - last) / 1000)
       last = now
-      if (!visible || document.hidden) return
-      // rebuild when the intensity changes enough to matter (the particle count depends on it)
-      if (!st.sim || Math.abs(builtFor - live.current.intensity) >= 4) build()
-      t += dt
-      const sp = 0.3 + (live.current.speed / 100) * 1.7
-      ctx.clearRect(0, 0, w, h)
-      st.sim?.(ctx, dt * sp, t * sp)
+      if (!running()) return
+      const cur = layers[layers.length - 1]
+      if (cur && Math.abs(cur.intensity - live.current.intensity) >= 3 && !rebuildTimer) {
+        rebuildTimer = window.setTimeout(() => {
+          rebuildTimer = 0
+          make(true)
+        }, 140)
+      }
+      for (const L of layers) paint(L, dt * sp())
+      raf = requestAnimationFrame(frame)
+    }
+    const start = () => {
+      if (raf || !running()) return
+      last = performance.now()
+      raf = requestAnimationFrame(frame)
     }
 
-    build()
-    const io = new IntersectionObserver((e) => (visible = e[0]?.isIntersecting ?? true))
-    io.observe(cv)
-    const ro = new ResizeObserver(() => build())
-    ro.observe(cv)
-
+    make(false)
     if (reduced) {
       // one still frame, after letting the simulation settle for a moment
-      for (let i = 0; i < 90; i++) {
-        t += 1 / 30
-        ctx.clearRect(0, 0, w, h)
-        st.sim?.(ctx, 1 / 30, t)
+      const L = layers[0]
+      if (L) for (let i = 0; i < 90; i++) paint(L, 1 / 30)
+    }
+
+    const io = new IntersectionObserver((e) => {
+      onScreen = e[0]?.isIntersecting ?? true
+      start()
+    })
+    io.observe(host)
+    const onVis = () => start()
+    document.addEventListener('visibilitychange', onVis)
+    let sizeTimer = 0
+    const ro = new ResizeObserver(() => {
+      const { w, h } = box()
+      const cur = layers[layers.length - 1]
+      if (!cur) return
+      for (const L of layers) {
+        fit(L, w, h)
+        paint(L, 0) // redraw at once at the new size, so there is never a stretched or empty frame
       }
-    } else raf = requestAnimationFrame(frame)
+      // small changes (a font arriving, a line wrapping) keep the running effect; big ones rebuild it, faded in
+      if (Math.abs(w - cur.w) > 2 || Math.abs(h - cur.h) / cur.h > 0.25) {
+        window.clearTimeout(sizeTimer)
+        sizeTimer = window.setTimeout(() => make(true), 160)
+      }
+    })
+    ro.observe(host)
+    start()
     return () => {
       cancelAnimationFrame(raf)
+      window.clearTimeout(rebuildTimer)
+      window.clearTimeout(sizeTimer)
+      for (const id of timers) window.clearTimeout(id)
       io.disconnect()
       ro.disconnect()
+      document.removeEventListener('visibilitychange', onVis)
+      for (const L of layers) L.cv.remove()
     }
-    // colours and effect rebuild the simulation; intensity and speed are read live
+    // colours and effect rebuild the simulation; intensity, speed and tint are read live
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [effect, colors[0], colors[1], reduced])
+  }, [effect, colors[0], colors[1], reduced, scope])
 
   if (effect === 'none') return null
-  return <canvas ref={ref} aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 size-full rounded-[inherit]" />
+  return <div ref={ref} aria-hidden="true" className={scope === 'page' ? 'pointer-events-none fixed inset-0 z-[1]' : 'pointer-events-none absolute inset-0 z-10 overflow-hidden rounded-[inherit]'} />
 }
