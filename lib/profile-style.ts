@@ -230,6 +230,7 @@ export const SHOW_OPTIONS = [
   { key: 'country', label: 'Country', hint: 'Shown as a country code', on: false },
   { key: 'links', label: 'Creator accounts', hint: 'Show the TikTok, YouTube and Instagram accounts you post from', on: false },
   { key: 'status', label: 'Online status', hint: 'A green dot when you are on logoless', on: true },
+  { key: 'feed', label: 'Clips on the public feed', hint: 'Your approved clips on the Submissions page, with your name', on: true },
 ] as const
 export type ShowKey = (typeof SHOW_OPTIONS)[number]['key']
 export type ShowMap = Record<ShowKey, boolean>

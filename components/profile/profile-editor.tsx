@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActionButton, Card, PanelSkeleton, Toggle } from '@/components/app/ui'
 import { BrandIcon } from '@/components/brand-icon'
 import { NAV_USER_REFRESH } from '@/components/shell/nav-user'
+import { useFeature } from '@/components/shell/features-provider'
 import { Field, Input, Select, Textarea } from '@/components/ui/fields'
 import { BADGE_BY_ID } from '@/lib/badges-defs'
 import { uploadImage } from '@/lib/image-client'
@@ -488,9 +489,10 @@ function Slider({ label, hint, value, onChange }: { label: string; hint: string;
   )
 }
 
-const SHOW_GROUPS: { title: string; keys: string[] }[] = [
+const SHOW_GROUPS: { title: string; keys: string[]; feature?: string }[] = [
   { title: 'On your card', keys: ['badges', 'joined', 'country', 'status', 'links'] },
   { title: 'Your numbers', keys: ['clips', 'views', 'earnings', 'campaigns'] },
+  { title: 'Around the site', keys: ['feed'], feature: 'submissions-feed' },
 ]
 
 /** One tap per thing. Public things are bright with an open eye, hidden things are dim with a crossed eye. */
@@ -498,6 +500,7 @@ function Visibility({ show, onChange }: { show: ShowMap; onChange: (s: ShowMap) 
   const total = SHOW_OPTIONS.length
   const shown = SHOW_OPTIONS.filter((o) => show[o.key]).length
   const setAll = (fn: (k: keyof ShowMap, def: boolean) => boolean) => onChange(Object.fromEntries(SHOW_OPTIONS.map((o) => [o.key, fn(o.key, o.on)])) as ShowMap)
+  const feedOn = useFeature('submissions-feed')
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2">
@@ -507,7 +510,7 @@ function Visibility({ show, onChange }: { show: ShowMap; onChange: (s: ShowMap) 
         <button type="button" onClick={() => setAll(() => false)} className="h-8 rounded-pill border border-line-strong px-3.5 text-xs hover:bg-paper/10">Hide all</button>
       </div>
       <div className="mt-4 grid gap-5">
-        {SHOW_GROUPS.map((g) => (
+        {SHOW_GROUPS.filter((g) => !g.feature || feedOn).map((g) => (
           <div key={g.title}>
             <p className="mb-2 text-xs text-mute">{g.title}</p>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
