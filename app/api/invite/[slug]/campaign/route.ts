@@ -1,5 +1,7 @@
 import { auditSafe } from '@/lib/chain'
 import { campaignRequestSchema, slugify } from '@/lib/campaign-input'
+import { saveExtras } from '@/lib/campaign-extras'
+import { budgetPlan } from '@/lib/campaign-extras-shared'
 import { campaignRow } from '@/lib/campaigns-db'
 import { db, nowSec } from '@/lib/db'
 import { protect } from '@/lib/guard'
@@ -27,7 +29,12 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ s
   const x = parseData(inv.data_json)
   if (!x.agreed) throw new HttpError(400, 'Please agree to how it works first.')
 
-  const summary = [x.summary?.trim(), x.projectUrl?.trim() ? `Listen: ${x.projectUrl.trim()}` : '', x.assetsUrl?.trim() ? `Assets: ${x.assetsUrl.trim()}` : ''].filter(Boolean).join('\n\n').slice(0, 1500)
+  // the client package keeps the music links and footage apart (they show on the campaign page); the older flow puts them in the brief
+  const pkg = Array.isArray(x.spotify) || Boolean(x.budgetMode)
+  const summary = (pkg ? [x.summary?.trim()] : [x.summary?.trim(), x.projectUrl?.trim() ? `Listen: ${x.projectUrl.trim()}` : '', x.assetsUrl?.trim() ? `Assets: ${x.assetsUrl.trim()}` : '']).filter(Boolean).join('\n\n').slice(0, 1500)
+  // the budget may have been set as "X views for $Y": the rate is worked out the same way the page showed it
+  const plan = budgetPlan(x.budgetMode ?? 'rate', Number(x.budget), Number(x.rate), Number(x.views))
+  if (x.budgetMode && plan.problem) throw new HttpError(400, plan.problem)
   const parsed = campaignRequestSchema.safeParse({
     title: x.projectTitle,
     creator: x.stageName,
@@ -38,7 +45,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ s
     summary,
     clipThis: lines(x.clipThis).slice(0, 8).map(clip),
     offLimits: lines(x.offLimits).slice(0, 8).map(clip),
-    rate: Number(x.rate),
+    rate: plan.rate,
     budget: Number(x.budget),
     endsOn: x.endsOn || null,
   })
@@ -82,6 +89,10 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ s
     await d.prepare('DELETE FROM campaigns WHERE id = ?1').bind(id).run()
     const again = await d.prepare('SELECT campaign_id FROM artist_invites WHERE id = ?1').bind(inv.id).first<{ campaign_id: string }>()
     return json({ id: again?.campaign_id ?? id, status: 'awaiting_payment', again: true })
+  }
+  if (pkg) {
+    const { previewUrl } = await saveExtras(id, user.id, { spotify: x.spotify ?? [], sounds: x.sounds ?? [], audioNote: x.audioNote ?? '', audio: x.audio ?? '', background: x.background ?? '', bio: x.pitch ?? '', assets: x.assetsUrl ?? '' })
+    if (previewUrl) await d.prepare('UPDATE campaigns SET preview_url = ?2 WHERE id = ?1').bind(id, previewUrl).run()
   }
   await auditSafe({ id: user.id, email: user.email }, 'invite.campaign', id, `${c.title} · $${c.budget} · /${inv.slug}`)
   await notify(user.id, { kind: 'campaign', title: `${c.title} is ready to fund`, body: 'Pay the budget to get it in front of clippers.', href: '/brand/campaigns', dedupe: `camp-invite:${id}` })

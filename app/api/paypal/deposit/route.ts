@@ -8,7 +8,8 @@ import { SITE } from '@/lib/site'
 import { requireUser } from '@/lib/user'
 
 const MIN = SITE.minTopUpUsd
-const schema = z.object({ amount: z.number().int().min(MIN).max(SITE.maxTopUpUsd) })
+// `back`: a page on this site to land on after paying, so someone halfway through making a campaign carries on where they were
+const schema = z.object({ amount: z.number().int().min(MIN).max(SITE.maxTopUpUsd), back: z.string().max(200).regex(/^\/(?!\/)[A-Za-z0-9\-_/?=&.]*$/).optional() })
 
 /** A brand adds funds to their balance. We open a PayPal checkout and send them there; the money lands once they approve it. */
 export const POST = route(async (req: Request) => {
@@ -23,8 +24,8 @@ export const POST = route(async (req: Request) => {
     amountCents: cents,
     userId: user.id,
     description: 'Funds for logoless campaigns',
-    returnUrl: `${origin}/brand/billing?paypal=return`,
-    cancelUrl: `${origin}/brand/billing?cancelled=1`,
+    returnUrl: `${origin}/brand/billing?paypal=return${parsed.data.back ? `&back=${encodeURIComponent(parsed.data.back)}` : ''}`,
+    cancelUrl: parsed.data.back ? `${origin}${parsed.data.back}${parsed.data.back.includes('?') ? '&' : '?'}cancelled=1` : `${origin}/brand/billing?cancelled=1`,
   })
   const d = await db()
   // the order id doubles as the unique id of this payment

@@ -2,7 +2,9 @@ import { db, nowSec, uid } from './db'
 import { HttpError } from './http'
 
 export const MAX_IMAGE_BYTES = 450 * 1024
-export const IMAGE_LIMITS = { avatar: { w: 512, h: 512 }, banner: { w: 1600, h: 900 }, cover: { w: 900, h: 900 } } as const
+export const IMAGE_LIMITS = { avatar: { w: 512, h: 512 }, banner: { w: 1600, h: 900 }, cover: { w: 900, h: 900 }, background: { w: 1600, h: 900 } } as const
+/** How many of each kind one person keeps. Covers and backgrounds belong to campaigns, so more of them are kept. */
+const KEEP: Record<ImageKind, number> = { avatar: 3, banner: 3, cover: 12, background: 12 }
 export type ImageKind = keyof typeof IMAGE_LIMITS
 
 /** Reads width/height from the file header itself, so we never trust what the browser says. */
@@ -62,8 +64,8 @@ export async function storeImage(userId: string, kind: ImageKind, bytes: Uint8Ar
   const d = await db()
   // Keep only the latest few per kind so nobody can fill the database.
   await d
-    .prepare('DELETE FROM uploads WHERE user_id = ?1 AND kind = ?2 AND id NOT IN (SELECT id FROM uploads WHERE user_id = ?1 AND kind = ?2 ORDER BY created_at DESC LIMIT 3)')
-    .bind(userId, kind)
+    .prepare('DELETE FROM uploads WHERE user_id = ?1 AND kind = ?2 AND id NOT IN (SELECT id FROM uploads WHERE user_id = ?1 AND kind = ?2 ORDER BY created_at DESC LIMIT ?3)')
+    .bind(userId, kind, KEEP[kind])
     .run()
   const id = uid()
   await d.prepare('INSERT INTO uploads (id, user_id, kind, mime, size, data, created_at) VALUES (?1,?2,?3,?4,?5,?6,?7)').bind(id, userId, kind, mime, bytes.length, toBase64(bytes), nowSec()).run()

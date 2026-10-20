@@ -4,7 +4,7 @@ import { ActionLink } from '@/components/app/action-link'
 import { EmptyState } from '@/components/app/table'
 import { PageHeader } from '@/components/app/ui'
 import { CampaignTile } from '@/components/browse/campaign-tile'
-import { toCampaign, type CampaignRow } from '@/lib/campaigns-db'
+import { NOT_FAKE, toCampaign, type CampaignRow } from '@/lib/campaigns-db'
 import { db } from '@/lib/db'
 import { featureOn } from '@/lib/features'
 import { pageUser } from '@/lib/user'
@@ -17,7 +17,7 @@ export default async function Page() {
   const d = await db()
   const rows = (
     await d
-      .prepare("SELECT c.* FROM favorites f JOIN campaigns c ON c.id = f.campaign_id WHERE f.user_id = ?1 AND c.status = 'live' ORDER BY f.created_at DESC")
+      .prepare(`SELECT c.* FROM favorites f JOIN campaigns c ON c.id = f.campaign_id WHERE f.user_id = ?1 AND c.status = 'live' AND ${NOT_FAKE} ORDER BY f.created_at DESC`)
       .bind(user.id)
       .all<CampaignRow>()
   ).results.map(toCampaign)

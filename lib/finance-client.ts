@@ -27,5 +27,6 @@ export const cents = (c: number) => `$${(c / 100).toLocaleString('en-US', { mini
 
 export const getFinance = () => api<Finance>('/api/me/finance')
 export const withdraw = (email: string, amountUsd?: number) => api<{ ok: true; amount: number; review?: boolean }>('/api/payouts/withdraw', { method: 'POST', data: amountUsd ? { email, amount: amountUsd } : { email } })
-export const startDeposit = (amountUsd: number) => api<{ url: string }>('/api/paypal/deposit', { method: 'POST', data: { amount: amountUsd } })
+/** `back` is a page on this site to return to after paying (for example a half-made campaign), instead of the Balance page. */
+export const startDeposit = (amountUsd: number, back?: string) => api<{ url: string }>('/api/paypal/deposit', { method: 'POST', data: back ? { amount: amountUsd, back } : { amount: amountUsd } })
 export const captureDeposit = (orderId: string) => api<{ ok: true; amount: number }>('/api/paypal/capture', { method: 'POST', data: { orderId } })

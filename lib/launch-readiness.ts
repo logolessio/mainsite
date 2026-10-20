@@ -70,7 +70,7 @@ export async function readiness(): Promise<Readiness> {
         .prepare(
           `SELECT
              (SELECT COUNT(*) FROM stripe_events) AS events,
-             (SELECT COUNT(*) FROM campaigns WHERE admin_note = 'sample') AS samples,
+             (SELECT COUNT(*) FROM campaigns WHERE admin_note = 'sample' OR id LIKE 'mock-%') AS samples,
              (SELECT COUNT(*) FROM campaigns WHERE status = 'live' AND COALESCE(admin_note, '') != 'sample' AND id NOT LIKE 'mock-%') AS realLive,
              (SELECT COUNT(*) FROM ledger WHERE kind = 'earning_spend' OR kind = 'campaign_fund') AS campaignPayments,
              (SELECT COUNT(*) FROM payouts WHERE status = 'sent') AS payoutsSent,
@@ -130,7 +130,7 @@ export async function readiness(): Promise<Readiness> {
     manual('alerts', { group: 'Database and safety', level: 'nice', title: 'Cloudflare usage alerts are on', why: 'An email if traffic or database use spikes.', how: ['Cloudflare → Notifications → add usage and D1 alerts.'] }),
 
     // ---------------- content ----------------
-    { id: 'samples', group: 'Content and look', level: 'blocker', title: 'Sample campaigns are removed', why: 'The home page should show only real campaigns. Samples are fake artists.', state: (f.samples ?? 0) === 0 ? 'done' : 'todo', detail: (f.samples ?? 0) === 0 ? 'None left' : `${f.samples} sample campaigns still showing`, how: ['Open Campaigns and press “Remove sample campaigns” (top right). Do this when your first real campaign is ready, so the home page is never empty.'], href: '/admin/campaigns', hrefLabel: 'Open campaigns' },
+    { id: 'samples', group: 'Content and look', level: 'should', title: 'Made-up campaigns are removed', why: 'The site already hides the sample and mock campaigns, but they are still rows in the database.', state: (f.samples ?? 0) === 0 ? 'done' : 'todo', detail: (f.samples ?? 0) === 0 ? 'None left' : `${f.samples} made-up campaigns still in the database (hidden)`, how: ['Review scripts/remove-fake-campaigns.sql, then run `npx wrangler d1 execute logoless --remote --file scripts/remove-fake-campaigns.sql`.', 'Or open Campaigns and press “Remove sample campaigns” at the bottom (it does the sample ones only).'], href: '/admin/campaigns', hrefLabel: 'Open campaigns' },
     { id: 'real-live', group: 'Content and look', level: 'blocker', title: 'At least one real campaign is live', why: 'A launch with an empty home page looks abandoned.', state: (f.realLive ?? 0) > 0 ? 'done' : 'todo', detail: `${f.realLive ?? 0} live`, how: ['Send your first artist link and launch their campaign.'], href: '/admin/invites', hrefLabel: 'Make an artist link' },
     { id: 'company', group: 'Content and look', level: 'blocker', title: 'Company name and address are real', why: 'They appear in the legal pages and receipts. A placeholder looks unfinished and is not legally sound.', state: SITE.address.includes('[') || SITE.address.includes('TODO') ? 'todo' : 'done', detail: SITE.address.includes('[') ? 'Address is still a placeholder' : SITE.company, how: ['Edit `company` and `address` in lib/site.ts, then push.'] },
     manual('mailboxes', { group: 'Content and look', level: 'blocker', title: 'support@ / legal@ / privacy@ mailboxes work', why: 'The legal pages and footer tell people to write to these. Someone must receive them.', how: [`The site lists ${SITE.emails.support}, ${SITE.emails.legal}, ${SITE.emails.privacy} and ${SITE.emails.abuse}.`, 'Make each one a real mailbox or a forward to you, and send a test to each.'] }),

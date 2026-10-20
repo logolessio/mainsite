@@ -3,9 +3,8 @@ import { verifiedHandles } from './bio-verify'
 import { checkClip, type Check } from './clip-check'
 import { db, nowSec, uid } from './db'
 import { HttpError } from './http'
-import { isMockId } from './mock-campaigns'
+import { isFake } from './campaigns-db'
 import { notify, notifyAdmins } from './notify'
-import { rolesForEmail } from './roles'
 import { getSetting } from './settings'
 
 export const CLIP_HOSTS: Record<string, RegExp> = {
@@ -34,12 +33,10 @@ export async function submitClip(user: { id: string; email: string }, campaignId
   u.hash = ''
 
   const d = await db()
-  const c = await d.prepare('SELECT title, creator, status, platforms_json, brand_user_id FROM campaigns WHERE id = ?1').bind(campaignId).first<{ title: string; creator: string; status: string; platforms_json: string; brand_user_id: string | null }>()
-  if (!c || c.status !== 'live') throw new HttpError(404, 'This campaign is not taking clips.')
+  const c = await d.prepare('SELECT id, title, creator, status, platforms_json, brand_user_id, admin_note FROM campaigns WHERE id = ?1').bind(campaignId).first<{ id: string; title: string; creator: string; status: string; platforms_json: string; brand_user_id: string | null; admin_note: string | null }>()
+  if (!c || c.status !== 'live' || isFake(c)) throw new HttpError(404, 'This campaign is not taking clips.')
   if (!(JSON.parse(c.platforms_json) as string[]).includes(platform)) throw new HttpError(400, 'This campaign does not count that platform.')
   if (c.brand_user_id === user.id) throw new HttpError(403, 'You cannot clip your own campaign.')
-  // a mock campaign is for trying the flow: only the team can send clips to it, and nothing is ever paid
-  if (isMockId(campaignId) && (await rolesForEmail(user.email)).length === 0) throw new HttpError(404, 'This campaign is not taking clips.')
   const pending = await d.prepare("SELECT COUNT(*) AS n FROM submissions WHERE user_id = ?1 AND status = 'pending'").bind(user.id).first<{ n: number }>()
   if ((pending?.n ?? 0) >= 40) throw new HttpError(429, 'You have a lot of clips waiting for review. Please wait for those first.')
 

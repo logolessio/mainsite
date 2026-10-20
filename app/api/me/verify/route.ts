@@ -5,7 +5,8 @@ import { checkCode, issueCode } from '@/lib/email-code'
 import { protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
 import { requestMeta } from '@/lib/log'
-import { isVerified, markVerified } from '@/lib/verification'
+import { featureOn } from '@/lib/features'
+import { emailProven, isVerified, markVerified } from '@/lib/verification'
 import { requireUser } from '@/lib/user'
 
 /** Whether this account has been verified. Discord and email sign-ups already are. */
@@ -22,8 +23,9 @@ export const POST = route(async (req: Request) => {
   await protect(req, { name: 'verify-code', max: 12, windowSec: 900, userId: user.id })
   const parsed = schema.safeParse(await body(req, 512))
   if (!parsed.success) throw new HttpError(400, 'Enter the 6 digit code.')
-  const state = await isVerified(user.id, user.email)
-  if (state.verified) return json({ ok: true, verified: true })
+  // with `onboarding-checks` on, a Discord sign-in proves its email with a code too, so only a real proof of the address counts here
+  const done = (await featureOn('onboarding-checks')) ? await emailProven(user.id, user.email) : (await isVerified(user.id, user.email)).verified
+  if (done) return json({ ok: true, verified: true })
 
   const email = user.email.toLowerCase()
   if (parsed.data.action === 'send') {

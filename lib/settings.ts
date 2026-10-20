@@ -19,7 +19,6 @@ export const SETTING_DEFAULTS = {
   design_font_figures: '', // ...for big numbers
   design_font_mono_face: '', // ...for code and small print
   design_font_mono: '0', // older switch: 1 = Geist Mono is the main typeface (design_font replaces it)
-  mock_public: '0', // 1 = mock campaigns (made up by an admin to try the site) are shown to everyone, not just the team
   design_font: 'inter', // the typeface for the whole site (an id from lib/fonts.ts)
   owner_notes: '', // the private notepad on the owner overview
   pinned_campaigns: '[]', // ids of live campaigns the owner pinned to the top of the browse page (a JSON list)

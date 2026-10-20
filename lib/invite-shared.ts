@@ -62,6 +62,16 @@ export type InviteData = {
   rate?: string
   endsOn?: string
   agreed?: boolean
+  // the client package (switch "client-links"): the music, the artwork, the budget either way round, and how to reach them
+  spotify?: string[]
+  sounds?: string[]
+  audioNote?: string
+  audio?: string
+  background?: string
+  budgetMode?: 'views' | 'rate'
+  views?: string
+  reachBy?: string
+  reachAt?: string
 }
 
 export const STEPS = [
@@ -78,8 +88,42 @@ export const STEPS = [
   { id: 'fund', chapter: 'Launch', title: 'Fund it' },
   { id: 'done', chapter: 'Launch', title: 'All set' },
 ] as const
-export type StepId = (typeof STEPS)[number]['id']
+/**
+ * The client package (switch "client-links"): the same link, but a fuller set-up. After their page they choose how to be reached
+ * and add funds, then build the first campaign in detail (the music, the official sound, the artwork, the budget either way round).
+ */
+export const PACKAGE_STEPS = [
+  { id: 'hello', chapter: 'Welcome', title: 'Welcome' },
+  { id: 'you', chapter: 'You', title: 'Your name' },
+  { id: 'sound', chapter: 'You', title: 'Your sound' },
+  { id: 'links', chapter: 'You', title: 'Where you are' },
+  { id: 'look', chapter: 'You', title: 'Your picture' },
+  { id: 'contact', chapter: 'You', title: 'Staying in touch' },
+  { id: 'funds', chapter: 'Funds', title: 'Add funds' },
+  { id: 'release', chapter: 'Campaign', title: 'What you are pushing' },
+  { id: 'audio', chapter: 'Campaign', title: 'The audio' },
+  { id: 'art', chapter: 'Campaign', title: 'Cover and background' },
+  { id: 'brief', chapter: 'Campaign', title: 'What to create' },
+  { id: 'money', chapter: 'Campaign', title: 'Budget' },
+  { id: 'rules', chapter: 'Launch', title: 'How we work' },
+  { id: 'review', chapter: 'Launch', title: 'Review' },
+  { id: 'fund', chapter: 'Launch', title: 'Start it' },
+  { id: 'done', chapter: 'Launch', title: 'All set' },
+] as const
+export type StepId = (typeof STEPS)[number]['id'] | (typeof PACKAGE_STEPS)[number]['id']
+export type Step = { id: StepId; chapter: string; title: string }
 export const CHAPTERS = ['You', 'Campaign', 'Launch'] as const
+export const PACKAGE_CHAPTERS = ['You', 'Funds', 'Campaign', 'Launch'] as const
+export const stepsFor = (pkg: boolean): readonly Step[] => (pkg ? PACKAGE_STEPS : STEPS)
+
+/** The ways a client can tell our team to reach them, beyond the site's own messages. */
+export const REACH = [
+  { id: 'email', label: 'Email', placeholder: 'you@example.com' },
+  { id: 'whatsapp', label: 'WhatsApp', placeholder: '+1 555 010 0000' },
+  { id: 'instagram', label: 'Instagram', placeholder: '@username' },
+  { id: 'phone', label: 'Phone call', placeholder: '+1 555 010 0000' },
+  { id: 'discord', label: 'Discord', placeholder: 'username' },
+] as const
 
 export const BUDGET_PRESETS = [100, 250, 500, 1000, 2500, 5000]
 export const RATE_PRESETS = [1, 2, 3, 5]

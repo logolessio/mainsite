@@ -18,6 +18,20 @@ export async function isVerified(userId: string, email: string): Promise<{ verif
   return { verified: false, via: null }
 }
 
+/**
+ * Whether this person has proven they own their email address: they signed up with a password (which needs the emailed code)
+ * or entered a code during onboarding or later. A Discord link does not count here, because Discord says nothing about who reads
+ * the inbox. Used by onboarding when the `onboarding-checks` switch is on.
+ */
+export async function emailProven(userId: string | null, email: string): Promise<boolean> {
+  const d = await db()
+  const [mark, cred] = await Promise.all([
+    userId ? d.prepare('SELECT 1 AS x FROM settings WHERE key = ?1').bind(`verified:${userId}`).first() : Promise.resolve(null),
+    d.prepare('SELECT 1 AS x FROM credentials WHERE email = ?1').bind(email.toLowerCase()).first(),
+  ])
+  return Boolean(mark || cred)
+}
+
 export async function markVerified(userId: string) {
   const d = await db()
   await d

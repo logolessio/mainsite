@@ -26,12 +26,24 @@ export async function prepareImage(file: File, w: number, h: number): Promise<st
   throw new Error('That picture is too detailed to shrink enough. Try a simpler one.')
 }
 
-export type UploadKind = 'avatar' | 'banner' | 'cover'
-const SIZES: Record<UploadKind, [number, number]> = { avatar: [512, 512], banner: [1600, 900], cover: [900, 900] }
+export type UploadKind = 'avatar' | 'banner' | 'cover' | 'background'
+const SIZES: Record<UploadKind, [number, number]> = { avatar: [512, 512], banner: [1600, 900], cover: [900, 900], background: [1600, 900] }
 
 export async function uploadImage(kind: UploadKind, file: File): Promise<string> {
   const data = await prepareImage(file, ...SIZES[kind])
   const res = await fetch('/api/me/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind, data }) })
+  const j = (await res.json().catch(() => ({}))) as { id?: string; error?: string }
+  if (!res.ok || !j.id) throw new Error(j.error ?? 'Upload failed.')
+  return j.id
+}
+
+/** A short audio preview (MP3, M4A, OGG or WAV, up to 1 MB). The server checks the real type. */
+export async function uploadAudio(file: File): Promise<string> {
+  if (file.size > 1024 * 1024) throw new Error('That file is too large. Keep the preview under 1 MB (about 30 seconds of MP3).')
+  const buf = new Uint8Array(await file.arrayBuffer())
+  let bin = ''
+  for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000))
+  const res = await fetch('/api/me/audio', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data: btoa(bin) }) })
   const j = (await res.json().catch(() => ({}))) as { id?: string; error?: string }
   if (!res.ok || !j.id) throw new Error(j.error ?? 'Upload failed.')
   return j.id

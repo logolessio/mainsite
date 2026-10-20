@@ -1,18 +1,16 @@
 import type { Metadata } from 'next'
 import { AdminButton } from '@/components/admin/ui'
-import { Disclosure } from '@/components/admin/disclosure'
 import { More } from '@/components/admin/more'
 import { Tabbed, type TabbedItem } from '@/components/admin/tabbed'
 import { money, when } from '@/lib/format'
 import { CampaignEditor } from '@/components/admin/campaign-editor'
-import { MockCampaigns } from '@/components/admin/mock-campaigns'
 import { RemoveSamples } from '@/components/admin/remove-samples'
 import { Badge } from '@/components/app/table'
 import { Card, PageHeader } from '@/components/app/ui'
 import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
 import { type CampaignRow } from '@/lib/campaigns-db'
 import { db } from '@/lib/db'
-import { getSetting, pinnedIds } from '@/lib/settings'
+import { pinnedIds } from '@/lib/settings'
 import { pageAdmin } from '@/lib/user'
 
 export const metadata: Metadata = { title: 'Campaigns | logoless', robots: { index: false } }
@@ -42,10 +40,9 @@ export default async function Page() {
       )
       .all<Row>()
   ).results
-  const mocks = rows.filter((r) => r.id.startsWith('mock-'))
-  const mockPublic = (await getSetting('mock_public')) === '1'
   const pins = new Set(await pinnedIds())
   const samples = rows.filter((r) => r.admin_note === 'sample').length
+  const fakes = rows.filter((r) => r.admin_note === 'sample' || r.id.startsWith('mock-')).length
 
   const tabs: TabbedItem[] = VIEWS.map((v) => {
     const items = rows.filter((r) => v.statuses.includes(r.status))
@@ -69,8 +66,7 @@ export default async function Page() {
                       <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-lg leading-tight">
                         {c.title} <span className="text-sm text-mute">by {c.creator}</span>
                         <Badge tone={CAMPAIGN_STATUS[c.status]?.tone}>{CAMPAIGN_STATUS[c.status]?.admin ?? c.status}</Badge>
-                        {c.admin_note === 'sample' && <Badge>sample</Badge>}
-                        {c.id.startsWith('mock-') && <Badge>mock</Badge>}
+                        {(c.admin_note === 'sample' || c.id.startsWith('mock-')) && <Badge>made up, hidden</Badge>}
                       </p>
                       <p className="mt-1.5 text-[13px] text-mute">
                         {money(c.budget_cents)} budget · ${(c.rate_cents / 100).toFixed(2)} per 1,000 views · {c.clips} {c.clips === 1 ? 'clip' : 'clips'} · {c.owner ?? 'no owner'}
@@ -138,15 +134,14 @@ export default async function Page() {
     <>
       <PageHeader title="Campaigns" sub="Accept a request, wait for the artist to pay, then launch. Nothing goes live until it is paid." />
       <Tabbed tabs={tabs} initial={first} />
-      <Disclosure className="mt-10" title="Testing tools" sub="Made-up campaigns to try the site with, and a clean-up for the sample campaigns.">
-        <div className="grid gap-6">
-          <MockCampaigns rows={mocks.map((r) => ({ id: r.id, title: r.title, creator: r.creator, cover_url: r.cover_url, rate_cents: r.rate_cents, budget_cents: r.budget_cents, clips: r.clips }))} publicOn={mockPublic} />
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
-            <p className="text-sm text-mute">Sample campaigns are placeholders that shipped with the site. Remove them once a real campaign is live.</p>
-            <RemoveSamples count={samples} />
-          </div>
+      {fakes > 0 && (
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
+          <p className="max-w-xl text-sm text-mute">
+            {fakes} made-up {fakes === 1 ? 'campaign is' : 'campaigns are'} still in the database. The public site already hides them. Remove them all with scripts/remove-fake-campaigns.sql, or the sample ones with the button.
+          </p>
+          <RemoveSamples count={samples} />
         </div>
-      </Disclosure>
+      )}
     </>
   )
 }

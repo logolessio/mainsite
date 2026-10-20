@@ -75,10 +75,19 @@ export const dataSchema = z
     rate: z.string().trim().max(8),
     endsOn: z.string().trim().max(12),
     agreed: z.boolean(),
+    spotify: z.array(z.string().trim().max(300)).max(6),
+    sounds: z.array(z.string().trim().max(300)).max(4),
+    audioNote: z.string().trim().max(200),
+    audio: z.string().regex(/^[0-9a-f-]{36}$/).or(z.literal('')),
+    background: z.string().regex(/^[0-9a-f-]{36}$/).or(z.literal('')),
+    budgetMode: z.enum(['views', 'rate']),
+    views: z.string().trim().max(10),
+    reachBy: z.enum(['email', 'whatsapp', 'instagram', 'phone', 'discord', '']),
+    reachAt: z.string().trim().max(120),
   })
   .partial()
 
-export const progressSchema = z.object({ step: z.number().int().min(0).max(11), data: dataSchema })
+export const progressSchema = z.object({ step: z.number().int().min(0).max(30), data: dataSchema })
 
 export function maskEmail(e: string) {
   const [u, host] = e.split('@')

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { connection } from 'next/server'
 import { Leaderboard, type Entry } from '@/components/marketing/leaderboard'
+import { NOT_FAKE } from '@/lib/campaigns-db'
 import { db, nowSec } from '@/lib/db'
 import { featureOn } from '@/lib/features'
 import { CONTAINER } from '@/lib/layout'
@@ -22,6 +23,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ p
         `SELECT p.handle, p.display_name, p.avatar_key, p.accent, p.show_json, SUM(s.views_verified) AS views, COUNT(*) AS clips
          FROM submissions s JOIN profiles p ON p.user_id = s.user_id JOIN users u ON u.id = s.user_id
          WHERE s.status = 'approved' AND s.views_verified > 0 AND s.created_at >= ?1 AND u.status = 'active'
+           AND s.campaign_id IN (SELECT id FROM campaigns WHERE ${NOT_FAKE})
          GROUP BY s.user_id ORDER BY views DESC LIMIT 60`,
       )
       .bind(since)

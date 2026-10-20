@@ -25,7 +25,7 @@ const KIND: Record<string, { label: string; tone: 'good' | 'neutral' | 'warn' }>
 }
 
 /** One balance for every campaign: add money here, and clippers are paid out of it as they earn. */
-export default async function Page({ searchParams }: { searchParams: Promise<{ funded?: string; cancelled?: string; paypal?: string; token?: string }> }) {
+export default async function Page({ searchParams }: { searchParams: Promise<{ funded?: string; cancelled?: string; paypal?: string; token?: string; back?: string }> }) {
   const user = await pageUser()
   const q = await searchParams
   const d = await db()
@@ -46,7 +46,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
   return (
     <>
       <PageHeader title="Balance" sub="One balance for all your campaigns. Creators are paid out of it as they earn, and we cover PayPal's fees on every deposit." />
-      {q.paypal === 'return' && q.token && <CaptureOnReturn orderId={q.token} />}
+      {q.paypal === 'return' && q.token && <CaptureOnReturn orderId={q.token} back={q.back} />}
       {q.funded && (
         <p role="status" className="mb-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/[0.05] px-4 py-3 text-sm">
           Payment received. Your balance is updated.

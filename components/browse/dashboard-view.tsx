@@ -14,6 +14,7 @@ import { EndingSoon } from './ending-soon'
 import { FilterBar, type SortKey } from './filter-bar'
 import { GlassSearch } from './glass-search'
 import { GuidedTour } from './guided-tour'
+import { NoCampaigns } from './no-campaigns'
 
 export function DashboardView({ campaigns, ended = [], startTour }: { campaigns: Campaign[]; ended?: EndedCampaign[]; startTour: boolean }) {
   const [query, setQuery] = useState('')
@@ -88,6 +89,9 @@ export function DashboardView({ campaigns, ended = [], startTour }: { campaigns:
     if (window.location.search.includes('tour')) window.history.replaceState(null, '', '/')
   }, [])
 
+  // nothing is live at all: no search or filters to offer, just say so (a search that finds nothing is handled further down)
+  const none = campaigns.length === 0
+
   return (
     <>
       <section aria-labelledby="hero-title" className="mx-auto flex max-w-3xl flex-col items-center pt-14 pb-12 text-center md:pt-24 md:pb-16">
@@ -102,62 +106,70 @@ export function DashboardView({ campaigns, ended = [], startTour }: { campaigns:
         )}
       </section>
 
-      <motion.div
-        initial={false}
-        className="sticky top-[76px] z-20 mx-auto mb-3 max-w-3xl md:mb-4"
-      >
-        <GlassSearch value={query} onChange={setQuery} resultCount={results.length} />
-      </motion.div>
+      {none ? (
+        <section id="campaigns" aria-label="Campaigns" className="scroll-mt-40">
+          <NoCampaigns />
+        </section>
+      ) : (
+        <>
+          <motion.div
+            initial={false}
+            className="sticky top-[76px] z-20 mx-auto mb-3 max-w-3xl md:mb-4"
+          >
+            <GlassSearch value={query} onChange={setQuery} resultCount={results.length} />
+          </motion.div>
 
-      <FilterBar
-        categories={categories}
-        category={category}
-        onCategory={setCategory}
-        platforms={platforms}
-        onPlatform={(p) => setPlatforms((cur) => (cur.includes(p) ? cur.filter((x) => x !== p) : [...cur, p]))}
-        sort={sort}
-        onSort={setSort}
-        active={filtersActive}
-        onClear={() => {
-          setCategory('All')
-          setPlatforms([])
-          setSort('rate')
-        }}
-      />
+          <FilterBar
+            categories={categories}
+            category={category}
+            onCategory={setCategory}
+            platforms={platforms}
+            onPlatform={(p) => setPlatforms((cur) => (cur.includes(p) ? cur.filter((x) => x !== p) : [...cur, p]))}
+            sort={sort}
+            onSort={setSort}
+            active={filtersActive}
+            onClear={() => {
+              setCategory('All')
+              setPlatforms([])
+              setSort('rate')
+            }}
+          />
 
-      {!filtersActive && !deferred.trim() && <EndingSoon campaigns={campaigns} />}
+          {!filtersActive && !deferred.trim() && <EndingSoon campaigns={campaigns} />}
 
-      <section id="campaigns" aria-label="Campaigns" className="scroll-mt-40">
-        {results.length > 0 ? (
-          <div className="island mx-auto max-w-[1300px] rounded-[calc(40px*var(--round,1))] bg-[#0a0a0c] p-4 sm:p-6 md:rounded-[calc(52px*var(--round,1))] md:p-10">
-            <CampaignGrid campaigns={results} />
-          </div>
-        ) : (
-          <div className="mx-auto max-w-xl rounded-[calc(28px*var(--round,1))] border border-dashed border-line-strong px-6 py-20 text-center">
-            {gone.length > 0 ? (
-              <>
-                <p className="font-display text-3xl">that campaign has ended</p>
-                <ul className="mt-5 grid gap-2 text-[15px]">
-                  {gone.map((c) => (
-                    <li key={c.id}>
-                      <TransitionLink href={`/campaign/${c.id}`} className="text-paper underline decoration-paper/30 underline-offset-4 transition-colors hover:decoration-paper">
-                        {c.title}
-                      </TransitionLink>{' '}
-                      <span className="text-mute">ended {agoText(c.endedAt)}</span>
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-4 text-sm text-mute">Try another search to find something that is live.</p>
-              </>
+          <section id="campaigns" aria-label="Campaigns" className="scroll-mt-40">
+            {results.length > 0 ? (
+              <div className="island mx-auto max-w-[1300px] rounded-[calc(40px*var(--round,1))] bg-[#0a0a0c] p-4 sm:p-6 md:rounded-[calc(52px*var(--round,1))] md:p-10">
+                <CampaignGrid campaigns={results} />
+              </div>
             ) : (
-              <>
-                <p className="font-display text-3xl">no campaigns match</p>
-                <p className="mt-2 text-sm text-mute">Try a different search, or clear the filters.</p>
-              </>
+              <div className="mx-auto max-w-xl rounded-[calc(28px*var(--round,1))] border border-dashed border-line-strong px-6 py-20 text-center">
+                {gone.length > 0 ? (
+                  <>
+                    <p className="font-display text-3xl">that campaign has ended</p>
+                    <ul className="mt-5 grid gap-2 text-[15px]">
+                      {gone.map((c) => (
+                        <li key={c.id}>
+                          <TransitionLink href={`/campaign/${c.id}`} className="text-paper underline decoration-paper/30 underline-offset-4 transition-colors hover:decoration-paper">
+                            {c.title}
+                          </TransitionLink>{' '}
+                          <span className="text-mute">ended {agoText(c.endedAt)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-4 text-sm text-mute">Try another search to find something that is live.</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-display text-3xl">no campaigns match</p>
+                    <p className="mt-2 text-sm text-mute">Try a different search, or clear the filters.</p>
+                  </>
+                )}
+              </div>
             )}
-          </div>
-        )}
-      </section>
+          </section>
+        </>
+      )}
 
       <GuidedTour open={tourOpen} onClose={closeTour} />
     </>

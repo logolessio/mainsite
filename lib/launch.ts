@@ -1,6 +1,7 @@
 import { hmacHex, safeEqual, sha256Hex } from './crypto'
 import { db, nowSec, setting } from './db'
-import { HANDLE_RE, RESERVED_WORDS } from './profile-style'
+import { featureOn } from './features'
+import { HANDLE_RE, HANDLE_RE_LOOSE, RESERVED_WORDS, handleProblem as looseHandleProblem, isReservedHandle } from './profile-style'
 import type { SettingKey } from './settings'
 
 // The launch page: a countdown and a sign-up that stand in front of the whole site until the owners open it.
@@ -47,8 +48,14 @@ export type Signup = { e: string; h: string | null; t: number; u?: number }
 /** Why a username cannot be reserved, or null if it is free. */
 export async function handleProblem(raw: string, forEmailKey?: string): Promise<string | null> {
   const h = raw.trim().toLowerCase().replace(/^@/, '')
-  if (!HANDLE_RE.test(h)) return 'Use 3 to 20 letters, numbers or underscores.'
-  if (RESERVED_WORDS.some((w) => h.includes(w))) return 'That name is kept by logoless.'
+  if (await featureOn('username-punctuation')) {
+    // dots and dashes too, and reserved words are found through punctuation ("log.oless" is still kept)
+    if (!HANDLE_RE_LOOSE.test(h)) return looseHandleProblem(h, { loose: true, isAdmin: true })
+    if (isReservedHandle(h, true)) return 'That name is kept by logoless.'
+  } else {
+    if (!HANDLE_RE.test(h)) return 'Use 3 to 20 letters, numbers or underscores.'
+    if (RESERVED_WORDS.some((w) => h.includes(w))) return 'That name is kept by logoless.'
+  }
   const d = await db()
   if (await d.prepare('SELECT 1 AS x FROM profiles WHERE handle = ?1').bind(h).first()) return 'That one is taken.'
   const held = await d.prepare('SELECT value FROM settings WHERE key = ?1').bind(`launch-handle:${h}`).first<{ value: string }>()

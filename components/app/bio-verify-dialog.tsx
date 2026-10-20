@@ -7,18 +7,22 @@ import { createPortal } from 'react-dom'
 import { BrandIcon } from '@/components/brand-icon'
 import { useDialog } from '@/hooks/use-dialog'
 import { useMounted } from '@/hooks/use-motion-prefs'
+import { useFeature } from '@/components/shell/features-provider'
 import type { State } from '@/lib/bio-verify'
 import { SPRING_POP } from '@/lib/layout'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 
 type P = State['platform']
-const LABEL: Record<P, string> = { tiktok: 'TikTok', youtube: 'YouTube', instagram: 'Instagram' }
-const WHERE: Record<P, string> = {
+export const LABEL: Record<P, string> = { tiktok: 'TikTok', youtube: 'YouTube', instagram: 'Instagram' }
+export const WHERE: Record<P, string> = {
   tiktok: 'In TikTok, open your profile, press Edit profile, and add the code to your Bio.',
   youtube: 'In YouTube Studio, open Customization, then Basic info, and add the code to your Description.',
   instagram: 'In Instagram, open your profile, press Edit profile, and add the code to your Bio.',
 }
+
+/** TikTok's website often shows an old bio for a while after it is changed (shown while `onboarding-checks` is on). */
+export const TIKTOK_SLOW = "TikTok's website can take a while (sometimes several minutes) to show a new bio. If we do not find the code straight away, wait a bit and press Check again."
 
 type Phase = { kind: 'loading' } | { kind: 'ready' } | { kind: 'checking' } | { kind: 'verified' } | { kind: 'not-found'; message: string } | { kind: 'unreadable'; message: string } | { kind: 'waiting' } | { kind: 'error'; message: string }
 
@@ -41,6 +45,7 @@ function Dialog({ platform, handle, onClose, onChange }: { platform: P; handle: 
   const [profileUrl, setProfileUrl] = useState('')
   const [phase, setPhase] = useState<Phase>({ kind: 'loading' })
   const [copied, setCopied] = useState(false)
+  const checks = useFeature('onboarding-checks')
 
   const begin = useCallback(async () => {
     try {
@@ -148,7 +153,7 @@ function Dialog({ platform, handle, onClose, onChange }: { platform: P; handle: 
                 <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-pill border border-line-strong text-xs">2</span>
                 <div className="min-w-0 flex-1">
                   <p>Save it, then check</p>
-                  <p className="mt-1 text-sm text-mute">It can take a minute for the platform to show the new bio.</p>
+                  <p className="mt-1 text-sm text-mute">{checks && platform === 'tiktok' ? TIKTOK_SLOW : 'It can take a minute for the platform to show the new bio.'}</p>
                 </div>
               </li>
             </ol>
@@ -164,7 +169,7 @@ function Dialog({ platform, handle, onClose, onChange }: { platform: P; handle: 
 
             <div className="mt-6 grid gap-2.5">
               <button type="button" onClick={run} disabled={busy || !code} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-pill bg-paper text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
-                {phase.kind === 'checking' && <Loader2 aria-hidden="true" className="size-4 animate-spin" />} Check my bio
+                {phase.kind === 'checking' && <Loader2 aria-hidden="true" className="size-4 animate-spin" />} {checks && (phase.kind === 'not-found' || phase.kind === 'unreadable') ? 'Check again' : 'Check my bio'}
               </button>
               {canAsk && (
                 <button type="button" onClick={ask} disabled={busy} className={cn('inline-flex h-12 w-full items-center justify-center rounded-pill border border-white/25 text-[15px] transition-colors hover:bg-white/10 disabled:opacity-40')}>
