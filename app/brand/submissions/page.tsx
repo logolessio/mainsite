@@ -2,6 +2,10 @@ import type { Metadata } from 'next'
 import { AdminButton } from '@/components/admin/ui'
 import { Badge, EmptyState } from '@/components/app/table'
 import { Card, PageHeader, StatCard } from '@/components/app/ui'
+import { ClientTour } from '@/components/brand/client-tour'
+import { FirstSubmissionGuide } from '@/components/brand/first-submission-guide'
+import { guidesSeen } from '@/lib/client-guide'
+import { featureOn } from '@/lib/features'
 import { db } from '@/lib/db'
 import { money, when } from '@/lib/format'
 import { pageUser } from '@/lib/user'
@@ -37,6 +41,13 @@ export default async function Page() {
   ).results
   const pending = rows.filter((r) => r.status === 'pending')
   const views = rows.reduce((a, r) => a + r.views_verified, 0)
+  // the walkthrough points at the first card on the page, and at the first "Turn down" there is
+  const shown = [...pending, ...rows.filter((r) => r.status !== 'pending')]
+  const firstCard = shown[0]?.id
+  const firstTurnDown = shown.find((r) => r.status !== 'rejected' && r.views_verified === 0)?.id
+  // removed submissions are hidden here, but they still count as "a first submission arrived"
+  const tourOn = await featureOn('client-tour')
+  const firstSub = tourOn && rows.length > 0 && !(await guidesSeen(user.id))['first-submission']
 
   const list = (items: Row[], empty: string) =>
     items.length === 0 ? (
@@ -46,7 +57,8 @@ export default async function Page() {
     ) : (
       <div className="grid gap-3">
         {items.map((r) => (
-          <Card key={r.id}>
+          <div key={r.id} data-tour={r.id === firstCard ? 'submission' : undefined}>
+          <Card>
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="min-w-0">
                 <p className="flex flex-wrap items-center gap-2">
@@ -64,17 +76,20 @@ export default async function Page() {
                   {r.platform} · posted {when(r.created_at)} · {r.views_verified.toLocaleString()} verified views · {money(r.earned_cents)} paid to the creator
                 </p>
                 {r.reject_reason && <p className="mt-1 text-xs text-mute">Reason given: {r.reject_reason}</p>}
-                <a href={r.url} target="_blank" rel="noopener noreferrer nofollow" className="mt-1 inline-block max-w-full truncate text-sm underline underline-offset-4 hover:text-paper">
+                <a href={r.url} data-tour={r.id === firstCard ? 'watch' : undefined} target="_blank" rel="noopener noreferrer nofollow" className="mt-1 inline-block max-w-full truncate text-sm underline underline-offset-4 hover:text-paper">
                   Watch the submission
                 </a>
               </div>
               {r.status !== 'rejected' && r.views_verified === 0 && (
+                <span data-tour={r.id === firstTurnDown ? 'turn-down' : undefined} className="inline-flex">
                 <AdminButton variant="danger" url={`/api/brand/submissions/${r.id}`} data={{ action: 'reject' }} ask={{ label: 'Why? The creator will see this', key: 'reason', required: true }}>
                   Turn down
                 </AdminButton>
+                </span>
               )}
             </div>
           </Card>
+          </div>
         ))}
       </div>
     )
@@ -82,7 +97,9 @@ export default async function Page() {
   return (
     <>
       <PageHeader title="Submissions" sub="Every submission made for your campaigns. We check the real views before anyone is paid, and you can turn down anything off-brief." />
-      <div className="grid gap-4 sm:grid-cols-3">
+      {tourOn && <ClientTour />}
+      {firstSub && <FirstSubmissionGuide />}
+      <div data-tour="submission-stats" className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Submissions made" value={String(rows.length)} />
         <StatCard label="Waiting for a check" value={String(pending.length)} />
         <StatCard label="Verified views" value={views.toLocaleString()} />

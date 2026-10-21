@@ -242,9 +242,64 @@ export type ShowKey = (typeof SHOW_OPTIONS)[number]['key']
 export type ShowMap = Record<ShowKey, boolean>
 export const DEFAULT_SHOW = Object.fromEntries(SHOW_OPTIONS.map((o) => [o.key, o.on])) as ShowMap
 
+/** The original username rule: 3 to 20 letters, numbers or underscores. New and changed usernames use it while `username-punctuation` is off. */
 export const HANDLE_RE = /^[a-z0-9_]{3,20}$/
+/**
+ * The looser rule (switch `username-punctuation`): dots and dashes too, but never first, never last and never two in a row.
+ * Underscores stay allowed anywhere, so every username that passes HANDLE_RE passes this one as well. Looking up an existing
+ * username always uses this rule, so a page for "luna.ray" keeps working whether the switch is on or off.
+ */
+export const HANDLE_RE_LOOSE = /^(?=[a-z0-9_.-]{3,20}$)[a-z0-9_]+(?:[.-][a-z0-9_]+)*$/
 /** Names that look official. Only the owner account may use them, so nobody can pose as staff. */
 export const RESERVED_WORDS = ['logoless', 'admin', 'administrator', 'support', 'staff', 'official', 'moderator', 'mod', 'help', 'security', 'billing', 'team', 'system', 'root', 'null', 'undefined', 'api', 'www']
+export const HANDLE_RESERVED_MSG = 'That name is reserved. Please pick another.'
+
+/** Lower case, no spaces around it and no leading "@". */
+export const normHandle = (raw: string) => raw.trim().toLowerCase().replace(/^@/, '')
+
+/** Whether a username uses an official-looking word. With `loose`, punctuation is ignored, so "log.oless" or "ad-min" still counts. */
+export function isReservedHandle(h: string, loose = false) {
+  const plain = loose ? h.replace(/[._-]/g, '') : h
+  return RESERVED_WORDS.some((w) => plain.includes(w))
+}
+
+/**
+ * Why this username cannot be used, as a sentence to show, or null when it is fine. Safe in the browser (no database here:
+ * whether it is taken is asked separately). `loose` is the `username-punctuation` switch, `isAdmin` skips the reserved words.
+ */
+export function handleProblem(raw: string, { loose = false, isAdmin = false }: { loose?: boolean; isAdmin?: boolean } = {}): string | null {
+  const h = normHandle(raw)
+  if (!loose) {
+    if (!HANDLE_RE.test(h)) return 'Use 3 to 20 letters, numbers or underscores.'
+  } else if (!HANDLE_RE_LOOSE.test(h)) {
+    if (h.length < 3 || h.length > 20) return 'Use 3 to 20 characters.'
+    if (/[^a-z0-9_.-]/.test(h)) return 'Use letters, numbers, dots, dashes and underscores only.'
+    if (/^[.-]|[.-]$/.test(h)) return 'A dot or dash cannot come first or last.'
+    return 'Dots and dashes cannot be next to each other.'
+  }
+  if (!isAdmin && isReservedHandle(h, loose)) return HANDLE_RESERVED_MSG
+  return null
+}
+
+/** The hint shown next to a username field. */
+export const handleHint = (loose: boolean) => (loose ? 'Letters, numbers, dots, dashes and underscores.' : 'Letters, numbers and underscores.')
+
+/** Drops what a username field cannot hold while someone types (dots and dashes stay with `loose`). */
+export const handleChars = (v: string, loose: boolean) => v.toLowerCase().replace(loose ? /[^a-z0-9_.-]/g : /[^a-z0-9_]/g, '')
+
+/** A first guess at a username from a name ("Luna Ray" becomes "lunaray", or "luna.ray" with `loose`). */
+export function suggestHandle(name: string, loose: boolean) {
+  if (!loose) return name.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20)
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '.')
+    .replace(/[^a-z0-9_.-]/g, '')
+    .replace(/([.-])[.-]+/g, '$1')
+    .replace(/^[.-]+/, '')
+    .slice(0, 20)
+    .replace(/[.-]+$/, '')
+}
 
 export type ProfileView = {
   handle: string

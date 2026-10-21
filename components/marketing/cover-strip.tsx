@@ -2,15 +2,23 @@
 
 import { FadeImg } from '@/components/ui/fade-img'
 import { COVER_IMG, COVER_LIFT, CoverSlide } from '@/components/browse/cover-slide'
+import { NoCampaigns } from '@/components/browse/no-campaigns'
 import { Reveal } from '@/components/motion/reveal'
 import { TransitionLink } from '@/components/shell/transition-link'
 import type { Campaign } from '@/lib/campaigns'
 import { CONTAINER } from '@/lib/layout'
 
-/** A row of real, live campaigns: the covers, who they are for and what they pay. Hidden when nothing is live. */
+/** A row of real, live campaigns: the covers, who they are for and what they pay. When nothing is live it says new ones are coming. */
 export function CoverStrip({ campaigns, heading = 'Browse our active campaigns.', browse = true }: { campaigns: Campaign[]; heading?: string; browse?: boolean }) {
   const shown = campaigns.slice(0, 5)
-  if (shown.length === 0) return null
+  if (shown.length === 0)
+    return (
+      <section className={`${CONTAINER} pb-24 md:pb-40`} aria-label="Campaigns">
+        <div className="border-t border-line pt-8 md:pt-10">
+          <NoCampaigns as="h2" className="max-w-2xl" />
+        </div>
+      </section>
+    )
   return (
     <section className={`${CONTAINER} pb-24 md:pb-40`} aria-label={heading}>
       <div className="mb-8 flex items-end justify-between gap-6 border-t border-line pt-5">

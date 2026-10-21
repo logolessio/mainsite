@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { extrasSchema } from './campaign-extras-shared'
 import { SITE } from './site'
 
 const line = z.string().trim().min(1).max(140)
@@ -19,6 +20,7 @@ export const campaignRequestSchema = z.object({
   endsOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   capPerPost: z.number().min(0).max(1_000_000).optional(), // USD, the most one clip can earn (0 or empty: no limit)
   capPerUser: z.number().min(0).max(1_000_000).optional(), // USD, the most one clipper can earn in this campaign
+  extras: extrasSchema.optional(), // music links, the official sound, an audio preview, a background and a bio (see campaign-extras.ts)
 })
 export type CampaignRequest = z.infer<typeof campaignRequestSchema>
 

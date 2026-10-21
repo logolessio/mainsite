@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { clientSlugOf } from '@/lib/client-host'
 
 const MAIN = 'https://logoless.io'
 const SCROLL = 'https://scroll.logoless.io'
@@ -22,7 +23,23 @@ export function middleware(req: NextRequest) {
   const headers = new Headers(req.headers)
   headers.delete('x-bare')
   headers.delete('x-path')
+  headers.delete('x-client-host')
   headers.set('x-path', p) // the launch page needs to know which page was asked for (the legal pages stay open behind it)
+
+  // A client's own address (kxng.logoless.io): its home is that client's private page, which is logoless.io/<name> inside the code.
+  // The page itself checks the client-links switch. The site's API answers here too (same worker, and the sign-in cookie is shared
+  // across *.logoless.io); every other page, sign-in included, belongs to the main site, because Google and Discord only send
+  // people back to the main address.
+  const client = clientSlugOf(req.headers.get('host') ?? '')
+  if (client) {
+    if (p.startsWith('/api/')) return NextResponse.next({ request: { headers } })
+    if (p === '/') {
+      headers.set('x-path', `/${client.slug}`)
+      headers.set('x-client-host', client.slug)
+      return NextResponse.rewrite(new URL(`/${client.slug}${search}`, req.url), { request: { headers } })
+    }
+    return NextResponse.redirect(`${client.main}${p}${search}`, 307)
+  }
 
   if (/^scroll\./.test(host)) {
     if (SCROLL_API.test(p)) return NextResponse.next({ request: { headers } })
@@ -43,4 +60,5 @@ export function middleware(req: NextRequest) {
   return NextResponse.next({ request: { headers } })
 }
 
-export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)'] }
+// Paths with a dot are files and are skipped, except public profiles, whose usernames may contain dots (logoless.io/@luna.ray).
+export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)', '/@:handle', '/u/:handle'] }

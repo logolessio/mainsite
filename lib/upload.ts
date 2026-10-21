@@ -5,7 +5,7 @@ export const MAX_IMAGE_BYTES = 450 * 1024
 // Banners may be taller than 16 by 9 (up to square), and the profile grows to fit them.
 export const IMAGE_LIMITS = { avatar: { w: 512, h: 512 }, banner: { w: 1600, h: 1600 }, cover: { w: 900, h: 900 }, background: { w: 1920, h: 1920 } } as const
 /** How many of each kind are kept. Banners keep more, so recent ones can be put back with one click. */
-const KEEP: Record<string, number> = { banner: 8, background: 4, bgvideo: 2 }
+const KEEP: Record<string, number> = { banner: 8, background: 12, cover: 12, bgvideo: 2 }
 /** A looping background video is stored as it is (it cannot be re-encoded in the browser), so it is kept small. */
 export const MAX_VIDEO_BYTES = 1300 * 1024
 export type ImageKind = keyof typeof IMAGE_LIMITS

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { AddFunds } from '@/components/app/add-funds'
 import { CaptureOnReturn } from '@/components/app/capture-on-return'
+import { ClientTour } from '@/components/brand/client-tour'
 import { PayCampaignButton } from '@/components/app/pay-campaign-button'
 import { Badge, DataTable, EmptyState } from '@/components/app/table'
 import { Card, PageHeader } from '@/components/app/ui'
@@ -25,7 +26,7 @@ const KIND: Record<string, { label: string; tone: 'good' | 'neutral' | 'warn' }>
 }
 
 /** One balance for every campaign: add money here, and clippers are paid out of it as they earn. */
-export default async function Page({ searchParams }: { searchParams: Promise<{ funded?: string; cancelled?: string; paypal?: string; token?: string }> }) {
+export default async function Page({ searchParams }: { searchParams: Promise<{ funded?: string; cancelled?: string; paypal?: string; token?: string; back?: string }> }) {
   const user = await pageUser()
   const q = await searchParams
   const d = await db()
@@ -46,7 +47,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
   return (
     <>
       <PageHeader title="Balance" sub="One balance for all your campaigns. Creators are paid out of it as they earn, and we cover PayPal's fees on every deposit." />
-      {q.paypal === 'return' && q.token && <CaptureOnReturn orderId={q.token} />}
+      {q.paypal === 'return' && q.token && <CaptureOnReturn orderId={q.token} back={q.back} />}
       {q.funded && (
         <p role="status" className="mb-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/[0.05] px-4 py-3 text-sm">
           Payment received. Your balance is updated.
@@ -54,7 +55,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
       )}
       {q.cancelled && <p role="status" className="mb-4 rounded-2xl border border-line px-4 py-3 text-sm text-mute">Payment cancelled. You have not been charged.</p>}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
+      <ClientTour />
+      <div data-tour="funds" className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
         <div className="border-t border-line-strong pt-5">
           <p className="text-[15px] text-paper/50">Your balance</p>
           <p className="mt-6 font-display text-6xl leading-none tracking-[-0.045em] tabular-nums md:text-[4.5rem]">{money(b.brand)}</p>

@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Check, Copy, Loader2, Mail, X } from 'lucide-react'
+import { signIn, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
@@ -10,12 +11,14 @@ import { BrandIcon } from '@/components/brand-icon'
 import { useDesign } from '@/components/shell/design-provider'
 import { useMotionPrefs, useMounted } from '@/hooks/use-motion-prefs'
 import { type Provider, type Role, signInWithProvider, signUpWithEmail } from '@/lib/auth'
+import { ensureHuman } from '@/lib/human-client'
 import { uploadImage } from '@/lib/image-client'
 import { LookPicker } from '@/components/profile/look-picker'
 import { Tour } from './tour'
 import { VerifyAccounts } from './verify-accounts'
 import { avatarCss, bannerCss, lookById, lookFor, lookKey } from '@/lib/looks'
-import { checkHandleAvailable, resendEmailCode, verifyEmailCode } from '@/lib/onboarding'
+import { checkHandle, checkHandleAvailable, resendEmailCode, verifyEmailCode } from '@/lib/onboarding'
+import { handleHint, handleProblem, suggestHandle } from '@/lib/profile-style'
 import { cn } from '@/lib/utils'
 
 type Id = 'welcome' | 'role' | 'method' | 'email' | 'password' | 'code' | 'paypal' | 'name' | 'handle' | 'pictures' | 'accounts' | 'happy' | 'saving' | 'verify' | 'hello' | 'tour' | 'done'
@@ -269,7 +272,12 @@ const STEP_ORDER: Id[] = ['welcome', 'role', 'method', 'email', 'password', 'cod
  * `preview` is an admin's dry run: it starts as a stranger would (signed out), every question works, and nothing is sent to the
  * server or saved. Sign-in is pretended, uploads stay in the browser, and the end of the flow shows two buttons instead of redirecting.
  */
-export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = false, needsVerify = false, initialStep }: { sessionUser: { name: string; email: string } | null; initialRole?: Role; preview?: boolean; needsVerify?: boolean; initialStep?: string }) {
+/**
+ * `checks` is the `onboarding-checks` switch: Discord sign-ins prove their email too (decided by the page), the signed-in email is
+ * shown with a way to use a different one, and the accounts step proves each account with a code in its bio, right in the flow.
+ * `looseHandles` is the `username-punctuation` switch: usernames may use dots and dashes.
+ */
+export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = false, needsVerify = false, initialStep, checks = false, looseHandles = false }: { sessionUser: { name: string; email: string } | null; initialRole?: Role; preview?: boolean; needsVerify?: boolean; initialStep?: string; checks?: boolean; looseHandles?: boolean }) {
   const sessionUser = preview ? null : realUser
   const router = useRouter()
   const mounted = useMounted()
@@ -291,6 +299,8 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
   const [data, setData] = useState<Data>({ role: initialRole ?? (startAt !== 'welcome' ? 'clipper' : null), email: sessionUser?.email ?? '', paypal: '', name: sessionUser?.name || (startAt !== 'welcome' ? 'Luna Ray' : ''), handle: startAt !== 'welcome' ? 'luna_ray' : '', avatarKey: null, avatarUrl: null, bannerKey: null, bannerUrl: null, lookId: startAt !== 'welcome' ? lookFor('luna_ray').id : '', linked: startAt === 'verify' ? { tiktok: 'luna_ray', youtube: '@lunaray', instagram: 'luna.ray' } : {} })
   const [signedIn, setSignedIn] = useState(Boolean(sessionUser))
   const [verifyMode, setVerifyMode] = useState(false) // the code step is proving a signed-in account, not finishing an email sign-up
+  const [accountEmail, setAccountEmail] = useState<string | null>(sessionUser?.email || null) // the address of the account they signed in with
+  const [switching, setSwitching] = useState(false) // signing out so they can pick a different email
   const avatarInput = useRef<HTMLInputElement>(null)
   const bannerInput = useRef<HTMLInputElement>(null)
   const brand = data.role === 'brand'
@@ -362,10 +372,14 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
     password: 'At least 10 characters.',
     code: `We sent a 6 digit code to ${data.email}.`,
     paypal: 'That is where your earnings go. You can change it later.',
-    handle: 'This is your address on logoless. Letters, numbers and underscores.',
+    handle: `This is your address on logoless. ${handleHint(looseHandles)}`,
     pictures: 'Pick a ready-made look, or tap the circle and the wide part to upload your own. You can change it any time.',
-    accounts: 'Add the accounts you post from, so we can match your submissions to you. Skip it if you like: it is in your dashboard when you are ready.',
-    verify: 'Put a short code in each bio and we confirm the account is yours. Submissions from verified accounts are checked automatically.',
+    accounts: checks
+      ? 'Add the accounts you post from, so we can match your submissions to you. Next you prove each one is yours with a short code in its bio. Skip it if you like: it is in your dashboard when you are ready.'
+      : 'Add the accounts you post from, so we can match your submissions to you. Skip it if you like: it is in your dashboard when you are ready.',
+    verify: checks
+      ? 'Put the code in each bio, then press Check. Submissions from verified accounts are checked automatically; unverified ones wait for a manual check.'
+      : 'Put a short code in each bio and we confirm the account is yours. Submissions from verified accounts are checked automatically.',
     saving: 'This only takes a moment.',
     hello: 'Your profile page is ready.',
   }
@@ -377,6 +391,14 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
     if (id === 'paypal') return EMAIL_RE.test(v) ? { ok: true, msg: 'Earnings will be sent here' } : { ok: false, msg: 'That does not look like a PayPal email' }
     if (id === 'handle') {
       const h = v.toLowerCase()
+      if (looseHandles) {
+        // reserved words are left to the server, which knows whether this is an admin (a dry run never asks it, so it checks here)
+        const problem = handleProblem(h, { loose: true, isAdmin: !preview })
+        if (problem) return { ok: false, msg: problem.replace(/\.$/, '') }
+        if (preview) return { ok: true, msg: `@${h} is yours` }
+        const r = await checkHandle(h)
+        return r.available ? { ok: true, msg: `@${h} is yours` } : { ok: false, msg: r.message?.replace(/\.$/, '') ?? 'Already taken' }
+      }
       if (!HANDLE_RE.test(h)) return { ok: false, msg: 'Use 3 to 20 letters, numbers or underscores' }
       const free = preview ? true : await checkHandleAvailable(h)
       return free ? { ok: true, msg: `@${h} is yours` } : { ok: false, msg: 'Already taken' }
@@ -410,12 +432,25 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       // pretend the sign-in worked
       setSignedIn(true)
       patch({ email: 'preview@logoless.test', name: data.name || 'Preview Person' })
+      if (checks) {
+        // with the checks on, Google and Discord sign-ins prove their email with a code too (the preview pretends the code is right)
+        setAccountEmail('preview@logoless.test')
+        setVerifyMode(true)
+        return go('code')
+      }
       return go(afterAuth(data.role))
     }
     setBusy(true)
     setError('')
     try {
-      await signInWithProvider(p, data.role ?? 'clipper', `/onboarding?role=${data.role ?? 'clipper'}`)
+      const returnTo = `/onboarding?role=${data.role ?? 'clipper'}`
+      if (checks && p === 'google') {
+        // always show Google's account chooser, so it never quietly picks the wrong account
+        const providers = (await fetch('/api/auth/providers').then((r) => r.json()).catch(() => ({}))) as Record<string, unknown>
+        if (!providers.google) throw new Error('Google sign-in is not set up yet.')
+        await ensureHuman()
+        await signIn('google', { callbackUrl: returnTo }, { prompt: 'select_account' })
+      } else await signInWithProvider(p, data.role ?? 'clipper', returnTo)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not connect. Please try again.')
       setBusy(false)
@@ -475,7 +510,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
     if (id === 'name') {
       if (!canContinue) return
       patch({ name: v })
-      return go('handle', v.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20))
+      return go('handle', suggestHandle(v, looseHandles))
     }
     if (id === 'handle') {
       if (shown.st !== 'ok') return
@@ -483,6 +518,38 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       return go('pictures')
     }
   }
+
+  // The wrong account was picked (say Google chose another one): sign out and come back here to pick again. A preview just pretends.
+  const switchAccount = async () => {
+    if (preview) {
+      setSignedIn(false)
+      setVerifyMode(false)
+      setAccountEmail(null)
+      patch({ email: '' })
+      setTrail(data.role ? ['role'] : [])
+      setReady(false)
+      setError('')
+      setForced(null)
+      setText('')
+      return setId('method')
+    }
+    setSwitching(true)
+    await signOut({ callbackUrl: `/onboarding${data.role ? `?role=${data.role}` : ''}` })
+  }
+  // A typo in the address of an email sign-up: back to the email step with what they typed, to fix it and get a new code.
+  const changeEmail = () => {
+    setTrail((t) => {
+      const i = t.lastIndexOf('email')
+      return i >= 0 ? t.slice(0, i) : t
+    })
+    setReady(false)
+    setError('')
+    setForced(null)
+    setText(data.email)
+    setId('email')
+  }
+  const showWho = checks && Boolean(accountEmail) && ((id === 'role' && signedIn) || (id === 'code' && verifyMode) || (id === afterAuth(data.role) && signedIn && !trail.includes('code')))
+  const showFix = checks && id === 'code' && !verifyMode && !signedIn
 
   // The code is checked the moment the sixth digit is typed.
   useEffect(() => {
@@ -597,6 +664,29 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
               }}
             />
             <p className={cn('mt-3 min-h-[1.5rem] text-[16px] text-mute transition-opacity duration-500', ready && hint[id] ? 'opacity-100' : 'opacity-0')}>{hint[id] ?? ''}</p>
+            {(showWho || showFix) && (
+              <p className={cn('mx-auto mt-2 max-w-md text-[14px] leading-relaxed text-mute transition-opacity duration-500', ready ? 'opacity-100' : 'pointer-events-none opacity-0')}>
+                {showWho ? (
+                  switching ? (
+                    'Signing you out'
+                  ) : (
+                    <>
+                      Signed in as <span className="break-all text-paper">{accountEmail}</span>.{' '}
+                      <button type="button" onClick={() => void switchAccount()} className="underline underline-offset-4 transition-colors hover:text-paper">
+                        Not you? Use a different email
+                      </button>
+                    </>
+                  )
+                ) : (
+                  <>
+                    Wrong email?{' '}
+                    <button type="button" onClick={changeEmail} className="underline underline-offset-4 transition-colors hover:text-paper">
+                      Change it
+                    </button>
+                  </>
+                )}
+              </p>
+            )}
 
             <div className={cn('mt-8 flex flex-col items-center transition-opacity duration-500', ready ? 'opacity-100' : 'pointer-events-none opacity-0')}>
               {id === 'role' && (
@@ -780,7 +870,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                 </>
               )}
 
-              {id === 'verify' && <VerifyAccounts linked={data.linked} preview={preview} onDone={() => go('hello')} buttonClass={primary} />}
+              {id === 'verify' && <VerifyAccounts linked={data.linked} preview={preview} onDone={() => go('hello')} buttonClass={primary} quietClass={quiet} inline={checks} />}
 
               {id === 'hello' && (
                 <>

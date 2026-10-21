@@ -79,6 +79,18 @@ export async function checkHandleAvailable(handle: string): Promise<boolean> {
   }
 }
 
+/** Like checkHandleAvailable, with the server's reason when it says no (only sent while `username-punctuation` is on). */
+export async function checkHandle(handle: string): Promise<{ available: boolean; message?: string }> {
+  try {
+    const res = await fetch(`/api/me/handle?h=${encodeURIComponent(handle)}`, { cache: 'no-store' })
+    if (!res.ok) return { available: true } // the real check happens again when the profile is saved
+    const j = (await res.json()) as { available: boolean; message?: string }
+    return { available: j.available, message: j.message }
+  } catch {
+    return { available: true }
+  }
+}
+
 export async function verifyEmailCode(email: string, code: string): Promise<boolean> {
   try {
     await confirmSignup(email, code)

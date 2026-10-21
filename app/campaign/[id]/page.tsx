@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { connection } from 'next/server'
 import { CampaignSheet } from '@/components/campaign/campaign-sheet'
+import { CampaignBackdrop, CampaignExtrasBlock } from '@/components/campaign/campaign-extras'
+import { getExtras } from '@/lib/campaign-extras'
 import { Breadcrumbs, Related } from '@/components/marketing/breadcrumbs'
 import { endedCampaign, liveCampaign } from '@/lib/campaigns-db'
 import { agoText } from '@/lib/time-ago'
@@ -59,15 +61,18 @@ export default async function CampaignPage({ params, searchParams }: Props) {
   }
   // How much of the budget is left, from what has really been paid out. Only once the feature is pushed.
   const leftPct = (await featureOn('pool-meter')) ? (campaign.budgetLeftPct ?? 100) : null
+  // the music links, sound, background and bio from the step-by-step builder or a client link
+  const extras = (await featureOn('campaign-builder')) || (await featureOn('client-links')) ? await getExtras(campaign.id) : null
   const ld = { '@context': 'https://schema.org', '@type': 'WebPage', name: `${campaign.title} by ${campaign.creator}`, url: `${SITE.url}/campaign/${campaign.id}`, image: `${SITE.url}${campaign.cover}`, description: campaign.summary }
   return (
-    <main>
+    <main className="relative isolate">
+      {extras?.background && <CampaignBackdrop id={extras.background} />}
       <Breadcrumbs trail={[{ name: 'Campaigns', href: '/' }, { name: campaign.title }]} />
       <h1 className="sr-only">
         {campaign.title} by {campaign.creator}
       </h1>
       <div className="px-4 pt-8 pb-16 md:pt-12">
-        <CampaignSheet campaign={campaign} leftPct={leftPct} preview={dry} inline />
+        <CampaignSheet campaign={campaign} leftPct={leftPct} preview={dry} inline extra={extras ? <CampaignExtrasBlock x={extras} /> : undefined} />
       </div>
       <Related links={[{ href: '/', label: 'All campaigns' }, { href: '/for-creators', label: 'How creators earn' }, { href: '/faq', label: "Q&A" }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />

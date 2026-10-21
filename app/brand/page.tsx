@@ -4,12 +4,18 @@ import { ActionLink } from '@/components/app/action-link'
 import { Badge, EmptyState } from '@/components/app/table'
 import { Card, PageHeader } from '@/components/app/ui'
 import { SetupBanner } from '@/components/app/setup-banner'
+import { ClientTour, TourButton } from '@/components/brand/client-tour'
+import { FirstSubmissionGuide } from '@/components/brand/first-submission-guide'
+import { MilestoneCelebration } from '@/components/brand/milestone-celebration'
+import { MilestoneProgress } from '@/components/brand/milestone-progress'
 import { ViewsChart, type Day } from '@/components/brand/views-chart'
 import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
+import { guidesSeen, submissionsEver } from '@/lib/client-guide'
 import { db } from '@/lib/db'
 import { money } from '@/lib/format'
 import { featureOn } from '@/lib/features'
 import { balances } from '@/lib/ledger'
+import { nextMilestone, passed, pendingMilestone } from '@/lib/milestones'
 import { brandSetup } from '@/lib/setup-steps'
 import { pageUser } from '@/lib/user'
 
@@ -19,8 +25,9 @@ type TopCreator = { uid: string; name: string; handle: string | null; paid: numb
 type Camp = { id: string; title: string; status: string; budget_cents: number; cover_url: string; views: number; spent: number }
 
 /** The brand's home: what the money bought, how it is going, the campaigns, and the balance they all draw from. */
-export default async function Page() {
+export default async function Page({ searchParams }: { searchParams: Promise<{ tour?: string }> }) {
   const user = await pageUser()
+  const q = await searchParams
   const d = await db()
   const today = new Date().toISOString().slice(0, 10)
   const [b, series, camps, totals, steps] = await Promise.all([
@@ -69,12 +76,25 @@ export default async function Page() {
     : []
   const per1k = totals && totals.views > 0 ? totals.spent / (totals.views / 1000) : 0
 
+  // the walkthrough, the first-submission guide and the milestone party never pile up: one at a time, in that order
+  const views = totals?.views ?? 0
+  const [tourOn, milestonesOn] = await Promise.all([featureOn('client-tour'), featureOn('view-milestones')])
+  const seen = tourOn ? await guidesSeen(user.id) : null
+  const tour = !seen ? undefined : q.tour === '1' ? 'force' : !seen.tour && camps.results.length > 0 ? 'first' : undefined
+  const milestone = milestonesOn && !tour ? await pendingMilestone(user.id, views) : null
+  const firstSub = Boolean(seen && !seen['first-submission'] && !tour && !milestone && (await submissionsEver(user.id)) > 0)
+  const next = milestonesOn ? nextMilestone(views) : null
+
   return (
     <>
-      <PageHeader title="Overview" sub="What your money bought, and how your campaigns are doing." />
+      <PageHeader title="Overview" sub="What your money bought, and how your campaigns are doing." actions={tourOn ? <TourButton /> : undefined} />
+      {tourOn && <ClientTour auto={tour} />}
+      {firstSub && <FirstSubmissionGuide />}
+      {milestone && <MilestoneCelebration milestone={milestone.milestone} views={milestone.views} top={milestone.top} />}
 
       <SetupBanner steps={steps} guide="/brand/setup" />
 
+      <div data-tour="stats">
       <Card>
         <ViewsChart series={series.results} today={today} />
         <dl className="mt-6 grid grid-cols-2 gap-6 border-t border-line pt-5 sm:grid-cols-4">
@@ -90,10 +110,13 @@ export default async function Page() {
             </div>
           ))}
         </dl>
+        {next && <MilestoneProgress views={views} from={passed(views)} to={next} />}
       </Card>
+      </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.6fr_1fr]">
-        <Card title="Campaigns" action={<Link href="/brand/campaigns" className="text-sm text-mute underline underline-offset-4 hover:text-paper">See all</Link>}>
+        <div data-tour="campaigns">
+        <Card className="h-full" title="Campaigns" action={<Link href="/brand/campaigns" className="text-sm text-mute underline underline-offset-4 hover:text-paper">See all</Link>}>
           {camps.results.length === 0 ? (
             <EmptyState icon="Megaphone" title="No campaigns yet" body="Write a short brief, set a rate and a budget, and creators start posting." action={<ActionLink href="/brand/campaigns/new">New campaign</ActionLink>} />
           ) : (
@@ -118,8 +141,10 @@ export default async function Page() {
             </ul>
           )}
         </Card>
+        </div>
 
-        <Card title="Balance">
+        <div data-tour="balance">
+        <Card className="h-full" title="Balance">
           <p className="font-display text-5xl leading-none tracking-[-0.04em] tabular-nums">{money(b.brand)}</p>
           <p className="mt-3 text-sm leading-relaxed text-mute">One balance for every campaign. Creators are paid out of it as they earn. We cover PayPal&apos;s fees.</p>
           <div className="mt-5 flex flex-wrap gap-2">
@@ -127,6 +152,7 @@ export default async function Page() {
             <ActionLink href="/brand/balance" variant="ghost">History</ActionLink>
           </div>
         </Card>
+        </div>
       </div>
 
       {top.length > 0 && (

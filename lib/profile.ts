@@ -15,6 +15,8 @@ import {
   DEFAULT_SHOW,
   FONT_IDS,
   HANDLE_RE,
+  HANDLE_RE_LOOSE,
+  handleProblem,
   LINK_PLATFORMS,
   RESERVED_WORDS,
   SHOW_OPTIONS,
@@ -26,6 +28,7 @@ import {
 } from './profile-style'
 import type { UserRow } from './user'
 import { normalizeExtras, parseExtras } from './profile-extras'
+import { featureOn } from './features'
 
 type ProfileRow = {
   user_id: string
@@ -132,7 +135,8 @@ export async function ensureProfile(user: UserRow): Promise<ProfileRow> {
 }
 
 export async function profileByHandle(handle: string) {
-  if (!HANDLE_RE.test(handle.toLowerCase())) return null
+  // the looser rule accepts every older username too, so pages for "luna.ray" and "luna_ray" both work whatever the switch says
+  if (!HANDLE_RE_LOOSE.test(handle.toLowerCase())) return null
   const d = await db()
   const row = await d
     .prepare(
@@ -162,8 +166,14 @@ export async function profileStats(userId: string): Promise<ProfileStats> {
 
 // ---------- validation for saves ----------
 
-export function validHandle(raw: string, isAdmin: boolean) {
+/** `loose` is the `username-punctuation` switch: dots and dashes are allowed too, and reserved words are found through punctuation. */
+export function validHandle(raw: string, isAdmin: boolean, loose = false) {
   const h = raw.trim().toLowerCase().replace(/^@/, '')
+  if (loose) {
+    const problem = handleProblem(h, { loose: true, isAdmin })
+    if (problem) throw new HttpError(400, problem)
+    return h
+  }
   if (!HANDLE_RE.test(h)) throw new HttpError(400, 'Usernames are 3 to 20 letters, numbers or underscores.')
   if (!isAdmin && RESERVED_WORDS.some((w) => h.includes(w))) throw new HttpError(400, 'That name is reserved. Please pick another.')
   return h
@@ -239,7 +249,7 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
   const changed: string[] = []
 
   if (input.handle !== undefined && input.handle.trim().toLowerCase().replace(/^@/, '') !== cur.handle) {
-    next.handle = validHandle(input.handle, user.role === 'admin')
+    next.handle = validHandle(input.handle, user.role === 'admin', await featureOn('username-punctuation'))
     changed.push('handle')
   }
   if (input.displayName !== undefined) {

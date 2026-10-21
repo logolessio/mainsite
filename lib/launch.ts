@@ -1,7 +1,7 @@
 import { hmacHex, safeEqual, sha256Hex } from './crypto'
 import { db, nowSec, setting } from './db'
 import { cleanPage, normHandle, type PageConfig, WAITLIST_HANDLE_RE } from './launch-page'
-import { RESERVED_WORDS } from './profile-style'
+import { isReservedHandle } from './profile-style'
 import type { SettingKey } from './settings'
 
 // The launch page: a countdown and a sign-up that stand in front of the whole site until the owners open it.
@@ -54,7 +54,7 @@ export async function handleProblem(raw: string, forEmailKey?: string): Promise<
   if (h.length > 20) return 'Up to 20 characters.'
   if (/[^a-z0-9._]/.test(h)) return 'Letters, numbers, dots and underscores only.'
   if (!WAITLIST_HANDLE_RE.test(h)) return 'A dot cannot start or end it, or come twice in a row.'
-  if (RESERVED_WORDS.some((w) => h.includes(w))) return 'That name is kept by logoless.'
+  if (isReservedHandle(h, true)) return 'That name is kept by logoless.'
   const d = await db()
   if (await d.prepare('SELECT 1 AS x FROM profiles WHERE handle = ?1').bind(h).first()) return 'That one is taken.'
   const held = await d.prepare('SELECT value FROM settings WHERE key = ?1').bind(`launch-handle:${h}`).first<{ value: string }>()

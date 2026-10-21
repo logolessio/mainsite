@@ -3,6 +3,7 @@
 import { ArrowUpRight, ChevronDown, Pause, Play, Volume2, VolumeX } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
+import { NoCampaigns } from '@/components/browse/no-campaigns'
 import { FavoriteButton } from '@/components/campaign/favorite-button'
 import { usePreview } from '@/components/shell/preview-provider'
 import { TransitionLink } from '@/components/shell/transition-link'
@@ -88,11 +89,8 @@ export function Reels({ campaigns }: { campaigns: Campaign[] }) {
 
   if (campaigns.length === 0)
     return (
-      <main className="grid min-h-dvh place-items-center px-6 text-center">
-        <div>
-          <h1 className="font-display text-4xl">No live campaigns yet</h1>
-          <p className="mt-3 text-mute">Check back soon. New drops land here first.</p>
-        </div>
+      <main className="grid min-h-dvh place-items-center px-4 py-28">
+        <NoCampaigns as="h1" className="w-full" />
       </main>
     )
 
