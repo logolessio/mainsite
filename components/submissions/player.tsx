@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowUpRight, CalendarDays, ChevronLeft, ChevronRight, Eye, Heart, Loader2, MessageCircle, Star, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { useDialog } from '@/hooks/use-dialog'
 import type { FeedClip } from '@/lib/clip-feed'
@@ -20,7 +21,20 @@ type Rating = FeedClip['rating']
  */
 export function Player({ clip, onClose, onPrev, onNext, signedIn, me, onRated }: { clip: FeedClip | null; onClose: () => void; onPrev?: () => void; onNext?: () => void; signedIn: boolean; me: string | null; onRated: (id: string, r: Rating) => void }) {
   const open = clip !== null
-  const box = useDialog<HTMLDivElement>(open, onClose, { initial: 'panel' })
+  const box = useDialog<HTMLDivElement>(open, onClose, { initial: 'none' })
+  // focus lands on the dialog without scrolling it (a plain focus() scrolls the tall phone layout past the close button),
+  // and each clip starts at the top
+  const id = clip?.id
+  useEffect(() => {
+    if (!id) return
+    const t = window.setTimeout(() => {
+      const el = box.current
+      if (!el) return
+      if (!el.contains(document.activeElement)) el.focus({ preventScroll: true })
+      el.closest('[data-player-scroll]')?.scrollTo({ top: 0 })
+    }, 30)
+    return () => window.clearTimeout(t)
+  }, [id, box])
 
   useEffect(() => {
     if (!open) return
@@ -33,10 +47,15 @@ export function Player({ clip, onClose, onPrev, onNext, signedIn, me, onRated }:
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onPrev, onNext])
 
-  return (
+  // drawn at the top of the page, so the site's own bar (and any page wrapper with a transform) can never sit above it
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+  if (!mounted) return null
+
+  return createPortal(
     <AnimatePresence>
       {clip && (
-        <motion.div key="player" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.22 }} className="fixed inset-0 z-[120] overflow-y-auto bg-black/80 backdrop-blur-md" onMouseDown={onClose}>
+        <motion.div key="player" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.22 }} data-player-scroll className="fixed inset-0 z-[120] overflow-y-auto bg-black/80 backdrop-blur-md" onMouseDown={onClose}>
           <div className="flex min-h-full items-start justify-center p-0 md:items-center md:p-8">
             <motion.div
               ref={box}
@@ -51,9 +70,11 @@ export function Player({ clip, onClose, onPrev, onNext, signedIn, me, onRated }:
               onMouseDown={(e) => e.stopPropagation()}
               className="relative grid w-full max-w-5xl overflow-hidden bg-[#0b0b0d] outline-none md:grid-cols-[auto_minmax(0,1fr)] md:rounded-[calc(2rem*var(--round,1))] md:border md:border-white/10 md:shadow-[0_60px_140px_-40px_rgb(0_0_0/1)]"
             >
-              <button type="button" onClick={onClose} aria-label="Close" className="absolute top-3 right-3 z-10 grid size-10 place-items-center rounded-pill bg-black/55 text-paper backdrop-blur-md transition-colors hover:bg-white/15">
-                <X className="size-5" />
-              </button>
+              <div className="absolute top-3 right-3 z-10">
+                <button type="button" onClick={onClose} aria-label="Close" className="grid size-10 place-items-center rounded-pill bg-black/55 text-paper backdrop-blur-md transition-colors hover:bg-white/15">
+                  <X className="size-5" />
+                </button>
+              </div>
               {/* a new clip (← and →) draws both halves afresh: the player loads again and the numbers rise in */}
               <Media key={`m-${clip.id}`} clip={clip} />
               <Side key={`s-${clip.id}`} clip={clip} signedIn={signedIn} own={me !== null && me === clip.by.handle} onRated={onRated} onClose={onClose} onPrev={onPrev} onNext={onNext} />
@@ -61,7 +82,8 @@ export function Player({ clip, onClose, onPrev, onNext, signedIn, me, onRated }:
           </div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   )
 }
 

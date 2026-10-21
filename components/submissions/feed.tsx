@@ -155,7 +155,7 @@ export function SubmissionsFeed({ initial, campaigns, filters: start, signedIn, 
         </p>
       </header>
 
-      <div className="relative z-20 mt-10 flex flex-col gap-3 md:sticky md:top-[5.25rem] md:flex-row md:flex-wrap md:items-center">
+      <div className="relative z-20 mt-10 flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center lg:sticky lg:top-[5.25rem]">
         <GlassTabs label="Sort clips" compact className="mx-0" value={filters.sort} onChange={(id) => apply({ ...filters, sort: id as FeedSort })} tabs={SORTS} />
         <div className="flex flex-wrap items-center gap-3">
           <GlassTabs label="Platform" compact className="mx-0" value={filters.platform ?? 'all'} onChange={(id) => apply({ ...filters, platform: id === 'all' ? null : id })} tabs={platformTabs} />

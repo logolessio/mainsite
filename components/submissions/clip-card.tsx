@@ -57,11 +57,14 @@ export function ClipCard({ clip, onOpen, loading, appear, index }: { clip: FeedC
         {loading && !thumb && <Shimmer />}
         <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/45 via-transparent via-35% to-black/85" />
 
-        <button type="button" onClick={onOpen} aria-label={label} className="absolute inset-0 z-[1] outline-none focus-visible:ring-2 focus-visible:ring-paper focus-visible:ring-inset rounded-[inherit]">
-          <span aria-hidden="true" className="absolute top-1/2 left-1/2 grid size-14 -translate-x-1/2 -translate-y-1/2 scale-75 place-items-center rounded-pill bg-white/15 opacity-0 backdrop-blur-md transition-all duration-300 group-hover/clip:scale-100 group-hover/clip:opacity-100 group-focus-within/clip:opacity-100">
-            <Play className="ml-0.5 size-6 fill-paper text-paper" />
-          </span>
-        </button>
+        {/* the wrapper holds the position: on touch screens every button is made position: relative (globals.css) for a bigger tap area */}
+        <div className="absolute inset-0 z-[1]">
+          <button type="button" onClick={onOpen} aria-label={label} className="grid size-full place-items-center rounded-[inherit] outline-none focus-visible:ring-2 focus-visible:ring-paper focus-visible:ring-inset">
+            <span aria-hidden="true" className="grid size-14 scale-75 place-items-center rounded-pill bg-white/15 opacity-0 backdrop-blur-md transition-all duration-300 group-hover/clip:scale-100 group-hover/clip:opacity-100 group-focus-within/clip:opacity-100">
+              <Play className="ml-0.5 size-6 fill-paper text-paper" />
+            </span>
+          </button>
+        </div>
 
         <div className="pointer-events-none absolute inset-x-0 top-0 z-[2] flex items-center justify-between gap-2 p-2.5">
           <span className="inline-flex h-7 items-center gap-1.5 rounded-pill bg-black/45 px-2.5 font-mono text-[11px] text-paper backdrop-blur-md tabular-nums">

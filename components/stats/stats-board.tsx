@@ -73,7 +73,7 @@ export function StatsBoard({ initial }: { initial: Board }) {
 
   return (
     <div>
-      <header className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+      <header className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-2xl">
           <p className="text-xs text-mute">Stats</p>
           <h1 className="mt-4 font-display text-[clamp(2.8rem,7vw,5.6rem)] leading-[0.95] tracking-tight">The numbers, live.</h1>
@@ -106,10 +106,10 @@ export function StatsBoard({ initial }: { initial: Board }) {
             </Section>
           )}
 
-          <div className="mt-24 grid gap-16 lg:grid-cols-2 lg:gap-10">
+          <div className="mt-24 grid gap-16 lg:grid-cols-2 lg:gap-10 [&>*]:min-w-0">
             <Section title="Biggest campaigns" sub="By views from every clip, together." inline>
               {board.campaigns.length === 0 ? <Nothing text="No campaign has clips in this range yet." /> : (
-                <ol className="grid gap-2">
+                <ol className="grid grid-cols-[minmax(0,1fr)] gap-2">
                   <AnimatePresence initial={false}>
                     {board.campaigns.map((c, i) => (
                       <Row key={c.id} layoutKey={`camp-${c.id}`} rank={i + 1} href={`/campaign/${c.id}`} share={c.views / (board.campaigns[0]?.views || 1)}>
@@ -128,7 +128,7 @@ export function StatsBoard({ initial }: { initial: Board }) {
             </Section>
             <Section title="Top artists" sub="The artists whose campaigns pulled the most views." inline>
               {board.artists.length === 0 ? <Nothing text="No artist has clips in this range yet." /> : (
-                <ol className="grid gap-2">
+                <ol className="grid grid-cols-[minmax(0,1fr)] gap-2">
                   <AnimatePresence initial={false}>
                     {board.artists.map((a, i) => (
                       <Row key={a.name} layoutKey={`artist-${a.name}`} rank={i + 1} share={a.views / (board.artists[0]?.views || 1)}>
@@ -237,7 +237,7 @@ function People({ board }: { board: Board }) {
       {list.length === 0 ? (
         <div className="mt-6"><Nothing text={`Nobody here yet. ${m.empty}`} /></div>
       ) : (
-        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-end">
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-end [&>*]:min-w-0">
           <ol className="grid grid-cols-3 items-end gap-3 md:gap-5">
             {[1, 0, 2].map((idx, col) => {
               const p = top[idx]
@@ -267,7 +267,7 @@ function People({ board }: { board: Board }) {
             })}
           </ol>
           {rest.length > 0 && (
-            <ol className="grid gap-2" start={4}>
+            <ol className="grid grid-cols-[minmax(0,1fr)] gap-2" start={4}>
               <AnimatePresence initial={false}>
                 {rest.map((p, i) => (
                   <Row key={`${metric}-${p.handle}`} layoutKey={`${metric}-${p.handle}`} rank={i + 4} href={`/@${p.handle}`} share={p.value / lead}>
