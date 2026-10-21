@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowRight, Check, ChevronLeft, Loader2, Plus, Wallet } from 'lucide-react'
+import { ArrowRight, AudioLines, Check, ChevronLeft, Clapperboard, Disc3, Gamepad2, Loader2, Megaphone, Mic, Package, Plus, Sparkles, Ticket, Wallet, type LucideIcon } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
 import { Ask, BigArea, BigInput, Chip, Label, Rise } from '@/components/invite/bits'
@@ -15,7 +15,8 @@ import { cn } from '@/lib/utils'
 import { BudgetPicker } from './budget-picker'
 import { ArtPicker, AudioPicker, LinkList } from './music-pickers'
 
-const STEPS = [
+const ALL_STEPS = [
+  { id: 'start', title: 'Start' },
   { id: 'basics', title: 'The basics' },
   { id: 'audio', title: 'The audio' },
   { id: 'look', title: 'Cover and background' },
@@ -24,7 +25,19 @@ const STEPS = [
   { id: 'funds', title: 'Funds' },
   { id: 'review', title: 'Review' },
 ] as const
-type StepId = (typeof STEPS)[number]['id']
+type StepId = (typeof ALL_STEPS)[number]['id']
+
+/** Where a campaign starts: the closest thing to what is being launched. It sets sensible defaults, and every one can be changed. */
+const TEMPLATES: { id: string; label: string; line: string; icon: LucideIcon; type: string; subtype: string; ideas: string[]; off: string[]; budget: string; hint: string }[] = [
+  { id: 'single', label: 'A new single', line: 'Chorus edits, lyric clips, fan reactions', icon: Disc3, type: 'Music', subtype: 'Single', ideas: ['The chorus or hook', 'Lyric edits', 'Fan reactions'], off: ['No sped-up or slowed versions of the track'], budget: '500', hint: 'What is the song about, what should the clips feel like, and what do you want people to do after hearing it?' },
+  { id: 'album', label: 'An album or EP', line: 'Many tracks, many angles', icon: AudioLines, type: 'Music', subtype: 'Album or EP', ideas: ['The chorus or hook', 'Behind the scenes', 'Lyric edits'], off: ['Only use tracks from this release'], budget: '1000', hint: 'Which tracks matter most, and what is the story of this project?' },
+  { id: 'video', label: 'A music video', line: 'Cut the video into moments', icon: Clapperboard, type: 'Music', subtype: 'Music video', ideas: ['The best scene', 'Behind the scenes', 'Fan reactions'], off: ['Use the official footage only'], budget: '750', hint: 'Which scenes should creators cut from, and which parts should stay untouched?' },
+  { id: 'show', label: 'A tour or show', line: 'Bring people to the room', icon: Ticket, type: 'Music', subtype: 'Tour or show', ideas: ['Live performance', 'Fan reactions', 'Behind the scenes'], off: ['No footage from other artists'], budget: '500', hint: 'Where and when is it, and what should creators capture?' },
+  { id: 'stream', label: 'Stream highlights', line: 'The best live moments', icon: Gamepad2, type: 'Streamer', subtype: 'Highlights', ideas: ['Funny or relatable moments', 'Live moments'], off: ['No clips that show private information'], budget: '300', hint: 'What kind of moments make your channel yours?' },
+  { id: 'pod', label: 'Podcast moments', line: 'Quotable clips from episodes', icon: Mic, type: 'Podcast', subtype: 'Best moments', ideas: ['Funny or relatable moments', 'The big quote'], off: ['Keep quotes in context'], budget: '300', hint: 'Which topics and guests should clips come from?' },
+  { id: 'product', label: 'A product or launch', line: 'Show it, use it, talk about it', icon: Package, type: 'Brand', subtype: 'Launch', ideas: ['Using it for real', 'A first reaction', 'Behind the scenes'], off: ['No claims about results that are not true'], budget: '1000', hint: 'What is it, who is it for, and what should people say or show?' },
+  { id: 'blank', label: 'Something else', line: 'Start from a blank page', icon: Sparkles, type: 'Music', subtype: '', ideas: [], off: [], budget: '500', hint: 'What is it about, who is it for, and what should creators make?' },
+]
 
 const TYPES = ['Music', 'Streamer', 'Podcast', 'Brand', 'Sport', 'Other'] as const
 const KINDS: Record<string, string[]> = {
@@ -41,7 +54,7 @@ const PLATFORMS = [
   { id: 'youtube', label: 'YouTube' },
 ] as const
 const IDEAS = ['The chorus or hook', 'Behind the scenes', 'Lyric edits', 'Live performance', 'Fan reactions', 'Funny or relatable moments']
-const DRAFT = 'll:draft:campaign-builder'
+const DRAFT_KEY = 'll:draft:campaign-builder'
 
 const BLANK = {
   title: '',
@@ -94,9 +107,12 @@ function restore(raw: unknown): Draft | null {
  * Making a campaign, one step at a time: the basics, the audio, the artwork, the brief, the budget (as views for a price, or a
  * rate), funds, then a last look. What is typed is kept on this device, so coming back from PayPal or a refresh loses nothing.
  */
-export function CampaignBuilder({ balanceCents, paypalReady, startAt }: { balanceCents: number; paypalReady: boolean; startAt?: string }) {
+export function CampaignBuilder({ balanceCents, paypalReady, startAt, edit, initial }: { balanceCents: number; paypalReady: boolean; startAt?: string; /** Fixing a request that is in review: its id, and what the team asked for. */ edit?: { id: string; note?: string }; initial?: Partial<Draft> }) {
   const { navigate } = useTransitions()
-  const [d, setD] = useState<Draft>(BLANK)
+  const STEPS = edit ? ALL_STEPS.filter((x) => x.id !== 'start' && x.id !== 'funds') : ALL_STEPS
+  const [d, setD] = useState<Draft>(() => (initial ? (restore({ ...BLANK, ...initial }) ?? BLANK) : BLANK))
+  const [tpl, setTpl] = useState<string>('')
+  const [sent, setSent] = useState(false)
   const [step, setStep] = useState(0)
   const [reached, setReached] = useState(0)
   const [dir, setDir] = useState(1)
@@ -106,6 +122,7 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt }: { balanc
   const [topUp, setTopUp] = useState('')
   const ready = useRef(false)
   const top = useRef<HTMLDivElement>(null)
+  const DRAFT = edit ? `${DRAFT_KEY}:edit:${edit.id}` : DRAFT_KEY
   const current = STEPS[step]
 
   useEffect(() => {
@@ -116,14 +133,18 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt }: { balanc
         setRestored(true)
       }
       const at = STEPS.findIndex((s) => s.id === startAt)
-      if (saved && at > 0) {
-        setStep(at)
-        setReached(at)
+      // a draft is already started, so the "what are you launching" screen is skipped
+      const first = saved && (saved.title || saved.summary) && !edit ? 1 : 0
+      const to = saved && at > 0 ? at : first
+      if (to > 0) {
+        setStep(to)
+        setReached(to)
       }
     } catch {
       /* storage is blocked: start fresh */
     }
     ready.current = true
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startAt])
   useEffect(() => {
     if (!ready.current) return
@@ -150,6 +171,7 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt }: { balanc
 
   const linksOk = (list: string[], check: typeof spotifyLink) => list.every((l) => !l.trim() || 'url' in check(l))
   const valid: Record<StepId, boolean> = {
+    start: true,
     basics: d.title.trim().length >= 2 && d.creator.trim().length >= 2 && d.platforms.length > 0,
     audio: linksOk(d.spotify, spotifyLink) && linksOk(d.sounds, soundLink),
     look: true,
@@ -191,8 +213,8 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt }: { balanc
     setBusy(true)
     setError('')
     try {
-      const res = await fetch('/api/campaigns', {
-        method: 'POST',
+      const res = await fetch(edit ? `/api/campaigns/${edit.id}` : '/api/campaigns', {
+        method: edit ? 'PATCH' : 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           title: d.title,
@@ -219,7 +241,8 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt }: { balanc
       } catch {
         /* ignore */
       }
-      navigate('/brand/campaigns?requested=1')
+      setBusy(false)
+      setSent(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not send your campaign.')
       setBusy(false)
@@ -260,7 +283,14 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt }: { balanc
         </ol>
       </nav>
 
-      {restored && step === 0 && (
+      {edit?.note && (
+        <div className="mb-8 rounded-card border border-paper/25 bg-white/[0.04] p-5 md:p-6">
+          <p className="text-xs text-mute">The team asked for changes</p>
+          <p className="mt-1.5 text-[15px] leading-relaxed whitespace-pre-wrap">{edit.note}</p>
+          <p className="mt-3 text-xs text-mute">Fix what they asked, then send it back. It stays in review and nothing is charged.</p>
+        </div>
+      )}
+      {restored && step <= 1 && !edit && (
         <p role="status" className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-2xl border border-line-strong bg-white/[0.03] px-5 py-3 text-sm">
           <span>We kept the campaign you were making.</span>
           <button type="button" onClick={startOver} className="text-paper/70 underline underline-offset-4 transition-colors hover:text-paper">
@@ -272,6 +302,36 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt }: { balanc
       <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,1fr)_320px]">
         <AnimatePresence mode="wait" initial={false} custom={dir}>
           <motion.section key={current.id} initial={{ opacity: 0, x: 32 * dir }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -32 * dir }} transition={{ duration: 0.32, ease: EASE_OUT }} className="min-w-0 max-w-2xl">
+            {current.id === 'start' && (
+              <>
+                <Ask sub="Pick the closest one. It sets up sensible starting points that you can change in every step.">What are you launching?</Ask>
+                <ul className="grid gap-3 sm:grid-cols-2">
+                  {TEMPLATES.map((t, i) => (
+                    <Rise key={t.id} i={Math.min(i, 5)}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTpl(t.id)
+                          set({ type: t.type, subtype: t.subtype, clipThis: t.ideas.join('\n'), offLimits: t.off.join('\n'), budget: t.budget })
+                          go(step + 1)
+                        }}
+                        className="group flex w-full items-center gap-4 rounded-card border border-line-strong bg-white/[0.03] p-4 text-left transition-all hover:-translate-y-0.5 hover:border-paper/40 hover:bg-white/[0.06]"
+                      >
+                        <span className="grid size-12 shrink-0 place-items-center rounded-panel bg-white/[0.07] text-paper/85 transition-colors group-hover:bg-paper group-hover:text-ink">
+                          <t.icon aria-hidden="true" className="size-5" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-[16px] leading-tight">{t.label}</span>
+                          <span className="mt-0.5 block text-sm text-mute">{t.line}</span>
+                        </span>
+                        <ArrowRight aria-hidden="true" className="ml-auto size-4 shrink-0 text-mute opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
+                      </button>
+                    </Rise>
+                  ))}
+                </ul>
+              </>
+            )}
+
             {current.id === 'basics' && (
               <>
                 <Ask sub="The name creators see, who it is for, and where submissions should be posted.">What are we promoting?</Ask>
@@ -349,7 +409,7 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt }: { balanc
                     <BigArea label={music ? 'About the artist' : 'About you'} hint={`Optional · ${d.bio.length}/600`} value={d.bio} maxLength={600} rows={3} onChange={(e) => set({ bio: e.target.value })} placeholder="A few lines creators should know about you." />
                   </Rise>
                   <Rise i={1}>
-                    <BigArea label="The vibe and the goal" hint={`${d.summary.length}/1500`} value={d.summary} maxLength={1500} rows={5} onChange={(e) => set({ summary: e.target.value })} placeholder="What is it about, who is it for, and what feeling should the submissions give?" />
+                    <BigArea label="The vibe and the goal" hint={`${d.summary.length}/1500`} value={d.summary} maxLength={1500} rows={5} onChange={(e) => set({ summary: e.target.value })} placeholder={TEMPLATES.find((x) => x.id === tpl)?.hint ?? "What is it about, who is it for, and what feeling should the submissions give?"} />
                     {d.summary.trim().length > 0 && d.summary.trim().length < 20 && <p className="mt-2 text-sm text-mute">A little more, please: at least 20 characters.</p>}
                   </Rise>
                   <Rise i={2}>
@@ -381,7 +441,10 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt }: { balanc
                 <Rise i={0}>
                   <BudgetPicker value={{ budget: d.budget, mode: d.mode, rate: d.rate, views: d.views }} onChange={(p) => set(p)} />
                 </Rise>
-                <Rise i={1} className="mt-8 grid gap-5 sm:grid-cols-3">
+                <Rise i={1} className="mt-6">
+                  <Estimates rate={plan.rate} views={plan.views} budget={budget} endsOn={d.endsOn} />
+                </Rise>
+                <Rise i={2} className="mt-8 grid gap-5 sm:grid-cols-3">
                   <BigInput label="End date" hint="Optional" type="date" value={d.endsOn} onChange={(e) => set({ endsOn: e.target.value })} />
                   <BigInput label="Most one submission earns" hint="Optional" prefix="$" inputMode="numeric" value={d.capPerPost} placeholder="No limit" onChange={(e) => set({ capPerPost: e.target.value.replace(/\D/g, '').slice(0, 6) })} />
                   <BigInput label="Most one creator earns" hint="Optional" prefix="$" inputMode="numeric" value={d.capPerUser} placeholder="No limit" onChange={(e) => set({ capPerUser: e.target.value.replace(/\D/g, '').slice(0, 6) })} />
@@ -438,9 +501,12 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt }: { balanc
                 <Rise i={0}>
                   <CampaignPreview d={d} rate={plan.rate} views={plan.views} big />
                 </Rise>
-                <Rise i={1} className="mt-4 grid gap-2 text-sm">
-                  {STEPS.slice(0, 5).map((s, i) => (
-                    <button key={s.id} type="button" onClick={() => go(i)} className="flex items-center justify-between rounded-2xl border border-line px-4 py-3 text-left transition-colors hover:border-paper/40">
+                <Rise i={1} className="mt-5">
+                  <Readiness d={d} problem={Boolean(plan.problem)} budget={budget} />
+                </Rise>
+                <Rise i={2} className="mt-4 grid gap-2 text-sm">
+                  {STEPS.filter((x) => x.id !== 'start' && x.id !== 'funds' && x.id !== 'review').map((s) => (
+                    <button key={s.id} type="button" onClick={() => go(STEPS.findIndex((x) => x.id === s.id))} className="flex items-center justify-between rounded-2xl border border-line px-4 py-3 text-left transition-colors hover:border-paper/40">
                       <span className="inline-flex items-center gap-2">
                         {valid[s.id] ? <Check className="size-4 text-emerald-400" /> : <span className="size-2 rounded-pill bg-signal" />} {s.title}
                       </span>
@@ -459,25 +525,27 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt }: { balanc
           </motion.section>
         </AnimatePresence>
 
-        <aside className={cn('sticky top-24 hidden', current.id !== 'review' && 'xl:block')} aria-label="Preview">
+        <aside className={cn('sticky top-24 hidden', current.id !== 'review' && current.id !== 'start' && 'xl:block')} aria-label="Preview">
           <p className="mb-3 text-xs tracking-wide text-mute">Live preview</p>
           <CampaignPreview d={d} rate={plan.rate} views={plan.views} />
+          <Readiness d={d} problem={Boolean(plan.problem)} budget={budget} className="mt-5" />
         </aside>
       </div>
 
       {/* ---------- moving on ---------- */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-5 z-30 flex justify-center px-4 md:pl-[var(--sidebar-w,0px)]">
+      <div className={cn('pointer-events-none fixed inset-x-0 bottom-5 z-30 flex justify-center px-4 md:pl-[var(--sidebar-w,0px)]', current.id === 'start' && 'hidden')}>
         <div className="pointer-events-auto flex items-center gap-2 rounded-pill border border-line-strong bg-ink/85 p-1.5 shadow-2xl backdrop-blur-xl">
           <button type="button" onClick={() => step > 0 && go(step - 1)} disabled={step === 0 || busy} aria-label="Back" className="grid size-12 place-items-center rounded-pill text-mute transition-colors hover:bg-white/10 hover:text-paper disabled:opacity-30">
             <ChevronLeft className="size-5" />
           </button>
           <button type="button" onClick={next} disabled={!valid[current.id] || busy} className="inline-flex h-12 min-w-44 items-center justify-center gap-2 rounded-pill bg-paper px-7 text-[15px] font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40">
             {busy && current.id === 'review' && <Loader2 className="size-4 animate-spin" />}
-            {current.id === 'review' ? 'Send for review' : current.id === 'funds' && short > 0 ? 'Add funds later' : current.id === 'audio' && !d.spotify.length && !d.sounds.length && !d.audio ? 'Skip for now' : 'Continue'}
+            {current.id === 'review' ? (edit ? 'Send it back for review' : 'Send for review') : current.id === 'funds' && short > 0 ? 'Add funds later' : current.id === 'audio' && !d.spotify.length && !d.sounds.length && !d.audio ? 'Skip for now' : 'Continue'}
             {current.id !== 'review' && <ArrowRight className="size-4" />}
           </button>
         </div>
       </div>
+      <AnimatePresence>{sent && <Sent d={d} rate={plan.rate} views={plan.views} again={Boolean(edit)} onDone={() => navigate(edit ? '/brand/campaigns?resent=1' : '/brand/campaigns?requested=1')} />}</AnimatePresence>
     </div>
   )
 }
@@ -514,5 +582,126 @@ function CampaignPreview({ d, rate, views, big }: { d: Draft; rate: number; view
         </div>
       </div>
     </div>
+  )
+}
+
+
+// ---------- what reviewers look at, shown while the campaign is written ----------
+type Item = { id: string; label: string; ok: boolean; why: string }
+const lineCount = (v: string) => v.split('\n').map((x) => x.trim()).filter(Boolean).length
+
+function readiness(d: Draft, problem: boolean, budget: number): { items: Item[]; score: number } {
+  const len = d.summary.trim().length
+  const items: Item[] = [
+    { id: 'name', label: 'A name and an artist', ok: d.title.trim().length >= 2 && d.creator.trim().length >= 2, why: 'Both are needed.' },
+    { id: 'brief', label: 'A brief to work from', ok: len >= 100, why: len < 20 ? 'Write at least a couple of sentences.' : 'A few more lines and creators get it right first time.' },
+    { id: 'ideas', label: 'Ideas for what to make', ok: lineCount(d.clipThis) > 0, why: 'Reviewers look for some direction.' },
+    { id: 'off', label: 'What is off limits', ok: lineCount(d.offLimits) > 0, why: 'Clear rules mean fewer rejected clips.' },
+    { id: 'audio', label: 'Audio creators can use', ok: Boolean(d.audio || d.sounds.some((x) => x.trim()) || d.spotify.some((x) => x.trim())), why: 'Add the official sound or a preview.' },
+    { id: 'cover', label: 'Your own cover picture', ok: Boolean(d.cover), why: 'Campaigns with their own art get noticed.' },
+    { id: 'example', label: 'An example edit', ok: Boolean(d.example.trim()), why: 'It shows the style you want.' },
+    { id: 'budget', label: 'A budget that works', ok: !problem && budget >= SITE.minCampaignBudgetUsd, why: `At least $${SITE.minCampaignBudgetUsd}.` },
+    { id: 'end', label: 'An end date', ok: Boolean(d.endsOn), why: 'Creators like to know how long they have.' },
+  ]
+  return { items, score: Math.round((items.filter((i) => i.ok).length / items.length) * 100) }
+}
+
+/** The things the team checks before accepting a campaign, ticked off as you write: so the first answer is "yes". */
+function Readiness({ d, problem, budget, className }: { d: Draft; problem: boolean; budget: number; className?: string }) {
+  const { items, score } = readiness(d, problem, budget)
+  const todo = items.filter((i) => !i.ok)
+  return (
+    <div className={cn('rounded-card border border-line-strong bg-white/[0.03] p-5', className)}>
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-sm font-medium">Ready for review</p>
+        <p className="font-mono text-xs text-mute tabular-nums">{score}%</p>
+      </div>
+      <div className="mt-3 h-1.5 overflow-hidden rounded-pill bg-white/10" role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100} aria-label="How ready the campaign is for review">
+        <motion.div className="h-full rounded-pill bg-paper" initial={false} animate={{ width: `${score}%` }} transition={{ duration: 0.5, ease: EASE_OUT }} />
+      </div>
+      <p className="mt-3 text-xs leading-snug text-mute">{todo.length === 0 ? 'Everything the team looks for is here.' : 'These are what the team looks at before accepting.'}</p>
+      {todo.length > 0 && (
+        <ul className="mt-3 grid gap-2.5">
+          {todo.slice(0, 4).map((i) => (
+            <li key={i.id} className="flex items-start gap-2.5 text-[13px]">
+              <span aria-hidden="true" className="mt-[7px] size-1.5 shrink-0 rounded-pill bg-paper/50" />
+              <span>
+                {i.label}
+                <span className="block text-xs text-mute">{i.why}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+/** What a budget is likely to look like in practice, in plain numbers. A guide, never a promise. */
+function Estimates({ rate, views, budget, endsOn }: { rate: number; views: number; budget: number; endsOn: string }) {
+  if (!(budget > 0) || !(rate > 0)) return null
+  const clipsLow = Math.max(1, Math.round(views / 20000))
+  const clipsHigh = Math.max(clipsLow, Math.round(views / 5000))
+  const days = endsOn ? Math.max(0, Math.ceil((Date.parse(`${endsOn}T23:59:59`) - Date.now()) / 86400000)) : 0
+  const cost = costFor(Math.round(budget * 100)) / 100
+  return (
+    <div className="rounded-card border border-line-strong bg-white/[0.03] p-5 md:p-6">
+      <p className="text-sm font-medium">What to expect</p>
+      <dl className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
+        <Stat k="Views it buys" v={views.toLocaleString('en-US')} />
+        <Stat k="Clips to use it all" v={`about ${clipsLow.toLocaleString('en-US')} to ${clipsHigh.toLocaleString('en-US')}`} sub="at 5,000 to 20,000 views each" />
+        <Stat k="A 20,000-view clip earns" v={usd((20000 / 1000) * rate)} />
+        <Stat k="The most it can cost you" v={usd(cost)} sub="the budget plus our fee, only as creators earn" />
+        {days > 0 && <Stat k="To use it by the end date" v={`${Math.ceil(views / days).toLocaleString('en-US')} views a day`} sub={`${days} ${days === 1 ? 'day' : 'days'} left`} />}
+      </dl>
+      <p className="mt-4 text-xs text-mute">A rough guide, not a promise. How fast it moves depends on the music, the rate and who picks it up.</p>
+    </div>
+  )
+}
+
+function Stat({ k, v, sub }: { k: string; v: string; sub?: string }) {
+  return (
+    <div>
+      <dt className="text-xs text-mute">{k}</dt>
+      <dd className="mt-0.5 font-display text-2xl leading-tight tabular-nums">{v}</dd>
+      {sub && <p className="text-xs text-mute">{sub}</p>}
+    </div>
+  )
+}
+
+/** After sending: the campaign, and where it goes from here. The first step lights up as the screen settles. */
+function Sent({ d, rate, views, again, onDone }: { d: Draft; rate: number; views: number; again: boolean; onDone: () => void }) {
+  const steps = [
+    { label: again ? 'Sent back' : 'Sent', note: 'Just now' },
+    { label: 'Reviewed', note: 'Usually within a day' },
+    { label: 'Funded', note: 'Your balance covers the start' },
+    { label: 'Live', note: 'Creators can post' },
+  ]
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="fixed inset-0 z-[150] grid place-items-center overflow-y-auto bg-ink/95 px-4 py-10 backdrop-blur-xl" role="dialog" aria-modal="true" aria-label="Campaign sent">
+      <div className="w-full max-w-xl text-center">
+        <motion.div initial={{ opacity: 0, y: 24, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: 'spring', stiffness: 240, damping: 24, delay: 0.1 }} className="text-left">
+          <CampaignPreview d={d} rate={rate} views={views} big />
+        </motion.div>
+        <motion.h2 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45, duration: 0.4, ease: EASE_OUT }} className="mt-10 font-display text-4xl leading-tight">
+          {again ? 'Sent back to the team.' : 'It is with the team.'}
+        </motion.h2>
+        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6, duration: 0.4 }} className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-mute">
+          We read every campaign before it goes live. You do not need to wait here: we tell you the moment there is news, and nothing is charged until creators earn.
+        </motion.p>
+        <ol className="mx-auto mt-9 grid max-w-md grid-cols-4 gap-2 text-left">
+          {steps.map((s, i) => (
+            <motion.li key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.75 + i * 0.12, duration: 0.35, ease: EASE_OUT }}>
+              <motion.span initial={{ background: 'rgba(255,255,255,0.12)' }} animate={{ background: i === 0 ? '#f3f2ee' : 'rgba(255,255,255,0.12)' }} transition={{ delay: 1.3, duration: 0.5 }} className="mb-3 block h-1 rounded-pill" />
+              <span className={cn('block text-sm', i === 0 ? 'text-paper' : 'text-mute')}>{s.label}</span>
+              <span className="mt-0.5 block text-[11px] leading-snug text-mute">{s.note}</span>
+            </motion.li>
+          ))}
+        </ol>
+        <motion.button type="button" onClick={onDone} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.35, duration: 0.35 }} autoFocus className="mt-10 inline-flex h-14 items-center gap-2 rounded-pill bg-paper px-9 text-base font-medium text-ink transition-colors hover:bg-paper/85">
+          See my campaigns <ArrowRight className="size-4" />
+        </motion.button>
+      </div>
+    </motion.div>
   )
 }

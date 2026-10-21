@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { AdminButton } from '@/components/admin/ui'
 import { More } from '@/components/admin/more'
 import { Tabbed, type TabbedItem } from '@/components/admin/tabbed'
@@ -73,6 +74,9 @@ export default async function Page() {
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center justify-end gap-2">
+                      <Link href={`/admin/campaigns/${c.id}`} className={c.status === 'requested' ? 'inline-flex h-10 items-center rounded-pill bg-paper px-5 text-sm font-medium text-ink transition-colors hover:bg-paper/85' : 'inline-flex h-10 items-center rounded-pill border border-line-strong px-4 text-sm transition-colors hover:bg-white/[0.06]'}>
+                        {c.status === 'requested' ? 'Review in full' : 'Open'}
+                      </Link>
                       {c.status === 'requested' && (
                         <>
                           <AdminButton variant="solid" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'accept' }} hotkey="a" confirm={`Accept "${c.title}"? The artist will be asked to pay ${money(c.budget_cents)}.`}>
@@ -132,7 +136,7 @@ export default async function Page() {
 
   return (
     <>
-      <PageHeader title="Campaigns" sub="Accept a request, wait for the artist to pay, then launch. Nothing goes live until it is paid." />
+      <PageHeader title="Campaigns" sub="Open a request to review it in full: how it will look, what the site checked, who is behind it. Then accept, send it back, or reject it." />
       <Tabbed tabs={tabs} initial={first} />
       {fakes > 0 && (
         <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">

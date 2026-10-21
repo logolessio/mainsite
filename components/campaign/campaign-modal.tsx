@@ -19,12 +19,19 @@ export function CampaignModalProvider({ children }: { children: React.ReactNode 
   const pathname = usePathname()
   const { stop } = usePreview()
   const [campaign, setCampaign] = useState<Campaign | null>(null)
+  const [backdrop, setBackdrop] = useState('')
   const panel = useRef<HTMLDivElement>(null)
   const returnTo = useRef<HTMLElement | null>(null)
 
   const open = useCallback((c: Campaign) => {
     returnTo.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    setBackdrop('')
     setCampaign(c)
+    // the picture the artist chose to show behind their campaign, if they chose one: it fades in when it has loaded
+    fetch(`/api/campaigns/${encodeURIComponent(c.id)}/backdrop`)
+      .then((r) => (r.ok ? r.json() : { background: '' }))
+      .then((j: { background?: string }) => setBackdrop(/^[0-9a-f-]{36}$/.test(j.background ?? '') ? (j.background as string) : ''))
+      .catch(() => {})
   }, [])
   const close = useCallback(() => {
     stop() // leaving a campaign ends its music
@@ -71,6 +78,13 @@ export function CampaignModalProvider({ children }: { children: React.ReactNode 
           <AnimatePresence>
             {campaign && (
               <motion.div key="overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-[140] flex items-center justify-center bg-black/55 p-3 md:p-6" onMouseDown={close}>
+                {backdrop && (
+                  <motion.div aria-hidden="true" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={`/api/img/${backdrop}`} alt="" className="size-full scale-110 object-cover opacity-55 blur-xl" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/55 to-black/80" />
+                  </motion.div>
+                )}
                 <motion.div
                   ref={panel}
                   role="dialog"

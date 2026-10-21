@@ -3,6 +3,8 @@ import { ActionLink } from '@/components/app/action-link'
 import { Badge, EmptyState } from '@/components/app/table'
 import { PageHeader } from '@/components/app/ui'
 import { CampaignActions, MoveBudget } from '@/components/brand/campaign-actions'
+import { CampaignJourney } from '@/components/brand/campaign-journey'
+import { pendingAsks } from '@/lib/campaign-review'
 import { ClientTour } from '@/components/brand/client-tour'
 import { allCaps } from '@/lib/campaign-caps'
 import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
@@ -29,7 +31,7 @@ type Row = {
 
 const usd = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
 
-export default async function Page({ searchParams }: { searchParams: Promise<{ requested?: string; cancelled?: string }> }) {
+export default async function Page({ searchParams }: { searchParams: Promise<{ requested?: string; cancelled?: string; resent?: string }> }) {
   const user = await pageUser()
   const q = await searchParams
   const d = await db()
@@ -49,11 +51,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ r
       .all<Row>()
   ).results
   const caps = await allCaps()
+  const asks = await pendingAsks(rows.filter((r) => r.status === 'requested').map((r) => r.id))
   const movable = rows.filter((r) => ['live', 'paused', 'awaiting_payment', 'paid'].includes(r.status)).map((r) => ({ id: r.id, title: r.title, free: Math.max(0, r.budget_cents - r.spent) / 100 }))
 
   return (
     <>
       <PageHeader title="Campaigns" sub="Every campaign draws from your one balance as creators earn. Pause, start or change a budget any time." actions={<ActionLink href="/brand/campaigns/new">New campaign</ActionLink>} />
+      {q.resent && <p role="status" className="mb-4 rounded-2xl border border-line-strong px-4 py-3 text-sm">Sent back. The team will read it again and tell you what they decide.</p>}
       {q.requested && <p role="status" className="mb-4 rounded-2xl border border-line-strong px-4 py-3 text-sm">Sent. We read every new campaign. Once it is approved it goes live as soon as your balance covers the start.</p>}
       <MoveBudget campaigns={movable} />
       <ClientTour />
@@ -74,7 +78,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ r
                     <span className="truncate">{r.title}</span>
                     <Badge tone={CAMPAIGN_STATUS[r.status]?.tone ?? 'neutral'}>{CAMPAIGN_STATUS[r.status]?.brand ?? r.status}</Badge>
                   </p>
-                  {r.admin_note && !['live', 'paused'].includes(r.status) && <p className="mt-0.5 text-xs text-mute">{r.admin_note}</p>}
+                  {r.admin_note && r.admin_note !== 'sample' && !['live', 'paused'].includes(r.status) && <p className="mt-0.5 text-xs text-mute">{r.admin_note}</p>}
+                  {asks[r.id] && (
+                    <div className="mt-3 max-w-xl rounded-panel border border-paper/25 bg-white/[0.04] p-4">
+                      <p className="text-xs text-mute">The team asked for changes</p>
+                      <p className="mt-1 text-sm leading-relaxed">{asks[r.id]}</p>
+                      <ActionLink href={`/brand/campaigns/${r.id}/edit`}>Fix it and send it back</ActionLink>
+                    </div>
+                  )}
+                  <CampaignJourney status={r.status} className="mt-3" />
                   <div className="mt-3 h-1.5 max-w-md overflow-hidden rounded-pill bg-white/10" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Share of the budget paid out">
                     <div className="h-full rounded-pill bg-paper" style={{ width: `${pct}%` }} />
                   </div>

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { evaluateBadges } from './badges'
 import { campaignRow } from './campaigns-db'
+import { addTrail } from './campaign-review'
 import { shortDate } from './campaign-input'
 import { audit, type Actor } from './chain'
 import { SITE } from './site'
@@ -22,6 +23,8 @@ import { shoutout } from './discord/outbound'
 export const campaignActionSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('accept'), note: z.string().max(300).optional() }),
   z.object({ action: z.literal('reject'), note: z.string().min(3).max(300) }),
+  z.object({ action: z.literal('changes'), note: z.string().trim().min(5).max(600) }),
+  z.object({ action: z.literal('note'), note: z.string().trim().min(2).max(600) }),
   z.object({ action: z.literal('launch') }),
   z.object({ action: z.literal('pause'), note: z.string().max(300).optional() }),
   z.object({ action: z.literal('resume') }),
@@ -54,6 +57,7 @@ export async function campaignAction(actor: Actor, ip: string | null, id: string
   switch (a.action) {
     case 'accept': {
       if (c.status !== 'requested') throw new HttpError(409, 'Only new requests can be accepted.')
+      await addTrail(id, { at: t, by: actor.email, kind: 'accept', text: a.note ?? '' })
       if (!c.brand_user_id) throw new HttpError(409, 'This campaign has no owner to bill.')
       // One balance pays for every campaign as clippers earn. If it already covers the start, the campaign simply goes live.
       const covered = (await balances(c.brand_user_id)).brand >= startNeeded(c.budget_cents)
@@ -70,8 +74,21 @@ export async function campaignAction(actor: Actor, ip: string | null, id: string
     }
     case 'reject': {
       if (!['requested', 'awaiting_payment'].includes(c.status)) throw new HttpError(409, 'That campaign cannot be rejected now.')
+      await addTrail(id, { at: t, by: actor.email, kind: 'reject', text: a.note })
       await set('rejected', a.note)
       if (c.brand_user_id) await notify(c.brand_user_id, { kind: 'campaign', title: `${c.title} was not accepted`, body: a.note, href: '/brand/campaigns', dedupe: `camp-rejected:${id}` })
+      break
+    }
+    case 'changes': {
+      // not a decision: the brand is asked to fix things and the request stays where it is, for them to answer
+      if (!['requested', 'awaiting_payment'].includes(c.status)) throw new HttpError(409, 'Changes can only be asked for on a request that is waiting.')
+      if (!c.brand_user_id) throw new HttpError(409, 'This campaign has no owner to ask.')
+      await addTrail(id, { at: t, by: actor.email, kind: 'changes', text: a.note })
+      await notify(c.brand_user_id, { kind: 'campaign', title: `Changes needed on ${c.title}`, body: a.note, href: '/brand/campaigns', dedupe: `camp-changes:${id}:${t}` })
+      break
+    }
+    case 'note': {
+      await addTrail(id, { at: t, by: actor.email, kind: 'note', text: a.note })
       break
     }
     case 'launch': {

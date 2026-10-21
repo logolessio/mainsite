@@ -16,7 +16,7 @@ const ADMIN: AppNavItem[] = [
   { key: 'p', label: 'Payouts', href: '/admin/payouts', icon: 'Banknote', section: 'Run' },
   { key: 'u', label: 'People', href: '/admin/people', icon: 'Users', match: ['/admin/users'], section: 'Run' },
   { key: 'i', label: 'Inbox', href: '/admin/inbox', icon: 'Mail', section: 'Run' },
-  { key: 'w', label: 'Site', href: '/admin/design', icon: 'Palette', match: ['/admin/text', '/admin/socials', '/admin/previews', '/admin/push', '/dev/design', '/dev/features', '/dev/previews', '/dev/dashboards'], section: 'Manage' },
+  { key: 'w', label: 'Site', href: '/admin/design', icon: 'Palette', match: ['/admin/text', '/admin/socials', '/admin/previews', '/admin/push', '/dev/design', '/dev/features', '/dev/previews', '/dev/dashboards', '/dev/lab'], section: 'Manage' },
   { key: 'm', label: 'Communicate', href: '/admin/broadcast', icon: 'Send', match: ['/admin/email', '/admin/discord', '/admin/countdown'], section: 'Manage' },
   { key: 'y', label: 'System', href: '/admin/system', icon: 'Activity', match: ['/admin/logs', '/admin/audit', '/admin/keys', '/admin/settings', '/admin/security', '/admin/api', '/admin/developers', '/dev/events'], section: 'Manage' },
 ]
@@ -25,6 +25,7 @@ const ADMIN: AppNavItem[] = [
 const DEV_ONLY: AppNavItem[] = [
   { key: 'f', label: 'Features', href: '/dev/features', icon: 'Rocket', section: 'Developer' },
   { key: 'v', label: 'Previews', href: '/dev/previews', icon: 'Eye', section: 'Developer' },
+  { key: 'l', label: 'Test lab', href: '/dev/lab', icon: 'FlaskConical', section: 'Developer' },
   { key: 'd', label: 'Dashboards', href: '/dev/dashboards', icon: 'LayoutGrid', section: 'Developer' },
   { key: 'e', label: 'Events', href: '/dev/events', icon: 'Activity', section: 'Developer' },
 ]
