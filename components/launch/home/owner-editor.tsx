@@ -216,13 +216,9 @@ export function OwnerEditor({ open, onClose, draft, setDraft, mode, setMode, ini
                   <div className="flex flex-wrap items-center gap-2">
                     {PAGE_ACCENTS.map((c) => (
                       <button key={c} type="button" aria-label={c} aria-pressed={draft.page.look.accent === c} onClick={() => setLook({ accent: c })} className={cn('grid size-8 place-items-center rounded-full ring-offset-2 ring-offset-[#0b0b0d] transition-transform hover:scale-110', draft.page.look.accent === c && 'ring-2 ring-paper')} style={{ background: c }}>
-                        {draft.page.look.accent === c && <Check className={cn('size-3.5', c === '#f3f2ee' || c === '#ffe14d' || c === '#5eff9a' || c === '#4de1ff' ? 'text-black' : 'text-white')} strokeWidth={3} />}
+                        {draft.page.look.accent === c && <Check className={cn('size-3.5', c === '#71717a' ? 'text-white' : 'text-black')} strokeWidth={3} />}
                       </button>
                     ))}
-                    <label className="relative grid size-8 cursor-pointer place-items-center overflow-hidden rounded-full border border-dashed border-white/30 text-paper/60" title="Any colour">
-                      <Plus className="size-3.5" />
-                      <input type="color" value={draft.page.look.accent} onChange={(e) => setLook({ accent: e.target.value })} className="absolute inset-0 cursor-pointer opacity-0" aria-label="Any colour" />
-                    </label>
                   </div>
                 </div>
               </div>

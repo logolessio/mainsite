@@ -9,8 +9,7 @@ import { Icon } from '@/components/icons'
 import { Logo } from '@/components/logo'
 import { useNavUser } from '@/components/shell/nav-user'
 import { NotificationBell } from '@/components/shell/notifications'
-import { useFeature } from '@/components/shell/features-provider'
-import { HelpButton } from '@/components/shell/search-help-buttons'
+import { OPEN_SEARCH_EVENT } from '@/components/shell/spotlight'
 import { TransitionLink } from '@/components/shell/transition-link'
 import { PageEnter } from '@/components/shell/page-frame'
 import { useTransitions } from '@/components/shell/transition-provider'
@@ -80,7 +79,7 @@ function SideLink({ it, n, active, lit, c, hint, onEnter }: { it: AppNavItem; n:
 }
 
 /**
- * A sidebar item at the bottom of the menu (Recap). While it glows it has a thin gold edge, gold lettering and a slow sweep of light;
+ * A sidebar item at the bottom of the menu (Recap). While it glows it has a thin white edge, bright lettering and a slow sweep of light;
  * once opened it looks like any other item.
  */
 function FootLink({ it, glow, lit, active, onEnter }: { it: AppNavItem; glow: boolean; lit: boolean; active: boolean; onEnter: () => void }) {
@@ -113,7 +112,12 @@ export function DashShell({ area, items: menu, footer = NONE, children }: { area
   const { phase } = useTransitions()
   const reduced = useReducedMotion()
   const [palette, setPalette] = useState(false)
-  const findable = useFeature('command-actions')
+  // the floating search button (bottom right of every page) opens this area's own box
+  useEffect(() => {
+    const open = () => setPalette(true)
+    window.addEventListener(OPEN_SEARCH_EVENT, open)
+    return () => window.removeEventListener(OPEN_SEARCH_EVENT, open)
+  }, [])
   const [more, setMore] = useState(false)
   const [recents, setRecents] = useState<string[]>([])
   const [hot, setHot] = useState<string | null>(null) // the sidebar item the pointer (or the keyboard) is on
@@ -273,15 +277,11 @@ export function DashShell({ area, items: menu, footer = NONE, children }: { area
               <Plus aria-hidden="true" className="size-4" /> {primary.label}
             </TransitionLink>
           )}
-          <button type="button" onClick={() => setPalette(true)} aria-label="Search or jump" aria-keyshortcuts="/" className="grid size-10 place-items-center rounded-pill border border-line text-paper/60 transition-colors hover:text-paper md:hidden">
-            <Search aria-hidden="true" className="size-4" />
-          </button>
           {primary && (
             <TransitionLink href={primary.href} aria-label={primary.label} className="grid size-10 place-items-center rounded-pill bg-paper text-ink lg:hidden">
               <Plus aria-hidden="true" className="size-4" />
             </TransitionLink>
           )}
-          {findable && <HelpButton className="size-10 border border-line bg-transparent text-paper/60" />}
           <NotificationBell />
         </div>
       </header>

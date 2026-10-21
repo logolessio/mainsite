@@ -62,7 +62,7 @@ export const BANNER_ASPECT_MIN = 9 / 16
 export const BANNER_ASPECT_MAX = 1
 
 export const DEFAULT_EXTRAS: ProfileExtras = {
-  avatar: { kind: 'image', color: '#6d8bff', glyph: 'initials', emoji: '✨', gif: '', noise: 0 },
+  avatar: { kind: 'image', color: '#3f3f46', glyph: 'initials', emoji: '✨', gif: '', noise: 0 },
   banner: { gif: '', aspect: BANNER_ASPECT_MIN, noise: 0 },
   name: { intensity: 50, speed: 50, angle: 90 },
   effectTint: { color: '#ffffff', amount: 0 },

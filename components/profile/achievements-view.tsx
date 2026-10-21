@@ -320,12 +320,12 @@ function BadgeGrid({ shown, data, onOpen }: { shown: BadgeDef[]; data: Data; onO
               type="button"
               onClick={() => onOpen(b)}
               aria-label={`${b.name}, ${R.label}. ${on ? 'On your profile.' : got ? 'Earned.' : 'Not earned yet.'}`}
-              className={cn('group relative flex aspect-square w-full flex-col items-center justify-center overflow-hidden rounded-[calc(1.5rem*var(--round,1))] border-2 bg-[#0b0b0d] p-3 text-center transition-all hover:-translate-y-0.5', b.rarity === 'legendary' && got && 'shadow-[0_0_30px_-10px_rgb(251_191_36/0.6)]')}
+              className={cn('group relative flex aspect-square w-full flex-col items-center justify-center overflow-hidden rounded-[calc(1.5rem*var(--round,1))] border-2 bg-[#0b0b0d] p-3 text-center transition-all hover:-translate-y-0.5', b.rarity === 'legendary' && got && 'shadow-[0_0_30px_-10px_rgb(255_255_255/0.5)]')}
               style={{ borderColor: got ? RARITY_BORDER[b.rarity] : RARITY_BORDER[b.rarity].replace(/[\d.]+\)$/, '0.22)'), borderStyle: got ? 'solid' : 'dashed' }}
             >
               {got && <span aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(70% 60% at 50% 35%, ${RARITY_BORDER[b.rarity].replace(/[\d.]+\)$/, '0.16)')}, transparent)` }} />}
               <span className="absolute top-2.5 left-2.5" title={got ? 'Earned' : 'Not earned yet'}>
-                {got ? <CircleCheck className="size-[18px] text-emerald-300" /> : <Lock className="size-4 text-mute" />}
+                {got ? <CircleCheck className="size-[18px] text-paper" /> : <Lock className="size-4 text-mute" />}
               </span>
               {on && (
                 <span className="absolute top-2 right-2 inline-flex h-6 items-center gap-1 rounded-pill bg-paper px-2 text-[10px] font-medium text-ink" title="On your profile">

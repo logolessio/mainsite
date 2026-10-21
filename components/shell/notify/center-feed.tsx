@@ -114,7 +114,7 @@ function Mark({ n }: { n: Note }) {
       {b ? (
         <BadgeArt badge={b} size={36} animated={false} />
       ) : (
-        <span className="grid size-9 place-items-center rounded-pill" style={{ background: `oklch(0.32 0.06 ${k?.hue ?? 220} / 0.55)`, color: `oklch(0.86 0.09 ${k?.hue ?? 220})` }}>
+        <span className="grid size-9 place-items-center rounded-pill bg-white/[0.07] text-paper/85">
           <Icon aria-hidden="true" className="size-4" />
         </span>
       )}

@@ -213,7 +213,7 @@ function Row({ rank, href, share, layoutKey, children }: { rank: number; href?: 
   )
 }
 
-const MEDAL = ['from-[#fff3c4] to-[#d9a531]', 'from-[#f4f5f8] to-[#9aa0b0]', 'from-[#f1c9a5] to-[#b3703a]']
+const MEDAL = ['from-[#f3f2ee] to-[#c9c9cf]', 'from-[#d4d4d8] to-[#9a9aa3]', 'from-[#a1a1aa] to-[#74747d]']
 type RankBy = 'views' | 'earners' | 'clippers'
 const METRICS: { id: RankBy; label: string; unit: (p: Person) => string; empty: string }[] = [
   { id: 'views', label: 'Views', unit: (p) => `${compact(p.value)} views`, empty: 'Turn on “Views generated” in your profile privacy settings to be listed here.' },
@@ -247,7 +247,7 @@ function People({ board }: { board: Board }) {
                 <motion.li key={`${metric}-${p.handle}`} layout="position" initial={switched ? { opacity: 0, y: 16 } : false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE_OUT, delay: col * 0.06 }}>
                   <TransitionLink href={`/@${p.handle}`} className="group flex flex-col items-center text-center">
                     <span className="relative">
-                      {first && <Crown aria-hidden="true" className="absolute -top-7 left-1/2 size-6 -translate-x-1/2 text-[#ffd45c]" />}
+                      {first && <Crown aria-hidden="true" className="absolute -top-7 left-1/2 size-6 -translate-x-1/2 text-paper" />}
                       <Face src={p.avatar} name={p.name} size={first ? 88 : 64} className="ring-2" />
                     </span>
                     <span className="mt-3 max-w-full truncate text-[15px] font-medium group-hover:underline">{p.name}</span>

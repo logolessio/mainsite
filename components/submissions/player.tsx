@@ -252,7 +252,7 @@ function RateStars({ clip, signedIn, own, onRated }: { clip: FeedClip; signedIn:
             onAnimationComplete={() => n === pop && setPop(0)}
             className={cn('grid size-10 place-items-center rounded-xl outline-none transition-colors focus-visible:ring-2 focus-visible:ring-paper/60', can ? 'cursor-pointer hover:bg-white/[0.06]' : 'cursor-default')}
           >
-            <Star className={cn('size-7 transition-colors duration-200', n <= shown ? 'fill-[#ffd45c] text-[#ffd45c]' : 'fill-transparent text-white/25')} strokeWidth={1.5} />
+            <Star className={cn('size-7 transition-colors duration-200', n <= shown ? 'fill-paper text-paper' : 'fill-transparent text-white/25')} strokeWidth={1.5} />
           </motion.button>
         ))}
         {busy && <Loader2 aria-hidden="true" className="ml-2 size-4 animate-spin text-mute" />}

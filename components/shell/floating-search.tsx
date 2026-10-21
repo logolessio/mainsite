@@ -1,0 +1,78 @@
+'use client'
+
+import { Search } from 'lucide-react'
+import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { LiquidGlass } from '@/components/ui/liquid-glass'
+import { isInvitePath } from '@/lib/invite-shared'
+import { cn } from '@/lib/utils'
+import { useFeature } from './features-provider'
+import { useSignedIn } from './nav-user'
+import { openSearch } from './spotlight'
+
+/** Pages that are one small flow of their own and have no search box to open. */
+const HIDDEN = ['/onboarding', '/@', '/u/', '/links', '/launch']
+/** The dashboards have a bar of tabs along the bottom of a phone: the buttons sit above it. */
+const DASH = /^\/(dashboard|brand|admin|owner|dev)(\/|$)/
+
+/** The information pages that keep a full width Get started button at the bottom of a phone for visitors without an account (see sticky-cta.tsx). */
+const STICKY = ['/for-creators', '/for-brands', '/about', '/pricing', '/faq', '/case-studies']
+
+const SIZE = 'size-11'
+
+/**
+ * The search button and the "?" button, floating in the bottom right corner of every page as two pieces of liquid glass, and staying there
+ * wherever you scroll. Search opens the box that finds a page or does something (⌘K, or /), "?" lists the shortcuts. On a wide screen the search
+ * button says what it is and shows its key; on a phone it is just the magnifier. `raised` lifts them over the dev site's push button.
+ */
+export function FloatingSearch({ raised = false }: { raised?: boolean }) {
+  const on = useFeature('command-actions')
+  const path = usePathname()
+  const signedIn = useSignedIn()
+  const [mod, setMod] = useState('⌘')
+  useEffect(() => setMod(/mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent) ? '⌘' : 'Ctrl'), [])
+
+  if (!on || HIDDEN.some((p) => path.startsWith(p)) || isInvitePath(path)) return null
+  const dash = DASH.test(path)
+  // phone: above the tab bar of a dashboard; the dev push button sits at 8.75rem on a phone, so lift over that. Computer: bottom corner, above the push button.
+  const bottom = raised
+    ? 'bottom-[12.25rem] md:bottom-[5.25rem]'
+    : dash
+      ? 'bottom-[calc(5.75rem+env(safe-area-inset-bottom))] md:bottom-5'
+      : !signedIn && STICKY.includes(path)
+        ? 'bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-5'
+        : 'bottom-[calc(1rem+env(safe-area-inset-bottom))] md:bottom-5'
+
+  return (
+    <div data-floating-search className={cn('pointer-events-none fixed right-3 z-[60] flex items-center gap-2 md:right-5', bottom)}>
+      <LiquidGlass
+        as="button"
+        type="button"
+        onClick={openSearch}
+        aria-label="Search, or do something"
+        aria-keyshortcuts="Meta+K /"
+        title={`Search (${mod} K)`}
+        rootClassName="pointer-events-auto"
+        className={cn('flex h-11 items-center justify-center gap-3 text-sm text-mute transition-colors hover:text-paper max-lg:w-11', 'lg:pr-2 lg:pl-4')}
+        look={{ zRadius: 12 }}
+      >
+        <Search aria-hidden="true" className="size-[18px]" />
+        <span className="hidden lg:inline">Search</span>
+        <kbd className="hidden rounded-pill bg-white/[0.08] px-2.5 py-1 font-mono text-[11px] text-paper/60 lg:inline">{mod} K</kbd>
+      </LiquidGlass>
+      <LiquidGlass
+        as="button"
+        type="button"
+        onClick={() => window.dispatchEvent(new Event('logoless:help'))}
+        aria-label="Keyboard shortcuts and help"
+        aria-keyshortcuts="?"
+        title="Shortcuts and help (?)"
+        rootClassName="pointer-events-auto"
+        className={cn(SIZE, 'grid place-items-center font-mono text-[15px] text-mute transition-colors hover:text-paper')}
+        look={{ zRadius: 12 }}
+      >
+        ?
+      </LiquidGlass>
+    </div>
+  )
+}

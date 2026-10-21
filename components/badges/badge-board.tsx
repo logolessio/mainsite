@@ -9,12 +9,12 @@ import { BadgeArt, RARITY_STYLE } from './badge-art'
 
 type Drag = { id: string; from: 'slot' | 'shelf'; index: number; x: number; y: number; over: { slot: number } | { shelf: true } | null }
 
-/** The border colour for each rarity, used on every badge tile. */
+/** The border for each rarity, used on every badge tile: black and white like the rest of the site, brighter the rarer it is. */
 export const RARITY_BORDER: Record<BadgeDef['rarity'], string> = {
-  common: 'rgb(190 196 206 / 0.45)',
-  rare: 'rgb(96 165 250 / 0.75)',
-  epic: 'rgb(192 132 252 / 0.8)',
-  legendary: 'rgb(251 191 36 / 0.85)',
+  common: 'rgb(143 143 152 / 0.45)',
+  rare: 'rgb(188 188 196 / 0.7)',
+  epic: 'rgb(232 232 238 / 0.85)',
+  legendary: 'rgb(255 255 255 / 1)',
 }
 
 /**
@@ -230,7 +230,7 @@ export function BadgeBoard({ unlocked, equipped, onChange, saving, compact = fal
           </ul>
         )}
       </div>
-      {note && <p role="status" className="mt-2 text-xs text-amber-200/90">{note}</p>}
+      {note && <p role="status" className="mt-2 text-xs text-paper/70">{note}</p>}
 
       {ghost && drag && (
         <div aria-hidden="true" className="pointer-events-none fixed z-[300] -translate-x-1/2 -translate-y-1/2" style={{ left: drag.x, top: drag.y }}>

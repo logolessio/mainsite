@@ -41,7 +41,7 @@ export function GetStarted({ copy, signedIn }: { copy: PageCopy; signedIn: boole
               {busy === 'google' ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <BrandIcon name="google" className="size-[18px]" />}
               Continue with Google
             </button>
-            <button type="button" onClick={() => go('discord')} disabled={busy !== null} className={cn(row, 'bg-[#5865f2] text-white hover:bg-[#6873f4]')}>
+            <button type="button" onClick={() => go('discord')} disabled={busy !== null} className={cn(row, 'border border-white/14 text-paper hover:border-white/30 hover:bg-white/[0.05]')}>
               {busy === 'discord' ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <BrandIcon name="discord" className="size-[18px]" />}
               Continue with Discord
             </button>

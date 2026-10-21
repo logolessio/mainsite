@@ -12,6 +12,7 @@ import { CopyProvider } from '@/components/shell/copy-provider'
 import { SkipLink } from '@/components/shell/skip-link'
 import { DesignProvider } from '@/components/shell/design-provider'
 import { FeaturesProvider } from '@/components/shell/features-provider'
+import { FloatingSearch } from '@/components/shell/floating-search'
 import { LiveProgress } from '@/components/shell/live-progress'
 import { getAnnouncement } from '@/lib/announcement'
 import { featureState, requestHost } from '@/lib/features'
@@ -216,6 +217,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <AppShell announcement={announcement} dots={design.bg_dots === '1'} links={links} signedIn={Boolean(session?.user?.email)}>{blocked ? <DevGate email={session?.user?.email ?? null} /> : children}</AppShell>
             <AutoCopy />
             <LiveProgress />
+            <FloatingSearch raised={fs.dev && (isAdmin || isDev)} />
             {isAdmin && <TextEditor />}
             {isAdmin && <SecretDialogHost />}
             {(isAdmin || isDev) && <SiteCheckHost />}

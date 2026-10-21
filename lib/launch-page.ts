@@ -12,7 +12,13 @@ export const PAGE_BACKGROUNDS = [
 ] as const
 export const PAGE_BACKGROUND_IDS: string[] = [...PAGE_BACKGROUNDS.map((b) => b.id), ...BANNER_PRESET_IDS]
 
-export const PAGE_ACCENTS = ['#f3f2ee', '#ff2a2a', '#ff9f43', '#ffe14d', '#5eff9a', '#4de1ff', '#6d8bff', '#b36dff', '#ff6dd0'] as const
+/** The page is black and white like the rest of the site: its accent is a shade of white or grey, never a colour. */
+export const PAGE_ACCENTS = ['#f3f2ee', '#ffffff', '#d4d4d8', '#a1a1aa', '#71717a'] as const
+/** True for a grey, a white or a black: the red, green and blue values are almost the same. */
+const neutral = (hex: string) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
+  return Math.max(r, g, b) - Math.min(r, g, b) <= 14
+}
 
 export type PageLook = { bg: string; effect: CardEffect; accent: string; intensity: number }
 
@@ -86,7 +92,7 @@ export function cleanPage(input: unknown): PageConfig {
   const look: PageLook = {
     bg: typeof l.bg === 'string' && PAGE_BACKGROUND_IDS.includes(l.bg) ? l.bg : DEFAULT_PAGE.look.bg,
     effect: typeof l.effect === 'string' && CARD_EFFECT_IDS.includes(l.effect) ? (l.effect as CardEffect) : DEFAULT_PAGE.look.effect,
-    accent: typeof l.accent === 'string' && HEX.test(l.accent) ? l.accent.toLowerCase() : DEFAULT_PAGE.look.accent,
+    accent: typeof l.accent === 'string' && HEX.test(l.accent) && neutral(l.accent) ? l.accent.toLowerCase() : DEFAULT_PAGE.look.accent,
     intensity: typeof l.intensity === 'number' && Number.isFinite(l.intensity) ? Math.round(Math.min(100, Math.max(0, l.intensity))) : DEFAULT_PAGE.look.intensity,
   }
   return { copy, look }

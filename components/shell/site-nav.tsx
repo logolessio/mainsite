@@ -15,7 +15,6 @@ import { NavUserActions, useNavUser } from './nav-user'
 import { SiteMenu } from './site-menu'
 import { useFeature } from './features-provider'
 import { useTransitions } from './transition-provider'
-import { SearchHelpButtons } from './search-help-buttons'
 
 const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin', '/owner', '/dev', '/@', '/u/', '/links', '/launch']
 export const TOUR_EVENT = 'logoless:tour'
@@ -28,7 +27,6 @@ export function SiteNav() {
   const { user, hint } = useNavUser()
   const board = useFeature('leaderboard')
   const reels = useFeature('reels')
-  const findable = useFeature('command-actions')
   const twoButtons = useFeature('smart-cta')
   const links = [...NAV_LINKS, ...(reels ? [{ label: 'Reels', href: '/reels' }] : []), ...(board ? [{ label: 'Leaderboard', href: '/leaderboard' }] : []), (user ? user.signedIn : hint) ? { label: 'Dashboard', href: '/dashboard' } : { label: 'Log in', href: '/login' }]
   const toggleRef = useRef<HTMLButtonElement>(null)
@@ -73,7 +71,6 @@ export function SiteNav() {
           </TransitionLink>
 
           <div className="pointer-events-auto flex items-center gap-2 md:gap-3">
-            {findable && <SearchHelpButtons roomy={!(user ? user.signedIn : hint)} />}
             {user?.signedIn ? (
               <NavUserActions onNavigate={() => setOpen(false)} menuOpen={open} />
             ) : user === null && hint ? (

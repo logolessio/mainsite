@@ -83,7 +83,7 @@ export function ConfirmDialog({ open, title, body, cancelLabel = 'Keep editing',
             className="w-full max-w-[30rem] rounded-[calc(1.6rem*var(--round,1))] border border-line-strong bg-[#0d0d0f] p-5 text-paper shadow-[0_30px_80px_-20px_rgb(0_0_0/0.9)] sm:p-6"
           >
             <div className="flex items-start gap-3.5">
-              <span className={tone === 'danger' ? 'grid size-10 shrink-0 place-items-center rounded-pill bg-amber-300/15 text-amber-200' : 'grid size-10 shrink-0 place-items-center rounded-pill bg-white/10'}>
+              <span className={tone === 'danger' ? 'grid size-10 shrink-0 place-items-center rounded-pill bg-white/10 text-paper' : 'grid size-10 shrink-0 place-items-center rounded-pill bg-white/10'}>
                 <TriangleAlert className="size-5" />
               </span>
               <div className="min-w-0 pt-0.5">

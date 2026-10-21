@@ -11,7 +11,7 @@ export type OptionalPage = (typeof OPTIONAL_PAGES)[number]
 
 /** Recap appears once there is something worth looking back on. */
 export const RECAP_MIN = { approvedClips: 1, views: 1000 }
-/** It glows gold again when it has not been opened for this long. */
+/** It glows again when it has not been opened for this long. */
 export const RECAP_GLOW_AFTER_SEC = 90 * 86400
 
 type Row = { recap_seen_at: number | null; nav_hidden: string }

@@ -126,7 +126,7 @@ function CampaignCard({ c, cover }: { c: Camp; cover: string | null }) {
             <span style={{ fontFamily: 'Gloock', fontSize: 56, lineHeight: 1 }}>{`${left}%`}</span>
           </div>
           <div style={{ display: 'flex', width: '100%', height: 22, borderRadius: 11, background: 'rgba(243,242,238,0.12)', overflow: 'hidden' }}>
-            <div style={{ width: `${left}%`, height: '100%', borderRadius: 11, background: left <= 20 ? '#ff2a2a' : PAPER }} />
+            <div style={{ width: `${left}%`, height: '100%', borderRadius: 11, background: PAPER }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 22, color: MUTE, marginTop: 12 }}>
             <span>{`${whole(Math.max(0, c.budgetCents - c.paidCents))} of ${whole(c.budgetCents)}`}</span>

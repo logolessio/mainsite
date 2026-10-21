@@ -43,7 +43,7 @@ export function StarsAverage({ avg, className, size = 12 }: { avg: number; class
       <span className="flex gap-px text-white/25">
         {[0, 1, 2, 3, 4].map((i) => <Star key={i} style={{ width: size, height: size }} className="fill-current" strokeWidth={0} />)}
       </span>
-      <span className="absolute inset-0 flex gap-px overflow-hidden text-[#ffd45c]" style={{ width: `${(Math.max(0, Math.min(5, avg)) / 5) * 100}%` }}>
+      <span className="absolute inset-0 flex gap-px overflow-hidden text-paper" style={{ width: `${(Math.max(0, Math.min(5, avg)) / 5) * 100}%` }}>
         {[0, 1, 2, 3, 4].map((i) => <Star key={i} style={{ width: size, height: size }} className="shrink-0 fill-current" strokeWidth={0} />)}
       </span>
     </span>

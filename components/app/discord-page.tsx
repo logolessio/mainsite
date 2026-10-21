@@ -91,8 +91,7 @@ export function DiscordPage() {
 
       {!o.linked ? (
         <section className="relative overflow-hidden rounded-3xl border border-line bg-black/45 p-7 md:p-10">
-          <span aria-hidden="true" className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-pill bg-[#5865F2]/25 blur-3xl" />
-          <span className="relative grid size-14 place-items-center rounded-2xl bg-[#5865F2] text-white">
+                    <span className="relative grid size-14 place-items-center rounded-2xl border border-white/15 bg-white/[0.06] text-paper">
             <Icon name="Discord" aria-hidden="true" className="size-7" />
           </span>
           <h2 className="relative mt-6 font-display text-3xl leading-[1.05] tracking-[-0.03em] md:text-4xl">Link your Discord</h2>
@@ -104,7 +103,7 @@ export function DiscordPage() {
             ))}
           </ul>
           <div className="relative mt-8 flex flex-wrap gap-2">
-            <a href={CONNECT} className="inline-flex h-11 items-center gap-2 rounded-pill bg-[#5865F2] px-6 text-[15px] font-medium text-white transition-colors hover:bg-[#4752c4]">
+            <a href={CONNECT} className="inline-flex h-11 items-center gap-2 rounded-pill bg-paper px-6 text-[15px] font-medium text-ink transition-colors hover:bg-paper/90">
               <Icon name="Discord" aria-hidden="true" className="size-4" /> Link Discord
             </a>
             <a href={o.invite} target="_blank" rel="noreferrer" className="inline-flex h-11 items-center gap-2 rounded-pill bg-white/[0.06] px-5 text-[15px] transition-colors hover:bg-white/[0.11]">
@@ -116,7 +115,7 @@ export function DiscordPage() {
       ) : (
         <Card>
           <div className="flex flex-wrap items-center gap-4">
-            <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-pill bg-[#5865F2] text-white">
+            <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-pill border border-white/15 bg-white/[0.06] text-paper">
               {o.account?.avatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={o.account.avatar} alt="" className="size-full object-cover" />
@@ -128,8 +127,8 @@ export function DiscordPage() {
               <span className="block truncate text-lg">{o.account?.name ?? 'Discord linked'}</span>
               <span className="flex flex-wrap items-center gap-2 text-sm text-paper/50">
                 {o.account && <span>@{o.account.username}</span>}
-                <span className={cn('inline-flex items-center gap-1.5 rounded-pill px-2 py-0.5 text-[12px]', o.inServer ? 'bg-emerald-400/10 text-emerald-300' : 'bg-white/[0.06] text-paper/55')}>
-                  <span aria-hidden="true" className={cn('size-1.5 rounded-pill', o.inServer ? 'bg-emerald-300' : 'bg-paper/40')} />
+                <span className={cn('inline-flex items-center gap-1.5 rounded-pill px-2 py-0.5 text-[12px]', o.inServer ? 'bg-white/[0.1] text-paper' : 'bg-white/[0.06] text-paper/55')}>
+                  <span aria-hidden="true" className={cn('size-1.5 rounded-pill', o.inServer ? 'bg-paper' : 'bg-paper/40')} />
                   {o.inServer ? 'In the server' : o.inServer === false ? 'Not in the server yet' : 'Linked'}
                 </span>
               </span>
@@ -137,7 +136,7 @@ export function DiscordPage() {
           </div>
           <div className="mt-6 flex flex-wrap gap-2">
             {o.inServer === false && (
-              <a href={CONNECT} className="inline-flex h-10 items-center gap-2 rounded-pill bg-[#5865F2] px-5 text-sm font-medium text-white transition-colors hover:bg-[#4752c4]">
+              <a href={CONNECT} className="inline-flex h-10 items-center gap-2 rounded-pill bg-paper px-5 text-sm font-medium text-ink transition-colors hover:bg-paper/90">
                 Join the server
               </a>
             )}
@@ -183,7 +182,7 @@ export function DiscordPage() {
             <ul className="divide-y divide-line">
               {o.roles.map((r) => (
                 <li key={r.id} className="flex items-center gap-4 py-3.5 first:pt-0 last:pb-0">
-                  <span aria-hidden="true" className="size-3 shrink-0 rounded-pill" style={{ background: r.color ?? 'rgb(255 255 255 / 0.25)', opacity: r.have ? 1 : 0.35 }} />
+                  <span aria-hidden="true" className="size-3 shrink-0 rounded-pill" style={{ background: 'rgb(243 242 238)', opacity: r.have ? 0.9 : 0.25 }} />
                   <span className="min-w-0 flex-1">
                     <span className={cn('block text-[15px]', !r.have && 'text-paper/55')}>{r.name}</span>
                     <span className="block text-[13px] text-paper/40">{r.how}</span>

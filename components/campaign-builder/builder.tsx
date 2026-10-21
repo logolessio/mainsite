@@ -504,7 +504,7 @@ function CampaignPreview({ d, rate, views, big }: { d: Draft; rate: number; view
             {d.platforms.map((p) => (
               <BrandIcon key={p} name={p} className="size-4" />
             ))}
-            {d.spotify.some((l) => l.trim()) && <BrandIcon name="spotify" className="size-4 text-emerald-400" />}
+            {d.spotify.some((l) => l.trim()) && <BrandIcon name="spotify" className="size-4 text-paper/70" />}
           </div>
           {big && d.summary && <p className="mt-4 line-clamp-4 text-sm leading-relaxed whitespace-pre-wrap text-mute">{d.summary}</p>}
         </div>
