@@ -1,6 +1,6 @@
 'use client'
 
-import { Ban, Binary, Bug, CircleDot, CloudRain, Droplets, Film, Flame, Flower2, ImagePlus, Leaf, Loader2, PartyPopper, Rocket, Snowflake, Sparkles, Star, Sun, Trash2, Tv, Upload, Video, Waves, Wind, Zap, type LucideIcon } from 'lucide-react'
+import { Ban, Binary, Bug, Check, CircleDot, CloudRain, Droplets, Film, Flame, Flower2, ImagePlus, Leaf, Loader2, PartyPopper, Rocket, Snowflake, Sparkles, Star, Sun, Trash2, Tv, Upload, Video, Waves, Wind, Zap, type LucideIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { BadgeBoard } from '@/components/badges/badge-board'
 import { uploadBackground, uploadBanner, uploadBgVideo, uploadImage } from '@/lib/image-client'
@@ -15,6 +15,7 @@ import {
 } from '@/lib/profile-extras'
 import { ACCENT_SWATCHES, BANNER_PRESETS, CARD_EFFECTS, DOT_SWATCHES, type ProfileView } from '@/lib/profile-style'
 import { cn } from '@/lib/utils'
+import { BG_PAINTERS, hexRgb } from './backdrop-effects'
 import { GifPicker } from './gif-picker'
 import { LookPicker } from './look-picker'
 import { bannerStyle } from './profile-card'
@@ -50,6 +51,45 @@ function UploadButton({ label, accept, busy, onFile, icon: Icon = Upload }: { la
         }}
       />
     </>
+  )
+}
+
+/** A big dashed tile that opens the file picker: the first thing in a grid of pictures. */
+function UploadTile({ label, accept, busy, onFile, icon: Icon = ImagePlus }: { label: string; accept: string; busy: boolean; onFile: (f: File) => void; icon?: LucideIcon }) {
+  const ref = useRef<HTMLInputElement>(null)
+  return (
+    <>
+      <button type="button" onClick={() => ref.current?.click()} disabled={busy} className="grid aspect-video place-items-center rounded-panel border border-dashed border-line-strong text-mute transition-colors hover:border-paper/50 hover:text-paper disabled:opacity-60">
+        <span className="grid justify-items-center gap-1.5 text-[13px]">
+          {busy ? <Loader2 aria-hidden="true" className="size-5 animate-spin" /> : <Icon aria-hidden="true" className="size-5" />}
+          {label}
+        </span>
+      </button>
+      <input
+        ref={ref}
+        type="file"
+        accept={accept}
+        hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          e.target.value = ''
+          if (file) onFile(file)
+        }}
+      />
+    </>
+  )
+}
+
+/** A picture shown large, to be picked again with one click. */
+function PicTile({ src, on, onClick, label }: { src: string; on: boolean; onClick: () => void; label: string }) {
+  return (
+    <button type="button" onClick={onClick} aria-pressed={on} aria-label={label} className={cn('relative aspect-video overflow-hidden rounded-panel border-2 bg-cover bg-center transition-[border-color,transform] hover:scale-[1.02]', on ? 'border-paper' : 'border-white/10 hover:border-white/30')} style={{ backgroundImage: `url(${src})` }}>
+      {on && (
+        <span className="absolute top-2 right-2 grid size-6 place-items-center rounded-pill bg-paper text-ink">
+          <Check aria-hidden="true" className="size-3.5" />
+        </span>
+      )}
+    </button>
   )
 }
 
@@ -212,43 +252,34 @@ export function BannerPanel({ s }: { s: Studio }) {
         <GifPicker selected={b.gif} onPick={(g) => ex('banner', { gif: g.id, aspect: Math.min(BANNER_ASPECT_MAX, Math.max(BANNER_ASPECT_MIN, g.h / g.w)) })} />
       ) : (
         <>
-          <Group title="Upload" hint="Taller pictures make a taller banner">
-            <UploadButton label="Upload a banner" accept="image/png,image/jpeg,image/webp" busy={busy} onFile={upload} icon={ImagePlus} />
+          <Group title="Pictures" hint="Taller pictures make a taller banner">
+            <div className="grid grid-cols-2 gap-3">
+              <UploadTile label="Upload a picture" accept="image/png,image/jpeg,image/webp" busy={busy} onFile={upload} />
+              {recent.map((r) => (
+                <PicTile
+                  key={r.id}
+                  src={`/api/img/${r.id}`}
+                  on={current === r.id}
+                  label="Use this picture again"
+                  onClick={() => setBanner('image', `/api/img/${r.id}`, Math.min(BANNER_ASPECT_MAX, Math.max(BANNER_ASPECT_MIN, r.aspect ?? BANNER_ASPECT_MIN)))}
+                />
+              ))}
+            </div>
           </Group>
-          <Group title="Colour" hint="Recent uploads on the right">
-            <Swatches
-              value={f.bannerKind === 'color' && !b.gif ? f.banner : '#000000'}
-              options={ACCENT_SWATCHES}
-              onChange={(v) => setBanner('color', v)}
-              extra={
-                recent.length > 0 && (
-                  <>
-                    <span aria-hidden="true" className="mx-1 h-6 w-px bg-line-strong" />
-                    {recent.slice(0, 6).map((r) => (
-                      <button
-                        key={r.id}
-                        type="button"
-                        onClick={() => setBanner('image', `/api/img/${r.id}`, Math.min(BANNER_ASPECT_MAX, Math.max(BANNER_ASPECT_MIN, r.aspect ?? BANNER_ASPECT_MIN)))}
-                        aria-label="Use this recent banner again"
-                        aria-pressed={current === r.id}
-                        title="Recent banner"
-                        className={cn('h-8 w-12 rounded-tile border-2 bg-cover bg-center transition-transform hover:scale-110', current === r.id ? 'border-paper' : 'border-white/10')}
-                        style={{ backgroundImage: `url(/api/img/${r.id})` }}
-                      />
-                    ))}
-                  </>
-                )
-              }
-            />
+          <Group title="Colours">
+            <Swatches value={f.bannerKind === 'color' && !b.gif ? f.banner : '#000000'} options={ACCENT_SWATCHES} onChange={(v) => setBanner('color', v)} />
           </Group>
           {f.bannerKind === 'color' && !b.gif && <Slider label="Grain" hint="Texture on the colour" value={b.noise} onChange={(noise) => ex('banner', { noise })} normal={0} />}
           <Group title="Ready-made">
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {BANNER_PRESETS.map((p) => (
-                <Tile key={p.id} label={p.label} on={!b.gif && f.bannerKind === 'preset' && f.banner === p.id} onClick={() => setBanner('preset', p.id)} className="h-14 overflow-hidden">
-                  <span className="absolute inset-0 rounded-[inherit]" style={bannerStyle('preset', p.id)} />
-                </Tile>
-              ))}
+            <div className="grid grid-cols-2 gap-3">
+              {BANNER_PRESETS.map((p) => {
+                const on = !b.gif && f.bannerKind === 'preset' && f.banner === p.id
+                return (
+                  <button key={p.id} type="button" aria-pressed={on} onClick={() => setBanner('preset', p.id)} className={cn('relative aspect-video overflow-hidden rounded-panel border-2 text-left transition-[border-color,transform] hover:scale-[1.02]', on ? 'border-paper' : 'border-white/10 hover:border-white/30')} style={bannerStyle('preset', p.id)}>
+                    <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2.5 pt-5 pb-2 text-xs">{p.label}</span>
+                  </button>
+                )
+              })}
             </div>
           </Group>
         </>
@@ -306,6 +337,34 @@ const BG_KIND_OPTIONS: { id: BgKind; label: string }[] = [
   { id: 'video', label: 'Video' },
 ]
 
+/** A still of one of the background effects, painted once into a small picture so every choice can be seen before it is picked. */
+function BgThumb({ effect, color, a1, a2, base }: { effect: keyof typeof BG_PAINTERS; color: string; a1: string; a2: string; base: string }) {
+  const ref = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    const cv = ref.current
+    const ctx = cv?.getContext('2d')
+    if (!cv || !ctx) return
+    const [w, h] = [176, 99]
+    cv.width = w
+    cv.height = h
+    try {
+      const paint = BG_PAINTERS[effect]({ w, h, c: hexRgb(color), p: hexRgb(a1), q: hexRgb(a2), base: hexRgb(base), k: 0.6 })
+      // a few moments in, so effects made of moving pieces have something to show
+      for (let i = 0; i < 24; i++) {
+        ctx.clearRect(0, 0, w, h)
+        paint(ctx, 1 + i * 0.1, 0.1)
+      }
+      ctx.globalCompositeOperation = 'destination-over'
+      ctx.fillStyle = base
+      ctx.fillRect(0, 0, w, h)
+    } catch {
+      ctx.fillStyle = base
+      ctx.fillRect(0, 0, w, h)
+    }
+  }, [effect, color, a1, a2, base])
+  return <canvas ref={ref} aria-hidden="true" className="absolute inset-0 size-full" />
+}
+
 export function BackgroundPanel({ s }: { s: Studio }) {
   const { f, ex } = s
   const g = f.extras.bg
@@ -333,12 +392,12 @@ export function BackgroundPanel({ s }: { s: Studio }) {
 
       {g.kind === 'effect' && (
         <>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             {BG_EFFECTS.map((e) => (
-              <Tile key={e.id} on={g.effect === e.id} onClick={() => ex('bg', { effect: e.id })} className="px-2.5 py-2.5 text-left">
-                <span className="block text-[13px] text-paper">{e.label}</span>
-                <span className="block text-[10px] leading-tight">{e.note}</span>
-              </Tile>
+              <button key={e.id} type="button" aria-pressed={g.effect === e.id} onClick={() => ex('bg', { effect: e.id })} className={cn('relative aspect-video overflow-hidden rounded-panel border-2 text-left transition-[border-color,transform] hover:scale-[1.02]', g.effect === e.id ? 'border-paper' : 'border-white/10 hover:border-white/30')}>
+                <BgThumb effect={e.id} color={f.dotColor} a1={f.accent} a2={f.accent2} base={g.color} />
+                <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-2.5 pt-6 pb-2 text-xs">{e.label}</span>
+              </button>
             ))}
           </div>
           <Swatches label="Effect colour" value={f.dotColor} options={DOT_SWATCHES} onChange={(v) => s.setF((c) => (c ? { ...c, dotColor: v } : c))} />
@@ -356,11 +415,11 @@ export function BackgroundPanel({ s }: { s: Studio }) {
       )}
 
       {g.kind === 'image' && (
-        <Group title="Picture" hint="Recent uploads on the right">
-          <div className="flex flex-wrap items-center gap-2">
-            <UploadButton label="Upload a picture" accept="image/png,image/jpeg,image/webp" busy={busy === 'image'} onFile={(file) => up('image', file)} icon={ImagePlus} />
+        <Group title="Pictures">
+          <div className="grid grid-cols-2 gap-3">
+            <UploadTile label="Upload a picture" accept="image/png,image/jpeg,image/webp" busy={busy === 'image'} onFile={(file) => up('image', file)} />
             {recentPics.map((r) => (
-              <button key={r.id} type="button" onClick={() => ex('bg', { image: r.id })} aria-pressed={g.image === r.id} aria-label="Use this recent background" className={cn('h-10 w-14 rounded-tile border-2 bg-cover bg-center', g.image === r.id ? 'border-paper' : 'border-white/10')} style={{ backgroundImage: `url(/api/img/${r.id})` }} />
+              <PicTile key={r.id} src={`/api/img/${r.id}`} on={g.image === r.id} label="Use this picture again" onClick={() => ex('bg', { image: r.id })} />
             ))}
           </div>
         </Group>

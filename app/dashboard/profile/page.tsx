@@ -10,7 +10,7 @@ export default async function Page() {
   const studio = await featureOn('profile-studio')
   return (
     <>
-      <PageHeader title="Profile" sub={studio ? 'This is your logoless.io/@username page. Tap a pencil on the preview to change that part.' : 'This is what people see at your logoless.io/@username page.'} />
+      <PageHeader title="Profile" sub={studio ? 'This is your logoless.io/@username page. Click anything on it to change it.' : 'This is what people see at your logoless.io/@username page.'} />
       {studio ? <ProfileStudio /> : <ProfileEditor />}
     </>
   )

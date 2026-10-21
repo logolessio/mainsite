@@ -44,7 +44,7 @@ function Count({ to, prefix = '' }: { to: number; prefix?: string }) {
 type Stats = Partial<{ clips: number; views: number; earnedCents: number; campaigns: number }>
 
 /** The parts of the card the studio preview can open for editing. */
-export type EditTarget = 'avatar' | 'banner' | 'card' | 'badges' | 'background'
+export type EditTarget = 'avatar' | 'banner' | 'card' | 'badges' | 'background' | 'name' | 'about' | 'privacy' | 'accounts'
 
 export type ProfileCardProps = {
   view: ProfileView
@@ -76,6 +76,29 @@ function Pencil2({ label, onClick, className }: { label: string; onClick: () => 
     >
       <Pencil className="size-4" />
     </button>
+  )
+}
+
+/** In the studio, a part of the card that opens its own controls when it is clicked: it is outlined softly under the pointer. */
+function Hot({ onEdit, target, label, as: Tag = 'div', className, children }: { onEdit?: (t: EditTarget) => void; target: EditTarget; label: string; as?: 'div' | 'span'; className?: string; children: React.ReactNode }) {
+  if (!onEdit) return <>{children}</>
+  return (
+    <Tag
+      role="button"
+      tabIndex={0}
+      aria-label={label}
+      title={label}
+      onClick={() => onEdit(target)}
+      onKeyDown={(e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onEdit(target)
+        }
+      }}
+      className={cn('-mx-1.5 cursor-pointer rounded-chip px-1.5 outline outline-1 -outline-offset-1 outline-transparent transition-[outline-color,background-color] duration-200 hover:bg-white/[0.06] hover:outline-white/30 focus-visible:outline-white/60', Tag === 'span' && 'inline-block', className)}
+    >
+      {children}
+    </Tag>
   )
 }
 
@@ -172,12 +195,14 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
           </div>
         )}
         <h1 className="flex flex-wrap items-center gap-x-2.5 gap-y-1 leading-tight">
-          <span
-            style={nameVars}
-            className={cn(nameFont, scale, 'min-w-0 break-words font-bold', `nx-${view.nameEffect}`)}
-          >
-            {view.displayName}
-          </span>
+          <Hot onEdit={onEdit} target="name" label="Change your name, font and effect" as="span" className="min-w-0">
+            <span
+              style={nameVars}
+              className={cn(nameFont, scale, 'min-w-0 break-words font-bold', `nx-${view.nameEffect}`)}
+            >
+              {view.displayName}
+            </span>
+          </Hot>
           {onEdit && (
             <button type="button" onClick={() => onEdit('badges')} className="inline-flex h-6 items-center gap-1 rounded-pill border border-dashed border-white/30 px-2 text-[11px] text-white/80 hover:bg-white/10">
               <Pencil className="size-3" /> Badges
@@ -198,32 +223,39 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
             </span>
           )}
         </h1>
-        <p className="mt-0.5 text-sm text-paper/80">
-          <span className="font-medium">{view.handle}</span>
-          {view.pronouns && <span className="text-paper/55"> · {view.pronouns}</span>}
-        </p>
+        <Hot onEdit={onEdit} target="about" label="Change your username and pronouns" className="mt-0.5">
+          <p className="text-sm text-paper/80">
+            <span className="font-medium">{view.handle}</span>
+            {view.pronouns ? <span className="text-paper/55"> · {view.pronouns}</span> : onEdit ? <span className="text-paper/40"> · add pronouns</span> : null}
+          </p>
+        </Hot>
 
         <motion.div
           initial={false}
           className="mt-4 grid gap-3.5 rounded-panel bg-black/40 p-3.5"
         >
-          {view.bio && (
-            <Section title="About me">
-              <p className="text-sm leading-[1.4] whitespace-pre-wrap text-paper/90">{view.bio}</p>
-            </Section>
+          {(view.bio || onEdit) && (
+            <Hot onEdit={onEdit} target="about" label="Change your bio">
+              <Section title="About me">
+                {view.bio ? <p className="text-sm leading-[1.4] whitespace-pre-wrap text-paper/90">{view.bio}</p> : <p className="text-sm text-paper/45">Write a short bio</p>}
+              </Section>
+            </Hot>
           )}
 
           {(view.show.joined || (view.show.country && view.country)) && (
-            <Section title="Member since">
-              <p className="flex items-center gap-2 text-sm text-paper/90">
-                <CalendarDays className="size-4 text-paper/60" />
-                {view.show.joined ? joined : ''}
-                {view.show.country && view.country && <span className="ml-1 rounded-chip bg-white/10 px-1.5 font-mono text-[11px]">{view.country}</span>}
-              </p>
-            </Section>
+            <Hot onEdit={onEdit} target="about" label="Change your country">
+              <Section title="Member since">
+                <p className="flex items-center gap-2 text-sm text-paper/90">
+                  <CalendarDays className="size-4 text-paper/60" />
+                  {view.show.joined ? joined : ''}
+                  {view.show.country && view.country && <span className="ml-1 rounded-chip bg-white/10 px-1.5 font-mono text-[11px]">{view.country}</span>}
+                </p>
+              </Section>
+            </Hot>
           )}
 
           {statRows.length > 0 && (
+            <Hot onEdit={onEdit} target="privacy" label="Choose which numbers show">
             <Section title="Stats">
               <ul className="grid grid-cols-2 gap-1.5">
                 {statRows.map(([label, node]) => (
@@ -234,9 +266,11 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
                 ))}
               </ul>
             </Section>
+            </Hot>
           )}
 
           {showLinks && (
+            <Hot onEdit={onEdit} target="accounts" label="Change your accounts">
             <Section title="Creator accounts">
               <ul className="flex flex-wrap gap-2">
                 {links.map((l) => {
@@ -258,9 +292,10 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
                 })}
               </ul>
             </Section>
+            </Hot>
           )}
 
-          {!view.bio && statRows.length === 0 && !showLinks && !view.show.joined && <p className="text-sm text-paper/55">Nothing to show yet.</p>}
+          {!onEdit && !view.bio && statRows.length === 0 && !showLinks && !view.show.joined && <p className="text-sm text-paper/55">Nothing to show yet.</p>}
         </motion.div>
 
         {isOwner && !preview && (
