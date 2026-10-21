@@ -6,9 +6,10 @@ import { body, HttpError, json, route } from '@/lib/http'
 import { reverseWithdrawal } from '@/lib/ledger'
 import { notify } from '@/lib/notify'
 import { sendPayout } from '@/lib/payout'
+import { requireAdminSecret } from '@/lib/admin-secret'
 import { requireAdmin } from '@/lib/user'
 
-const schema = z.discriminatedUnion('action', [z.object({ action: z.literal('approve') }), z.object({ action: z.literal('reject'), note: z.string().trim().min(3).max(200) })])
+const schema = z.discriminatedUnion('action', [z.object({ action: z.literal('approve'), secret: z.string().max(200).optional() }), z.object({ action: z.literal('reject'), note: z.string().trim().min(3).max(200) })])
 
 /** A withdrawal that was held for review: send it, or give the money back to the clipper. */
 export const POST = route(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
@@ -23,6 +24,8 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
   if (p.status !== 'review') throw new HttpError(409, 'That withdrawal is not waiting for review.')
   const actor = { id: admin.id, email: admin.email }
   const ip = await ipHash(req)
+  // sending money out needs the admin password every time, checked here and not only by the button that asks for it
+  if (parsed.data.action === 'approve') await requireAdminSecret(admin.id, parsed.data.secret)
 
   if (parsed.data.action === 'reject') {
     await reverseWithdrawal(id, 'failed', `Declined: ${parsed.data.note}`)

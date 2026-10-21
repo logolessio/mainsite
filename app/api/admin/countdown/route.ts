@@ -4,7 +4,7 @@ import { ipHash, protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
 import { launchView, signupCounts } from '@/lib/launch'
 import { allSettings, setSetting } from '@/lib/settings'
-import { requireAdmin } from '@/lib/user'
+import { requireAdmin, requireOwner } from '@/lib/user'
 
 const schema = z.object({
   on: z.boolean().optional(),
@@ -22,7 +22,8 @@ export const GET = route(async () => {
 
 /** The owner sets the countdown and switches the launch page on or off. Every change is written to the audit log. */
 export const POST = route(async (req: Request) => {
-  const admin = await requireAdmin()
+  // the launch page can close the whole public site, so only the owner changes it
+  const admin = await requireOwner()
   await protect(req, { name: 'admin-countdown', max: 60, windowSec: 600, userId: admin.id })
   const parsed = schema.safeParse(await body(req, 2048))
   if (!parsed.success) throw new HttpError(400, 'That is not valid.')

@@ -7,7 +7,7 @@ import { accountDeletedEmail, emailEnabled, sendEmail } from '@/lib/email'
 import { ipHash, protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
 import { balances } from '@/lib/ledger'
-import { requireAdmin } from '@/lib/user'
+import { isOwnerEmail, requireAdmin } from '@/lib/user'
 
 const schema = z.object({
   action: z.enum(['suspend', 'ban', 'reinstate', 'flag', 'unflag', 'delete']),
@@ -27,6 +27,10 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
   const u = await d.prepare('SELECT id, email, role FROM users WHERE id = ?1').bind(id).first<{ id: string; email: string; role: string }>()
   if (!u) throw new HttpError(404, 'Account not found.')
   if (u.role === 'admin') throw new HttpError(403, 'Admin accounts cannot be restricted here.')
+  // the owner is protected by address too, not only by the role column (which only catches up when they next sign in)
+  if (await isOwnerEmail(u.email)) throw new HttpError(403, 'The owner account cannot be restricted.')
+  // deleting and banning cannot be undone, so only the owner can do them
+  if ((action === 'delete' || action === 'ban') && !(await isOwnerEmail(admin.email))) throw new HttpError(403, 'Only the owner can delete or ban an account.')
 
   if (action === 'delete') {
     // An admin deletes the account for good, right now. The owner is emailed first (their address is wiped by the deletion).

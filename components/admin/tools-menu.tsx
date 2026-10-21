@@ -1,5 +1,6 @@
 'use client'
 
+import { askConfirm } from './confirm-dialog'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Activity, Banknote, BarChart3, CheckCircle2, Clapperboard, Copy, Eye, EyeOff, FileText, Loader2, Mail, Megaphone, Palette, Pencil, Search, Settings, ShieldCheck, Shuffle, Users, Wrench, X, XCircle } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
@@ -84,7 +85,7 @@ export function ToolsMenu() {
     )
 
   const flip = async (key: string, on: boolean) => {
-    if (on && !window.confirm('Switch this on? It takes effect straight away.')) return
+    if (on && !(await askConfirm({ title: `Switch on "${key.replace(/_/g, ' ')}"?`, summary: ['It takes effect for every member straight away.', 'You can switch it back at any time; nothing is lost.'], action: 'Switch it on', danger: true }))) return
     const pass = await askAdminSecret('This switch affects every member, so it needs your admin password.')
     if (!pass) return
     setPulse((p) => (p ? { ...p, settings: { ...p.settings, [key]: on ? '1' : '0' } } : p))

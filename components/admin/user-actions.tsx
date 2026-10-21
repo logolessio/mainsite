@@ -1,5 +1,6 @@
 'use client'
 
+import { askConfirm } from './confirm-dialog'
 import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -103,6 +104,14 @@ export function AdjustMoney({ id }: { id: string }) {
       className="grid gap-3"
       onSubmit={async (e) => {
         e.preventDefault()
+        const where = account === 'brand' ? 'brand balance' : 'clipper earnings'
+        const ok = await askConfirm({
+          title: n < 0 ? `Take $${Math.abs(n).toFixed(2)} away?` : `Add $${n.toFixed(2)}?`,
+          summary: [`${n < 0 ? 'Takes' : 'Adds'} $${Math.abs(n).toFixed(2)} ${n < 0 ? 'from' : 'to'} this person's ${where}.`, `They see the reason: "${note.trim()}".`, 'It is written to the audit log. A debit can never take them below zero.'],
+          action: n < 0 ? 'Take it away' : 'Add it',
+          danger: n < 0,
+        })
+        if (!ok) return
         const pass = await askAdminSecret(`${n < 0 ? 'Taking' : 'Adding'} $${Math.abs(n).toFixed(2)} ${n < 0 ? 'from' : 'to'} this person's ${account === 'brand' ? 'brand balance' : 'earnings'}.`)
         if (!pass) return
         if (await run({ action: 'adjust', account, amount: n, note, secret: pass }, (j) => `Done. Their ${account === 'brand' ? 'balance' : 'earnings'} are now $${((j.balance ?? 0) / 100).toFixed(2)}.`, 'a balance adjustment')) {
@@ -163,7 +172,7 @@ export function Recognise({ id, verified }: { id: string; verified: boolean }) {
         <button type="button" disabled={busy} className={btn} onClick={() => run({ action: 'badge', badge, on: true }, () => 'Badge given.')}>
           Give
         </button>
-        <button type="button" disabled={busy} className="inline-flex h-10 items-center rounded-pill border border-line-strong px-5 text-sm hover:bg-paper/10 disabled:opacity-40" onClick={() => run({ action: 'badge', badge, on: false }, () => 'Badge taken away.')}>
+        <button type="button" disabled={busy} className="inline-flex h-10 items-center rounded-pill border border-line-strong px-5 text-sm hover:bg-paper/10 disabled:opacity-40" onClick={async () => (await askConfirm({ title: 'Take this badge away?', summary: ['It disappears from their profile straight away.'], action: 'Take it away' })) && run({ action: 'badge', badge, on: false }, () => 'Badge taken away.')}>
           Take away
         </button>
       </div>
@@ -173,14 +182,14 @@ export function Recognise({ id, verified }: { id: string; verified: boolean }) {
 }
 
 /** Suspend, ban, reinstate, add or clear extra checks. */
-export function Moderation({ id, status, risk }: { id: string; status: string; risk: string }) {
+export function Moderation({ id, status, risk, canBan = false }: { id: string; status: string; risk: string; /** banning is for the owner only */ canBan?: boolean }) {
   const url = `/api/admin/users/${id}`
   return (
     <div className="flex flex-wrap gap-2">
       {status === 'active' ? (
         <>
-          <AdminButton url={url} data={{ action: 'suspend' }} ask={{ label: 'Reason', required: true }}>Suspend</AdminButton>
-          <AdminButton variant="danger" url={url} data={{ action: 'ban' }} ask={{ label: 'Reason', required: true }} secret="Banning someone locks them out for good.">Ban</AdminButton>
+          <AdminButton url={url} data={{ action: 'suspend' }} ask={{ label: 'Reason', required: true }} confirm="Suspend this account?" summary={['They cannot submit clips, withdraw or run campaigns until you reinstate them.', 'Nothing is deleted, and you can reinstate them at any time.']}>Suspend</AdminButton>
+          {canBan && <AdminButton variant="danger" url={url} data={{ action: 'ban' }} ask={{ label: 'Reason', required: true }} secret="Banning someone locks them out for good." confirm="Ban this person for good?" summary={['They are signed out and can never sign in again.', 'Only the owner can ban, and it needs your admin password.']} typed="BAN">Ban</AdminButton>}
         </>
       ) : (
         <AdminButton variant="solid" url={url} data={{ action: 'reinstate' }}>Reinstate</AdminButton>

@@ -49,7 +49,7 @@ export async function OverviewQueue() {
                   <p className="truncate text-xs text-mute">{r.creator} · {money(r.budget_cents)} cap · {money(r.rate_cents)} per 1k{r.email ? ` · ${r.email}` : ''}</p>
                 </div>
                 <div className="flex gap-2">
-                  <AdminButton variant="solid" url={`/api/admin/campaigns/${r.id}`} data={{ action: 'accept' }}>Accept</AdminButton>
+                  <AdminButton variant="solid" url={`/api/admin/campaigns/${r.id}`} data={{ action: 'accept' }} confirm={`Accept "${r.title}"?`} summary={[`${r.creator}, ${money(r.budget_cents)} cap at ${money(r.rate_cents)} per 1K views.`, 'The brand is asked to pay; it goes live once it is funded.']}>Accept</AdminButton>
                   <AdminButton variant="danger" url={`/api/admin/campaigns/${r.id}`} data={{ action: 'reject' }} ask={{ label: 'Why not? (they will see it)', required: true }}>Decline</AdminButton>
                 </div>
               </li>
@@ -98,7 +98,7 @@ export async function OverviewQueue() {
                   <p className="truncate text-xs text-mute">{p.email}{p.review_reason ? ` · ${p.review_reason}` : ''}</p>
                 </div>
                 <div className="flex gap-2">
-                  <AdminButton variant="solid" url={`/api/admin/payouts/${p.id}`} data={{ action: 'approve' }} secret={`Sending ${money(p.amount_cents)} to ${p.email}.`}>Send</AdminButton>
+                  <AdminButton variant="solid" url={`/api/admin/payouts/${p.id}`} data={{ action: 'approve' }} confirm={`Send ${money(p.amount_cents)} now?`} summary={[`${money(p.amount_cents)} goes to ${p.email} on PayPal straight away.`, 'A PayPal payment cannot be called back from here.']} secret={`Sending ${money(p.amount_cents)} to ${p.email}.`}>Send</AdminButton>
                   <AdminButton variant="danger" url={`/api/admin/payouts/${p.id}`} data={{ action: 'reject' }} ask={{ label: 'Why? (they will see it)', required: true }}>Decline</AdminButton>
                 </div>
               </li>

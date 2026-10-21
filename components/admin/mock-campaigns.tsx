@@ -1,5 +1,6 @@
 'use client'
 
+import { askConfirm } from './confirm-dialog'
 import { Loader2, Plus, Shuffle, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -80,8 +81,8 @@ export function MockCampaigns({ rows, publicOn }: { rows: MockRow[]; publicOn: b
             type="button"
             disabled={Boolean(busy)}
             className={cn(btn, 'border border-signal/50 text-signal hover:bg-signal/10')}
-            onClick={() => {
-              if (!window.confirm(`Delete all ${rows.length} mock campaigns and the clips sent to them?`)) return
+            onClick={async () => {
+              if (!(await askConfirm({ title: `Delete all ${rows.length} mock campaigns?`, summary: ['The clips sent to them are deleted too.', 'Real campaigns are not touched.'], word: 'DELETE', action: 'Delete them' }))) return
               void run('clear', async () => { const j = (await call({ action: 'clear' })) as { removed?: number }; return `Removed ${j.removed}.` })
             }}
           >

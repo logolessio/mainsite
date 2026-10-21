@@ -1,5 +1,6 @@
 'use client'
 
+import { askConfirm } from './confirm-dialog'
 import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -17,7 +18,7 @@ export function ReviewControls({ id, status, views, rateCents }: { id: string; s
 
   const send = async (action: 'approve' | 'views') => {
     if (!Number.isInteger(n) || n < 0) return setMsg('Enter a whole number of views.')
-    if (gross > 0 && !window.confirm(`Pay out $${(gross / 100).toFixed(2)} (before the platform fee) for ${delta.toLocaleString()} new views?`)) return
+    if (gross > 0 && !(await askConfirm({ title: `Pay $${(gross / 100).toFixed(2)} for these views?`, summary: [`${delta.toLocaleString()} new verified views.`, `$${(gross / 100).toFixed(2)} goes to the creator (before the platform fee), out of the brand's budget.`, 'Money that has been paid out is not taken back automatically.'], action: 'Pay it' }))) return
     setBusy(true)
     setMsg('')
     const res = await fetch(`/api/admin/submissions/${id}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action, views: n }) }).catch(() => null)

@@ -1,5 +1,6 @@
 'use client'
 
+import { askConfirm } from './confirm-dialog'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { ActionButton } from '@/components/app/ui'
@@ -11,7 +12,7 @@ export function RemoveSamples({ count }: { count: number }) {
   const [msg, setMsg] = useState('')
   if (count === 0) return null
   const run = async () => {
-    if (!window.confirm(`Delete all ${count} sample campaign${count > 1 ? 's' : ''}? They are made-up artists. This cannot be undone.`)) return
+    if (!(await askConfirm({ title: `Delete ${count} sample campaign${count > 1 ? 's' : ''}?`, summary: ['They are made-up artists, used to show how the site looks.', 'Any that have money or clips attached are kept.'], word: 'DELETE', action: 'Delete them' }))) return
     setBusy(true)
     setMsg('')
     const res = await fetch('/api/admin/campaigns/samples', { method: 'POST' }).catch(() => null)
