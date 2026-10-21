@@ -1,5 +1,6 @@
 
 import { AppFrame } from '@/components/app/frame'
+import { developerNav } from '@/lib/dev-nav'
 import { requireSession } from '@/lib/session'
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
@@ -14,6 +15,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
         { key: 'p', label: 'Profile', href: '/dashboard/profile', icon: 'UserCheck', match: ['/dashboard/achievements', '/dashboard/saved', '/dashboard/recap'] },
         { key: 'a', label: 'Accounts', href: '/dashboard/accounts', icon: 'Link2' },
         { key: 't', label: 'Settings', href: '/dashboard/settings', icon: 'Settings', match: ['/dashboard/notifications'] },
+        ...(await developerNav()),
       ]}
     >
       {children}

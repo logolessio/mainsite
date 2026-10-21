@@ -13,6 +13,8 @@ export const metadata: Metadata = { title: 'Your apps | logoless', robots: { ind
 export default async function Page() {
   await connection()
   if (!(await featureOn('developers'))) notFound()
+  // with the developer tools on, apps live in the Developer section of the dashboard
+  if (await featureOn('developer-tools')) redirect('/dashboard/developer')
   if (!(await getSession())?.user?.email) redirect('/login?next=/developers/apps')
   return (
     <main>

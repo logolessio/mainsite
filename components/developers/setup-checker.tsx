@@ -9,9 +9,9 @@ type Result = { ready: boolean; checks: { ok: boolean; label: string; fix?: stri
 const field = 'h-12 w-full rounded-2xl border border-line-strong bg-ink/80 px-4 font-mono text-sm outline-none transition-colors placeholder:text-mute/70 focus:border-paper'
 
 /** Paste a client id and a return address, and see whether a sign-in would work, with the fix for anything that would not. */
-export function SetupChecker({ issuer }: { issuer: string }) {
-  const [clientId, setClientId] = useState('')
-  const [redirect, setRedirect] = useState('')
+export function SetupChecker({ issuer, initialClientId = '', initialRedirect = '' }: { issuer: string; initialClientId?: string; initialRedirect?: string }) {
+  const [clientId, setClientId] = useState(initialClientId)
+  const [redirect, setRedirect] = useState(initialRedirect)
   const [busy, setBusy] = useState(false)
   const [res, setRes] = useState<Result | null>(null)
   const [error, setError] = useState('')
@@ -50,7 +50,7 @@ export function SetupChecker({ issuer }: { issuer: string }) {
         void run()
       }}
     >
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-2">
         <label className="grid gap-1.5">
           <span className="text-sm">Client id</span>
           <input className={field} value={clientId} onChange={(e) => setClientId(e.target.value)} placeholder="lg_…" spellCheck={false} autoComplete="off" />

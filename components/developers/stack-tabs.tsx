@@ -38,7 +38,7 @@ export function StackTabs({ stacks }: { stacks: Stack[] }) {
         <p className="max-w-3xl text-[15px] leading-relaxed text-paper/70">{s.intro}</p>
         <dl className="mt-4 grid gap-3 rounded-2xl border border-line p-4 text-sm sm:grid-cols-2">
           <div>
-            <dt className="text-xs text-mute">When you register, choose</dt>
+            <dt className="text-xs text-mute">Can it keep a secret?</dt>
             <dd className="mt-1">{s.kind}</dd>
           </div>
           <div className="min-w-0">

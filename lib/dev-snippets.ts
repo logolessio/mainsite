@@ -7,7 +7,7 @@ export type Stack = {
   id: string
   label: string
   /** Which choice to make when registering the app. */
-  kind: 'Has a server' | 'Browser or phone only'
+  kind: 'Yes, it has a server' | 'No, it runs on the device'
   /** The return address to register while developing. */
   redirect: string
   install?: string
@@ -20,7 +20,7 @@ export function stacks(issuer: string): Stack[] {
     {
       id: 'html',
       label: 'HTML + JavaScript',
-      kind: 'Browser or phone only',
+      kind: 'No, it runs on the device',
       redirect: 'http://localhost:5500/callback.html',
       intro: 'No server and no library: two files. The browser makes a one-time PKCE code so no secret is needed.',
       files: [
@@ -96,7 +96,7 @@ export function stacks(issuer: string): Stack[] {
     {
       id: 'nextjs',
       label: 'Next.js',
-      kind: 'Has a server',
+      kind: 'Yes, it has a server',
       redirect: 'http://localhost:3000/api/auth/callback/logoless',
       install: 'npm install next-auth@beta',
       intro: 'With Auth.js, logoless is one provider block. It reads everything else from the discovery document.',
@@ -140,7 +140,7 @@ export default async function Page() {
     {
       id: 'react',
       label: 'React',
-      kind: 'Browser or phone only',
+      kind: 'No, it runs on the device',
       redirect: 'http://localhost:5173/callback',
       install: 'npm install oidc-client-ts react-oidc-context',
       intro: 'For a React app with no server (Vite, Create React App). The library handles PKCE, state and the callback.',
@@ -182,7 +182,7 @@ export default function App() {
     {
       id: 'express',
       label: 'Node + Express',
-      kind: 'Has a server',
+      kind: 'Yes, it has a server',
       redirect: 'http://localhost:3000/auth/logoless/callback',
       install: 'npm install express express-session',
       intro: 'Plain fetch, no OAuth library: two routes. Needs Node 18 or newer.',
@@ -251,7 +251,7 @@ app.listen(3000)`,
     {
       id: 'python',
       label: 'Python',
-      kind: 'Has a server',
+      kind: 'Yes, it has a server',
       redirect: 'http://localhost:5000/auth/logoless/callback',
       install: 'pip install flask authlib requests',
       intro: 'Flask with Authlib. Authlib reads the discovery document and checks state, nonce and the id_token for you.',

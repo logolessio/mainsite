@@ -48,7 +48,7 @@ export const LIMITS = { name: [2, 40], summary: [10, 120], use: [100, 1000], url
 export function squeeze(text: string) {
   return text
     .normalize('NFKC')
-    .replace(/(.)\1{2,}/gsu, '$1')
+    .replace(/(.)\1{2,}/gu, '$1')
     .replace(/\s+/g, ' ')
     .trim()
 }
@@ -73,7 +73,7 @@ export function fillerProblem(text: string): string | null {
   const nonSpace = [...lower].filter((c) => !/\s/.test(c))
   if (nonSpace.length && letters.length / nonSpace.length < 0.6) return 'Please write it in words, not mostly numbers or symbols.'
   if (new Set(letters).size < 8) return 'That looks like the same few letters repeated. Please write real sentences.'
-  if (/(.{2,25}?)\1{3,}/su.test(lower.replace(/\s/g, ''))) return 'That repeats the same thing over and over. Please write real sentences.'
+  if (/(.{2,25}?)\1{3,}/u.test(lower.replace(/\s/g, ''))) return 'That repeats the same thing over and over. Please write real sentences.'
   const words = lower.split(/[^\p{L}\p{N}']+/u).filter(Boolean)
   if (words.length >= 6) {
     const counts = new Map<string, number>()
@@ -101,7 +101,7 @@ export function nameProblem(raw: string): string | null {
   if (t.length < LIMITS.name[0]) return 'The name needs at least 2 characters.'
   if (t.length > LIMITS.name[1]) return `Keep the name to ${LIMITS.name[1]} characters.`
   if (!/\p{L}|\p{N}/u.test(t)) return 'The name needs at least one letter or number.'
-  if (/(.)\1{4,}/su.test(t)) return 'The name repeats one character too many times.'
+  if (/(.)\1{4,}/u.test(t)) return 'The name repeats one character too many times.'
   if (/\blogoless\b/i.test(t) && !/\bfor logoless\b/i.test(t)) return 'Only logoless can use logoless in a name. "For logoless" is fine.'
   if (/https?:|www\./i.test(t)) return 'Use the name of your app, not its address.'
   return null
@@ -113,7 +113,7 @@ export function summaryProblem(raw: string): string | null {
   if (realLength(t) < LIMITS.summary[0]) return `Write at least ${LIMITS.summary[0]} characters.`
   if (t.length > LIMITS.summary[1]) return `Keep it to ${LIMITS.summary[1]} characters.`
   if (!/\p{L}{2,}/u.test(t)) return 'Write it in words.'
-  if (/(.)\1{4,}/su.test(t)) return 'That repeats one character too many times.'
+  if (/(.)\1{4,}/u.test(t)) return 'That repeats one character too many times.'
   return null
 }
 
