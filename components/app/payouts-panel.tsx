@@ -66,7 +66,7 @@ export function PayoutsPanel() {
   }
 
   return (
-    <div id="withdraw" className="grid scroll-mt-24 gap-6">
+    <div id="withdraw" className="grid scroll-mt-24 grid-cols-[minmax(0,1fr)] gap-6">
       {fin?.testMode && <p className="rounded-2xl border border-amber-400/30 bg-amber-400/5 px-4 py-3 text-sm text-amber-200">PayPal sandbox. No real money moves.</p>}
       {fin && !fin.ready && <p className="rounded-2xl border border-line-strong px-4 py-3 text-sm text-mute">Withdrawals are not open yet. Your earnings are kept and will be here when they are.</p>}
       {notice && (
@@ -82,7 +82,7 @@ export function PayoutsPanel() {
 
       <Card title="Withdraw to PayPal" sub={`We pay PayPal's fees. Whatever you withdraw is what arrives. From $${SITE.minPayoutUsd}.`}>
         {ceremony ? (
-          <div className="grid gap-8">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-8">
             <div className="flex flex-wrap items-end justify-between gap-5">
               <div>
                 <p className="text-sm text-mute">Available to withdraw</p>

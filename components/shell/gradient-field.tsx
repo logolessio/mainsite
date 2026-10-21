@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { useFeature } from './features-provider'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 
 /** A cloud edge that eases out to nothing (a smooth S curve), so there is no visible ring where it ends. */
@@ -22,6 +23,7 @@ type Cloud = { cx: number; cy: number; rx: number; ry: number; stops: [number, s
 export function GradientField() {
   const ref = useRef<HTMLCanvasElement>(null)
   const { reduced } = useMotionPrefs()
+  const look = useFeature('anubis-look')
 
   useEffect(() => {
     const canvas = ref.current
@@ -39,20 +41,23 @@ export function GradientField() {
       canvas.height = h
     }
 
+    // the Anubis look recolours the same four clouds: indigo, violet, magenta and a cool blue (the fifth, dark one, stays dark)
+    const tint = look ? ['120,92,255', '206,84,230', '86,132,255', '255,106,190'] : ['255,255,255', '225,225,225', '255,255,255', '255,255,255']
+    const gain = look ? 1.45 : 1
     const clouds = (): Cloud[] => {
       const m = Math.max(w, h)
       return [
-        { cx: 0.21 * m, cy: 0.05 * m, rx: 0.39 * m, ry: 0.29 * m, stops: soft('255,255,255', 0.32, 0.8), sway: [0.2 * w, 0.2 * h], period: 41, phase: 0, spin: 0.35, breathe: 0.18 },
-        { cx: w - 0.07 * m, cy: 0.02 * h + 0.37 * m, rx: 0.31 * m, ry: 0.37 * m, stops: soft('225,225,225', 0.26, 0.82), sway: [-0.26 * w, 0.18 * h], period: 53, phase: 1.3, spin: -0.5, breathe: 0.2 },
-        { cx: 0.49 * m, cy: h + 0.02 * m, rx: 0.43 * m, ry: 0.26 * m, stops: soft('255,255,255', 0.22, 0.84), sway: [0.2 * w, -0.24 * h], period: 47, phase: 2.4, spin: 0.4, breathe: 0.2 },
-        { cx: 0.36 * w + 0.19 * m, cy: 0.24 * h + 0.19 * m, rx: 0.19 * m, ry: 0.19 * m, stops: soft('255,255,255', 0.2, 0.78), sway: [-0.22 * w, 0.18 * h], period: 29, phase: 3.1, spin: 0, breathe: 0.35 },
+        { cx: 0.21 * m, cy: 0.05 * m, rx: 0.39 * m, ry: 0.29 * m, stops: soft(tint[0], 0.32 * gain, 0.8), sway: [0.2 * w, 0.2 * h], period: 41, phase: 0, spin: 0.35, breathe: 0.18 },
+        { cx: w - 0.07 * m, cy: 0.02 * h + 0.37 * m, rx: 0.31 * m, ry: 0.37 * m, stops: soft(tint[1], 0.26 * gain, 0.82), sway: [-0.26 * w, 0.18 * h], period: 53, phase: 1.3, spin: -0.5, breathe: 0.2 },
+        { cx: 0.49 * m, cy: h + 0.02 * m, rx: 0.43 * m, ry: 0.26 * m, stops: soft(tint[2], 0.22 * gain, 0.84), sway: [0.2 * w, -0.24 * h], period: 47, phase: 2.4, spin: 0.4, breathe: 0.2 },
+        { cx: 0.36 * w + 0.19 * m, cy: 0.24 * h + 0.19 * m, rx: 0.19 * m, ry: 0.19 * m, stops: soft(tint[3], 0.2 * gain, 0.78), sway: [-0.22 * w, 0.18 * h], period: 29, phase: 3.1, spin: 0, breathe: 0.35 },
         { cx: 0.28 * w + 0.3 * m, cy: 0.44 * h + 0.22 * m, rx: 0.3 * m, ry: 0.22 * m, stops: soft('0,0,0', 0.7, 0.9), sway: [-0.24 * w, -0.16 * h], period: 37, phase: 4.2, spin: 0.5, breathe: 0.25 },
       ]
     }
     let cs = clouds()
 
     const draw = (t: number) => {
-      ctx.fillStyle = '#000'
+      ctx.fillStyle = look ? '#05050a' : '#000'
       ctx.fillRect(0, 0, w, h)
       for (const c of cs) {
         const s = Math.sin((t / c.period) * Math.PI * 2 + c.phase)
@@ -92,7 +97,7 @@ export function GradientField() {
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', onResize)
     }
-  }, [reduced])
+  }, [reduced, look])
 
   return (
     <div aria-hidden="true" className="gradient-field pointer-events-none fixed inset-0 z-0 overflow-hidden">

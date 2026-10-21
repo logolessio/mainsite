@@ -1403,3 +1403,38 @@ html.calm .top-veil {
 @media (prefers-reduced-motion: reduce) {
   .stage-blob, .stage-spin, .stage-pulse, .stage-sweep { animation: none !important; }
 }
+
+/* ------------------------------------------------------------------------------------------------------------------------------
+   The Anubis look (feature switch "anubis-look"): a blue-black base with violet in the lines, Schibsted Grotesk set heavy and tight in capitals
+   for the big words, and IBM Plex Mono for the small print. The fonts themselves are put in place in app/layout.tsx; the moving gradient is the
+   site's own background canvas (components/shell/gradient-field.tsx), recoloured.
+   ------------------------------------------------------------------------------------------------------------------------------ */
+html[data-look='anubis'] {
+  --ink: #05050a;
+  --surface: #0a0a12;
+  --raised: #12121c;
+  --line: rgb(206 198 255 / 0.12);
+  --line-strong: rgb(206 198 255 / 0.24);
+  --mute: rgb(236 232 255 / 0.6);
+  --ring: rgb(196 170 255 / 0.55);
+}
+html[data-look='anubis'] .font-display:not(.tabular-nums) {
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+  word-spacing: 0;
+}
+html[data-look='anubis'] .font-display.tabular-nums {
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  font-variant-numeric: normal; /* at this size the tabular dot and comma gap the figures out */
+}
+html[data-look='anubis'] :is(.text-xs, [class*='text-[10px]'], [class*='text-[10.5px]'], [class*='text-[11px]'], [class*='text-[12px]'], kbd, code) {
+  font-family: var(--font-mono-pick), ui-monospace, monospace;
+  letter-spacing: 0.015em;
+}
+html[data-look='anubis'] ::selection {
+  background: rgb(176 140 255 / 0.4);
+  color: #fff;
+}

@@ -158,7 +158,16 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     ...(figuresFace ? { '--font-figures': `var(${figuresFace.var})` } : {}),
     ...(monoFace ? { '--font-mono-pick': `var(${monoFace.var})` } : {}),
   }
-  const kind = headline?.kind ?? (font.id === 'inter' ? undefined : font.kind)
+  // The Anubis look (a switch the owner pushes): one grotesk for the words, one mono for the small print, whatever was chosen in Design
+  const look = fs.on['anubis-look'] === true
+  if (look) {
+    fontVars['--font-body'] = 'var(--font-f-schibsted)'
+    fontVars['--font-display-face'] = 'var(--font-f-schibsted)'
+    ;(fontVars as Record<string, string>)['--font-ui'] = 'var(--font-f-schibsted)'
+    ;(fontVars as Record<string, string>)['--font-figures'] = 'var(--font-f-schibsted)'
+    ;(fontVars as Record<string, string>)['--font-mono-pick'] = 'var(--font-f-ibm-plex-mono)'
+  }
+  const kind = look ? 'sans' : (headline?.kind ?? (font.id === 'inter' ? undefined : font.kind))
   const isAdmin = session?.user?.role === 'admin'
   const isDev = session?.user?.roles?.includes('dev') === true
   // The dev site is for the team (admins and developers): everyone else gets a sign-in screen and nothing from behind it.
@@ -178,10 +187,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <html
         lang="en"
         suppressHydrationWarning
-        data-font={font.id === 'inter' ? undefined : font.id}
+        data-look={look ? 'anubis' : undefined}
+        data-font={look ? 'schibsted' : font.id === 'inter' ? undefined : font.id}
         data-kind={kind}
-        data-ui={uiFace ? '1' : undefined}
-        data-figures={figuresFace ? '1' : undefined}
+        data-ui={look || uiFace ? '1' : undefined}
+        data-figures={look || figuresFace ? '1' : undefined}
         style={{ ...fontVars, ...roundnessVars(parseRoundness(design.design_roundness)) } as React.CSSProperties}
         className={`${FONT_CLASSES} bg-ink`}
       >
@@ -198,10 +208,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html
       lang="en"
       suppressHydrationWarning
-      data-font={font.id === 'inter' ? undefined : font.id}
+      data-look={look ? 'anubis' : undefined}
+      data-font={look ? 'schibsted' : font.id === 'inter' ? undefined : font.id}
       data-kind={kind}
-      data-ui={uiFace ? '1' : undefined}
-      data-figures={figuresFace ? '1' : undefined}
+      data-ui={look || uiFace ? '1' : undefined}
+      data-figures={look || figuresFace ? '1' : undefined}
       style={{ ...fontVars, ...roundnessVars(parseRoundness(design.design_roundness)) } as React.CSSProperties}
       className={`${FONT_CLASSES} bg-ink`}
     >
