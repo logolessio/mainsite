@@ -27,7 +27,7 @@ export function postId(platform: string, raw: string): string | null {
   }
   if (platform === 'tiktok') return /\/(?:video|photo)\/(\d{6,})/.exec(u.pathname)?.[1] ?? null
   if (platform === 'instagram') return /\/(?:p|reel|reels|tv)\/([\w-]{5,})/.exec(u.pathname)?.[1] ?? null
-  if (platform === 'x') return /\/status(?:es)?\/(\d{6,})/.exec(u.pathname)?.[1] ?? null
+  if (platform === 'x') return /\/status(?:es)?\/(\d{1,25})/.exec(u.pathname)?.[1] ?? null
   return null
 }
 

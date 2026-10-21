@@ -106,7 +106,7 @@ const RATINGS = 'LEFT JOIN (SELECT submission_id, COUNT(*) AS n, SUM(stars) AS t
 
 /** Our own address for a platform's picture (TikTok, Instagram and X pictures cannot be shown straight from their sites). YouTube's can. */
 export const thumbFor = (platform: string, id: string, thumb: string | null, fetchedAt: number | null) =>
-  !thumb ? null : platform === 'youtube' && thumb.startsWith('https://i.ytimg.com/') ? thumb : `/api/clips/${encodeURIComponent(id)}/thumb?v=${fetchedAt ?? 0}`
+  !thumb ? null : platform === 'youtube' && thumb.startsWith('https://i.ytimg.com/') ? thumb : `/clip-thumb/${encodeURIComponent(id)}?v=${fetchedAt ?? 0}`
 
 export function toClip(r: Row, t = nowSec()): FeedClip {
   const embedId = r.embed_id ?? postId(r.platform, r.url)

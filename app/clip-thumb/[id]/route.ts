@@ -46,7 +46,8 @@ async function pull(src: string | null | undefined): Promise<{ type: string; byt
 
 /**
  * A clip's picture, fetched from TikTok, Instagram or X and served from our own address. Their picture links expire and refuse to show
- * on other sites, so they cannot be used directly. Pictures are kept in Cloudflare's cache for a day.
+ * on other sites, so they cannot be used directly. Pictures are kept in Cloudflare's cache and the browser for a day. (It lives outside
+ * /api because every /api answer is marked never-store in next.config.mjs.)
  */
 export const GET = route(async (req: Request, ctx: { params: Promise<{ id: string }> }) => {
   if (!(await featureOn('submissions-feed'))) return nothing()

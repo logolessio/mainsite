@@ -205,7 +205,7 @@ async function instagram(url: string, keys: MetaKeys): Promise<ClipMeta> {
       m.author ??= line[3]
       m.postedAt = secs(`${line[4]} 12:00 UTC`)
     }
-    const caption = d ? /: "([\s\S]*)"\.?$/.exec(d)?.[1] : undefined
+    const caption = d ? /\d{4}: [“"]([\s\S]*?)[”"]?\.?\s*$/.exec(d)?.[1] : undefined
     m.title ??= text(caption)
     const img = tag('og:image')
     if (img) {
@@ -263,14 +263,22 @@ async function x(url: string, keys: MetaKeys): Promise<ClipMeta> {
   return m
 }
 
+async function read(platform: string, url: string, keys: MetaKeys): Promise<ClipMeta> {
+  if (platform === 'youtube') return youtube(url, keys)
+  if (platform === 'tiktok') return tiktok(url)
+  if (platform === 'instagram') return instagram(url, keys)
+  if (platform === 'x') return x(url, keys)
+  return blank(postId(platform as ClipPlatform, url))
+}
+
 export async function fetchClipMeta(platform: string, url: string, keys: MetaKeys = {}): Promise<ClipMeta> {
   try {
-    if (platform === 'youtube') return await youtube(url, keys)
-    if (platform === 'tiktok') return await tiktok(url)
-    if (platform === 'instagram') return await instagram(url, keys)
-    if (platform === 'x') return await x(url, keys)
+    const m = await read(platform, url, keys)
+    // it only counts as an answer when something worth showing came back (a platform that rate-limits us is asked again sooner)
+    m.ok = !m.gone && Boolean(m.thumb || m.title || m.views !== null || m.likes !== null)
+    return m
   } catch {
     /* a platform that is down never breaks the page */
+    return blank(postId(platform as ClipPlatform, url))
   }
-  return blank(postId(platform as ClipPlatform, url))
 }

@@ -56,13 +56,7 @@ export function Player({ clip, onClose, onPrev, onNext, signedIn, me, onRated }:
               </button>
               {/* a new clip (← and →) draws both halves afresh: the player loads again and the numbers rise in */}
               <Media key={`m-${clip.id}`} clip={clip} />
-              <Side key={`s-${clip.id}`} clip={clip} signedIn={signedIn} own={me !== null && me === clip.by.handle} onRated={onRated} onClose={onClose} />
-              {(onPrev || onNext) && (
-                <div className="pointer-events-none absolute inset-x-0 top-1/2 z-10 hidden -translate-y-1/2 justify-between px-3 md:flex">
-                  <NavButton label="Previous clip" onClick={onPrev}><ChevronLeft className="size-5" /></NavButton>
-                  <NavButton label="Next clip" onClick={onNext}><ChevronRight className="size-5" /></NavButton>
-                </div>
-              )}
+              <Side key={`s-${clip.id}`} clip={clip} signedIn={signedIn} own={me !== null && me === clip.by.handle} onRated={onRated} onClose={onClose} onPrev={onPrev} onNext={onNext} />
             </motion.div>
           </div>
         </motion.div>
@@ -72,9 +66,8 @@ export function Player({ clip, onClose, onPrev, onNext, signedIn, me, onRated }:
 }
 
 function NavButton({ label, onClick, children }: { label: string; onClick?: () => void; children: React.ReactNode }) {
-  if (!onClick) return <span />
   return (
-    <button type="button" aria-label={label} onClick={onClick} className="pointer-events-auto grid size-10 place-items-center rounded-pill bg-black/50 text-paper backdrop-blur-md transition-all hover:scale-105 hover:bg-white/15">
+    <button type="button" aria-label={label} title={label} onClick={onClick} disabled={!onClick} className="grid size-11 shrink-0 place-items-center rounded-pill border border-line-strong text-paper transition-all hover:bg-white/[0.08] active:scale-95 disabled:opacity-30">
       {children}
     </button>
   )
@@ -115,7 +108,7 @@ function Media({ clip }: { clip: FeedClip }) {
   )
 }
 
-function Side({ clip, signedIn, own, onRated, onClose }: { clip: FeedClip; signedIn: boolean; own: boolean; onRated: (id: string, r: Rating) => void; onClose: () => void }) {
+function Side({ clip, signedIn, own, onRated, onClose, onPrev, onNext }: { clip: FeedClip; signedIn: boolean; own: boolean; onRated: (id: string, r: Rating) => void; onClose: () => void; onPrev?: () => void; onNext?: () => void }) {
   const stats = [
     { icon: Eye, label: 'Views', value: compact(clip.views) },
     { icon: Heart, label: 'Likes', value: clip.likes === null ? '–' : compact(clip.likes) },
@@ -137,7 +130,7 @@ function Side({ clip, signedIn, own, onRated, onClose }: { clip: FeedClip; signe
 
       {clip.title && <p className="line-clamp-4 text-[15px] leading-relaxed text-paper/80">{clip.title}</p>}
 
-      <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-2 lg:grid-cols-4">
+      <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-2">
         {stats.map((s, i) => (
           <motion.li key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.08 + i * 0.05, ease: EASE_OUT }} className="rounded-2xl border border-line bg-white/[0.03] px-3.5 py-3">
             <span className="flex items-center gap-1.5 text-[11px] text-mute"><s.icon className="size-3.5" />{s.label}</span>
@@ -159,9 +152,13 @@ function Side({ clip, signedIn, own, onRated, onClose }: { clip: FeedClip; signe
         <ArrowUpRight className="size-4 text-mute transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
       </TransitionLink>
 
-      <a href={clip.url} target="_blank" rel="noopener noreferrer" className="mt-auto inline-flex h-11 items-center justify-center gap-2 rounded-pill border border-line-strong text-sm transition-colors hover:bg-white/[0.06]">
-        <PlatformIcon platform={clip.platform} /> Open on {PLATFORM_LABEL[clip.platform] ?? 'the platform'} <ArrowUpRight className="size-4" />
-      </a>
+      <div className="mt-auto flex items-center gap-2">
+        <NavButton label="Previous clip (←)" onClick={onPrev}><ChevronLeft className="size-5" /></NavButton>
+        <a href={clip.url} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-pill border border-line-strong px-4 text-sm transition-colors hover:bg-white/[0.06]">
+          <PlatformIcon platform={clip.platform} /> <span className="truncate">Open on {PLATFORM_LABEL[clip.platform] ?? 'the platform'}</span> <ArrowUpRight className="size-4 shrink-0" />
+        </a>
+        <NavButton label="Next clip (→)" onClick={onNext}><ChevronRight className="size-5" /></NavButton>
+      </div>
     </div>
   )
 }
