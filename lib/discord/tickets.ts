@@ -116,3 +116,20 @@ export async function closeTicket(inq: Inquiry, by: string) {
 export const ticketLink = (guildId: string, channelId: string) => channelUrl(guildId, channelId)
 export const dashboardLink = (id: string) => `https://owner.logoless.io/admin/inbox/${id}`
 export { siteUrl }
+
+/**
+ * Someone deleted a ticket's channel in Discord: the ticket is closed on the site too, with a note saying so. The conversation stays
+ * in the inbox (nothing is deleted), and the person can open a new ticket. Found by the live loop (see tick.ts).
+ */
+export async function ticketChannelGone(inq: Inquiry) {
+  if (!inq.discord) return
+  const { userId } = inq.discord
+  inq.replies.push({ by: 'admin', text: 'The ticket channel was deleted in Discord, so this ticket was closed.', at: nowSec() })
+  inq.status = 'closed'
+  inq.adminSeen = true
+  delete inq.discord
+  await saveInquiry(inq)
+  const d = await db()
+  await d.prepare('DELETE FROM settings WHERE key = ?1').bind(`discord:ticket:${userId}`).run()
+  await logToDiscord(`Ticket "${inq.subject}" was closed on the site because its channel was deleted in Discord.`)
+}

@@ -15,7 +15,6 @@ import * as k from './cards'
 import { getStartedMessage, rulesMessage, siteMessage, statusMessage, supportPanel } from './panels'
 import { SAMPLES, SAMPLE_BY_ID } from './samples'
 import { go as goBtn, goTarget, tidy } from './ui'
-import { applyWording } from '../wording'
 import { addUserReply, closeTicket, openTicket } from './tickets'
 import { getDiscordConfig } from './config'
 import { announceCampaign, logToDiscord, postTo, refreshStatus } from './outbound'
@@ -26,7 +25,12 @@ import { evaluateBadges } from '../badges'
 import { publicStats } from '../public-stats'
 import { runHealth } from '../health'
 import { setDmEnabled, unlinkDiscord, userByDiscord } from './link'
-import { syncRoles } from './roles'
+import { kindWords, memberKinds, syncRoles, wantedRoles } from './roles'
+import * as more from './cards-more'
+import { featureOn } from '../features'
+import { setting } from '../db'
+import { videoInfo } from './video'
+import { CLIP_HOSTS } from '../submit-clip'
 
 // ---------- Discord's shapes (only the parts we use) ----------
 type DUser = { id: string; username: string; global_name?: string | null; avatar?: string | null }
@@ -50,7 +54,7 @@ export type Interaction = {
   message?: { id: string }
 }
 export type Reply = { type: number; data?: Record<string, unknown> }
-export type Env = { appId: string; defer: (work: () => Promise<Message>) => Reply }
+export type Env = { appId: string; defer: (work: () => Promise<Message>, ephemeral?: boolean) => Reply }
 
 // ---------- small helpers ----------
 const EPHEMERAL = 64
@@ -93,77 +97,8 @@ async function me(discordId: string): Promise<Me | null> {
 const notLinked = () => say(k.notLinkedCard())
 const isTeam = async (m: Me) => (await rolesForEmail(m.email)).includes('admin')
 
-// ---------- the commands, as Discord wants them for registration ----------
-const S = 3 // string option
-const U = 6 // user option
-const choices = (...v: string[]) => v.map((x) => ({ name: x, value: x }))
-const RAW_COMMANDS = [
-  { name: 'help', description: 'What this bot can do', type: 1 },
-  { name: 'link', description: 'Connect your logoless account to Discord', type: 1 },
-  { name: 'unlink', description: 'Disconnect your logoless account from Discord', type: 1 },
-  { name: 'profile', description: 'Show a logoless profile', type: 1, options: [{ type: U, name: 'member', description: 'Someone else in the server (leave empty for you)', required: false }] },
-  { name: 'stats', description: 'Your submissions, views and earnings', type: 1 },
-  { name: 'balance', description: 'What you can withdraw, and what is still clearing', type: 1 },
-  { name: 'submissions', description: 'Your latest submissions and where they stand', type: 1 },
-  { name: 'badges', description: 'Your badges, or someone else’s', type: 1, options: [{ type: U, name: 'member', description: 'Someone else in the server', required: false }] },
-  { name: 'campaigns', description: 'Campaigns you can join right now', type: 1 },
-  { name: 'campaign', description: 'All the details of one campaign', type: 1, options: [{ type: S, name: 'name', description: 'Which campaign', required: true, autocomplete: true }] },
-  {
-    name: 'submit',
-    description: 'Send your content to a campaign',
-    type: 1,
-    options: [
-      { type: S, name: 'campaign', description: 'Which campaign', required: true, autocomplete: true },
-      { type: S, name: 'platform', description: 'Where you posted it', required: true, choices: choices('tiktok', 'youtube', 'instagram') },
-      { type: S, name: 'url', description: 'The link to your post', required: true, max_length: 300 },
-    ],
-  },
-  { name: 'leaderboard', description: 'Who is bringing in the most views', type: 1, options: [{ type: S, name: 'period', description: 'How far back', required: false, choices: choices('30 days', 'all time') }] },
-  { name: 'earn', description: 'Work out what some views are worth', type: 1, options: [{ type: 4, name: 'views', description: 'How many views', required: true, min_value: 1, max_value: 1_000_000_000 }, { type: S, name: 'campaign', description: 'Which campaign’s rate to use', required: false, autocomplete: true }] },
-  { name: 'faq', description: 'Answers to common questions', type: 1, options: [{ type: S, name: 'question', description: 'What you want to know', required: true, autocomplete: true }] },
-  { name: 'support', description: 'Open a private ticket with the logoless team', type: 1, options: [{ type: S, name: 'message', description: 'What you need', required: true, max_length: 1000 }] },
-  { name: 'status', description: 'Is everything at logoless working?', type: 1 },
-  { name: 'rules', description: 'Post the server rules in this channel (team only)', type: 1, default_member_permissions: '8' },
-  { name: 'site', description: 'Post the logoless site card in this channel (team only)', type: 1, default_member_permissions: '8' },
-  {
-    name: 'report',
-    description: 'Report a submission, a campaign or a person',
-    type: 1,
-    options: [
-      { type: S, name: 'what', description: 'What kind of problem', required: true, choices: [{ name: 'Fake or inflated views', value: 'fake-views' }, { name: 'Stolen content', value: 'copyright' }, { name: 'Scam or misleading', value: 'scam' }, { name: 'Harassment', value: 'abuse' }, { name: 'Pretending to be someone', value: 'impersonation' }, { name: 'Something else', value: 'custom' }] },
-      { type: S, name: 'where', description: 'A link, a @handle or a campaign name', required: true, max_length: 200 },
-      { type: S, name: 'details', description: 'What happened', required: false, max_length: 1000 },
-    ],
-  },
-  { name: 'notifications', description: 'Get your logoless notifications as Discord messages', type: 1, options: [{ type: S, name: 'mode', description: 'On or off', required: true, choices: choices('on', 'off') }] },
-  { name: 'sync', description: 'Refresh your roles in this server', type: 1 },
-  { name: 'ping', description: 'Is the bot awake?', type: 1 },
-  {
-    name: 'admin',
-    description: 'For the logoless team',
-    type: 1,
-    default_member_permissions: '8',
-    options: [
-      { type: 1, name: 'stats', description: 'The site at a glance' },
-      { type: 1, name: 'queue', description: 'How many submissions are waiting, and for which campaigns' },
-      { type: 1, name: 'lookup', description: 'Look someone up', options: [{ type: S, name: 'who', description: 'A @handle or an email', required: true }] },
-      { type: 1, name: 'announce', description: 'Post an announcement in #news', options: [{ type: S, name: 'title', description: 'Headline', required: true, max_length: 200 }, { type: S, name: 'text', description: 'The message', required: true, max_length: 1500 }] },
-      { type: 1, name: 'update', description: 'Post a product update in #updates', options: [{ type: S, name: 'title', description: 'Headline', required: true, max_length: 200 }, { type: S, name: 'text', description: 'What changed', required: true, max_length: 1500 }] },
-      { type: 1, name: 'campaign', description: 'Pause, start or announce a campaign', options: [{ type: S, name: 'campaign', description: 'Which one', required: true, autocomplete: true }, { type: S, name: 'action', description: 'What to do', required: true, choices: choices('pause', 'resume', 'announce') }] },
-      { type: 1, name: 'sync-all', description: 'Refresh everyone’s roles' },
-      { type: 1, name: 'panel', description: 'Post a panel in this channel', options: [{ type: S, name: 'which', description: 'Which panel', required: true, choices: [{ name: 'Get started', value: 'start' }, { name: 'Support tickets', value: 'support' }, { name: 'Live status', value: 'status' }] }] },
-      { type: 1, name: 'test', description: 'Show any message the bot can send, with made-up data', options: [{ type: S, name: 'which', description: 'Which message', required: true, autocomplete: true }] },
-    ],
-  },
-]
-
-// the site's wording is used in every description Discord shows (clip is submission or content, clipper is creator)
-const localize = <T,>(v: T): T => {
-  if (Array.isArray(v)) return v.map(localize) as T
-  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([key, val]) => [key, key === 'description' && typeof val === 'string' ? applyWording(val) : localize(val)])) as T
-  return v
-}
-export const COMMANDS = localize(RAW_COMMANDS)
+// the commands, as Discord wants them for registration, are in command-defs.ts (so the registration script can read them on its own)
+export { COMMANDS } from './command-defs'
 
 // ---------- the answers ----------
 /** `/link`: connecting is done on logoless.io with Discord's own approval page (see connect.ts), so there is no code to type. */
@@ -460,6 +395,11 @@ async function admin(i: Interaction): Promise<Reply> {
       const res = await postMessage(i.channel_id!, msg)
       return res.ok ? ok('Posted it here.') : fail(explainDiscord(res, 'this channel'))
     }
+    case 'tick': {
+      const { discordTick } = await import('./tick')
+      const r = await discordTick({ force: true })
+      return ok(r.skipped ? `Skipped: ${r.skipped}.` : Object.entries(r.parts).map(([k2, v]) => `**${k2}** ${v}`).join('\n'), 'Live loop')
+    }
     case 'test': {
       const sample = SAMPLE_BY_ID[String(opt(i, 'which') ?? '')]
       return sample ? say(sample.build()) : fail('I do not have a sample by that name. Start typing and pick one from the list.')
@@ -502,6 +442,16 @@ async function component(i: Interaction): Promise<Reply> {
     return t ? { type: 4, data: { content: `[${t.label}](${t.url})`, flags: EPHEMERAL | NO_EMBEDS, allowed_mentions: { parse: [] } } } : fail('That button is out of date.')
   }
   // buttons that run a command for you
+  // the one button in #get-started: an answer only that person sees (see welcome.ts)
+  if (id === 'start:go') {
+    const { startPressed } = await import('./welcome')
+    return say(await startPressed({ discordId: whoami(i).id, appId: i.application_id, token: i.token }))
+  }
+  if (id === 'cmd:leaderboard') {
+    const r = await cmdLeaderboard(i)
+    return { ...r, data: { ...r.data, flags: EPHEMERAL } }
+  }
+  if (id === 'cmd:sync') return cmdSync(i)
   if (id === 'cmd:stats') return cmdStats(i)
   if (id === 'cmd:balance') return cmdBalance(i)
   if (id === 'cmd:submissions') return cmdSubmissions(i)
@@ -569,6 +519,140 @@ async function autocomplete(i: Interaction): Promise<Reply> {
   return { type: 8, data: { choices: list.slice(0, 25) } }
 }
 
+
+// ---------- the newer commands (the discord-commands switch) ----------
+async function cmdNext(i: Interaction): Promise<Reply> {
+  const m = await me(whoami(i).id)
+  if (!m) return say(more.startReplyCard('new', (await import('./welcome')).startUrl()))
+  const d = await db()
+  const cfg = await getDiscordConfig()
+  const live = await d.prepare("SELECT COUNT(*) AS n FROM campaigns WHERE status = 'live' AND id NOT LIKE 'mock-%'").first<{ n: number }>()
+  const k = await memberKinds(m.id)
+  return say(more.nextStepsCard({ name: m.name || m.handle, guildId: cfg.guildId, campaignsChannel: cfg.channels.newCampaigns || undefined, supportChannel: cfg.channels.support || undefined, brand: Boolean(k?.brand || k?.creator), live: live?.n ?? 0 }))
+}
+
+async function cmdPayout(i: Interaction): Promise<Reply> {
+  const m = await me(whoami(i).id)
+  if (!m) return notLinked()
+  const d = await db()
+  const rows = (await d.prepare('SELECT amount_cents, status, created_at FROM payouts WHERE user_id = ?1 ORDER BY created_at DESC LIMIT 6').bind(m.id).all<{ amount_cents: number; status: string; created_at: number }>()).results
+  const b = await balances(m.id)
+  return say(more.payoutStatusCard(rows.map((r) => ({ cents: r.amount_cents, status: r.status, at: r.created_at })), b.available))
+}
+
+async function cmdRank(i: Interaction): Promise<Reply> {
+  const m = await me(whoami(i).id)
+  if (!m) return notLinked()
+  const d = await db()
+  const rows = (
+    await d
+      .prepare(
+        `SELECT s.user_id, COALESCE(p.display_name, p.handle) AS name, p.show_json, SUM(s.views_verified) AS views FROM submissions s JOIN users u ON u.id = s.user_id LEFT JOIN profiles p ON p.user_id = s.user_id
+         WHERE s.status = 'approved' AND s.views_verified > 0 AND s.created_at >= ?1 AND u.status = 'active' GROUP BY s.user_id ORDER BY views DESC LIMIT 500`,
+      )
+      .bind(nowSec() - 30 * 86400)
+      .all<{ user_id: string; name: string | null; show_json: string | null; views: number }>()
+  ).results
+  const at = rows.findIndex((r) => r.user_id === m.id)
+  if (at < 0) return say(more.rankCard({ place: null, of: rows.length, views: 0 }))
+  const ahead = at > 0 ? rows[at - 1] : null
+  // the person ahead is named only if they show their views publicly
+  const shows = (j: string | null) => {
+    try {
+      return JSON.parse(j ?? '{}').views === true
+    } catch {
+      return false
+    }
+  }
+  return say(more.rankCard({ place: at + 1, of: rows.length, views: rows[at].views, next: ahead ? { name: shows(ahead.show_json) && ahead.name ? ahead.name : `#${at}`, gap: ahead.views - rows[at].views + 1 } : null }))
+}
+
+async function cmdRoles(i: Interaction): Promise<Reply> {
+  const m = await me(whoami(i).id)
+  if (!m) return notLinked()
+  const { wanted, kinds } = await wantedRoles(m.id)
+  return say(more.rolesCard([...wanted], kinds ? kindWords(kinds) : []))
+}
+
+async function cmdBrand(i: Interaction): Promise<Reply> {
+  const m = await me(whoami(i).id)
+  if (!m) return notLinked()
+  const k = await memberKinds(m.id)
+  if (!k?.brand && !k?.creator && !k?.admin) return fail('This is for brands and creators with campaigns. Start one on logoless.io.')
+  const d = await db()
+  const rows = (
+    await d
+      .prepare(
+        `SELECT c.id, c.title, c.status, c.budget_cents,
+           COALESCE((SELECT SUM(net_cents) FROM earnings e WHERE e.campaign_id = c.id), 0) AS paid,
+           (SELECT COUNT(*) FROM submissions s WHERE s.campaign_id = c.id) AS subs,
+           COALESCE((SELECT SUM(views_verified) FROM submissions s WHERE s.campaign_id = c.id AND s.status = 'approved'), 0) AS views
+         FROM campaigns c WHERE c.brand_user_id = ?1 ORDER BY c.status = 'live' DESC, c.updated_at DESC LIMIT 8`,
+      )
+      .bind(m.id)
+      .all<{ id: string; title: string; status: string; budget_cents: number; paid: number; subs: number; views: number }>()
+  ).results
+  return say(more.brandCard(rows.map((r) => ({ id: r.id, title: r.title, status: r.status, budgetCents: r.budget_cents, paidCents: r.paid, submissions: r.subs, views: r.views }))))
+}
+
+async function cmdDev(i: Interaction): Promise<Reply> {
+  const m = await me(whoami(i).id)
+  if (!m) return notLinked()
+  const k = await memberKinds(m.id)
+  const d = await db()
+  const apps = (await d.prepare("SELECT value FROM settings WHERE key LIKE 'oauth:app:%' AND json_extract(value, '$.ownerId') = ?1 ORDER BY updated_at DESC LIMIT 10").bind(m.id).all<{ value: string }>()).results
+  const list = apps.flatMap((a) => {
+    try {
+      const j = JSON.parse(a.value) as { name?: string; clientId?: string; id?: string }
+      return [{ name: j.name ?? 'App', id: j.clientId ?? j.id ?? '' }]
+    } catch {
+      return []
+    }
+  })
+  if (!k?.developer && list.length === 0) return say(more.devCard([]))
+  return say(more.devCard(list))
+}
+
+async function cmdRoast(i: Interaction, env: Env): Promise<Reply> {
+  const url = String(opt(i, 'url') ?? '').trim()
+  let platform = ''
+  try {
+    const h = new URL(url).hostname
+    platform = Object.entries(CLIP_HOSTS).find(([, re]) => re.test(h))?.[0] ?? ''
+  } catch {
+    /* not a link */
+  }
+  if (!platform || !url.startsWith('https://')) return fail('Paste the full https link to a TikTok or YouTube post.')
+  return env.defer(async () => more.roastCard(url, await videoInfo(platform, url, { youtubeKey: await setting('YOUTUBE_API_KEY') })), false)
+}
+
+async function newer(i: Interaction, env: Env, name: string): Promise<Reply | null> {
+  const known = ['next', 'payout', 'rank', 'roles', 'brand', 'dev', '8ball', 'coinflip', 'roll', 'choose', 'hype', 'roast-my-clip']
+  if (!known.includes(name)) return null
+  if (!(await featureOn('discord-commands'))) return fail('That command is coming soon.')
+  switch (name) {
+    case 'next': return cmdNext(i)
+    case 'payout': return cmdPayout(i)
+    case 'rank': return cmdRank(i)
+    case 'roles': return cmdRoles(i)
+    case 'brand': return cmdBrand(i)
+    case 'dev': return cmdDev(i)
+    case '8ball': return say(more.eightBallCard(String(opt(i, 'question') ?? '')), false)
+    case 'coinflip': return say(more.coinCard(), false)
+    case 'roll': return say(more.rollCard(Number(opt(i, 'sides') ?? 6) || 6), false)
+    case 'choose': {
+      const list = String(opt(i, 'options') ?? '').split(/[,|\n]/).map((x) => x.trim()).filter(Boolean)
+      return list.length < 2 ? fail('Give me at least two things, split with commas.') : say(more.chooseCard(list), false)
+    }
+    case 'hype': {
+      const target = (opt(i, 'member') as string | undefined) ?? whoami(i).id
+      return { ...say(more.hypeCard(`<@${target}>`), false) }
+    }
+    case 'roast-my-clip': return cmdRoast(i, env)
+  }
+  return null
+}
+
 /** One interaction in, one reply out. Every slow thing goes through `env.defer`. */
 export async function handleInteraction(i: Interaction, env: Env): Promise<Reply> {
   try {
@@ -630,6 +714,8 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<Reply
       }
       case 'admin': return await admin(i)
     }
+    const extra = name ? await newer(i, env, name) : null
+    if (extra) return extra
     return fail('I do not know that command yet. Try `/help`.')
   } catch (e) {
     console.error('discord command failed', e instanceof Error ? e.message : e)

@@ -24,14 +24,14 @@ export async function POST(req: Request) {
   if (i.type === 1) return Response.json({ type: 1 }) // Discord's check that the address works
 
   // A command that needs more than three seconds answers "thinking" at once and finishes in the background.
-  const defer = (work: () => Promise<Message>) => {
+  const defer = (work: () => Promise<Message>, ephemeral = true) => {
     const job = work()
       .then((m) => editOriginal(i.application_id, i.token, m))
       .catch(() => editOriginal(i.application_id, i.token, { content: 'Something went wrong. Please try again.' }))
     getCloudflareContext({ async: true })
       .then(({ ctx }) => ctx.waitUntil(job))
       .catch(() => void job)
-    return { type: 5, data: { flags: 64 } }
+    return { type: 5, data: ephemeral ? { flags: 64 } : {} }
   }
   const reply = await handleInteraction(i, { appId: i.application_id, defer })
   logEvent({ kind: 'api', name: 'discord', detail: `${i.type}:${i.data?.name ?? i.data?.custom_id ?? ''}` })

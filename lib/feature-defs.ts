@@ -1,4 +1,5 @@
 // The features that can be tried on the dev site and then pushed to the live site. Safe for the browser: no secrets.
+import { DISCORD_FEATURES } from './discord/feature-list'
 
 export type FeatureDef = {
   id: string
@@ -10,6 +11,7 @@ export type FeatureDef = {
 }
 
 export const FEATURES: FeatureDef[] = [
+  ...DISCORD_FEATURES,
   { id: 'reels', name: 'Reels: swipe through campaigns', category: 'Discover', path: '/reels', description: 'A full-screen, swipeable way to browse live campaigns, one at a time. The track plays as you scroll, with the rate, pool and a one-tap Clip this button. Keyboard friendly (↑ ↓, M for sound). Also adds a "Swipe through campaigns" button on the home page.' },
   { id: 'leaderboard', name: 'Clipper leaderboard', category: 'Discover', path: '/leaderboard', description: 'A public ranking of the top clippers by verified views, for people who have chosen to show their views. Gold, silver and bronze podium.' },
   { id: 'live-numbers', name: 'Live numbers on the home page', category: 'Trust', path: '/', description: 'A band under the campaigns with real totals: live campaigns, paid out so far, clips posted. It stays hidden until the numbers are worth showing.' },

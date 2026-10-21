@@ -11,7 +11,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 
 // ---------- the scheduled job (runs first: the patch below may end the script early) ----------
 // OpenNext's worker only answers web requests. This adds a `scheduled` handler to it, so the cron in wrangler.jsonc can start the
-// two-hourly look at submission views. It asks the site itself (through the self-reference binding) to run the check, with a code
+// two-hourly look at submission views, and (every minute) the 30-second Discord and campaign loop. It asks the site itself (through the self-reference binding) to run the check, with a code
 // made from the site's secret and the current hour, so /api/cron/views cannot be started by anyone else.
 function addScheduled() {
   const worker = '.open-next/worker.js'
@@ -31,10 +31,18 @@ function addScheduled() {
                 const key = await crypto.subtle.importKey("raw", enc.encode(String(env.AUTH_SECRET ?? "")), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
                 const sig = await crypto.subtle.sign("HMAC", key, enc.encode("cron:" + Math.floor(Date.now() / 3600000)));
                 const code = [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
-                const req = new Request("https://logoless.io/api/cron/views", { method: "POST", headers: { "x-cron-key": code } });
-                if (env.WORKER_SELF_REFERENCE) await env.WORKER_SELF_REFERENCE.fetch(req);
+                const call = (path) => env.WORKER_SELF_REFERENCE ? env.WORKER_SELF_REFERENCE.fetch(new Request("https://logoless.io" + path, { method: "POST", headers: { "x-cron-key": code } })) : null;
+                if (event.cron === "* * * * *") {
+                    // the 30-second loop (lib/discord/tick.ts): once now, once half a minute later. A cron cannot run more often than
+                    // once a minute; the wait in between costs no CPU time.
+                    await call("/api/cron/tick");
+                    await new Promise((r) => setTimeout(r, Math.max(0, event.scheduledTime + 30000 - Date.now())));
+                    await call("/api/cron/tick");
+                } else {
+                    await call("/api/cron/views");
+                }
             } catch (e) {
-                console.error("scheduled view check failed", e && e.message);
+                console.error("scheduled job failed", e && e.message);
             }
         })());
     },

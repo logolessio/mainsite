@@ -1,0 +1,17 @@
+import type { FeatureDef } from '../feature-defs'
+
+/**
+ * The Discord bot's switches. Safe for the browser: no secrets. Each one is off on logoless.io until it is pushed, like every
+ * other feature. The bot always answers on logoless.io (Discord sends everything to the one address), so "on the dev site" here
+ * means: the buttons in the owner dashboard on dev.logoless.io can try it, and nothing happens in the server by itself until it is pushed.
+ */
+export const DISCORD_FEATURES: FeatureDef[] = [
+  { id: 'discord-onboarding', name: 'Discord: one-button get started', category: 'Launch', path: '/onboarding?ref=discord', description: 'The #get-started message has one button. It sends the member to the site\'s sign-up with a Discord step at the end (link your Discord). Once both are done, a message only they can see appears in #get-started with what to do next, and the bot sends them a full rundown by direct message.' },
+  { id: 'discord-payouts', name: 'Discord: payouts channel', category: 'Trust', path: '/admin/discord', description: 'Every earning is posted in the payouts channel with a picture card (the amount in front of the site\'s black background), the campaign and the views, and the person\'s name half hidden (em***).' },
+  { id: 'discord-submissions', name: 'Discord: submissions channel', category: 'Trust', path: '/admin/discord', description: 'Every submission is posted in the submissions channel with the video (Discord plays YouTube links in place), its title, likes, comments and views from the platform, and where it stands. The post updates as it is reviewed and earns.' },
+  { id: 'discord-campaigns', name: 'Discord: new campaign cards', category: 'Discover', path: '/admin/discord', description: 'A bigger campaign card with the cover, a picture of the budget left as a bar, and a Submit button that opens the submit step of that campaign. Each artist\'s channel is made when their first campaign goes live; an ended campaign\'s card is removed while the artist has others live, and the channel moves to the private inactive category when none are.' },
+  { id: 'discord-live', name: 'Discord: live numbers every 30 seconds', category: 'Trust', path: '/admin/discord', description: 'Every 30 seconds the site looks again at campaign progress: a few due view checks, then the campaign cards, the payouts and submissions channels, ticket channels and roles in Discord are brought up to date.' },
+  { id: 'discord-roles', name: 'Discord: a role for every kind of member', category: 'Account', path: '/admin/discord', description: 'Admin, developer, creator, clipper, brand and the earnings tiers, kept in step with the site: a few members are checked every 30 seconds, and anyone can press /sync.' },
+  { id: 'discord-tickets', name: 'Discord: deleted ticket channels close the ticket', category: 'Comfort', path: '/admin/inbox', description: 'If someone deletes a ticket\'s channel in Discord, the ticket is closed on the site too (the conversation stays in the inbox, with a note).' },
+  { id: 'discord-commands', name: 'Discord: more slash commands', category: 'Launch', path: '/admin/discord', description: 'New commands for everyone (/next, /payout, /rank, /roles), for brands (/brand), for developers (/dev), and fun ones (/8ball, /coinflip, /roll, /choose, /hype, /roast-my-clip). The owner registers them with the Register commands button or the script.' },
+]

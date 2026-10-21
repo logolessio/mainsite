@@ -69,6 +69,13 @@ export async function postTo(where: 'news' | 'updates', post: Post): Promise<boo
 
 /** Welcome a new member in #system, once, with what they chose when they made their account. */
 export async function welcomeMember(userId: string) {
+  // the account was just finished: if Discord is linked too, the next steps and the rundown go out now (see welcome.ts)
+  try {
+    const { welcomeOnce } = await import('./welcome')
+    await welcomeOnce(userId)
+  } catch {
+    /* never in the way of finishing an account */
+  }
   try {
     const cfg = await getDiscordConfig()
     if (!cfg.channels.system || !(await botReady())) return
