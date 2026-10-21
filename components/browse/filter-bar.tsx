@@ -59,7 +59,7 @@ export function FilterBar({
       as={motion.div}
       data-tour="filters"
       initial={false}
-      rootClassName="mx-auto mb-10 w-fit max-w-full md:mb-14"
+      rootClassName="relative z-[14] mx-auto mb-10 w-fit max-w-full md:mb-14"
       rounded="rounded-[calc(26px*var(--round,1))] md:rounded-pill"
       className="flex flex-wrap items-center justify-center gap-1 p-1.5 md:px-3"
     >
@@ -94,6 +94,8 @@ export function FilterBar({
         })}
       </div>
       <span aria-hidden="true" className="mx-1 hidden h-4 w-px bg-line-strong md:block" />
+      {/* the sort, the text size and the clear button stay together on one line, so the clear button's kept place never wraps on its own */}
+      <span className="flex items-center">
       {/* the visible text decides the width, so the bar is only as wide as its choices; the real select sits invisibly on top */}
       <label className="group/sort relative inline-grid h-8 cursor-pointer items-center rounded-pill has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-paper/60">
         <span className="sr-only">Sort by</span>
@@ -134,6 +136,7 @@ export function FilterBar({
             </motion.button>
           )}
         </AnimatePresence>
+      </span>
       </span>
     </LiquidGlass>
   )

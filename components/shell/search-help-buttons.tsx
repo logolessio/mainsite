@@ -20,12 +20,12 @@ export function HelpButton({ className }: { className?: string }) {
  * The search button and the "?" button in the top bar, so the ⌘K box and the shortcuts can be found without knowing the keys. On a wide
  * screen the search button says what it is and shows its key; on a phone it is just the magnifier.
  */
-export function SearchHelpButtons() {
+export function SearchHelpButtons({ roomy = true }: { /** false on a phone with a full bar: the search button then lives in the menu instead */ roomy?: boolean }) {
   const [mod, setMod] = useState('⌘')
   useEffect(() => setMod(/mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent) ? '⌘' : 'Ctrl'), [])
   return (
     <>
-      <button type="button" onClick={openSearch} aria-label="Search, or do something" aria-keyshortcuts="Meta+K /" className={cn(round, 'lg:w-auto lg:grid-flow-col lg:gap-2.5 lg:pr-2 lg:pl-4')}>
+      <button type="button" onClick={openSearch} aria-label="Search, or do something" aria-keyshortcuts="Meta+K /" className={cn(round, !roomy && 'hidden sm:grid', 'lg:w-auto lg:grid-flow-col lg:gap-2.5 lg:pr-2 lg:pl-4')}>
         <Search aria-hidden="true" className="size-[18px]" />
         <span className="hidden text-sm lg:inline">Search</span>
         <kbd className="hidden rounded-pill bg-white/[0.08] px-2 py-1 font-mono text-[11px] text-paper/60 lg:inline">{mod} K</kbd>

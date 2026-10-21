@@ -50,12 +50,14 @@ export function NavUserProvider({ children, signedIn }: { children: React.ReactN
   const [user, setUser] = useState<NavUser | null>(signedIn === false ? { signedIn: false } : null)
   const pathname = usePathname()
 
+  // A failed request (a hiccup on the server) says nothing about who is signed in: what is already known is kept, and someone the server
+  // said was signed in is never shown the signed-out buttons because of it. Only an answer of { signedIn: false } signs the bar out.
   const refresh = useCallback(() => {
     fetch('/api/me/nav', { credentials: 'same-origin', cache: 'no-store' })
-      .then((r) => (r.ok ? r.json() : { signedIn: false }))
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((j: NavUser) => setUser(j))
-      .catch(() => setUser((u) => u ?? { signedIn: false }))
-  }, [])
+      .catch(() => setUser((u) => u ?? (signedIn ? null : { signedIn: false })))
+  }, [signedIn])
 
   // On the first load, and each time the person moves to a different area, so the bell stays current.
   const area = pathname.split('/')[1] ?? ''
