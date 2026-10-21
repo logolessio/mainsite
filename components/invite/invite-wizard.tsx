@@ -344,6 +344,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
           <main className="min-w-0">
             <p className="mb-6 text-xs tracking-wide text-mute md:hidden">
               Step {step + 1} of {STEPS.length} · {current.chapter}
+              {preview && <span className="text-amber-200"> · Preview, nothing is saved</span>}
             </p>
             <AnimatePresence mode="wait" initial={false} custom={dir}>
               <motion.section key={current.id} custom={dir} initial={{ opacity: 0, x: 40 * dir }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 * dir }} transition={{ duration: 0.38, ease: EASE_OUT }} className="max-w-2xl">
@@ -759,6 +760,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                             ['Platforms', (data.platforms ?? []).map((p) => PLATFORMS.find((x) => x.id === p)?.label).join(', ')],
                             ['Ends', data.endsOn || 'No end date'],
                             ['Your page', `@${data.handle}`],
+                            ...(pkg ? [['Music', [(data.spotify ?? []).filter((l) => l.trim()).length ? `${(data.spotify ?? []).filter((l) => l.trim()).length} Spotify link${(data.spotify ?? []).filter((l) => l.trim()).length === 1 ? '' : 's'}` : '', (data.sounds ?? []).some((l) => l.trim()) ? 'official sound' : '', data.audio ? 'preview' : ''].filter(Boolean).join(' · ') || 'None added']] : []),
                           ].map(([k, v]) => (
                             <div key={k} className="bg-ink p-5">
                               <dt className="text-xs tracking-wide text-mute">{k}</dt>
