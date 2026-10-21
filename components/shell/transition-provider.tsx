@@ -74,6 +74,10 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
         if (target !== pathname) {
           setPending(true)
           if (!reduced) setLeaving(pathname)
+          // a link must never do nothing: if the page has not arrived after a few seconds (a stalled request, a stuck transition), load it the plain way
+          window.setTimeout(() => {
+            if (window.location.pathname === pathname) window.location.assign(href)
+          }, 3500)
         }
         router.push(href)
       })
