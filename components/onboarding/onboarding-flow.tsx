@@ -392,8 +392,8 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
     if (id === 'handle') {
       const h = v.toLowerCase()
       if (looseHandles) {
-        // reserved words are left to the server, which knows whether this is an admin
-        const problem = handleProblem(h, { loose: true, isAdmin: true })
+        // reserved words are left to the server, which knows whether this is an admin (a dry run never asks it, so it checks here)
+        const problem = handleProblem(h, { loose: true, isAdmin: !preview })
         if (problem) return { ok: false, msg: problem.replace(/\.$/, '') }
         if (preview) return { ok: true, msg: `@${h} is yours` }
         const r = await checkHandle(h)

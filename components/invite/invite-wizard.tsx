@@ -148,7 +148,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
   const goodLinks = (list: string[] | undefined, check: typeof spotifyLink) => (list ?? []).every((l) => !l.trim() || 'url' in check(l))
   const valid: Record<StepId, boolean> = {
     hello: true,
-    you: (data.stageName ?? '').trim().length >= 2 && (looseHandles ? handleProblem(data.handle ?? '', { loose: true, isAdmin: true }) === null : /^[a-z0-9_]{3,20}$/.test(data.handle ?? '')),
+    you: (data.stageName ?? '').trim().length >= 2 && (looseHandles ? handleProblem(data.handle ?? '', { loose: true }) === null : /^[a-z0-9_]{3,20}$/.test(data.handle ?? '')),
     sound: (data.genres?.length ?? 0) > 0 && (data.pitch ?? '').trim().length >= 10,
     links: linkCount > 0 && Object.keys(links).every((p) => !linkErr(p)),
     look: true,
@@ -380,7 +380,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                         <BigInput label="Artist or brand name" value={data.stageName ?? ''} maxLength={40} onChange={(e) => set({ stageName: e.target.value })} placeholder="Your name on the page" autoFocus />
                       </Rise>
                       <Rise i={1}>
-                        <BigInput label="Your username" hint={looseHandles ? 'Letters, numbers, dots, dashes, _' : 'Letters, numbers, _'} prefix="logoless.io/@" value={data.handle ?? ''} maxLength={20} onChange={(e) => set({ handle: handleChars(e.target.value, looseHandles) })} placeholder="yourname" />
+                        <BigInput label="Your username" hint={looseHandles ? 'Letters, numbers, dots, dashes, _' : 'Letters, numbers, _'} prefix="logoless.io/@" value={data.handle ?? ''} maxLength={20} onChange={(e) => set({ handle: handleChars(e.target.value, looseHandles) })} error={looseHandles && (data.handle ?? '').length >= 3 ? (handleProblem(data.handle ?? '', { loose: true }) ?? undefined) : undefined} placeholder="yourname" />
                       </Rise>
                       <Rise i={2}>
                         <Label>Where are you based?</Label>
