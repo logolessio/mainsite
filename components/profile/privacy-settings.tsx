@@ -182,7 +182,7 @@ export function PrivacySettings() {
 
       <p className="text-xs leading-relaxed text-mute">Your username, display name, picture and banner are part of your page, so anyone who can see the page sees them. Nothing here changes what the logoless team can see to run payouts and checks.</p>
 
-      <div className="sticky bottom-4 z-20 rounded-3xl border border-line-strong bg-surface/95 p-2.5 backdrop-blur">
+      <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 md:bottom-4 rounded-3xl border border-line-strong bg-surface/95 p-2.5 backdrop-blur">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pl-1.5">
           <ActionButton data-hotkey-save onClick={() => void save()} disabled={saving || !dirty} className="rounded-pill">
             {saving && <Loader2 className="size-4 animate-spin" />} Save privacy

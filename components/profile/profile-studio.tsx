@@ -162,7 +162,8 @@ export function ProfileStudio() {
 
   const open = (t: EditTarget) => {
     setPanel(t)
-    if (!wide) stage.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    // after the sheet has started to open, so nothing else moves the page in the same moment
+    if (!wide) window.setTimeout(() => stage.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
   }
 
   // Escape closes a panel
@@ -300,7 +301,7 @@ export function ProfileStudio() {
   )
 
   const preview = (
-    <div ref={stage} className="scroll-mt-24">
+    <div>
       <div className="mb-3 flex items-center justify-between font-mono text-xs text-mute">
         <span>Live preview · tap a pencil to edit</span>
         <span className="hidden sm:inline">Example numbers</span>
@@ -310,11 +311,12 @@ export function ProfileStudio() {
         <button type="button" onClick={() => open('background')} className="absolute top-3 left-3 z-30 inline-flex h-9 items-center gap-1.5 rounded-pill border border-white/25 bg-black/65 px-3 text-xs text-white backdrop-blur-md transition-colors hover:bg-black/85">
           <ImageIcon className="size-3.5" /> Background <Pencil className="size-3" />
         </button>
-        <div className="relative z-10 flex justify-center px-3 pt-16 pb-8 sm:px-6">
+        <div ref={stage} className="relative z-10 flex scroll-mt-5 justify-center px-3 pt-16 pb-8 sm:px-6">
           <ProfileCard
             preview
             isOwner
             studio
+            className="w-full max-w-[440px]"
             onEdit={open}
             view={f}
             stats={{ ...(f.show.clips ? { clips: 12 } : {}), ...(f.show.views ? { views: 48200 } : {}), ...(f.show.earnings ? { earnedCents: 32000 } : {}), ...(f.show.campaigns ? { campaigns: 4 } : {}) }}
@@ -359,7 +361,7 @@ export function ProfileStudio() {
               initial={{ y: '100%' }}
               animate={{ y: 0, transition: { duration: 0.38, ease: EASE_OUT } }}
               exit={{ y: '100%', transition: { duration: 0.22 } }}
-              className="fixed inset-x-0 bottom-0 z-[81] mx-auto max-h-[62dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-[28px] border border-b-0 border-line-strong bg-[#0b0b0d] px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-30px_60px_-20px_rgb(0_0_0/0.9)]"
+              className="fixed inset-x-0 bottom-0 z-[81] mx-auto max-h-[58dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-[28px] border border-b-0 border-line-strong bg-[#0b0b0d] px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-30px_60px_-20px_rgb(0_0_0/0.9)]"
             >
               <span aria-hidden="true" className="mx-auto mb-3 block h-1 w-10 rounded-pill bg-white/25" />
               <PanelHeader title={PANEL_TITLE[panel]} onClose={() => setPanel(null)} />
@@ -373,7 +375,7 @@ export function ProfileStudio() {
       </AnimatePresence>
 
       {/* ---------- save bar ---------- */}
-      <div className="sticky bottom-4 z-20 mt-6 rounded-3xl border border-line-strong bg-surface/95 p-2.5 backdrop-blur">
+      <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 md:bottom-4 mt-6 rounded-3xl border border-line-strong bg-surface/95 p-2.5 backdrop-blur">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pl-1.5">
           <ActionButton data-hotkey-save onClick={() => void save()} disabled={saving || !dirty} className="rounded-pill">
             {saving && <Loader2 className="size-4 animate-spin" />} Save profile
