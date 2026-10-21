@@ -128,6 +128,26 @@ export async function unsubscribe(key: string, token: string): Promise<boolean> 
   return true
 }
 
+/** The username this address reserved on the waitlist, if it still holds one. */
+export async function reservedHandleFor(email: string): Promise<string | null> {
+  try {
+    const s = await signupFor(await emailKey(email))
+    return s && !s.u && s.h ? s.h : null
+  } catch {
+    return null
+  }
+}
+
+/** True when the username was reserved on the waitlist by a different address, so nobody else can take it once the site is open. */
+export async function reservedByAnother(handle: string, email: string): Promise<boolean> {
+  try {
+    const row = await (await db()).prepare('SELECT value FROM settings WHERE key = ?1').bind(`launch-handle:${normHandle(handle)}`).first<{ value: string }>()
+    return Boolean(row) && row?.value !== (await emailKey(email))
+  } catch {
+    return false
+  }
+}
+
 /** One person on the list, by the hash of their address. */
 export async function signupFor(key: string): Promise<Signup | null> {
   const row = await (await db()).prepare('SELECT value FROM settings WHERE key = ?1').bind(`launch-signup:${key}`).first<{ value: string }>()

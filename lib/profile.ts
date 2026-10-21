@@ -29,6 +29,7 @@ import {
 import type { UserRow } from './user'
 import { normalizeExtras, parseExtras } from './profile-extras'
 import { featureOn } from './features'
+import { reservedByAnother, reservedHandleFor } from './launch'
 
 type ProfileRow = {
   user_id: string
@@ -113,8 +114,10 @@ export async function ensureProfile(user: UserRow): Promise<ProfileRow> {
   const base = slug(user.email)
   const t = nowSec()
   const name = clean(user.name ?? base).slice(0, 40) || base
+  // a username this address reserved on the waitlist is the first one tried
+  const tries = [...(await reservedHandleFor(user.email).then((h) => (h ? [h] : []))), base]
   for (let i = 0; i < 20; i++) {
-    let handle = i === 0 ? base : `${base}${Math.floor(1000 + Math.random() * 9000)}`.slice(0, 20)
+    let handle = i < tries.length ? tries[i] : `${base}${Math.floor(1000 + Math.random() * 9000)}`.slice(0, 20)
     // Official-looking names are not handed out automatically.
     if (RESERVED_WORDS.some((w) => handle.includes(w))) handle = `user${Math.floor(100000 + Math.random() * 900000)}`
     const res = await d
@@ -250,6 +253,7 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
 
   if (input.handle !== undefined && input.handle.trim().toLowerCase().replace(/^@/, '') !== cur.handle) {
     next.handle = validHandle(input.handle, user.role === 'admin', await featureOn('username-punctuation'))
+    if (await reservedByAnother(next.handle, user.email)) throw new HttpError(409, 'That username was reserved by someone on the waitlist.')
     changed.push('handle')
   }
   if (input.displayName !== undefined) {

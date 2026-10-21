@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { featureOn } from '@/lib/features'
 import { protect } from '@/lib/guard'
+import { reservedByAnother } from '@/lib/launch'
 import { json, route } from '@/lib/http'
 import { RESERVED_WORDS, HANDLE_RE, HANDLE_RESERVED_MSG, handleProblem } from '@/lib/profile-style'
 import { requireUser } from '@/lib/user'
@@ -20,5 +21,8 @@ export const GET = route(async (req: Request) => {
   }
   const d = await db()
   const row = await d.prepare('SELECT user_id FROM profiles WHERE handle = ?1').bind(h).first<{ user_id: string }>()
-  return json({ available: !row || row.user_id === user.id })
+  if (row && row.user_id !== user.id) return json({ available: false })
+  // a username somebody reserved on the waitlist is theirs when the site opens
+  if (await reservedByAnother(h, user.email)) return json({ available: false, reason: 'reserved-waitlist', message: 'That username was reserved on the waitlist.' })
+  return json({ available: true })
 })
