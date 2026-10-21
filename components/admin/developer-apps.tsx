@@ -33,8 +33,8 @@ export function DeveloperApps({ apps }: { apps: A[] }) {
           </ul>
           <div className="flex flex-wrap gap-2">
             {a.verified ? <AdminButton url={`/api/admin/oauth/${a.id}`} data={{ action: 'unverify' }}>Remove check</AdminButton> : <AdminButton variant="solid" url={`/api/admin/oauth/${a.id}`} data={{ action: 'verify' }}>Mark as checked</AdminButton>}
-            {a.suspended ? <AdminButton url={`/api/admin/oauth/${a.id}`} data={{ action: 'restore' }}>Switch back on</AdminButton> : <AdminButton variant="danger" url={`/api/admin/oauth/${a.id}`} data={{ action: 'suspend' }}>Switch off</AdminButton>}
-            <AdminButton variant="danger" url={`/api/admin/oauth/${a.id}`} data={{ action: 'delete' }} confirm={`Delete ${a.name} for good?`}>Delete</AdminButton>
+            {a.suspended ? <AdminButton url={`/api/admin/oauth/${a.id}`} data={{ action: 'restore' }}>Switch back on</AdminButton> : <AdminButton variant="danger" url={`/api/admin/oauth/${a.id}`} data={{ action: 'suspend' }} confirm={`Switch ${a.name} off?`} summary={['People can no longer sign in to it with logoless.', 'You can switch it back on at any time.']}>Switch off</AdminButton>}
+            <AdminButton variant="danger" url={`/api/admin/oauth/${a.id}`} data={{ action: 'delete' }} confirm={`Delete ${a.name} for good?`} summary={['Everyone signed in through it is signed out, and its keys stop working.']} typed="DELETE">Delete</AdminButton>
           </div>
         </li>
       ))}

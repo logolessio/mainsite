@@ -137,7 +137,7 @@ export default async function Page() {
                     </AdminButton>
                   )}
                   {!r.user_id && !r.campaign_id && (
-                    <AdminButton variant="danger" url={`/api/admin/invites/${r.id}`} data={{ action: 'delete' }} confirm={`Delete the link for ${r.artist_name}?`}>
+                    <AdminButton variant="danger" url={`/api/admin/invites/${r.id}`} data={{ action: 'delete' }} confirm={`Delete the link for ${r.artist_name}?`} summary={['The link stops working and its answers are removed.']} typed="DELETE">
                       Delete
                     </AdminButton>
                   )}

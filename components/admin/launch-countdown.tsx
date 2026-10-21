@@ -1,5 +1,6 @@
 'use client'
 
+import { askConfirm } from './confirm-dialog'
 import { Loader2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { ActionButton, Card, Toggle } from '@/components/app/ui'
@@ -78,7 +79,7 @@ export function LaunchCountdown() {
   const sendAll = async () => {
     if (!counts) return
     const live = counts.total - counts.unsubscribed
-    if (!window.confirm(`Send this update to ${live} ${live === 1 ? 'person' : 'people'} on the list?`)) return
+    if (!(await askConfirm({ title: `Email ${live} ${live === 1 ? 'person' : 'people'}?`, summary: [`Subject: "${subject}"`, `Goes to everyone on the launch list who has not unsubscribed (${live}).`, 'An email cannot be taken back once it is sent.'], word: 'SEND', action: 'Send the email', danger: true }))) return
     const secret = await askAdminSecret(`This emails everyone on the launch list (${live}).`)
     if (!secret) return
     let after: string | undefined

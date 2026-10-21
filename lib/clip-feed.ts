@@ -2,7 +2,6 @@ import { embedSrc, isTall, postId } from './clip-embed'
 import { fetchClipMeta, type ClipMeta, type MetaKeys } from './clip-meta'
 import { db, nowSec, setting } from './db'
 import { avatarSrc } from './looks'
-import { mockVisible } from './mock-campaigns'
 import { getSession } from './session'
 
 /**
@@ -57,7 +56,8 @@ const FROM = `FROM submissions s
   JOIN profiles p ON p.user_id = s.user_id
   LEFT JOIN clip_meta m ON m.submission_id = s.id`
 
-const notMock = async () => ((await mockVisible()) ? '' : "AND c.id NOT LIKE 'mock-%'")
+/** There are no sample campaigns any more; this keeps any leftovers out of the feed. */
+const notMock = async () => "AND c.id NOT LIKE 'mock-%' AND COALESCE(c.admin_note, '') != 'sample'"
 
 /** A star average that does not let one 5-star vote beat fifty 4-star ones: every clip starts with three made-up 3-star votes. */
 export const BAYES = '((COALESCE(r.total, 0) + 9.0) / (COALESCE(r.n, 0) + 3))'

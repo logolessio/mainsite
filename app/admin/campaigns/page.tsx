@@ -97,13 +97,13 @@ export default async function Page() {
                         <>
                           <AdminButton url={`/api/admin/campaigns/${c.id}`} data={{ action: pins.has(c.id) ? 'unpin' : 'pin' }} hotkey="t">{pins.has(c.id) ? 'Unpin' : 'Pin to top'}</AdminButton>
                           <AdminButton url={`/api/admin/campaigns/${c.id}`} data={{ action: 'pause' }} hotkey="p" ask={{ label: 'Reason (optional)' }}>Pause</AdminButton>
-                          <AdminButton variant="danger" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'end' }} confirm="End this campaign? It stops taking clips.">End</AdminButton>
+                          <AdminButton variant="danger" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'end' }} confirm={`End "${c.title}"?`} summary={['It stops taking clips straight away.', 'What is left of the pool goes back to the brand balance.', 'An ended campaign cannot be started again.']} typed="END">End</AdminButton>
                         </>
                       )}
                       {c.status === 'paused' && (
                         <>
                           <AdminButton variant="solid" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'resume' }} hotkey="s">Resume</AdminButton>
-                          <AdminButton variant="danger" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'end' }} confirm="End this campaign?">End</AdminButton>
+                          <AdminButton variant="danger" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'end' }} confirm={`End "${c.title}"?`} summary={['What is left of the pool goes back to the brand balance.', 'An ended campaign cannot be started again.']} typed="END">End</AdminButton>
                         </>
                       )}
                     </div>
@@ -117,7 +117,7 @@ export default async function Page() {
                     <div className="mt-3 flex flex-wrap items-start gap-2">
                       <CampaignEditor c={{ id: c.id, title: c.title, creator: c.creator, summary: c.summary, rate: c.rate_cents / 100, endsOn: c.ends_on ?? '', cover: c.cover_url, previewUrl: c.preview_url ?? '' }} />
                       {c.clips === 0 && c.pool === 0 && (
-                        <AdminButton variant="danger" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'delete' }} confirm={`Delete "${c.title}" for good?`}>Delete</AdminButton>
+                        <AdminButton variant="danger" url={`/api/admin/campaigns/${c.id}`} data={{ action: 'delete' }} confirm={`Delete "${c.title}" for good?`} summary={['The campaign and its page are removed.']} typed="DELETE">Delete</AdminButton>
                       )}
                     </div>
                   </More>

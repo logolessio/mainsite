@@ -278,8 +278,8 @@ export function Keyboard() {
 
   // after a page change: tell screen readers where they are, and after a keyboard click move focus into the new page
   useEffect(() => {
-    const main = document.querySelector<HTMLElement>('main')
-    if (main && !main.id) main.id = 'main'
+    // (the page's <main> is not given an id here: a page that streams in behind its loading screen is still waiting to hydrate when this runs,
+    // and changing its markup first makes React throw it away. The skip link finds <main> by itself.)
     if (first.current) {
       first.current = false
       return

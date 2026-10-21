@@ -4,6 +4,7 @@ import { Loader2, Lock } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useDialog } from '@/hooks/use-dialog'
+import { ConfirmDialogHost } from './confirm-dialog'
 
 type Ask = { resolve: (v: string | null) => void; reason?: string }
 const EVENT = 'logoless:admin-secret'
@@ -15,8 +16,18 @@ export function askAdminSecret(reason?: string): Promise<string | null> {
   })
 }
 
-/** The password box itself. If no admin password exists yet it offers to make one. */
+/** The password box, and the box that asks before risky actions (components/admin/confirm-dialog.tsx). */
 export function SecretDialogHost() {
+  return (
+    <>
+      <ConfirmDialogHost />
+      <SecretBox />
+    </>
+  )
+}
+
+/** The password box itself. If no admin password exists yet it offers to make one. */
+function SecretBox() {
   const [ask, setAsk] = useState<Ask | null>(null)
   const [isSet, setIsSet] = useState<boolean | null>(null)
   const [pw, setPw] = useState('')

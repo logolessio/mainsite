@@ -12,6 +12,8 @@ export function FeaturesProvider({ dev, on, children }: Value & { children: Reac
 /** True when a feature is switched on for this site (always true on the dev site). */
 export const useFeature = (id: string) => useContext(Ctx).on[id] === true
 export const useIsDevSite = () => useContext(Ctx).dev
+/** Every feature and whether it is on here. */
+export const useFeatures = () => useContext(Ctx).on
 
 /** Renders its children only when the feature is on. */
 export function Feature({ id, children }: { id: string; children: React.ReactNode }) {

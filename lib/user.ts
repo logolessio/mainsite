@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { connection } from 'next/server'
 import { db, nowSec, uid } from './db'
 import { HttpError } from './http'
+import { ownerEmails } from './roles'
 import { getSession } from './session'
 import { getSetting } from './settings'
 
@@ -58,6 +59,22 @@ export async function requireAdmin() {
   if (session?.user?.role !== 'admin') throw new HttpError(403, 'Admins only.')
   const u = await requireUser()
   if (u.role !== 'admin') throw new HttpError(403, 'Admins only.')
+  return u
+}
+
+/** Is this address the owner's (one of ADMIN_EMAILS)? Granted admins are not. */
+export async function isOwnerEmail(email: string | null | undefined) {
+  const e = (email ?? '').trim().toLowerCase()
+  return Boolean(e) && (await ownerEmails()).includes(e)
+}
+
+/**
+ * The owner, and nobody else: for the things a granted admin may not do (moving money by hand, deleting or banning people, owner API
+ * keys, deleting logs, the launch gate). Checked here on the server, so hiding a button is never the only thing in the way.
+ */
+export async function requireOwner() {
+  const u = await requireAdmin()
+  if (!(await isOwnerEmail(u.email))) throw new HttpError(403, 'Only the owner can do this.')
   return u
 }
 

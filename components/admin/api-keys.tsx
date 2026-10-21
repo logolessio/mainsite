@@ -1,5 +1,6 @@
 'use client'
 
+import { askConfirm } from './confirm-dialog'
 import { Check, Copy, Loader2, Plus, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Card } from '@/components/app/ui'
@@ -65,6 +66,7 @@ export function ApiKeys({ base, prompt }: { base: string; prompt: string }) {
     setBusy('')
   }
   const revoke = async (id: string) => {
+    if (!(await askConfirm({ title: 'Revoke this key?', summary: ['Anything using it stops working straight away.', 'A revoked key cannot be switched back on; you would make a new one.'], action: 'Revoke it', danger: true }))) return
     const secret = await askAdminSecret('Revoking stops that key working straight away.')
     if (!secret) return
     setBusy(id)

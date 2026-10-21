@@ -11,7 +11,9 @@ export function DeleteAccountButton({ id, email }: { id: string; email: string }
       data={{ action: 'delete' }}
       ask={{ label: 'Reason (they will see it)', required: true }}
       secret="Deleting an account cannot be undone."
-      confirm={`Permanently delete ${email}? This cannot be undone. They are emailed the reason.`}
+      confirm={`Delete ${email} for good?`}
+      summary={['Their profile, clips and connected accounts are removed.', 'Any money left in their account goes back to the campaigns it came from, and they are emailed the reason.', 'Only the owner can delete an account.']}
+      typed={email}
       onDone={(j) => {
         if ((j as { emailed?: boolean } | null)?.emailed === false) window.alert('The account was deleted, but the email could not be sent. Let them know another way.')
       }}

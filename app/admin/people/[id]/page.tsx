@@ -71,7 +71,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
               <dd>{discord ? (bot ? 'Linked, the bot can message them' : 'Linked, bot not set up yet') : 'Not linked'}</dd>
             </dl>
             <div className="mt-5 flex flex-wrap gap-2">
-              {!isOwner && <DeleteAccountButton id={u.id} email={u.email} />}
+              {/* only the owner can delete an account (the server checks this too), and never their own */}
+              {!isOwner && viewerIsOwner && <DeleteAccountButton id={u.id} email={u.email} />}
             </div>
           </Card>
           {accounts.length > 0 && (
@@ -117,11 +118,13 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           {!isOwner && (
             <>
               <Card title="Moderation" sub="Suspend, ban or add extra checks. They are told why.">
-                <Moderation id={u.id} status={u.status} risk={u.risk_level} />
+                <Moderation id={u.id} status={u.status} risk={u.risk_level} canBan={viewerIsOwner} />
               </Card>
-              <Card title="Money" sub="Correct a balance by hand. Needs your admin password and a reason the person can see.">
-                <AdjustMoney id={u.id} />
-              </Card>
+              {viewerIsOwner && (
+                <Card title="Money" sub="Correct a balance by hand. Only the owner can, with the admin password and a reason the person can see.">
+                  <AdjustMoney id={u.id} />
+                </Card>
+              )}
             </>
           )}
           <Card title="Verification and badges">

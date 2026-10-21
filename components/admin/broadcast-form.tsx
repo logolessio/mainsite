@@ -1,5 +1,6 @@
 'use client'
 
+import { askConfirm } from './confirm-dialog'
 import { Loader2, Megaphone } from 'lucide-react'
 import { useState } from 'react'
 import { runSiteCheck } from '@/lib/site-check-client'
@@ -40,6 +41,13 @@ export function BroadcastForm() {
         e.preventDefault()
         let secret: string | undefined
         if (big) {
+          const ok = await askConfirm({
+            title: `Send to ${aud.label.toLowerCase()}?`,
+            summary: [`"${title}"`, onlyDiscord ? 'Posted in the Discord server.' : `Every one of them is notified${email ? ' and emailed' : ''} straight away.`, 'A message cannot be taken back once it is sent.'],
+            word: 'SEND',
+            action: 'Send it',
+          })
+          if (!ok) return
           const p = await askAdminSecret(`This will notify ${aud.label.toLowerCase()} straight away, and it cannot be taken back.`)
           if (!p) return
           secret = p

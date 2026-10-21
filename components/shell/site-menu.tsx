@@ -1,5 +1,7 @@
 'use client'
 
+import { Search } from 'lucide-react'
+import { openSearch } from './spotlight'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import { signOut } from 'next-auth/react'
@@ -28,6 +30,7 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
   const box = useDialog<HTMLElement>(open, onClose, { initial: 'none', inert: false })
   const board = useFeature('leaderboard')
   const reels = useFeature('reels')
+  const findable = useFeature('command-actions')
   const status = useFeature('status-page')
   const feed = useFeature('submissions-feed')
   const stats = useFeature('stats-page')
@@ -65,6 +68,19 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
             exit={{ x: '100%', transition: { duration: 0.35, ease: [0.32, 0.72, 0, 1] } }}
             className="no-scrollbar fixed top-0 right-0 bottom-0 z-[45] flex transform-gpu will-change-transform w-[min(26rem,100vw)] flex-col overflow-y-auto border-l border-line bg-ink px-8 pt-24 pb-8 text-paper"
           >
+            {findable && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose()
+                  window.setTimeout(openSearch, 380)
+                }}
+                className="mb-6 flex h-12 w-full items-center gap-3 rounded-pill border border-line-strong bg-white/[0.03] px-5 text-left text-[15px] text-paper/55 transition-colors hover:border-paper/30 hover:text-paper"
+              >
+                <Search aria-hidden="true" className="size-4 shrink-0" />
+                <span className="flex-1">Search, or do something</span>
+              </button>
+            )}
             <nav aria-label="Main">
               <ul className="[&:hover>li:not(:hover)]:opacity-35">
                 {NAV_LINKS.map((l, i) => {

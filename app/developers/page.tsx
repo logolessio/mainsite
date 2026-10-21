@@ -5,6 +5,7 @@ import { DevelopersGuide } from '@/components/developers/guide'
 import { BUTTON_SNIPPET, LoginWithLogoless } from '@/components/developers/login-button'
 import { Breadcrumbs } from '@/components/marketing/breadcrumbs'
 import { PageHero } from '@/components/marketing/page-hero'
+import { RolePreview } from '@/components/marketing/role-preview'
 import { PillLink } from '@/components/motion/cta'
 import { featureOn } from '@/lib/features'
 import { CONTAINER } from '@/lib/layout'
@@ -63,6 +64,8 @@ export default async function Page() {
           ))}
         </div>
       </section>
+
+      <RolePreview role="developer" />
 
       <section id="guide" className={`${CONTAINER} pb-16`}>
         <h2 className="font-display text-4xl tracking-[-0.035em] md:text-5xl">Five steps</h2>

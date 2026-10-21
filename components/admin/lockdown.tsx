@@ -1,5 +1,6 @@
 'use client'
 
+import { askConfirm } from './confirm-dialog'
 import { Loader2, ShieldAlert } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -15,7 +16,7 @@ export function LockdownButton({ locked }: { locked: boolean }) {
   const [error, setError] = useState('')
   const flip = async () => {
     const next = !locked
-    if (next && !window.confirm('Stop withdrawals, new clips and new sign-ups for everyone right now?')) return
+    if (next && !(await askConfirm({ title: 'Lock the site down?', summary: ['Withdrawals stop for everyone.', 'No new clips can be submitted.', 'No new accounts can be made.', 'Nothing is lost: open it again with the same button.'], action: 'Lock it down', danger: true }))) return
     const pass = await askAdminSecret(next ? 'This stops withdrawals, new clips and sign-ups for everyone.' : 'This opens withdrawals, clips and sign-ups again.')
     if (!pass) return
     setBusy(true)

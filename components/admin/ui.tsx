@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { runSiteCheck } from '@/lib/site-check-client'
 import { toast } from '@/lib/toast'
 import { askAdminSecret } from './secret-dialog'
+import { askConfirm } from './confirm-dialog'
 
 /** A button that posts JSON to an admin route, then refreshes the page. Shows the server's error if it fails. */
 export function AdminButton({
@@ -15,6 +16,8 @@ export function AdminButton({
   children,
   variant = 'ghost',
   confirm,
+  summary,
+  typed,
   ask,
   secret,
   className,
@@ -25,7 +28,12 @@ export function AdminButton({
   data: Record<string, unknown>
   children: React.ReactNode
   variant?: 'solid' | 'ghost' | 'danger'
+  /** Asks first, in a dialog that says what will happen. */
   confirm?: string
+  /** The facts shown in that dialog, one per line ("$40.00 goes to ana@example.com on PayPal"). */
+  summary?: string[]
+  /** For something that cannot be undone: the word that has to be typed before it runs (DELETE, their email, the campaign name). */
+  typed?: string
   /** Asks for a short typed reason first; it is sent as `note` (or the key you pass). */
   ask?: { label: string; key?: string; required?: boolean }
   /** Needs the admin password before it runs: use it for anything that could hurt the company. */
@@ -42,7 +50,7 @@ export function AdminButton({
   const [text, setText] = useState('')
 
   const run = async (extra?: Record<string, unknown>) => {
-    if (confirm && !window.confirm(confirm)) return
+    if ((confirm || typed || summary) && !(await askConfirm({ title: confirm ?? 'Are you sure?', summary, word: typed, danger: variant === 'danger', action: typeof children === 'string' ? children : undefined }))) return
     let pass: string | null = null
     if (secret) {
       pass = await askAdminSecret(typeof secret === 'string' ? secret : undefined)

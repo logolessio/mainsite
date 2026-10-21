@@ -53,7 +53,7 @@ export default async function Page() {
                     <p className="mt-1 text-xs text-mute">Requested {when(p.created_at)}. Held because: {p.review_reason ?? 'review'}</p>
                   </div>
                   <div className="flex gap-2">
-                    <AdminButton variant="solid" url={`/api/admin/payouts/${p.id}`} data={{ action: 'approve' }} confirm={`Send ${money(p.amount_cents)} to ${p.paypal_email ?? p.email} on PayPal now?`}>Approve and send</AdminButton>
+                    <AdminButton variant="solid" url={`/api/admin/payouts/${p.id}`} data={{ action: 'approve' }} confirm={`Send ${money(p.amount_cents)} now?`} summary={[`${money(p.amount_cents)} goes to ${p.paypal_email ?? p.email} on PayPal straight away.`, `Held because: ${p.review_reason ?? 'review'}.`, 'A PayPal payment cannot be called back from here.']} secret={`Sending ${money(p.amount_cents)} to ${p.paypal_email ?? p.email}.`}>Approve and send</AdminButton>
                     <AdminButton variant="danger" url={`/api/admin/payouts/${p.id}`} data={{ action: 'reject' }} ask={{ label: 'Why? (the clipper sees this)', required: true }}>Decline</AdminButton>
                   </div>
                 </div>

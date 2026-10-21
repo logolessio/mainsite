@@ -1,5 +1,6 @@
 'use client'
 
+import { askConfirm } from './confirm-dialog'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Toggle } from '@/components/app/ui'
@@ -27,7 +28,7 @@ export function Switch({ k, label, hint, on, danger, endpoint }: { k: string; la
         label={label}
         checked={v}
         onChange={async (next) => {
-          if (next && danger && !window.confirm(`${label}? This takes effect straight away.`)) return
+          if (next && danger && !(await askConfirm({ title: `${label}?`, summary: ['It takes effect for every member straight away.', 'You can switch it back at any time; nothing is lost.'], action: 'Switch it on', danger: true }))) return
           // a switch that could stop the company needs the admin password, whichever way it is flipped
           const pass = danger ? await askAdminSecret(`Switching "${label}" ${next ? 'on' : 'off'} affects every member.`) : undefined
           if (danger && !pass) return

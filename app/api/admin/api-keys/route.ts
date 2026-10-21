@@ -4,7 +4,7 @@ import { API_SCOPES, createApiKey, isScope, listApiKeys, revokeApiKey } from '@/
 import { audit } from '@/lib/chain'
 import { ipHash, protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
-import { requireAdmin } from '@/lib/user'
+import { requireAdmin, requireOwner } from '@/lib/user'
 
 export const GET = route(async () => {
   await requireAdmin()
@@ -18,7 +18,8 @@ const schema = z.discriminatedUnion('action', [
 
 /** Make or revoke a key for the owner API. Both ask for the admin password. A new key is shown once and never again. */
 export const POST = route(async (req: Request) => {
-  const admin = await requireAdmin()
+  // a key can run admin work from anywhere, so only the owner makes or revokes them
+  const admin = await requireOwner()
   await protect(req, { name: 'admin-api-keys', max: 20, windowSec: 600, userId: admin.id })
   const parsed = schema.safeParse(await body(req, 2048))
   if (!parsed.success) throw new HttpError(400, 'Give the key a name and at least one scope.')

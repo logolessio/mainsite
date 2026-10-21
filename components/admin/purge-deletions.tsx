@@ -1,5 +1,7 @@
 'use client'
 
+import { askConfirm } from './confirm-dialog'
+import { askAdminSecret } from './secret-dialog'
 import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -19,10 +21,13 @@ export function PurgeDeletions({ waiting, due }: { waiting: number; due: number 
         type="button"
         disabled={busy || !due}
         onClick={async () => {
-          if (!window.confirm(`Permanently delete ${due} ${due === 1 ? 'account' : 'accounts'} now? Any money left goes where each person chose.`)) return
+          const ok = await askConfirm({ title: `Delete ${due} ${due === 1 ? 'account' : 'accounts'} now?`, summary: ['Only accounts whose 30 days are up are removed.', 'Any money left goes where each person chose.', 'Only the owner can do this, with the admin password.'], word: 'DELETE', action: 'Delete them' })
+          if (!ok) return
+          const secret = await askAdminSecret('Deleting accounts cannot be undone.')
+          if (!secret) return
           setBusy(true)
           setMsg('')
-          const res = await fetch('/api/admin/deletions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' }).catch(() => null)
+          const res = await fetch('/api/admin/deletions', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ secret }) }).catch(() => null)
           const j = (await res?.json().catch(() => ({}))) as { error?: string; removed?: number; failed?: string[] } | undefined
           setBusy(false)
           setMsg(res?.ok ? `Removed ${j?.removed ?? 0}.${j?.failed?.length ? ` Could not remove: ${j.failed.join('; ')}` : ''}` : (j?.error ?? 'Failed.'))

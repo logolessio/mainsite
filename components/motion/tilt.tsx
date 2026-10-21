@@ -60,15 +60,12 @@ export function Tilt3D({
 
   return (
     <div ref={ref} onPointerMove={local} onPointerLeave={reset} style={{ perspective }} className={cn('tilt relative', className)}>
-      <motion.div style={on ? { rotateX, rotateY, transformStyle: 'preserve-3d' } : undefined} className="relative">
+      <motion.div style={on ? { rotateX, rotateY, transformStyle: 'preserve-3d' } : undefined} className="relative rounded-[inherit]">
         {children}
+        {/* The light rides on the tilted card itself and is clipped to its rounded shape, so it moves with the card (and with anything
+            that floats the whole tilt) and never shows past the corners or stops short at a square edge. */}
+        {glare && on && <div aria-hidden="true" className="sheen-sweep pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]" />}
       </motion.div>
-      {/* The light lives on the outer box, so it covers the whole card, padding included, not just the inner content. */}
-      {glare && on && (
-        <>
-          <div aria-hidden="true" className="sheen-sweep pointer-events-none absolute inset-0 overflow-hidden" />
-        </>
-      )}
     </div>
   )
 }

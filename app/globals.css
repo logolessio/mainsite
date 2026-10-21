@@ -1244,3 +1244,86 @@ html.tr-idle * {
 html.calm .sk {
   animation: none;
 }
+
+/* a campaign cover rising into place on the home page ("Home page motion"): short, light, no blur, so it never looks heavy */
+@keyframes cover-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0) scale(0.975);
+  }
+}
+.cover-in {
+  animation: cover-in 0.62s var(--ease-out) backwards;
+  animation-delay: var(--d, 0ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cover-in {
+    animation: none;
+  }
+}
+html.calm .cover-in {
+  animation: none;
+}
+
+/* the soft shade and blur along the top of the home page once it has scrolled ("Home page motion"). The blur fades out downwards. */
+.top-veil {
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%);
+}
+html.calm .top-veil {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* a loading spinner that waits a moment before it shows, so a quick load never flashes it (see components/ui/loader.tsx) */
+@keyframes loader-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes loader-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.loader-wait {
+  animation: loader-in 0.35s var(--ease-out) backwards;
+  animation-delay: var(--wait, 180ms);
+}
+.loader-ring {
+  animation: loader-spin 0.9s linear infinite;
+}
+.loader-dot {
+  animation: loader-dot 1.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .loader-ring {
+    animation-duration: 2.4s;
+  }
+  .loader-dot {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* the hairline under the calm mode notice that empties over its 20 seconds */
+@keyframes calm-timer {
+  to {
+    transform: scaleX(0);
+  }
+}
+.calm-timer {
+  animation: calm-timer linear forwards;
+}

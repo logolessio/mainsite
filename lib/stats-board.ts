@@ -2,7 +2,6 @@ import { BAYES, thumbFor } from './clip-feed'
 import { postId } from './clip-embed'
 import { db, nowSec } from './db'
 import { avatarSrc } from './looks'
-import { mockVisible } from './mock-campaigns'
 
 /**
  * Everything on /stats: the totals and the leaderboards, for this week, this month or all time. A person is only ever listed by a number
@@ -66,14 +65,13 @@ const clip = (r: ClipRow): ClipStat => {
 const memo = new Map<string, { at: number; board: Board }>()
 
 export async function statsBoard(range: StatsRange): Promise<Board> {
-  const mock = await mockVisible()
-  const key = `${range}:${mock ? 1 : 0}`
+  const key = range
   const hit = memo.get(key)
   if (hit && Date.now() - hit.at < 60_000) return hit.board
 
   const days = STATS_RANGES.find((r) => r.id === range)?.days ?? null
   const since = days ? nowSec() - days * 86400 : 0
-  const notMock = mock ? '' : "AND c.id NOT LIKE 'mock-%'"
+  const notMock = "AND c.id NOT LIKE 'mock-%' AND COALESCE(c.admin_note, '') != 'sample'"
   const inRange = 's.created_at >= ?1'
   const feed = `${shows('feed', 1)} AND COALESCE(m.gone, 0) = 0`
   const d = await db()

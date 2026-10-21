@@ -11,7 +11,7 @@ import { body, HttpError, json, route } from '@/lib/http'
 import { balances } from '@/lib/ledger'
 import { notify } from '@/lib/notify'
 import { markVerified } from '@/lib/verification'
-import { requireAdmin } from '@/lib/user'
+import { isOwnerEmail, requireAdmin } from '@/lib/user'
 
 const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('message'), title: z.string().trim().min(2).max(100), text: z.string().trim().max(240).default(''), href: z.string().trim().max(200).optional(), email: z.boolean().optional() }),
@@ -71,7 +71,10 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
     return json({ ok: true })
   }
 
-  // adjust: move money by hand, with a reason. Needs the admin password. A debit can never take a balance below zero.
+  // adjust: move money by hand, with a reason. Only the owner, never on their own account, and with the admin password.
+  // A debit can never take a balance below zero.
+  if (!(await isOwnerEmail(admin.email))) throw new HttpError(403, 'Only the owner can change a balance by hand.')
+  if (u.id === admin.id) throw new HttpError(400, 'You cannot change your own balance.')
   await requireAdminSecret(admin.id, a.secret)
   const cents = Math.round(a.amount * 100)
   const rowId = uid()

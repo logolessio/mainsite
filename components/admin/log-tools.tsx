@@ -1,5 +1,7 @@
 'use client'
 
+import { askAdminSecret } from './secret-dialog'
+import { askConfirm } from './confirm-dialog'
 import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -18,10 +20,12 @@ export function CleanupLogs() {
         type="button"
         disabled={busy || Number(days) < 7}
         onClick={async () => {
-          if (!window.confirm(`Permanently delete activity log rows older than ${days} days? The audit log is not affected. Export first if you want a copy.`)) return
+          if (!(await askConfirm({ title: `Delete activity older than ${days} days?`, summary: ['Removes old rows from the activity log for good.', 'The audit log (who did what) is not touched.', 'Export first if you want a copy. Only the owner can do this.'], word: 'DELETE', action: 'Delete old rows' }))) return
+          const secret = await askAdminSecret('Deleting logs cannot be undone.')
+          if (!secret) return
           setBusy(true)
           setMsg('')
-          const res = await fetch('/api/admin/logs-cleanup', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ days: Number(days) }) }).catch(() => null)
+          const res = await fetch('/api/admin/logs-cleanup', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ days: Number(days), secret }) }).catch(() => null)
           const j = (await res?.json().catch(() => ({}))) as { error?: string; deleted?: number } | undefined
           setBusy(false)
           setMsg(res?.ok ? `Deleted ${j?.deleted ?? 0} rows.` : (j?.error ?? 'Failed.'))
