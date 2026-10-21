@@ -24,7 +24,7 @@ export function LiveToasts() {
     const q = since.current ? `?since=${since.current}` : '?limit=1'
     const res = await fetch(`/api/me/notifications${q}`, { cache: 'no-store' }).catch(() => null)
     if (!res?.ok) return
-    const j = (await res.json().catch(() => null)) as { items: Note[]; unread?: number } | null
+    const j = (await res.json().catch(() => null)) as { items: Note[]; unread?: number; quiet?: boolean } | null
     if (!j) return
     const newest = j.items.reduce((m, n) => Math.max(m, n.created_at), since.current ?? 0)
     // the first look only sets the starting point: nothing old pops up
@@ -32,7 +32,8 @@ export function LiveToasts() {
       const fresh = j.items.filter((n) => !n.read_at && !seen.current.has(n.id))
       fresh.forEach((n) => seen.current.add(n.id))
       if (fresh.length) {
-        setToasts((cur) => [...fresh.slice(0, 3), ...cur].slice(0, 3))
+        // quiet hours (notification centre): the bell still counts them, nothing pops up
+        if (!j.quiet) setToasts((cur) => [...fresh.slice(0, 3), ...cur].slice(0, 3))
         if (typeof j.unread === 'number') setUnread(j.unread)
       }
     }

@@ -1,0 +1,85 @@
+/* The gold sidebar item (Recap, until it has been opened). Quiet on purpose: a thin gold edge, gold lettering and one slow
+   sweep of light every few seconds. No sweep in calm mode or for people who asked for less motion. */
+
+.gold {
+  isolation: isolate;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgb(243 210 122 / 0.11), rgb(243 210 122 / 0.03));
+  box-shadow: 0 12px 30px -16px rgb(212 165 55 / 0.55);
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+.gold:hover,
+.gold:focus-visible {
+  box-shadow: 0 14px 34px -14px rgb(212 165 55 / 0.7);
+}
+
+/* a 1px edge drawn with a gradient (the middle of the box is masked away) */
+.ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(120deg, #7a5a17, #e9c56c 28%, #fff4d2 44%, #d0a03a 62%, #6e5114);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(105deg, transparent 38%, rgb(255 242 205 / 0.16) 50%, transparent 62%);
+  background-size: 260% 100%;
+  background-position: 130% 0;
+  animation: sweep 6s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+.text {
+  background: linear-gradient(100deg, #cf9f3a 0%, #f2d488 32%, #fffaf0 50%, #f2d488 68%, #cf9f3a 100%);
+  background-size: 260% 100%;
+  background-position: 130% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 500;
+  animation: sweep 6s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+.icon {
+  color: #efcd78;
+  filter: drop-shadow(0 0 6px rgb(239 205 120 / 0.45));
+}
+
+.dot {
+  background: #f3d27a;
+  box-shadow: 0 0 10px 1px rgb(243 210 122 / 0.75);
+}
+
+@keyframes sweep {
+  0% {
+    background-position: 130% 0;
+  }
+  55%,
+  100% {
+    background-position: -30% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheen,
+  .text {
+    animation: none;
+    background-position: 50% 0;
+  }
+}
+:global(html.calm) .sheen,
+:global(html.calm) .text {
+  animation: none;
+  background-position: 50% 0;
+}

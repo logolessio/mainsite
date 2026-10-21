@@ -3,6 +3,8 @@
 import { Bell, Check, Mail } from 'lucide-react'
 import { BrandIcon } from '@/components/brand-icon'
 import { useEffect, useState } from 'react'
+import { useFeature } from '@/components/shell/features-provider'
+import { TransitionLink } from '@/components/shell/transition-link'
 import { cn } from '@/lib/utils'
 import { Card } from './ui'
 
@@ -14,8 +16,21 @@ const Disc = () => <BrandIcon name="discord" className="size-5" />
 const Ring = () => <Bell className="size-5" aria-hidden="true" />
 const ICONS: Record<string, (() => React.JSX.Element)[]> = { both: [Mark, Disc], email: [Mark], discord: [Disc], site: [Ring] }
 
-/** How should we tell you about things that matter, like a campaign ending and what you earned from it? The site's bell always gets it. */
+/** With the notification centre on, this choice is made kind by kind on the notification settings page, so this card points there. */
 export function ContactCard() {
+  return useFeature('notification-center') ? (
+    <Card id="contact" title="How we contact you" sub="Choose for each kind of news: on the site, by email or on Discord, with quiet hours and digests.">
+      <TransitionLink href="/dashboard/notifications/settings" className="inline-flex h-10 items-center gap-2 rounded-pill bg-white/[0.06] px-5 text-sm transition-colors hover:bg-white/[0.11]">
+        <Bell aria-hidden="true" className="size-4" /> Notification settings
+      </TransitionLink>
+    </Card>
+  ) : (
+    <ClassicContactCard />
+  )
+}
+
+/** How should we tell you about things that matter, like a campaign ending and what you earned from it? The site's bell always gets it. */
+function ClassicContactCard() {
   const [pref, setPref] = useState<string | null>(null)
   const [options, setOptions] = useState<Option[]>([])
   const [error, setError] = useState('')

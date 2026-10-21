@@ -10,6 +10,8 @@ import { cn } from '@/lib/utils'
 import { useNavUser } from './nav-user'
 import { TransitionLink } from './transition-link'
 import { LiquidGlass } from '@/components/ui/liquid-glass'
+import { useFeature } from './features-provider'
+import { CenterBell } from './notify/center-bell'
 
 export type Note = { id: string; kind: string; title: string; body: string; href: string | null; read_at: number | null; created_at: number }
 
@@ -181,8 +183,13 @@ export function useNoteActions(update: (fn: (cur: Note[]) => Note[]) => void) {
   return { markAll, clear }
 }
 
+/** The bell. With the notification centre switched on it is the cleaner, notifications-only one (see notify/center-bell.tsx). */
+export function NotificationBell(props: { onNavigate?: () => void; align?: 'left' | 'right' }) {
+  return useFeature('notification-center') ? <CenterBell {...props} /> : <ClassicBell {...props} />
+}
+
 /** The bell. It rings when something new arrives, and opens a glass panel with the feed. */
-export function NotificationBell({ onNavigate, align = 'right' }: { onNavigate?: () => void; align?: 'left' | 'right' }) {
+function ClassicBell({ onNavigate, align = 'right' }: { onNavigate?: () => void; align?: 'left' | 'right' }) {
   const { user } = useNavUser()
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<'all' | 'unread'>('all')
