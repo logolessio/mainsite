@@ -1,6 +1,7 @@
 'use client'
 
 import { useUnsavedGuard } from '@/hooks/use-unsaved-guard'
+import { useFeature } from '@/components/shell/features-provider'
 import { toast } from '@/lib/toast'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Ban, Binary, Bug, Camera, Check, ChevronDown, CircleDot, CloudRain, Download, Droplets, Eye, EyeOff, Film, Flame, Flower2, Globe, ImagePlus, Leaf, Link2, Loader2, Palette, PartyPopper, Pencil, Plus, Rocket, Search, Snowflake, Sparkles, Star, Sun, Trash2, Tv, Undo2, User, Waves, Wind, X, Zap, type LucideIcon } from 'lucide-react'
@@ -496,6 +497,7 @@ const SHOW_GROUPS: { title: string; keys: string[] }[] = [
 function Visibility({ show, onChange }: { show: ShowMap; onChange: (s: ShowMap) => void }) {
   const total = SHOW_OPTIONS.length
   const shown = SHOW_OPTIONS.filter((o) => show[o.key]).length
+  const morePrivacy = useFeature('profile-privacy')
   const setAll = (fn: (k: keyof ShowMap, def: boolean) => boolean) => onChange(Object.fromEntries(SHOW_OPTIONS.map((o) => [o.key, fn(o.key, o.on)])) as ShowMap)
   return (
     <div>
@@ -538,6 +540,7 @@ function Visibility({ show, onChange }: { show: ShowMap; onChange: (s: ShowMap) 
         ))}
       </div>
       <p className="mt-4 text-xs text-mute">Your username, name, picture and banner are always public. The preview updates as you tap.</p>
+      {morePrivacy && <a href="/dashboard/profile/privacy" className="mt-3 inline-block text-xs text-paper underline underline-offset-4">More privacy choices: who can see your page, and each account</a>}
     </div>
   )
 }
