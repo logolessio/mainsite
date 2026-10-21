@@ -45,8 +45,8 @@ export function DashLoader({ label }: { label?: string }) {
         <div className="sk mt-4 h-4 w-80 max-w-full rounded-pill bg-white/[0.035]" />
       </div>
       <div aria-hidden="true" className="grid gap-5">
-        <div className="sk h-[180px] rounded-3xl border border-line bg-white/[0.025]" />
-        <div className="sk h-[240px] rounded-3xl border border-line bg-white/[0.02]" />
+        <div className="sk h-[180px] rounded-card border border-line bg-white/[0.025]" />
+        <div className="sk h-[240px] rounded-card border border-line bg-white/[0.02]" />
       </div>
       <Loader label={label} wait={300} className="absolute inset-x-0 top-48" />
     </div>

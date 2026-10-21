@@ -47,7 +47,7 @@ export default async function CampaignPage({ params, searchParams }: Props) {
         <Breadcrumbs trail={[{ name: 'Campaigns', href: '/' }, { name: gone.title }]} />
         <div className="mx-auto flex max-w-md flex-col items-center px-4 pt-16 pb-32 text-center md:pt-24">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={gone.cover} alt="" className="size-40 rounded-[calc(2rem*var(--round,1))] object-cover opacity-60 grayscale" />
+          <img src={gone.cover} alt="" className="size-40 rounded-card object-cover opacity-60 grayscale" />
           <h1 className="mt-8 font-display text-4xl tracking-[-0.03em]">{gone.title}</h1>
           <p className="mt-2 text-mute">by {gone.creator}</p>
           <p className="mt-8 text-xl">This campaign ended {agoText(gone.endedAt)}.</p>

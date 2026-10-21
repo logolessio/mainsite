@@ -66,7 +66,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ r
           {rows.map((r, n) => {
             const pct = r.budget_cents > 0 ? Math.min(100, Math.round((r.spent / r.budget_cents) * 100)) : 0
             return (
-              <li key={r.id} data-tour={n === 0 ? 'campaign' : undefined} className="flex flex-wrap items-center gap-x-6 gap-y-4 rounded-[calc(1.6rem*var(--round,1))] border border-line bg-white/[0.02] p-4 pr-6 sm:flex-nowrap">
+              <li key={r.id} data-tour={n === 0 ? 'campaign' : undefined} className="flex flex-wrap items-center gap-x-6 gap-y-4 rounded-card border border-line bg-white/[0.02] p-4 pr-6 sm:flex-nowrap">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={r.cover_url} alt="" className="size-20 shrink-0 rounded-2xl object-cover" />
                 <div className="min-w-0 flex-1">

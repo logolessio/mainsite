@@ -50,7 +50,7 @@ export default async function Page() {
       </PageHero>
 
       <section className={`${CONTAINER} pb-16`}>
-        <div className="grid gap-px overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-px overflow-hidden rounded-card border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
           {[
             ['A real identity', 'One account per person, with a stable id that is different for every app, so apps cannot compare notes.'],
             ['Profile', 'Name, @handle, picture and a link to the public profile.'],
@@ -208,7 +208,7 @@ const challenge = base64url(
       </section>
 
       <section className={`${CONTAINER} pb-28`}>
-        <div className="rounded-[calc(2rem*var(--round,1))] border border-line-strong p-8 text-center md:p-14">
+        <div className="rounded-card border border-line-strong p-8 text-center md:p-14">
           <h2 className="font-display text-4xl tracking-[-0.035em] md:text-5xl">Ready when you are</h2>
           <p className="mx-auto mt-3 max-w-xl text-paper/60">It takes two minutes to get a client id.</p>
           <div className="mt-7 flex justify-center">

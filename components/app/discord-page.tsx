@@ -90,7 +90,7 @@ export function DiscordPage() {
       </AnimatePresence>
 
       {!o.linked ? (
-        <section className="relative overflow-hidden rounded-3xl border border-line bg-black/45 p-7 md:p-10">
+        <section className="relative overflow-hidden rounded-card border border-line bg-black/45 p-7 md:p-10">
                     <span className="relative grid size-14 place-items-center rounded-2xl border border-white/15 bg-white/[0.06] text-paper">
             <Icon name="Discord" aria-hidden="true" className="size-7" />
           </span>

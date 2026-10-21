@@ -111,7 +111,7 @@ export function AdminButton({
 
 export function Pill({ label, value, note, tone = 'neutral' }: { label: string; value: string; note?: string; tone?: 'neutral' | 'good' }) {
   return (
-    <div className={cn('flex min-w-0 flex-1 flex-col justify-center rounded-[calc(40px*var(--round,1))] border px-7 py-5', tone === 'good' ? 'border-emerald-400/30 bg-emerald-400/[0.04]' : 'border-line-strong bg-surface/80')}>
+    <div className={cn('flex min-w-0 flex-1 flex-col justify-center rounded-card border px-7 py-5', tone === 'good' ? 'border-emerald-400/30 bg-emerald-400/[0.04]' : 'border-line-strong bg-surface/80')}>
       <p className="font-mono text-xs text-mute">{label}</p>
       <p className="mt-1 font-display text-5xl leading-none md:text-6xl">{value}</p>
       {note && <p className="mt-2 text-xs text-mute">{note}</p>}

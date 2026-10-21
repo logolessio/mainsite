@@ -150,7 +150,7 @@ function ProfileIcon({ onNavigate, menuOpen }: { onNavigate?: () => void; menuOp
             transition={{ duration: 0.22, ease: EASE_OUT }}
             className="absolute top-full right-0 z-50 w-72 pt-3"
           >
-            <LiquidGlass rounded="rounded-[calc(26px*var(--round,1))]" look={{ zRadius: 22 }}>
+            <LiquidGlass rounded="rounded-card" look={{ zRadius: 22 }}>
               <div className="h-20 rounded-t-[inherit]" style={{ background: bannerCss(p.banner, p.bannerKind) }} />
               <div className="px-4 pb-4">
                 <Avatar src={p.avatar} name={p.displayName} size={56} className="-mt-9 border-2 border-surface" />

@@ -78,7 +78,7 @@ function Guide({ onClose, onShow }: { onClose: () => void; onShow: (s: StepId) =
         exit={{ opacity: 0, y: 14, transition: { duration: 0.16 } }}
         transition={SPRING_POP}
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[92dvh] w-full max-w-xl flex-col rounded-t-[calc(28px*var(--round,1))] border border-white/12 bg-gradient-to-b from-[#17171b] to-[#0b0b0d] pb-[env(safe-area-inset-bottom)] sm:rounded-[calc(28px*var(--round,1))] sm:pb-0"
+        className="flex max-h-[92dvh] w-full max-w-xl flex-col rounded-t-[calc(1.25rem*var(--round,1))] border border-white/12 bg-gradient-to-b from-[#17171b] to-[#0b0b0d] pb-[env(safe-area-inset-bottom)] sm:rounded-card sm:pb-0"
       >
         <div className="flex items-start justify-between gap-4 px-6 pt-6 md:px-8 md:pt-8">
           <div>

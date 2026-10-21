@@ -10,7 +10,7 @@ export function DeveloperApps({ apps }: { apps: A[] }) {
   return (
     <ul className="grid max-w-4xl gap-3">
       {apps.map((a) => (
-        <li key={a.id} className="grid gap-3 rounded-[calc(1.6rem*var(--round,1))] border border-line bg-white/[0.02] p-5">
+        <li key={a.id} className="grid gap-3 rounded-card border border-line bg-white/[0.02] p-5">
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-lg">{a.name}</p>
             {a.verified && (

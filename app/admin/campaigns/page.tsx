@@ -53,7 +53,7 @@ export default async function Page() {
       hot: v.hot,
       node:
         items.length === 0 ? (
-          <p className="rounded-3xl border border-dashed border-line-strong px-6 py-14 text-center text-mute">{v.empty}</p>
+          <p className="rounded-card border border-dashed border-line-strong px-6 py-14 text-center text-mute">{v.empty}</p>
         ) : (
           <ul className="grid gap-3">
             {items.map((c) => (
@@ -61,7 +61,7 @@ export default async function Page() {
                 <Card>
                   <div className="flex flex-wrap items-center gap-4">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={c.cover_url} alt="" className="size-14 shrink-0 rounded-xl object-cover" />
+                    <img src={c.cover_url} alt="" className="size-14 shrink-0 rounded-panel object-cover" />
                     <div className="min-w-0 flex-1 basis-64">
                       <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-lg leading-tight">
                         {c.title} <span className="text-sm text-mute">by {c.creator}</span>

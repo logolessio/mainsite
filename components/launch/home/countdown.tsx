@@ -36,7 +36,7 @@ function Digit({ v, roll }: { v: string; roll: boolean }) {
 function Tile({ value, label, roll, compact }: { value: number; label: string; roll: boolean; compact: boolean }) {
   const t = String(Math.min(value, 999)).padStart(2, '0')
   return (
-    <div className={cn(s.glass, 'flex min-w-0 flex-1 flex-col items-center rounded-[calc(22px*var(--round,1))]', compact ? 'px-1.5 pt-2 pb-2.5' : 'px-2 pt-3 pb-3.5 md:pt-4 md:pb-4')}>
+    <div className={cn(s.glass, 'flex min-w-0 flex-1 flex-col items-center rounded-card', compact ? 'px-1.5 pt-2 pb-2.5' : 'px-2 pt-3 pb-3.5 md:pt-4 md:pb-4')}>
       <div aria-hidden="true" className={cn('font-display text-paper tabular-nums', compact ? 'text-[clamp(1.9rem,7vw,2.8rem)] leading-[1.18]' : 'text-[clamp(2.3rem,8vw,4.4rem)] leading-[1.18]')}>
         {[...t].map((c, i) => (
           <Digit key={t.length - i} v={c} roll={roll} />
@@ -90,7 +90,7 @@ export function Countdown({ end, compact = false, auto = true, onOver }: { end: 
           </>
         ) : (
           ['Days', 'Hours', 'Minutes', 'Seconds'].map((l) => (
-            <div key={l} className={cn(s.glass, 'flex flex-1 flex-col items-center rounded-[calc(22px*var(--round,1))]', compact ? 'px-1.5 pt-2 pb-2.5' : 'px-2 pt-3 pb-3.5 md:pt-4 md:pb-4')}>
+            <div key={l} className={cn(s.glass, 'flex flex-1 flex-col items-center rounded-card', compact ? 'px-1.5 pt-2 pb-2.5' : 'px-2 pt-3 pb-3.5 md:pt-4 md:pb-4')}>
               <span aria-hidden="true" className={cn('font-display text-paper/25', compact ? 'text-[clamp(1.9rem,7vw,2.8rem)] leading-[1.18]' : 'text-[clamp(2.3rem,8vw,4.4rem)] leading-[1.18]')}>--</span>
               <span className="mt-2 text-[10.5px] font-medium tracking-[0.16em] text-paper/45 uppercase md:text-[11.5px]">{l}</span>
             </div>

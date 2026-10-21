@@ -205,7 +205,7 @@ export function SubmissionsFeed({ initial, campaigns, filters: start, signedIn, 
 
 function Empty({ filtered, onClear, campaign }: { filtered: boolean; onClear: () => void; campaign: string | null }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE_OUT }} className="rounded-[calc(2rem*var(--round,1))] border border-dashed border-line-strong px-6 py-16 text-center">
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE_OUT }} className="rounded-card border border-dashed border-line-strong px-6 py-16 text-center">
       <Clapperboard className="mx-auto size-8 text-mute" />
       <p className="mt-4 font-display text-2xl">{filtered ? 'No clips match that.' : 'No clips yet.'}</p>
       <p className="mx-auto mt-2 max-w-sm text-sm text-mute">{filtered ? `Nothing here${campaign ? ` for ${campaign}` : ''} yet. Try another platform or campaign.` : 'Approved clips show up here the moment they are approved.'}</p>
@@ -262,7 +262,7 @@ function CampaignPicker({ options, value, onChange }: { options: CampaignOption[
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.2, ease: EASE_OUT }}
-            className="absolute top-full left-0 z-30 mt-2 w-[min(20rem,calc(100vw-2.5rem))] origin-top-left overflow-hidden rounded-3xl border border-white/12 bg-[#0c0c0f]/95 shadow-[0_40px_90px_-30px_rgb(0_0_0/0.95)] backdrop-blur-xl"
+            className="absolute top-full left-0 z-30 mt-2 w-[min(20rem,calc(100vw-2.5rem))] origin-top-left overflow-hidden rounded-card border border-white/12 bg-[#0c0c0f]/95 shadow-[0_40px_90px_-30px_rgb(0_0_0/0.95)] backdrop-blur-xl"
           >
             <label className="flex items-center gap-2 border-b border-line px-4">
               <Search aria-hidden="true" className="size-4 text-mute" />

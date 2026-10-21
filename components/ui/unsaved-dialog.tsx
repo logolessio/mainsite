@@ -5,6 +5,7 @@ import { Loader2, TriangleAlert } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { EASE_OUT } from '@/lib/layout'
+import { cn } from '@/lib/utils'
 
 export type ConfirmDialogProps = {
   open: boolean
@@ -80,28 +81,28 @@ export function ConfirmDialog({ open, title, body, cancelLabel = 'Keep editing',
             initial={{ opacity: 0, y: 24, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.32, ease: EASE_OUT } }}
             exit={{ opacity: 0, y: 12, scale: 0.98, transition: { duration: 0.15 } }}
-            className="w-full max-w-[30rem] rounded-[calc(1.6rem*var(--round,1))] border border-line-strong bg-[#0d0d0f] p-5 text-paper shadow-[0_30px_80px_-20px_rgb(0_0_0/0.9)] sm:p-6"
+            className="w-full max-w-[32rem] rounded-card border border-line-strong bg-[#0d0d0f] p-5 text-paper shadow-[0_30px_80px_-20px_rgb(0_0_0/0.9)] sm:p-6"
           >
             <div className="flex items-start gap-3.5">
               <span className={tone === 'danger' ? 'grid size-10 shrink-0 place-items-center rounded-pill bg-white/10 text-paper' : 'grid size-10 shrink-0 place-items-center rounded-pill bg-white/10'}>
                 <TriangleAlert className="size-5" />
               </span>
               <div className="min-w-0 pt-0.5">
-                <h2 id={`${id}-t`} className="text-[17px] leading-snug font-medium">{title}</h2>
+                <h2 id={`${id}-t`} className="font-sans text-[17px] leading-snug font-medium">{title}</h2>
                 {body && <div id={`${id}-b`} className="mt-1.5 text-sm leading-relaxed text-mute">{body}</div>}
               </div>
             </div>
-            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <button type="button" data-autofocus onClick={onCancel} className="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-pill bg-paper px-5 text-sm font-medium text-ink transition-colors hover:bg-paper/85 sm:h-10">
-                {cancelLabel}
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+              <button type="button" disabled={saving} onClick={onConfirm} className={cn('inline-flex h-11 items-center justify-center rounded-pill px-4 text-sm whitespace-nowrap transition-colors disabled:opacity-50 sm:mr-auto sm:h-10', tone === 'danger' ? 'text-signal hover:bg-signal/10' : 'text-mute hover:bg-white/10 hover:text-paper')}>
+                {confirmLabel}
               </button>
               {onSave && saveLabel && (
-                <button type="button" disabled={saving} onClick={save} className="inline-flex h-11 items-center justify-center whitespace-nowrap gap-2 rounded-pill border border-line-strong px-5 text-sm transition-colors hover:bg-white/10 disabled:opacity-50 sm:h-10">
+                <button type="button" disabled={saving} onClick={save} className="inline-flex h-11 items-center justify-center gap-2 rounded-pill border border-line-strong px-4 text-sm whitespace-nowrap transition-colors hover:bg-white/10 disabled:opacity-50 sm:h-10">
                   {saving && <Loader2 className="size-4 animate-spin" />} {saveLabel}
                 </button>
               )}
-              <button type="button" disabled={saving} onClick={onConfirm} className={tone === 'danger' ? 'inline-flex h-11 items-center justify-center whitespace-nowrap rounded-pill px-5 text-sm text-signal transition-colors hover:bg-signal/10 disabled:opacity-50 sm:h-10' : 'inline-flex h-11 items-center justify-center whitespace-nowrap rounded-pill px-5 text-sm text-mute transition-colors hover:bg-white/10 hover:text-paper disabled:opacity-50 sm:h-10'}>
-                {confirmLabel}
+              <button type="button" data-autofocus onClick={onCancel} className="inline-flex h-11 items-center justify-center rounded-pill bg-paper px-5 text-sm font-medium whitespace-nowrap text-ink transition-colors hover:bg-paper/85 sm:h-10">
+                {cancelLabel}
               </button>
             </div>
           </motion.div>

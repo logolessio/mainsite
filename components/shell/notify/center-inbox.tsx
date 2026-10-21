@@ -50,7 +50,7 @@ export function CenterInbox() {
           <Settings2 aria-hidden="true" className="size-4" />
         </TransitionLink>
       </div>
-      <div className="overflow-hidden rounded-[calc(1.75rem*var(--round,1))] border border-line bg-[#0d0d10]">
+      <div className="overflow-hidden rounded-card border border-line bg-[#0d0d10]">
         {shown === null ? <CenterSkeleton rows={5} /> : shown.length === 0 ? <CenterEmpty tall /> : <CenterFeed notes={shown} setNotes={update} roomy />}
       </div>
     </div>

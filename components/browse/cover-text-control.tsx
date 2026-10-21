@@ -49,7 +49,7 @@ export function CoverTextControl() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.18, ease: EASE_OUT }}
-            className="absolute top-[calc(100%+10px)] right-0 z-30 w-[244px] origin-top-right rounded-[calc(22px*var(--round,1))] border border-white/10 bg-[#0e0e11]/95 p-3 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.9)] backdrop-blur-xl"
+            className="absolute top-[calc(100%+10px)] right-0 z-30 w-[244px] origin-top-right rounded-card border border-white/10 bg-[#0e0e11]/95 p-3 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.9)] backdrop-blur-xl"
           >
             <p className="px-1 pb-2.5 text-xs text-mute">Text size on the covers</p>
             <div role="radiogroup" aria-label="Cover text size" className="flex items-end justify-between gap-1 rounded-[calc(14px*var(--round,1))] bg-white/[0.04] p-1">

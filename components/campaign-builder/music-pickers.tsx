@@ -94,7 +94,7 @@ export function AudioPicker({ sounds, audio, audioNote, onChange, preview = fals
       <BigInput label="Which part should creators use?" hint="Optional" value={audioNote} maxLength={200} onChange={(e) => onChange({ audioNote: e.target.value })} placeholder="e.g. The chorus from 0:42 to 1:05" />
       <div>
         <Label hint="MP3 or M4A · up to 1 MB">A short preview to play on the campaign</Label>
-        <div className={cn('flex items-center gap-4 rounded-3xl border border-dashed border-line-strong bg-white/[0.03] p-4 transition-colors', src && 'border-solid')}>
+        <div className={cn('flex items-center gap-4 rounded-card border border-dashed border-line-strong bg-white/[0.03] p-4 transition-colors', src && 'border-solid')}>
           {src ? (
             <>
               <audio ref={el} src={src} preload="metadata" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} />
@@ -193,7 +193,7 @@ export function ArtPicker({ cover, background, onChange, preview = false, title,
       {err && <p className="text-sm text-signal">{err}</p>}
       <div>
         <Label>How it looks to creators</Label>
-        <div className="relative overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-line-strong">
+        <div className="relative overflow-hidden rounded-card border border-line-strong">
           <AnimatePresence initial={false}>
             {bgSrc ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -232,7 +232,7 @@ function Drop({ label, hint, src, busy, onFile, onClear, className }: { label: s
             const f = e.dataTransfer.files?.[0]
             if (f) onFile(f)
           }}
-          className="relative grid size-full cursor-pointer place-items-center overflow-hidden rounded-[calc(1.6rem*var(--round,1))] border border-dashed border-line-strong bg-white/[0.03] transition-colors hover:border-paper/60 hover:bg-white/[0.06]"
+          className="relative grid size-full cursor-pointer place-items-center overflow-hidden rounded-card border border-dashed border-line-strong bg-white/[0.03] transition-colors hover:border-paper/60 hover:bg-white/[0.06]"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {src && <img src={src} alt="" className="absolute inset-0 size-full object-cover" />}

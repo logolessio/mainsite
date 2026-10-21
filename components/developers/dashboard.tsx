@@ -83,7 +83,7 @@ export function AppList({ apps }: { apps: DevApp[] }) {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <code className="rounded-lg bg-white/[0.06] px-2.5 py-1.5 font-mono text-xs">{a.id}</code>
+                <code className="rounded-tile bg-white/[0.06] px-2.5 py-1.5 font-mono text-xs">{a.id}</code>
                 <CopyButton text={a.id} label="Copy client id" />
               </div>
               <Stats u={a.usage} />
@@ -168,7 +168,7 @@ export function AppDetail({ app }: { app: DevApp }) {
             <div>
               <p className="text-sm text-mute">Client id. Public: it goes in your sign-in address.</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <code className="rounded-lg bg-white/[0.06] px-2.5 py-1.5 font-mono text-sm break-all">{app.id}</code>
+                <code className="rounded-tile bg-white/[0.06] px-2.5 py-1.5 font-mono text-sm break-all">{app.id}</code>
                 <CopyButton text={app.id} label="Copy" />
               </div>
             </div>
@@ -179,13 +179,13 @@ export function AppDetail({ app }: { app: DevApp }) {
                   <div className="mt-3 rounded-2xl border border-emerald-400/30 bg-emerald-400/[0.05] p-4">
                     <p className="text-sm">Your new secret. Copy it now: it is shown once. The old one has stopped working.</p>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <code className="rounded-lg bg-black/50 px-2.5 py-1.5 font-mono text-xs break-all">{secret}</code>
+                      <code className="rounded-tile bg-black/50 px-2.5 py-1.5 font-mono text-xs break-all">{secret}</code>
                       <CopyButton text={secret} label="Copy secret" />
                     </div>
                   </div>
                 ) : (
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <code className="rounded-lg bg-white/[0.06] px-2.5 py-1.5 font-mono text-sm text-mute">lgs_••••••••••••</code>
+                    <code className="rounded-tile bg-white/[0.06] px-2.5 py-1.5 font-mono text-sm text-mute">lgs_••••••••••••</code>
                     <button
                       type="button"
                       disabled={busy === 'rotate'}
@@ -207,7 +207,7 @@ export function AppDetail({ app }: { app: DevApp }) {
             <div>
               <p className="text-sm text-mute">Issuer, for your library</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <code className="rounded-lg bg-white/[0.06] px-2.5 py-1.5 font-mono text-sm">{SITE.url}</code>
+                <code className="rounded-tile bg-white/[0.06] px-2.5 py-1.5 font-mono text-sm">{SITE.url}</code>
                 <CopyButton text={SITE.url} label="Copy" />
               </div>
             </div>

@@ -52,7 +52,7 @@ export default async function ProfilePage({ params }: Props) {
         <TransitionLink href="/" aria-label="logoless home" className="fixed top-5 left-5 z-50 block">
           <Logo />
         </TransitionLink>
-        <div className="w-full max-w-sm rounded-[calc(1.75rem*var(--round,1))] border border-line bg-[#0b0b0d] p-7 text-center">
+        <div className="w-full max-w-sm rounded-card border border-line bg-[#0b0b0d] p-7 text-center">
           <span className="mx-auto grid size-12 place-items-center rounded-pill bg-white/[0.06]">
             <Lock className="size-5" />
           </span>

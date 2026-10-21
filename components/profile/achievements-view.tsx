@@ -133,7 +133,7 @@ export function AchievementsView({ board = false }: { board?: boolean }) {
   return (
     <div>
       {/* ---------- the overview ---------- */}
-      <motion.section initial={false} className="relative overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-[#0a0a0b] p-6 md:p-8">
+      <motion.section initial={false} className="relative overflow-hidden rounded-card border border-line-strong bg-[#0a0a0b] p-6 md:p-8">
         <div aria-hidden="true" className="pointer-events-none absolute -top-1/2 -right-1/4 size-[36rem] rounded-pill bg-[radial-gradient(closest-side,rgb(185_166_255/0.12),transparent)]" />
         <div className="relative grid gap-8 lg:grid-cols-[auto_1fr]">
           <div className="flex items-center gap-6">
@@ -228,11 +228,11 @@ export function AchievementsView({ board = false }: { board?: boolean }) {
             const R = RARITY_STYLE[b.rarity]
             return (
               <motion.li key={b.id} layout initial={false} exit={{ opacity: 0, scale: 0.94 }} transition={{ delay: Math.min(i * 0.03, 0.4), duration: 0.5, ease: EASE_OUT }}>
-                <Tilt3D max={7} glare={false} className="rounded-[calc(1.75rem*var(--round,1))]">
+                <Tilt3D max={7} glare={false} className="rounded-card">
                   <button
                     type="button"
                     onClick={() => setOpen(b)}
-                    className={cn('group relative flex w-full flex-col items-center overflow-hidden rounded-[calc(1.75rem*var(--round,1))] border bg-[#0b0b0d] px-3 pt-6 pb-4 text-center transition-colors', got ? R.ring : 'border-line', on && 'ring-1 ring-paper/70')}
+                    className={cn('group relative flex w-full flex-col items-center overflow-hidden rounded-card border bg-[#0b0b0d] px-3 pt-6 pb-4 text-center transition-colors', got ? R.ring : 'border-line', on && 'ring-1 ring-paper/70')}
                   >
                     {got && <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-2/3" style={{ background: `radial-gradient(70% 70% at 50% 28%, ${R.glow}, transparent)` }} />}
                     <span className="relative">
@@ -272,7 +272,7 @@ export function AchievementsView({ board = false }: { board?: boolean }) {
                   animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: EASE_OUT } }}
                   exit={{ opacity: 0, y: 12, scale: 0.97, transition: { duration: 0.18 } }}
                   onClick={(e) => e.stopPropagation()}
-                  className="relative w-full max-w-sm overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-[#0b0b0d] p-6 text-center"
+                  className="relative w-full max-w-sm overflow-hidden rounded-card border border-line-strong bg-[#0b0b0d] p-6 text-center"
                 >
                   <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-72" style={{ background: `radial-gradient(60% 60% at 50% 38%, ${R.glow}, transparent)` }} />
                   <button type="button" aria-label="Close" onClick={() => setOpen(null)} className="absolute top-4 right-4 z-10 grid size-9 place-items-center rounded-pill hover:bg-white/10">

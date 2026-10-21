@@ -128,7 +128,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
     <motion.article
       aria-label={`${view.displayName}'s profile`}
       initial={false}
-      className={cn('relative w-[min(440px,calc(100vw-2rem))] overflow-hidden rounded-[calc(22px*var(--round,1))] border border-white/10 text-paper shadow-[0_40px_90px_-30px_rgb(0_0_0/0.95),0_0_0_1px_rgb(0_0_0/0.4)]', className)}
+      className={cn('relative w-[min(440px,calc(100vw-2rem))] overflow-hidden rounded-card border border-white/10 text-paper shadow-[0_40px_90px_-30px_rgb(0_0_0/0.95),0_0_0_1px_rgb(0_0_0/0.4)]', className)}
       style={{
         ['--card' as string]: '#0f1012',
         background: `linear-gradient(165deg, color-mix(in srgb, ${view.accent} 34%, #101113) 0%, color-mix(in srgb, ${view.accent2} 24%, #0b0b0c) 100%)`,
@@ -205,7 +205,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
 
         <motion.div
           initial={false}
-          className="mt-4 grid gap-3.5 rounded-xl bg-black/40 p-3.5"
+          className="mt-4 grid gap-3.5 rounded-panel bg-black/40 p-3.5"
         >
           {view.bio && (
             <Section title="About me">
@@ -218,7 +218,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
               <p className="flex items-center gap-2 text-sm text-paper/90">
                 <CalendarDays className="size-4 text-paper/60" />
                 {view.show.joined ? joined : ''}
-                {view.show.country && view.country && <span className="ml-1 rounded bg-white/10 px-1.5 font-mono text-[11px]">{view.country}</span>}
+                {view.show.country && view.country && <span className="ml-1 rounded-chip bg-white/10 px-1.5 font-mono text-[11px]">{view.country}</span>}
               </p>
             </Section>
           )}
@@ -227,7 +227,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
             <Section title="Stats">
               <ul className="grid grid-cols-2 gap-1.5">
                 {statRows.map(([label, node]) => (
-                  <li key={label} className="rounded-lg bg-white/[0.06] px-3 py-2">
+                  <li key={label} className="rounded-chip bg-white/[0.06] px-3 py-2">
                     <p className="text-[11px] text-paper/55">{label}</p>
                     <p className="text-lg leading-tight font-semibold tabular-nums">{node}</p>
                   </li>
@@ -247,7 +247,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
                       {...(preview ? { role: 'img' } : { href: l.href, target: '_blank', rel: 'noopener noreferrer nofollow ugc' })}
                       aria-label={preview ? l.label : `${l.label}${l.verified ? ', verified' : ''} (opens in a new tab)`}
                       title={l.label}
-                      className="group relative grid size-11 place-items-center overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.06] transition-all duration-200 hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.14] active:scale-95"
+                      className="group relative grid size-11 place-items-center overflow-hidden rounded-panel border border-white/[0.08] bg-white/[0.06] transition-all duration-200 hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.14] active:scale-95"
                     >
                       <span aria-hidden="true" className="absolute inset-y-0 -left-full w-full -skew-x-12 bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-[220%]" />
                       <BrandIcon name={l.platform} className="relative size-5" />
@@ -264,7 +264,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
         </motion.div>
 
         {isOwner && !preview && (
-          <TransitionLink href="/dashboard/profile" className="mt-3 flex h-10 items-center justify-center gap-2 rounded-lg bg-white/[0.1] text-sm font-medium transition-colors hover:bg-white/[0.18]">
+          <TransitionLink href="/dashboard/profile" className="mt-3 flex h-10 items-center justify-center gap-2 rounded-tile bg-white/[0.1] text-sm font-medium transition-colors hover:bg-white/[0.18]">
             <Pencil className="size-4" /> Edit profile
           </TransitionLink>
         )}
@@ -279,7 +279,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
         card
       ) : (
         // the whole tilt floats (not just the card inside it), so the light sweep that rides on the card floats with it
-        <Tilt3D max={4.5} perspective={1600} className="animate-float rounded-[calc(22px*var(--round,1))]">
+        <Tilt3D max={4.5} perspective={1600} className="animate-float rounded-card">
           {card}
         </Tilt3D>
       )}

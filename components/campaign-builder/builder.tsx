@@ -389,7 +389,7 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt }: { balanc
               <>
                 <Ask sub={`Campaigns draw from one balance. To start, it needs ${money(need)}: the first $50 creators earn, plus our fee. Nothing is charged until creators earn.`}>{short > 0 ? 'Add funds.' : 'Your funds are ready.'}</Ask>
                 <Rise i={0}>
-                  <div className="rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-white/[0.04] p-6 md:p-8">
+                  <div className="rounded-card border border-line-strong bg-white/[0.04] p-6 md:p-8">
                     <p className="text-xs tracking-wide text-mute">Your balance</p>
                     <p className="mt-2 font-display text-6xl leading-none font-medium tabular-nums">{money(balanceCents)}</p>
                     <div className="mt-5 h-2 overflow-hidden rounded-pill bg-white/10">
@@ -483,7 +483,7 @@ function CampaignPreview({ d, rate, views, big }: { d: Draft; rate: number; view
   const cover = d.cover ? `/api/img/${d.cover}` : null
   const bg = d.background ? `/api/img/${d.background}` : null
   return (
-    <div className="relative overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-white/[0.03]">
+    <div className="relative overflow-hidden rounded-card border border-line-strong bg-white/[0.03]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       {bg && <img src={bg} alt="" className="absolute inset-0 size-full scale-110 object-cover opacity-40 blur-sm" />}
       <div className={cn('relative grid gap-4 p-5', big && 'md:grid-cols-[auto_1fr] md:items-center md:p-6')}>

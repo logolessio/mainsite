@@ -174,11 +174,11 @@ export function DashboardView({ campaigns, ended = [], startTour }: { campaigns:
 
           <section id="campaigns" aria-label="Campaigns" className="scroll-mt-40">
             {results.length > 0 ? (
-              <div className="island mx-auto max-w-[1300px] rounded-[calc(40px*var(--round,1))] bg-[#0a0a0c] p-4 sm:p-6 md:rounded-[calc(52px*var(--round,1))] md:p-10">
+              <div className="island mx-auto max-w-[1300px] rounded-card bg-[#0a0a0c] p-4 sm:p-6 md:rounded-card md:p-10">
                 <CampaignGrid campaigns={results} />
               </div>
             ) : (
-              <div className="mx-auto max-w-xl rounded-[calc(28px*var(--round,1))] border border-dashed border-line-strong px-6 py-20 text-center">
+              <div className="mx-auto max-w-xl rounded-card border border-dashed border-line-strong px-6 py-20 text-center">
                 {gone.length > 0 ? (
                   <>
                     <p className="font-display text-3xl">that campaign has ended</p>

@@ -126,7 +126,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ t
                 return (
                   <li key={c.id} className="flex items-center gap-4 py-3.5">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={c.cover_url} alt="" className="size-12 shrink-0 rounded-xl object-cover" />
+                    <img src={c.cover_url} alt="" className="size-12 shrink-0 rounded-panel object-cover" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[15px]">{c.title}</p>
                       <div className="mt-1.5 h-1 max-w-[12rem] overflow-hidden rounded-pill bg-white/10">

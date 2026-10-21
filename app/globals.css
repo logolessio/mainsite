@@ -99,6 +99,21 @@
   border-bottom-right-radius: var(--pill, 9999px);
 }
 
+/* One corner scale for panels, cards and tiles, so what sits inside something is always a little less round than what holds it.
+   card (dialogs, sheets, cards) > panel (a block inside a card) > tile (a row or a choice inside a panel) > chip. All of them follow Roundness. */
+@utility rounded-card {
+  border-radius: calc(1.25rem * var(--round, 1));
+}
+@utility rounded-panel {
+  border-radius: calc(1rem * var(--round, 1));
+}
+@utility rounded-tile {
+  border-radius: calc(0.75rem * var(--round, 1));
+}
+@utility rounded-chip {
+  border-radius: calc(0.5rem * var(--round, 1));
+}
+
 @utility glass {
   /* No backdrop-filter: blurring a moving canvas every frame is what made the site lag. */
   background: linear-gradient(180deg, rgb(26 26 28 / 0.88), rgb(14 14 15 / 0.8));

@@ -67,7 +67,7 @@ export function BudgetPicker({ value, onChange, minBudget = SITE.minCampaignBudg
         ] as const).map((o) => {
           const on = value.mode === o.id
           return (
-            <button key={o.id} type="button" role="radio" aria-checked={on} onClick={() => switchTo(o.id)} className={cn('relative flex items-start gap-3 rounded-3xl border p-4 text-left transition-colors', on ? 'border-paper bg-white/[0.07]' : 'border-line-strong text-mute hover:border-paper/50 hover:text-paper')}>
+            <button key={o.id} type="button" role="radio" aria-checked={on} onClick={() => switchTo(o.id)} className={cn('relative flex items-start gap-3 rounded-card border p-4 text-left transition-colors', on ? 'border-paper bg-white/[0.07]' : 'border-line-strong text-mute hover:border-paper/50 hover:text-paper')}>
               <o.icon aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
               <span>
                 <span className="block text-[15px] text-paper">{o.t}</span>
@@ -127,7 +127,7 @@ export function BudgetPicker({ value, onChange, minBudget = SITE.minCampaignBudg
         )}
       </div>
 
-      <div aria-live="polite" className={cn('relative overflow-hidden rounded-[calc(2rem*var(--round,1))] border p-6 transition-colors md:p-8', ok ? 'border-line-strong bg-white/[0.04]' : 'border-amber-400/30 bg-amber-400/[0.05]')}>
+      <div aria-live="polite" className={cn('relative overflow-hidden rounded-card border p-6 transition-colors md:p-8', ok ? 'border-line-strong bg-white/[0.04]' : 'border-amber-400/30 bg-amber-400/[0.05]')}>
         <div className="grid gap-6 sm:grid-cols-2">
           <div>
             <p className="text-xs tracking-wide text-mute">{value.mode === 'views' ? 'Creators earn' : 'Your budget buys up to'}</p>

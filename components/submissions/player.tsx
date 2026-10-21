@@ -68,7 +68,7 @@ export function Player({ clip, onClose, onPrev, onNext, signedIn, me, onRated }:
               exit={{ opacity: 0, y: 24, scale: 0.98 }}
               transition={{ duration: 0.4, ease: EASE_OUT }}
               onMouseDown={(e) => e.stopPropagation()}
-              className="relative grid w-full max-w-5xl overflow-hidden bg-[#0b0b0d] outline-none md:grid-cols-[auto_minmax(0,1fr)] md:rounded-[calc(2rem*var(--round,1))] md:border md:border-white/10 md:shadow-[0_60px_140px_-40px_rgb(0_0_0/1)]"
+              className="relative grid w-full max-w-5xl overflow-hidden bg-[#0b0b0d] outline-none md:grid-cols-[auto_minmax(0,1fr)] md:rounded-card md:border md:border-white/10 md:shadow-[0_60px_140px_-40px_rgb(0_0_0/1)]"
             >
               <div className="absolute top-3 right-3 z-10">
                 <button type="button" onClick={onClose} aria-label="Close" className="grid size-10 place-items-center rounded-pill bg-black/55 text-paper backdrop-blur-md transition-colors hover:bg-white/15">
@@ -165,7 +165,7 @@ function Side({ clip, signedIn, own, onRated, onClose, onPrev, onNext }: { clip:
 
       <TransitionLink href={`/campaign/${clip.campaign.id}`} onClick={onClose} className="group flex items-center gap-3 rounded-2xl border border-line bg-white/[0.03] p-3 transition-colors hover:bg-white/[0.07]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={clip.campaign.cover} alt="" className="size-12 shrink-0 rounded-xl object-cover" />
+        <img src={clip.campaign.cover} alt="" className="size-12 shrink-0 rounded-panel object-cover" />
         <span className="min-w-0 flex-1">
           <span className="block text-[11px] text-mute">Clipped for</span>
           <span className="block truncate text-[15px] group-hover:underline">{clip.campaign.title}</span>
@@ -250,7 +250,7 @@ function RateStars({ clip, signedIn, own, onRated }: { clip: FeedClip; signedIn:
             animate={pop && n <= pop ? { scale: [1, 1.35, 1], rotate: [0, -12, 0] } : { scale: 1, rotate: 0 }}
             transition={pop && n <= pop ? { duration: 0.45, delay: (n - 1) * 0.05, ease: EASE_OUT } : SPRING_POP}
             onAnimationComplete={() => n === pop && setPop(0)}
-            className={cn('grid size-10 place-items-center rounded-xl outline-none transition-colors focus-visible:ring-2 focus-visible:ring-paper/60', can ? 'cursor-pointer hover:bg-white/[0.06]' : 'cursor-default')}
+            className={cn('grid size-10 place-items-center rounded-panel outline-none transition-colors focus-visible:ring-2 focus-visible:ring-paper/60', can ? 'cursor-pointer hover:bg-white/[0.06]' : 'cursor-default')}
           >
             <Star className={cn('size-7 transition-colors duration-200', n <= shown ? 'fill-paper text-paper' : 'fill-transparent text-white/25')} strokeWidth={1.5} />
           </motion.button>

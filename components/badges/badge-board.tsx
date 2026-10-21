@@ -215,7 +215,7 @@ export function BadgeBoard({ unlocked, equipped, onChange, saving, compact = fal
                     onPointerDown={(e) => onPointerDown(e, b.id, 'shelf', 0)}
                     onClickCapture={clickGuard}
                     onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), add(b.id))}
-                    className={cn('grid aspect-square w-full cursor-grab touch-manipulation place-items-center rounded-xl border-2 bg-white/[0.03] transition-all hover:bg-white/[0.07] focus-visible:outline-2 focus-visible:outline-paper', drag?.id === b.id && 'opacity-30')}
+                    className={cn('grid aspect-square w-full cursor-grab touch-manipulation place-items-center rounded-panel border-2 bg-white/[0.03] transition-all hover:bg-white/[0.07] focus-visible:outline-2 focus-visible:outline-paper', drag?.id === b.id && 'opacity-30')}
                     style={{ borderColor: RARITY_BORDER[b.rarity] }}
                     title={`${b.name} · ${RARITY_STYLE[b.rarity].label}`}
                   >

@@ -103,7 +103,7 @@ export function LiveToasts() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -90, transition: { duration: 0.25 } }}
               transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-              className="island pointer-events-auto w-[min(26rem,100%)] rounded-[calc(1.75rem*var(--round,1))] bg-[#0b0b0d] text-white shadow-[0_18px_50px_-12px_rgb(0_0_0/0.55)]"
+              className="island pointer-events-auto w-[min(26rem,100%)] rounded-card bg-[#0b0b0d] text-white shadow-[0_18px_50px_-12px_rgb(0_0_0/0.55)]"
             >
               {n.href ? (
                 <TransitionLink href={n.href} className={cls} onClick={() => dismiss(n.id, true)}>

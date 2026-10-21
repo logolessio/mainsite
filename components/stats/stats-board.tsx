@@ -85,7 +85,7 @@ export function StatsBoard({ initial }: { initial: Board }) {
       <motion.div animate={{ opacity: busy ? 0.55 : 1 }} transition={{ duration: 0.25 }} aria-busy={busy}>
         <ul className="mt-12 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
           {tiles.map((x) => (
-            <li key={x.label} className="relative overflow-hidden rounded-[calc(24px*var(--round,1))] border border-line bg-white/[0.03] p-4 md:p-5">
+            <li key={x.label} className="relative overflow-hidden rounded-card border border-line bg-white/[0.03] p-4 md:p-5">
               <x.icon aria-hidden="true" className="size-4 text-mute" />
               <p className="mt-6 font-display text-3xl tabular-nums md:text-4xl"><Count value={x.value} format={x.format} /></p>
               <p className="mt-1 text-xs text-mute">{x.label}</p>
@@ -114,7 +114,7 @@ export function StatsBoard({ initial }: { initial: Board }) {
                     {board.campaigns.map((c, i) => (
                       <Row key={c.id} layoutKey={`camp-${c.id}`} rank={i + 1} href={`/campaign/${c.id}`} share={c.views / (board.campaigns[0]?.views || 1)}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={c.cover} alt="" className="size-11 shrink-0 rounded-xl object-cover" />
+                        <img src={c.cover} alt="" className="size-11 shrink-0 rounded-panel object-cover" />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[15px]">{c.title}</span>
                           <span className="block truncate text-xs text-mute">{c.creator} · {c.clips} clip{c.clips === 1 ? '' : 's'} · {c.clippers} creator{c.clippers === 1 ? '' : 's'}</span>
@@ -152,7 +152,7 @@ export function StatsBoard({ initial }: { initial: Board }) {
         </LayoutGroup>
       </motion.div>
 
-      <Reveal className="mt-24 rounded-[calc(2rem*var(--round,1))] border border-line bg-white/[0.03] px-6 py-10 text-center md:py-14">
+      <Reveal className="mt-24 rounded-card border border-line bg-white/[0.03] px-6 py-10 text-center md:py-14">
         <p className="font-display text-3xl md:text-4xl">Want to be on here?</p>
         <p className="mx-auto mt-3 max-w-md text-sm text-mute">Clip a campaign, get your clips approved, then choose which of your numbers to show in your profile privacy settings.</p>
         <div className="mt-7 flex flex-wrap justify-center gap-3">
@@ -184,7 +184,7 @@ function Section({ title, sub, href, more, inline, children }: { title: string; 
 }
 
 function Nothing({ text }: { text: string }) {
-  return <p className="rounded-3xl border border-dashed border-line-strong px-6 py-10 text-center text-sm text-mute">{text}</p>
+  return <p className="rounded-card border border-dashed border-line-strong px-6 py-10 text-center text-sm text-mute">{text}</p>
 }
 
 function Metric({ icon: Icon, value, format }: { icon: typeof Eye; value: number; format?: (n: number) => string }) {

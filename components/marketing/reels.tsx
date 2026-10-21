@@ -143,7 +143,7 @@ function Slide({ c, i, total, on, near, playing, onPlay, refEl }: { c: Campaign;
       <div className="absolute inset-0 bg-gradient-to-b from-ink/40 via-transparent to-ink" />
 
       <div className={cn('relative z-10 flex w-full max-w-5xl flex-col items-center gap-7 transition-all duration-700 ease-out md:flex-row md:gap-16', on ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0')}>
-        <button type="button" onClick={onPlay} aria-label={playing ? `Pause ${c.title}` : `Play ${c.title}`} className="group relative aspect-square w-[min(66vw,40dvh)] shrink-0 overflow-hidden rounded-[calc(28px*var(--round,1))] border border-white/15 shadow-[0_40px_120px_-30px_rgba(0,0,0,0.9)] transition-transform duration-500 hover:scale-[1.02] md:w-[min(34vw,52dvh)] md:rounded-[calc(36px*var(--round,1))]">
+        <button type="button" onClick={onPlay} aria-label={playing ? `Pause ${c.title}` : `Play ${c.title}`} className="group relative aspect-square w-[min(66vw,40dvh)] shrink-0 overflow-hidden rounded-card border border-white/15 shadow-[0_40px_120px_-30px_rgba(0,0,0,0.9)] transition-transform duration-500 hover:scale-[1.02] md:w-[min(34vw,52dvh)] md:rounded-card">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={c.cover} alt="" className={cn('size-full object-cover transition-transform duration-[2000ms]', playing && 'scale-110')} />
           <span className="absolute inset-0 grid place-items-center bg-black/0 transition-colors group-hover:bg-black/25">

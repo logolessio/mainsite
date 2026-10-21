@@ -80,7 +80,7 @@ function SecretBox() {
   if (!ask || typeof document === 'undefined') return null
   return createPortal(
     <div className="fixed inset-0 z-[300] grid place-items-center bg-black/70 px-4" onMouseDown={() => close(null)} role="presentation">
-      <form ref={box} onSubmit={submit} onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Admin password" className="w-full max-w-sm rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-ink p-7">
+      <form ref={box} onSubmit={submit} onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Admin password" className="w-full max-w-sm rounded-card border border-line-strong bg-ink p-7">
         <span className="grid size-11 place-items-center rounded-pill bg-paper text-ink">
           <Lock className="size-5" />
         </span>

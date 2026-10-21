@@ -81,7 +81,7 @@ export function ConfirmDialogHost() {
         aria-modal="true"
         aria-labelledby="confirm-title"
         aria-describedby="confirm-summary"
-        className="w-full max-w-md rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-ink p-7 shadow-[0_40px_100px_-30px_rgb(0_0_0/0.95)]"
+        className="w-full max-w-md rounded-card border border-line-strong bg-ink p-7 shadow-[0_40px_100px_-30px_rgb(0_0_0/0.95)]"
       >
         <span className={cn('grid size-11 place-items-center rounded-pill', danger ? 'bg-signal/15 text-signal' : 'bg-paper text-ink')}>
           <Icon className="size-5" />

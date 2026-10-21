@@ -32,7 +32,7 @@ export function CampaignTile({ campaign, priority }: { campaign: Campaign; prior
     : undefined
 
   return (
-    <div ref={root} data-vt-cover={campaign.id} onPointerMove={glow} className={`group/tile relative aspect-square w-full rounded-[calc(22px*var(--round,1))] bg-surface shadow-[0_14px_30px_-18px_rgb(0_0_0/0.9)] ${soft ? COVER_LIFT_SOFT : COVER_LIFT}`}>
+    <div ref={root} data-vt-cover={campaign.id} onPointerMove={glow} className={`group/tile relative aspect-square w-full rounded-card bg-surface shadow-[0_14px_30px_-18px_rgb(0_0_0/0.9)] ${soft ? COVER_LIFT_SOFT : COVER_LIFT}`}>
       <button
         type="button"
         onClick={() => open(campaign)}

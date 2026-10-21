@@ -148,7 +148,7 @@ export function AvatarPanel({ s }: { s: Studio }) {
             <Group title="Emoji" hint="Or type any emoji">
               <div className="grid grid-cols-8 gap-1.5">
                 {EMOJI.map((e) => (
-                  <button key={e} type="button" onClick={() => ex('avatar', { emoji: e })} aria-pressed={a.emoji === e} aria-label={e} className={cn('grid aspect-square place-items-center rounded-lg text-xl transition-transform hover:scale-110', a.emoji === e ? 'bg-paper/15 ring-1 ring-paper' : 'hover:bg-white/5')}>
+                  <button key={e} type="button" onClick={() => ex('avatar', { emoji: e })} aria-pressed={a.emoji === e} aria-label={e} className={cn('grid aspect-square place-items-center rounded-tile text-xl transition-transform hover:scale-110', a.emoji === e ? 'bg-paper/15 ring-1 ring-paper' : 'hover:bg-white/5')}>
                     {e}
                   </button>
                 ))}
@@ -232,7 +232,7 @@ export function BannerPanel({ s }: { s: Studio }) {
                         aria-label="Use this recent banner again"
                         aria-pressed={current === r.id}
                         title="Recent banner"
-                        className={cn('h-8 w-12 rounded-lg border-2 bg-cover bg-center transition-transform hover:scale-110', current === r.id ? 'border-paper' : 'border-white/10')}
+                        className={cn('h-8 w-12 rounded-tile border-2 bg-cover bg-center transition-transform hover:scale-110', current === r.id ? 'border-paper' : 'border-white/10')}
                         style={{ backgroundImage: `url(/api/img/${r.id})` }}
                       />
                     ))}
@@ -360,7 +360,7 @@ export function BackgroundPanel({ s }: { s: Studio }) {
           <div className="flex flex-wrap items-center gap-2">
             <UploadButton label="Upload a picture" accept="image/png,image/jpeg,image/webp" busy={busy === 'image'} onFile={(file) => up('image', file)} icon={ImagePlus} />
             {recentPics.map((r) => (
-              <button key={r.id} type="button" onClick={() => ex('bg', { image: r.id })} aria-pressed={g.image === r.id} aria-label="Use this recent background" className={cn('h-10 w-14 rounded-lg border-2 bg-cover bg-center', g.image === r.id ? 'border-paper' : 'border-white/10')} style={{ backgroundImage: `url(/api/img/${r.id})` }} />
+              <button key={r.id} type="button" onClick={() => ex('bg', { image: r.id })} aria-pressed={g.image === r.id} aria-label="Use this recent background" className={cn('h-10 w-14 rounded-tile border-2 bg-cover bg-center', g.image === r.id ? 'border-paper' : 'border-white/10')} style={{ backgroundImage: `url(/api/img/${r.id})` }} />
             ))}
           </div>
         </Group>

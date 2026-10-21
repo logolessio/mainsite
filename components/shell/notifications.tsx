@@ -235,7 +235,7 @@ function ClassicBell({ onNavigate, align = 'right' }: { onNavigate?: () => void;
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.98 }}
             transition={{ duration: 0.26, ease: EASE_OUT }}
-            className={cn('absolute top-full z-50 mt-3 flex max-h-[min(34rem,78dvh)] w-[min(25rem,calc(100vw-1.5rem))] origin-top-right flex-col overflow-hidden rounded-[calc(28px*var(--round,1))] border border-white/15 bg-[#0d0d10]/[0.98] shadow-[0_40px_90px_-20px_rgb(0_0_0/0.95)] backdrop-blur-xl', align === 'right' ? 'right-0' : 'left-0 origin-top-left')}
+            className={cn('absolute top-full z-50 mt-3 flex max-h-[min(34rem,78dvh)] w-[min(25rem,calc(100vw-1.5rem))] origin-top-right flex-col overflow-hidden rounded-card border border-white/15 bg-[#0d0d10]/[0.98] shadow-[0_40px_90px_-20px_rgb(0_0_0/0.95)] backdrop-blur-xl', align === 'right' ? 'right-0' : 'left-0 origin-top-left')}
           >
             <div className="relative px-5 pt-5 pb-3">
               <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(60%_100%_at_30%_0%,rgb(185_166_255/0.16),transparent)]" />

@@ -203,7 +203,7 @@ export function ProfileEditor() {
         </LiquidGlass>
 
         <AnimatePresence mode="wait" initial={false}>
-          <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22, ease: EASE_OUT }} className={cn(tab !== 'preview' && 'rounded-[calc(2rem*var(--round,1))] border border-line bg-[#0a0a0b] p-5 sm:p-7')}>
+          <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.22, ease: EASE_OUT }} className={cn(tab !== 'preview' && 'rounded-card border border-line bg-[#0a0a0b] p-5 sm:p-7')}>
             {/* ================= PROFILE ================= */}
             {tab === 'profile' && (
               <div className="grid gap-7">
@@ -253,7 +253,7 @@ export function ProfileEditor() {
                       <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                         <div className="border-t border-line px-4 pt-4 pb-4">
                           {!loaded.discordImport ? (
-                            <p className="rounded-xl border border-line bg-ink/60 p-3 text-xs text-mute">This is not switched on yet.</p>
+                            <p className="rounded-panel border border-line bg-ink/60 p-3 text-xs text-mute">This is not switched on yet.</p>
                           ) : !loaded.discordLinked ? (
                             <a href="/api/discord/connect?back=/dashboard/profile" className="inline-flex h-10 items-center rounded-pill bg-paper px-5 text-sm font-medium text-ink hover:bg-paper/85">
                               Connect Discord first
@@ -278,7 +278,7 @@ export function ProfileEditor() {
                 <Group title="Name font" hint="Shown with your own name">
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {FONT_OPTIONS.map((o) => (
-                      <button key={o.id} type="button" onClick={() => set('font', o.id)} aria-pressed={f.font === o.id} className={cn('rounded-xl border px-3 py-2.5 text-left transition-colors', f.font === o.id ? 'border-paper bg-paper/10' : 'border-line hover:bg-paper/5')}>
+                      <button key={o.id} type="button" onClick={() => set('font', o.id)} aria-pressed={f.font === o.id} className={cn('rounded-panel border px-3 py-2.5 text-left transition-colors', f.font === o.id ? 'border-paper bg-paper/10' : 'border-line hover:bg-paper/5')}>
                         <span className={cn('block truncate text-lg leading-tight', PROFILE_FONT_CLASS[o.id])}>{f.displayName || o.label}</span>
                         <span className="block text-[11px] text-mute">{o.label}</span>
                       </button>
@@ -288,7 +288,7 @@ export function ProfileEditor() {
                 <Group title="Name effect">
                   <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                     {NAME_EFFECTS.filter((o) => !('studio' in o)).map((o) => (
-                      <button key={o.id} type="button" onClick={() => set('nameEffect', o.id)} aria-pressed={f.nameEffect === o.id} className={cn('rounded-xl border px-2 py-2.5 text-center', f.nameEffect === o.id ? 'border-paper bg-paper/10' : 'border-line hover:bg-paper/5')}>
+                      <button key={o.id} type="button" onClick={() => set('nameEffect', o.id)} aria-pressed={f.nameEffect === o.id} className={cn('rounded-panel border px-2 py-2.5 text-center', f.nameEffect === o.id ? 'border-paper bg-paper/10' : 'border-line hover:bg-paper/5')}>
                         <span style={nameVars} className={cn('block text-base font-bold', `nx-${o.id}`, o.id === 'gradient' && 'mx-auto w-fit')}>Aa</span>
                         <span className="block text-[11px] text-mute">{o.label}</span>
                       </button>
@@ -304,11 +304,11 @@ export function ProfileEditor() {
                 <Group title="Banner">
                   <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                     {BANNER_PRESETS.map((b) => (
-                      <button key={b.id} type="button" onClick={() => setF((c) => (c ? { ...c, bannerKind: 'preset', banner: b.id } : c))} aria-label={b.label} aria-pressed={f.bannerKind === 'preset' && f.banner === b.id} className={cn('relative h-14 overflow-hidden rounded-xl border', f.bannerKind === 'preset' && f.banner === b.id ? 'border-paper' : 'border-line')} style={bannerStyle('preset', b.id)}>
+                      <button key={b.id} type="button" onClick={() => setF((c) => (c ? { ...c, bannerKind: 'preset', banner: b.id } : c))} aria-label={b.label} aria-pressed={f.bannerKind === 'preset' && f.banner === b.id} className={cn('relative h-14 overflow-hidden rounded-panel border', f.bannerKind === 'preset' && f.banner === b.id ? 'border-paper' : 'border-line')} style={bannerStyle('preset', b.id)}>
                         {f.bannerKind === 'preset' && f.banner === b.id && <Check className="absolute top-1.5 right-1.5 size-4" />}
                       </button>
                     ))}
-                    <button type="button" onClick={() => bannerInput.current?.click()} className={cn('grid h-14 place-items-center rounded-xl border border-dashed text-xs text-mute hover:text-paper', f.bannerKind === 'image' ? 'border-paper text-paper' : 'border-line-strong')}>
+                    <button type="button" onClick={() => bannerInput.current?.click()} className={cn('grid h-14 place-items-center rounded-panel border border-dashed text-xs text-mute hover:text-paper', f.bannerKind === 'image' ? 'border-paper text-paper' : 'border-line-strong')}>
                       {busy === 'banner' ? <Loader2 className="size-4 animate-spin" /> : <span className="inline-flex items-center gap-1"><ImagePlus className="size-4" /> Upload</span>}
                     </button>
                     <input ref={bannerInput} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => upload('banner', e.target.files?.[0])} />
@@ -338,7 +338,7 @@ export function ProfileEditor() {
                             const Icon = EFFECT_ICONS[o.id] ?? Ban
                             const on = f.cardEffect === o.id
                             return (
-                              <button key={o.id} type="button" onClick={() => set('cardEffect', o.id)} aria-pressed={on} className={cn('flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-xs transition-all hover:-translate-y-0.5', on ? 'border-paper bg-paper/10' : 'border-line text-mute hover:bg-paper/5 hover:text-paper')}>
+                              <button key={o.id} type="button" onClick={() => set('cardEffect', o.id)} aria-pressed={on} className={cn('flex flex-col items-center gap-1.5 rounded-panel border px-2 py-3 text-xs transition-all hover:-translate-y-0.5', on ? 'border-paper bg-paper/10' : 'border-line text-mute hover:bg-paper/5 hover:text-paper')}>
                                 <Icon className="size-5" />
                                 {o.label}
                               </button>
@@ -375,7 +375,7 @@ export function ProfileEditor() {
         </AnimatePresence>
 
         {/* ---------- save bar ---------- */}
-        <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 md:bottom-4 mt-5 rounded-3xl border border-line-strong bg-surface/95 p-2.5">
+        <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 md:bottom-4 mt-5 rounded-card border border-line-strong bg-surface/95 p-2.5">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pl-1.5">
             <ActionButton data-hotkey-save onClick={save} disabled={saving || !dirty} className="rounded-pill">
               {saving && <Loader2 className="size-4 animate-spin" />} Save profile
@@ -436,7 +436,7 @@ function PreviewPane({ f, previewLinks }: { f: ProfileView; previewLinks: { plat
         <span>Live preview</span>
         <span>Example numbers</span>
       </p>
-      <div className="relative overflow-hidden rounded-[calc(28px*var(--round,1))] border border-line bg-black">
+      <div className="relative overflow-hidden rounded-card border border-line bg-black">
         <MiniDots color={f.dotColor} />
         <div className="relative flex justify-center px-4 py-8">
           <ProfileCard

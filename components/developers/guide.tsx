@@ -58,7 +58,7 @@ export function DevelopersGuide({ signedIn }: { signedIn: boolean }) {
       <section aria-labelledby="quickstart" className={`${CONTAINER} pb-20`}>
         <H2 id="quickstart">Quickstart</H2>
         <Lede>Four steps. Most people are done in ten minutes.</Lede>
-        <ol className="mt-8 grid gap-px overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-line bg-line md:grid-cols-2 xl:grid-cols-4">
+        <ol className="mt-8 grid gap-px overflow-hidden rounded-card border border-line bg-line md:grid-cols-2 xl:grid-cols-4">
           {[
             { n: '1', t: 'Register your app', b: 'Say what it is and add the address people come back to. You get a client id, and a secret if your app has a server.', href: register, cta: 'Register an app' },
             { n: '2', t: 'Copy the code for your stack', b: 'HTML, Next.js, React, Express or Python. Paste in your client id and you have a working button.', href: '#code', cta: 'See the code' },
@@ -90,14 +90,14 @@ export function DevelopersGuide({ signedIn }: { signedIn: boolean }) {
       <section aria-labelledby="test" className={`${CONTAINER} pb-20`}>
         <H2 id="test">Test it</H2>
         <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_1.4fr]">
-          <div className="flex flex-col rounded-[calc(2rem*var(--round,1))] border border-line-strong p-6 md:p-8">
+          <div className="flex flex-col rounded-card border border-line-strong p-6 md:p-8">
             <p className="font-display text-2xl tracking-[-0.02em]">Try a real sign-in</p>
             <p className="mt-2 flex-1 text-sm leading-relaxed text-mute">Sign in with your own account through a test app and see every step: the code, the tokens and who signed in. No code needed.</p>
             <div className="mt-6">
               <LoginWithLogoless href="/developers/try" />
             </div>
           </div>
-          <div className="rounded-[calc(2rem*var(--round,1))] border border-line-strong p-6 md:p-8">
+          <div className="rounded-card border border-line-strong p-6 md:p-8">
             <p className="font-display text-2xl tracking-[-0.02em]">Check my setup</p>
             <p className="mt-2 mb-5 text-sm leading-relaxed text-mute">Paste your client id and the return address your code sends. We tell you whether a sign-in will work, and how to fix it if not.</p>
             <SetupChecker issuer={ISSUER} />
@@ -124,7 +124,7 @@ export function DevelopersGuide({ signedIn }: { signedIn: boolean }) {
       <section aria-labelledby="troubleshooting" className={`${CONTAINER} pb-20`}>
         <H2 id="troubleshooting">Troubleshooting</H2>
         <Lede>The message you see, why it happens and the fix. Most problems are a return address that does not match exactly.</Lede>
-        <ul className="mt-8 max-w-4xl divide-y divide-line rounded-[calc(1.6rem*var(--round,1))] border border-line">
+        <ul className="mt-8 max-w-4xl divide-y divide-line rounded-card border border-line">
           {TROUBLE.map((t) => (
             <li key={t.q}>
               <details className="group">
@@ -197,7 +197,7 @@ Revoke      ${ISSUER}/api/oauth/revoke`}
       </section>
 
       <section className={`${CONTAINER} pb-28`}>
-        <div className="rounded-[calc(2rem*var(--round,1))] border border-line-strong p-8 text-center md:p-14">
+        <div className="rounded-card border border-line-strong p-8 text-center md:p-14">
           <h2 className="font-display text-4xl tracking-[-0.035em] md:text-5xl">Ready when you are</h2>
           <p className="mx-auto mt-3 max-w-xl text-paper/60">It takes two minutes to get a client id.</p>
           <div className="mt-7 flex justify-center">

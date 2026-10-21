@@ -17,7 +17,7 @@ const ORDER: Field[] = ['name', 'description', 'website', 'kind', 'useCases', 'u
 
 function Section({ n, title, help, children }: { n: number; title: string; help: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-[calc(1.8rem*var(--round,1))] border border-line bg-black/40 p-5 sm:p-7 md:p-8">
+    <section className="rounded-card border border-line bg-black/40 p-5 sm:p-7 md:p-8">
       <header className="mb-6 flex gap-4">
         <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-pill border border-line-strong font-mono text-xs text-mute">
           {n}
@@ -120,7 +120,7 @@ export function AppForm({ mode, appId, initial, onSaved, onCancel }: { mode: 'cr
 
   if (made) {
     return (
-      <div className="rounded-[calc(1.8rem*var(--round,1))] border border-emerald-400/30 bg-emerald-400/[0.04] p-6 md:p-9">
+      <div className="rounded-card border border-emerald-400/30 bg-emerald-400/[0.04] p-6 md:p-9">
         <p className="flex items-center gap-2.5 text-xl">
           <CheckCircle2 aria-hidden="true" className="size-6 text-emerald-300" /> {made.name} is registered
         </p>
@@ -128,7 +128,7 @@ export function AppForm({ mode, appId, initial, onSaved, onCancel }: { mode: 'cr
           <div>
             <p className="text-sm text-mute">Client id (public: it goes in your sign-in address)</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <code className="rounded-xl bg-black/50 px-3 py-2 font-mono text-sm break-all">{made.id}</code>
+              <code className="rounded-panel bg-black/50 px-3 py-2 font-mono text-sm break-all">{made.id}</code>
               <CopyButton text={made.id} label="Copy client id" />
             </div>
           </div>
@@ -136,7 +136,7 @@ export function AppForm({ mode, appId, initial, onSaved, onCancel }: { mode: 'cr
             <div>
               <p className="text-sm text-mute">Client secret. Copy it now: it is shown once, and we only keep a fingerprint. Keep it on your server.</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <code className="rounded-xl bg-black/50 px-3 py-2 font-mono text-sm break-all">{made.secret}</code>
+                <code className="rounded-panel bg-black/50 px-3 py-2 font-mono text-sm break-all">{made.secret}</code>
                 <CopyButton text={made.secret} label="Copy secret" />
               </div>
             </div>

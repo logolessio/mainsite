@@ -53,7 +53,7 @@ export function RolePreview({ role }: { role: PreviewRole }) {
         <p className="max-w-md text-pretty text-lg leading-relaxed text-paper/60 md:col-span-5 md:col-start-8">{c.lede}</p>
       </div>
       <Reveal delay={0.1} className="mt-12 md:mt-16">
-        <div className="overflow-hidden rounded-[calc(28px*var(--round,1))] border border-white/10 bg-[#08080a] shadow-[0_60px_120px_-50px_rgb(0_0_0/0.95)]">
+        <div className="overflow-hidden rounded-card border border-white/10 bg-[#08080a] shadow-[0_60px_120px_-50px_rgb(0_0_0/0.95)]">
           {/* the window's bar */}
           <div className="flex h-10 items-center gap-2 border-b border-white/[0.06] px-4">
             <span className="size-2.5 rounded-full bg-white/15" />
@@ -147,7 +147,7 @@ function CreatorPane({ tab, go }: { tab: string; go: (t: string) => void }) {
           ['Lyric clip, verse 2', 'TikTok', '—', 'Declined: no sound'],
         ].map(([t, p, v, s]) => (
           <div key={t} className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3.5 last:border-0 md:px-5">
-            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/[0.05]"><Clapperboard className="size-4 text-paper/60" /></span>
+            <span className="grid size-9 shrink-0 place-items-center rounded-panel bg-white/[0.05]"><Clapperboard className="size-4 text-paper/60" /></span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[14px]">{t}</span>
               <span className="text-[12px] text-paper/40">{p} · {v}</span>
@@ -192,7 +192,7 @@ function CreatorPane({ tab, go }: { tab: string; go: (t: string) => void }) {
         <Stat label="Clips approved" note="3 waiting for a look"><Count to={14} /></Stat>
       </div>
       <div className={cn(card, 'flex flex-wrap items-center gap-3')}>
-        <span className="grid size-10 place-items-center rounded-xl bg-white/[0.05]"><Link2 className="size-4" /></span>
+        <span className="grid size-10 place-items-center rounded-panel bg-white/[0.05]"><Link2 className="size-4" /></span>
         <span className="min-w-0 flex-1 text-[14px]">
           <span className="block">Link your TikTok to get clips approved faster</span>
           <span className="text-[12px] text-paper/40">Verified accounts are checked automatically</span>
@@ -218,7 +218,7 @@ function BrandPane({ tab, go }: { tab: string; go: (t: string) => void }) {
         <AnimatePresence initial={false}>
           {queue.map((q) => (
             <motion.div key={q.id} layout exit={{ opacity: 0, x: decided[q.id] === 'no' ? -30 : 30, transition: { duration: 0.25 } }} className={cn(card, 'flex items-center gap-3 py-3 md:py-3.5')}>
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/[0.05]"><Clapperboard className="size-4 text-paper/60" /></span>
+              <span className="grid size-10 shrink-0 place-items-center rounded-panel bg-white/[0.05]"><Clapperboard className="size-4 text-paper/60" /></span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[14px]">{q.what}</span>
                 <span className="text-[12px] text-paper/40">{q.who} · {q.views} views</span>
@@ -280,7 +280,7 @@ function DeveloperPane({ tab }: { tab: string }) {
   const id = 'lgc_7f3a92e1c4'
   if (tab === 'consent')
     return (
-      <div className="mx-auto max-w-sm rounded-[calc(24px*var(--round,1))] border border-white/10 bg-[#0d0d10] p-6 text-center">
+      <div className="mx-auto max-w-sm rounded-card border border-white/10 bg-[#0d0d10] p-6 text-center">
         <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-white/[0.06]"><Code2 className="size-5" /></span>
         <p className="mt-4 font-display text-2xl">Beatgrid wants to sign you in</p>
         <ul className="mt-5 grid gap-2 text-left text-[13px] text-paper/70">
@@ -311,14 +311,14 @@ function DeveloperPane({ tab }: { tab: string }) {
     <div className="grid gap-4">
       <div className={card}>
         <div className="flex flex-wrap items-center gap-3">
-          <span className="grid size-10 place-items-center rounded-xl bg-white/[0.05]"><Code2 className="size-4" /></span>
+          <span className="grid size-10 place-items-center rounded-panel bg-white/[0.05]"><Code2 className="size-4" /></span>
           <span className="min-w-0 flex-1">
             <span className="block text-[15px]">Beatgrid</span>
             <span className="text-[12px] text-paper/40">Server app · https://beatgrid.app/auth/logoless/callback</span>
           </span>
           <span className="rounded-pill bg-emerald-400/10 px-2.5 py-1 text-[11px] text-emerald-300">Verified</span>
         </div>
-        <div className="mt-4 flex items-center gap-2 rounded-xl border border-white/[0.07] bg-black/40 px-3 py-2 font-mono text-[12px]">
+        <div className="mt-4 flex items-center gap-2 rounded-panel border border-white/[0.07] bg-black/40 px-3 py-2 font-mono text-[12px]">
           <span className="text-paper/40">client_id</span>
           <span className="min-w-0 flex-1 truncate">{id}</span>
           <button type="button" onClick={() => (void navigator.clipboard?.writeText(id).catch(() => {}), setCopied(true), window.setTimeout(() => setCopied(false), 1400))} className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-paper/60 transition-colors hover:bg-white/[0.06] hover:text-paper">

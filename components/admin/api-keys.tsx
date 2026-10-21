@@ -83,9 +83,9 @@ export function ApiKeys({ base, prompt }: { base: string; prompt: string }) {
     <div className="grid max-w-4xl gap-6">
       <Card title="Keys" sub="A key lets another tool, like a dashboard built in Base44, do your admin work from anywhere. It cannot send money, ban or delete people, change roles or change site-wide switches.">
         {fresh && (
-          <div className="mb-6 rounded-[calc(1.4rem*var(--round,1))] border border-emerald-400/30 bg-emerald-400/[0.05] p-4">
+          <div className="mb-6 rounded-card border border-emerald-400/30 bg-emerald-400/[0.05] p-4">
             <p className="text-sm">Copy this key now. It is shown once and cannot be shown again.</p>
-            <p className="mt-3 break-all rounded-xl bg-black/40 p-3 font-mono text-xs">{fresh}</p>
+            <p className="mt-3 break-all rounded-panel bg-black/40 p-3 font-mono text-xs">{fresh}</p>
             <div className="mt-3 flex gap-2">
               <CopyButton text={fresh} label="Copy the key" />
               <button type="button" className="h-9 rounded-pill px-4 text-xs text-mute hover:text-paper" onClick={() => setFresh(null)}>
@@ -145,7 +145,7 @@ export function ApiKeys({ base, prompt }: { base: string; prompt: string }) {
       </Card>
 
       <Card title="Use it" sub="Send the key in a header on every call.">
-        <pre className="overflow-x-auto rounded-xl bg-black/40 p-4 font-mono text-xs leading-relaxed text-paper/80">{`curl ${base}/overview \\\n  -H "Authorization: Bearer lgk_YOURKEY"`}</pre>
+        <pre className="overflow-x-auto rounded-panel bg-black/40 p-4 font-mono text-xs leading-relaxed text-paper/80">{`curl ${base}/overview \\\n  -H "Authorization: Bearer lgk_YOURKEY"`}</pre>
         <p className="mt-3 text-xs text-mute">GET {base} lists every route. Changes are written to the audit log as “api:&lt;key name&gt;”.</p>
       </Card>
 
@@ -153,7 +153,7 @@ export function ApiKeys({ base, prompt }: { base: string; prompt: string }) {
         <div className="mb-3">
           <CopyButton text={prompt} label="Copy the prompt" />
         </div>
-        <pre className="max-h-96 overflow-auto whitespace-pre-wrap rounded-xl bg-black/40 p-4 font-mono text-xs leading-relaxed text-paper/80">{prompt}</pre>
+        <pre className="max-h-96 overflow-auto whitespace-pre-wrap rounded-panel bg-black/40 p-4 font-mono text-xs leading-relaxed text-paper/80">{prompt}</pre>
       </Card>
     </div>
   )

@@ -95,7 +95,7 @@ export function AutoCalm() {
           onPointerLeave={() => setHeld(false)}
           onFocus={() => setHeld(true)}
           onBlur={() => setHeld(false)}
-          className="fixed right-4 bottom-4 z-[160] w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-3xl border border-line-strong bg-ink p-5 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.6)]"
+          className="fixed right-4 bottom-4 z-[160] w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-card border border-line-strong bg-ink p-5 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.6)]"
         >
           <button type="button" aria-label="Dismiss" onClick={() => setTold(false)} className="absolute top-3 right-3 grid size-8 place-items-center rounded-pill text-mute hover:bg-white/10">
             <X className="size-4" />

@@ -107,7 +107,7 @@ function Dialog({ platform, handle, onClose, onChange }: { platform: P; handle: 
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[90] grid place-items-center overflow-y-auto bg-black/75 p-4" onClick={onClose}>
-      <motion.div ref={box} role="dialog" aria-modal="true" aria-label={`Verify ${LABEL[platform]}`} initial={{ opacity: 0, y: 24, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.98, transition: { duration: 0.16 } }} transition={SPRING_POP} onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-[calc(28px*var(--round,1))] border border-white/12 bg-gradient-to-b from-[#17171b] to-[#0b0b0d] p-6 md:p-8">
+      <motion.div ref={box} role="dialog" aria-modal="true" aria-label={`Verify ${LABEL[platform]}`} initial={{ opacity: 0, y: 24, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.98, transition: { duration: 0.16 } }} transition={SPRING_POP} onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-card border border-white/12 bg-gradient-to-b from-[#17171b] to-[#0b0b0d] p-6 md:p-8">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <span className="grid size-12 place-items-center rounded-pill border border-line"><BrandIcon name={platform} className="size-6" /></span>
@@ -130,7 +130,7 @@ function Dialog({ platform, handle, onClose, onChange }: { platform: P; handle: 
           <div className="mt-8 text-center">
             <p className="text-lg">Waiting for the team</p>
             <p className="mx-auto mt-2 max-w-xs text-sm text-mute">Someone will look at your bio and you will get a notification. Leave the code in your bio until then.</p>
-            <p className="mt-5 inline-block rounded-xl border border-line-strong bg-ink/70 px-4 py-2 font-mono text-sm select-all">{code}</p>
+            <p className="mt-5 inline-block rounded-panel border border-line-strong bg-ink/70 px-4 py-2 font-mono text-sm select-all">{code}</p>
             <button type="button" onClick={onClose} className="mt-7 inline-flex h-12 w-full items-center justify-center rounded-pill border border-white/25 text-[15px] transition-colors hover:bg-white/10">Close</button>
           </div>
         ) : (

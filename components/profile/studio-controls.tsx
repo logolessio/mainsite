@@ -101,7 +101,7 @@ export function Segmented<T extends string>({ value, options, onChange, label, l
 /** A tile in a grid of choices (effects, fonts). */
 export function Tile({ on, onClick, children, className, label }: { on: boolean; onClick: () => void; children: React.ReactNode; className?: string; label?: string }) {
   return (
-    <button type="button" onClick={onClick} aria-pressed={on} aria-label={label} className={cn('relative rounded-xl border transition-all hover:-translate-y-0.5', on ? 'border-paper bg-paper/10' : 'border-line text-mute hover:bg-paper/5 hover:text-paper', className)}>
+    <button type="button" onClick={onClick} aria-pressed={on} aria-label={label} className={cn('relative rounded-panel border transition-all hover:-translate-y-0.5', on ? 'border-paper bg-paper/10' : 'border-line text-mute hover:bg-paper/5 hover:text-paper', className)}>
       {children}
       {on && <Check className="absolute top-1.5 right-1.5 size-3.5 text-paper" />}
     </button>

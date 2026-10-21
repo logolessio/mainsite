@@ -21,7 +21,7 @@ type Status = {
 }
 
 type AccessLine = { label: string; ok: boolean; note: string }
-const input = 'h-10 w-full rounded-xl border border-line-strong bg-ink/80 px-3 font-mono text-xs outline-none focus:border-paper'
+const input = 'h-10 w-full rounded-panel border border-line-strong bg-ink/80 px-3 font-mono text-xs outline-none focus:border-paper'
 const btn = 'inline-flex h-10 items-center justify-center gap-2 rounded-pill px-5 text-sm transition-colors disabled:opacity-40'
 const ghost = `${btn} border border-line-strong hover:bg-paper/10`
 const solid = `${btn} bg-paper font-medium text-ink hover:bg-paper/85`
@@ -143,14 +143,14 @@ export function DiscordPanel() {
           <li>
             <span className="text-paper">2.</span> Set the <b>Interactions Endpoint URL</b> to:
             <span className="mt-1.5 flex items-center gap-2">
-              <code className="rounded-lg bg-white/[0.06] px-2.5 py-1.5 text-xs text-paper">{s.endpoint}</code>
+              <code className="rounded-tile bg-white/[0.06] px-2.5 py-1.5 text-xs text-paper">{s.endpoint}</code>
               <button type="button" aria-label="Copy" className="grid size-8 place-items-center rounded-pill border border-line-strong hover:bg-paper/10" onClick={() => navigator.clipboard.writeText(s.endpoint).then(() => (setCopied(true), setTimeout(() => setCopied(false), 1500)))}>
                 {copied ? <CheckCircle2 className="size-4 text-emerald-300" /> : <Copy className="size-4" />}
               </button>
             </span>
           </li>
           <li>
-            <span className="text-paper">2b.</span> Under <b>OAuth2</b> in the same application, copy the <b>Client Secret</b> into Cloudflare as AUTH_DISCORD_SECRET (and the Application ID as AUTH_DISCORD_ID), and add these two <b>Redirects</b>: <code className="rounded-lg bg-white/[0.06] px-2 py-1 text-xs text-paper">https://logoless.io/api/discord/callback</code> and <code className="rounded-lg bg-white/[0.06] px-2 py-1 text-xs text-paper">https://dev.logoless.io/api/discord/callback</code>. Members then press <b>Connect Discord</b> in Settings (or sign in with Discord), approve on Discord&apos;s own page, and are added to your server with the linked role. No codes.
+            <span className="text-paper">2b.</span> Under <b>OAuth2</b> in the same application, copy the <b>Client Secret</b> into Cloudflare as AUTH_DISCORD_SECRET (and the Application ID as AUTH_DISCORD_ID), and add these two <b>Redirects</b>: <code className="rounded-tile bg-white/[0.06] px-2 py-1 text-xs text-paper">https://logoless.io/api/discord/callback</code> and <code className="rounded-tile bg-white/[0.06] px-2 py-1 text-xs text-paper">https://dev.logoless.io/api/discord/callback</code>. Members then press <b>Connect Discord</b> in Settings (or sign in with Discord), approve on Discord&apos;s own page, and are added to your server with the linked role. No codes.
           </li>
           <li>
             <span className="text-paper">3.</span> Add the bot to your server:{' '}

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
  */
 export function NoCampaigns({ className, as: Heading = 'p' }: { className?: string; as?: 'h1' | 'h2' | 'p' }) {
   return (
-    <div className={cn('mx-auto max-w-xl rounded-[calc(28px*var(--round,1))] border border-dashed border-line-strong px-6 py-16 text-center md:py-20', className)}>
+    <div className={cn('mx-auto max-w-xl rounded-card border border-dashed border-line-strong px-6 py-16 text-center md:py-20', className)}>
       <Heading className="font-display text-3xl tracking-tight md:text-4xl">New campaigns are on their way</Heading>
       <p className="mx-auto mt-3 max-w-sm text-[15px] leading-relaxed text-mute">Nothing is live right this minute. Check back soon: new campaigns show up here first.</p>
       <p className="mt-7 text-sm text-mute">

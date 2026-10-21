@@ -120,7 +120,7 @@ export function CenterBell({ onNavigate, align = 'right' }: { onNavigate?: () =>
             exit={reduced ? { opacity: 0 } : { opacity: 0, y: -4, scale: 0.97, filter: 'blur(2px)' }}
             transition={{ duration: 0.28, ease: EASE_OUT }}
             className={cn(
-              'absolute top-full z-50 mt-3 flex max-h-[min(32rem,76dvh)] w-[min(24rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[calc(26px*var(--round,1))] border border-white/[0.09] bg-[#0d0d10]/[0.97] shadow-[0_40px_90px_-24px_rgb(0_0_0/0.95)] backdrop-blur-xl',
+              'absolute top-full z-50 mt-3 flex max-h-[min(32rem,76dvh)] w-[min(24rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-card border border-white/[0.09] bg-[#0d0d10]/[0.97] shadow-[0_40px_90px_-24px_rgb(0_0_0/0.95)] backdrop-blur-xl',
               align === 'right' ? 'right-0 origin-top-right' : 'left-0 origin-top-left',
             )}
           >

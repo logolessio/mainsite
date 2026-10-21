@@ -181,7 +181,7 @@ export function NotifySettings() {
     return (
       <div role="status" aria-busy="true" aria-label="Loading" className="max-w-3xl space-y-6">
         {[520, 170, 200].map((h, i) => (
-          <div key={i} className="sk rounded-3xl border border-line bg-white/[0.03]" style={{ height: h }} />
+          <div key={i} className="sk rounded-card border border-line bg-white/[0.03]" style={{ height: h }} />
         ))}
       </div>
     )

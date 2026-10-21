@@ -360,7 +360,7 @@ function Coach({ run, onMove, onClose }: { run: Run; onMove: (i: number) => void
         transition={{ duration: reduced ? 0 : 0.3, ease: EASE_OUT }}
         style={docked ? undefined : { left: pos?.left ?? EDGE, top: pos?.top ?? EDGE, width: cardW }}
         className={cn(
-          'absolute rounded-[calc(24px*var(--round,1))] border border-white/12 bg-gradient-to-b from-[#17171b] to-[#0b0b0d] p-5 shadow-[0_30px_80px_-20px_rgb(0_0_0/0.9)]',
+          'absolute rounded-card border border-white/12 bg-gradient-to-b from-[#17171b] to-[#0b0b0d] p-5 shadow-[0_30px_80px_-20px_rgb(0_0_0/0.9)]',
           docked && 'inset-x-3 bottom-[max(12px,env(safe-area-inset-bottom))]',
           !shown && 'pointer-events-none',
         )}

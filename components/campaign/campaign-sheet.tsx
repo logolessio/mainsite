@@ -92,7 +92,7 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
     </div>
   )
   const cover = (
-    <div className="aspect-square overflow-hidden rounded-[calc(1.75rem*var(--round,1))] bg-white/10 max-md:size-24 max-md:shrink-0 max-md:rounded-3xl">
+    <div className="aspect-square overflow-hidden rounded-card bg-white/10 max-md:size-24 max-md:shrink-0 max-md:rounded-card">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <FadeImg src={campaign.cover} alt={`Cover of ${campaign.title} by ${campaign.creator}`} className="size-full scale-[1.07] object-cover" />
     </div>
@@ -172,7 +172,7 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
   )
 
   return (
-    <div ref={root} data-kb-keys style={scale < 1 ? { transform: `scale(${scale})` } : undefined} className={cn('island relative w-full max-w-[1000px] rounded-[calc(2.5rem*var(--round,1))] bg-[#0b0b0d] p-5 text-white md:p-8', inline && 'mx-auto')}>
+    <div ref={root} data-kb-keys style={scale < 1 ? { transform: `scale(${scale})` } : undefined} className={cn('island relative w-full max-w-[1000px] rounded-card bg-[#0b0b0d] p-5 text-white md:p-8', inline && 'mx-auto')}>
       {view === 'details' && onClose && (
         <button type="button" aria-label="Close" onClick={onClose} className="absolute top-4 right-4 z-10 grid size-10 place-items-center rounded-pill text-white/60 transition-colors hover:bg-white/10 hover:text-white md:top-6 md:right-6">
           <X className="size-5" />

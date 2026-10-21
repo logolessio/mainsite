@@ -291,7 +291,7 @@ function VerifyInline({ linked, preview, onDone, buttonClass, quietClass }: { li
           const waitingOnAuto = p === 'tiktok' && secondsLeft !== null
           const canAsk = Boolean(r.code) && (p === 'instagram' || r.phase === 'unreadable' || (r.phase === 'not-found' && !waitingOnAuto))
           return (
-            <li key={p} className="rounded-[calc(1.6rem*var(--round,1))] border border-line-strong p-4 sm:p-5">
+            <li key={p} className="rounded-card border border-line-strong p-4 sm:p-5">
               <div className="flex items-center gap-3">
                 <BrandIcon name={p} className="size-5 shrink-0 text-mute" />
                 <span className="min-w-0 flex-1 truncate text-[16px]">

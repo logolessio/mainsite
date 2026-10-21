@@ -140,7 +140,7 @@ export function InviteForm() {
 
       <AnimatePresence>
         {made && (
-          <motion.div initial={{ opacity: 0, y: 12, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0 }} className="mt-6 rounded-3xl border border-emerald-400/30 bg-emerald-400/[0.05] p-5">
+          <motion.div initial={{ opacity: 0, y: 12, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0 }} className="mt-6 rounded-card border border-emerald-400/30 bg-emerald-400/[0.05] p-5">
             <p className="text-sm text-emerald-300">Link ready for {made.name}</p>
             <p className="mt-1 font-display text-2xl break-all">{made.url}</p>
             <div className="mt-4 flex flex-wrap gap-2">

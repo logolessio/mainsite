@@ -118,7 +118,7 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
 
             <div className="mt-auto pt-10">
               {user?.signedIn ? <ProfilePill user={user} onClose={onClose} onTour={onTour} /> : (
-                <div className="overflow-hidden rounded-[calc(28px*var(--round,1))] border border-line bg-white/[0.03] p-5">
+                <div className="overflow-hidden rounded-card border border-line bg-white/[0.03] p-5">
                   <TransitionLink href="/onboarding" onClick={onClose} className="inline-flex h-14 w-full items-center justify-center rounded-pill bg-paper text-[17px] font-medium text-ink transition-colors hover:bg-paper/85">
                     Get started
                   </TransitionLink>
@@ -171,7 +171,7 @@ function ProfilePill({ user, onClose, onTour }: { user: Extract<NavUser, { signe
   ]
   const chip = 'inline-flex h-8 items-center rounded-pill bg-white/[0.06] px-3.5 text-[13px] text-paper/80 transition-colors hover:bg-white/[0.12] hover:text-paper'
   return (
-    <div className="overflow-hidden rounded-[calc(30px*var(--round,1))] border border-white/[0.09] bg-[#0b0b0d] shadow-[0_30px_60px_-30px_rgb(0_0_0/0.9)]">
+    <div className="overflow-hidden rounded-card border border-white/[0.09] bg-[#0b0b0d] shadow-[0_30px_60px_-30px_rgb(0_0_0/0.9)]">
       <div className="relative h-[84px]" style={{ background: banner }}>
         <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/10 to-[#0b0b0d]" />
       </div>

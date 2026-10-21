@@ -318,7 +318,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
         <div className="mx-auto grid w-full max-w-[1180px] gap-10 px-5 pt-6 pb-40 md:grid-cols-[250px_1fr] md:px-10 md:pt-12">
           {/* ---------- the rail ---------- */}
           <aside className="hidden md:block">
-            <LiquidGlass as="nav" aria-label="Setup steps" rootClassName="sticky top-28" rounded="rounded-[calc(2rem*var(--round,1))]" className="p-3" look={{ zRadius: 24 }}>
+            <LiquidGlass as="nav" aria-label="Setup steps" rootClassName="sticky top-28" rounded="rounded-card" className="p-3" look={{ zRadius: 24 }}>
               {(pkg ? PACKAGE_CHAPTERS : CHAPTERS).map((c) => (
                 <div key={c} className="mb-2 last:mb-0">
                   <p className="px-3 pt-2 pb-1 text-[11px] font-medium text-mute">{c}</p>
@@ -358,7 +358,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                         { icon: Wallet, t: 'Your funds', d: 'Add money any time. Pay only for verified views.' },
                       ].map((c, i) => (
                         <Rise key={c.t} i={i}>
-                          <div className="h-full rounded-3xl border border-line bg-white/[0.03] p-5">
+                          <div className="h-full rounded-card border border-line bg-white/[0.03] p-5">
                             <c.icon className="size-6" />
                             <p className="mt-4 text-lg">{c.t}</p>
                             <p className="mt-1 text-sm leading-relaxed text-mute">{c.d}</p>
@@ -482,7 +482,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                       )}
                     </div>
                     {upload.err && <p className="mt-4 text-sm text-signal">{upload.err}</p>}
-                    <Rise i={2} className="mt-8 rounded-3xl border border-line bg-white/[0.03] p-5 text-sm text-mute">
+                    <Rise i={2} className="mt-8 rounded-card border border-line bg-white/[0.03] p-5 text-sm text-mute">
                       <span className="text-paper">What happens next:</span> when you continue we create your page at logoless.io/@{data.handle || 'you'} with everything so far.
                     </Rise>
                   </>
@@ -498,7 +498,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                           {(prefs?.options ?? []).map((o) => {
                             const on = prefs?.pref === o.id
                             return (
-                              <button key={o.id} type="button" role="radio" aria-checked={on} onClick={() => void choosePref(o.id)} className={cn('flex items-start gap-3 rounded-3xl border p-4 text-left transition-colors', on ? 'border-paper bg-white/[0.07]' : 'border-line-strong text-mute hover:border-paper/50 hover:text-paper')}>
+                              <button key={o.id} type="button" role="radio" aria-checked={on} onClick={() => void choosePref(o.id)} className={cn('flex items-start gap-3 rounded-card border p-4 text-left transition-colors', on ? 'border-paper bg-white/[0.07]' : 'border-line-strong text-mute hover:border-paper/50 hover:text-paper')}>
                                 <span className={cn('mt-1 grid size-4 shrink-0 place-items-center rounded-pill border', on ? 'border-paper bg-paper' : 'border-line-strong')}>{on && <span className="size-1.5 rounded-pill bg-ink" />}</span>
                                 <span>
                                   <span className="block text-[15px] text-paper">{o.label}</span>
@@ -531,7 +531,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                   <>
                     <Ask sub="Your campaigns are paid from one balance. Add funds now and your first campaign can start the moment it is ready. Nothing is spent until creators earn, and we cover PayPal's fees.">{flash === 'paid' ? 'Funds added. Nice.' : 'Add funds.'}</Ask>
                     <Rise i={0}>
-                      <div className="rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-white/[0.04] p-6 md:p-8">
+                      <div className="rounded-card border border-line-strong bg-white/[0.04] p-6 md:p-8">
                         <p className="text-xs tracking-wide text-mute">Your balance</p>
                         <p className="mt-2 font-display text-6xl leading-none font-medium tabular-nums md:text-7xl">{balance === null ? '…' : money(balance)}</p>
                         <div className="mt-7">
@@ -682,7 +682,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                         </div>
                       </Rise>
                       <Rise i={2}>
-                        <motion.div layout className="relative overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-white/[0.04] p-6 md:p-8">
+                        <motion.div layout className="relative overflow-hidden rounded-card border border-line-strong bg-white/[0.04] p-6 md:p-8">
                           <p className="text-xs tracking-wide text-mute">Your budget can buy up to</p>
                           <p className="mt-2 font-display text-5xl font-medium tabular-nums md:text-7xl">
                             <CountUp key={estimate} value={estimate.toLocaleString('en-US')} />
@@ -712,7 +712,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                         ['Top up any time', 'Running well? Add more funds to the same campaign in two clicks.'],
                       ].map(([t, d], i) => (
                         <Rise key={t} i={i}>
-                          <li className="flex gap-4 rounded-3xl border border-line bg-white/[0.03] p-5">
+                          <li className="flex gap-4 rounded-card border border-line bg-white/[0.03] p-5">
                             <span className="grid size-8 shrink-0 place-items-center rounded-pill bg-paper font-mono text-sm text-ink">{i + 1}</span>
                             <span>
                               <span className="block text-lg">{t}</span>
@@ -723,7 +723,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                       ))}
                     </ol>
                     <Rise i={5} className="mt-6">
-                      <label className="flex cursor-pointer items-start gap-4 rounded-3xl border border-line-strong p-5 transition-colors hover:bg-white/[0.03]">
+                      <label className="flex cursor-pointer items-start gap-4 rounded-card border border-line-strong p-5 transition-colors hover:bg-white/[0.03]">
                         <input type="checkbox" checked={Boolean(data.agreed)} onChange={(e) => set({ agreed: e.target.checked })} className="mt-1 size-5 accent-white" />
                         <span className="text-sm leading-relaxed text-mute">
                           I agree to the{' '}
@@ -740,7 +740,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                   <>
                     <Ask sub="Last look. Nothing is charged yet. Next you can fund it, or leave it for later.">Ready to make it real?</Ask>
                     <Rise i={0}>
-                      <div className="overflow-hidden rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-white/[0.04]">
+                      <div className="overflow-hidden rounded-card border border-line-strong bg-white/[0.04]">
                         <div className="flex items-center gap-5 p-5 md:p-6">
                           <div className="size-24 shrink-0 overflow-hidden rounded-2xl bg-white/10">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -778,7 +778,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                   <>
                     <Ask sub="Your campaign is created. Fund it and our team launches it. Until it is paid and launched, nobody can see it.">{flash === 'cancelled' ? 'No problem. Whenever you are ready.' : 'Fund your campaign.'}</Ask>
                     <Rise i={0}>
-                      <div className="rounded-[calc(2rem*var(--round,1))] border border-line-strong bg-white/[0.04] p-6 md:p-8">
+                      <div className="rounded-card border border-line-strong bg-white/[0.04] p-6 md:p-8">
                         <p className="text-xs tracking-wide text-mute">{campaign.title}</p>
                         <p className="mt-2 font-display text-6xl font-medium tabular-nums md:text-7xl">{money(costFor(campaign.budgetCents))}</p>
                         <p className="mt-2 text-sm text-mute">
@@ -823,7 +823,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                     <Ask sub={flash === 'paid' || campaign?.status === 'paid' || campaign?.status === 'live' ? 'Payment received. Our team is checking your brief and will launch it shortly. We’ll tell you as soon as it’s live.' : campaign ? 'Your campaign is saved and waiting for its funds. You can pay from your dashboard whenever you like.' : 'Your page is ready.'}>{flash === 'paid' ? 'You are in. Payment received.' : 'You are all set.'}</Ask>
                     {pkg && (
                       <Rise i={0} className="relative z-10 mb-6">
-                        <a href="/brand?tour=1" className="group flex items-center gap-5 rounded-[calc(2rem*var(--round,1))] border border-paper/40 bg-white/[0.07] p-5 transition-all hover:-translate-y-0.5 hover:bg-white/[0.1] md:p-6">
+                        <a href="/brand?tour=1" className="group flex items-center gap-5 rounded-card border border-paper/40 bg-white/[0.07] p-5 transition-all hover:-translate-y-0.5 hover:bg-white/[0.1] md:p-6">
                           <span className="grid size-14 shrink-0 place-items-center rounded-pill bg-paper text-ink">
                             <Sparkles className="size-6" />
                           </span>
@@ -843,7 +843,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                         { href: `/@${data.handle}`, icon: ExternalLink, t: 'Your public page', d: `logoless.io/@${data.handle}` },
                       ].map((c, i) => (
                         <Rise key={c.t} i={i}>
-                          <a href={c.href} className="group flex h-full items-start gap-4 rounded-3xl border border-line bg-white/[0.04] p-5 transition-all hover:-translate-y-0.5 hover:border-paper/40 hover:bg-white/[0.07]">
+                          <a href={c.href} className="group flex h-full items-start gap-4 rounded-card border border-line bg-white/[0.04] p-5 transition-all hover:-translate-y-0.5 hover:border-paper/40 hover:bg-white/[0.07]">
                             <c.icon className="mt-0.5 size-6 shrink-0" />
                             <span className="min-w-0 flex-1">
                               <span className="block text-lg">{c.t}</span>

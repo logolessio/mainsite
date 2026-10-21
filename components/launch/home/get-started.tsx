@@ -26,7 +26,7 @@ export function GetStarted({ copy, signedIn }: { copy: PageCopy; signedIn: boole
 
   const row = 'flex h-[52px] w-full items-center justify-center gap-2.5 rounded-pill text-[15px] font-medium transition-[transform,background-color,border-color] duration-300 active:scale-[0.98] disabled:opacity-60'
   return (
-    <div className={cn(s.glass, 'w-full rounded-[calc(28px*var(--round,1))] p-5 text-left md:p-7')}>
+    <div className={cn(s.glass, 'w-full rounded-card p-5 text-left md:p-7')}>
       <p className="font-display text-[clamp(1.6rem,3.4vw,2.1rem)] leading-none">{copy.startTitle}</p>
       <p className="mt-2.5 text-[14.5px] leading-relaxed text-paper/55">{copy.startText}</p>
       {signedIn ? (

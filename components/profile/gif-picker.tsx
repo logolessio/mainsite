@@ -89,11 +89,11 @@ export function GifPicker({ onPick, selected, className }: { onPick: (g: GifPick
           ))}
         </div>
       )}
-      <div className="mt-3 max-h-[360px] overflow-y-auto overscroll-contain rounded-xl">
+      <div className="mt-3 max-h-[360px] overflow-y-auto overscroll-contain rounded-panel">
         {state === 'loading' ? (
           <div className="grid grid-cols-2 gap-2">
             {Array.from({ length: 6 }, (_, i) => (
-              <div key={i} className="h-24 animate-pulse rounded-xl bg-white/[0.05]" />
+              <div key={i} className="h-24 animate-pulse rounded-panel bg-white/[0.05]" />
             ))}
           </div>
         ) : state === 'error' ? (
@@ -111,7 +111,7 @@ export function GifPicker({ onPick, selected, className }: { onPick: (g: GifPick
                     onClick={() => onPick({ id: g.id, w: g.w, h: g.h, title: g.title })}
                     aria-pressed={selected === g.id}
                     aria-label={g.title || 'GIF'}
-                    className={cn('relative block overflow-hidden rounded-xl bg-white/[0.04] ring-offset-2 ring-offset-[#0b0b0d] transition-transform hover:scale-[1.02]', selected === g.id && 'ring-2 ring-paper')}
+                    className={cn('relative block overflow-hidden rounded-panel bg-white/[0.04] ring-offset-2 ring-offset-[#0b0b0d] transition-transform hover:scale-[1.02]', selected === g.id && 'ring-2 ring-paper')}
                     style={{ aspectRatio: `${g.w} / ${g.h}` }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}

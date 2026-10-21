@@ -35,7 +35,7 @@ const WORDS: { key: keyof PageCopy; label: string; long?: boolean; group: string
   { key: 'loginLabel', label: 'Log in link', group: 'Once open' },
 ]
 
-const input = 'w-full rounded-xl border border-white/12 bg-white/[0.04] px-3 py-2.5 text-[14px] text-paper outline-none transition-colors placeholder:text-paper/30 focus:border-white/35'
+const input = 'w-full rounded-panel border border-white/12 bg-white/[0.04] px-3 py-2.5 text-[14px] text-paper outline-none transition-colors placeholder:text-paper/30 focus:border-white/35'
 const label = 'mb-1.5 block text-[12px] font-medium text-paper/55'
 
 /** A date for an <input type="datetime-local">, in the owner's own time. */
@@ -106,7 +106,7 @@ export function OwnerEditor({ open, onClose, draft, setDraft, mode, setMode, ini
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 24 }}
           transition={{ duration: 0.4, ease: EASE }}
-          className="fixed inset-x-2 bottom-2 z-50 flex max-h-[72dvh] flex-col overflow-hidden rounded-[24px] border border-white/12 bg-[#0b0b0d]/92 text-left shadow-[0_30px_80px_-20px_rgb(0_0_0/0.9)] backdrop-blur-2xl md:inset-x-auto md:top-3 md:right-3 md:bottom-3 md:max-h-none md:w-[400px]"
+          className="fixed inset-x-2 bottom-2 z-50 flex max-h-[72dvh] flex-col overflow-hidden rounded-card border border-white/12 bg-[#0b0b0d]/92 text-left shadow-[0_30px_80px_-20px_rgb(0_0_0/0.9)] backdrop-blur-2xl md:inset-x-auto md:top-3 md:right-3 md:bottom-3 md:max-h-none md:w-[400px]"
         >
           <header className="flex items-center gap-3 border-b border-white/8 px-5 pt-4 pb-3">
             <div className="min-w-0 flex-1">
@@ -327,7 +327,7 @@ function Field({ w, value, onChange }: { w: (typeof WORDS)[number]; value: strin
 
 function Swatch({ on, onClick, label: name, title, style }: { on: boolean; onClick: () => void; label: string; title?: string; style: React.CSSProperties }) {
   return (
-    <button type="button" aria-pressed={on} title={title ?? name} onClick={onClick} className={cn('relative aspect-[4/3] overflow-hidden rounded-xl text-left ring-offset-2 ring-offset-[#0b0b0d] transition-transform hover:scale-[1.03]', on ? 'ring-2 ring-paper' : 'ring-1 ring-white/10')} style={style}>
+    <button type="button" aria-pressed={on} title={title ?? name} onClick={onClick} className={cn('relative aspect-[4/3] overflow-hidden rounded-panel text-left ring-offset-2 ring-offset-[#0b0b0d] transition-transform hover:scale-[1.03]', on ? 'ring-2 ring-paper' : 'ring-1 ring-white/10')} style={style}>
       <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-2 pt-4 pb-1.5 text-[11px] text-paper/85">{name}</span>
     </button>
   )

@@ -135,7 +135,7 @@ export function InviteWelcome({ name, slug, state, email, lockedTo, admin }: Pro
           ].map(([Ic, t]) => {
             const I = Ic as typeof Users
             return (
-              <li key={t as string} className="flex flex-col items-center gap-2 rounded-3xl border border-line bg-white/[0.03] px-4 py-5 text-sm text-mute">
+              <li key={t as string} className="flex flex-col items-center gap-2 rounded-card border border-line bg-white/[0.03] px-4 py-5 text-sm text-mute">
                 <I className="size-5 text-paper" />
                 {t as string}
               </li>

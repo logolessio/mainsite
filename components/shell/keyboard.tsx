@@ -312,7 +312,7 @@ export function Keyboard() {
       <AnimatePresence>
         {armed && (
           <motion.div key="go" role="note" initial={{ opacity: 0, y: 16, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, transition: { duration: 0.12 } }} transition={SPRING_POP} className="pointer-events-none fixed inset-x-0 bottom-24 z-[240] flex justify-center px-4 md:bottom-10">
-            <div className="max-w-xl rounded-3xl border border-line-strong bg-[#101012] px-5 py-4 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.9)]">
+            <div className="max-w-xl rounded-card border border-line-strong bg-[#101012] px-5 py-4 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.9)]">
               <p className="mb-3 text-xs text-mute">Go to… press a key</p>
               <ul className="flex flex-wrap gap-x-5 gap-y-2.5 text-sm">
                 {nav.map((n, i) => (
@@ -330,7 +330,7 @@ export function Keyboard() {
       <AnimatePresence>
         {help && (
           <motion.div key="help" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} onMouseDown={() => setHelp(false)} className="fixed inset-0 z-[260] grid place-items-center overflow-y-auto bg-black/65 p-4">
-            <motion.div ref={box} role="dialog" aria-modal="true" aria-labelledby="kb-title" initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, transition: { duration: 0.12 } }} transition={SPRING_POP} onMouseDown={(e) => e.stopPropagation()} className="my-8 w-full max-w-2xl rounded-[calc(28px*var(--round,1))] border border-line-strong bg-[#0b0b0d] p-6 md:p-8">
+            <motion.div ref={box} role="dialog" aria-modal="true" aria-labelledby="kb-title" initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, transition: { duration: 0.12 } }} transition={SPRING_POP} onMouseDown={(e) => e.stopPropagation()} className="my-8 w-full max-w-2xl rounded-card border border-line-strong bg-[#0b0b0d] p-6 md:p-8">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 id="kb-title" className="font-display text-3xl">

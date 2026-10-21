@@ -1,10 +1,10 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, ChevronDown, Download, ExternalLink, Image as ImageIcon, Loader2, Pencil, Shield, Undo2, X } from 'lucide-react'
+import { ArrowLeft, Award, ChevronDown, Download, ExternalLink, Image as ImageIcon, Layers, Loader2, Palette, Pencil, Shield, UserRound, X, type LucideIcon } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { ActionButton } from '@/components/app/ui'
-import { BrandIcon } from '@/components/brand-icon'
+import { useFeature } from '@/components/shell/features-provider'
 import { NAV_USER_REFRESH } from '@/components/shell/nav-user'
 import { Field, Input, Select, Textarea } from '@/components/ui/fields'
 import { useUnsavedGuard } from '@/hooks/use-unsaved-guard'
@@ -17,7 +17,8 @@ import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { nameSpeed, ProfileCard, type EditTarget } from './profile-card'
 import { ProfileBackdrop } from './profile-backdrop'
-import { Group, Slider, Tile } from './studio-controls'
+import { UnsavedBar } from '@/components/ui/unsaved-bar'
+import { Slider, Tile } from './studio-controls'
 import { AvatarPanel, BackgroundPanel, BadgesPanel, BannerPanel, CardPanel, type Studio } from './studio-panels'
 
 type Loaded = { profile: ProfileView; unlocked: string[]; discordImport: boolean; discordLinked: boolean }
@@ -47,6 +48,62 @@ function useWide() {
   )
 }
 
+
+/** A block of the settings column. The blocks are separated by hairlines, not boxed one inside another. */
+function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <section className="px-5 py-5 sm:px-6">
+      <div className="mb-4 flex items-baseline justify-between gap-3">
+        <h3 className="font-sans text-[15px] font-medium">{title}</h3>
+        {hint && <p className="text-right text-xs text-mute">{hint}</p>}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+/** One thing on the page that can be changed: what it is, what it is now, and a button that opens just its controls. */
+function EditRow({ icon: Icon, title, sub, onClick }: { icon: LucideIcon; title: string; sub: string; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className="group flex w-full items-center gap-3.5 rounded-tile px-3 py-2.5 text-left transition-colors hover:bg-white/[0.04] focus-visible:bg-white/[0.04]">
+      <span className="grid size-10 shrink-0 place-items-center rounded-tile bg-white/[0.06] text-paper/80">
+        <Icon aria-hidden="true" className="size-[18px]" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm">{title}</span>
+        <span className="block truncate text-xs text-mute">{sub}</span>
+      </span>
+      <span className="inline-flex h-8 shrink-0 items-center rounded-pill border border-line-strong px-3.5 text-xs text-paper/75 transition-colors group-hover:border-paper/40 group-hover:text-paper">Change</span>
+    </button>
+  )
+}
+
+/** A row that opens to show its choices in place, so the column stays short. */
+function Disclosure({ title, sub, children }: { title: string; sub: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="rounded-panel border border-line">
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="flex w-full items-center gap-3 px-4 py-3 text-left">
+        <span className="flex-1 text-sm">{title}</span>
+        <span className="truncate text-xs text-mute">{sub}</span>
+        <ChevronDown aria-hidden="true" className={cn('size-4 shrink-0 text-mute transition-transform duration-300', open && 'rotate-180')} />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.28, ease: EASE_OUT }} className="overflow-hidden">
+            <div className="border-t border-line p-4">{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+/** Text fields in the studio are soft rectangles (like the editors people know), not pills. */
+const FIELD = 'h-11 rounded-tile'
+const AVATAR_KIND: Record<string, string> = { image: 'A picture', color: 'A solid colour', gif: 'A GIF' }
+const BG_KIND: Record<string, string> = { default: 'The standard background', effect: 'An animated background', image: 'A picture', gif: 'A GIF', video: 'A looping video' }
+
 /**
  * The profile studio. A live preview of the real page sits beside (or above) the words: tap the pencil on the
  * picture, banner, card, badges or background to open just that part's controls. The main column holds only the
@@ -59,9 +116,9 @@ export function ProfileStudio() {
   const [saving, setSaving] = useState(false)
   const [pendingAvatar, setPendingAvatar] = useState<string | null | undefined>(undefined)
   const [panel, setPanel] = useState<EditTarget | null>(null)
-  const [discordOpen, setDiscordOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const wide = useWide()
+  const punctuation = useFeature('username-punctuation')
   const stage = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -198,25 +255,40 @@ export function ProfileStudio() {
   )
 
   const textSide = (
-    <div className="grid gap-7">
-      <Group title="About you">
+    <div className="divide-y divide-line">
+      <Section title="Profile">
         <div className="grid gap-4">
           <Field label="Display name">
-            <Input value={f.displayName} maxLength={40} onChange={(e) => set('displayName', e.target.value)} />
+            <Input className={FIELD} value={f.displayName} maxLength={40} onChange={(e) => set('displayName', e.target.value)} />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Username" hint={`logoless.io/@${f.handle}`}>
-              <Input value={f.handle} maxLength={20} onChange={(e) => set('handle', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))} />
+              <Input className={FIELD} value={f.handle} maxLength={20} onChange={(e) => set('handle', e.target.value.toLowerCase().replace(punctuation ? /[^a-z0-9_.-]/g : /[^a-z0-9_]/g, ''))} />
             </Field>
             <Field label="Pronouns (optional)">
-              <Input value={f.pronouns} maxLength={30} placeholder="e.g. she/her" onChange={(e) => set('pronouns', e.target.value)} />
+              <Input className={FIELD} value={f.pronouns} maxLength={30} placeholder="e.g. she/her" onChange={(e) => set('pronouns', e.target.value)} />
             </Field>
           </div>
+        </div>
+      </Section>
+
+      <Section title="Look" hint="Or tap a pencil on the preview">
+        <div className="-mx-3 grid gap-0.5">
+          <EditRow icon={UserRound} title="Profile picture" sub={AVATAR_KIND[f.extras.avatar.kind] ?? 'Your picture'} onClick={() => open('avatar')} />
+          <EditRow icon={ImageIcon} title="Banner" sub={f.extras.banner.gif ? 'A GIF' : f.bannerKind === 'image' ? 'A picture' : f.bannerKind === 'color' ? 'A solid colour' : 'A ready made banner'} onClick={() => open('banner')} />
+          <EditRow icon={Palette} title="Card colours and effect" sub={f.cardEffect === 'none' ? 'No effect' : `${f.cardEffect.charAt(0).toUpperCase()}${f.cardEffect.slice(1)} effect`} onClick={() => open('card')} />
+          <EditRow icon={Layers} title="Page background" sub={BG_KIND[f.extras.bg.kind] ?? 'The standard background'} onClick={() => open('background')} />
+          <EditRow icon={Award} title="Badges" sub={f.badges.length ? `${f.badges.length} on your page` : 'None on your page yet'} onClick={() => open('badges')} />
+        </div>
+      </Section>
+
+      <Section title="About you">
+        <div className="grid gap-4">
           <Field label="About me" hint={`${f.bio.length}/400`}>
-            <Textarea value={f.bio} maxLength={400} rows={4} onChange={(e) => set('bio', e.target.value)} />
+            <Textarea className="min-h-28 rounded-tile" value={f.bio} maxLength={400} rows={4} onChange={(e) => set('bio', e.target.value)} />
           </Field>
           <Field label="Country (optional)">
-            <Select value={f.country ?? ''} onChange={(e) => set('country', e.target.value || null)}>
+            <Select className={FIELD} value={f.country ?? ''} onChange={(e) => set('country', e.target.value || null)}>
               <option value="">Prefer not to say</option>
               {['US', 'GB', 'CA', 'AU', 'DE', 'FR', 'SG', 'NL', 'SE', 'BR', 'IN', 'NG', 'ZA', 'PH', 'ID', 'MX', 'JP', 'KR'].map((c) => (
                 <option key={c} value={c}>
@@ -226,87 +298,79 @@ export function ProfileStudio() {
             </Select>
           </Field>
         </div>
-      </Group>
+      </Section>
 
-      <Group title="Name font" hint="Shown with your own name">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {FONT_OPTIONS.map((o) => (
-            <Tile key={o.id} on={f.font === o.id} onClick={() => set('font', o.id)} className="px-3 py-2.5 text-left">
-              <span className={cn('block truncate pr-4 text-lg leading-tight text-paper', PROFILE_FONT_CLASS[o.id])}>{f.displayName || o.label}</span>
-              <span className="block text-[11px]">{o.label}</span>
-            </Tile>
-          ))}
-        </div>
-      </Group>
-
-      <Group title="Name effect">
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-          {NAME_EFFECTS.map((o) => (
-            <Tile key={o.id} on={f.nameEffect === o.id} onClick={() => set('nameEffect', o.id)} className="px-2 py-2.5 text-center">
-              <span style={nameVars} className={cn('mx-auto block w-fit text-base font-bold text-paper', `nx-${o.id}`)}>
-                Aa
-              </span>
-              <span className="block text-[11px]">{o.label}</span>
-            </Tile>
-          ))}
-        </div>
-        {f.nameEffect !== 'solid' && (
-          <div className="mt-4 grid gap-4 rounded-2xl border border-line bg-ink/50 p-4">
-            <Slider label="Intensity" hint="How strong the effect is" value={f.extras.name.intensity} onChange={(intensity) => ex('name', { intensity })} normal={50} />
-            {MOVING.includes(f.nameEffect) && <Slider label="Speed" hint="How fast it moves" value={f.extras.name.speed} onChange={(speed) => ex('name', { speed })} normal={50} />}
-            {ANGLED.includes(f.nameEffect) && <Slider label="Direction" value={f.extras.name.angle} min={0} max={360} step={5} unit="°" onChange={(angle) => ex('name', { angle })} normal={90} />}
-            <p className="text-xs text-mute">Colours come from your card colours (open the card with its pencil).</p>
-          </div>
-        )}
-      </Group>
-
-      <div className="rounded-2xl border border-line">
-        <button type="button" onClick={() => setDiscordOpen((v) => !v)} aria-expanded={discordOpen} className="flex w-full items-center gap-3 px-4 py-3.5 text-left">
-          <BrandIcon name="discord" className="size-5" />
-          <span className="flex-1 text-sm">
-            Import from Discord<span className="block text-xs text-mute">Bring your picture, banner, colour and name across</span>
-          </span>
-          <ChevronDown className={cn('size-4 text-mute transition-transform', discordOpen && 'rotate-180')} />
-        </button>
-        <AnimatePresence initial={false}>
-          {discordOpen && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-              <div className="border-t border-line p-4">
-                {!loaded.discordImport ? (
-                  <p className="rounded-xl border border-line bg-ink/60 p-3 text-xs text-mute">This is not switched on yet.</p>
-                ) : !loaded.discordLinked ? (
-                  <a href="/api/discord/connect?back=/dashboard/profile" className="inline-flex h-10 items-center rounded-pill bg-paper px-5 text-sm font-medium text-ink hover:bg-paper/85">
-                    Connect Discord first
-                  </a>
-                ) : (
-                  <ActionButton onClick={importDiscord} disabled={busy} className="rounded-pill">
-                    {busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Import from my Discord
-                  </ActionButton>
-                )}
-                <p className="mt-3 text-xs leading-snug text-mute">Discord does not share your “About me” or connections, so add those yourself.</p>
+      <Section title="Your name">
+        <div className="grid gap-2.5">
+          <Disclosure title="Font" sub={FONT_OPTIONS.find((o) => o.id === f.font)?.label ?? ''}>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {FONT_OPTIONS.map((o) => (
+                <Tile key={o.id} on={f.font === o.id} onClick={() => set('font', o.id)} className="px-3 py-2.5 text-left">
+                  <span className={cn('block truncate pr-4 text-lg leading-tight text-paper', PROFILE_FONT_CLASS[o.id])}>{f.displayName || o.label}</span>
+                  <span className="block text-[11px]">{o.label}</span>
+                </Tile>
+              ))}
+            </div>
+          </Disclosure>
+          <Disclosure title="Effect" sub={NAME_EFFECTS.find((o) => o.id === f.nameEffect)?.label ?? ''}>
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+              {NAME_EFFECTS.map((o) => (
+                <Tile key={o.id} on={f.nameEffect === o.id} onClick={() => set('nameEffect', o.id)} className="px-2 py-2.5 text-center">
+                  <span style={nameVars} className={cn('mx-auto block w-fit text-base font-bold text-paper', `nx-${o.id}`)}>
+                    Aa
+                  </span>
+                  <span className="block text-[11px]">{o.label}</span>
+                </Tile>
+              ))}
+            </div>
+            {f.nameEffect !== 'solid' && (
+              <div className="mt-4 grid gap-4 border-t border-line pt-4">
+                <Slider label="Intensity" hint="How strong the effect is" value={f.extras.name.intensity} onChange={(intensity) => ex('name', { intensity })} normal={50} />
+                {MOVING.includes(f.nameEffect) && <Slider label="Speed" hint="How fast it moves" value={f.extras.name.speed} onChange={(speed) => ex('name', { speed })} normal={50} />}
+                {ANGLED.includes(f.nameEffect) && <Slider label="Direction" value={f.extras.name.angle} min={0} max={360} step={5} unit="°" onChange={(angle) => ex('name', { angle })} normal={90} />}
+                <p className="text-xs text-mute">Colours come from your card colours.</p>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+            )}
+          </Disclosure>
+        </div>
+      </Section>
 
-      <a href="/dashboard/profile/privacy" className="flex items-center gap-3 rounded-2xl border border-line px-4 py-3.5 transition-colors hover:bg-white/[0.03]">
-        <Shield className="size-5 text-mute" />
-        <span className="flex-1 text-sm">
-          Privacy<span className="block text-xs text-mute">Choose who sees your page, your numbers and each account</span>
-        </span>
-        <ExternalLink className="size-4 text-mute" />
-      </a>
+      <Section title="More">
+        <div className="grid gap-2.5">
+          <Disclosure title="Import from Discord" sub="Picture, banner, colour and name">
+            {!loaded.discordImport ? (
+              <p className="text-xs text-mute">This is not switched on yet.</p>
+            ) : !loaded.discordLinked ? (
+              <a href="/api/discord/connect?back=/dashboard/profile" className="inline-flex h-10 items-center rounded-pill bg-paper px-5 text-sm font-medium text-ink hover:bg-paper/85">
+                Connect Discord first
+              </a>
+            ) : (
+              <ActionButton onClick={importDiscord} disabled={busy} className="rounded-pill">
+                {busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Import from my Discord
+              </ActionButton>
+            )}
+            <p className="mt-3 text-xs leading-snug text-mute">Discord does not share your “About me” or connections, so add those yourself.</p>
+          </Disclosure>
+          <a href="/dashboard/profile/privacy" className="flex items-center gap-3 rounded-panel border border-line px-4 py-3 transition-colors hover:bg-white/[0.03]">
+            <Shield aria-hidden="true" className="size-[18px] text-mute" />
+            <span className="flex-1 text-sm">Privacy</span>
+            <span className="truncate text-xs text-mute">Who sees your page, numbers and accounts</span>
+            <ExternalLink aria-hidden="true" className="size-4 shrink-0 text-mute" />
+          </a>
+        </div>
+      </Section>
     </div>
   )
 
   const preview = (
     <div>
-      <div className="mb-3 flex items-center justify-between font-mono text-xs text-mute">
-        <span>Live preview · tap a pencil to edit</span>
-        <span className="hidden sm:inline">Example numbers</span>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <span className="text-[15px] font-medium">Preview</span>
+        <a href={`/@${f.handle}`} className="inline-flex items-center gap-1.5 text-xs text-mute transition-colors hover:text-paper">
+          View your page <ExternalLink aria-hidden="true" className="size-3" />
+        </a>
       </div>
-      <div className="relative overflow-hidden rounded-[calc(28px*var(--round,1))] border border-line bg-black">
+      <div className="relative overflow-hidden rounded-card border border-line bg-black">
         <ProfileBackdrop scope="box" bg={f.extras.bg} overlay={f.extras.overlay} color={f.dotColor} accents={[f.accent, f.accent2]} />
         <button type="button" onClick={() => open('background')} className="absolute top-3 left-3 z-30 inline-flex h-9 items-center gap-1.5 rounded-pill border border-white/25 bg-black/65 px-3 text-xs text-white backdrop-blur-md transition-colors hover:bg-black/85">
           <ImageIcon className="size-3.5" /> Background <Pencil className="size-3" />
@@ -334,12 +398,12 @@ export function ProfileStudio() {
         <div className="order-2 min-w-0 xl:order-1">
           <AnimatePresence mode="wait" initial={false}>
             {wide && panel ? (
-              <motion.div key={`panel-${panel}`} initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.22, ease: EASE_OUT }} className="rounded-[calc(2rem*var(--round,1))] border border-line bg-[#0a0a0b] p-5 sm:p-7">
+              <motion.div key={`panel-${panel}`} initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.22, ease: EASE_OUT }} className="rounded-card border border-line bg-[#0a0a0b] p-5 sm:p-7">
                 <PanelHeader title={PANEL_TITLE[panel]} onClose={() => setPanel(null)} back />
                 {panelBody}
               </motion.div>
             ) : (
-              <motion.div key="text" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="rounded-[calc(2rem*var(--round,1))] border border-line bg-[#0a0a0b] p-5 sm:p-7">
+              <motion.div key="text" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }} className="overflow-hidden rounded-card border border-line bg-[#0a0a0b]">
                 {textSide}
               </motion.div>
             )}
@@ -361,7 +425,7 @@ export function ProfileStudio() {
               initial={{ y: '100%' }}
               animate={{ y: 0, transition: { duration: 0.38, ease: EASE_OUT } }}
               exit={{ y: '100%', transition: { duration: 0.22 } }}
-              className="fixed inset-x-0 bottom-0 z-[81] mx-auto max-h-[58dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-[28px] border border-b-0 border-line-strong bg-[#0b0b0d] px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-30px_60px_-20px_rgb(0_0_0/0.9)]"
+              className="fixed inset-x-0 bottom-0 z-[81] mx-auto max-h-[58dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-[calc(1.25rem*var(--round,1))] border border-b-0 border-line-strong bg-[#0b0b0d] px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-[0_-30px_60px_-20px_rgb(0_0_0/0.9)]"
             >
               <span aria-hidden="true" className="mx-auto mb-3 block h-1 w-10 rounded-pill bg-white/25" />
               <PanelHeader title={PANEL_TITLE[panel]} onClose={() => setPanel(null)} />
@@ -374,26 +438,8 @@ export function ProfileStudio() {
         )}
       </AnimatePresence>
 
-      {/* ---------- save bar ---------- */}
-      <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 md:bottom-4 mt-6 rounded-3xl border border-line-strong bg-surface/95 p-2.5 backdrop-blur">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pl-1.5">
-          <ActionButton data-hotkey-save onClick={() => void save()} disabled={saving || !dirty} className="rounded-pill">
-            {saving && <Loader2 className="size-4 animate-spin" />} Save profile
-          </ActionButton>
-          {dirty && (
-            <button type="button" onClick={discard} className="inline-flex h-10 items-center gap-1.5 rounded-pill px-3 text-sm text-mute hover:text-paper">
-              <Undo2 className="size-4" /> Discard
-            </button>
-          )}
-          <span className="flex items-center gap-2 text-xs text-mute">
-            <span className={cn('size-2 rounded-pill', dirty ? 'bg-amber-300' : 'bg-emerald-400')} />
-            {dirty ? 'Unsaved changes' : 'All saved'}
-          </span>
-          <a href={`/@${f.handle}`} className="ml-auto pr-2 text-sm text-mute hover:text-paper">
-            View public page
-          </a>
-        </div>
-      </div>
+      {/* only there when there is something to save */}
+      <UnsavedBar show={dirty || saving} saving={saving} onReset={discard} onSave={() => void save()} />
     </div>
   )
 }
@@ -418,8 +464,8 @@ function StudioSkeleton({ error }: { error: string }) {
   if (error) return <p className="text-mute">{error}</p>
   return (
     <div role="status" aria-busy="true" aria-label="Loading" className="grid gap-8 xl:grid-cols-[minmax(0,560px)_minmax(0,1fr)]">
-      <div className="sk order-2 h-[640px] rounded-[2rem] border border-line bg-white/[0.03] xl:order-1" />
-      <div className="sk order-1 h-[560px] rounded-[28px] border border-line bg-white/[0.03] xl:order-2" />
+      <div className="sk order-2 h-[640px] rounded-card border border-line bg-white/[0.03] xl:order-1" />
+      <div className="sk order-1 h-[560px] rounded-card border border-line bg-white/[0.03] xl:order-2" />
     </div>
   )
 }

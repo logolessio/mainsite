@@ -28,7 +28,7 @@ export function ClipCard({ clip, onOpen, loading, appear, index }: { clip: FeedC
       transition={{ duration: 0.55, ease: EASE_OUT, delay: appear ? Math.min(index % 18, 10) * 0.04 : 0 }}
       className="group/clip relative"
     >
-      <div className="relative aspect-[9/16] overflow-hidden rounded-[calc(22px*var(--round,1))] bg-surface shadow-[0_18px_40px_-24px_rgb(0_0_0/0.95)] ring-1 ring-white/[0.07] transition-[transform,box-shadow] duration-500 group-hover/clip:-translate-y-1 group-hover/clip:shadow-[0_28px_60px_-26px_rgb(0_0_0/1)]">
+      <div className="relative aspect-[9/16] overflow-hidden rounded-card bg-surface shadow-[0_18px_40px_-24px_rgb(0_0_0/0.95)] ring-1 ring-white/[0.07] transition-[transform,box-shadow] duration-500 group-hover/clip:-translate-y-1 group-hover/clip:shadow-[0_28px_60px_-26px_rgb(0_0_0/1)]">
         {/* the campaign cover, blurred: the clip's colours before its picture arrives */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={clip.campaign.cover} alt="" aria-hidden="true" loading="lazy" decoding="async" className="absolute inset-0 size-full scale-125 object-cover opacity-60 blur-2xl saturate-150" />
@@ -105,7 +105,7 @@ export function ClipCard({ clip, onOpen, loading, appear, index }: { clip: FeedC
 export function ClipCardSkeleton() {
   return (
     <li aria-hidden="true">
-      <div className="relative aspect-[9/16] overflow-hidden rounded-[calc(22px*var(--round,1))] bg-white/[0.04] ring-1 ring-white/[0.05]">
+      <div className="relative aspect-[9/16] overflow-hidden rounded-card bg-white/[0.04] ring-1 ring-white/[0.05]">
         <Shimmer />
       </div>
       <div className="mt-2 h-3 w-2/3 rounded-pill bg-white/[0.05]" />
