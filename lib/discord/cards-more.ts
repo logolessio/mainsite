@@ -8,6 +8,8 @@ import { big, btn, card, chan, chip, dot, go, join, num, row, small, usd, SITE_U
  */
 const quiet = { parse: [] as string[] }
 const msg = (embeds: Embed[], components?: Component[]): Message => ({ embeds, components, allowed_mentions: quiet })
+/** An empty line that survives `join` (which drops empty strings). */
+const BLANK = '\u200b'
 const cut = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s)
 
 // ---------- small helpers, exported so they can be tested ----------
@@ -46,7 +48,7 @@ export const startCard = (): Message =>
         title: 'Get paid for the views you bring',
         text: join(
           'Artists, streamers and brands post campaigns here. You post content for them on your own TikTok, YouTube or Instagram, and you are paid for every 1,000 verified views.',
-          '',
+          BLANK,
           small('One button: make your account, link your Discord, and you are in.'),
         ),
         thumb: `${SITE_URL}/logo-lg.png`,
@@ -85,13 +87,13 @@ export const nextStepsCard = (n: NextData): Message =>
         label: 'You are in',
         title: `Welcome, ${n.name}`,
         text: n.brand
-          ? join('**1.** Start a campaign on logoless.io: set the rate, the budget and the brief.', '**2.** It is posted in its own channel here the moment it goes live.', '**3.** Watch the submissions and the numbers come in, live.', '', small('The full rundown is in your direct messages.'))
+          ? join('**1.** Start a campaign on logoless.io: set the rate, the budget and the brief.', '**2.** It is posted in its own channel here the moment it goes live.', '**3.** Watch the submissions and the numbers come in, live.', BLANK, small('The full rundown is in your direct messages.'))
           : join(
               `**1.** Pick a campaign.${n.live ? ` ${n.live} ${n.live === 1 ? 'is' : 'are'} live right now.` : ''}${n.guildId && n.campaignsChannel ? ` They are announced in <#${n.campaignsChannel}>.` : ''}`,
               '**2.** Post your content on your own account.',
               '**3.** Press Submit on the campaign, or type `/submit` here.',
               '**4.** You are paid for every 1,000 verified views. `/balance` shows it.',
-              '',
+              BLANK,
               small('The full rundown is in your direct messages.'),
             ),
       }),
@@ -132,7 +134,7 @@ export const rundownDm = (n: NextData & { commands: [string, string][] }): Messa
     card({
       icon: 'help',
       label: 'Commands',
-      text: join(n.commands.map(([c, d]) => `\`/${c}\` ${d}`).join('\n'), '', small('Type / in any channel to see them all.')),
+      text: join(n.commands.map(([c, d]) => `\`/${c}\` ${d}`).join('\n'), BLANK, small('Type / in any channel to see them all.')),
     }),
     card({
       icon: 'users',
@@ -157,7 +159,7 @@ export const payoutPostCard = (p: PayoutPost): Message =>
       card({
         icon: 'money',
         label: 'Paid',
-        title: `${censor(p.name)} earned ${usd(p.cents)}`,
+        title: `${censorMd(p.name)} earned ${usd(p.cents)}`,
         url: p.campaignId ? `${SITE_URL}/campaign/${p.campaignId}` : undefined,
         text: join(`On **${p.campaign}**`, small(dot(p.views ? `${num(p.views)} more verified views` : '', p.rateCents ? `${usd(p.rateCents)} per 1,000 views` : '', `<t:${p.at}:R>`))),
         image: cardImage('payout', p.earningId),
@@ -167,7 +169,7 @@ export const payoutPostCard = (p: PayoutPost): Message =>
   )
 
 export const withdrawalPostCard = (p: { name: string; cents: number; at: number }): Message =>
-  msg([card({ icon: 'wallet', label: 'Withdrawn', title: `${censor(p.name)} withdrew ${usd(p.cents)}`, text: small(dot('Sent to PayPal', `<t:${p.at}:R>`)) })])
+  msg([card({ icon: 'wallet', label: 'Withdrawn', title: `${censorMd(p.name)} withdrew ${usd(p.cents)}`, text: small(dot('Sent to PayPal', `<t:${p.at}:R>`)) })])
 
 // ---------- submissions channel ----------
 export type SubmissionPost = {
@@ -264,7 +266,7 @@ export const campaignPostCard = (c: CampaignPost): Message => {
           big(`${usd(c.rateCents)} per 1,000 views`, dot(c.platforms.map(platformName).join(', ') || 'Any platform', c.endsOn ? `ends ${c.endsOn}` : '')),
           cut(c.summary, 280),
           c.clipThis.length ? `\n**What to make**\n${c.clipThis.slice(0, 3).map((x) => `• ${cut(x, 120)}`).join('\n')}` : '',
-          '',
+          BLANK,
           `**Budget left** ${left}%`,
           `\`${bar(left, 24)}\``,
           small(`${usd(Math.max(0, c.budgetCents - c.paidCents))} of ${usd(c.budgetCents)} left`),

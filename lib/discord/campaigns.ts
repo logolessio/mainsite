@@ -28,6 +28,9 @@ export function simpleHash(text: string) {
   return (h >>> 0).toString(36)
 }
 
+/** What a card shows, without its "updated" time (which is new on every build), so an unchanged card is never edited. */
+const cardHash = (card: Message) => simpleHash(JSON.stringify(card, (k, v) => (k === 'timestamp' ? undefined : v)))
+
 const put = async (key: string, value: string) => {
   const d = await db()
   await d.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?1, ?2, ?3) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at').bind(key, value, nowSec()).run()
@@ -190,7 +193,7 @@ export async function refreshCampaignCard(campaignId: string, force = false): Pr
     if (savedChannel && savedMessage) {
       const card = await campaignCard(c, cfg, savedChannel)
       // only edit when something on the card changed: the 30-second loop calls this for every live campaign
-      const hash = JSON.stringify(card).length + ':' + simpleHash(JSON.stringify(card))
+      const hash = cardHash(card)
       if (v2 && !force && (await get(`discord:camp-hash:${campaignId}`)) === hash) return true
       const edited = await discord('PATCH', `/channels/${savedChannel}/messages/${savedMessage}`, card)
       if (edited.ok) {
@@ -202,8 +205,12 @@ export async function refreshCampaignCard(campaignId: string, force = false): Pr
     if (c.status !== 'live') return false // only start a card for something that is running
     const channel = await syncArtist(c.creator, true)
     if (!channel) return false
-    const posted = await postMessage(channel, await campaignCard(c, cfg, channel))
-    if (posted.ok && posted.json?.id) await put(`discord:camp-msg:${campaignId}`, `${channel}:${posted.json.id}`)
+    const card = await campaignCard(c, cfg, channel)
+    const posted = await postMessage(channel, card)
+    if (posted.ok && posted.json?.id) {
+      await put(`discord:camp-msg:${campaignId}`, `${channel}:${posted.json.id}`)
+      await put(`discord:camp-hash:${campaignId}`, cardHash(card))
+    }
     return posted.ok
   } catch {
     return false
