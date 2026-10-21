@@ -17,8 +17,10 @@ import { featureState, requestHost } from '@/lib/features'
 import { headers } from 'next/headers'
 import { parseChoices } from '@/lib/design-choices'
 import { effectiveFont, faceById, fontById } from '@/lib/fonts'
-import { launchExempt, launchView } from '@/lib/launch'
+import { launchExempt, launchView, linksExempt } from '@/lib/launch'
+import { launchHomeData } from '@/lib/launch-home'
 import { LaunchPage } from '@/components/launch/launch-page'
+import { LaunchHome } from '@/components/launch/home/launch-home'
 import { getOverrides } from '@/lib/copy'
 import { parseRoundness, roundnessVars } from '@/lib/roundness'
 import { allSettings } from '@/lib/settings'
@@ -165,7 +167,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // sees only the countdown and the sign-up, on the public address. The owner dashboard, the dev address, scroll (a site of its own) and owners themselves are never shut out.
   const launch = launchView(design)
   const host = await requestHost()
-  const shut = launch.closed && !fs.dev && !/^(owner|admin|scroll)\./i.test(host) && !isAdmin && !launchExempt(reqHeaders.get('x-path') ?? '/')
+  const path = reqHeaders.get('x-path') ?? '/'
+  // with the new page (launch-links) /links stays open too, and the closed site shows the new page
+  const newLaunch = fs.on['launch-links'] === true
+  const shut = launch.closed && !fs.dev && !/^(owner|admin|scroll)\./i.test(host) && !isAdmin && !launchExempt(path) && !(newLaunch && linksExempt(path))
   if (shut) {
     return (
       <html
@@ -182,7 +187,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 {HEAD_SCRIPT}
         </head>
         <body className="antialiased">
-          <LaunchPage end={launch.end} headline={launch.headline} text={launch.text} signedInAs={session?.user?.email ?? null} />
+          {newLaunch ? <LaunchHome {...await launchHomeData('soon')} locked /> : <LaunchPage end={launch.end} headline={launch.headline} text={launch.text} signedInAs={session?.user?.email ?? null} />}
         </body>
       </html>
     )

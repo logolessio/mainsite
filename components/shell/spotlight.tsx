@@ -17,7 +17,7 @@ import { LiquidGlass } from '@/components/ui/liquid-glass'
 type C = { id: string; title: string; creator: string; type: string; cover: string; rate: number }
 type Row = { key: string; label: string; sub: string; group: 'Campaigns' | 'Pages'; href: string; cover?: string }
 // The dashboards have their own jump-to box, so this one stays out of them.
-const HIDDEN = ['/dashboard', '/brand', '/admin', '/owner', '/dev', '/onboarding', '/@', '/u/', '/links']
+const HIDDEN = ['/dashboard', '/brand', '/admin', '/owner', '/dev', '/onboarding', '/@', '/u/', '/links', '/launch']
 
 /** ⌘K (or /) opens a search over every live campaign and page. ? lists the shortcuts. */
 export function Spotlight() {

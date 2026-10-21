@@ -204,6 +204,51 @@ export function plainTestEmail(): Mail {
   }
 }
 
+/** The code that proves an address on the waitlist. Digits only, so nothing typed by a visitor reaches the HTML. */
+export function waitlistCodeEmail(code: string, test = false, meta?: Meta): Mail {
+  const note = 'If you did not ask to join the logoless waitlist, ignore this email. Nothing happens without the code.'
+  return {
+    subject: `${test ? '[TEST] ' : ''}${code} is your logoless waitlist code`,
+    text: `${test ? 'THIS IS A TEST from the admin panel.\n\n' : ''}Confirm your spot\n\nYour code is ${code}\nIt works for 10 minutes and can be used once.\n\n${metaText(meta)}${metaText(meta) ? '\n\n' : ''}${note}\n\nlogoless · ${SITE_URL}`,
+    html: layout({
+      preheader: `${code} is your code. It works for 10 minutes.`,
+      tag: test ? 'Test' : 'Waitlist',
+      title: test ? 'Confirm your spot (test)' : 'Confirm your spot',
+      intro: 'Enter this code on the logoless page to hold your place on the waitlist. Next you can reserve your username.',
+      body: `${codeBoxes(code)}${expiry()}${details(meta)}`,
+      note,
+      test,
+    }),
+  }
+}
+
+/** Sent once someone is on the waitlist: everything they gave us, and how to leave. The username is escaped (it is only ever letters, numbers, dots and underscores anyway). */
+export function waitlistWelcomeEmail(input: { email: string; handle: string | null; joinedAt: number; position: number | null; unsubscribe: string }, test = false): Mail {
+  const when = new Date(input.joinedAt * 1000).toUTCString().replace(/:\d\d GMT$/, ' UTC')
+  const rows: [string, string][] = [
+    ['Email', input.email],
+    ['Username', input.handle ? `@${input.handle}` : 'None reserved yet'],
+    ['Joined', when],
+    ...(input.position ? ([['Place on the list', `#${input.position.toLocaleString('en-US')}`]] as [string, string][]) : []),
+  ]
+  const table = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px">${rows
+    .map(([k, v]) => `<tr><td align="left" style="padding:13px 0;border-top:1px solid #222227;font:400 13px/1.3 ${SANS};color:#6c6c75">${esc(k)}</td><td align="right" style="padding:13px 0;border-top:1px solid #222227;font:500 14px/1.3 ${SANS};color:#e4e4e8">${esc(v)}</td></tr>`)
+    .join('')}</table>`
+  const leave = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:30px 0 0"><tr><td align="left" style="background:#111114;border:1px solid #26262b;border-radius:16px;padding:16px 18px"><p style="margin:0 0 6px;font:600 11px/1 ${SANS};letter-spacing:.12em;text-transform:uppercase;color:#80808a">Changed your mind?</p><p style="margin:0;font:400 14px/1.6 ${SANS};color:#c3c3ca">One click on <a href="${esc(input.unsubscribe)}" style="color:#f3f2ee">unsubscribe</a> takes you off the list and frees your username. There is nothing to confirm and no account to delete. Every email we send about the launch has the same link at the bottom.</p></td></tr></table>`
+  return {
+    subject: `${test ? '[TEST] ' : ''}${input.handle ? `@${input.handle} is yours` : 'You are on the logoless waitlist'}`,
+    text: `${test ? 'THIS IS A TEST from the admin panel.\n\n' : ''}You are on the logoless waitlist.\n\nWhat you signed up with:\n${rows.map(([k, v]) => `${k}: ${v}`).join('\n')}\n\nWe will email this address when logoless opens, and only about the launch.\n\nChanged your mind? One click takes you off the list and frees your username:\n${input.unsubscribe}\n\nlogoless · ${SITE_URL}`,
+    html: layout({
+      preheader: input.handle ? `@${input.handle} is held for you. Here is everything you signed up with.` : 'Here is everything you signed up with.',
+      tag: test ? 'Test' : 'Waitlist',
+      title: input.handle ? `@${input.handle} is yours` : 'You are on the list',
+      intro: 'Thanks for joining the logoless waitlist. Here is everything you signed up with. We will email this address when the doors open, and only about the launch.',
+      body: `${table}${button(SITE_URL, 'Visit logoless')}${leave}`,
+      test,
+    }),
+  }
+}
+
 export const PREVIEWS = [
   { id: 'signup', label: 'Sign-up code', make: () => codeEmail('482 913'.replace(' ', ''), 'signup', false, { place: 'London, United Kingdom', device: 'Chrome on macOS' }) },
   { id: 'reset', label: 'Password reset', make: () => codeEmail('730256', 'reset', false, { place: 'Singapore', device: 'Safari on iPhone' }) },
@@ -211,6 +256,8 @@ export const PREVIEWS = [
   { id: 'deleted', label: 'Account deleted', make: () => accountDeletedEmail('Sam', 'Selling views against the campaign rules.', 'Your remaining balance was returned to the campaigns it came from.') },
   { id: 'role', label: 'Role given', make: () => roleChangedEmail('Sam', ['Admin', 'Developer']) },
   { id: 'plain', label: 'Delivery test', make: () => plainTestEmail() },
+  { id: 'waitlist-code', label: 'Waitlist code', make: () => waitlistCodeEmail('215804', false, { place: 'Singapore', device: 'Safari on iPhone' }) },
+  { id: 'waitlist-welcome', label: 'Waitlist confirmation', make: () => waitlistWelcomeEmail({ email: 'sam@example.com', handle: 'sam.clips', joinedAt: 1792540800, position: 1284, unsubscribe: `${SITE_URL}/api/launch/unsubscribe?k=0&t=0` }) },
 ] as const
 
 /** A short message from the team to one person. */

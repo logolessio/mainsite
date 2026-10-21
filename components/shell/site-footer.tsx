@@ -13,7 +13,7 @@ import { TransitionLink } from './transition-link'
 import { T } from '@/components/shell/copy-provider'
 import { Feature } from './features-provider'
 
-const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin', '/owner', '/dev', '/@', '/u/', '/links']
+const HIDDEN = ['/onboarding', '/dashboard', '/brand', '/admin', '/owner', '/dev', '/@', '/u/', '/links', '/launch']
 
 export function SiteFooter({ links = [] }: { links?: LinkItem[] }) {
   const pathname = usePathname()

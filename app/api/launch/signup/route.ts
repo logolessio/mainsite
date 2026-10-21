@@ -1,7 +1,9 @@
 import { z } from 'zod'
+import { featureOn } from '@/lib/features'
 import { limit } from '@/lib/guard'
 import { addSignup, handleProblem, normEmail, validEmail } from '@/lib/launch'
 import { assertSameOrigin, body, HttpError, json, route } from '@/lib/http'
+import { HANDLE_RE } from '@/lib/profile-style'
 import { rolesForEmail } from '@/lib/roles'
 
 const schema = z.object({ email: z.string().max(254), handle: z.string().max(40).optional() })
@@ -14,12 +16,15 @@ const schema = z.object({ email: z.string().max(254), handle: z.string().max(40)
  */
 export const POST = route(async (req: Request) => {
   assertSameOrigin(req)
+  // the new page (launch-links) has its own waitlist, with an emailed code and one spot per device; this older, unchecked way in is closed with it
+  if (await featureOn('launch-links')) throw new HttpError(410, 'Please reload the page to join the waitlist.')
   await limit(req, { name: 'launch-signup', max: 12, windowSec: 600 })
   const parsed = schema.safeParse(await body(req, 1024))
   if (!parsed.success) throw new HttpError(400, 'Enter a valid email address.')
   const email = normEmail(parsed.data.email)
   if (!validEmail(email)) throw new HttpError(400, 'Enter a valid email address.')
   if ((await rolesForEmail(email)).includes('admin')) return json({ owner: true })
+  if (parsed.data.handle && !HANDLE_RE.test(parsed.data.handle.trim().toLowerCase().replace(/^@/, ''))) throw new HttpError(400, 'Use 3 to 20 letters, numbers or underscores.')
   try {
     const r = await addSignup(email, parsed.data.handle)
     return json({ ok: true, handle: r.handle, already: r.already })
@@ -33,6 +38,6 @@ export const POST = route(async (req: Request) => {
 export const GET = route(async (req: Request) => {
   await limit(req, { name: 'launch-handle', max: 90, windowSec: 600 })
   const h = (new URL(req.url).searchParams.get('h') ?? '').trim().toLowerCase().replace(/^@/, '')
-  const problem = await handleProblem(h)
+  const problem = HANDLE_RE.test(h) ? await handleProblem(h) : 'Use 3 to 20 letters, numbers or underscores.'
   return json(problem ? { ok: false, problem } : { ok: true })
 })

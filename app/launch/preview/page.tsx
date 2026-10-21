@@ -1,7 +1,10 @@
 import type { Metadata } from 'next'
+import { LaunchHome } from '@/components/launch/home/launch-home'
 import { LaunchPage } from '@/components/launch/launch-page'
+import { featureOn } from '@/lib/features'
 import { allSettings } from '@/lib/settings'
 import { launchView } from '@/lib/launch'
+import { launchHomeData } from '@/lib/launch-home'
 import { pageAdmin } from '@/lib/user'
 
 export const metadata: Metadata = { title: 'Launch page preview | logoless', robots: { index: false } }
@@ -9,6 +12,14 @@ export const metadata: Metadata = { title: 'Launch page preview | logoless', rob
 /** What visitors see while the launch page is on, shown to an owner without switching anything on. */
 export default async function Page() {
   await pageAdmin()
+  if (await featureOn('launch-links')) {
+    const data = await launchHomeData('soon')
+    return (
+      <div className="fixed inset-0 z-[300] overflow-y-auto bg-ink">
+        <LaunchHome {...data} />
+      </div>
+    )
+  }
   const v = launchView(await allSettings())
   return (
     <div className="fixed inset-0 z-[300] overflow-y-auto bg-ink">

@@ -5,7 +5,7 @@ import { db } from '@/lib/db'
 import { emailEnabled, launchUpdateEmail, sendEmail } from '@/lib/email'
 import { ipHash, protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
-import { signupCounts, unsubUrl, type Signup } from '@/lib/launch'
+import { signupCounts, unsubHeaders, unsubUrl, type Signup } from '@/lib/launch'
 import { requireAdmin } from '@/lib/user'
 
 const schema = z.object({
@@ -54,7 +54,8 @@ export const POST = route(async (req: Request) => {
     }
     if (s.u) continue
     try {
-      await sendEmail({ to: s.e, ...launchUpdateEmail(a.subject, a.message, await unsubUrl(s.e)), template: 'launch update' })
+      const url = await unsubUrl(s.e)
+      await sendEmail({ to: s.e, ...launchUpdateEmail(a.subject, a.message, url), headers: unsubHeaders(url), template: 'launch update' })
       sent++
     } catch {
       failed++

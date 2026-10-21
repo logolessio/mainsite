@@ -12,7 +12,7 @@ export async function emailEnabled() {
 const wordHtml = (html: string) => html.split(/(<[^>]*>)/).map((part) => (part.startsWith('<') ? part : applyWording(part))).join('')
 
 /** Sends one email through Resend. Locally, with no key, it prints the message to the server log instead. */
-export async function sendEmail(input: { to: string; subject: string; html: string; text: string; template?: string; replyTo?: string }): Promise<{ id: string | null }> {
+export async function sendEmail(input: { to: string; subject: string; html: string; text: string; template?: string; replyTo?: string; headers?: Record<string, string> }): Promise<{ id: string | null }> {
   const o = { ...input, subject: applyWording(input.subject), text: applyWording(input.text), html: wordHtml(input.html) }
   const key = await setting('RESEND_API_KEY')
   const label = o.template ?? 'email'
@@ -27,7 +27,7 @@ export async function sendEmail(input: { to: string; subject: string; html: stri
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ from, to: [o.to], subject: o.subject, html: o.html, text: o.text, ...(o.replyTo ? { reply_to: o.replyTo } : {}) }),
+    body: JSON.stringify({ from, to: [o.to], subject: o.subject, html: o.html, text: o.text, ...(o.replyTo ? { reply_to: o.replyTo } : {}), ...(o.headers ? { headers: o.headers } : {}) }),
   })
   if (!res.ok) {
     const detail = (await res.text().catch(() => '')).slice(0, 300)
@@ -40,4 +40,4 @@ export async function sendEmail(input: { to: string; subject: string; html: stri
   return { id }
 }
 
-export { accountDeletedEmail, alreadyMemberEmail, codeEmail, inviteEmail, launchUpdateEmail, plainMessageEmail, plainTestEmail, roleChangedEmail } from './email-templates'
+export { accountDeletedEmail, alreadyMemberEmail, codeEmail, inviteEmail, launchUpdateEmail, plainMessageEmail, plainTestEmail, roleChangedEmail, waitlistCodeEmail, waitlistWelcomeEmail } from './email-templates'
