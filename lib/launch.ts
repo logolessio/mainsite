@@ -1,6 +1,7 @@
 import { hmacHex, safeEqual, sha256Hex } from './crypto'
 import { db, nowSec, setting } from './db'
-import { HANDLE_RE, RESERVED_WORDS } from './profile-style'
+import { cleanPage, normHandle, type PageConfig, WAITLIST_HANDLE_RE } from './launch-page'
+import { RESERVED_WORDS } from './profile-style'
 import type { SettingKey } from './settings'
 
 // The launch page: a countdown and a sign-up that stand in front of the whole site until the owners open it.
@@ -20,6 +21,8 @@ export function launchView(s: Record<SettingKey, string>, now = nowSec()): Launc
 
 /** The pages that stay open behind the launch page: the legal pages, the unsubscribe page, the sign-in page (so an owner is never locked out) and the page that hands scroll's Google and Discord sign-ins over. */
 export const launchExempt = (path: string) => /^\/(legal|launch|login|scroll-signin)(\/|$)/.test(path)
+/** With the new page (the launch-links feature) /links stays open too, so a link in a bio still works while the site is closed. */
+export const linksExempt = (path: string) => /^\/links\/?$/.test(path)
 
 export const normEmail = (e: string) => e.trim().toLowerCase()
 export const validEmail = (e: string) => e.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)
@@ -46,8 +49,11 @@ export type Signup = { e: string; h: string | null; t: number; u?: number }
 
 /** Why a username cannot be reserved, or null if it is free. */
 export async function handleProblem(raw: string, forEmailKey?: string): Promise<string | null> {
-  const h = raw.trim().toLowerCase().replace(/^@/, '')
-  if (!HANDLE_RE.test(h)) return 'Use 3 to 20 letters, numbers or underscores.'
+  const h = normHandle(raw)
+  if (h.length < 3) return 'At least 3 characters.'
+  if (h.length > 20) return 'Up to 20 characters.'
+  if (/[^a-z0-9._]/.test(h)) return 'Letters, numbers, dots and underscores only.'
+  if (!WAITLIST_HANDLE_RE.test(h)) return 'A dot cannot start or end it, or come twice in a row.'
   if (RESERVED_WORDS.some((w) => h.includes(w))) return 'That name is kept by logoless.'
   const d = await db()
   if (await d.prepare('SELECT 1 AS x FROM profiles WHERE handle = ?1').bind(h).first()) return 'That one is taken.'
@@ -69,7 +75,7 @@ export async function addSignup(email: string, handle?: string | null): Promise<
     cur = null
   }
   let h = cur?.h ?? null
-  const want = handle?.trim().toLowerCase().replace(/^@/, '') || null
+  const want = (handle && normHandle(handle)) || null
   if (want && want !== h) {
     if (await handleProblem(want, key)) throw new Error('taken')
     // the INSERT only succeeds for the first person to ask, so two people cannot both get the name
@@ -111,9 +117,42 @@ export async function unsubscribe(key: string, token: string): Promise<boolean> 
   const row = await d.prepare('SELECT value FROM settings WHERE key = ?1').bind(`launch-signup:${key}`).first<{ value: string }>()
   if (!row) return true
   try {
-    await put(`launch-signup:${key}`, { ...(JSON.parse(row.value) as Signup), u: 1 })
+    const cur = JSON.parse(row.value) as Signup
+    // leaving the list also frees the username it held and the device's spot
+    if (cur.h) await d.prepare('DELETE FROM settings WHERE key = ?1 AND value = ?2').bind(`launch-handle:${cur.h}`, key).run()
+    await d.prepare('DELETE FROM launch_devices WHERE email_key = ?1').bind(key).run().catch(() => null)
+    await put(`launch-signup:${key}`, { ...cur, h: null, u: 1 })
   } catch {
     /* nothing to mark */
   }
   return true
 }
+
+/** One person on the list, by the hash of their address. */
+export async function signupFor(key: string): Promise<Signup | null> {
+  const row = await (await db()).prepare('SELECT value FROM settings WHERE key = ?1').bind(`launch-signup:${key}`).first<{ value: string }>()
+  try {
+    return row ? (JSON.parse(row.value) as Signup) : null
+  } catch {
+    return null
+  }
+}
+
+const PAGE_KEY = 'site:launch-page'
+
+/** The words and look of the coming-soon and links page (see lib/launch-page.ts). The defaults if nothing was saved or it cannot be read. */
+export async function getPage(): Promise<PageConfig> {
+  try {
+    const row = await (await db()).prepare('SELECT value FROM settings WHERE key = ?1').bind(PAGE_KEY).first<{ value: string }>()
+    return cleanPage(row ? JSON.parse(row.value) : null)
+  } catch {
+    return cleanPage(null)
+  }
+}
+
+export async function savePage(page: PageConfig) {
+  await put(PAGE_KEY, cleanPage(page))
+}
+
+/** The headers that put an Unsubscribe button in the mail app itself (one click, RFC 8058). The same link as in the email. */
+export const unsubHeaders = (url: string) => ({ 'List-Unsubscribe': `<${url}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' })

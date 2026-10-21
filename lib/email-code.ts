@@ -2,7 +2,7 @@ import { hmacHex, safeEqual } from './crypto'
 import { db, nowSec, setting } from './db'
 import { HttpError } from './http'
 
-export type Purpose = 'signup' | 'reset' | 'test' | 'verify'
+export type Purpose = 'signup' | 'reset' | 'test' | 'verify' | 'waitlist'
 const TTL = 10 * 60
 const MAX_TRIES = 5
 const COOLDOWN = 30
