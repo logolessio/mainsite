@@ -25,6 +25,7 @@ import {
   type ShowMap,
 } from './profile-style'
 import type { UserRow } from './user'
+import { normalizeExtras, parseExtras } from './profile-extras'
 
 type ProfileRow = {
   user_id: string
@@ -49,6 +50,7 @@ type ProfileRow = {
   show_json: string
   badges_json: string
   niches_json: string
+  style_json?: string
   created_at: number
   updated_at: number
 }
@@ -91,6 +93,7 @@ export function toView(row: ProfileRow, isStaff: boolean, online = false): Profi
     joinedAt: row.created_at,
     country: row.country,
     isStaff,
+    extras: parseExtras(row.style_json),
   }
 }
 
@@ -224,6 +227,8 @@ export type ProfileInput = {
   badges?: string[]
   country?: string | null
   niches?: string[]
+  /** The profile studio choices. Partial: only the parts sent are changed. */
+  extras?: unknown
 }
 
 /** Applies a profile edit. Returns which customisations actually changed, for achievements. */
@@ -348,6 +353,20 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
     changed.push('badges')
   }
 
+  let extrasJson: string | null = null
+  if (input.extras !== undefined) {
+    const was = parseExtras(cur.style_json)
+    const ex = normalizeExtras(input.extras, was)
+    // uploads must be the person's own, of the right kind
+    const own = async (id: string, kinds: string[]) =>
+      Boolean(await d.prepare(`SELECT id FROM uploads WHERE id = ?1 AND user_id = ?2 AND kind IN (${kinds.map((_, i) => `?${i + 3}`).join(',')})`).bind(id, user.id, ...kinds).first())
+    if (ex.bg.image && ex.bg.image !== was.bg.image && !(await own(ex.bg.image, ['background', 'banner']))) throw new HttpError(400, 'Upload the background picture first.')
+    if (/^[0-9a-f-]{36}$/.test(ex.bg.video) && ex.bg.video !== was.bg.video && !(await own(ex.bg.video, ['bgvideo']))) throw new HttpError(400, 'Upload the background video first.')
+    extrasJson = JSON.stringify(ex)
+    if (extrasJson !== JSON.stringify(was)) changed.push('extras')
+    next.style_json = extrasJson
+  }
+
   try {
     await d
       .prepare(
@@ -383,6 +402,15 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
   } catch (e) {
     if (/UNIQUE/i.test(e instanceof Error ? e.message : '')) throw new HttpError(409, 'That username is taken.')
     throw e
+  }
+  // A statement of its own, so the rest of a save still works on a database that has not had 0011 applied yet.
+  if (extrasJson !== null) {
+    try {
+      await d.prepare('UPDATE profiles SET style_json = ?2 WHERE user_id = ?1').bind(user.id, extrasJson).run()
+    } catch (e) {
+      if (/no such column/i.test(e instanceof Error ? e.message : '')) throw new HttpError(503, 'These profile options are not ready yet. Please try again later.')
+      throw e
+    }
   }
   if (changed.includes('links')) {
     // an account that was removed or changed is no longer verified

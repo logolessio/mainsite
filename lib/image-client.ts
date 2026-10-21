@@ -36,3 +36,48 @@ export async function uploadImage(kind: UploadKind, file: File): Promise<string>
   if (!res.ok || !j.id) throw new Error(j.error ?? 'Upload failed.')
   return j.id
 }
+
+/**
+ * A banner keeps its own shape when it is taller than 16 by 9 (up to square), so the profile can grow to fit it.
+ * Wider pictures are trimmed to 16 by 9 as before. Returns the upload id and the shape (height / width).
+ */
+export async function uploadBanner(file: File): Promise<{ id: string; aspect: number }> {
+  if (file.size > 12 * 1024 * 1024) throw new Error('That picture is too large. Pick one under 12 MB.')
+  const bmp = await createImageBitmap(file).catch(() => {
+    throw new Error('That file is not a picture we can read.')
+  })
+  const aspect = Math.min(1, Math.max(9 / 16, bmp.height / bmp.width))
+  bmp.close()
+  const w = aspect > 0.75 ? 1200 : 1600
+  const h = Math.round(w * aspect)
+  const data = await prepareImage(file, w, h)
+  return { id: await send('banner', data), aspect: Math.round((h / w) * 1000) / 1000 }
+}
+
+/** A full-page background picture: up to 1920 on its longest side, its shape kept. */
+export async function uploadBackground(file: File): Promise<string> {
+  const bmp = await createImageBitmap(file).catch(() => {
+    throw new Error('That file is not a picture we can read.')
+  })
+  const s = Math.min(1, 1920 / Math.max(bmp.width, bmp.height))
+  const [w, h] = [Math.max(32, Math.round(bmp.width * s)), Math.max(32, Math.round(bmp.height * s))]
+  bmp.close()
+  return send('background', await prepareImage(file, w, h))
+}
+
+/** A short looping video for the page background. Sent as it is, so it must already be small. */
+export async function uploadBgVideo(file: File): Promise<string> {
+  if (!/^video\/(mp4|webm)$/.test(file.type)) throw new Error('Pick an MP4 or WebM video.')
+  if (file.size > 1300 * 1024) throw new Error('That video is too large. Keep it under 1.3 MB: a few seconds at a small size.')
+  const buf = new Uint8Array(await file.arrayBuffer())
+  let bin = ''
+  for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000))
+  return send('bgvideo', btoa(bin))
+}
+
+async function send(kind: string, data: string) {
+  const res = await fetch('/api/me/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind, data }) })
+  const j = (await res.json().catch(() => ({}))) as { id?: string; error?: string }
+  if (!res.ok || !j.id) throw new Error(j.error ?? 'Upload failed.')
+  return j.id
+}

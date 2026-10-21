@@ -1,5 +1,6 @@
 // Shared (browser + server) definitions for profile customisation. No secrets or database code here.
 import { bannerCss, LOOKS } from './looks'
+import type { ProfileExtras } from './profile-extras'
 
 export const FONT_OPTIONS = [
   { id: 'geist', label: 'Sans', note: 'Clean' },
@@ -38,6 +39,11 @@ export const NAME_EFFECTS = [
   { id: 'toon', label: 'Toon' },
   { id: 'pop', label: 'Pop' },
   { id: 'glow', label: 'Glow' },
+  // newer ones, offered in the profile studio
+  { id: 'rainbow', label: 'Rainbow', studio: true },
+  { id: 'chrome', label: 'Chrome', studio: true },
+  { id: 'glitch', label: 'Glitch', studio: true },
+  { id: 'shimmer', label: 'Shimmer', studio: true },
 ] as const
 export type NameEffect = (typeof NAME_EFFECTS)[number]['id']
 export const NAME_EFFECT_IDS = NAME_EFFECTS.map((e) => e.id) as string[]
@@ -264,6 +270,8 @@ export type ProfileView = {
   joinedAt: number
   country: string | null
   isStaff: boolean
+  /** The profile studio choices, always complete (defaults filled in). */
+  extras: ProfileExtras
 }
 
 export type ProfileStats = { clips: number; views: number; earnedCents: number; campaigns: number }

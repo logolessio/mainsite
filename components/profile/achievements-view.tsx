@@ -1,9 +1,10 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Check, Loader2, Plus, X } from 'lucide-react'
+import { ArrowDownWideNarrow, Check, CircleCheck, Loader2, Lock, Pin, Plus, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { BadgeArt, RARITY_STYLE } from '@/components/badges/badge-art'
+import { BadgeBoard, RARITY_BORDER } from '@/components/badges/badge-board'
 import { PanelSkeleton } from '@/components/app/ui'
 import { GlassTabs } from '@/components/ui/glass-tabs'
 import { Tilt3D } from '@/components/motion/tilt'
@@ -43,13 +44,14 @@ function Ring({ value, total }: { value: number; total: number }) {
   )
 }
 
-export function AchievementsView() {
+export function AchievementsView({ board = false }: { board?: boolean }) {
   const [data, setData] = useState<Data | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [open, setOpen] = useState<BadgeDef | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
   const [rarity, setRarity] = useState<Rarity | 'any'>('any')
+  const [sort, setSort] = useState<'earned' | 'rarity' | 'name'>('earned')
 
   useEffect(() => {
     fetch('/api/me/achievements', { cache: 'no-store' })
@@ -88,6 +90,24 @@ export function AchievementsView() {
     }
   }
 
+  const setEquipped = async (next: string[]) => {
+    if (!data) return
+    const before = data
+    setError('')
+    setSaving(true)
+    setData({ ...data, equipped: next })
+    try {
+      const res = await fetch('/api/me/profile', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ badges: next }) })
+      if (!res.ok) throw new Error(((await res.json().catch(() => ({}))) as { error?: string }).error ?? 'Could not save.')
+      window.dispatchEvent(new Event(NAV_USER_REFRESH))
+    } catch (e) {
+      setData(before)
+      setError(e instanceof Error ? e.message : 'Could not save.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const shown = useMemo(
     () =>
       BADGES.filter((b) => {
@@ -96,8 +116,13 @@ export function AchievementsView() {
         if (filter === 'locked' && got) return false
         if (rarity !== 'any' && b.rarity !== rarity) return false
         return true
-      }).sort((a, b) => Number(Boolean(data && b.id in data.unlocked)) - Number(Boolean(data && a.id in data.unlocked))),
-    [data, filter, rarity],
+      }).sort((a, b) => {
+        const got = (x: BadgeDef) => Number(Boolean(data && x.id in data.unlocked))
+        if (board && sort === 'rarity') return RARITIES.indexOf(b.rarity) - RARITIES.indexOf(a.rarity) || got(b) - got(a)
+        if (board && sort === 'name') return a.name.localeCompare(b.name)
+        return got(b) - got(a)
+      }),
+    [data, filter, rarity, sort, board],
   )
 
   if (!data) return <PanelSkeleton heights={[230, 60, 320]} error={error} />
@@ -133,6 +158,9 @@ export function AchievementsView() {
             </div>
           </div>
 
+          {board ? (
+            <BadgeBoard unlocked={Object.keys(data.unlocked)} equipped={data.equipped} onChange={setEquipped} saving={saving} />
+          ) : (
           <div>
             <div className="mb-3 flex items-baseline justify-between">
               <p className="text-xs text-mute">On your profile</p>
@@ -161,6 +189,7 @@ export function AchievementsView() {
             </ul>
             <p className="mt-3 text-xs text-mute">These show on your public profile. Open any unlocked badge to add or remove it.</p>
           </div>
+          )}
         </div>
       </motion.section>
       {error && <p role="alert" className="mt-3 text-sm text-signal">{error}</p>}
@@ -174,9 +203,23 @@ export function AchievementsView() {
             {r === 'any' ? 'Every rarity' : RARITY_STYLE[r].label}
           </button>
         ))}
+        {board && (
+          <label className="ml-auto inline-flex h-9 items-center gap-2 rounded-pill border border-line-strong pr-2 pl-3.5 text-xs text-mute">
+            <ArrowDownWideNarrow className="size-3.5" />
+            <span className="sr-only">Sort by</span>
+            <select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} className="bg-transparent text-paper outline-none">
+              <option value="earned">Earned first</option>
+              <option value="rarity">Rarest first</option>
+              <option value="name">A to Z</option>
+            </select>
+          </label>
+        )}
       </div>
 
       {/* ---------- the badges ---------- */}
+      {board ? (
+        <BadgeGrid shown={shown} data={data} onOpen={setOpen} />
+      ) : (
       <ul className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
         <AnimatePresence mode="popLayout">
           {shown.map((b, i) => {
@@ -208,6 +251,7 @@ export function AchievementsView() {
           })}
         </AnimatePresence>
       </ul>
+      )}
       {shown.length === 0 && <p className="mt-10 text-center text-sm text-mute">Nothing here yet. Try another filter.</p>}
 
       {/* ---------- one badge, big ---------- */}
@@ -256,5 +300,47 @@ export function AchievementsView() {
         )}
       </AnimatePresence>
     </div>
+  )
+}
+
+/**
+ * Square tiles in a plain grid (no layout animation, so re-sorting never leaves gaps). Every tile has its rarity's
+ * own border colour, and a clear mark for its state: a tick for earned, a pin for on your profile, a lock otherwise.
+ */
+function BadgeGrid({ shown, data, onOpen }: { shown: BadgeDef[]; data: Data; onOpen: (b: BadgeDef) => void }) {
+  return (
+    <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 2xl:grid-cols-6">
+      {shown.map((b) => {
+        const got = b.id in data.unlocked
+        const on = data.equipped.includes(b.id)
+        const R = RARITY_STYLE[b.rarity]
+        return (
+          <li key={b.id} className="min-w-0">
+            <button
+              type="button"
+              onClick={() => onOpen(b)}
+              aria-label={`${b.name}, ${R.label}. ${on ? 'On your profile.' : got ? 'Earned.' : 'Not earned yet.'}`}
+              className={cn('group relative flex aspect-square w-full flex-col items-center justify-center overflow-hidden rounded-[calc(1.5rem*var(--round,1))] border-2 bg-[#0b0b0d] p-3 text-center transition-all hover:-translate-y-0.5', b.rarity === 'legendary' && got && 'shadow-[0_0_30px_-10px_rgb(251_191_36/0.6)]')}
+              style={{ borderColor: got ? RARITY_BORDER[b.rarity] : RARITY_BORDER[b.rarity].replace(/[\d.]+\)$/, '0.22)'), borderStyle: got ? 'solid' : 'dashed' }}
+            >
+              {got && <span aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(70% 60% at 50% 35%, ${RARITY_BORDER[b.rarity].replace(/[\d.]+\)$/, '0.16)')}, transparent)` }} />}
+              <span className="absolute top-2.5 left-2.5" title={got ? 'Earned' : 'Not earned yet'}>
+                {got ? <CircleCheck className="size-[18px] text-emerald-300" /> : <Lock className="size-4 text-mute" />}
+              </span>
+              {on && (
+                <span className="absolute top-2 right-2 inline-flex h-6 items-center gap-1 rounded-pill bg-paper px-2 text-[10px] font-medium text-ink" title="On your profile">
+                  <Pin className="size-3" /> On profile
+                </span>
+              )}
+              <BadgeArt badge={b} size={96} locked={!got} className="relative max-w-[56%]" />
+              <span className="relative mt-2 line-clamp-1 text-sm leading-tight font-medium">{b.name}</span>
+              <span className="relative mt-0.5 text-[10px] font-medium tracking-wide uppercase" style={{ color: got ? RARITY_BORDER[b.rarity].replace(/[\d.]+\)$/, '1)') : undefined }}>
+                {R.label}
+              </span>
+            </button>
+          </li>
+        )
+      })}
+    </ul>
   )
 }

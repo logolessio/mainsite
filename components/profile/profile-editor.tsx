@@ -1,6 +1,7 @@
 'use client'
 
 import { useUnsavedGuard } from '@/hooks/use-unsaved-guard'
+import { useFeature } from '@/components/shell/features-provider'
 import { toast } from '@/lib/toast'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Ban, Binary, Bug, Camera, Check, ChevronDown, CircleDot, CloudRain, Download, Droplets, Eye, EyeOff, Film, Flame, Flower2, Globe, ImagePlus, Leaf, Link2, Loader2, Palette, PartyPopper, Pencil, Plus, Rocket, Search, Snowflake, Sparkles, Star, Sun, Trash2, Tv, Undo2, User, Waves, Wind, X, Zap, type LucideIcon } from 'lucide-react'
@@ -151,8 +152,7 @@ export function ProfileEditor() {
       setPendingAvatar(undefined)
       window.dispatchEvent(new Event(NAV_USER_REFRESH))
       const names = res.newBadges.map((id) => BADGE_BY_ID[id]?.name).filter(Boolean)
-      setNote(names.length ? `Saved. New badge${names.length > 1 ? 's' : ''}: ${names.join(', ')}` : 'Saved')
-      setTimeout(() => setNote(''), 4500)
+      // one confirmation only: the toast that rises from the bottom
       toast.ok(names.length ? `Saved. New badge: ${names.join(', ')}` : 'Profile saved')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save.')
@@ -286,7 +286,7 @@ export function ProfileEditor() {
                 </Group>
                 <Group title="Name effect">
                   <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                    {NAME_EFFECTS.map((o) => (
+                    {NAME_EFFECTS.filter((o) => !('studio' in o)).map((o) => (
                       <button key={o.id} type="button" onClick={() => set('nameEffect', o.id)} aria-pressed={f.nameEffect === o.id} className={cn('rounded-xl border px-2 py-2.5 text-center', f.nameEffect === o.id ? 'border-paper bg-paper/10' : 'border-line hover:bg-paper/5')}>
                         <span style={nameVars} className={cn('block text-base font-bold', `nx-${o.id}`, o.id === 'gradient' && 'mx-auto w-fit')}>Aa</span>
                         <span className="block text-[11px] text-mute">{o.label}</span>
@@ -374,7 +374,7 @@ export function ProfileEditor() {
         </AnimatePresence>
 
         {/* ---------- save bar ---------- */}
-        <div className="sticky bottom-4 z-20 mt-5 rounded-3xl border border-line-strong bg-surface/95 p-2.5">
+        <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 md:bottom-4 mt-5 rounded-3xl border border-line-strong bg-surface/95 p-2.5">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pl-1.5">
             <ActionButton data-hotkey-save onClick={save} disabled={saving || !dirty} className="rounded-pill">
               {saving && <Loader2 className="size-4 animate-spin" />} Save profile
@@ -499,6 +499,7 @@ const SHOW_GROUPS: { title: string; keys: string[]; feature?: string }[] = [
 function Visibility({ show, onChange }: { show: ShowMap; onChange: (s: ShowMap) => void }) {
   const total = SHOW_OPTIONS.length
   const shown = SHOW_OPTIONS.filter((o) => show[o.key]).length
+  const morePrivacy = useFeature('profile-privacy')
   const setAll = (fn: (k: keyof ShowMap, def: boolean) => boolean) => onChange(Object.fromEntries(SHOW_OPTIONS.map((o) => [o.key, fn(o.key, o.on)])) as ShowMap)
   const feedOn = useFeature('submissions-feed')
   return (
@@ -542,6 +543,7 @@ function Visibility({ show, onChange }: { show: ShowMap; onChange: (s: ShowMap) 
         ))}
       </div>
       <p className="mt-4 text-xs text-mute">Your username, name, picture and banner are always public. The preview updates as you tap.</p>
+      {morePrivacy && <a href="/dashboard/profile/privacy" className="mt-3 inline-block text-xs text-paper underline underline-offset-4">More privacy choices: who can see your page, and each account</a>}
     </div>
   )
 }
