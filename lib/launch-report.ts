@@ -772,5 +772,134 @@ export const FINAL_RUNDOWN: Report = {
   footer: 'Sent once from logoless to emile@logoless.io. The claims audit is in CLAIMS_REVIEW.md in the project.',
 }
 
+export const BIG_UPDATE: Report = {
+  id: 'big-update-2026-10-21',
+  to: 'emile@logoless.io',
+  subject: 'logoless: the big update is on the dev site (31 new switches), scroll is gone, and what only you can do',
+  preheader: 'Everything that was built from your long list, what is live right now, what is waiting behind a switch, and the short checklist for you.',
+  title: 'The big update',
+  intro: 'Your long list was built by eight sessions working at once, then merged and checked together. Most of it is switched off on logoless.io until you press push, so nothing changes for visitors by surprise. This email says what is live now, what is waiting, and the few things only you can do.',
+  blocks: [
+    {
+      h: 'The short version',
+      items: [
+        ['Scroll is gone.', 'The trailers site and the Mac app are removed. scroll.logoless.io now simply forwards to logoless.io.'],
+        ['31 new feature switches are on the dev site.', 'Open dev.logoless.io, try them, then tick the ones you want and press push. Every push can be undone.'],
+        ['Fake campaigns are gone from every page.', 'They are hidden everywhere already. Nothing was deleted from the live database: there is a ready script for that, and it is your call.'],
+        ['One thing must be done first.', 'The new features keep their data in five new database tables. Run the migration command in the checklist below, otherwise the new features will show errors on the dev site.'],
+        ['Checked, but not on real services.', 'Each area was tried in a browser at desktop, iPad and phone widths on a local copy. The typecheck and the production build pass. I could not try a real Discord server, real TikTok, YouTube and Instagram lookups, real payments or real emails, so look at those once on dev first.'],
+      ],
+    },
+    {
+      h: 'Live as soon as the deploy finished (no switch)',
+      items: [
+        'A clean loading animation wherever a page or panel loads, instead of the screen freezing.',
+        'The quiet mode notice now fades after 20 seconds.',
+        'The light sweep on the owner dashboard people panel is no longer cropped.',
+        'Admin actions are far more cautious: each one shows a clear summary, the destructive ones need a typed confirmation, and the dangerous ones are checked on the server so only the owner can run them.',
+        'Fake and sample campaigns no longer appear anywhere. The old admin tool that made them is removed.',
+        'The sign in with logoless button on the Developers page has a logo that no longer looks cut off.',
+        'Usernames chosen on the waitlist are kept: when that person signs up with the same email the name is theirs, and nobody else can take it.',
+        'Phone and iPad layout fixes on the dashboards, the top bar and the new pages.',
+      ],
+    },
+    {
+      h: 'Profile settings (switches: Profile studio, Privacy page for profiles, Badge board, Leave without saving box)',
+      items: [
+        'The profile editor is now a live preview with a pencil on each part (picture, banner, card, background). Each pencil opens only that part\'s controls. The main page keeps just the words: name, fonts, bio, pronouns.',
+        'Banners grow taller when the picture you upload is taller. Recent banners sit next to the colours so one click puts a banner back.',
+        'A GIF library (GIPHY) for banners and profile pictures. It needs a key from you, see the checklist.',
+        'Backgrounds: wave dots, aurora, starfield, synthwave and more, or your own picture, GIF or looping video, with overlay effects such as embers.',
+        'Solid colour pictures can show initials, or an emoji of your choice. Grain on solid colours has its own amount slider, and text effects have intensity, speed and more.',
+        'Fireflies, VHS and fireworks were rebuilt and look much better. Fireworks is light now (few particles, pauses when off screen) and every effect can be tinted slightly.',
+        'The two save confirmations are one now, the newer one from the bottom. The effect no longer jitters when a new font loads.',
+        'A new Privacy page with switches instead of buttons, grouped by topic with plain explanations. Each creator account can be made public or private, and the whole page can be limited to members or only you.',
+        'Badges: drag tiles onto your profile to add, reorder and remove them, with a cross on equipped badges and a plus on the others. The gallery uses square tiles in a proper grid (no gaps when sorting by rarity) with a border colour for each rarity and clear earned and equipped marks.',
+        'Leaving a page with unsaved changes asks in a box on the site (Keep editing, Save and leave, Leave) instead of the browser prompt.',
+      ],
+    },
+    {
+      h: 'Developers (switch: Developers: easier setup and a Developer dashboard)',
+      items: [
+        'A much clearer Developers page: a four step quickstart, copyable code for plain HTML, Next.js, React, Node and Python, a live "try a real sign in" button, a setup checker and troubleshooting.',
+        'A real registration form: many app types and uses, return addresses as one chip each, the one line about the app is required, a 100 character minimum for the use, and real links are checked as you type and again on the server.',
+        'A Developer section in the dashboard holds every app, its secrets, return addresses, usage and deleting.',
+      ],
+    },
+    {
+      h: 'Coming soon and links (switch: New coming-soon and links page)',
+      items: [
+        'One merged page: the logo, the social icons in a row, then the countdown and the email sign up. When the site is live it shows a Get started block instead. The /links page stays open even while the site is closed.',
+        'The waitlist asks for a code sent to the email, then lets the person choose a username. A confirmation email follows with how to unsubscribe in one click.',
+        'One spot per device, with the Cloudflare checks. Devices where you are signed in as the owner are exempt, so you can test with many accounts.',
+        'You edit the words, countdown, background, effect, accent colour and link buttons right on the page.',
+      ],
+    },
+    {
+      h: 'Main page and the whole site (switches: Home page motion, Cover text size, Log in and Dashboard buttons, Dashboard previews on role pages, ⌘K: hundreds of actions)',
+      items: [
+        'The clear cross on a filter now appears at the end without moving the other options.',
+        'Campaign covers rise in and lift gently on hover. A soft blur and shade fades in at the top as you scroll, and the hero eases away.',
+        'An Aa control sets how big the names on campaign covers are, remembered per visitor.',
+        'The command search box (press K with Command, or /) is rebuilt with hundreds of actions such as change my name, link TikTok, request payout, open privacy and create campaign. It forgives typos and only offers what that person can do. Every page now has a search button and a question mark button for the shortcuts.',
+        'Signed out, the top right shows Log in and Get started. Signed in, Get started becomes Dashboard and goes to the right dashboard for that page.',
+        'The For creators, For brands and Developers pages each have a small interactive preview of the matching dashboard.',
+        'Live campaign numbers (switch: Live campaign numbers): the main pages quietly fetch the latest budget left, views and earnings every 30 seconds.',
+      ],
+    },
+    {
+      h: 'Onboarding, campaigns and clients (switches: Onboarding checks, Dots and dashes in usernames, Client links, Campaign builder, Client walkthrough, View milestones)',
+      items: [
+        'Usernames can contain dots, underscores and dashes (never at the start or end, never two in a row). Reserved names stay blocked, even with dots in between.',
+        'Onboarding proves the email with a code and has a button to switch email if the wrong one was picked. Each social account you add is proven with a code in its bio, right there. TikTok shows a note that its website can be slow to show a new bio, with a check again button.',
+        'Making a campaign is a guided wizard: basics, audio (official sound, Spotify links, a preview), cover, optional background, the brief, then the budget as either "X views for $Y" or "$Y at $Z per 1,000 views", worked out live. Then funds and a last review.',
+        'Client links: an admin makes a link such as kxng and the client gets the full package at kxng.logoless.io. They set up their account, choose how to be contacted, add funds, build their first campaign, then get an interactive tour of the dashboard. The first submission shows everything they can do with it, and total view milestones celebrate with confetti and a notification. This needs a Cloudflare step from you, see the checklist.',
+      ],
+    },
+    {
+      h: 'Notifications and the sidebar (switches: Notification centre, Recap in the sidebar, Discord page in the dashboard)',
+      items: [
+        'The bell shows only the notifications, nothing else, with two small icons to open the full page and the settings. It rings with a soft ripple when clicked and when something new arrives. Notifications mark themselves read once you have seen them.',
+        'Notifications have their own page and the settings are expanded: each kind on or off for the site, email and Discord separately, quiet hours, and daily or weekly digests.',
+        'Recap moved to the bottom of the sidebar with a clean gold shine. It only shows when it applies and only once set up is finished. It glows until opened, and glows again after three months.',
+        'Discord has its own dashboard page where people link or unlink Discord and see their roles. It can be taken out of the sidebar and put back from Settings.',
+      ],
+    },
+    {
+      h: 'New public pages (switches: Public submissions feed, Stats and leaderboards)',
+      items: [
+        '/submissions: every approved clip, newest first, that keeps loading as you scroll. Watch it on the page, rate it out of five stars, open the clipper\'s profile. Thumbnails, views, likes and comments come from TikTok, YouTube, Instagram and X. Clippers can hide their clips in their privacy settings.',
+        '/stats: totals and leaderboards for creators, views, earnings, clips, campaigns and artists, for this week, this month or all time.',
+      ],
+    },
+    {
+      h: 'Discord (eight switches, all starting with Discord:)',
+      items: [
+        'The get started message has one button. It takes the member to the site sign up with an extra step to link Discord. When both are done, a message only they can see says what to do next, and they get a full rundown by direct message.',
+        'A public payouts channel: every earning is posted with a picture card (the amount in front of the site background), the campaign and the views, with half of the name hidden.',
+        'A submissions channel with the video, title, likes, comments and views from the platform, updated as the clip is reviewed and earns.',
+        'Each new campaign gets a bigger card with a bar for the budget left and a Submit button that opens that campaign. It goes in the artist\'s own channel (made if it does not exist). When all of an artist\'s campaigns end, the channel moves to the private inactive category. When only one ends, just its message is removed.',
+        'Every 30 seconds the site and Discord look again at campaign progress. Deleted ticket channels now close the ticket on the site.',
+        'Roles for each kind of member (admin, developer, creator, clipper, brand and the earnings tiers) and many more slash commands for everyone, brands, developers and some for fun.',
+      ],
+    },
+    {
+      h: 'What only you can do (in this order)',
+      numbered: true,
+      items: [
+        ['Apply the database changes.', 'In the project folder run: npx wrangler d1 migrations apply DB --remote. It adds new tables and two new columns and changes nothing that exists. It also applies the artist links migration if that is still waiting. Do this before pressing any push.'],
+        ['Try it on dev.logoless.io.', 'Walk through the new profile editor, the Privacy page, the Developer section, the coming soon preview, onboarding as a new person, the campaign builder and the notifications. Then press push on the ones you like.'],
+        ['GIF library.', 'Make a free key at developers.giphy.com and add it in Cloudflare as a secret called GIPHY_API_KEY. Without it the GIF library just says it is not switched on.'],
+        ['Optional keys for the submissions feed.', 'YOUTUBE_API_KEY, META_APP_ID with META_CLIENT_TOKEN, and X_BEARER_TOKEN (X charges for it). Without them the feed still works from the public pages, with fewer numbers. PLATFORM_SETUP.md has the details.'],
+        ['Client links.', 'Follow CLIENT_LINKS_SETUP.md: add one wildcard DNS record and one Worker route for *.logoless.io. I deliberately did not edit wrangler.jsonc for this, because a bad route line can stop deploys. Until then, links still work at logoless.io/name.'],
+        ['Discord.', 'On the Discord page of the owner dashboard press Register commands, use the setup buttons to make the payouts, submissions and inactive channels, then push the Discord switches one at a time and watch the server.'],
+        ['Fake campaigns in the database.', 'Optional. They are hidden everywhere. To delete the rows for good, read scripts/remove-fake-campaigns.sql first, then run it. It never touches money.'],
+        ['scroll.logoless.io.', 'It only forwards to logoless.io now. If you want the address gone completely, tell me and I will remove it from the project settings; do not delete it in Cloudflare first or the next deploy will add it back.'],
+      ],
+    },
+  ],
+  footer: 'logoless, the big update, 21 October 2026. Sent once from the site itself to the owner.',
+}
+
 /** The reports that can be sent, by id. */
-export const REPORTS: Record<string, Report> = { [OVERNIGHT.id]: OVERNIGHT, [ADDENDUM.id]: ADDENDUM, [FEATURE_LIST.id]: FEATURE_LIST, [SESSION_TWO.id]: SESSION_TWO, [FULL_LOWDOWN.id]: FULL_LOWDOWN, [LAUNCH_RUNDOWN.id]: LAUNCH_RUNDOWN, [FINAL_RUNDOWN.id]: FINAL_RUNDOWN }
+export const REPORTS: Record<string, Report> = { [OVERNIGHT.id]: OVERNIGHT, [ADDENDUM.id]: ADDENDUM, [FEATURE_LIST.id]: FEATURE_LIST, [SESSION_TWO.id]: SESSION_TWO, [FULL_LOWDOWN.id]: FULL_LOWDOWN, [LAUNCH_RUNDOWN.id]: LAUNCH_RUNDOWN, [FINAL_RUNDOWN.id]: FINAL_RUNDOWN, [BIG_UPDATE.id]: BIG_UPDATE }
