@@ -18,7 +18,6 @@ export function CreatorCard({ c, campaigns }: { c: Creator; campaigns: { id: str
           </Link>
           <p className="truncate text-sm text-mute">
             @{c.handle}
-            {c.level ? ` · ${c.level}` : ''}
           </p>
         </div>
         {c.trusted && <span className="ml-auto shrink-0 rounded-chip border border-line-strong px-2 py-1 text-xs text-paper/80">Trusted</span>}

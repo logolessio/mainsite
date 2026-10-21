@@ -1,28 +1,6 @@
 /** The parts of the growth features that need no database, so browser code can use them too. */
 const nowSec = () => Math.floor(Date.now() / 1000)
 
-// ---------- levels ----------
-export const LEVELS = [
-  { id: 'rookie', name: 'Rookie', from: 0, line: 'Everyone starts here.' },
-  { id: 'cutter', name: 'Cutter', from: 10_000, line: 'Your clips are getting seen.' },
-  { id: 'editor', name: 'Editor', from: 100_000, line: 'Brands will notice a name like yours.' },
-  { id: 'pro', name: 'Pro', from: 500_000, line: 'Half a million views, verified.' },
-  { id: 'elite', name: 'Elite', from: 2_000_000, line: 'Top of the leaderboard territory.' },
-  { id: 'legend', name: 'Legend', from: 10_000_000, line: 'There is nowhere higher to go.' },
-] as const
-export type Level = (typeof LEVELS)[number]
-
-export function levelFor(views: number): { level: Level; next: Level | null; pct: number; toGo: number; index: number } {
-  let index = 0
-  LEVELS.forEach((l, i) => {
-    if (views >= l.from) index = i
-  })
-  const level = LEVELS[index]
-  const next = LEVELS[index + 1] ?? null
-  const pct = next ? Math.max(0, Math.min(100, Math.round(((views - level.from) / (next.from - level.from)) * 100))) : 100
-  return { level, next, pct, toGo: next ? Math.max(0, next.from - views) : 0, index }
-}
-
 export type CreatorStats = {
   views: number
   approved: number

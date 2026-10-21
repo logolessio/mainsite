@@ -1336,3 +1336,70 @@ html.calm .top-veil {
     animation: none;
   }
 }
+
+/* ------------------------------------------------------------------------------------------------------------------------------
+   A client's own page (logoless.io/<name>, <name>.logoless.io): a heavy grotesk for the big words, a small monospace for the quiet ones,
+   and a gradient that never stops moving. --stage-h is a real number property, so the colours slide smoothly when it changes.
+   ------------------------------------------------------------------------------------------------------------------------------ */
+@property --stage-h {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 262;
+}
+.stage-root {
+  --stage-h: 262;
+  transition: --stage-h 1.6s cubic-bezier(0.22, 1, 0.36, 1);
+  background: #05050a;
+}
+.stage-grot {
+  font-family: var(--font-grot), 'Arial Black', 'Helvetica Neue', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.045em;
+  line-height: 0.86;
+}
+.stage-mono {
+  font-family: var(--font-plex), ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.stage-mono-body {
+  font-family: var(--font-plex), ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.01em;
+}
+.stage-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  will-change: transform;
+}
+@keyframes stage-drift-a {
+  0% { transform: translate3d(-8%, -6%, 0) scale(1) rotate(0deg); }
+  33% { transform: translate3d(14%, 10%, 0) scale(1.18) rotate(40deg); }
+  66% { transform: translate3d(-4%, 18%, 0) scale(0.92) rotate(80deg); }
+  100% { transform: translate3d(-8%, -6%, 0) scale(1) rotate(120deg); }
+}
+@keyframes stage-drift-b {
+  0% { transform: translate3d(10%, 8%, 0) scale(1.1); }
+  50% { transform: translate3d(-16%, -10%, 0) scale(0.9); }
+  100% { transform: translate3d(10%, 8%, 0) scale(1.1); }
+}
+@keyframes stage-drift-c {
+  0% { transform: translate3d(0, 0, 0) scale(0.95); }
+  40% { transform: translate3d(-12%, 14%, 0) scale(1.2); }
+  100% { transform: translate3d(0, 0, 0) scale(0.95); }
+}
+@keyframes stage-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes stage-pulse {
+  0% { transform: scale(0.9); opacity: 0.55; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+@keyframes stage-sweep {
+  0% { transform: translate3d(-130%, 0, 0) skewX(-18deg); }
+  100% { transform: translate3d(330%, 0, 0) skewX(-18deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-blob, .stage-spin, .stage-pulse, .stage-sweep { animation: none !important; }
+}

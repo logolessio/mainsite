@@ -5,23 +5,25 @@ import { Check, ImagePlus, Loader2 } from 'lucide-react'
 import { useId, useMemo } from 'react'
 import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
+import { useStage } from './stage'
 
 /** The big question at the top of a step. Words rise in one after another. */
 export function Ask({ children, sub }: { children: string; sub?: string }) {
   const words = children.split(' ')
+  const stage = useStage() // on a client's own page the question is set in the heavy grotesk and the sub line in the monospace
   return (
-    <div className="mb-8 md:mb-10">
-      <h1 className="font-display text-[2.1rem] leading-[1.05] font-medium tracking-tight md:text-6xl">
+    <div className="mb-8 md:mb-12">
+      <h1 className={cn(stage ? 'stage-grot text-[2.3rem] md:text-[4.6rem]' : 'font-display text-[2.1rem] leading-[1.05] font-medium tracking-tight md:text-6xl')}>
         {words.map((w, i) => (
           <span key={i} className="inline-block overflow-hidden pb-[0.12em] align-top">
-            <motion.span initial={{ y: '110%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.7, delay: 0.05 + i * 0.045, ease: EASE_OUT }} className="inline-block">
+            <motion.span initial={{ y: '110%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: stage ? 0.9 : 0.7, delay: 0.05 + i * 0.045, ease: EASE_OUT }} className="inline-block">
               {w}&nbsp;
             </motion.span>
           </span>
         ))}
       </h1>
       {sub && (
-        <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.25 + words.length * 0.04, ease: EASE_OUT }} className="mt-4 max-w-xl text-base leading-relaxed text-mute md:text-lg">
+        <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.25 + words.length * 0.04, ease: EASE_OUT }} className={cn('mt-5 max-w-xl', stage ? 'stage-mono-body text-[13px] leading-[1.9] text-white/75' : 'text-lg leading-relaxed text-mute')}>
           {sub}
         </motion.p>
       )}
@@ -41,10 +43,11 @@ export function Rise({ i = 0, children, className }: { i?: number; children: Rea
 const box = 'w-full rounded-2xl border border-line-strong bg-white/[0.035] px-5 text-lg text-paper placeholder:text-mute/70 transition-colors focus:border-paper/60 focus:bg-white/[0.06] focus:outline-none'
 
 export function Label({ children, hint }: { children: React.ReactNode; hint?: string }) {
+  const stage = useStage()
   return (
     <span className="mb-2 flex items-baseline justify-between gap-3">
-      <span className="text-xs tracking-wide text-mute">{children}</span>
-      {hint && <span className="shrink-0 text-xs text-mute/80">{hint}</span>}
+      <span className={cn(stage ? 'stage-mono text-[10.5px] text-white/70' : 'text-xs tracking-wide text-mute')}>{children}</span>
+      {hint && <span className={cn('shrink-0 text-xs', stage ? 'stage-mono-body text-white/55' : 'text-mute/80')}>{hint}</span>}
     </span>
   )
 }

@@ -19,6 +19,8 @@ import { useFeature } from '@/components/shell/features-provider'
 import { SITE } from '@/lib/site'
 import { cn } from '@/lib/utils'
 import { Ask, BigArea, BigInput, Chip, Confetti, Label, Rise, UploadTile } from './bits'
+import { STAGE_FONTS } from './fonts'
+import { hueFor, MovingGradient, StageCtx, usePointer } from './stage'
 import { LiquidGlass } from '@/components/ui/liquid-glass'
 
 type Campaign = { id: string; title: string; status: string; budgetCents: number } | null
@@ -290,11 +292,15 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
   const estimate = estimateViews(budget || 0, rate || 0)
   const chapterIdx = (c: string) => STEPS.filter((s) => s.chapter === c)
   const progress = Math.round((step / (STEPS.length - 1)) * 100)
+  // the page's own colour, drifting a little further with every step
+  const hue = hueFor(slug) + step * 9
+  const pointer = usePointer()
   const showFooter = current.id !== 'done' && current.id !== 'fund'
 
   return (
-    <div className="fixed inset-0 z-[80] bg-ink text-paper" onKeyDown={onKey}>
-      <Backdrop step={step} />
+    <StageCtx.Provider value>
+    <div className={cn('stage-root fixed inset-0 z-[80] text-paper', STAGE_FONTS)} style={{ ['--stage-h' as string]: hue }} onKeyDown={onKey}>
+      <MovingGradient hue={hue} pointer={pointer} />
       <div ref={scroller} className="relative h-full overflow-y-auto overscroll-contain">
         <header className="sticky top-0 z-20 flex h-20 items-center justify-between bg-gradient-to-b from-ink from-60% to-transparent px-5 md:px-10">
           <Logo className="h-10 md:h-11" />
@@ -303,12 +309,12 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
               Preview: nothing is saved · Exit
             </a>
           )}
-          <div className="flex items-center gap-4 text-sm text-mute">
+          <div className="stage-mono flex items-center gap-4 text-[11px] text-white/70">
             <span aria-live="polite" className="hidden items-center gap-1.5 sm:inline-flex">
               {saved === 'saving' ? <Loader2 className="size-3.5 animate-spin" /> : saved === 'saved' ? <Check className="size-3.5" /> : null}
               {saved === 'saving' ? 'Saving…' : saved === 'saved' ? 'Saved' : 'Saves as you go'}
             </span>
-            <span className="font-mono text-xs">{progress}%</span>
+            <span className="text-xs">{progress}%</span>
           </div>
           <div className="absolute inset-x-0 bottom-0 h-px bg-line">
             <motion.div className="h-full bg-paper" initial={false} animate={{ width: `${progress}%` }} transition={{ duration: 0.6, ease: EASE_OUT }} />
@@ -894,6 +900,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
         )}
       </div>
     </div>
+    </StageCtx.Provider>
   )
 }
 
@@ -909,14 +916,3 @@ function clean(d: InviteData): InviteData {
   return out as InviteData
 }
 
-/** Slow drifting colour behind everything, different for each part of the setup. */
-function Backdrop({ step }: { step: number }) {
-  const hue = useMemo(() => [0, 18, 38, 58, 78, 100][Math.min(5, Math.floor(step / 2))], [step])
-  return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-      <motion.div className="absolute -top-1/4 left-1/4 size-[60rem] rounded-pill opacity-[0.16] blur-3xl" animate={{ x: [0, 80, -40, 0], y: [0, 40, 80, 0], background: `radial-gradient(closest-side, hsl(${210 + hue} 12% 70%), transparent)` }} transition={{ x: { duration: 22, repeat: Infinity }, y: { duration: 26, repeat: Infinity }, background: { duration: 1.2 } }} />
-      <motion.div className="absolute right-0 bottom-0 size-[48rem] rounded-pill opacity-[0.12] blur-3xl" animate={{ x: [0, -60, 40, 0], y: [0, -50, 20, 0], background: `radial-gradient(closest-side, hsl(${260 + hue} 10% 65%), transparent)` }} transition={{ x: { duration: 28, repeat: Infinity }, y: { duration: 24, repeat: Infinity }, background: { duration: 1.2 } }} />
-      <div className="absolute inset-0 [background-image:radial-gradient(rgb(255_255_255/0.07)_1px,transparent_1px)] [background-size:28px_28px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" />
-    </div>
-  )
-}

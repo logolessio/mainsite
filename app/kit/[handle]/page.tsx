@@ -4,7 +4,6 @@ import { connection } from 'next/server'
 import { BrandIcon, type BrandName } from '@/components/brand-icon'
 import { Breadcrumbs } from '@/components/marketing/breadcrumbs'
 import { featureOn } from '@/lib/features'
-import { levelFor } from '@/lib/growth-shared'
 import { CONTAINER } from '@/lib/layout'
 import { LINK_PLATFORMS, usernameOf } from '@/lib/profile-style'
 import { publicCreator, topClipsOf } from '@/lib/showcase'
@@ -30,8 +29,7 @@ export default async function Page({ params }: Props) {
   const clips = c.view.show.clips || c.view.show.views ? await topClipsOf(c.userId) : []
   const hidden = c.view.extras.privacy.hiddenLinks
   const links = c.view.show.links ? c.view.links.filter((l) => ['tiktok', 'youtube', 'instagram'].includes(l.platform) && !hidden.includes(l.platform)) : []
-  const lv = c.views !== null ? levelFor(c.views) : null
-  const stats = [c.views !== null && ['Verified views', compact(c.views)], c.clips !== null && ['Approved clips', String(c.clips)], c.earnedCents !== null && ['Earned on logoless', usd(c.earnedCents)], lv && ['Level', lv.level.name]].filter(Boolean) as [string, string][]
+  const stats = [c.views !== null && ['Verified views', compact(c.views)], c.clips !== null && ['Approved clips', String(c.clips)], c.earnedCents !== null && ['Earned on logoless', usd(c.earnedCents)]].filter(Boolean) as [string, string][]
   return (
     <main className={`${CONTAINER} pt-24 pb-32 print:pt-6`}>
       <Breadcrumbs trail={[{ name: 'Creators', href: '/creators' }, { name: c.name }]} />

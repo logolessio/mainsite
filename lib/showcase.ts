@@ -1,5 +1,5 @@
 import { db, nowSec } from './db'
-import { isTrusted, levelFor } from './growth-shared'
+import { isTrusted } from './growth-shared'
 import { avatarSrc } from './looks'
 import { toView } from './profile'
 import { CLIPPING_PLATFORMS, type ProfileView } from './profile-style'
@@ -20,7 +20,6 @@ export type Creator = {
   clips: number | null
   earnedCents: number | null
   approved: number
-  level: string | null
   trusted: boolean
   joinedAt: number
   view: ProfileView
@@ -66,7 +65,6 @@ function shape(v: ProfileView, userId: string, a: Agg | undefined): Creator {
     clips: show.clips ? (a?.approved ?? 0) : null,
     earnedCents: show.earnings ? (a?.earned ?? 0) : null,
     approved: a?.approved ?? 0,
-    level: show.views ? levelFor(views).level.name : null,
     trusted: isTrusted({ approved: a?.approved ?? 0, rejected: a?.rejected ?? 0 }),
     joinedAt: v.joinedAt,
     view: v,
