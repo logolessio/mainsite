@@ -17,6 +17,7 @@ type Status = {
   samples: { id: string; label: string; group: string }[]
   endpoint: string
   invite: string | null
+  lastTick: { at: number; ms: number; skipped?: string; parts: Record<string, string> } | null
 }
 
 type AccessLine = { label: string; ok: boolean; note: string }
@@ -52,6 +53,8 @@ const CHANNELS: { key: ChannelKey; label: string; hint: string; post?: 'getStart
   { key: 'updates', label: '#updates', hint: 'Product updates, including features you push live.' },
   { key: 'clips', label: 'Proof', hint: 'Big earnings are celebrated here, as proof that people get paid. Clips are never reviewed in Discord: that is done on the dashboard.' },
   { key: 'logs', label: 'Team log', hint: 'Tickets, reports and admin actions.' },
+  { key: 'payouts', label: '#payouts', hint: 'Every earning, with a picture card of the amount and the name half hidden (em***). Switch: Discord: payouts channel.' },
+  { key: 'submissions', label: '#submissions', hint: 'Every submission with the video and its numbers, updated as it is reviewed and earns. Switch: Discord: submissions channel.' },
 ]
 
 /** Everything to run the Discord bot: what is missing, the address to give Discord, where each thing is posted and which roles it hands out. */
@@ -239,9 +242,9 @@ export function DiscordPanel() {
       <Card title="Roles" sub="IDs only. The bot gives and takes these as people link and earn.">
         <div className="grid gap-5">
           <div className="grid gap-4 sm:grid-cols-3">
-            {(['linked', 'clipper', 'brand', 'team', 'staff'] as const).map((k) => (
+            {(['linked', 'clipper', 'creator', 'brand', 'developer', 'admin', 'team', 'staff'] as const).map((k) => (
               <label key={k} className="grid gap-1.5">
-                <span className="text-xs text-mute">{{ linked: 'Linked members', clipper: 'Clippers', brand: 'Brands', team: 'Team', staff: 'Staff (can see tickets)' }[k]}</span>
+                <span className="text-xs text-mute">{{ linked: 'Linked members', clipper: 'Clippers', creator: 'Artists (run campaigns)', brand: 'Brands', developer: 'Developers', admin: 'Admins', team: 'Team', staff: 'Staff (can see tickets)' }[k]}</span>
                 <input className={input} inputMode="numeric" value={cfg.roles[k]} onChange={(e) => set({ roles: { ...cfg.roles, [k]: digits(e.target.value) } })} placeholder="Role ID" />
               </label>
             ))}
@@ -264,6 +267,10 @@ export function DiscordPanel() {
               <Plus className="size-3.5" /> Add an earnings role
             </button>
           </div>
+          <label className="grid max-w-xs gap-1.5">
+            <span className="text-xs text-mute">Smallest earning posted in #payouts, in dollars</span>
+            <input className={input} inputMode="decimal" value={cfg.payoutMinCents / 100} onChange={(e) => set({ payoutMinCents: Math.round((Number(e.target.value.replace(/[^\d.]/g, '')) || 0) * 100) })} />
+          </label>
           <label className="flex items-center gap-2 text-sm text-mute">
             <input type="checkbox" className="size-4 accent-white" checked={cfg.dm} onChange={(e) => set({ dm: e.target.checked })} /> Send linked members their notifications as direct messages
           </label>
@@ -304,6 +311,18 @@ export function DiscordPanel() {
           <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('artists', async () => { const j = (await call({ action: 'artists' })) as { artists?: number; checked?: number }; return `Checked ${j.artists} artists, ${j.checked} channels filed in the right category.` })}>
             {busy === 'artists' && <Loader2 className="size-4 animate-spin" />} Sort artist channels
           </button>
+          <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('make-roles', async () => { const j = (await call({ action: 'make-roles' })) as { made?: string[] }; return j.made?.length ? `Made ${j.made.join(', ')} and saved their IDs. Drag the bot's role above them.` : 'Every role already has an ID.' })}>
+            {busy === 'make-roles' && <Loader2 className="size-4 animate-spin" />} Make the missing roles
+          </button>
+          <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('make-places', async () => { const j = (await call({ action: 'make-places' })) as { made?: string[] }; return j.made?.length ? `Made ${j.made.join(', ')} and saved their IDs.` : 'Every category and channel already has an ID.' })}>
+            {busy === 'make-places' && <Loader2 className="size-4 animate-spin" />} Make the missing categories and channels
+          </button>
+          <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('tick', async () => { const j = (await call({ action: 'tick' })) as { skipped?: string; parts?: Record<string, string> }; return j.skipped ? `Skipped: ${j.skipped}.` : Object.entries(j.parts ?? {}).map(([k, v]) => `${k}: ${v}`).join(' · ') })}>
+            {busy === 'tick' && <Loader2 className="size-4 animate-spin" />} Run the live loop now
+          </button>
+          <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('welcome-me', async () => (await call({ action: 'welcome-me' }), 'Sent you the rundown by direct message.'))}>
+            {busy === 'welcome-me' && <Loader2 className="size-4 animate-spin" />} Send me the welcome rundown
+          </button>
           <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('sync', async () => { const j = (await call({ action: 'sync' })) as { checked?: number; changed?: number }; return `Checked ${j.checked} members, ${j.changed} had roles changed.` })}>
             {busy === 'sync' && <Loader2 className="size-4 animate-spin" />} Refresh everyone&apos;s roles
           </button>
@@ -311,6 +330,11 @@ export function DiscordPanel() {
         {msg && (
           <p role={msg.ok ? 'status' : 'alert'} className={`mt-4 text-sm ${msg.ok ? 'text-emerald-300' : 'text-signal'}`}>
             {msg.text}
+          </p>
+        )}
+        {s.lastTick && (
+          <p className="mt-4 text-xs text-mute">
+            Live loop, last run {new Date(s.lastTick.at * 1000).toLocaleTimeString()} ({s.lastTick.ms} ms): {s.lastTick.skipped ?? Object.entries(s.lastTick.parts).map(([k, v]) => `${k} ${v}`).join(' · ')}
           </p>
         )}
         {access && (

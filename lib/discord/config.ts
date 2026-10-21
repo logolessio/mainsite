@@ -19,19 +19,30 @@ export type DiscordConfig = {
     updates: string
     clips: string
     logs: string
+    /** Every earning is posted here with a picture card, the person's name half hidden. */
+    payouts: string
+    /** Every submission is posted here with the video and its numbers. */
+    submissions: string
   }
   /** The category that private ticket channels are created under. */
   ticketCategory: string
   /** Artist channels live here while the artist has a live campaign, and move to the inactive category when they do not. */
   artistsCategory: string
   inactiveCategory: string
-  roles: { linked: string; clipper: string; brand: string; team: string; staff: string; tiers: { minUsd: number; role: string }[] }
+  /**
+   * One role per kind of member, kept in step with the site: linked (anyone connected), clipper, brand, creator (an artist or
+   * streamer whose campaigns run here), developer (has an app on the developer page, or the dev role), admin, team (any team role),
+   * staff (only read: who can see tickets), and the earnings tiers.
+   */
+  roles: { linked: string; clipper: string; brand: string; creator: string; developer: string; admin: string; team: string; staff: string; tiers: { minUsd: number; role: string }[] }
+  /** Earnings below this are not posted in the payouts channel (the automatic view checks pay in small steps). */
+  payoutMinCents: number
   /** One channel per artist: the artist's name (as written on the campaign) and the channel its campaigns are announced in. */
   artists: { name: string; channel: string }[]
   dm: boolean // direct-message linked members their notifications
 }
 
-export const EMPTY_CHANNELS: DiscordConfig['channels'] = { getStarted: '', rules: '', site: '', support: '', status: '', news: '', newCampaigns: '', system: '', updates: '', clips: '', logs: '' }
+export const EMPTY_CHANNELS: DiscordConfig['channels'] = { getStarted: '', rules: '', site: '', support: '', status: '', news: '', newCampaigns: '', system: '', updates: '', clips: '', logs: '', payouts: '', submissions: '' }
 
 export const EMPTY: DiscordConfig = {
   guildId: '',
@@ -39,7 +50,8 @@ export const EMPTY: DiscordConfig = {
   ticketCategory: '',
   artistsCategory: '',
   inactiveCategory: '',
-  roles: { linked: '', clipper: '', brand: '', team: '', staff: '', tiers: [] },
+  roles: { linked: '', clipper: '', brand: '', creator: '', developer: '', admin: '', team: '', staff: '', tiers: [] },
+  payoutMinCents: 100,
   artists: [],
   dm: true,
 }
@@ -75,11 +87,14 @@ export function clean(input: unknown): DiscordConfig {
       updates: snowflake(ch.updates),
       clips: snowflake(ch.clips),
       logs: snowflake(ch.logs),
+      payouts: snowflake(ch.payouts),
+      submissions: snowflake(ch.submissions),
     },
     ticketCategory: snowflake(i.ticketCategory),
     artistsCategory: snowflake(i.artistsCategory),
     inactiveCategory: snowflake(i.inactiveCategory),
-    roles: { linked: snowflake(ro.linked), clipper: snowflake(ro.clipper), brand: snowflake(ro.brand), team: snowflake(ro.team), staff: snowflake(ro.staff), tiers },
+    roles: { linked: snowflake(ro.linked), clipper: snowflake(ro.clipper), brand: snowflake(ro.brand), creator: snowflake(ro.creator), developer: snowflake(ro.developer), admin: snowflake(ro.admin), team: snowflake(ro.team), staff: snowflake(ro.staff), tiers },
+    payoutMinCents: i.payoutMinCents === undefined ? 100 : Math.max(0, Math.min(1_000_000, Math.round(Number(i.payoutMinCents) || 0))),
     artists,
     dm: i.dm !== false,
   }

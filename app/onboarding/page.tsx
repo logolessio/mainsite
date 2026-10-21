@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/session'
@@ -10,8 +11,8 @@ export const metadata: Metadata = {
   description: 'Create your account, link your socials, set up your profile and get paid, all in one guided flow.',
 }
 
-export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ role?: string; preview?: string; step?: string }> }) {
-  const { role, preview, step } = await searchParams
+export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ role?: string; preview?: string; step?: string; ref?: string }> }) {
+  const { role, preview, step, ref } = await searchParams
   const session = await getSession()
   const user = session?.user ? { name: session.user.name ?? '', email: session.user.email ?? '' } : null
   // an admin's dry run: nothing is saved (see the Previews page in the admin area)
@@ -27,6 +28,12 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
       const hasPassword = await d.prepare('SELECT 1 AS x FROM credentials WHERE email = ?1').bind(session.user.email.toLowerCase()).first()
       needsVerify = !hasDiscord && !hasPassword
     }
+  }
+  // from the Get started button in Discord, by someone who has already been through the flow: straight to the Discord step
+  if (ref === 'discord' && session?.user?.email && !dry) {
+    const d = await db()
+    const done = await d.prepare("SELECT 1 AS x FROM settings s JOIN users u ON s.key = 'onboarded:' || u.id WHERE u.email = ?1").bind(session.user.email.toLowerCase()).first()
+    if (done) redirect('/onboarding/discord')
   }
   return (
     <Suspense>

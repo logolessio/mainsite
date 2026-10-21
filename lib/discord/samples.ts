@@ -1,6 +1,7 @@
 import type { Health } from '../health'
 import type { Message } from './api'
 import * as k from './cards'
+import * as m from './cards-more'
 import { kindIcon } from './ui'
 
 /**
@@ -177,6 +178,34 @@ export const SAMPLES: Sample[] = [
   { id: 'team-stats', group: 'Team', label: 'The site right now', build: () => k.siteNowCard({ users: 1284, newToday: 12, online: 31, live: 5, requests: 2, toReview: 7, held: 1, brandCents: 1840000, owedCents: 320000, feesCents: 276000 }) },
   { id: 'team-queue', group: 'Team', label: 'What is waiting', build: () => k.queueCard([{ title: 'Red Room, the new single', n: 5 }, { title: 'Night Shift live session', n: 2 }]) },
   { id: 'team-log', group: 'Team', label: 'A line in the team log', build: () => k.logCard({ text: 'New ticket from <@0>: My withdrawal has not arrived' }) },
+
+  // ---- the bigger bot (cards-more.ts)
+  { id: 'start', group: 'Get started', label: 'Get started (one button)', build: () => m.startCard() },
+  { id: 'start-new', group: 'Get started', label: 'After pressing it: no account yet', build: () => m.startReplyCard('new', 'https://logoless.io/onboarding?ref=discord') },
+  { id: 'start-unfinished', group: 'Get started', label: 'After pressing it: linked, profile not finished', build: () => m.startReplyCard('unfinished', 'https://logoless.io/onboarding?ref=discord') },
+  { id: 'next-steps', group: 'Get started', label: 'Next steps (only they see it)', build: () => m.nextStepsCard({ name: 'Luna Ray', brand: false, live: 5 }) },
+  { id: 'next-steps-brand', group: 'Get started', label: 'Next steps for a brand', build: () => m.nextStepsCard({ name: 'Acme Records', brand: true, live: 5 }) },
+  { id: 'rundown', group: 'Get started', label: 'The rundown (direct message)', build: () => m.rundownDm({ name: 'Luna Ray', brand: false, live: 5, commands: [['campaigns', 'what is live right now'], ['submit', 'send your content to a campaign'], ['balance', 'what you can withdraw'], ['next', 'what to do next'], ['help', 'every command']] }) },
+  { id: 'payout-post', group: 'Feeds', label: 'Payouts channel: an earning', build: () => m.payoutPostCard({ earningId: 'sample', name: 'emile', cents: 12450, campaign: camp.title, campaignId: camp.id, views: 49800, rateCents: 250, at: Math.floor(Date.now() / 1000) }) },
+  { id: 'withdrawal-post', group: 'Feeds', label: 'Payouts channel: a withdrawal', build: () => m.withdrawalPostCard({ name: 'emile', cents: 5000, at: Math.floor(Date.now() / 1000) }) },
+  {
+    id: 'submission-post',
+    group: 'Feeds',
+    label: 'Submissions channel',
+    build: () =>
+      m.submissionPostCard({
+        id: 'x', url: 'https://www.youtube.com/shorts/aqz-KE-bpKQ', platform: 'youtube', status: 'approved', campaign: camp.title, campaignId: camp.id, handle: 'luna_ray', name: 'Luna Ray', at: Math.floor(Date.now() / 1000), verifiedViews: 48200, earnedCents: 12050, rateCents: 250,
+        video: { title: 'the chorus at 2am hits different #redroom', author: 'Luna Ray', thumb: COVER, views: 51340, likes: 6120, comments: 214, postedAt: Math.floor(Date.now() / 1000) - 86400 },
+      }),
+  },
+  { id: 'campaign-card', group: 'Campaigns', label: 'New campaign card (live)', build: () => m.campaignPostCard({ id: 'sample', title: camp.title, creator: camp.creator, status: 'live', summary: camp.summary, cover: COVER, rateCents: 250, budgetCents: 500000, paidCents: 180000, platforms: ['tiktok', 'youtube', 'instagram'], approved: 412, views: 720000, joined: 1284, endsOn: 'Dec 14', clipThis: ['The chorus, with the lyrics on screen', 'Your reaction to the first listen'], imageVersion: '1' }) },
+  { id: 'campaign-card-ended', group: 'Campaigns', label: 'New campaign card (ended)', build: () => m.campaignPostCard({ id: 'sample', title: camp.title, creator: camp.creator, status: 'ended', summary: camp.summary, cover: COVER, rateCents: 250, budgetCents: 500000, paidCents: 500000, platforms: ['tiktok'], approved: 412, views: 720000, joined: 1284, clipThis: [], imageVersion: '2' }) },
+  { id: 'payout-status', group: 'Commands', label: '/payout', build: () => m.payoutStatusCard([{ cents: 5000, status: 'sent', at: Math.floor(Date.now() / 1000) - 86400 }, { cents: 2500, status: 'pending', at: Math.floor(Date.now() / 1000) - 600 }], 3105) },
+  { id: 'rank', group: 'Commands', label: '/rank', build: () => m.rankCard({ place: 7, of: 214, views: 98100, next: { name: 'Marlo', gap: 4200 } }) },
+  { id: 'brand', group: 'Commands', label: '/brand', build: () => m.brandCard([{ id: camp.id, title: camp.title, status: 'live', budgetCents: 500000, paidCents: 180000, submissions: 512, views: 720000 }]) },
+  { id: 'eight-ball', group: 'Fun', label: '/8ball', build: () => m.eightBallCard('Will my next post go viral?', 0.75) },
+  { id: 'coinflip', group: 'Fun', label: '/coinflip', build: () => m.coinCard(0.2) },
+  { id: 'roast', group: 'Fun', label: '/roast-my-clip', build: () => m.roastCard('https://www.tiktok.com/@luna/video/1', { title: 'pov: the chorus hits', views: 18400, likes: 210, comments: 3, shares: 0 }, 0.4) },
 ]
 
 export const SAMPLE_BY_ID = Object.fromEntries(SAMPLES.map((s) => [s.id, s])) as Record<string, Sample>

@@ -551,7 +551,17 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       /* no clipboard: the address is on screen anyway */
     }
   }
-  const finish = () => (preview ? setId('done') : router.push(brand ? '/brand' : '/dashboard'))
+  // someone who came from the Get started button in Discord (?ref=discord) ends on the step that links their Discord (see lib/discord/welcome.ts)
+  const fromDiscord = () => {
+    try {
+      if (new URLSearchParams(window.location.search).get('ref') === 'discord') sessionStorage.setItem('ll-ref', 'discord')
+      return sessionStorage.getItem('ll-ref') === 'discord'
+    } catch {
+      return false
+    }
+  }
+  useEffect(() => void fromDiscord(), [])
+  const finish = () => (preview ? setId('done') : router.push(fromDiscord() ? '/onboarding/discord' : brand ? '/brand' : '/dashboard'))
 
   const settling = ['Creating your profile', 'Setting up your page', 'Lining up your dashboard', 'Nearly there'][Math.min(tick, 3)]
   const progress = Math.max(0, STEP_ORDER.indexOf(id)) / (STEP_ORDER.length - 1)

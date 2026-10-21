@@ -1,7 +1,8 @@
 import { setting } from '../db'
 import { tidy } from './ui'
 
-const API = 'https://discord.com/api/v10'
+// DISCORD_API_BASE is only for tests on a developer machine (a stand-in for Discord). It is never set on Cloudflare.
+const API = (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' && process.env.DISCORD_API_BASE) || 'https://discord.com/api/v10'
 
 export type Embed = {
   title?: string
@@ -66,6 +67,19 @@ export async function editOriginal(appId: string, interactionToken: string, m: M
     await fetch(`${API}/webhooks/${appId}/${interactionToken}/messages/@original`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(tidy(m)), signal: AbortSignal.timeout(8000) })
   } catch {
     /* the person simply keeps seeing "thinking" */
+  }
+}
+
+/**
+ * A follow-up to an interaction, for up to 15 minutes after it. With `ephemeral` only the person who pressed the button sees it:
+ * this is the only way a bot can put a message in a channel that one person alone can see.
+ */
+export async function followUp(appId: string, interactionToken: string, m: Message, ephemeral = true): Promise<boolean> {
+  try {
+    const res = await fetch(`${API}/webhooks/${appId}/${interactionToken}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...tidy(m), ...(ephemeral ? { flags: 64 } : {}) }), signal: AbortSignal.timeout(8000) })
+    return res.ok
+  } catch {
+    return false
   }
 }
 

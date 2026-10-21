@@ -2,6 +2,8 @@ import { type CampaignRow, campaignRow } from '../campaigns-db'
 import { db, nowSec } from '../db'
 import { abs, botReady, discord, type Message, postMessage } from './api'
 import { announceCard, trackerCard } from './cards'
+import { campaignPostCard } from './cards-more'
+import { featureOn } from '../features'
 import { type DiscordConfig, getDiscordConfig, slug } from './config'
 
 /**
@@ -18,6 +20,16 @@ const sleepless = async (p: Promise<unknown>) => {
     void p
   }
 }
+
+/** A short fingerprint of a card, to tell whether it changed. Not for security. */
+export function simpleHash(text: string) {
+  let h = 2166136261
+  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619)
+  return (h >>> 0).toString(36)
+}
+
+/** What a card shows, without its "updated" time (which is new on every build), so an unchanged card is never edited. */
+const cardHash = (card: Message) => simpleHash(JSON.stringify(card, (k, v) => (k === 'timestamp' ? undefined : v)))
 
 const put = async (key: string, value: string) => {
   const d = await db()
@@ -68,7 +80,10 @@ export async function syncArtist(creator: string, create = false): Promise<strin
   const want = live ? cfg.artistsCategory : cfg.inactiveCategory
   if (want) {
     const now = await discord<{ parent_id: string | null }>('GET', `/channels/${id}`)
-    if (now.ok && now.json && now.json.parent_id !== want) await discord('PATCH', `/channels/${id}`, { parent_id: want, lock_permissions: false })
+    // with the new cards on, the channel takes the category's permissions when it moves, so the inactive category being private
+    // makes the channel private, and moving back makes it public again
+    const lock = await featureOn('discord-campaigns')
+    if (now.ok && now.json && now.json.parent_id !== want) await discord('PATCH', `/channels/${id}`, { parent_id: want, lock_permissions: lock })
   }
   return id
 }
@@ -105,6 +120,26 @@ const list = (j: string, n = 4): string[] => {
 /** The live card for a campaign: cover, details and the numbers that change. */
 export async function campaignCard(c: CampaignRow, cfg: DiscordConfig, channelId?: string | null): Promise<Message> {
   const s = await stats(c)
+  if (await featureOn('discord-campaigns'))
+    return campaignPostCard({
+      id: c.id,
+      title: c.title,
+      creator: c.creator,
+      status: c.status,
+      summary: c.summary,
+      cover: abs(c.cover_url),
+      rateCents: c.rate_cents,
+      budgetCents: c.budget_cents,
+      paidCents: s.paidCents,
+      platforms: list(c.platforms_json, 6),
+      approved: s.clips,
+      views: s.views,
+      joined: s.joined,
+      endsOn: c.ends_on,
+      clipThis: list(c.clip_this_json, 3),
+      // the picture is drawn again only when what it shows changes
+      imageVersion: `${c.status}-${s.leftPct}-${c.rate_cents}`,
+    })
   return trackerCard({
     id: c.id,
     title: c.title,
@@ -136,22 +171,46 @@ export async function refreshCampaignCard(campaignId: string, force = false): Pr
     const c = await campaignRow(campaignId)
     if (!c || !['live', 'paused', 'ended'].includes(c.status)) return false
     const t = nowSec()
-    if (!force) {
+    const v2 = await featureOn('discord-campaigns')
+    if (!force && !v2) {
       const last = await get(`discord:camp-at:${campaignId}`)
       if (last && t - Number(last) < SOON) return false
     }
     await put(`discord:camp-at:${campaignId}`, String(t))
     const saved = await get(`discord:camp-msg:${campaignId}`)
     const [savedChannel, savedMessage] = (saved ?? ':').split(':')
+    // an ended or paused campaign whose artist still has others live: its card is simply taken down
+    if (v2 && c.status !== 'live' && (await hasLive(c.creator))) {
+      if (savedChannel && savedMessage) {
+        const gone = await discord('DELETE', `/channels/${savedChannel}/messages/${savedMessage}`)
+        if (gone.ok || gone.status === 404) {
+          const d = await db()
+          await d.prepare("DELETE FROM settings WHERE key IN (?1, ?2)").bind(`discord:camp-msg:${campaignId}`, `discord:camp-hash:${campaignId}`).run()
+        }
+      }
+      return true
+    }
     if (savedChannel && savedMessage) {
-      const edited = await discord('PATCH', `/channels/${savedChannel}/messages/${savedMessage}`, await campaignCard(c, cfg, savedChannel))
-      if (edited.ok) return true
+      const card = await campaignCard(c, cfg, savedChannel)
+      // only edit when something on the card changed: the 30-second loop calls this for every live campaign
+      const hash = cardHash(card)
+      if (v2 && !force && (await get(`discord:camp-hash:${campaignId}`)) === hash) return true
+      const edited = await discord('PATCH', `/channels/${savedChannel}/messages/${savedMessage}`, card)
+      if (edited.ok) {
+        await put(`discord:camp-hash:${campaignId}`, hash)
+        return true
+      }
+      if (edited.status !== 404) return false // a Discord hiccup: try again next time rather than posting a second card
     }
     if (c.status !== 'live') return false // only start a card for something that is running
     const channel = await syncArtist(c.creator, true)
     if (!channel) return false
-    const posted = await postMessage(channel, await campaignCard(c, cfg, channel))
-    if (posted.ok && posted.json?.id) await put(`discord:camp-msg:${campaignId}`, `${channel}:${posted.json.id}`)
+    const card = await campaignCard(c, cfg, channel)
+    const posted = await postMessage(channel, card)
+    if (posted.ok && posted.json?.id) {
+      await put(`discord:camp-msg:${campaignId}`, `${channel}:${posted.json.id}`)
+      await put(`discord:camp-hash:${campaignId}`, cardHash(card))
+    }
     return posted.ok
   } catch {
     return false
@@ -190,6 +249,11 @@ export async function announceNewCampaign(campaignId: string) {
     await refreshCampaignCard(campaignId, true)
     const target = cfg.channels.newCampaigns || cfg.channels.news
     if (!target) return
+    if (await featureOn('discord-campaigns')) {
+      const m = await campaignCard(c, cfg, target)
+      await postMessage(target, { ...m, embeds: m.embeds?.map((e) => ({ ...e, author: e.author ? { ...e.author, name: `New campaign · ${c.creator}` } : e.author })) })
+      return
+    }
     const s = await stats(c)
     await postMessage(
       target,

@@ -32,6 +32,8 @@ export const helpCard = (): Message =>
           '`/stats` `/balance` `/profile` `/badges`',
           '`/leaderboard` `/faq` `/support` `/report`',
           '`/notifications` `/sync` `/unlink`',
+          '`/next` `/payout` `/rank` `/roles` `/brand` `/dev`',
+          '`/8ball` `/coinflip` `/roll` `/choose` `/hype` `/roast-my-clip`',
         ),
       }),
     ],

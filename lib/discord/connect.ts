@@ -61,6 +61,9 @@ export async function finishConnect(a: { userId: string; code: string; state: st
   const botToken = await setting('DISCORD_BOT_TOKEN')
   if (cfg.guildId && botToken && token.scope.includes('guilds.join')) joined = await joinGuild({ botToken, guildId: cfg.guildId, discordId: me.id, accessToken: token.access, roles: cfg.roles.linked ? [cfg.roles.linked] : [] })
   if (joined) await syncRoles(a.userId) // someone already in the server did not get the roles above
+  // account and Discord both done: the next steps in #get-started and the rundown by direct message, once (see welcome.ts)
+  const { welcomeOnce } = await import('./welcome')
+  await welcomeOnce(a.userId)
   await notify(a.userId, { kind: 'account', title: 'Discord connected', body: `Linked to ${me.name}.${joined ? ' You are in the server now.' : ''} You will get your notifications there too.`, href: '/dashboard/settings', dedupe: `discord-linked:${me.id}:${nowSec()}` })
   return { ok: true, back, joined }
 }

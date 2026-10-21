@@ -50,6 +50,11 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  // a link that ends in ?submit=1 (the Submit buttons in Discord) opens the campaign page straight on the submit step
+  useEffect(() => {
+    if (inline && signedIn && new URLSearchParams(window.location.search).get('submit') === '1') setView('submit')
+  }, [inline, signedIn])
+
   // The pop-up never scrolls: if the sheet is taller than the screen it is shrunk to fit, down to two thirds of its size.
   useLayoutEffect(() => {
     const el = root.current
