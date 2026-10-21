@@ -95,7 +95,7 @@ export function RedirectChips({ value, onChange, type, error, onBlur, describedB
             if (draft.trim()) add(draft)
             onBlur?.()
           }}
-          className={cn('h-12 min-w-0 flex-1 rounded-2xl border bg-ink/80 px-4 font-mono text-sm outline-none transition-colors placeholder:font-sans placeholder:text-mute/70 focus:border-paper', shown ? 'border-signal/70' : 'border-line-strong')}
+          className={cn('h-12 w-0 min-w-0 flex-1 rounded-2xl border bg-ink/80 px-4 font-mono text-sm outline-none transition-colors placeholder:font-sans placeholder:text-mute/70 focus:border-paper', shown ? 'border-signal/70' : 'border-line-strong')}
         />
         <button type="button" onClick={() => add(draft)} disabled={!draft.trim()} className="inline-flex h-12 shrink-0 items-center gap-1.5 rounded-2xl border border-line-strong px-4 text-sm transition-colors hover:bg-paper/10 disabled:opacity-40">
           <Plus aria-hidden="true" className="size-4" /> Add
