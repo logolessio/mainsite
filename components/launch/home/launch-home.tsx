@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
-import { ArrowUpRight, Globe, Pencil } from 'lucide-react'
+import { Globe, Pencil } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { useCallback, useEffect, useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
@@ -87,10 +87,9 @@ export function LaunchHome(props: LaunchHomeProps) {
     solid: 'bg-paper text-ink hover:bg-paper/90',
     minimal: 'border border-transparent hover:bg-white/[0.06]',
   }[look.rows]
-  const iconTone = look.rows === 'solid' ? 'text-ink/70' : 'text-paper/70'
 
   const socialRow =
-    socials.length > 0 && look.socials !== 'off' ? (
+    !props.links && socials.length > 0 && look.socials !== 'off' ? (
       <ul aria-label="logoless elsewhere" className={cn('flex flex-wrap items-center gap-1', left ? 'justify-start' : 'justify-center')}>
         {socials.map((l) => (
           <li key={l.id}>
@@ -143,7 +142,6 @@ export function LaunchHome(props: LaunchHomeProps) {
             )}
             <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className={cta}>
               {soon ? copy.joinLabel : copy.startTitle}
-              <ArrowUpRight aria-hidden="true" className={cn('size-[18px] transition-transform duration-500', open ? 'rotate-[135deg]' : 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5')} />
             </button>
             <AutoHeight>
               <AnimatePresence initial={false}>
@@ -162,11 +160,9 @@ export function LaunchHome(props: LaunchHomeProps) {
                     <a
                       href={l.url}
                       {...(external(l.url) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                      className={cn('group flex items-center gap-3.5 px-5 transition-[background-color,border-color,transform] duration-300 active:scale-[0.985]', shape, size.row, rowStyle, left ? 'text-left' : 'text-left')}
+                      className={cn('group flex items-center justify-center px-6 text-center transition-[background-color,border-color,transform] duration-300 active:scale-[0.985]', shape, size.row, rowStyle)}
                     >
-                      <span className={cn('shrink-0', iconTone)}>{l.platform === 'website' ? <Globe aria-hidden="true" className="size-5" /> : <BrandIcon name={l.platform} className="size-5" />}</span>
-                      <span className="min-w-0 flex-1 truncate">{l.label}</span>
-                      <ArrowUpRight aria-hidden="true" className={cn('size-[18px] shrink-0 transition-[transform,opacity] duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5', look.rows === 'solid' ? 'text-ink/50' : 'text-paper/30 group-hover:text-paper')} />
+                      <span className="min-w-0 truncate">{l.label}</span>
                     </a>
                   </li>
                 ))}

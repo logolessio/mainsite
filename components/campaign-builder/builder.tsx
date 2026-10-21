@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
 import { Ask, BigArea, BigInput, Chip, Label, Rise } from '@/components/invite/bits'
 import { useTransitions } from '@/components/shell/transition-provider'
-import { budgetPlan, cleanLinks, type BudgetMode, soundLink, spotifyLink } from '@/lib/campaign-extras-shared'
+import { budgetPlan, cleanLinks, exampleLink, type BudgetMode, soundLink, spotifyLink } from '@/lib/campaign-extras-shared'
 import { startDeposit } from '@/lib/finance-client'
 import { costFor, startNeeded } from '@/lib/ledger-math'
 import { EASE_OUT } from '@/lib/layout'
@@ -60,6 +60,7 @@ const BLANK = {
   clipThis: '',
   offLimits: '',
   assets: '',
+  example: '',
   budget: '500',
   mode: 'views' as BudgetMode,
   rate: '2',
@@ -208,7 +209,7 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt }: { balanc
           endsOn: d.endsOn || null,
           ...(Number(d.capPerPost) > 0 ? { capPerPost: Number(d.capPerPost) } : {}),
           ...(Number(d.capPerUser) > 0 ? { capPerUser: Number(d.capPerUser) } : {}),
-          extras: { spotify: cleanLinks(d.spotify, spotifyLink), sounds: cleanLinks(d.sounds, soundLink), audioNote: d.audioNote, audio: d.audio, background: d.background, bio: d.bio, assets: d.assets },
+          extras: { spotify: cleanLinks(d.spotify, spotifyLink), sounds: cleanLinks(d.sounds, soundLink), audioNote: d.audioNote, audio: d.audio, background: d.background, bio: d.bio, assets: d.assets, example: d.example },
         }),
       })
       const j = (await res.json().catch(() => ({}))) as { error?: string }
@@ -363,6 +364,9 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt }: { balanc
                   </Rise>
                   <Rise i={3}>
                     <BigArea label="Off limits" hint="One per line · optional" value={d.offLimits} rows={3} maxLength={1100} onChange={(e) => set({ offLimits: e.target.value })} placeholder="No sped-up versions of the track" />
+                  </Rise>
+                  <Rise i={4}>
+                    <BigInput label="Example edit" hint="A link to a video file (.mp4) or a TikTok, YouTube or Instagram post · optional" value={d.example} maxLength={300} onChange={(e) => set({ example: e.target.value })} placeholder="https://" inputMode="url" error={d.example && 'error' in exampleLink(d.example) ? (exampleLink(d.example) as { error: string }).error : undefined} />
                   </Rise>
                   <Rise i={4}>
                     <BigInput label="Footage creators can use" hint="Drive, Dropbox… optional" value={d.assets} maxLength={300} onChange={(e) => set({ assets: e.target.value })} placeholder="https://" inputMode="url" error={d.assets && !/^https:\/\//i.test(d.assets) ? 'Use a full link that starts with https://' : undefined} />

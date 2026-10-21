@@ -17,7 +17,9 @@ export type Embed = {
   timestamp?: string
 }
 export type Component = { type: 1; components: ({ type: 2; style: 1 | 2 | 3 | 4 | 5; label: string; custom_id?: string; url?: string; emoji?: { name: string }; disabled?: boolean })[] }
-export type Message = { /** Words written by a person: posted exactly as they are (no wording changes, no emoji removed). */ raw?: boolean; content?: string; embeds?: Embed[]; components?: Component[]; flags?: number; allowed_mentions?: { parse?: string[]; users?: string[]; roles?: string[] } }
+/** A part of a Components V2 message (a container, a text display, a media gallery...): see v2.ts. */
+export type V2Node = { type: number; [key: string]: unknown }
+export type Message = { /** Words written by a person: posted exactly as they are (no wording changes, no emoji removed). */ raw?: boolean; content?: string; embeds?: Embed[]; components?: (Component | V2Node)[]; flags?: number; allowed_mentions?: { parse?: string[]; users?: string[]; roles?: string[] } }
 
 // everything the bot says goes through `tidy` (see ui.ts): no emoji, the site's wording
 const isMessagePath = (path: string) => /\/messages(\/|$)/.test(path)

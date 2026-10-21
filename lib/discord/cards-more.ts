@@ -1,5 +1,6 @@
 import type { Component, Embed, Message } from './api'
-import { big, btn, card, chan, chip, dot, go, join, num, row, small, usd, SITE_URL } from './ui'
+import { big, btn, card, chan, chip, dot, go, INK, join, MUTE, num, row, small, usd, SITE_URL } from './ui'
+import { container, gallery, isVideoFile, sep, section, text, thumb, v2 } from './v2'
 
 /**
  * The messages added with the bigger bot: the one-button get started, the next steps and the rundown, the payouts and submissions
@@ -247,41 +248,46 @@ export type CampaignPost = {
   joined: number
   endsOn?: string | null
   clipThis: string[]
+  /** what must not be done */
+  offLimits?: string[]
+  /** an example edit: a video file plays in the card, a link to a post opens from a button */
+  example?: string
+  /** the official sound or the track, as a link */
+  soundUrl?: string
   imageVersion: string
 }
 const CAMP_STATUS: Record<string, string> = { live: 'Live', paused: 'Paused', ended: 'Ended' }
-/** The card in an artist's channel: a picture with the cover and the budget bar, the brief, the numbers, and Submit. */
+/**
+ * The card in an artist's channel, laid out like a brief: the cover and the pay, what to make and what not to, the numbers and the
+ * budget bar, an example edit that plays right in the card (when it is a video file), and the buttons. Built with Components V2.
+ */
 export const campaignPostCard = (c: CampaignPost): Message => {
   const left = pctLeft(c.budgetCents, c.paidCents)
   const live = c.status === 'live'
-  return msg(
-    [
-      card({
-        icon: 'campaign',
-        label: `${c.creator} · ${CAMP_STATUS[c.status] ?? c.status}`,
-        title: c.title,
-        url: `${SITE_URL}/campaign/${c.id}`,
-        mute: !live,
-        text: join(
-          big(`${usd(c.rateCents)} per 1,000 views`, dot(c.platforms.map(platformName).join(', ') || 'Any platform', c.endsOn ? `ends ${c.endsOn}` : '')),
-          cut(c.summary, 280),
-          c.clipThis.length ? `\n**What to make**\n${c.clipThis.slice(0, 3).map((x) => `• ${cut(x, 120)}`).join('\n')}` : '',
-          BLANK,
-          `**Budget left** ${left}%`,
-          `\`${bar(left, 24)}\``,
-          small(`${usd(Math.max(0, c.budgetCents - c.paidCents))} of ${usd(c.budgetCents)} left`),
-        ),
-        fields: [
-          { name: 'Paid out', value: usd(c.paidCents), inline: true },
-          { name: 'Approved', value: num(c.approved), inline: true },
-          { name: 'Verified views', value: num(c.views), inline: true },
-        ],
-        image: cardImage('campaign', c.id, c.imageVersion),
-        foot: live ? `Live numbers · ${num(c.joined)} joined` : 'This campaign is not taking submissions',
-        time: true,
-      }),
-    ],
-    live ? [row(go('Submit content', submitUrl(c.id)), btn('Join', `camp:join:${c.id}`))] : [row(go('See live campaigns', '/'))],
+  const platforms = c.platforms.map(platformName).join(', ') || 'Any platform'
+  const head = [`-# ${c.creator} · ${CAMP_STATUS[c.status] ?? c.status}`, `## ${cut(c.title, 90)}`, `**${usd(c.rateCents)} per 1,000 views**${c.endsOn ? `\n-# Ends ${c.endsOn}` : ''}`]
+  const brief = join(
+    c.summary && cut(c.summary, 600),
+    c.clipThis.length ? `### What to make\n${c.clipThis.slice(0, 4).map((x) => `• ${cut(x, 140)}`).join('\n')}` : '',
+    c.offLimits?.length ? `### Off limits\n${c.offLimits.slice(0, 4).map((x) => `• ${cut(x, 140)}`).join('\n')}` : '',
+  )
+  const file = c.example && isVideoFile(c.example)
+  return v2(
+    container(
+      live ? INK : MUTE,
+      c.cover ? section(head, thumb(c.cover, c.title)) : text(head.join('\n')),
+      ...(brief ? [sep(), text(brief)] : []),
+      sep(),
+      text(join('### Campaign info', `**Pays** ${usd(c.rateCents)} per 1,000 views`, `**Budget** ${usd(c.budgetCents, true)}`, `**Platforms** ${platforms}`)),
+      text(join(`**Budget left ${left}%**`, `\`${bar(left, 24)}\``, small(`${usd(Math.max(0, c.budgetCents - c.paidCents))} of ${usd(c.budgetCents)} left`))),
+      sep(),
+      // a video file plays here; with none, the picture card with the cover and the budget bar
+      ...(file ? [text('### Example edit'), gallery({ url: c.example as string, description: `Example edit for ${c.title}` })] : [gallery({ url: cardImage('campaign', c.id, c.imageVersion), description: c.title })]),
+      text(small(`${num(c.approved)} approved · ${num(c.views)} verified views · ${usd(c.paidCents)} paid out · ${num(c.joined)} joined`)),
+      live
+        ? row(go('Submit content', submitUrl(c.id)), btn('Join', `camp:join:${c.id}`), ...(c.soundUrl ? [go('Use the sound', c.soundUrl)] : []), ...(c.example && !file ? [go('Watch the example', c.example)] : []))
+        : row(go('See live campaigns', '/')),
+    ),
   )
 }
 

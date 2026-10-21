@@ -1,14 +1,14 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Check, Loader2, Mail, Plus } from 'lucide-react'
+import { Check, Loader2, Mail, Pencil, Plus } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useFeature } from '@/components/shell/features-provider'
-import { checkEmail, cleanEmail } from '@/lib/email-check'
+import { checkEmail, cleanEmail, maskEmail } from '@/lib/email-check'
 import { EASE_OUT } from '@/lib/layout'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
-import { AddEmailSheet } from './payout-flow'
+import { AddEmailSheet, ManageEmailSheet } from './payout-flow'
 
 export const MAX_PAYPAL_EMAILS = 5
 
@@ -30,7 +30,7 @@ export function PaypalEmails({ emails, defaultEmail, onChange, pick, onPick, aut
   const [text, setText] = useState('')
   const [touched, setTouched] = useState(false)
   const [confirming, setConfirming] = useState<string | null>(null)
-  const [removing, setRemoving] = useState<string | null>(null)
+  const [managing, setManaging] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [fresh, setFresh] = useState<string | null>(null)
@@ -80,31 +80,6 @@ export function PaypalEmails({ emails, defaultEmail, onChange, pick, onPick, aut
     setBusy(null)
   }
 
-  const makeDefault = async (email: string) => {
-    setBusy(email)
-    try {
-      onChange(await call('POST', email, true))
-      toast.ok('Now your default')
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not change that.')
-    }
-    setBusy(null)
-  }
-
-  const remove = async (email: string) => {
-    setBusy(email)
-    try {
-      const r = await call('DELETE', email)
-      onChange(r)
-      if (pick === email) onPick?.(r.email || r.emails[0] || '')
-      toast.ok('Removed')
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not remove that.')
-    }
-    setRemoving(null)
-    setBusy(null)
-  }
-
   return (
     <div className="grid gap-3">
       {emails.length > 0 && (
@@ -113,46 +88,38 @@ export function PaypalEmails({ emails, defaultEmail, onChange, pick, onPick, aut
             const selected = onPick ? pick === e : false
             const isDefault = e === defaultEmail
             return (
-              <li key={e} className={cn('rounded-panel border transition-colors duration-500', fresh === e ? 'border-paper/60 bg-white/[0.06]' : selected ? 'border-paper bg-white/[0.05]' : 'border-line-strong')}>
-                <div className="flex items-center gap-3 px-4 py-3">
-                  {onPick ? (
-                    <button type="button" role="radio" aria-checked={selected} onClick={() => onPick(e)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-                      <span className={cn('grid size-5 shrink-0 place-items-center rounded-pill border', selected ? 'border-paper bg-paper text-ink' : 'border-line-strong')}>{selected && <Check aria-hidden="true" className="size-3" />}</span>
-                      <span className="truncate text-[15px]">{e}</span>
-                    </button>
-                  ) : (
-                    <span className="min-w-0 flex-1 truncate text-[15px]">{e}</span>
-                  )}
-                  {isDefault && <span className="shrink-0 rounded-chip border border-line-strong px-2 py-0.5 text-[11px] text-mute">Default</span>}
-                </div>
-                <AnimatePresence initial={false} mode="wait">
-                  {removing === e ? (
-                    <motion.div key="sure" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="flex items-center gap-2 border-t border-line px-4 py-2.5 text-sm">
-                      <span className="flex-1 text-mute">Remove this email?</span>
-                      <button type="button" disabled={busy === e} onClick={() => void remove(e)} className="inline-flex h-8 items-center gap-1.5 rounded-pill bg-paper px-3.5 text-[13px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-60">
-                        {busy === e && <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />} Remove
-                      </button>
-                      <button type="button" onClick={() => setRemoving(null)} className="inline-flex h-8 items-center rounded-pill px-3 text-[13px] text-mute transition-colors hover:text-paper">
-                        Keep it
-                      </button>
-                    </motion.div>
-                  ) : (
-                    <motion.div key="actions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="flex items-center gap-1 border-t border-line px-2 py-1.5">
-                      {!isDefault && (
-                        <button type="button" disabled={busy === e} onClick={() => void makeDefault(e)} className="inline-flex h-8 items-center gap-1.5 rounded-pill px-3 text-[13px] text-mute transition-colors hover:text-paper disabled:opacity-60">
-                          {busy === e && <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />} Make default
-                        </button>
-                      )}
-                      <button type="button" onClick={() => setRemoving(e)} className="ml-auto inline-flex h-8 items-center rounded-pill px-3 text-[13px] text-mute transition-colors hover:text-paper">
-                        Remove
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+              <li key={e} className={cn('flex items-center gap-3 rounded-panel border px-4 py-2.5 transition-colors duration-500', fresh === e ? 'border-paper/60 bg-white/[0.06]' : selected ? 'border-paper bg-white/[0.05]' : 'border-line-strong')}>
+                {onPick ? (
+                  <button type="button" role="radio" aria-checked={selected} onClick={() => onPick(e)} className="flex min-w-0 flex-1 items-center gap-3 py-1.5 text-left">
+                    <span className={cn('grid size-5 shrink-0 place-items-center rounded-pill border', selected ? 'border-paper bg-paper text-ink' : 'border-line-strong')}>{selected && <Check aria-hidden="true" className="size-3" />}</span>
+                    <span className="truncate text-[15px]" title="Hidden for your privacy">{maskEmail(e)}</span>
+                  </button>
+                ) : (
+                  <span className="min-w-0 flex-1 truncate py-1.5 text-[15px]" title="Hidden for your privacy">
+                    {maskEmail(e)}
+                  </span>
+                )}
+                {isDefault && <span className="shrink-0 rounded-chip border border-line-strong px-2 py-0.5 text-[11px] text-mute">Default</span>}
+                <button type="button" onClick={() => setManaging(e)} aria-label="Edit this PayPal email" title="Edit" className="grid size-9 shrink-0 place-items-center rounded-pill text-mute transition-colors hover:bg-white/10 hover:text-paper">
+                  <Pencil aria-hidden="true" className="size-4" />
+                </button>
               </li>
             )
           })}
         </ul>
+      )}
+      {managing && (
+        <ManageEmailSheet
+          open
+          onClose={() => setManaging(null)}
+          email={managing}
+          isDefault={managing === defaultEmail}
+          emails={emails}
+          onChange={(r) => {
+            onChange(r)
+            if (pick && !r.emails.includes(pick)) onPick?.(r.email || r.emails[0] || '')
+          }}
+        />
       )}
 
       {full ? (

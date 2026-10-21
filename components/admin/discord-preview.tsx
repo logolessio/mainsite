@@ -1,7 +1,7 @@
 'use client'
 
 import { Fragment } from 'react'
-import type { Embed, Message } from '@/lib/discord/api'
+import type { Component, Embed, Message, V2Node } from '@/lib/discord/api'
 import { tidy } from '@/lib/discord/ui'
 
 /**
@@ -87,24 +87,100 @@ function EmbedView({ e }: { e: Embed }) {
   )
 }
 
+/** A Components V2 message: a container with its bar, text, separators, pictures, video and buttons. */
+function V2View({ nodes }: { nodes: V2Node[] }) {
+  return (
+    <>
+      {nodes.map((n, i) => (
+        <V2Part key={i} n={n} />
+      ))}
+    </>
+  )
+}
+
+const kids = (n: V2Node) => (Array.isArray(n.components) ? (n.components as V2Node[]) : [])
+const mediaUrl = (m: unknown) => local((m as { url?: string } | undefined)?.url ?? '')
+const isVideo = (u: string) => /\.(mp4|webm|mov|m4v)(\?|$)/i.test(u)
+
+function V2Part({ n }: { n: V2Node }) {
+  if (n.type === 17) {
+    const color = typeof n.accent_color === 'number' ? `#${n.accent_color.toString(16).padStart(6, '0')}` : '#4e5058'
+    return (
+      <div className="grid gap-2.5 rounded-lg border border-[#1e1f22] border-l-4 bg-[#2b2d31] p-4" style={{ borderLeftColor: color }}>
+        <V2View nodes={kids(n)} />
+      </div>
+    )
+  }
+  if (n.type === 10) return <Body text={String(n.content ?? '')} className="text-[0.95rem]" />
+  if (n.type === 14) return n.divider === false ? <div className="h-1" /> : <hr className="border-[#3f4147]" />
+  if (n.type === 9) {
+    const acc = n.accessory as V2Node | undefined
+    return (
+      <div className="flex items-start gap-4">
+        <div className="grid min-w-0 flex-1 gap-1">
+          <V2View nodes={kids(n)} />
+        </div>
+        {acc?.type === 11 && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={mediaUrl(acc.media)} alt="" className="size-20 shrink-0 rounded-md object-cover" />
+        )}
+      </div>
+    )
+  }
+  if (n.type === 12) {
+    const items = (n.items as { media: unknown }[]) ?? []
+    return (
+      <div className="grid gap-2">
+        {items.map((it, i) => {
+          const u = mediaUrl(it.media)
+          return isVideo(u) ? <video key={i} src={u} controls playsInline preload="metadata" className="max-h-[420px] w-full max-w-[480px] rounded-lg bg-black" /> : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={i} src={u} alt="" className="max-h-[420px] w-full max-w-[480px] rounded-lg object-cover" />
+          )
+        })}
+      </div>
+    )
+  }
+  if (n.type === 1) {
+    return (
+      <div className="flex flex-wrap gap-2">
+        {(n as unknown as Component).components.map((c, k) => (
+          <span key={k} className="inline-flex h-8 items-center rounded-[calc(3px*var(--round,1))] bg-[#4e5058] px-4 text-[0.875rem] font-medium text-white">
+            {c.label}
+            {c.url && <span aria-hidden="true" className="ml-1.5 text-[0.7rem]">↗</span>}
+          </span>
+        ))}
+      </div>
+    )
+  }
+  return null
+}
+
 export function MessagePreview({ message }: { message: Message }) {
   const m = tidy(message)
+  const v2 = Boolean(m.flags && m.flags & (1 << 15))
   return (
     <div className="grid gap-2 rounded-xl bg-[#313338] p-4 font-sans text-[#dbdee1]">
-      {m.content && <Body text={m.content} className="text-[0.95rem]" />}
-      {m.embeds?.map((e, n) => (
-        <EmbedView key={n} e={e} />
-      ))}
-      {m.components?.map((r, n) => (
-        <div key={n} className="flex flex-wrap gap-2">
-          {r.components.map((c, k) => (
-            <span key={k} className="inline-flex h-8 items-center rounded-[calc(3px*var(--round,1))] bg-[#4e5058] px-4 text-[0.875rem] font-medium text-white">
-              {c.label}
-              {c.url && <span aria-hidden="true" className="ml-1.5 text-[0.7rem]">↗</span>}
-            </span>
+      {v2 ? (
+        <V2View nodes={(m.components ?? []) as V2Node[]} />
+      ) : (
+        <>
+          {m.content && <Body text={m.content} className="text-[0.95rem]" />}
+          {m.embeds?.map((e, n) => (
+            <EmbedView key={n} e={e} />
           ))}
-        </div>
-      ))}
+          {m.components?.map((r, n) => (
+            <div key={n} className="flex flex-wrap gap-2">
+              {(r as Component).components.map((c, k) => (
+                <span key={k} className="inline-flex h-8 items-center rounded-[calc(3px*var(--round,1))] bg-[#4e5058] px-4 text-[0.875rem] font-medium text-white">
+                  {c.label}
+                  {c.url && <span aria-hidden="true" className="ml-1.5 text-[0.7rem]">↗</span>}
+                </span>
+              ))}
+            </div>
+          ))}
+        </>
+      )}
     </div>
   )
 }

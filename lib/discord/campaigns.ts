@@ -3,6 +3,7 @@ import { db, nowSec } from '../db'
 import { abs, botReady, discord, type Message, postMessage } from './api'
 import { announceCard, trackerCard } from './cards'
 import { campaignPostCard } from './cards-more'
+import { getExtras } from '../campaign-extras'
 import { featureOn } from '../features'
 import { type DiscordConfig, getDiscordConfig, slug } from './config'
 
@@ -120,7 +121,8 @@ const list = (j: string, n = 4): string[] => {
 /** The live card for a campaign: cover, details and the numbers that change. */
 export async function campaignCard(c: CampaignRow, cfg: DiscordConfig, channelId?: string | null): Promise<Message> {
   const s = await stats(c)
-  if (await featureOn('discord-campaigns'))
+  if (await featureOn('discord-campaigns')) {
+    const x = await getExtras(c.id)
     return campaignPostCard({
       id: c.id,
       title: c.title,
@@ -136,10 +138,14 @@ export async function campaignCard(c: CampaignRow, cfg: DiscordConfig, channelId
       views: s.views,
       joined: s.joined,
       endsOn: c.ends_on,
-      clipThis: list(c.clip_this_json, 3),
+      clipThis: list(c.clip_this_json, 4),
+      offLimits: list(c.off_limits_json, 4),
+      example: x.example || undefined,
+      soundUrl: x.sounds[0] || x.spotify[0] || undefined,
       // the picture is drawn again only when what it shows changes
       imageVersion: `${c.status}-${s.leftPct}-${c.rate_cents}`,
     })
+  }
   return trackerCard({
     id: c.id,
     title: c.title,
@@ -200,7 +206,12 @@ export async function refreshCampaignCard(campaignId: string, force = false): Pr
         await put(`discord:camp-hash:${campaignId}`, hash)
         return true
       }
-      if (edited.status !== 404) return false // a Discord hiccup: try again next time rather than posting a second card
+      if (edited.status === 400 && v2) {
+        // the card in the channel was made the old way and cannot be edited into the new layout: take it down and post the new one
+        await discord('DELETE', `/channels/${savedChannel}/messages/${savedMessage}`)
+        const d = await db()
+        await d.prepare('DELETE FROM settings WHERE key IN (?1, ?2)').bind(`discord:camp-msg:${campaignId}`, `discord:camp-hash:${campaignId}`).run()
+      } else if (edited.status !== 404) return false // a Discord hiccup: try again next time rather than posting a second card
     }
     if (c.status !== 'live') return false // only start a card for something that is running
     const channel = await syncArtist(c.creator, true)

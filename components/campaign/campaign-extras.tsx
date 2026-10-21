@@ -1,6 +1,7 @@
 import { ExternalLink, FolderOpen } from 'lucide-react'
 import { BrandIcon } from '@/components/brand-icon'
-import type { CampaignExtras } from '@/lib/campaign-extras-shared'
+import { exampleLink, type CampaignExtras } from '@/lib/campaign-extras-shared'
+import { embedSrc, isTall, postId } from '@/lib/clip-embed'
 
 const iconFor = (url: string) => (/tiktok\.com/.test(url) ? 'tiktok' : /instagram\.com/.test(url) ? 'instagram' : /youtu/.test(url) ? 'youtube' : /soundcloud/.test(url) ? 'soundcloud' : /apple\.com/.test(url) ? 'applemusic' : 'spotify')
 const labelFor = (url: string) => (/tiktok\.com/.test(url) ? 'Use the sound on TikTok' : /instagram\.com/.test(url) ? 'Use the audio on Instagram' : /youtu/.test(url) ? 'Open on YouTube' : /soundcloud/.test(url) ? 'Open on SoundCloud' : 'Open on Apple Music')
@@ -12,9 +13,10 @@ const pill = 'inline-flex h-10 items-center gap-2 rounded-pill border border-whi
 
 /** The music links, the official sound, which part to use, footage and the bio, under a campaign's brief. Nothing shows when there is none. */
 export function CampaignExtrasBlock({ x }: { x: CampaignExtras }) {
-  if (!x.bio && !x.spotify.length && !x.sounds.length && !x.audioNote && !x.assets) return null
+  if (!x.bio && !x.spotify.length && !x.sounds.length && !x.audioNote && !x.assets && !x.example) return null
   return (
     <div className="grid gap-5">
+      {x.example && <ExampleEdit url={x.example} />}
       {(x.sounds.length > 0 || x.audioNote) && (
         <section>
           <h3 className="text-[13px] text-white/50">The audio</h3>
@@ -62,5 +64,32 @@ export function CampaignBackdrop({ id }: { id: string }) {
       <img src={`/api/img/${id}`} alt="" className="size-full scale-110 object-cover opacity-35 blur-2xl" />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-ink/60 to-ink" />
     </div>
+  )
+}
+
+/** The brand's example edit, played right on the page: a video file in the browser's own player, or a TikTok, YouTube or Instagram post in its official player. */
+function ExampleEdit({ url }: { url: string }) {
+  const link = exampleLink(url)
+  if ('error' in link) return null
+  const platform = link.kind === 'file' ? null : link.kind
+  const src = platform ? embedSrc(platform, postId(platform, url), url) : null
+  const tall = platform ? isTall(platform, url) : true
+  return (
+    <section>
+      <h3 className="text-[13px] text-white/50">Example edit</h3>
+      <div className="mt-2.5">
+        {link.kind === 'file' ? (
+          <video src={url} controls playsInline preload="metadata" className="max-h-[540px] w-full max-w-[320px] rounded-panel bg-black" />
+        ) : src ? (
+          <div className={tall ? 'aspect-[9/16] w-full max-w-[320px]' : 'aspect-video w-full max-w-[520px]'}>
+            <iframe src={src} title="Example edit" loading="lazy" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" className="size-full rounded-panel border-0 bg-black" />
+          </div>
+        ) : (
+          <a href={url} target="_blank" rel="noopener noreferrer" className={pill}>
+            <ExternalLink aria-hidden="true" className="size-4" /> Watch the example
+          </a>
+        )}
+      </div>
+    </section>
   )
 }

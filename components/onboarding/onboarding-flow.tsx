@@ -16,6 +16,7 @@ import { ensureHuman } from '@/lib/human-client'
 import { uploadImage } from '@/lib/image-client'
 import { LookPicker } from '@/components/profile/look-picker'
 import { Tour } from './tour'
+import { ConnectAccounts } from './connect-accounts'
 import { VerifyAccounts } from './verify-accounts'
 import { avatarCss, bannerCss, lookById, lookFor, lookKey } from '@/lib/looks'
 import { checkHandle, checkHandleAvailable, resendEmailCode, verifyEmailCode } from '@/lib/onboarding'
@@ -838,6 +839,10 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
 
               {id === 'accounts' && (
                 <>
+                  {checks && !preview ? (
+                    // with the checks on, adding an account and proving it is one thing: Connect, the username, the code in the bio, the check
+                    <ConnectAccounts linked={data.linked} onLinked={(p, h) => patch({ linked: { ...data.linked, [p]: h } })} />
+                  ) : (
                   <div className="grid w-full max-w-sm gap-3">
                     {([
                       ['tiktok', 'TikTok', '@username'],
@@ -859,6 +864,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                       </label>
                     ))}
                   </div>
+                  )}
                   <div className="mt-8 flex flex-col items-center gap-4">
                     <button type="button" className={primary} onClick={() => go('happy')}>
                       {Object.values(data.linked).some((v) => v.trim()) ? 'Continue' : 'Skip for now'}

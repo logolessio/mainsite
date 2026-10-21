@@ -1,10 +1,10 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowDownWideNarrow, Check, CircleCheck, Loader2, Lock, Pin, Plus, X } from 'lucide-react'
+import { ArrowDownWideNarrow, Check, Loader2, Lock, Pin, Plus, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { BadgeArt, RARITY_STYLE } from '@/components/badges/badge-art'
-import { BadgeBoard, RARITY_BORDER } from '@/components/badges/badge-board'
+import { BadgeBoard } from '@/components/badges/badge-board'
 import { PanelSkeleton } from '@/components/app/ui'
 import { GlassTabs } from '@/components/ui/glass-tabs'
 import { Tilt3D } from '@/components/motion/tilt'
@@ -17,32 +17,6 @@ type Data = { unlocked: Record<string, number>; equipped: string[] }
 type Filter = 'all' | 'unlocked' | 'locked'
 const RARITIES: Rarity[] = ['common', 'rare', 'epic', 'legendary']
 const when = (t: number) => new Date(t * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-
-function Ring({ value, total }: { value: number; total: number }) {
-  const r = 52
-  const c = 2 * Math.PI * r
-  return (
-    <div className="relative size-36 shrink-0">
-      <svg viewBox="0 0 120 120" className="size-full -rotate-90">
-        <circle cx="60" cy="60" r={r} fill="none" stroke="currentColor" strokeWidth="7" className="text-white/10" />
-        <motion.circle cx="60" cy="60" r={r} fill="none" stroke="url(#ach-ring)" strokeWidth="7" strokeLinecap="round" strokeDasharray={c} initial={{ strokeDashoffset: c }} animate={{ strokeDashoffset: c * (1 - value / Math.max(1, total)) }} transition={{ duration: 1.3, ease: EASE_OUT }} />
-        <defs>
-          <linearGradient id="ach-ring" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#ffffff" />
-            <stop offset=".5" stopColor="#c9c9d0" />
-            <stop offset="1" stopColor="#8f8f98" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <div className="absolute inset-0 grid place-items-center text-center">
-        <div>
-          <p className="font-display text-4xl leading-none tabular-nums">{value}<span className="text-xl text-mute">/{total}</span></p>
-          <p className="mt-1 text-[10px] text-mute">unlocked</p>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 export function AchievementsView({ board = false }: { board?: boolean }) {
   const [data, setData] = useState<Data | null>(null)
@@ -133,29 +107,34 @@ export function AchievementsView({ board = false }: { board?: boolean }) {
   return (
     <div>
       {/* ---------- the overview ---------- */}
-      <motion.section initial={false} className="relative overflow-hidden rounded-card border border-line-strong bg-[#0a0a0b] p-6 md:p-8">
-        <div aria-hidden="true" className="pointer-events-none absolute -top-1/2 -right-1/4 size-[36rem] rounded-pill bg-[radial-gradient(closest-side,rgb(185_166_255/0.12),transparent)]" />
-        <div className="relative grid gap-8 lg:grid-cols-[auto_1fr]">
-          <div className="flex items-center gap-6">
-            <Ring value={count} total={BADGES.length} />
-            <div className="min-w-0">
-              <p className="text-xs text-mute">Score</p>
-              <p className="font-display text-5xl leading-none tabular-nums">{score}</p>
-              <p className="mt-1 text-xs text-mute">of {maxScore} possible</p>
-              <ul className="mt-4 grid gap-1.5">
-                {RARITIES.map((r) => {
-                  const total = BADGES.filter((b) => b.rarity === r).length
-                  const got = BADGES.filter((b) => b.rarity === r && b.id in data.unlocked).length
-                  return (
-                    <li key={r} className="flex items-center gap-2 text-xs">
-                      <span className="size-2 rounded-pill" style={{ background: RARITY_STYLE[r].glow.replace(/0\.\d+\)/, '1)') }} />
-                      <span className={cn('w-16', RARITY_STYLE[r].text)}>{RARITY_STYLE[r].label}</span>
-                      <span className="font-mono text-mute tabular-nums">{got}/{total}</span>
-                    </li>
-                  )
-                })}
-              </ul>
+      <motion.section initial={false} className="rounded-card border border-line-strong bg-[#0a0a0b] p-6 md:p-8">
+        <div className="grid gap-8 lg:grid-cols-[15rem_1fr] lg:gap-14">
+          <div className="min-w-0">
+            <p className="text-xs text-mute">Unlocked</p>
+            <p className="mt-1 font-display text-6xl leading-none tabular-nums">
+              {count}
+              <span className="text-2xl text-mute">/{BADGES.length}</span>
+            </p>
+            <div className="mt-4 h-1 overflow-hidden rounded-pill bg-white/10" role="progressbar" aria-valuemin={0} aria-valuemax={BADGES.length} aria-valuenow={count} aria-label="Badges unlocked">
+              <motion.div className="h-full rounded-pill bg-paper" initial={{ width: 0 }} animate={{ width: `${(count / Math.max(1, BADGES.length)) * 100}%` }} transition={{ duration: 1.1, ease: EASE_OUT }} />
             </div>
+            <p className="mt-3 text-sm text-mute">
+              <span className="text-paper tabular-nums">{score}</span> of {maxScore} points
+            </p>
+            <ul className="mt-6 border-t border-line">
+              {RARITIES.map((r) => {
+                const total = BADGES.filter((b) => b.rarity === r).length
+                const got = BADGES.filter((b) => b.rarity === r && b.id in data.unlocked).length
+                return (
+                  <li key={r} className="flex items-center justify-between border-b border-line py-2.5 text-sm">
+                    <span className={RARITY_STYLE[r].text}>{RARITY_STYLE[r].label}</span>
+                    <span className="font-mono text-xs text-mute tabular-nums">
+                      {got}/{total}
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
           </div>
 
           {board ? (
@@ -163,7 +142,7 @@ export function AchievementsView({ board = false }: { board?: boolean }) {
           ) : (
           <div>
             <div className="mb-3 flex items-baseline justify-between">
-              <p className="text-xs text-mute">On your profile</p>
+              <p className="text-sm font-medium">On your profile</p>
               <p className="font-mono text-xs text-mute tabular-nums">
                 {data.equipped.length}/{MAX_EQUIPPED} {saving && <Loader2 className="ml-1 inline size-3 animate-spin" />}
               </p>
@@ -304,12 +283,12 @@ export function AchievementsView({ board = false }: { board?: boolean }) {
 }
 
 /**
- * Square tiles in a plain grid (no layout animation, so re-sorting never leaves gaps). Every tile has its rarity's
- * own border colour, and a clear mark for its state: a tick for earned, a pin for on your profile, a lock otherwise.
+ * A plain grid of badge cards, with no layout animation so re-sorting never leaves gaps. Every card says what the badge is, how it
+ * is earned, and where you stand: on your profile, earned, or still locked.
  */
 function BadgeGrid({ shown, data, onOpen }: { shown: BadgeDef[]; data: Data; onOpen: (b: BadgeDef) => void }) {
   return (
-    <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 2xl:grid-cols-6">
+    <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 2xl:grid-cols-5">
       {shown.map((b) => {
         const got = b.id in data.unlocked
         const on = data.equipped.includes(b.id)
@@ -320,22 +299,17 @@ function BadgeGrid({ shown, data, onOpen }: { shown: BadgeDef[]; data: Data; onO
               type="button"
               onClick={() => onOpen(b)}
               aria-label={`${b.name}, ${R.label}. ${on ? 'On your profile.' : got ? 'Earned.' : 'Not earned yet.'}`}
-              className={cn('group relative flex aspect-square w-full flex-col items-center justify-center overflow-hidden rounded-[calc(1.5rem*var(--round,1))] border-2 bg-[#0b0b0d] p-3 text-center transition-all hover:-translate-y-0.5', b.rarity === 'legendary' && got && 'shadow-[0_0_30px_-10px_rgb(255_255_255/0.5)]')}
-              style={{ borderColor: got ? RARITY_BORDER[b.rarity] : RARITY_BORDER[b.rarity].replace(/[\d.]+\)$/, '0.22)'), borderStyle: got ? 'solid' : 'dashed' }}
+              className={cn('flex h-full w-full flex-col items-center rounded-card border bg-[#0b0b0d] px-4 pt-7 pb-5 text-center transition-colors hover:bg-white/[0.03]', got ? 'border-line-strong hover:border-paper/30' : 'border-dashed border-line')}
             >
-              {got && <span aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(70% 60% at 50% 35%, ${RARITY_BORDER[b.rarity].replace(/[\d.]+\)$/, '0.16)')}, transparent)` }} />}
-              <span className="absolute top-2.5 left-2.5" title={got ? 'Earned' : 'Not earned yet'}>
-                {got ? <CircleCheck className="size-[18px] text-paper" /> : <Lock className="size-4 text-mute" />}
+              <BadgeArt badge={b} size={92} locked={!got} />
+              <span className="mt-4 text-[15px] leading-tight font-medium">{b.name}</span>
+              <span className={cn('mt-1 text-xs', got ? R.text : 'text-mute')}>
+                {R.label} · {b.points} points
               </span>
-              {on && (
-                <span className="absolute top-2 right-2 inline-flex h-6 items-center gap-1 rounded-pill bg-paper px-2 text-[10px] font-medium text-ink" title="On your profile">
-                  <Pin className="size-3" /> On profile
-                </span>
-              )}
-              <BadgeArt badge={b} size={96} locked={!got} className="relative max-w-[56%]" />
-              <span className="relative mt-2 line-clamp-1 text-sm leading-tight font-medium">{b.name}</span>
-              <span className="relative mt-0.5 text-[11px] font-medium" style={{ color: got ? RARITY_BORDER[b.rarity].replace(/[\d.]+\)$/, '1)') : undefined }}>
-                {R.label}
+              <span className="mt-2.5 line-clamp-2 text-xs leading-snug text-mute">{b.how}</span>
+              <span className={cn('mt-auto inline-flex items-center gap-1.5 pt-4 text-xs', on ? 'text-paper' : 'text-mute')}>
+                {on ? <Pin aria-hidden="true" className="size-3.5" /> : got ? <Check aria-hidden="true" className="size-3.5" /> : <Lock aria-hidden="true" className="size-3.5" />}
+                {on ? 'On your profile' : got ? 'Earned' : 'Locked'}
               </span>
             </button>
           </li>

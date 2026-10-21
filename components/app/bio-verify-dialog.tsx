@@ -10,6 +10,7 @@ import { useMounted } from '@/hooks/use-motion-prefs'
 import { useFeature } from '@/components/shell/features-provider'
 import type { State } from '@/lib/bio-verify'
 import { SPRING_POP } from '@/lib/layout'
+import { buildLink, USERNAME_LINKS } from '@/lib/profile-style'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 
@@ -24,7 +25,7 @@ export const WHERE: Record<P, string> = {
 /** TikTok's website often shows an old bio for a while after it is changed (shown while `onboarding-checks` is on). */
 export const TIKTOK_SLOW = "TikTok's website can take a while (sometimes several minutes) to show a new bio. If we do not find the code straight away, wait a bit and press Check again."
 
-type Phase = { kind: 'loading' } | { kind: 'ready' } | { kind: 'checking' } | { kind: 'verified' } | { kind: 'not-found'; message: string } | { kind: 'unreadable'; message: string } | { kind: 'waiting' } | { kind: 'error'; message: string }
+type Phase = { kind: 'username'; error?: string } | { kind: 'loading' } | { kind: 'ready' } | { kind: 'checking' } | { kind: 'verified' } | { kind: 'not-found'; message: string } | { kind: 'unreadable'; message: string } | { kind: 'waiting' } | { kind: 'error'; message: string }
 
 async function call(action: 'start' | 'check' | 'ask', platform: P) {
   const res = await fetch('/api/me/accounts/verify', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action, platform }) })
@@ -34,16 +35,21 @@ async function call(action: 'start' | 'check' | 'ask', platform: P) {
 }
 
 /** Prove an account is yours: put a short code in its bio, then we look for it. A person on the team can check by hand when a site will not let us read it. */
-export function BioVerifyDialog({ platform, handle, open, onClose, onChange }: { platform: P | null; handle: string; open: boolean; onClose: () => void; onChange: () => void }) {
+/** Saves the account on the profile, so the code can be made for it. Returns a message when it could not. */
+export type Connect = { save: (platform: P, url: string) => Promise<string | null> }
+
+export function BioVerifyDialog({ platform, handle, open, onClose, onChange, connect }: { platform: P | null; handle: string; open: boolean; onClose: () => void; onChange: () => void; /** Adding an account and proving it in one go: asks for the username first, then shows the code in the same window. */ connect?: Connect }) {
   const mounted = useMounted()
   if (!mounted) return null
-  return createPortal(<AnimatePresence>{open && platform && <Dialog key={platform} platform={platform} handle={handle} onClose={onClose} onChange={onChange} />}</AnimatePresence>, document.body)
+  return createPortal(<AnimatePresence>{open && platform && <Dialog key={platform} platform={platform} handle={handle} onClose={onClose} onChange={onChange} connect={connect} />}</AnimatePresence>, document.body)
 }
 
-function Dialog({ platform, handle, onClose, onChange }: { platform: P; handle: string; onClose: () => void; onChange: () => void }) {
+function Dialog({ platform, handle: given, onClose, onChange, connect }: { platform: P; handle: string; onClose: () => void; onChange: () => void; connect?: Connect }) {
+  const [handle, setHandle] = useState(given)
+  const [value, setValue] = useState('')
   const [code, setCode] = useState('')
   const [profileUrl, setProfileUrl] = useState('')
-  const [phase, setPhase] = useState<Phase>({ kind: 'loading' })
+  const [phase, setPhase] = useState<Phase>(connect ? { kind: 'username' } : { kind: 'loading' })
   const [copied, setCopied] = useState(false)
   const checks = useFeature('onboarding-checks')
 
@@ -62,8 +68,22 @@ function Dialog({ platform, handle, onClose, onChange }: { platform: P; handle: 
 
   const box = useDialog<HTMLDivElement>(true, onClose)
   useEffect(() => {
-    void begin()
+    if (!connect) void begin()
+    // with `connect`, the code is made once the username has been given
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [begin])
+
+  const addAndStart = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!connect) return
+    const built = buildLink(platform, value)
+    if ('error' in built) return setPhase({ kind: 'username', error: built.error })
+    setPhase({ kind: 'loading' })
+    const problem = await connect.save(platform, built.url)
+    if (problem) return setPhase({ kind: 'username', error: problem })
+    setHandle(value.trim().replace(/^@+/, ''))
+    await begin()
+  }
 
   const copy = async () => {
     try {
@@ -112,14 +132,29 @@ function Dialog({ platform, handle, onClose, onChange }: { platform: P; handle: 
           <div className="flex items-center gap-3">
             <span className="grid size-12 place-items-center rounded-pill border border-line"><BrandIcon name={platform} className="size-6" /></span>
             <div className="min-w-0">
-              <h2 className="font-display text-2xl">Verify {LABEL[platform]}</h2>
-              <p className="truncate text-sm text-mute">@{handle}</p>
+              <h2 className="font-display text-2xl">{connect ? 'Connect' : 'Verify'} {LABEL[platform]}</h2>
+              <p className="truncate text-sm text-mute">{phase.kind === 'username' ? 'Your username is enough.' : `@${handle}`}</p>
             </div>
           </div>
           <button type="button" aria-label="Close" onClick={onClose} className="grid size-9 place-items-center rounded-pill hover:bg-white/10"><X className="size-4" /></button>
         </div>
 
-        {phase.kind === 'verified' ? (
+        {phase.kind === 'username' ? (
+          <form onSubmit={addAndStart} className="mt-6">
+            <label className="block">
+              <span className="mb-1.5 block text-sm text-mute">Username</span>
+              <span className="flex h-12 items-center rounded-tile border border-line-strong bg-ink/70 px-4 focus-within:border-paper/60">
+                {USERNAME_LINKS[platform] && <span className="mr-0.5 shrink-0 text-sm text-mute">{USERNAME_LINKS[platform].label}</span>}
+                <input autoFocus value={value} onChange={(e) => (setValue(e.target.value), setPhase({ kind: 'username' }))} placeholder="yourname" autoCapitalize="none" autoCorrect="off" spellCheck={false} className="h-full min-w-0 flex-1 bg-transparent text-[16px] outline-none placeholder:text-mute/50" />
+              </span>
+            </label>
+            {phase.error && <p role="alert" className="mt-3 text-sm text-signal">{phase.error}</p>}
+            <p className="mt-4 text-sm leading-relaxed text-mute">Next you will get a short code to put in your {platform === 'youtube' ? 'channel description' : 'bio'}. We check for it, and that proves the account is yours. It all happens here.</p>
+            <button type="submit" disabled={!value.trim()} className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-pill bg-paper text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
+              Continue
+            </button>
+          </form>
+        ) : phase.kind === 'verified' ? (
           <div className="mt-8 text-center">
             <span className="mx-auto grid size-14 place-items-center rounded-pill bg-emerald-400/15 text-emerald-300"><Check className="size-7" /></span>
             <p className="mt-5 text-lg">@{handle} is verified</p>

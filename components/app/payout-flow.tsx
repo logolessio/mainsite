@@ -1,18 +1,16 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, Check, Loader2, Plus, ShieldCheck, X } from 'lucide-react'
+import { ArrowLeft, Check, Loader2, Plus, ShieldCheck, Trash2, UserRoundCheck, X } from 'lucide-react'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { checkEmail, cleanEmail } from '@/lib/email-check'
+import { checkEmail, cleanEmail, maskEmail } from '@/lib/email-check'
 import { cents, withdraw } from '@/lib/finance-client'
 import { EASE_OUT } from '@/lib/layout'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 
 type Saved = { emails: string[]; email: string }
-
-const maskEmail = (e: string) => e.replace(/^(.{1,2}).*(@.*)$/, '$1***$2')
 
 async function post(body: Record<string, unknown>): Promise<Record<string, unknown>> {
   const res = await fetch('/api/me/paypal', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
@@ -106,7 +104,7 @@ function Tick() {
  * Adding a PayPal email, one step at a time: type it, type it again (no pasting), then confirm it with a code emailed to the account.
  * A payout can only go to an email that went through this.
  */
-export function AddEmailSheet({ open, onClose, existing, onAdded }: { open: boolean; onClose: () => void; existing: string[]; onAdded: (r: Saved, email: string) => void }) {
+export function AddEmailSheet({ open, onClose, existing, onAdded, replace }: { open: boolean; onClose: () => void; existing: string[]; onAdded: (r: Saved, email: string) => void; /** changing an email: the new one is confirmed the same way, then it takes the old one's place */ replace?: { email: string; isDefault: boolean } }) {
   const [step, setStep] = useState<'enter' | 'again' | 'code' | 'done'>('enter')
   const [text, setText] = useState('')
   const [again, setAgain] = useState('')
@@ -155,8 +153,15 @@ export function AddEmailSheet({ open, onClose, existing, onAdded }: { open: bool
       setBusy(true)
       setError('')
       try {
-        const j = await post({ email: c.email, code: value, makeDefault: existing.length === 0 })
-        onAdded({ emails: (j.emails as string[]) ?? [], email: String(j.email ?? '') }, c.email)
+        const j = await post({ email: c.email, code: value, makeDefault: replace ? replace.isDefault : existing.length === 0 })
+        let saved: Saved = { emails: (j.emails as string[]) ?? [], email: String(j.email ?? '') }
+        if (replace) {
+          // the new email is in; now the old one goes
+          const res = await fetch('/api/me/paypal', { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: replace.email }) })
+          const d = (await res.json().catch(() => ({}))) as { emails?: string[]; email?: string }
+          if (res.ok) saved = { emails: d.emails ?? saved.emails, email: d.email ?? saved.email }
+        }
+        onAdded(saved, c.email)
         setStep('done')
       } catch (e) {
         setError(e instanceof Error ? e.message : 'That code did not work.')
@@ -164,14 +169,14 @@ export function AddEmailSheet({ open, onClose, existing, onAdded }: { open: bool
       }
       setBusy(false)
     },
-    [busy, c.email, existing.length, onAdded],
+    [busy, c.email, existing.length, onAdded, replace],
   )
 
   const same = cleanEmail(again) === c.email
   const index = { enter: 0, again: 1, code: 2, done: 3 }[step]
 
   return (
-    <Sheet open={open} onClose={onClose} steps={4} step={index} busy={busy} title={{ enter: 'Add a PayPal email', again: 'Check it carefully', code: 'Confirm it is you', done: 'PayPal email added' }[step]}>
+    <Sheet open={open} onClose={onClose} steps={4} step={index} busy={busy} title={{ enter: replace ? 'Change your PayPal email' : 'Add a PayPal email', again: 'Check it carefully', code: 'Confirm it is you', done: replace ? 'PayPal email changed' : 'PayPal email added' }[step]}>
       {step === 'enter' && (
         <form
           onSubmit={(e) => {
@@ -180,7 +185,7 @@ export function AddEmailSheet({ open, onClose, existing, onAdded }: { open: bool
           }}
           noValidate
         >
-          <p className="text-sm leading-relaxed text-mute">Payouts are sent to this email, so it has to be the one you sign in to PayPal with. It takes a minute and a code, because this is where your money goes.</p>
+          <p className="text-sm leading-relaxed text-mute">{replace ? `This takes the place of ${maskEmail(replace.email)}. ` : ''}Payouts are sent to this email, so it has to be the one you sign in to PayPal with. It takes a minute and a code, because this is where your money goes.</p>
           <input data-autofocus type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="name@example.com" value={text} onChange={(e) => setText(e.target.value)} aria-label="PayPal email" className={cn('mt-5', field, c.problem && text ? 'border-signal/50' : 'border-line-strong')} />
           <div aria-live="polite" className="mt-2 min-h-5 text-[13px]">
             {c.ok && c.suggestion && !dup ? (
@@ -280,6 +285,110 @@ export function AddEmailSheet({ open, onClose, existing, onAdded }: { open: bool
         </div>
       )}
     </Sheet>
+  )
+}
+
+
+/**
+ * One saved PayPal email: what can be done with it. Make it the default, change it to another address (confirmed with a code, like adding one),
+ * or remove it. The address itself is only ever shown with most of it hidden.
+ */
+export function ManageEmailSheet({ open, onClose, email, isDefault, emails, onChange }: { open: boolean; onClose: () => void; email: string; isDefault: boolean; emails: string[]; onChange: (r: Saved) => void }) {
+  const [step, setStep] = useState<'menu' | 'remove'>('menu')
+  const [busy, setBusy] = useState<string | null>(null)
+  const [error, setError] = useState('')
+  const [changing, setChanging] = useState(false)
+  useEffect(() => {
+    if (!open) return
+    setStep('menu')
+    setError('')
+    setBusy(null)
+    setChanging(false)
+  }, [open])
+
+  const run = async (what: 'default' | 'remove') => {
+    setBusy(what)
+    setError('')
+    try {
+      const res = await fetch('/api/me/paypal', { method: what === 'remove' ? 'DELETE' : 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(what === 'remove' ? { email } : { email, makeDefault: true }) })
+      const j = (await res.json().catch(() => ({}))) as { error?: string; emails?: string[]; email?: string }
+      if (!res.ok) throw new Error(j.error ?? 'Something went wrong. Please try again.')
+      onChange({ emails: j.emails ?? [], email: j.email ?? '' })
+      toast.ok(what === 'remove' ? 'Removed' : 'Now your default')
+      onClose()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong.')
+    }
+    setBusy(null)
+  }
+
+  const row = 'flex w-full items-center gap-3.5 rounded-panel border border-line-strong px-4 py-3.5 text-left transition-colors hover:border-paper/40 hover:bg-white/[0.03] disabled:opacity-50'
+  return (
+    <>
+      <Sheet open={open && !changing} onClose={onClose} steps={1} step={0} busy={busy !== null} title="Manage this PayPal email">
+        <div className="rounded-panel border border-line px-4 py-4">
+          <p className="text-sm text-mute">PayPal email</p>
+          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[clamp(1.05rem,4.4vw,1.25rem)] font-medium break-all">
+            {maskEmail(email)}
+            {isDefault && <span className="rounded-chip border border-line-strong px-2 py-0.5 text-[11px] font-normal text-mute">Default</span>}
+          </p>
+        </div>
+        {step === 'menu' ? (
+          <div className="mt-4 grid gap-2.5">
+            {!isDefault && (
+              <button type="button" disabled={busy !== null} onClick={() => void run('default')} className={row}>
+                {busy === 'default' ? <Loader2 aria-hidden="true" className="size-[18px] animate-spin text-mute" /> : <UserRoundCheck aria-hidden="true" className="size-[18px] text-mute" />}
+                <span className="flex-1">
+                  <span className="block text-[15px]">Make it the default</span>
+                  <span className="block text-xs text-mute">Withdrawals start with this one</span>
+                </span>
+              </button>
+            )}
+            <button type="button" onClick={() => setChanging(true)} className={row}>
+              <ArrowLeft aria-hidden="true" className="size-[18px] rotate-180 text-mute" />
+              <span className="flex-1">
+                <span className="block text-[15px]">Change the email</span>
+                <span className="block text-xs text-mute">Type the new one and confirm it with a code</span>
+              </span>
+            </button>
+            <button type="button" onClick={() => setStep('remove')} className={row}>
+              <Trash2 aria-hidden="true" className="size-[18px] text-mute" />
+              <span className="flex-1">
+                <span className="block text-[15px]">Remove it</span>
+                <span className="block text-xs text-mute">It will no longer be a place to be paid</span>
+              </span>
+            </button>
+          </div>
+        ) : (
+          <div className="mt-5">
+            <p className="text-sm leading-relaxed text-mute">Remove {maskEmail(email)}? You can add it again later with a code.</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button type="button" disabled={busy !== null} onClick={() => void run('remove')} className="inline-flex h-11 items-center gap-2 rounded-pill bg-paper px-5 text-sm font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-60">
+                {busy === 'remove' && <Loader2 aria-hidden="true" className="size-4 animate-spin" />} Yes, remove it
+              </button>
+              <button type="button" disabled={busy !== null} onClick={() => setStep('menu')} className="inline-flex h-11 items-center rounded-pill border border-line-strong px-5 text-sm transition-colors hover:bg-white/[0.06]">
+                Keep it
+              </button>
+            </div>
+          </div>
+        )}
+        {error && (
+          <p role="alert" className="mt-3 text-[13px] text-signal">
+            {error}
+          </p>
+        )}
+      </Sheet>
+      <AddEmailSheet
+        open={open && changing}
+        onClose={() => {
+          setChanging(false)
+          onClose()
+        }}
+        existing={emails.filter((e) => e !== email)}
+        replace={{ email, isDefault }}
+        onAdded={(r) => onChange(r)}
+      />
+    </>
   )
 }
 
@@ -437,7 +546,7 @@ export function WithdrawSheet({ open, onClose, availableCents, minCents, emails,
                 <li key={e}>
                   <button type="button" role="radio" aria-checked={pick === e} onClick={() => setPick(e)} className={cn('flex w-full items-center gap-3 rounded-panel border px-4 py-3.5 text-left transition-colors', pick === e ? 'border-paper bg-white/[0.05]' : 'border-line-strong hover:border-paper/40')}>
                     <span className={cn('grid size-5 shrink-0 place-items-center rounded-pill border', pick === e ? 'border-paper bg-paper text-ink' : 'border-line-strong')}>{pick === e && <Check aria-hidden="true" className="size-3" />}</span>
-                    <span className="min-w-0 flex-1 truncate text-[15px]">{e}</span>
+                    <span className="min-w-0 flex-1 truncate text-[15px]">{maskEmail(e)}</span>
                     {e === defaultEmail && <span className="shrink-0 rounded-chip border border-line-strong px-2 py-0.5 text-[11px] text-mute">Default</span>}
                   </button>
                 </li>

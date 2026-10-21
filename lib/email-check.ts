@@ -75,3 +75,13 @@ export function checkEmail(raw: string): EmailCheck {
   const suggestion = best !== domain ? `${local}@${best}` : null
   return { email, ok: true, problem: '', suggestion }
 }
+
+/** An address as it is shown in lists: a few letters and the rest hidden ("jw•••••@g••••.com"), so a screen never gives it away. */
+export function maskEmail(e: string): string {
+  const [local = '', domain = ''] = e.split('@')
+  const dot = domain.lastIndexOf('.')
+  const host = dot > 0 ? domain.slice(0, dot) : domain
+  const tld = dot > 0 ? domain.slice(dot) : ''
+  const dots = (n: number) => '•'.repeat(Math.max(3, Math.min(n, 6)))
+  return `${local.slice(0, 2)}${dots(local.length - 2)}@${host.slice(0, 1)}${dots(host.length - 1)}${tld}`
+}

@@ -1,4 +1,4 @@
-import { cleanLinks, EMPTY_EXTRAS, extrasSchema, soundLink, spotifyLink, type CampaignExtras } from './campaign-extras-shared'
+import { cleanLinks, EMPTY_EXTRAS, exampleLink, extrasSchema, soundLink, spotifyLink, type CampaignExtras } from './campaign-extras-shared'
 import { db, nowSec } from './db'
 import { HttpError } from './http'
 
@@ -28,14 +28,20 @@ export async function saveExtras(id: string, userId: string, raw: unknown): Prom
   const p = extrasSchema.safeParse(raw ?? {})
   if (!p.success) throw new HttpError(400, 'Please check the music links and pictures.')
   const x = p.data
-  const extras: CampaignExtras = { ...x, spotify: cleanLinks(x.spotify, spotifyLink), sounds: cleanLinks(x.sounds, soundLink), assets: /^https:\/\//i.test(x.assets) ? x.assets : '' }
+  let example = ''
+  if (x.example.trim()) {
+    const e = exampleLink(x.example)
+    if ('error' in e) throw new HttpError(400, e.error)
+    example = e.url
+  }
+  const extras: CampaignExtras = { ...x, spotify: cleanLinks(x.spotify, spotifyLink), sounds: cleanLinks(x.sounds, soundLink), assets: /^https:\/\//i.test(x.assets) ? x.assets : '', example }
   const d = await db()
   for (const [field, kind] of [['audio', 'audio'], ['background', 'background']] as const) {
     if (!extras[field]) continue
     const own = await d.prepare('SELECT id FROM uploads WHERE id = ?1 AND user_id = ?2 AND kind = ?3').bind(extras[field], userId, kind).first()
     if (!own) throw new HttpError(400, field === 'audio' ? 'Upload the audio preview again.' : 'Upload the background picture again.')
   }
-  const empty = !extras.spotify.length && !extras.sounds.length && !extras.audioNote && !extras.audio && !extras.background && !extras.bio && !extras.assets
+  const empty = !extras.spotify.length && !extras.sounds.length && !extras.audioNote && !extras.audio && !extras.background && !extras.bio && !extras.assets && !extras.example
   if (empty) await d.prepare('DELETE FROM settings WHERE key = ?1').bind(key(id)).run()
   else
     await d

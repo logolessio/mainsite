@@ -18,9 +18,11 @@ export type CampaignExtras = {
   bio: string
   /** a link to footage creators can use */
   assets: string
+  /** an example edit: a link to a video file (played in place on the campaign page and in Discord) or to a TikTok, YouTube or Instagram post */
+  example: string
 }
 
-export const EMPTY_EXTRAS: CampaignExtras = { spotify: [], sounds: [], audioNote: '', audio: '', background: '', bio: '', assets: '' }
+export const EMPTY_EXTRAS: CampaignExtras = { spotify: [], sounds: [], audioNote: '', audio: '', background: '', bio: '', assets: '', example: '' }
 
 const uploadId = z.string().regex(/^[0-9a-f-]{36}$/).or(z.literal(''))
 const url = z.string().trim().max(300)
@@ -33,7 +35,28 @@ export const extrasSchema = z.object({
   background: uploadId.default(''),
   bio: z.string().trim().max(600).default(''),
   assets: url.default(''),
+  example: url.default(''),
 })
+
+export type ExampleKind = 'file' | 'tiktok' | 'youtube' | 'instagram'
+
+/** An example edit link: a video file on any https address, or a post on TikTok, YouTube or Instagram. Returns the clean link or an error. */
+export function exampleLink(raw: string): { url: string; kind: ExampleKind } | { error: string } {
+  const v = raw.trim()
+  let u: URL
+  try {
+    u = new URL(v)
+  } catch {
+    return { error: 'Paste the full link, starting with https://' }
+  }
+  if (u.protocol !== 'https:') return { error: 'The link has to start with https://' }
+  const h = u.hostname.toLowerCase().replace(/^www\./, '')
+  if (/\.(mp4|webm|mov|m4v)$/i.test(u.pathname)) return { url: u.toString(), kind: 'file' }
+  if (h === 'tiktok.com' || h.endsWith('.tiktok.com')) return { url: u.toString(), kind: 'tiktok' }
+  if (h === 'youtu.be' || h === 'youtube.com' || h.endsWith('.youtube.com')) return { url: u.toString(), kind: 'youtube' }
+  if (h === 'instagram.com' || h.endsWith('.instagram.com')) return { url: u.toString(), kind: 'instagram' }
+  return { error: 'Use a link to a video file (ending in .mp4) or to a TikTok, YouTube or Instagram post.' }
+}
 
 /** A Spotify link we can trust: only open.spotify.com, and only a track, album, artist, playlist or episode. Returns the clean link or an error. */
 export function spotifyLink(raw: string): { url: string; kind: string } | { error: string } {

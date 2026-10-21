@@ -102,9 +102,25 @@ export function goTarget(id: string, guildId?: string): { url: string; label: st
 const EMOJI = /[\p{Extended_Pictographic}\u{FE0F}\u{200D}\u{20E3}]/gu
 const clean = (s: string | undefined) => (s === undefined ? s : applyWording(s.replace(EMOJI, '').replace(/ {2,}/g, ' ').trim()))
 
+/** Every text inside a Components V2 message gets the same treatment: no emoji, the site's wording. */
+function tidyNode(n: unknown): unknown {
+  if (Array.isArray(n)) return n.map(tidyNode)
+  if (n && typeof n === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(n as Record<string, unknown>)) {
+      if (k === 'emoji') continue
+      out[k] = (k === 'content' || k === 'label' || k === 'description' || k === 'placeholder') && typeof v === 'string' ? clean(v) : tidyNode(v)
+    }
+    return out
+  }
+  return n
+}
+
 export function tidy(message: Message): Message {
   const { raw, ...m } = message
   if (raw) return m // words written by a person are sent exactly as they are
+  // a Components V2 message (flag 1 << 15) is all components: there is no content or embed to tidy
+  if (m.flags && m.flags & (1 << 15)) return { ...m, components: tidyNode(m.components) as Message['components'] }
   return {
     ...m,
     content: clean(m.content),
@@ -116,7 +132,7 @@ export function tidy(message: Message): Message {
       footer: e.footer ? { ...e.footer, text: clean(e.footer.text) ?? '' } : undefined,
       fields: e.fields?.map((f) => ({ ...f, name: clean(f.name) || '-', value: clean(f.value) || '-' })),
     })),
-    components: m.components?.map((r) => ({ ...r, components: r.components.map((c) => ({ ...c, label: clean(c.label) ?? c.label, emoji: undefined })) })),
+    components: m.components?.map((r) => ('components' in r && Array.isArray(r.components) ? { ...r, components: (r as Component).components.map((c) => ({ ...c, label: clean(c.label) ?? c.label, emoji: undefined })) } : r)) as Message['components'],
   }
 }
 

@@ -6,8 +6,7 @@ import { BrandIcon, type BrandName } from '@/components/brand-icon'
 import type { SocialPlatform } from '@/lib/accounts'
 import { usernameOf, type ProfileLink } from '@/lib/profile-style'
 import type { State } from '@/lib/bio-verify'
-import { AddAccountDialog } from './add-account-dialog'
-import { BioVerifyDialog } from './bio-verify-dialog'
+import { BioVerifyDialog, type Connect } from './bio-verify-dialog'
 import { Badge } from './table'
 import { ActionButton, Card, PanelSkeleton, Toggle } from './ui'
 
@@ -66,6 +65,16 @@ export function AccountsPanel() {
   }
 
   if (!links) return <PanelSkeleton heights={[250]} error={error} />
+  const connect: Connect = {
+    save: async (p, url) => {
+      const res = await fetch('/api/me/profile', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ links: [...links.filter((l) => l.platform !== p), { platform: p, url }] }) }).catch(() => null)
+      const j = (await res?.json().catch(() => ({}))) as { profile?: { links: ProfileLink[] }; error?: string }
+      if (!res?.ok || !j.profile) return j.error ?? 'Could not save that.'
+      setLinks(j.profile.links)
+      void loadStates()
+      return null
+    },
+  }
   const has = (p: string) => links.find((l) => l.platform === p)
 
   return (
@@ -93,7 +102,7 @@ export function AccountsPanel() {
                     {busy && <Loader2 className="size-4 animate-spin" />} Remove
                   </ActionButton>
                 ) : (
-                  <ActionButton onClick={() => setDialog(a.name)}>Add</ActionButton>
+                  <ActionButton onClick={() => setDialog(a.name)}>Connect</ActionButton>
                 )}
               </li>
             )
@@ -117,15 +126,8 @@ export function AccountsPanel() {
         onClose={() => setVerifying(null)}
         onChange={() => void loadStates()}
       />
-      <AddAccountDialog
-        platform={dialog}
-        open={dialog !== null}
-        onClose={() => setDialog(null)}
-        onAdded={(p, _h, url) => {
-          setDialog(null)
-          void save([...links.filter((l) => l.platform !== p), { platform: p, url }])
-        }}
-      />
+      {/* adding an account and proving it is one window: the username, then the code, then the check */}
+      <BioVerifyDialog platform={dialog} handle="" open={dialog !== null} onClose={() => setDialog(null)} onChange={() => void loadStates()} connect={connect} />
     </>
   )
 }

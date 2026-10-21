@@ -5,8 +5,8 @@ const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&
 
 export const SITE_URL = 'https://logoless.io'
 const LOGO = `${SITE_URL}/logo-sm.png`
-const MONO = "ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace"
-const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
+const MONO = "'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace"
+const SANS = "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
 
 export type Meta = { place?: string | null; device?: string | null }
 export type Mail = { subject: string; text: string; html: string }
@@ -21,58 +21,56 @@ type Layout = {
   test?: boolean
 }
 
-const SERIF = "Georgia,'Times New Roman',Times,serif"
+const SERIF = "Gloock,Georgia,'Times New Roman',Times,serif"
 
 function layout(l: Layout) {
   const banner = l.test
-    ? `<tr><td style="padding:0 0 14px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="left" style="background:#2a1d05;border:1px solid #5a4210;border-radius:12px;padding:10px 14px;font:600 12px/1.4 ${SANS};color:#ffcf70">Test email from the admin panel. Nothing was created.</td></tr></table></td></tr>`
+    ? `<tr><td style="padding:0 0 14px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="left" style="background:#111114;border:1px solid #2a2a30;border-radius:12px;padding:10px 14px;font:500 12px/1.4 ${SANS};color:#a2a2a9">Test email from the admin panel. Nothing was created.</td></tr></table></td></tr>`
     : ''
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"><title>${esc(l.title)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Gloock&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
-  body{margin:0!important;padding:0!important;background:#050506}
+  body{margin:0!important;padding:0!important;background:#050506;-webkit-text-size-adjust:100%}
   a{color:#f3f2ee}
+  a[x-apple-data-detectors]{color:inherit!important;text-decoration:none!important;font:inherit!important}
   @media (max-width:560px){
-    .wrap{padding:20px 12px!important}
-    .card{padding:32px 22px!important}
-    .digit{width:42px!important;height:56px!important;font-size:26px!important;line-height:56px!important}
-    .h1{font-size:31px!important}
+    .wrap{padding:24px 14px 32px!important}
+    .card{padding:34px 24px 30px!important}
+    .code{font-size:32px!important}
+    .h1{font-size:32px!important}
   }
 </style></head>
 <body style="margin:0;background:#050506">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#050506;font-size:1px;line-height:1px">${esc(l.preheader)}&#8199;&zwnj;&#8199;&zwnj;&#8199;&zwnj;&#8199;&zwnj;&#8199;&zwnj;&#8199;&zwnj;</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#050506" style="background:#050506"><tr><td align="center" class="wrap" style="padding:40px 16px">
-<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="width:100%;max-width:560px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#050506" style="background:#050506"><tr><td align="center" class="wrap" style="padding:48px 16px 56px">
+<table role="presentation" width="540" cellpadding="0" cellspacing="0" style="width:100%;max-width:540px">
 ${banner}
-<tr><td align="left" style="padding:0 4px 24px"><a href="${SITE_URL}" style="text-decoration:none"><img src="${LOGO}" width="52" height="39" alt="logoless" style="display:block;border:0;width:52px;height:39px;font:600 18px/39px ${SANS};color:#f3f2ee"></a></td></tr>
-<tr><td class="card" bgcolor="#0b0b0d" style="background:#0b0b0d;border:1px solid #232328;border-radius:24px;padding:46px 42px;text-align:left">
-  <h1 class="h1" style="margin:0 0 14px;font:400 38px/1.08 ${SERIF};letter-spacing:-.015em;color:#f3f2ee">${esc(l.title)}</h1>
-  <p style="margin:0 0 32px;max-width:410px;font:400 16px/1.6 ${SANS};color:#a2a2a9">${esc(l.intro)}</p>
+<tr><td align="left" style="padding:0 6px 28px"><a href="${SITE_URL}" style="text-decoration:none"><img src="${LOGO}" width="46" height="34" alt="logoless" style="display:block;border:0;width:46px;height:34px;font:600 18px/34px ${SANS};color:#f3f2ee"></a></td></tr>
+<tr><td class="card" bgcolor="#0b0b0d" style="background:#0b0b0d;background-image:linear-gradient(180deg,#151518 0,#0b0b0d 300px);border:1px solid #26262b;border-radius:28px;padding:48px 44px 40px;text-align:left">
+  <h1 class="h1" style="margin:0 0 16px;font:400 38px/1.1 ${SERIF};letter-spacing:-.01em;color:#f3f2ee">${esc(l.title)}</h1>
+  <p style="margin:0 0 34px;max-width:420px;font:400 16px/1.65 ${SANS};color:#a2a2a9">${esc(l.intro)}</p>
   ${l.body}
-  ${l.note ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:34px 0 0"><tr><td style="border-top:1px solid #222227;padding:18px 0 0;font:400 13px/1.6 ${SANS};color:#80808a">${esc(l.note)}</td></tr></table>` : ''}
+  ${l.note ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:38px 0 0"><tr><td style="border-top:1px solid #222227;padding:20px 0 0;font:400 13px/1.65 ${SANS};color:#80808a">${esc(l.note)}</td></tr></table>` : ''}
 </td></tr>
-<tr><td align="left" style="padding:24px 6px 0;font:400 12px/1.7 ${SANS};color:#6c6c75">
+<tr><td align="left" style="padding:26px 8px 0;font:400 12px/1.8 ${SANS};color:#6c6c75">
   Sent by logoless because someone used this address on <a href="${SITE_URL}" style="color:#9a9aa3">logoless.io</a>.<br>
   <a href="${SITE_URL}/legal/terms" style="color:#9a9aa3">Terms</a> &nbsp;·&nbsp; <a href="${SITE_URL}/legal/privacy" style="color:#9a9aa3">Privacy</a> &nbsp;·&nbsp; <a href="${SITE_URL}/contact" style="color:#9a9aa3">Help</a>
 </td></tr>
 </table></td></tr></table></body></html>`
 }
 
-/** Six separate boxes, one per digit, so the code is easy to read and to type. Under them the same code as plain text, which is easy to select and copy. */
+/**
+ * The code in one panel, as one piece of text, so selecting it (a double click, a long press) takes all six digits and pasting gives
+ * "482913" with nothing between. Separate boxes per digit look like a code field, but a client selects them one cell at a time.
+ */
 function codeBoxes(code: string) {
   const digits = code.replace(/\D/g, '').slice(0, 6)
-  const cells = [...digits]
-    .map(
-      (d) =>
-        `<td class="digit" align="center" width="52" height="66" style="width:52px;height:66px;background:#111114;border:1px solid #303036;border-radius:14px;font:500 30px/66px ${MONO};color:#ffffff">${esc(d)}</td>`,
-    )
-    .join('<td width="8" style="width:8px"></td>')
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0"><tr>${cells}</tr></table>
-<p style="clear:both;margin:20px 0 0;font:400 13px/1.5 ${SANS};color:#80808a">Cannot select the boxes? Copy it from here: <span style="font:600 14px/1.5 ${MONO};letter-spacing:.12em;color:#f3f2ee;-webkit-user-select:all;user-select:all">${esc(digits)}</span></p>`
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0"><tr><td align="center" bgcolor="#101013" style="background:#101013;border:1px solid #2c2c32;border-radius:20px;padding:30px 12px"><span class="code" style="display:inline-block;padding-left:.34em;font:600 44px/1.1 ${MONO};letter-spacing:.34em;color:#ffffff;-webkit-user-select:all;user-select:all">${esc(digits)}</span></td></tr></table>`
 }
 
 function expiry() {
-  return `<p style="margin:22px 0 0;font:500 13px/1.5 ${SANS};color:#b4b4bb">Works for 10 minutes. It can be used once.</p>`
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0 0"><tr><td align="left" style="font:500 13px/1.4 ${SANS};color:#8a8a93">Works for 10 minutes</td><td align="right" style="font:500 13px/1.4 ${SANS};color:#8a8a93">Single use</td></tr></table>`
 }
 
 function details(meta?: Meta) {
