@@ -29,6 +29,8 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
   const board = useFeature('leaderboard')
   const reels = useFeature('reels')
   const status = useFeature('status-page')
+  const feed = useFeature('submissions-feed')
+  const stats = useFeature('stats-page')
   // the smaller pages: always there, or there once their feature is switched on
   const more = [
     { label: 'Case studies', href: '/case-studies' },
@@ -36,6 +38,8 @@ export function SiteMenu({ open, onClose, onTour }: { open: boolean; onClose: ()
     ...(board ? [{ label: 'Leaderboard', href: '/leaderboard' }] : []),
     ...(reels ? [{ label: 'Reels', href: '/reels' }] : []),
     ...(status ? [{ label: 'Status', href: '/status' }] : []),
+    ...(feed ? [{ label: 'Submissions', href: '/submissions' }] : []),
+    ...(stats ? [{ label: 'Stats', href: '/stats' }] : []),
   ]
 
   useEffect(() => {

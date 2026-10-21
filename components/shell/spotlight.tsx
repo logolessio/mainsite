@@ -29,6 +29,8 @@ export function Spotlight() {
   const reels = useFeature('reels')
   const board = useFeature('leaderboard')
   const status = useFeature('status-page')
+  const feed = useFeature('submissions-feed')
+  const stats = useFeature('stats-page')
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
   const [i, setI] = useState(0)
@@ -72,12 +74,14 @@ export function Spotlight() {
       ...(reels ? [{ key: 'p-reels', label: 'Reels: swipe through campaigns', sub: '/reels', group: 'Pages' as const, href: '/reels' }] : []),
       ...(board ? [{ key: 'p-board', label: 'Leaderboard', sub: '/leaderboard', group: 'Pages' as const, href: '/leaderboard' }] : []),
       ...(status ? [{ key: 'p-status', label: 'System status', sub: '/status', group: 'Pages' as const, href: '/status' }] : []),
+      ...(feed ? [{ key: 'p-submissions', label: 'Submissions: watch and rate clips', sub: '/submissions', group: 'Pages' as const, href: '/submissions' }] : []),
+      ...(stats ? [{ key: 'p-stats', label: 'Stats and leaderboards', sub: '/stats', group: 'Pages' as const, href: '/stats' }] : []),
       { key: 'p-pricing', label: 'Pricing and fees', sub: '/pricing', group: 'Pages', href: '/pricing' },
       { key: 'p-payouts', label: 'How payouts work', sub: '/payouts', group: 'Pages', href: '/payouts' },
       { key: 'p-trust', label: 'Fraud protection', sub: '/trust', group: 'Pages', href: '/trust' },
       user?.signedIn ? { key: 'p-dash', label: 'Your dashboard', sub: '/dashboard', group: 'Pages', href: '/dashboard' } : { key: 'p-login', label: 'Log in', sub: '/login', group: 'Pages', href: '/login' },
     ]
-  }, [user, reels, board, status])
+  }, [user, reels, board, status, feed, stats])
 
   const rows = useMemo<Row[]>(() => {
     const t = q.trim().toLowerCase()

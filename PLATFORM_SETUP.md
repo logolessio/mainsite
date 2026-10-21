@@ -102,3 +102,17 @@ An invited artist's campaign skips the review step and goes straight to "waiting
 ## Launch readiness
 
 **Admin > Launch readiness** checks the real site (secrets, PayPal mode, webhook, database migrations, sample campaigns, money books, errors, payouts sent) and lists the things only you can confirm (Google app published, Cloudflare Access, mailboxes, legal review...) as tick boxes. It scores everything, says "Not ready / Almost / Ready", and lists the must-do items first with plain steps for each.
+
+## Submissions feed and stats (/submissions, /stats)
+
+Both are feature switches (**Submissions feed**, **Stats and leaderboards**): on at dev.logoless.io, off on logoless.io until you push them. They need migration `0011_public_submissions_feed.sql` (star ratings and the cache of what each platform says about a clip), applied with the `migrations apply` command above.
+
+Clip pictures, views, likes, comments and posted dates are read from public pages and oEmbed, and kept for six hours. Everything works without keys; these optional secrets make it sturdier or fill gaps:
+
+| Name | What it adds | Where to get it |
+| --- | --- | --- |
+| `YOUTUBE_API_KEY` | YouTube comment counts, and steadier views and likes (also used by the view checks) | Google Cloud Console > APIs & Services > enable **YouTube Data API v3** > Credentials > Create API key |
+| `META_APP_ID`, `META_CLIENT_TOKEN` | Official Instagram oEmbed for pictures and author (without them the public post page is read, which Instagram can block) | developers.facebook.com > My Apps > create an app > add **oEmbed Read** > Settings > Basic (App ID) and Settings > Advanced (Client token) |
+| `X_BEARER_TOKEN` | View counts for X posts (likes, replies and dates work without it) | developer.x.com > Projects & Apps > your app > Keys and tokens > Bearer token. Needs a paid X API plan (Basic) |
+
+TikTok has no key for this: its public page and oEmbed are read, and TikTok sometimes rate-limits that, in which case the clip shows its campaign's colours and is asked again an hour later. Instagram never shows view counts publicly, so Instagram clips show the views your team verified.

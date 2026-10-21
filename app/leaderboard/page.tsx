@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { connection } from 'next/server'
 import { Leaderboard, type Entry } from '@/components/marketing/leaderboard'
+import { TransitionLink } from '@/components/shell/transition-link'
 import { db, nowSec } from '@/lib/db'
 import { featureOn } from '@/lib/features'
 import { CONTAINER } from '@/lib/layout'
@@ -41,6 +42,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ p
   return (
     <main className={`${CONTAINER} pt-32 pb-40 md:pt-44`}>
       <Leaderboard entries={shown} period={period} />
+      {(await featureOn('stats-page')) && (
+        <p className="mt-12 text-center text-sm text-mute">
+          Earnings, clips, campaigns and artists too:{' '}
+          <TransitionLink href="/stats" className="text-paper underline underline-offset-2">see all stats</TransitionLink>
+        </p>
+      )}
     </main>
   )
 }

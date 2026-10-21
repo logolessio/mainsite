@@ -11,7 +11,7 @@ import { applyWording } from './wording'
  * Used by the owner API (/api/v1/text). A change is stored under the hash of the ORIGINAL sentence, exactly as the editor does.
  */
 type Actor = { id: string | null; email: string }
-export const PUBLIC_PAGES = ['/', '/welcome', '/how-it-works', '/for-brands', '/for-creators', '/pricing', '/payouts', '/trust', '/faq', '/about', '/contact', '/careers', '/login', '/signup', '/case-studies', '/leaderboard', '/status', '/developers']
+export const PUBLIC_PAGES = ['/', '/welcome', '/how-it-works', '/for-brands', '/for-creators', '/pricing', '/payouts', '/trust', '/faq', '/about', '/contact', '/careers', '/login', '/signup', '/case-studies', '/leaderboard', '/status', '/developers', '/submissions', '/stats']
 
 const clean = (s: string) => s.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '').trim()
 
