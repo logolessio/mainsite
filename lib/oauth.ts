@@ -34,7 +34,15 @@ export type OAuthApp = {
   verified: boolean
   suspended: boolean
   createdAt: number
+  /** Added with the developer tools: what kind of app it is, what it is for, and its policy pages. Older apps have none. */
+  kind?: string
+  useCases?: string[]
+  useDescription?: string
+  privacyUrl?: string
+  termsUrl?: string
 }
+
+export type AppExtras = Pick<OAuthApp, 'kind' | 'useCases' | 'useDescription' | 'privacyUrl' | 'termsUrl'>
 
 const rand = (bytes: number) => [...crypto.getRandomValues(new Uint8Array(bytes))].map((b) => b.toString(16).padStart(2, '0')).join('')
 const b64url = (buf: ArrayBuffer | Uint8Array) => btoa(String.fromCharCode(...new Uint8Array(buf instanceof Uint8Array ? buf : buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
@@ -98,6 +106,7 @@ export async function deleteApp(id: string) {
     d.prepare('DELETE FROM settings WHERE key = ?1').bind(appKey(id)),
     d.prepare("DELETE FROM settings WHERE key LIKE 'oauth:grant:%' AND key LIKE ?1").bind(`%:${id}`),
     d.prepare("DELETE FROM settings WHERE (key LIKE 'oauth:rt:%' OR key LIKE 'oauth:at:%') AND json_extract(value, '$.clientId') = ?1").bind(id),
+    d.prepare('DELETE FROM settings WHERE key = ?1').bind(usageKey(id)),
   ])
 }
 
@@ -114,7 +123,7 @@ export function checkRedirect(raw: string): string | null {
   return u.toString()
 }
 
-export async function newApp(ownerId: string, i: { name: string; description: string; website: string; redirectUris: string[]; type: 'confidential' | 'public' }) {
+export async function newApp(ownerId: string, i: { name: string; description: string; website: string; redirectUris: string[]; type: 'confidential' | 'public' } & AppExtras) {
   const id = `lg_${rand(10)}`
   const secret = i.type === 'confidential' ? `lgs_${rand(24)}` : null
   const app: OAuthApp = { id, ...i, ownerId, secretHash: secret ? await sha256Hex(secret) : null, verified: false, suspended: false, createdAt: nowSec() }
@@ -130,7 +139,53 @@ export async function rotateSecret(app: OAuthApp) {
   return secret
 }
 
-export const appPublic = (a: OAuthApp) => ({ id: a.id, name: a.name, description: a.description, website: a.website, redirectUris: a.redirectUris, type: a.type, verified: a.verified, suspended: a.suspended, createdAt: a.createdAt })
+export const appPublic = (a: OAuthApp) => ({ id: a.id, name: a.name, description: a.description, website: a.website, redirectUris: a.redirectUris, type: a.type, verified: a.verified, suspended: a.suspended, createdAt: a.createdAt, kind: a.kind ?? '', useCases: a.useCases ?? [], useDescription: a.useDescription ?? '', privacyUrl: a.privacyUrl ?? '', termsUrl: a.termsUrl ?? '' })
+
+// ---------- usage ----------
+/** Sign-ins per day for the last 60 days, one small row per app: oauth:usage:<clientId> = { "2026-10-20": 3, ... }. */
+const usageKey = (id: string) => `oauth:usage:${id}`
+const day = (t: number) => new Date(t * 1000).toISOString().slice(0, 10)
+
+async function countSignIn(clientId: string) {
+  try {
+    const d = await db()
+    const r = await d.prepare('SELECT value FROM settings WHERE key = ?1').bind(usageKey(clientId)).first<{ value: string }>()
+    const days = (r ? JSON.parse(r.value) : {}) as Record<string, number>
+    const today = day(nowSec())
+    days[today] = (days[today] ?? 0) + 1
+    const keep = day(nowSec() - 60 * 86400)
+    for (const k of Object.keys(days)) if (k < keep) delete days[k]
+    await d.prepare('INSERT INTO settings (key, value, updated_at) VALUES (?1, ?2, ?3) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at').bind(usageKey(clientId), JSON.stringify(days), nowSec()).run()
+  } catch {
+    /* a count is a nice-to-have; signing in must never fail because of it */
+  }
+}
+
+export type AppUsage = { people: number; active30: number; signIns30: number; lastSignIn: number | null; days: { day: string; n: number }[] }
+
+/** How much an app is used: people connected, people active in the last 30 days, and sign-ins per day. */
+export async function appUsage(clientId: string): Promise<AppUsage> {
+  const d = await db()
+  const since = nowSec() - 30 * 86400
+  const [g, u] = await Promise.all([
+    d
+      .prepare("SELECT COUNT(*) AS people, SUM(CASE WHEN json_extract(value, '$.last') >= ?2 THEN 1 ELSE 0 END) AS active, MAX(json_extract(value, '$.last')) AS last FROM settings WHERE key LIKE 'oauth:grant:%' AND substr(key, -length(?1)) = ?1")
+      .bind(`:${clientId}`, since)
+      .first<{ people: number; active: number | null; last: number | null }>(),
+    d.prepare('SELECT value FROM settings WHERE key = ?1').bind(usageKey(clientId)).first<{ value: string }>(),
+  ])
+  let counts: Record<string, number> = {}
+  try {
+    counts = u ? (JSON.parse(u.value) as Record<string, number>) : {}
+  } catch {
+    counts = {}
+  }
+  const days = Array.from({ length: 30 }, (_, i) => {
+    const k = day(nowSec() - (29 - i) * 86400)
+    return { day: k, n: counts[k] ?? 0 }
+  })
+  return { people: g?.people ?? 0, active30: g?.active ?? 0, signIns30: days.reduce((a, b) => a + b.n, 0), lastSignIn: g?.last ?? null, days }
+}
 
 // ---------- the signing key ----------
 type Jwks = { kid: string; priv: JsonWebKey; pub: JsonWebKey }
@@ -278,6 +333,7 @@ export type CodeData = { clientId: string; userId: string; redirectUri: string; 
 
 export async function issueCode(d: Omit<CodeData, 'exp' | 'authTime'>) {
   await sweep()
+  await countSignIn(d.clientId)
   const code = b64url(crypto.getRandomValues(new Uint8Array(32)))
   await put(`oauth:code:${await sha256Hex(code)}`, { ...d, exp: nowSec() + CODE_TTL, authTime: nowSec() })
   return code

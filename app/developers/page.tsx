@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { connection } from 'next/server'
+import { DevelopersGuide } from '@/components/developers/guide'
 import { BUTTON_SNIPPET, LoginWithLogoless } from '@/components/developers/login-button'
 import { Breadcrumbs } from '@/components/marketing/breadcrumbs'
 import { PageHero } from '@/components/marketing/page-hero'
@@ -8,6 +9,7 @@ import { PillLink } from '@/components/motion/cta'
 import { featureOn } from '@/lib/features'
 import { CONTAINER } from '@/lib/layout'
 import { ISSUER, SCOPES } from '@/lib/oauth'
+import { getSession } from '@/lib/session'
 
 export const metadata: Metadata = {
   title: 'Developers: Sign in with logoless',
@@ -35,6 +37,7 @@ const Step = ({ n, title, children }: { n: string; title: string; children: Reac
 export default async function Page() {
   await connection()
   if (!(await featureOn('developers'))) notFound()
+  if (await featureOn('developer-tools')) return <DevelopersGuide signedIn={Boolean((await getSession())?.user?.email)} />
   return (
     <main>
       <Breadcrumbs trail={[{ name: 'Developers' }]} />
