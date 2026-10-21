@@ -26,11 +26,12 @@ const EXPLAIN: Record<ShowKey, string> = {
   earnings: 'How much you have earned in total, in dollars.',
   campaigns: 'How many campaigns you have taken part in.',
   links: 'Your TikTok, YouTube and Instagram, as buttons on your page.',
+  feed: 'Your approved clips on the public Submissions page, with your name and a link to your profile.',
 }
 
 const SECTIONS: { title: string; sub: string; keys: ShowKey[] }[] = [
   { title: 'About you', sub: 'Small details on your card.', keys: ['status', 'joined', 'country', 'badges'] },
-  { title: 'Your numbers', sub: 'Each one stays hidden until you switch it on.', keys: ['clips', 'views', 'earnings', 'campaigns'] },
+  { title: 'Your numbers', sub: 'Each one stays hidden until you switch it on.', keys: ['clips', 'views', 'earnings', 'campaigns', 'feed'] },
 ]
 
 /**

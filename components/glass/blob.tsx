@@ -22,7 +22,7 @@ export type BlobItem = { id: string; label?: React.ReactNode; icon?: React.React
 
 /**
  * A row of choices on a bar of glass, with the chosen one held by a lens that glides, stretches and can be dragged. Used for the site's
- * filters and tabs, the trailers site's bottom bar, and anywhere a choice slides.
+ * filters and tabs, and anywhere a choice slides.
  */
 export function BlobTabs({
   items,

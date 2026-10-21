@@ -1,7 +1,6 @@
 'use client'
 
 import { useUnsavedGuard } from '@/hooks/use-unsaved-guard'
-import { useFeature } from '@/components/shell/features-provider'
 import { toast } from '@/lib/toast'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Ban, Binary, Bug, Camera, Check, ChevronDown, CircleDot, CloudRain, Download, Droplets, Eye, EyeOff, Film, Flame, Flower2, Globe, ImagePlus, Leaf, Link2, Loader2, Palette, PartyPopper, Pencil, Plus, Rocket, Search, Snowflake, Sparkles, Star, Sun, Trash2, Tv, Undo2, User, Waves, Wind, X, Zap, type LucideIcon } from 'lucide-react'

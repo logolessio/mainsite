@@ -105,7 +105,7 @@ An invited artist's campaign skips the review step and goes straight to "waiting
 
 ## Submissions feed and stats (/submissions, /stats)
 
-Both are feature switches (**Submissions feed**, **Stats and leaderboards**): on at dev.logoless.io, off on logoless.io until you push them. They need migration `0011_public_submissions_feed.sql` (star ratings and the cache of what each platform says about a clip), applied with the `migrations apply` command above.
+Both are feature switches (**Submissions feed**, **Stats and leaderboards**): on at dev.logoless.io, off on logoless.io until you push them. They need migration `0015_public_submissions_feed.sql` (star ratings and the cache of what each platform says about a clip), applied with the `migrations apply` command above.
 
 Clip pictures, views, likes, comments and posted dates are read from public pages and oEmbed, and kept for six hours. Everything works without keys; these optional secrets make it sturdier or fill gaps:
 

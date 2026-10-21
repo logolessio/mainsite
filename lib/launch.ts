@@ -20,7 +20,7 @@ export function launchView(s: Record<SettingKey, string>, now = nowSec()): Launc
 }
 
 /** The pages that stay open behind the launch page: the legal pages, the unsubscribe page, the sign-in page (so an owner is never locked out) and the page that hands scroll's Google and Discord sign-ins over. */
-export const launchExempt = (path: string) => /^\/(legal|launch|login|scroll-signin)(\/|$)/.test(path)
+export const launchExempt = (path: string) => /^\/(legal|launch|login)(\/|$)/.test(path)
 /** With the new page (the launch-links feature) /links stays open too, so a link in a bio still works while the site is closed. */
 export const linksExempt = (path: string) => /^\/links\/?$/.test(path)
 

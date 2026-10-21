@@ -413,7 +413,7 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
     if (/UNIQUE/i.test(e instanceof Error ? e.message : '')) throw new HttpError(409, 'That username is taken.')
     throw e
   }
-  // A statement of its own, so the rest of a save still works on a database that has not had 0011 applied yet.
+  // A statement of its own, so the rest of a save still works on a database that has not had 0014 applied yet.
   if (extrasJson !== null) {
     try {
       await d.prepare('UPDATE profiles SET style_json = ?2 WHERE user_id = ?1').bind(user.id, extrasJson).run()

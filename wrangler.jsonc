@@ -25,7 +25,7 @@
   // Both of the site's addresses are attached to this worker here. Wrangler treats this list as the complete set, so
   // logoless.io MUST stay in it: leaving it out takes the live site offline. Add new addresses; never remove this one.
   // The dev site is the same worker and database: on dev.logoless.io every feature is on and only the team gets in.
-  // scroll.logoless.io is the movie-trailers site: the same worker, but a site of its own (see middleware.ts): no launch page, its own sign-in.
+  // scroll.logoless.io was the movie-trailers site and is gone. It stays attached only so the old link lands on the main site (see middleware.ts).
   // owner.logoless.io is the owner and admin dashboard, also the same worker (admin.logoless.io only forwards there). Pushing a feature turns it on for logoless.io (see /dev/features).
   // Every half hour the site looks again at the views of live submissions (each one only about every two hours: see lib/views-rescan.ts).
   // The scheduled handler itself is added to the built worker by scripts/patch-open-next.mjs.

@@ -192,26 +192,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       </html>
     )
   }
-  // The trailers site is a full-screen app of its own (see middleware.ts): no site chrome, and open to everyone, even on the dev address.
-  if (reqHeaders.get('x-bare') === '1') {
-    return (
-      <html
-        lang="en"
-        suppressHydrationWarning
-        data-font={font.id === 'inter' ? undefined : font.id}
-        data-kind={kind}
-        data-ui={uiFace ? '1' : undefined}
-        data-figures={figuresFace ? '1' : undefined}
-        style={fontVars as React.CSSProperties}
-        className={`${FONT_CLASSES} bg-ink`}
-      >
-        <head>
-        {HEAD_SCRIPT}
-        </head>
-        <body className="antialiased">{children}</body>
-      </html>
-    )
-  }
   return (
     <html
       lang="en"

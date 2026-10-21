@@ -5,7 +5,7 @@ import { createContext, useCallback, useContext } from 'react'
 import { LiquidGlass } from '@/components/ui/liquid-glass'
 import { cn } from '@/lib/utils'
 
-// One liquid glass for the whole of logoless: the site's own (components/ui/liquid-glass.tsx). The trailers site, the blob lenses and
+// One liquid glass for the whole of logoless: the site's own (components/ui/liquid-glass.tsx). The blob lenses and
 // the site's bars all draw it, so it is the same dark glass with the same rim light everywhere.
 
 const Intensity = createContext(70)

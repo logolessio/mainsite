@@ -15,7 +15,7 @@ const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.googleusercontent.com https://cdn.discordapp.com https://i.ytimg.com https://image.tmdb.org https://*.giphy.com",
+  "img-src 'self' data: blob: https://*.googleusercontent.com https://cdn.discordapp.com https://i.ytimg.com https://*.giphy.com",
   "media-src 'self' blob: https://*.giphy.com",
   "font-src 'self' data:",
   "connect-src 'self' https://challenges.cloudflare.com",

@@ -44,7 +44,7 @@ the route in `wrangler.jsonc`, **next to** the existing lines, never instead of 
   ]
 ```
 
-Only the last line is new. The five custom domains keep priority over the wildcard route, so dev, owner, admin and scroll are
+Only the last line is new. The five custom domains keep priority over the wildcard route, so dev, owner, admin and scroll (which only forwards to the main site) are
 untouched. Deploy as usual, then check:
 
 1. `https://logoless.io` still loads (the live site).
