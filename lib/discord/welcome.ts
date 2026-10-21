@@ -28,6 +28,16 @@ const put = async (key: string, value: string) => {
 }
 const get = async (key: string) => (await (await db()).prepare('SELECT value FROM settings WHERE key = ?1').bind(key).first<{ value: string }>())?.value ?? null
 
+/** Keeps a job running after the answer has gone back to Discord (on Cloudflare a loose promise would be cut off). */
+async function background(p: Promise<unknown>) {
+  try {
+    const { getCloudflareContext } = await import('@opennextjs/cloudflare')
+    getCloudflareContext().ctx.waitUntil(p)
+  } catch {
+    void p
+  }
+}
+
 const onboarded = async (userId: string) => Boolean(await get(`onboarded:${userId}`))
 
 async function nextData(userId: string): Promise<NextData> {
@@ -54,7 +64,7 @@ export async function startPressed(a: { discordId: string; appId: string; token:
   const state: StartState = !userId ? 'new' : (await onboarded(userId)) ? 'ready' : 'unfinished'
   if (state === 'ready' && userId) {
     // already set up: the next steps are the answer itself, and the rundown goes out if it never did
-    void welcomeOnce(userId, { skipFollowUp: true })
+    await background(welcomeOnce(userId, { skipFollowUp: true }))
     return nextStepsCard(await nextData(userId))
   }
   return startReplyCard(state, startUrl())

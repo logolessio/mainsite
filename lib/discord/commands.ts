@@ -391,7 +391,7 @@ async function admin(i: Interaction): Promise<Reply> {
     case 'panel': {
       const which = String(opt(i, 'which'))
       const cfg = await getDiscordConfig()
-      const msg = which === 'start' ? getStartedMessage(cfg) : which === 'support' ? supportPanel() : statusMessage(await runHealth())
+      const msg = which === 'start' ? getStartedMessage(cfg, await featureOn('discord-onboarding')) : which === 'support' ? supportPanel() : statusMessage(await runHealth())
       const res = await postMessage(i.channel_id!, msg)
       return res.ok ? ok('Posted it here.') : fail(explainDiscord(res, 'this channel'))
     }

@@ -16,6 +16,8 @@ import { syncRoles } from '@/lib/discord/roles'
 import { ipHash, protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
 import { requireAdmin } from '@/lib/user'
+import { featureOn } from '@/lib/features'
+import { lastTick } from '@/lib/discord/tick'
 
 /** Permissions the bot asks for when it is added: see channels, send messages, embed links, read history, manage roles and manage channels (for tickets). */
 const PERMISSIONS = 268520464
@@ -30,6 +32,10 @@ const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('sync') }),
   z.object({ action: z.literal('artists') }),
   z.object({ action: z.literal('cards') }),
+  z.object({ action: z.literal('tick') }),
+  z.object({ action: z.literal('make-roles') }),
+  z.object({ action: z.literal('make-places') }),
+  z.object({ action: z.literal('welcome-me') }),
 ])
 
 /** What is set up, and the buttons that make it work. */
@@ -48,6 +54,7 @@ export const GET = route(async () => {
     cfg,
     linked: (linked?.n ?? 0) + (byLogin?.n ?? 0),
     commands: COMMANDS.length,
+    lastTick: await lastTick(),
     samples: sampleList(),
     endpoint: 'https://logoless.io/api/discord/interactions',
     invite: appId ? `https://discord.com/oauth2/authorize?client_id=${appId}&scope=bot%20applications.commands&permissions=${PERMISSIONS}` : null,
@@ -107,7 +114,7 @@ export const POST = route(async (req: Request) => {
   }
   if (a.action === 'post') {
     const ok = {
-      getStarted: { id: cfg.channels.getStarted, label: 'get-started', msg: () => getStartedMessage(cfg) },
+      getStarted: { id: cfg.channels.getStarted, label: 'get-started', msg: async () => getStartedMessage(cfg, await featureOn('discord-onboarding')) },
       rules: { id: cfg.channels.rules, label: 'rules', msg: () => rulesMessage(cfg) },
       site: { id: cfg.channels.site, label: 'site', msg: async () => siteMessage(await publicStats()) },
       support: { id: cfg.channels.support, label: 'support', msg: () => supportPanel() },
@@ -122,6 +129,59 @@ export const POST = route(async (req: Request) => {
     if (!res.ok) throw new HttpError(502, explainDiscord(res, `the ${ok.label} channel`))
     await audit(actor, 'discord.post', a.what, null, ip)
     return json({ ok: true })
+  }
+  if (a.action === 'tick') {
+    // one run of the 30-second loop now, whatever the switches say (the owner asked for it)
+    const { discordTick } = await import('@/lib/discord/tick')
+    const r = await discordTick({ force: true })
+    await audit(actor, 'discord.tick', null, r.skipped ?? null, ip)
+    return json({ ok: true, ...r })
+  }
+  if (a.action === 'welcome-me') {
+    // sends the owner the next steps and the rundown, to see them (again) as a member would
+    const { welcomeOnce } = await import('@/lib/discord/welcome')
+    const r = await welcomeOnce(admin.id, { force: true, skipFollowUp: true })
+    if (!r) throw new HttpError(409, 'Link your own Discord first (Settings, Connect Discord), and finish onboarding.')
+    if (!r.dm) throw new HttpError(502, 'Discord would not take the direct message. Check that you allow messages from server members.')
+    return json({ ok: true })
+  }
+  if (a.action === 'make-roles' || a.action === 'make-places') {
+    // Makes what is missing in the server, and saves the new IDs. It never changes or deletes anything that is already there:
+    // only empty boxes are filled. The owner presses the button; nothing calls this by itself.
+    if (!cfg.guildId) throw new HttpError(409, 'Save your server ID first.')
+    const next = structuredClone(cfg)
+    const made: string[] = []
+    if (a.action === 'make-roles') {
+      const { ROLE_NAMES } = await import('@/lib/discord/roles')
+      for (const r of ROLE_NAMES) {
+        if (next.roles[r.key]) continue
+        const res = await discord<{ id: string }>('POST', `/guilds/${cfg.guildId}/roles`, { name: r.name, permissions: '0', hoist: r.key !== 'linked', mentionable: false })
+        if (!res.ok || !res.json?.id) throw new HttpError(502, explainDiscord(res, 'the server'))
+        next.roles[r.key] = res.json.id
+        made.push(r.name)
+      }
+    } else {
+      const me = await discord<{ id: string }>('GET', '/users/@me')
+      if (!me.ok || !me.json) throw new HttpError(502, explainDiscord(me))
+      const bot = { id: me.json.id, type: 1, allow: String(1024 + 2048 + 16384 + 65536 + 16), deny: '0' }
+      const staff = cfg.roles.staff ? [{ id: cfg.roles.staff, type: 0, allow: String(1024 + 2048 + 65536), deny: '0' }] : []
+      const hidden = [{ id: cfg.guildId, type: 0, allow: '0', deny: '1024' }, bot, ...staff]
+      const readOnly = [{ id: cfg.guildId, type: 0, allow: '0', deny: '2048' }, bot]
+      const make = async (name: string, type: 0 | 4, overwrites: object[], parent?: string) => {
+        const res = await discord<{ id: string }>('POST', `/guilds/${cfg.guildId}/channels`, { name, type, permission_overwrites: overwrites, ...(parent ? { parent_id: parent } : {}) })
+        if (!res.ok || !res.json?.id) throw new HttpError(502, explainDiscord(res, 'the server'))
+        made.push(type === 4 ? `${name} (category)` : `#${name}`)
+        return res.json.id
+      }
+      if (!next.artistsCategory) next.artistsCategory = await make('Artists', 4, readOnly)
+      if (!next.inactiveCategory) next.inactiveCategory = await make('Inactive', 4, hidden)
+      if (!next.ticketCategory) next.ticketCategory = await make('Tickets', 4, hidden)
+      if (!next.channels.payouts) next.channels.payouts = await make('payouts', 0, readOnly)
+      if (!next.channels.submissions) next.channels.submissions = await make('submissions', 0, readOnly)
+    }
+    const savedCfg = await saveDiscordConfig(next)
+    await audit(actor, `discord.${a.action}`, null, made.join(', ') || 'nothing missing', ip)
+    return json({ ok: true, made, cfg: savedCfg })
   }
   if (a.action === 'artists') {
     const { syncAllArtists } = await import('@/lib/discord/campaigns')

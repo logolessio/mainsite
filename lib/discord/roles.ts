@@ -45,7 +45,7 @@ export async function memberKinds(userId: string): Promise<Kinds | null> {
 
 /** Why someone has the roles they have, in words, for /roles. */
 export const kindWords = (k: Kinds) =>
-  [k.admin && 'admin', k.team && !k.admin && 'team', k.developer && 'developer', k.creator && 'creator', k.brand && 'brand', k.clipper && 'clipper', k.earnedCents > 0 && `$${Math.floor(k.earnedCents / 100).toLocaleString('en-US')} earned`].filter(Boolean) as string[]
+  [k.admin && 'admin', k.team && !k.admin && 'team', k.developer && 'developer', k.creator && 'artist', k.brand && 'brand', k.clipper && 'clipper', k.earnedCents > 0 && `$${Math.floor(k.earnedCents / 100).toLocaleString('en-US')} earned`].filter(Boolean) as string[]
 
 /** What Discord roles someone should have, by what they do on logoless. */
 export async function wantedRoles(userId: string) {
@@ -86,12 +86,16 @@ export async function syncRoles(userId: string): Promise<SyncResult> {
   return { ok: true, added, removed }
 }
 
-/** The roles the bot can make for the owner (the "Make the roles" button), by the config key they are saved under. */
+/**
+ * The roles the bot can make for the owner. The site calls clippers "creators" in its wording, so the role for artists and streamers
+ * with campaigns (saved as `creator`) is named Artist, to keep the two apart. Rename any of them in Discord freely.
+ * Used by the "Make the missing roles" button, by the config key they are saved under.
+ */
 export const ROLE_NAMES: { key: 'linked' | 'clipper' | 'brand' | 'creator' | 'developer' | 'admin' | 'team'; name: string }[] = [
   { key: 'admin', name: 'Admin' },
   { key: 'team', name: 'Team' },
   { key: 'developer', name: 'Developer' },
-  { key: 'creator', name: 'Creator' },
+  { key: 'creator', name: 'Artist' },
   { key: 'brand', name: 'Brand' },
   { key: 'clipper', name: 'Clipper' },
   { key: 'linked', name: 'Linked' },

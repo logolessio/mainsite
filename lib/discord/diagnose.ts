@@ -7,7 +7,7 @@ import { ADMIN, effective, EMBED, MANAGE_CHANNELS, MANAGE_ROLES, SEND, VIEW, ZER
 
 const CHANNEL_NAMES: Record<string, string> = {
   getStarted: '#get-started', rules: '#rules', site: '#site', support: '#support', status: '#status', news: '#news', newCampaigns: '#new-campaigns',
-  system: '#system', updates: '#updates', clips: 'Proof', logs: 'Team log',
+  system: '#system', updates: '#updates', clips: 'Proof', logs: 'Team log', payouts: '#payouts', submissions: '#submissions',
 }
 
 /**
@@ -64,7 +64,7 @@ export async function checkAccess(cfg: DiscordConfig): Promise<AccessLine[]> {
   lines.push(...(await Promise.all([...channels.map((c) => look(c, false)), ...categories.map((c) => look(c, true))])))
 
   // roles it hands out
-  const wanted: [string, string][] = [['Linked members role', cfg.roles.linked], ['Clippers role', cfg.roles.clipper], ['Brands role', cfg.roles.brand], ['Team role', cfg.roles.team], ['Staff role', cfg.roles.staff], ...cfg.roles.tiers.map((t, n) => [`Earnings role ${n + 1}`, t.role] as [string, string])].filter(([, id]) => id) as [string, string][]
+  const wanted: [string, string][] = [['Linked members role', cfg.roles.linked], ['Clippers role', cfg.roles.clipper], ['Brands role', cfg.roles.brand], ['Creators role', cfg.roles.creator], ['Developers role', cfg.roles.developer], ['Admins role', cfg.roles.admin], ['Team role', cfg.roles.team], ['Staff role', cfg.roles.staff], ...cfg.roles.tiers.map((t, n) => [`Earnings role ${n + 1}`, t.role] as [string, string])].filter(([, id]) => id) as [string, string][]
   if (wanted.length) {
     if (!isAdmin && !(base & MANAGE_ROLES)) lines.push({ label: 'Manage Roles', ok: false, note: 'The bot\'s role does not have Manage Roles, so it cannot hand out roles.' })
     for (const [label, id] of wanted) {

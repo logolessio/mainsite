@@ -67,12 +67,12 @@ export const startReplyCard = (state: StartState, url: string): Message =>
             label: state === 'new' ? 'Step 1 of 2' : 'Almost there',
             title: state === 'new' ? 'Make your account' : 'Finish setting up',
             text: join(
-              state === 'new' ? 'It takes about a minute. The last step links this Discord account.' : 'Your account is there, the Discord link is not. One more step.',
+              state === 'new' ? 'It takes about a minute. The last step links this Discord account.' : 'This Discord is linked to your account. Finish setting up your profile, it takes a minute.',
               small('Come back here when you are done: a message only you can see will tell you what to do next.'),
             ),
           }),
         ],
-        [row(go(state === 'new' ? 'Start on logoless.io' : 'Link Discord', url))],
+        [row(go(state === 'new' ? 'Start on logoless.io' : 'Finish setting up', url))],
       )
 
 export type NextData = { name: string; guildId?: string; campaignsChannel?: string; supportChannel?: string; brand: boolean; live: number }

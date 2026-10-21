@@ -1,7 +1,8 @@
 import { setting } from '../db'
 import { tidy } from './ui'
 
-const API = 'https://discord.com/api/v10'
+// DISCORD_API_BASE is only for tests on a developer machine (a stand-in for Discord). It is never set on Cloudflare.
+const API = (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production' && process.env.DISCORD_API_BASE) || 'https://discord.com/api/v10'
 
 export type Embed = {
   title?: string
