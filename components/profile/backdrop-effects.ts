@@ -89,19 +89,25 @@ function dots({ w, h, c, k }: BgOpts): Painter {
 }
 
 // ---------- aurora: curtains of light, worked out per pixel at low resolution ----------
+const plain = (c: Rgb) => Math.max(...c) - Math.min(...c) < 36
+
+/** The person's colours, or a pleasant set of three when they kept the plain white and grey defaults. */
+const trio = (c: Rgb, p: Rgb, q: Rgb): [Rgb, Rgb, Rgb] => (plain(p) && plain(q) ? [plain(c) ? [150, 160, 255] : vivid(c), [255, 96, 170], [60, 214, 200]] : [vivid(c), vivid(p), vivid(q)])
+
 function aurora({ w, h, c, p, q, k }: BgOpts): Painter {
-  const cols: Rgb[] = [vivid(c), vivid(p), vivid(q)]
+  // white or grey theme colours get the real thing: green, with violet and teal edges
+  const cols: Rgb[] = plain(c) && plain(p) ? [[70, 255, 160], [110, 120, 255], [40, 210, 230]] : [vivid(c), vivid(p), vivid(q)]
   const gain = 0.55 + k * 0.7
-  return field(w, h, 7, (x, y, t, d, o) => {
+  return field(w, h, 8, (x, y, t, d, o) => {
     let r = 0
     let g = 0
     let b = 0
     for (let i = 0; i < 3; i++) {
-      const centre = 0.22 + i * 0.13 + Math.sin(x * (3 + i) + t * (0.18 + i * 0.05) + i * 2) * 0.07 + Math.sin(x * 11 - t * 0.4 + i) * 0.015
+      const centre = 0.26 + i * 0.12 + Math.sin(x * (2.2 + i * 0.7) + t * (0.16 + i * 0.05) + i * 2) * 0.09 + Math.sin(x * 6.5 - t * 0.33 + i) * 0.025
       const dist = y - centre
-      // a sharp lower edge and a long soft fade upwards, like a real curtain
-      const v = dist > 0 ? Math.exp(-dist * dist * 900) : Math.exp(-dist * dist * 28)
-      const rays = 0.65 + 0.35 * Math.sin(x * 140 + Math.sin(x * 9 + t * 0.6) * 6 + i)
+      // a soft lower edge and a long fade upwards, like a real curtain
+      const v = dist > 0 ? Math.exp(-dist * dist * 260) : Math.exp(-dist * dist * 22)
+      const rays = 0.78 + 0.22 * Math.sin(x * 46 + Math.sin(x * 5 + t * 0.5) * 3 + i * 1.3)
       const s = v * rays * gain * (0.5 + 0.5 * Math.sin(x * 2.3 + t * 0.21 + i * 1.7))
       r += cols[i][0] * s
       g += cols[i][1] * s
@@ -228,7 +234,8 @@ function synth({ w, h, c, p, q, k }: BgOpts): Painter {
 
 // ---------- mesh: soft colour drifting like a lava lamp ----------
 function mesh({ w, h, c, p, q, base, k }: BgOpts): Painter {
-  const cols: Rgb[] = [vivid(p), vivid(q), vivid(c), mix(vivid(p), vivid(q), 0.5)]
+  const [t1, t2, t3] = trio(c, p, q)
+  const cols: Rgb[] = [t2, t3, t1, mix(t2, t3, 0.5)]
   const blobs = cols.map((col, i) => ({ col, ph: i * 1.7, sx: rand(0.11, 0.2), sy: rand(0.09, 0.17) }))
   const strength = 0.45 + k * 0.55
   return field(w, h, 10, (x, y, t, d, o) => {
@@ -304,8 +311,8 @@ function constellation({ w, h, c, k }: BgOpts): Painter {
 // ---------- silk: many fine lines flowing together like a sheet of fabric ----------
 function silk({ w, h, c, p, q, k }: BgOpts): Painter {
   const lines = Math.round(26 + 34 * k)
-  const a = vivid(c)
-  const b = vivid(mix(p, q, 0.5))
+  const [a, b2, b3] = trio(c, p, q)
+  const b = mix(b2, b3, 0.5)
   return (ctx, t) => {
     ctx.lineWidth = 1
     ctx.globalCompositeOperation = 'lighter'
@@ -331,7 +338,7 @@ function silk({ w, h, c, p, q, k }: BgOpts): Painter {
 
 // ---------- bokeh: big soft lights drifting out of focus ----------
 function bokeh({ w, h, c, p, q, k }: BgOpts): Painter {
-  const cols = [vivid(c), vivid(p), vivid(q)]
+  const cols = trio(c, p, q)
   const sprites = cols.map((col) => sprite(col, 128, 0.55))
   const count = Math.round(16 + 26 * k)
   const lights = Array.from({ length: count }, () => ({ x: rand(0, w), y: rand(0, h), r: rand(18, Math.min(110, w * 0.09)), s: Math.floor(Math.random() * 3), ph: rand(0, TAU), vx: rand(-6, 6), vy: rand(-10, -2) }))
