@@ -30,19 +30,19 @@ export const STEPS = {
     page: '/brand/campaigns',
     targets: ['[data-tour="campaign"]', '[data-tour="campaigns-empty"]'],
     title: 'Manage a campaign',
-    body: 'Each campaign shows what has been paid to creators out of its budget, and how many views and clips it has brought in.',
+    body: 'Each campaign shows what has been paid to creators out of its budget, and how many views and submissions it has brought in.',
   },
   'campaign-actions': {
     page: '/brand/campaigns',
     targets: ['[data-tour="campaign-actions"]', '[data-tour="campaign"]', '[data-tour="campaigns-empty"]'],
     title: 'Edit, top up, pause',
-    body: 'Pause stops new spending at once, and Start brings it back. Budget and limits raises the budget or caps what one clip or one creator can earn.',
+    body: 'Pause stops new spending at once, and Start brings it back. Budget and limits raises the budget or caps what one submission or one creator can earn.',
   },
   submissions: {
     page: '/brand/submissions',
     targets: ['[data-tour="submission"]', '[data-tour="submission-stats"]'],
     title: 'Submissions',
-    body: 'Every clip made for you. We check its real views before anyone is paid, so there is nothing to approve. Turn down anything off-brief and say why.',
+    body: 'Every submission made for you. We check its real views before anyone is paid, so there is nothing to approve. Turn down anything off-brief and say why.',
   },
   funds: {
     page: '/brand/balance',

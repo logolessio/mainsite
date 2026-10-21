@@ -17,7 +17,7 @@ type Item = { icon: React.ReactNode; title: string; body: string; show?: StepId;
 // Only what a client can really do today. Approving is done by us after the view check, so it is explained, not offered.
 const ITEMS: Item[] = [
   { icon: <Play className="size-4" />, title: 'Watch it', body: 'Open the post where it went live and see exactly what the creator made.', show: 'watch' },
-  { icon: <ShieldCheck className="size-4" />, title: 'Approving is on us', body: 'There is nothing to approve. We check every clip and its real views on the platform before anyone is paid.' },
+  { icon: <ShieldCheck className="size-4" />, title: 'Approving is on us', body: 'There is nothing to approve. We check every submission and its real views on the platform before anyone is paid.' },
   { icon: <Ban className="size-4" />, title: 'Turn it down', body: 'Off-brief? Turn it down with a reason the creator sees. It stops earning from you. This works until its views have been paid for.', show: 'turn-down' },
   { icon: <Pause className="size-4" />, title: 'Pause or start the campaign', body: 'Pause stops all new spending at once; Start brings it back. A campaign ends on its own when its budget is used up.', show: 'pause' },
   { icon: <SlidersHorizontal className="size-4" />, title: 'Top up the budget, set caps', body: 'Under Budget and limits: raise the budget, or cap what one submission or one creator can earn.', show: 'budget' },

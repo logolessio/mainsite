@@ -455,7 +455,7 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt }: { balanc
           </motion.section>
         </AnimatePresence>
 
-        <aside className="sticky top-24 hidden xl:block" aria-label="Preview">
+        <aside className={cn('sticky top-24 hidden', current.id !== 'review' && 'xl:block')} aria-label="Preview">
           <p className="mb-3 text-xs tracking-wide text-mute">Live preview</p>
           <CampaignPreview d={d} rate={plan.rate} views={plan.views} />
         </aside>
