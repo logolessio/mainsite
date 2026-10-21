@@ -79,7 +79,7 @@ function SideLink({ it, n, active, lit, c, hint, onEnter }: { it: AppNavItem; n:
 }
 
 /**
- * A sidebar item at the bottom of the menu (Recap). While it glows it has a thin white edge, bright lettering and a slow sweep of light;
+ * A sidebar item at the bottom of the menu (Recap). While it glows it has a thin gold edge, gold lettering and a slow sweep of light;
  * once opened it looks like any other item.
  */
 function FootLink({ it, glow, lit, active, onEnter }: { it: AppNavItem; glow: boolean; lit: boolean; active: boolean; onEnter: () => void }) {

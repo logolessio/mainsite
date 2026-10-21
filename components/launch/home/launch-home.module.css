@@ -21,6 +21,8 @@
   overflow: hidden;
   pointer-events: none;
   background: #000;
+  /* black and white like the rest of the site, whatever background was chosen */
+  filter: grayscale(1);
 }
 
 .preset {
@@ -214,6 +216,7 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
+  filter: grayscale(1);
 }
 
 /* ---------- the logo ---------- */

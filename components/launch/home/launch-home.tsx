@@ -109,9 +109,9 @@ export function LaunchHome(props: LaunchHomeProps) {
                   aria-label={l.label}
                   title={l.label}
                   {...(external(l.url) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                  className={cn(s.glass, 'grid size-11 place-items-center rounded-full text-paper/75 transition-[transform,color,border-color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-[rgb(var(--acc-rgb)/0.5)] hover:text-paper hover:shadow-[0_8px_26px_-8px_rgb(var(--acc-rgb)/0.5)] focus-visible:-translate-y-0.5 md:size-12')}
+                  className="grid size-11 place-items-center rounded-full text-paper/70 transition-[transform,color] duration-300 hover:-translate-y-0.5 hover:text-paper focus-visible:-translate-y-0.5 focus-visible:text-paper md:size-12"
                 >
-                  {l.platform === 'website' ? <Globe aria-hidden="true" className="size-[18px]" /> : <BrandIcon name={l.platform} className="size-[18px]" />}
+                  {l.platform === 'website' ? <Globe aria-hidden="true" className="size-5" /> : <BrandIcon name={l.platform} className="size-5" />}
                 </a>
               </li>
             ))}
