@@ -92,9 +92,14 @@ export function InviteWelcome({ name, slug, state, email, lockedTo, admin }: Pro
                 </a>
               </>
             ) : admin ? (
-              <a href="/admin/invites" className="inline-flex h-14 items-center gap-2 rounded-pill border border-line-strong px-9 text-base transition-colors hover:bg-white/10">
-                Back to artist links
-              </a>
+              <>
+                <a href={`/${slug}?preview=1`} className="inline-flex h-14 items-center gap-2 rounded-pill bg-paper px-9 text-base font-medium text-ink transition-all hover:bg-paper/85 active:scale-95">
+                  Try the set-up as {name}
+                </a>
+                <a href="/admin/invites" className="inline-flex h-14 items-center gap-2 rounded-pill border border-line-strong px-9 text-base transition-colors hover:bg-white/10">
+                  Back to artist links
+                </a>
+              </>
             ) : (
               <>
                 <button type="button" onClick={claim} disabled={busy} className="inline-flex h-14 items-center gap-2 rounded-pill bg-paper px-9 text-base font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:opacity-60">

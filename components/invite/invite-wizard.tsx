@@ -32,6 +32,8 @@ type Props = {
   flash: 'paid' | 'cancelled' | null
   /** The client package (switch "client-links"): contact, funds, and a fuller first campaign. */
   pkg?: boolean
+  /** An admin's dry run (?preview=1): every step works and looks real, and nothing is sent or saved. */
+  preview?: boolean
 }
 
 const KEY_LINKS = ['spotify', 'applemusic', 'instagram', 'tiktok', 'youtube'] as const
@@ -46,12 +48,12 @@ const label = (id: string) => LINK_PLATFORMS.find((p) => p.id === id)?.label ?? 
 const usd = (n: number) => `$${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
 const money = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
-export function InviteWizard({ slug, artistName, email, initialStep, initialData, campaign: initialCampaign, flash, pkg = false }: Props) {
+export function InviteWizard({ slug, artistName, email, initialStep, initialData, campaign: initialCampaign, flash, pkg = false, preview = false }: Props) {
   const STEPS = stepsFor(pkg)
   const looseHandles = useFeature('username-punctuation')
   const idx = (id: StepId) => STEPS.findIndex((s) => s.id === id)
   const [step, setStep] = useState(Math.min(initialStep, STEPS.length - 1))
-  const [reached, setReached] = useState(Math.min(initialStep, STEPS.length - 1))
+  const [reached, setReached] = useState(preview ? STEPS.length - 1 : Math.min(initialStep, STEPS.length - 1))
   const [dir, setDir] = useState(1)
   const [data, setData] = useState<InviteData>(() => ({
     stageName: initialData.stageName ?? artistName,
@@ -90,11 +92,15 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
     async (nextStep?: number) => {
       const { step: s, data: d } = latest.current
       setSaved('saving')
+      if (preview) {
+        setSaved('saved')
+        return true
+      }
       const res = await fetch(`/api/invite/${slug}/progress`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ step: nextStep ?? s, data: clean(d) }) }).catch(() => null)
       setSaved(res?.ok ? 'saved' : 'idle')
       return Boolean(res?.ok)
     },
-    [slug],
+    [slug, preview],
   )
 
   const set = (patch: Partial<InviteData>) => {
@@ -166,7 +172,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
     if (current.id === 'look') {
       setBusy(true)
       await persist(step)
-      const res = await fetch(`/api/invite/${slug}/profile`, { method: 'POST' }).catch(() => null)
+      const res = preview ? new Response('{}') : await fetch(`/api/invite/${slug}/profile`, { method: 'POST' }).catch(() => null)
       const j = (await res?.json().catch(() => ({}))) as { error?: string }
       setBusy(false)
       if (!res?.ok) {
@@ -178,7 +184,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
     if (current.id === 'review') {
       setBusy(true)
       await persist(step)
-      const res = await fetch(`/api/invite/${slug}/campaign`, { method: 'POST' }).catch(() => null)
+      const res = preview ? new Response(JSON.stringify({ id: 'preview', status: 'awaiting_payment' })) : await fetch(`/api/invite/${slug}/campaign`, { method: 'POST' }).catch(() => null)
       const j = (await res?.json().catch(() => ({}))) as { error?: string; id?: string; status?: string }
       setBusy(false)
       if (!res?.ok || !j.id) return setError(j.error ?? 'Could not create your campaign. Please try again.')
@@ -203,7 +209,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
     if (!campaign) return
     setBusy(true)
     setError('')
-    const res = await fetch(`/api/campaigns/${campaign.id}/pay`, { method: 'POST' }).catch(() => null)
+    const res = preview ? new Response(JSON.stringify({ ok: true })) : await fetch(`/api/campaigns/${campaign.id}/pay`, { method: 'POST' }).catch(() => null)
     const j = (await res?.json().catch(() => ({}))) as { error?: string; ok?: boolean }
     setBusy(false)
     if (!res?.ok || !j.ok) return setError(j.error ?? 'Could not take the payment. Please try again.')
@@ -213,6 +219,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
 
   const addFunds = async () => {
     if (!campaign) return
+    if (preview) return setError('Preview: a real client goes to PayPal here.')
     setBusy(true)
     setError('')
     try {
@@ -228,6 +235,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
   // ---------- the package: adding funds before the campaign, and how to be reached ----------
   const [topUp, setTopUp] = useState(0)
   const depositNow = async (amount: number) => {
+    if (preview) return setError('Preview: a real client goes to PayPal here, then comes straight back to this step.')
     setBusy(true)
     setError('')
     try {
@@ -251,6 +259,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
     if (!prefs) return
     const before = prefs.pref
     setPrefs({ ...prefs, pref })
+    if (preview) return
     const res = await fetch('/api/me/contact', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ pref }) }).catch(() => null)
     if (!res?.ok) {
       setPrefs({ ...prefs, pref: before })
@@ -261,6 +270,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
   const pick = async (kind: 'avatar' | 'cover', file: File) => {
     setUpload((u) => ({ ...u, [kind]: true, err: undefined }))
     try {
+      if (preview) throw new Error('Preview: pictures are not uploaded in a dry run.')
       const id = await uploadImage(kind, file)
       set({ [kind]: id })
     } catch (e) {
@@ -288,6 +298,11 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
       <div ref={scroller} className="relative h-full overflow-y-auto overscroll-contain">
         <header className="sticky top-0 z-20 flex h-20 items-center justify-between bg-gradient-to-b from-ink from-60% to-transparent px-5 md:px-10">
           <Logo className="h-10 md:h-11" />
+          {preview && (
+            <a href={`/${slug}`} className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-2 rounded-pill border border-amber-300/40 bg-amber-300/10 px-4 py-1.5 text-xs text-amber-200 sm:inline-flex">
+              Preview: nothing is saved · Exit
+            </a>
+          )}
           <div className="flex items-center gap-4 text-sm text-mute">
             <span aria-live="polite" className="hidden items-center gap-1.5 sm:inline-flex">
               {saved === 'saving' ? <Loader2 className="size-3.5 animate-spin" /> : saved === 'saved' ? <Check className="size-3.5" /> : null}
@@ -334,7 +349,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
               <motion.section key={current.id} custom={dir} initial={{ opacity: 0, x: 40 * dir }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 * dir }} transition={{ duration: 0.38, ease: EASE_OUT }} className="max-w-2xl">
                 {current.id === 'hello' && (
                   <>
-                    <Ask sub="This page is yours. In a few minutes you'll set up your artist page, pick what to promote and launch a campaign that pays creators per view.">{`Hey ${artistName}.`}</Ask>
+                    <Ask sub={pkg ? "This page is yours. In a few minutes you'll set up your page, tell us how to reach you, add funds and build your first campaign. Then we'll show you around your dashboard." : "This page is yours. In a few minutes you'll set up your artist page, pick what to promote and launch a campaign that pays creators per view."}>{`Hey ${artistName}.`}</Ask>
                     <div className="grid gap-3 sm:grid-cols-3">
                       {[
                         { icon: Users, t: 'Your page', d: 'A public artist profile at logoless.io/@you.' },
@@ -569,7 +584,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                   <>
                     <Ask sub="Point creators at the official sound and the part that matters, and let them hear it. All optional, all changeable later.">Choose the audio.</Ask>
                     <Rise i={0}>
-                      <AudioPicker sounds={data.sounds ?? []} audio={data.audio ?? ''} audioNote={data.audioNote ?? ''} onChange={(p) => set(p)} />
+                      <AudioPicker sounds={data.sounds ?? []} audio={data.audio ?? ''} audioNote={data.audioNote ?? ''} onChange={(p) => set(p)} preview={preview} />
                     </Rise>
                   </>
                 )}
@@ -578,7 +593,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                   <>
                     <Ask sub="The album cover is what creators see first. A wide background makes the campaign page feel like yours.">The cover and the background.</Ask>
                     <Rise i={0}>
-                      <ArtPicker cover={data.cover ?? ''} background={data.background ?? ''} title={data.projectTitle ?? ''} creator={data.stageName ?? ''} onChange={(p) => set(p)} />
+                      <ArtPicker cover={data.cover ?? ''} background={data.background ?? ''} title={data.projectTitle ?? ''} creator={data.stageName ?? ''} onChange={(p) => set(p)} preview={preview} />
                     </Rise>
                   </>
                 )}

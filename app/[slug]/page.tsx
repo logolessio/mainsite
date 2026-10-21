@@ -15,7 +15,7 @@ import { findOrCreateUser } from '@/lib/user'
 
 export const metadata: Metadata = { title: 'Your logoless page', robots: { index: false, follow: false } }
 
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ paid?: string; cancelled?: string }> }
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ paid?: string; cancelled?: string; preview?: string; step?: string }> }
 
 /**
  * logoless.io/<name>: a private page an admin made for an artist. Signed-out visitors see a welcome, the right account
@@ -51,6 +51,13 @@ export default async function Page({ params, searchParams }: Props) {
 
   const user = await findOrCreateUser(email, session?.user?.name, session?.user?.image)
   if (user.status !== 'active') return <InviteBlocked kind="off" slug={slug} />
+
+  // an admin's dry run of the whole set-up, as the client would see it: nothing is saved
+  if (isAdmin && q.preview === '1') {
+    const at = Math.max(0, STEPS.findIndex((x) => x.id === q.step))
+    const sample = at > 0 ? { stageName: inv.artist_name, genres: ['Pop', 'R&B'], pitch: 'Late-night pop with big choruses, made in my bedroom in London.', links: { spotify: 'https://open.spotify.com/artist/0TnOYISbd1XYRBk9myaseg', instagram: 'novavale' }, projectTitle: 'Midnight Drive', projectKind: 'Single', spotify: ['https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC'], summary: 'A song about driving home at 3am with the windows down. We want it on every night-time edit and city timelapse.', clipThis: 'The chorus or hook\nNight drives and city lights', agreed: true } : {}
+    return <InviteWizard slug={slug} artistName={inv.artist_name} email={email} initialStep={at} initialData={sample} campaign={null} flash={null} pkg={pkg} preview />
+  }
 
   if (!inv.user_id) {
     if (!isAdmin) {
