@@ -1,7 +1,7 @@
 import { headers } from 'next/headers'
 import { cache } from 'react'
 import { db, nowSec } from './db'
-import { FEATURE_IDS } from './feature-defs'
+import { FEATURE_IDS, SHIPPED_IDS } from './feature-defs'
 
 /**
  * The dev site and the live site run the same code. A feature on the dev site is always on (so you can try it);
@@ -30,6 +30,7 @@ export async function readLive() {
   } catch {
     /* no database yet: everything is off */
   }
+  for (const id of SHIPPED_IDS) if (live[id] === undefined) live[id] = true // shipped features are live until someone undoes them
   return live
 }
 

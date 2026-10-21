@@ -8,6 +8,8 @@ export type FeatureDef = {
   category: 'Discover' | 'Account' | 'Trust' | 'Launch' | 'Comfort' | 'Design'
   /** Where to see it on the dev site. */
   path: string
+  /** Already live without a push: on at logoless.io until someone turns it off here (an "undo" writes the off row). */
+  shipped?: true
 }
 
 export const FEATURES: FeatureDef[] = [
@@ -82,7 +84,7 @@ export const FEATURES: FeatureDef[] = [
   { id: 'campaign-duplicate', name: 'Duplicate a campaign', category: 'Launch', path: '/brand/campaigns', description: 'A Duplicate button on each campaign opens the step-by-step builder already filled in from it, with "(copy)" on the name, so the next release starts from the last one instead of a blank page.' },
   { id: 'share-report', name: 'Shareable campaign report', category: 'Trust', path: '/brand/campaigns', description: 'A Share report button on live and ended campaigns makes a private link to a read-only page: verified views, approved clips, creators, what was paid, views by day and the best clips. For a label, a manager or a client. Switch it off any time and the link dies at once.' },
   { id: 'two-step-sign-in', name: 'Two-step sign-in', category: 'Trust', path: '/dashboard/settings#two-step', description: 'People who sign in with an email and password can turn on a second step in Settings: a 6 digit code from an authenticator app after the password, with eight backup codes shown once. The log in page asks for the code only when it is on. Google and Discord sign-in keep their own. Passkeys are not part of this.' },
-  { id: 'anubis-look', name: 'The Anubis look', category: 'Design', path: '/', description: 'The whole site in the Anubis style: Schibsted Grotesk set heavy and tight in capitals for headlines and big numbers, IBM Plex Mono for the small print, and the moving indigo, violet and magenta gradient on a blue-black base instead of the grey one. It overrides the typefaces chosen in Design while it is on; switch it off and the site goes back to what was chosen there.' },
+  { id: 'anubis-look', name: 'The Anubis look', category: 'Design', path: '/', shipped: true, description: 'The whole site in the Anubis style: Schibsted Grotesk set heavy and tight in capitals for headlines and big numbers, IBM Plex Mono for the small print, and the moving indigo, violet and magenta gradient on a blue-black base instead of the grey one. It overrides the typefaces chosen in Design while it is on; switch it off and the site goes back to what was chosen there.' },
   // main page and site-wide polish
   { id: 'command-actions', name: '⌘K: hundreds of actions', category: 'Comfort', path: '/', description: 'The ⌘K search box answers almost anything: "change my name", "link TikTok", "request payout", "open privacy", "create campaign" and hundreds more, with typo-tolerant matching and answers from the Q&A shown right in the box. It only offers what the person can actually do (signed out, creator, brand, admin, developer). Adds a search button and a "?" shortcuts button to the top bar of every page.' },
   { id: 'home-motion', name: 'Home page motion', category: 'Design', path: '/', description: 'A soft blur and shade at the top of the home page as you scroll, the hero easing away as you scroll past it, and smoother, lighter cover animations (they rise in as they appear and lift gently on hover).' },
@@ -93,3 +95,4 @@ export const FEATURES: FeatureDef[] = [
 
 export const FEATURE_BY_ID = Object.fromEntries(FEATURES.map((f) => [f.id, f])) as Record<string, FeatureDef>
 export const FEATURE_IDS = FEATURES.map((f) => f.id)
+export const SHIPPED_IDS = FEATURES.filter((f) => f.shipped).map((f) => f.id)
