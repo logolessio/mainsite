@@ -17,6 +17,7 @@ import {
   signInWithEmail,
   signInWithProvider,
   signUpWithEmail,
+  needsTwoStep,
 } from '@/lib/auth'
 import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
@@ -54,7 +55,8 @@ export function AuthCard({ mode }: { mode: Mode }) {
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [show, setShow] = useState(false)
-  const [step, setStep] = useState<'form' | 'code'>('form')
+  const [step, setStep] = useState<'form' | 'code' | 'two'>('form')
+  const [second, setSecond] = useState('')
   const [code, setCode] = useState('')
   const [cooldown, setCooldown] = useState(0)
   const [error, setError] = useState(
@@ -97,6 +99,12 @@ export function AuthCard({ mode }: { mode: Mode }) {
     try {
       const addr = email.trim()
       if (mode === 'login') {
+        // a person with two-step sign-in on is asked for the code before anything else happens
+        if (await needsTwoStep(addr, password)) {
+          setStep('two')
+          setSecond('')
+          return
+        }
         await signInWithEmail(addr, password)
         done()
         return
@@ -113,6 +121,19 @@ export function AuthCard({ mode }: { mode: Mode }) {
     } catch (err) {
       fail(err)
     } finally {
+      setBusy(false)
+    }
+  }
+
+  const finishTwoStep = async () => {
+    if (!second.trim() || busy) return
+    setBusy(true)
+    setError('')
+    try {
+      await signInWithEmail(email.trim(), password, second)
+      done()
+    } catch (err) {
+      fail(err, 'That code did not work.')
       setBusy(false)
     }
   }
@@ -148,16 +169,19 @@ export function AuthCard({ mode }: { mode: Mode }) {
 
   const pw = strength(password)
   const verifying = step === 'code'
+  const twoStep = step === 'two'
   const field = 'h-12 w-full rounded-tile border border-line-strong bg-transparent px-4 text-[16px] text-paper outline-none transition-colors placeholder:text-mute/50 focus:border-paper/60 disabled:opacity-50'
   const label = 'mb-1.5 block text-sm text-mute'
 
   return (
     <motion.div initial={false} animate="show" variants={{ show: { transition: { staggerChildren: 0.05, delayChildren: 0.1 } } }} className="w-full max-w-[380px]">
       <motion.h1 variants={item} className="font-display text-[2.6rem] leading-[1.05]">
-        {verifying ? 'Check your inbox' : COPY[mode].title}
+        {twoStep ? 'One more step' : verifying ? 'Check your inbox' : COPY[mode].title}
       </motion.h1>
       <motion.p variants={item} className="mt-3 text-[15px] leading-relaxed text-mute">
-        {verifying ? (
+        {twoStep ? (
+          'Open your authenticator app and enter the 6 digit code for logoless. Lost your phone? Use one of your backup codes.'
+        ) : verifying ? (
           <>
             We sent a 6 digit code to <span className="text-paper">{email}</span>.
           </>
@@ -167,7 +191,25 @@ export function AuthCard({ mode }: { mode: Mode }) {
       </motion.p>
 
       <AnimatePresence mode="wait" initial={false}>
-        {!verifying ? (
+        {twoStep ? (
+          <motion.form key="two" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3, ease: EASE_OUT }} onSubmit={(e) => (e.preventDefault(), void finishTwoStep())} className="mt-8">
+            <label htmlFor="auth-second" className="sr-only">
+              Code from your authenticator app, or a backup code
+            </label>
+            <input id="auth-second" autoFocus value={second} onChange={(e) => (setSecond(e.target.value), setError(''))} inputMode="text" autoComplete="one-time-code" autoCapitalize="none" spellCheck={false} placeholder="123456" className="h-14 w-full rounded-tile border border-line-strong bg-transparent px-4 text-center font-mono text-2xl tracking-[0.3em] text-paper outline-none transition-colors placeholder:text-mute/40 focus:border-paper/60" />
+            {error && (
+              <p role="alert" className="mt-3 text-sm text-signal">
+                {error}
+              </p>
+            )}
+            <button type="submit" disabled={busy || !second.trim()} className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-pill bg-paper px-6 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
+              {busy && <Loader2 aria-hidden="true" className="size-4 animate-spin" />} Log in
+            </button>
+            <button type="button" onClick={() => (setStep('form'), setSecond(''), setError(''))} className="mt-4 text-sm text-mute transition-colors hover:text-paper">
+              Back
+            </button>
+          </motion.form>
+        ) : !verifying ? (
           <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
             {mode === 'signup' && (
               <motion.fieldset variants={item} className="mt-7">

@@ -270,10 +270,10 @@ export function AppDetail({ app }: { app: DevApp }) {
           <dl className="grid gap-4 text-sm sm:grid-cols-2">
             {[
               ['Kind', kindLabel(app.kind)],
-              ['Website', app.website || '—'],
-              ['For', app.useCases.map((u) => USE_CASES.find((x) => x.id === u)?.label ?? u).join(', ') || '—'],
-              ['Privacy policy', app.privacyUrl || '—'],
-              ['Terms', app.termsUrl || '—'],
+              ['Website', app.website || '-'],
+              ['For', app.useCases.map((u) => USE_CASES.find((x) => x.id === u)?.label ?? u).join(', ') || '-'],
+              ['Privacy policy', app.privacyUrl || '-'],
+              ['Terms', app.termsUrl || '-'],
               ['Registered', when(app.createdAt)],
             ].map(([k, v]) => (
               <div key={k} className="min-w-0">
@@ -283,7 +283,7 @@ export function AppDetail({ app }: { app: DevApp }) {
             ))}
             <div className="sm:col-span-2">
               <dt className="text-xs text-mute">How it uses logoless</dt>
-              <dd className="mt-1 leading-relaxed whitespace-pre-line">{app.useDescription || '—'}</dd>
+              <dd className="mt-1 leading-relaxed whitespace-pre-line">{app.useDescription || '-'}</dd>
             </div>
           </dl>
         )}

@@ -7,6 +7,7 @@ import { Field, Input } from '@/components/ui/fields'
 import { GlassTabs } from '@/components/ui/glass-tabs'
 import { calmWasAutomatic, clearCalmChoice, getCalmChoice, getContrast, getLargeText, getUnderline, setCalm, setContrast, setLargeText, setUnderline, subscribeCalm } from '@/lib/calm'
 import { InstallCard } from '@/components/extras/install-card'
+import { TwoStepCard } from '@/components/extras/two-step-card'
 import { DeleteCard } from './account-cards'
 import { ConnectedApps } from './connected-apps'
 import { ContactCard } from './contact-card'
@@ -66,6 +67,8 @@ export function SettingsPanel({ role }: { role: 'clipper' | 'brand' }) {
 
 
       <PasswordCard me={me} />
+
+      <TwoStepCard />
 
       <DeleteCard />
       </div>

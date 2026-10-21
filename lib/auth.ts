@@ -44,9 +44,15 @@ export async function confirmSignup(email: string, code: string): Promise<void> 
   if (!r || r.error || r.ok === false) throw new Error('That code is not right, or it has expired. Check the 6 digits or ask for a new one.')
 }
 
-export async function signInWithEmail(email: string, password: string): Promise<void> {
-  const r = await signIn('password', { email, password, redirect: false })
-  if (!r || r.error || r.ok === false) throw new Error('That email and password do not match. If you signed up with Google or Discord, use that button instead.')
+export async function signInWithEmail(email: string, password: string, totp?: string): Promise<void> {
+  const r = await signIn('password', { email, password, totp: totp ?? '', redirect: false })
+  if (!r || r.error || r.ok === false) throw new Error(totp ? 'That code did not work. Try the next one, or a backup code.' : 'That email and password do not match. If you signed up with Google or Discord, use that button instead.')
+}
+
+/** Does this email and password need a second step? Only true when the password is right and the person turned two-step on. */
+export async function needsTwoStep(email: string, password: string): Promise<boolean> {
+  const res = await fetch('/api/auth/two-step', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, password }) }).catch(() => null)
+  return Boolean(res?.ok && ((await res.json().catch(() => ({}))) as { needed?: boolean }).needed)
 }
 
 /** Emails a reset code. The answer is the same for every address, so it reveals nothing. */

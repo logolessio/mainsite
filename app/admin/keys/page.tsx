@@ -27,6 +27,10 @@ export default async function Page() {
     <>
       <PageHeader title="Keys and tests" sub="See what is set up and test it. Secret values are never shown here and cannot be changed from here: to change one, edit it in Cloudflare (Settings, Variables and Secrets)." />
       <div className="grid max-w-4xl gap-6">
+        <a href="/admin/paypal" className="flex items-center justify-between rounded-card border border-line-strong bg-white/[0.03] px-6 py-4 text-[15px] transition-colors hover:bg-white/[0.06]">
+          <span>Setting up PayPal? A step-by-step guide with the exact commands and live checks.</span>
+          <span className="text-mute">Open</span>
+        </a>
         <Card title="What is set up">
           <ul className="divide-y divide-line">
             {h.map((x) => (

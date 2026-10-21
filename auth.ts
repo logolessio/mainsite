@@ -33,7 +33,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => ({
     Credentials({
       id: 'password',
       name: 'Email and password',
-      credentials: { email: {}, password: {} },
+      credentials: { email: {}, password: {}, totp: {} },
       async authorize(c) {
         const email = String(c?.email ?? '').trim().toLowerCase()
         const password = String(c?.password ?? '')
@@ -45,6 +45,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => ({
         const ok = await verifyPassword(password, row?.password_hash)
         if (!ok) {
           logEvent({ kind: 'security', name: 'login failed', actor: email, detail: row ? 'wrong password' : 'no password on file' })
+          return null
+        }
+        // two-step sign-in, for people who turned it on: the right password is not enough without the code
+        const { twoStepOn, checkTwoStep } = await import('./lib/two-step')
+        if ((await twoStepOn(email)) && !(await checkTwoStep(email, String(c?.totp ?? '')))) {
+          logEvent({ kind: 'security', name: 'login failed', actor: email, detail: 'second step missing or wrong' })
           return null
         }
         return { id: email, email, name: email.split('@')[0] }

@@ -141,10 +141,10 @@ function CreatorPane({ tab, go }: { tab: string; go: (t: string) => void }) {
     return (
       <div className={cn(card, 'p-0 md:p-0')}>
         {[
-          ['Midnight drive — chorus edit', 'TikTok', '42,180 views', 'Approved'],
+          ['Midnight drive, chorus edit', 'TikTok', '42,180 views', 'Approved'],
           ['Studio session, 15s', 'YouTube', '18,904 views', 'Approved'],
           ['Dance cut, slowed', 'Instagram', 'Checking', 'In review'],
-          ['Lyric clip, verse 2', 'TikTok', '—', 'Declined: no sound'],
+          ['Lyric clip, verse 2', 'TikTok', '-', 'Declined: no sound'],
         ].map(([t, p, v, s]) => (
           <div key={t} className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3.5 last:border-0 md:px-5">
             <span className="grid size-9 shrink-0 place-items-center rounded-panel bg-white/[0.05]"><Clapperboard className="size-4 text-paper/60" /></span>

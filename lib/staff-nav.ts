@@ -18,7 +18,7 @@ const ADMIN: AppNavItem[] = [
   { key: 'i', label: 'Inbox', href: '/admin/inbox', icon: 'Mail', section: 'Run' },
   { key: 'w', label: 'Site', href: '/admin/design', icon: 'Palette', match: ['/admin/text', '/admin/socials', '/admin/previews', '/admin/push', '/dev/design', '/dev/features', '/dev/previews', '/dev/dashboards', '/dev/lab'], section: 'Manage' },
   { key: 'm', label: 'Communicate', href: '/admin/broadcast', icon: 'Send', match: ['/admin/email', '/admin/discord', '/admin/countdown'], section: 'Manage' },
-  { key: 'y', label: 'System', href: '/admin/system', icon: 'Activity', match: ['/admin/logs', '/admin/audit', '/admin/keys', '/admin/settings', '/admin/security', '/admin/api', '/admin/developers', '/dev/events'], section: 'Manage' },
+  { key: 'y', label: 'System', href: '/admin/system', icon: 'Activity', match: ['/admin/logs', '/admin/audit', '/admin/keys', '/admin/paypal', '/admin/settings', '/admin/security', '/admin/api', '/admin/developers', '/dev/events'], section: 'Manage' },
 ]
 
 // Someone who is a developer but not an admin only has the developer tools.
