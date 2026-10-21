@@ -39,7 +39,7 @@ export function EarningsChart({ events, now }: { events: [number, number][]; now
   const max = Math.max(1, ...bars.map((b) => b.cents))
   const total = bars.reduce((s, b) => s + b.cents, 0)
   const label = (b: { from: number; to: number }) => {
-    const f = new Date(b.from * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    const f = new Date(b.from * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
     return range === '12w' ? `Week of ${f}` : f
   }
 

@@ -238,7 +238,9 @@ export function waitlistCodeEmail(code: string, test = false, meta?: Meta): Mail
 
 /** Sent once someone is on the waitlist: everything they gave us, and how to leave. The username is escaped (it is only ever letters, numbers, dots and underscores anyway). */
 export function waitlistWelcomeEmail(input: { email: string; handle: string | null; joinedAt: number; position: number | null; unsubscribe: string }, test = false): Mail {
-  const when = new Date(input.joinedAt * 1000).toUTCString().replace(/:\d\d GMT$/, ' UTC')
+  const d = new Date(input.joinedAt * 1000)
+  const two = (n: number) => String(n).padStart(2, '0')
+  const when = `${two(d.getUTCDate())}/${two(d.getUTCMonth() + 1)}/${d.getUTCFullYear()} ${two(d.getUTCHours())}:${two(d.getUTCMinutes())} UTC`
   const rows: [string, string][] = [
     ['Email', input.email],
     ['Username', input.handle ? `@${input.handle}` : 'None reserved yet'],

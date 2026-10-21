@@ -33,7 +33,7 @@ export function ConnectedApps() {
                 {app.name} {app.verified && <BadgeCheck className="size-4" aria-label="Checked by logoless" />}
               </p>
               <p className="text-xs text-mute">
-                Can see: {grant.scope.map((s) => SCOPES.find((x) => x.id === s)?.label.replace(/^See your |^Know /, '').toLowerCase() ?? s).join(', ')} · since {new Date(grant.at * 1000).toLocaleDateString('en-US', { dateStyle: 'medium' })}
+                Can see: {grant.scope.map((s) => SCOPES.find((x) => x.id === s)?.label.replace(/^See your |^Know /, '').toLowerCase() ?? s).join(', ')} · since {new Date(grant.at * 1000).toLocaleDateString('en-GB')}
               </p>
             </div>
             <ActionButton

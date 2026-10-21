@@ -136,7 +136,7 @@ async function profileData(userId: string): Promise<k.ProfileData | null> {
     show,
     stats: { submissions: s.clips, views: s.views, earnedCents: s.earnedCents },
     badges,
-    since: new Date(p.created_at * 1000).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+    since: new Date(p.created_at * 1000).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
   }
 }
 

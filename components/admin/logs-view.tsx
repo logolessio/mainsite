@@ -21,7 +21,7 @@ const href = (base: string, sp: LogsSP, over: Partial<LogsSP>) => {
 }
 
 const n = (v: unknown) => Number(v ?? 0)
-const when = (t: number) => new Date(t * 1000).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+const when = (t: number) => new Date(t * 1000).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
 
 /** The traffic stats and event log. Shown to admins at /admin/logs and to developers at /dev/events (without the data export). */
 export async function LogsView({ sp, base, canExport }: { sp: LogsSP; base: string; canExport: boolean }) {

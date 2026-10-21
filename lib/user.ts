@@ -4,6 +4,7 @@ import { db, nowSec, uid } from './db'
 import { HttpError } from './http'
 import { ownerEmails } from './roles'
 import { getSession } from './session'
+import { overIpLimit, recordSignupIp } from './ip-limit'
 import { getSetting } from './settings'
 
 export type UserRow = {
@@ -25,12 +26,16 @@ export async function findOrCreateUser(email: string, name?: string | null, imag
   const existing = await d.prepare('SELECT * FROM users WHERE email = ?1').bind(e).first<UserRow>()
   if (existing) return { ...existing, isNew: false }
   if ((await getSetting('signups_paused')) === '1') throw new HttpError(403, 'New accounts are paused for a moment. Please try again soon.')
+  // up to three accounts from one network address (the owner's own addresses are never held back)
+  if (!(await isOwnerEmail(e)) && (await overIpLimit())) throw new HttpError(403, 'Too many accounts have been made from this network. If that is a mistake, contact support and we will sort it out.')
+  const id = uid()
   await d
     .prepare('INSERT OR IGNORE INTO users (id, email, name, image, created_at) VALUES (?1, ?2, ?3, ?4, ?5)')
-    .bind(uid(), e, name ?? null, image ?? null, nowSec())
+    .bind(id, e, name ?? null, image ?? null, nowSec())
     .run()
   const row = await d.prepare('SELECT * FROM users WHERE email = ?1').bind(e).first<UserRow>()
   if (!row) throw new HttpError(500, 'Could not load your account.')
+  if (row.id === id) await recordSignupIp(row.id)
   return { ...row, isNew: true }
 }
 

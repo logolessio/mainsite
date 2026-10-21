@@ -16,7 +16,7 @@ import { SetupChecker } from './setup-checker'
 export type DevApp = ReturnType<typeof appPublic> & { usage: AppUsage }
 
 const n = (v: number) => v.toLocaleString('en-US')
-const when = (t: number | null) => (t ? new Date(t * 1000).toLocaleDateString('en-US', { dateStyle: 'medium', timeZone: 'UTC' }) : 'Never')
+const when = (t: number | null) => (t ? new Date(t * 1000).toLocaleDateString('en-GB', { timeZone: 'UTC' }) : 'Never')
 
 function Badges({ app }: { app: DevApp }) {
   return (

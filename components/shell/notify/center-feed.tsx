@@ -9,6 +9,7 @@ import { EASE_OUT } from '@/lib/layout'
 import { cn } from '@/lib/utils'
 import { useNavUser } from '../nav-user'
 import { NOTE_KINDS, type Note } from '../notifications'
+import { SwipeAway } from '@/components/ui/swipe-away'
 import { TransitionLink } from '../transition-link'
 
 /**
@@ -22,7 +23,7 @@ const ago = (t: number) => {
   if (s < 3600) return `${Math.floor(s / 60)}m`
   if (s < 86400) return `${Math.floor(s / 3600)}h`
   if (s < 604800) return `${Math.floor(s / 86400)}d`
-  return new Date(t * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return new Date(t * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
 /** How long a notification has to be in view before it counts as seen. */
@@ -173,20 +174,17 @@ export function CenterFeed({ notes, setNotes, onOpen, active = true, roomy = fal
               initial={reduced ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0, transition: { delay: reduced ? 0 : Math.min(i * 0.03, 0.24), duration: 0.32, ease: EASE_OUT } }}
               exit={{ opacity: 0, x: 48, height: 0, transition: { duration: 0.22 } }}
-              drag={reduced ? false : 'x'}
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={{ left: 0, right: 0.5 }}
-              dragSnapToOrigin
-              onDragEnd={(_, info) => info.offset.x > 90 && remove(n)}
               className="group/n relative"
             >
-              {n.href ? (
-                <TransitionLink href={n.href} className={cls} onClick={() => onOpen?.()} draggable={false}>
-                  {inner}
-                </TransitionLink>
-              ) : (
-                <div className={cls}>{inner}</div>
-              )}
+              <SwipeAway onAway={() => remove(n)}>
+                {n.href ? (
+                  <TransitionLink href={n.href} className={cls} onClick={() => onOpen?.()} draggable={false}>
+                    {inner}
+                  </TransitionLink>
+                ) : (
+                  <div className={cls}>{inner}</div>
+                )}
+              </SwipeAway>
               <button
                 type="button"
                 aria-label="Dismiss"

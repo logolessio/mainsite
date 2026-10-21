@@ -1,13 +1,17 @@
 'use client'
 
-import { Download, ExternalLink, Link2, Loader2, Shield } from 'lucide-react'
-import { ActionButton } from '@/components/app/ui'
+import { BadgeCheck, Download, ExternalLink, Link2, Loader2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ActionButton, Toggle } from '@/components/app/ui'
+import { BrandIcon, type BrandName } from '@/components/brand-icon'
 import { useFeature } from '@/components/shell/features-provider'
 import { Field, Input, Select, Textarea } from '@/components/ui/fields'
 import { PROFILE_FONT_CLASS } from '@/lib/profile-fonts'
-import { FONT_OPTIONS, NAME_EFFECTS, type ProfileView } from '@/lib/profile-style'
+import { PROFILE_VISIBILITY, type ProfileExtras } from '@/lib/profile-extras'
+import { CLIPPING_PLATFORMS, DEFAULT_SHOW, FONT_OPTIONS, LINK_PLATFORMS, NAME_EFFECTS, SHOW_OPTIONS, type ProfileView, type ShowKey, type ShowMap } from '@/lib/profile-style'
 import { cn } from '@/lib/utils'
 import { nameSpeed } from './profile-card'
+import { EXPLAIN, Row, VIS_ICON } from './privacy-settings'
 import { Group, Slider, Tile } from './studio-controls'
 import type { Studio } from './studio-panels'
 
@@ -93,14 +97,115 @@ export function AboutPanel({ s }: { s: Studio }) {
   )
 }
 
-/** Which numbers and accounts show is its own page; this opens it. */
-export function PrivacyPanel() {
+/**
+ * Privacy, right inside the profile settings: who can see the page, then one switch for each detail and each account. It edits the same
+ * profile as everything else here, so it saves with the rest.
+ */
+export function PrivacyPanel({ s }: { s: Studio }) {
+  const { f } = s
+  const [verified, setVerified] = useState<string[]>([])
+  useEffect(() => {
+    fetch('/api/me/accounts/verify', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { accounts?: { platform: string; status: string }[] } | null) => setVerified((j?.accounts ?? []).filter((a) => a.status === 'verified').map((a) => a.platform)))
+      .catch(() => {})
+  }, [])
+  const setShow = (k: ShowKey, v: boolean) => s.setF((c) => (c ? { ...c, show: { ...c.show, [k]: v } } : c))
+  const setPriv = (p: Partial<ProfileExtras['privacy']>) => s.ex('privacy', p)
+  const preset = (kind: 'recommended' | 'open' | 'closed') => {
+    s.setF((c) => (c ? { ...c, show: Object.fromEntries(SHOW_OPTIONS.map((o) => [o.key, kind === 'open' ? true : kind === 'closed' ? false : DEFAULT_SHOW[o.key]])) as ShowMap } : c))
+    setPriv({ profile: kind === 'closed' ? 'private' : 'public', ...(kind === 'open' ? { hiddenLinks: [] } : {}) })
+  }
+  const accounts = f.links.filter((l) => CLIPPING_PLATFORMS.includes(l.platform))
+  const hiddenPage = f.extras.privacy.profile === 'private'
   return (
-    <div className="grid gap-5">
-      <p className="text-sm leading-relaxed text-mute">Choose who can see your page, which numbers show on it (submissions, views, earnings, campaigns), and which of your accounts are listed. Nothing there changes what the logoless team can see to run payouts and checks.</p>
-      <a href="/dashboard/profile/privacy" className="inline-flex h-11 items-center justify-center gap-2 rounded-pill bg-paper px-5 text-sm font-medium text-ink transition-colors hover:bg-paper/85">
-        <Shield aria-hidden="true" className="size-4" /> Open privacy settings <ExternalLink aria-hidden="true" className="size-3.5" />
-      </a>
+    <div className="grid gap-8">
+      <Group title="Who can see your page" hint={`logoless.io/@${f.handle}`}>
+        <div role="radiogroup" aria-label="Who can see your page" className="grid gap-2">
+          {PROFILE_VISIBILITY.map((v) => {
+            const on = f.extras.privacy.profile === v.id
+            const Icon = VIS_ICON[v.id]
+            return (
+              <button key={v.id} type="button" role="radio" aria-checked={on} onClick={() => setPriv({ profile: v.id })} className={cn('flex items-center gap-3 rounded-panel border p-3.5 text-left transition-colors', on ? 'border-paper bg-paper/[0.08]' : 'border-line hover:bg-white/[0.03]')}>
+                <span className={cn('grid size-9 shrink-0 place-items-center rounded-pill', on ? 'bg-paper text-ink' : 'bg-white/[0.06] text-mute')}>
+                  <Icon aria-hidden="true" className="size-4" />
+                </span>
+                <span>
+                  <span className="block text-sm font-medium">{v.label}</span>
+                  <span className="block text-xs leading-snug text-mute">{v.hint}</span>
+                </span>
+              </button>
+            )
+          })}
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {(
+            [
+              ['recommended', 'Recommended'],
+              ['open', 'Show everything'],
+              ['closed', 'Keep it private'],
+            ] as const
+          ).map(([k, label]) => (
+            <button key={k} type="button" onClick={() => preset(k)} className="h-8 rounded-pill border border-line-strong px-3.5 text-xs transition-colors hover:bg-white/10">
+              {label}
+            </button>
+          ))}
+        </div>
+      </Group>
+
+      <div className={cn('grid gap-8 transition-opacity', hiddenPage && 'opacity-50')}>
+        {hiddenPage && <p className="-mb-3 text-sm text-mute">Your page is private, so none of this is shown to anyone but you. Your choices are kept for when you open it up again.</p>}
+        {(
+          [
+            ['About you', ['status', 'joined', 'country', 'badges']],
+            ['Your numbers', ['clips', 'views', 'earnings', 'campaigns', 'feed']],
+          ] as const
+        ).map(([title, keys]) => (
+          <Group key={title} title={title}>
+            <ul className="divide-y divide-line">
+              {keys.map((k) => (
+                <Row key={k} label={SHOW_OPTIONS.find((o) => o.key === k)!.label} body={EXPLAIN[k]} checked={f.show[k]} onChange={(v) => setShow(k, v)} />
+              ))}
+            </ul>
+          </Group>
+        ))}
+        <Group title="Creator accounts">
+          <ul className="divide-y divide-line">
+            <Row label="Show creator accounts" body={EXPLAIN.links} checked={f.show.links} onChange={(v) => setShow('links', v)} />
+          </ul>
+          {accounts.length === 0 ? (
+            <p className="mt-3 rounded-panel border border-dashed border-line p-4 text-sm text-mute">
+              You have not linked any accounts yet. <a href="/dashboard/accounts" className="text-paper underline underline-offset-4">Link an account</a>
+            </p>
+          ) : (
+            <ul className={cn('mt-2 grid gap-2 transition-opacity', !f.show.links && 'pointer-events-none opacity-40')}>
+              {accounts.map((l) => {
+                const shown = !f.extras.privacy.hiddenLinks.includes(l.platform)
+                const label = LINK_PLATFORMS.find((p) => p.id === l.platform)?.label ?? l.platform
+                return (
+                  <li key={l.platform} className="flex items-center gap-3 rounded-panel border border-line px-3.5 py-3">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-pill border border-line">
+                      <BrandIcon name={l.platform as BrandName} className="size-4" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-1.5 text-sm">
+                        {label}
+                        {verified.includes(l.platform) && <BadgeCheck aria-label="Verified" className="size-3.5 text-paper/70" />}
+                      </span>
+                      <span className="block truncate text-xs text-mute">{shown ? 'Public' : 'Private'}</span>
+                    </span>
+                    <Toggle label={`Show ${label} on my page`} checked={shown} onChange={(v) => setPriv({ hiddenLinks: v ? f.extras.privacy.hiddenLinks.filter((x) => x !== l.platform) : [...f.extras.privacy.hiddenLinks, l.platform] })} />
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+          <ul className="mt-2 divide-y divide-line">
+            <Row label="Show verified ticks" body="A small tick on accounts you proved are yours." checked={f.extras.privacy.verifiedTicks} onChange={(v) => setPriv({ verifiedTicks: v })} />
+          </ul>
+        </Group>
+      </div>
+      <p className="text-xs leading-relaxed text-mute">Nothing here changes what the logoless team can see to run payouts and checks.</p>
     </div>
   )
 }

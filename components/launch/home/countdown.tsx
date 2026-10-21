@@ -64,7 +64,7 @@ export function Countdown({ end, compact = false, auto = true, onOver }: { end: 
   // before the browser has the time, the tiles hold their place with dashes so nothing jumps
   const p = now === null ? null : parts(left)
   const opens = new Date(end * 1000)
-  const when = now === null ? '' : opens.toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
+  const when = now === null ? '' : opens.toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
 
   if (over && !auto) return <p className="font-display text-[clamp(1.6rem,3.6vw,2.6rem)] text-paper">The doors open any moment.</p>
   if (over)

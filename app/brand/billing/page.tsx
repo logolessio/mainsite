@@ -92,7 +92,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
       <DataTable
         rows={moves.results}
         columns={[
-          { key: 'd', header: 'Date', render: (r) => new Date(r.created_at * 1000).toLocaleDateString('en-US', { dateStyle: 'medium' }) },
+          { key: 'd', header: 'Date', render: (r) => new Date(r.created_at * 1000).toLocaleDateString('en-GB') },
           { key: 'k', header: 'What', render: (r) => <Badge tone={KIND[r.kind]?.tone ?? 'neutral'}>{KIND[r.kind]?.label ?? r.kind}</Badge> },
           { key: 'c', header: 'Campaign', render: (r) => r.title ?? '' },
           { key: 'a', header: 'Amount', render: (r) => <span className={r.amount_cents < 0 ? 'text-mute' : ''}>{r.amount_cents < 0 ? '-' : '+'}{money(Math.abs(r.amount_cents))}</span>, className: 'text-right tabular-nums' },

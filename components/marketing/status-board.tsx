@@ -34,7 +34,7 @@ export function StatusBoard({ initial }: { initial: Health }) {
         </span>
         <h1 className="mt-5 font-display text-4xl tracking-tight md:text-5xl">{h.ok ? 'Everything is running.' : "Something's not right."}</h1>
         <p className="mt-3 text-mute">{h.ok ? 'logoless is up. Submissions, sign-in and payments are all working.' : "Something's wrong and we're looking into it. Parts of the site may be slow or unavailable."}</p>
-        <p className="mt-6 text-xs text-mute">Checked {new Date(h.at * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' })}</p>
+        <p className="mt-6 text-xs text-mute">Checked {new Date(h.at * 1000).toLocaleTimeString('en-GB')}</p>
       </motion.div>
       <ul className="mt-6 grid gap-3">
         {h.checks.map((c, i) => (

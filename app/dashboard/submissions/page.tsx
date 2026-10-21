@@ -27,7 +27,7 @@ export default async function Page() {
     status: r.status,
     views: r.views_verified,
     earned: r.earned_cents / 100,
-    submittedAt: new Date(r.created_at * 1000).toLocaleDateString('en-US', { dateStyle: 'medium' }),
+    submittedAt: new Date(r.created_at * 1000).toLocaleDateString('en-GB'),
   }))
   return (
     <>

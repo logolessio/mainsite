@@ -37,7 +37,7 @@ const tracker: k.TrackerData = {
   approved: 412,
   views: 720000,
   joined: 1284,
-  endsOn: 'Dec 14',
+  endsOn: '14/12/2026',
 }
 const profile: k.ProfileData = {
   name: 'Luna Ray',
@@ -47,6 +47,7 @@ const profile: k.ProfileData = {
   stats: { submissions: 42, views: 318400, earnedCents: 79600 },
   badges: ['First submission', 'Ten thousand views', 'Early member'],
   since: 'Mar 2026',
+  imageFor: 'sample',
 }
 const health = (ok: boolean): Health => ({
   ok,
@@ -158,7 +159,7 @@ export const SAMPLES: Sample[] = [
   // ---- campaigns
   { id: 'tracker-live', group: 'Campaigns', label: 'Live tracker', build: () => k.trackerCard(tracker) },
   { id: 'tracker-ended', group: 'Campaigns', label: 'Tracker: ended', build: () => k.trackerCard({ ...tracker, status: 'ended', leftPct: 0, leftCents: 0, paidCents: 500000 }) },
-  { id: 'announcement', group: 'Campaigns', label: 'New campaign announcement', build: () => k.announceCard({ id: camp.id, title: camp.title, creator: camp.creator, summary: camp.summary, cover: COVER, rateCents: 250, budgetCents: 500000, platforms: camp.platforms, endsOn: 'Dec 14', channelId: null, joined: 0 }) },
+  { id: 'announcement', group: 'Campaigns', label: 'New campaign announcement', build: () => k.announceCard({ id: camp.id, title: camp.title, creator: camp.creator, summary: camp.summary, cover: COVER, rateCents: 250, budgetCents: 500000, platforms: camp.platforms, endsOn: '14/12/2026', channelId: null, joined: 0 }) },
 
   // ---- tickets
   { id: 'ticket-thread', group: 'Tickets', label: 'Ticket opened (in its channel)', build: () => k.ticketThreadCard({ ref: 'a1b2c3', subject: 'My withdrawal has not arrived', text: 'I withdrew $50 on Monday and it still says in review.', pings: '<@0>', userId: '0' }) },
@@ -198,7 +199,7 @@ export const SAMPLES: Sample[] = [
         video: { title: 'the chorus at 2am hits different #redroom', author: 'Luna Ray', thumb: COVER, views: 51340, likes: 6120, comments: 214, postedAt: Math.floor(Date.now() / 1000) - 86400 },
       }),
   },
-  { id: 'campaign-card', group: 'Campaigns', label: 'New campaign card (live)', build: () => m.campaignPostCard({ id: 'sample', title: camp.title, creator: camp.creator, status: 'live', summary: camp.summary, cover: COVER, rateCents: 250, budgetCents: 500000, paidCents: 180000, platforms: ['tiktok', 'youtube', 'instagram'], approved: 412, views: 720000, joined: 1284, endsOn: 'Dec 14', clipThis: ['The chorus, with the lyrics on screen', 'Your reaction to the first listen'], offLimits: ['Sped-up or slowed versions of the track', 'Edits that cover the artwork'], soundUrl: 'https://open.spotify.com/track/sample', example: 'https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4', imageVersion: '1' }) },
+  { id: 'campaign-card', group: 'Campaigns', label: 'New campaign card (live)', build: () => m.campaignPostCard({ id: 'sample', title: camp.title, creator: camp.creator, status: 'live', summary: camp.summary, cover: COVER, rateCents: 250, budgetCents: 500000, paidCents: 180000, platforms: ['tiktok', 'youtube', 'instagram'], approved: 412, views: 720000, joined: 1284, endsOn: '14/12/2026', clipThis: ['The chorus, with the lyrics on screen', 'Your reaction to the first listen'], offLimits: ['Sped-up or slowed versions of the track', 'Edits that cover the artwork'], soundUrl: 'https://open.spotify.com/track/sample', example: 'https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4', imageVersion: '1' }) },
   { id: 'campaign-card-ended', group: 'Campaigns', label: 'New campaign card (ended)', build: () => m.campaignPostCard({ id: 'sample', title: camp.title, creator: camp.creator, status: 'ended', summary: camp.summary, cover: COVER, rateCents: 250, budgetCents: 500000, paidCents: 500000, platforms: ['tiktok'], approved: 412, views: 720000, joined: 1284, clipThis: [], imageVersion: '2' }) },
   { id: 'payout-status', group: 'Commands', label: '/payout', build: () => m.payoutStatusCard([{ cents: 5000, status: 'sent', at: Math.floor(Date.now() / 1000) - 86400 }, { cents: 2500, status: 'pending', at: Math.floor(Date.now() / 1000) - 600 }], 3105) },
   { id: 'rank', group: 'Commands', label: '/rank', build: () => m.rankCard({ place: 7, of: 214, views: 98100, next: { name: 'Marlo', gap: 4200 } }) },

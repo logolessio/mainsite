@@ -76,6 +76,7 @@ export async function purgeAccount(userId: string, d0: Deletion) {
     d.prepare("UPDATE users SET email = ?2, name = NULL, image = NULL, status = 'banned' WHERE id = ?1").bind(userId, `deleted-${userId}@deleted.invalid`),
   ])
   await (await import('./notify-center')).forgetNotifyData(userId).catch(() => {})
+  await d.prepare('DELETE FROM signup_ips WHERE user_id = ?1').bind(userId).run().catch(() => {}) // the address kept for the account limit goes with the account
   await auditSafe({ id: null, email: 'system' }, 'account.purged', userId, `choice ${d0.choice}, ${left} cents, was ${email.replace(/^(.).*(@.*)$/, '$1***$2')}`)
 }
 

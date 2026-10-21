@@ -127,7 +127,7 @@ export function AvatarFace({ view, studio, size = 96 }: { view: ProfileView; stu
 export function ProfileCard({ view, stats, links, isOwner, preview = false, className, studio = false, onEdit }: ProfileCardProps) {
   const nameFont = PROFILE_FONT_CLASS[view.font]
   const scale = FONT_SCALE[view.font] ?? 'text-[1.7rem]'
-  const joined = new Date(view.joinedAt * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  const joined = new Date(view.joinedAt * 1000).toLocaleDateString('en-GB')
   const badges = view.show.badges ? view.badges.map((id) => BADGE_BY_ID[id]).filter(Boolean) : []
   const statRows: [string, React.ReactNode][] = []
   if (stats.clips !== undefined) statRows.push(['Submissions', <Count key="c" to={stats.clips} />])

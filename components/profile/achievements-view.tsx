@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
 type Data = { unlocked: Record<string, number>; equipped: string[] }
 type Filter = 'all' | 'unlocked' | 'locked'
 const RARITIES: Rarity[] = ['common', 'rare', 'epic', 'legendary']
-const when = (t: number) => new Date(t * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+const when = (t: number) => new Date(t * 1000).toLocaleDateString('en-GB')
 
 export function AchievementsView({ board = false }: { board?: boolean }) {
   const [data, setData] = useState<Data | null>(null)

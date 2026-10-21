@@ -12,7 +12,7 @@ import { PaypalEmails } from './paypal-emails'
 import { Badge, DataTable, EmptyState } from './table'
 import { ActionButton, Card } from './ui'
 
-const date = (s: number) => new Date(s * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+const date = (s: number) => new Date(s * 1000).toLocaleDateString('en-GB')
 const LABEL: Record<string, string> = { sent: 'Sent', pending: 'Processing', review: 'Being checked', failed: 'Failed', reversed: 'Returned' }
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 

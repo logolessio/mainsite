@@ -1,8 +1,9 @@
 import type { Health } from '../health'
 import { LEGAL_LINKS, SITE } from '../site'
 import type { Component, Embed, Message } from './api'
+import { container, sep, text, v2 } from './v2'
 import {
-  big, btn, bullets, card, chan, chip, dot, go, icon, join, meter, num, row, small, usd, SITE_URL, OWNER_URL, type IconName,
+  big, btn, bullets, card, chan, chip, dot, go, icon, INK, join, meter, num, row, small, usd, SITE_URL, OWNER_URL, type IconName,
 } from './ui'
 
 /**
@@ -59,19 +60,25 @@ export type ProfileData = {
   stats: { submissions: number; views: number; earnedCents: number }
   badges: string[]
   since: string
+  /** What the picture card is drawn for. The handle, unless this says otherwise ("sample" in the admin previews). */
+  imageFor?: string
 }
-export const profileCard = (p: ProfileData): Message => {
-  const fields = [
-    ...(p.show.submissions ? [{ name: 'Submissions', value: num(p.stats.submissions), inline: true }] : []),
-    ...(p.show.views ? [{ name: 'Views', value: num(p.stats.views), inline: true }] : []),
-    ...(p.show.earnings ? [{ name: 'Earned', value: usd(p.stats.earnedCents), inline: true }] : []),
-    ...(p.badges.length ? [{ name: 'Badges', value: p.badges.slice(0, 8).join(', '), inline: false }] : []),
-  ]
-  return msg(
-    [card({ icon: 'user', label: 'Profile', title: p.name, url: `${SITE_URL}/@${p.handle}`, text: join(`@${p.handle}`, p.bio && clip(p.bio, 300)), fields, thumb: p.avatar, image: p.banner, foot: `Member since ${p.since}` })],
+/** One message: the picture card (their banner, picture, name in their colours, numbers they show and their badges as medals), one line of words under it, one button. */
+export const profileCard = (p: ProfileData): Message =>
+  msg(
+    [
+      card({
+        icon: 'user',
+        label: 'Profile',
+        title: p.name,
+        url: `${SITE_URL}/@${p.handle}`,
+        text: join(`@${p.handle}`, p.bio && clip(p.bio, 200), p.badges.length > 0 && small(p.badges.slice(0, 5).join('  ·  '))),
+        image: `${SITE_URL}/api/discord/card/profile/${encodeURIComponent(p.imageFor ?? p.handle)}`,
+        foot: `Member since ${p.since}`,
+      }),
+    ],
     [row(go('Open profile', `/@${p.handle}`))],
   )
-}
 
 export type StatsData = { name: string; earnedCents: number; weekCents: number; availableCents: number; views: number; submissions: number; campaigns: number }
 export const statsCard = (s: StatsData): Message =>
@@ -438,10 +445,14 @@ export const announceCard = (c: AnnounceData): Message =>
   )
 
 // ---------- notifications and the team's log ----------
+/** A site notification as a direct message: one small container (a line saying what it is and when, the title, the words, one button), not an embed. */
 export const notificationCard = (n: { kind: string; title: string; body?: string; href?: string; icon: IconName }): Message =>
-  msg(
-    [card({ icon: n.icon, label: n.kind === 'campaign' ? 'Campaign' : n.kind === 'account' ? 'Account' : n.kind === 'earning' || n.kind === 'payout' ? 'Earnings' : 'logoless', title: n.title, url: n.href, text: n.body ? clip(n.body, 500) : undefined, time: true })],
-    n.href ? [row(go('Open', n.href))] : undefined,
+  v2(
+    container(
+      INK,
+      text(join(small(`${n.kind === 'campaign' ? 'Campaign' : n.kind === 'account' ? 'Account' : n.kind === 'earning' || n.kind === 'payout' ? 'Earnings' : 'logoless'} · <t:${Math.floor(Date.now() / 1000)}:R>`), `**${n.title}**`, n.body && clip(n.body, 500))),
+      ...(n.href ? [row(go('Open', n.href))] : []),
+    ),
   )
 
 export const logCard = (a: { text: string }): Message => ({ content: clip(a.text, 1900), allowed_mentions: quiet })

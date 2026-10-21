@@ -159,7 +159,7 @@ export function BadgeBoard({ unlocked, equipped, onChange, saving, compact = fal
           return (
             <li key={i} data-badge-slot={i} className="min-w-0">
               {b ? (
-                <motion.div layout layoutId={`board-${b.id}`} transition={{ type: 'spring', stiffness: 500, damping: 38 }}>
+                <motion.div layout="position" layoutId={`board-${b.id}`} transition={{ type: 'spring', stiffness: 420, damping: 36 }}>
                   <div
                     role="button"
                     tabIndex={0}
@@ -172,7 +172,9 @@ export function BadgeBoard({ unlocked, equipped, onChange, saving, compact = fal
                     }}
                     className={cn('group relative grid aspect-square w-full cursor-grab touch-manipulation place-items-center rounded-panel border border-line-strong bg-white/[0.035] transition-all hover:bg-white/[0.06] focus-visible:outline-2 focus-visible:outline-paper', drag?.id === b.id && 'opacity-30', over && 'border-paper bg-white/10')}
                   >
-                    <BadgeArt badge={b} size={art} className="pointer-events-none max-w-[72%]" />
+                    <span className="pointer-events-none block w-[70%]">
+                      <BadgeArt badge={b} size={art} fluid />
+                    </span>
                     <button
                       type="button"
                       data-no-drag
@@ -202,10 +204,10 @@ export function BadgeBoard({ unlocked, equipped, onChange, saving, compact = fal
           <p className="text-xs text-mute">{drag?.from === 'slot' ? 'Drop here to take it off' : shelf.length ? 'Press one to add it, or drag it up' : ''}</p>
         </div>
         {shelf.length > 0 ? (
-          <ul className={cn('grid gap-2.5', compact ? 'grid-cols-5' : 'grid-cols-5 sm:grid-cols-7 lg:grid-cols-9')}>
+          <ul className={cn('grid gap-2.5', compact ? 'grid-cols-[repeat(auto-fill,minmax(58px,1fr))]' : 'grid-cols-[repeat(auto-fill,minmax(68px,1fr))]')}>
             <AnimatePresence initial={false}>
               {shelf.map((b) => (
-                <motion.li key={b.id} layout layoutId={`board-${b.id}`} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ type: 'spring', stiffness: 500, damping: 38 }} className="min-w-0">
+                <motion.li key={b.id} layout="position" layoutId={`board-${b.id}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ type: 'spring', stiffness: 420, damping: 36 }} className="min-w-0">
                   <div
                     role="button"
                     tabIndex={0}
@@ -216,7 +218,9 @@ export function BadgeBoard({ unlocked, equipped, onChange, saving, compact = fal
                     className={cn('grid aspect-square w-full cursor-grab touch-manipulation place-items-center rounded-panel border border-line bg-white/[0.025] transition-all hover:border-line-strong hover:bg-white/[0.06] focus-visible:outline-2 focus-visible:outline-paper', drag?.id === b.id && 'opacity-30')}
                     title={`${b.name}, ${RARITY_STYLE[b.rarity].label}`}
                   >
-                    <BadgeArt badge={b} size={compact ? 44 : 52} className="pointer-events-none max-w-[72%]" />
+                    <span className="pointer-events-none block w-[72%]">
+                      <BadgeArt badge={b} size={compact ? 52 : 60} fluid />
+                    </span>
                   </div>
                 </motion.li>
               ))}
@@ -235,7 +239,9 @@ export function BadgeBoard({ unlocked, equipped, onChange, saving, compact = fal
       {ghost && drag && (
         <div aria-hidden="true" className="pointer-events-none fixed z-[300] -translate-x-1/2 -translate-y-1/2" style={{ left: drag.x, top: drag.y }}>
           <div className="grid size-20 scale-110 place-items-center rounded-panel border border-line-strong bg-[#141416]/95 shadow-[0_20px_40px_-10px_rgb(0_0_0/0.9)] backdrop-blur">
-            <BadgeArt badge={ghost} size={56} />
+            <span className="block w-14">
+              <BadgeArt badge={ghost} size={56} fluid />
+            </span>
           </div>
         </div>
       )}

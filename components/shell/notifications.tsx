@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils'
 import { useNavUser } from './nav-user'
 import { TransitionLink } from './transition-link'
 import { LiquidGlass } from '@/components/ui/liquid-glass'
+import { SwipeAway } from '@/components/ui/swipe-away'
 import { useFeature } from './features-provider'
 import { CenterBell } from './notify/center-bell'
 
@@ -33,7 +34,7 @@ const short = (t: number) => {
   if (s < 3600) return `${Math.floor(s / 60)}m`
   if (s < 86400) return `${Math.floor(s / 3600)}h`
   if (s < 604800) return `${Math.floor(s / 86400)}d`
-  return new Date(t * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return new Date(t * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
 function dayLabel(t: number) {
@@ -114,15 +115,17 @@ export function NotificationFeed({ notes, setNotes, onOpen, compact = false }: {
                     exit={{ opacity: 0, x: 40, height: 0, transition: { duration: 0.22 } }}
                     className="relative"
                   >
-                    {n.href ? (
-                      <TransitionLink href={n.href} className={base} onClick={() => { read(n); onOpen?.() }}>
-                        {inner}
-                      </TransitionLink>
-                    ) : (
-                      <button type="button" className={base} onClick={() => read(n)}>
-                        {inner}
-                      </button>
-                    )}
+                    <SwipeAway onAway={() => remove(n)}>
+                      {n.href ? (
+                        <TransitionLink href={n.href} className={base} onClick={() => { read(n); onOpen?.() }} draggable={false}>
+                          {inner}
+                        </TransitionLink>
+                      ) : (
+                        <button type="button" className={base} onClick={() => read(n)}>
+                          {inner}
+                        </button>
+                      )}
+                    </SwipeAway>
                     <span className="absolute top-2 right-2 hidden items-center gap-0.5 rounded-pill bg-[#0d0d10]/90 p-0.5 backdrop-blur group-hover/n:flex group-focus-within/n:flex" style={{ top: 6 }}>
                       {!n.read_at && (
                         <button type="button" aria-label="Mark as read" onClick={() => read(n)} className="grid size-6 place-items-center rounded-pill text-mute hover:bg-white/10 hover:text-paper">
@@ -238,7 +241,6 @@ function ClassicBell({ onNavigate, align = 'right' }: { onNavigate?: () => void;
             className={cn('absolute top-full z-50 mt-3 flex max-h-[min(34rem,78dvh)] w-[min(25rem,calc(100vw-1.5rem))] origin-top-right flex-col overflow-hidden rounded-card border border-white/15 bg-[#0d0d10]/[0.98] shadow-[0_40px_90px_-20px_rgb(0_0_0/0.95)] backdrop-blur-xl', align === 'right' ? 'right-0' : 'left-0 origin-top-left')}
           >
             <div className="relative px-5 pt-5 pb-3">
-              <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(60%_100%_at_30%_0%,rgb(185_166_255/0.16),transparent)]" />
               <div className="relative flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <p className="font-display text-xl">Notifications</p>

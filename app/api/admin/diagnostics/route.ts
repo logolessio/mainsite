@@ -49,7 +49,7 @@ export const POST = route(async (req: Request) => {
       out.lines = [
         id ? 'PAYPAL_WEBHOOK_ID is set.' : 'PAYPAL_WEBHOOK_ID is NOT set: refunds and failed payouts will not be noticed.',
         ...(listed ? [listed] : []),
-        last ? `Last event: ${last.type}, ${new Date(last.received_at * 1000).toLocaleString('en-US')}. ${total?.n ?? 0} received in total.` : 'No event has arrived yet. In the PayPal dashboard, send a simulated event to /api/paypal/webhook to prove it works.',
+        last ? `Last event: ${last.type}, ${new Date(last.received_at * 1000).toLocaleString('en-GB')}. ${total?.n ?? 0} received in total.` : 'No event has arrived yet. In the PayPal dashboard, send a simulated event to /api/paypal/webhook to prove it works.',
       ]
       break
     }

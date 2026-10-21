@@ -68,10 +68,14 @@ export function FloatingSearch({ raised = false }: { raised?: boolean }) {
         aria-keyshortcuts="?"
         title="Shortcuts and help (?)"
         rootClassName="pointer-events-auto"
-        className={cn(SIZE, 'grid place-items-center font-mono text-[15px] text-mute transition-colors hover:text-paper')}
+        className={cn(SIZE, 'grid place-items-center text-mute transition-colors hover:text-paper')}
         look={{ zRadius: 12 }}
       >
-        ?
+        {/* drawn, not typed: a typed question mark sits off centre in a monospace font */}
+        <svg aria-hidden="true" viewBox="0 -0.5 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9.09 9a3 3 0 0 1 5.82 1c0 2-3 3-3 3" />
+          <path d="M12 17h.01" />
+        </svg>
       </LiquidGlass>
     </div>
   )

@@ -102,55 +102,31 @@ export const nextStepsCard = (n: NextData): Message =>
     [row(n.brand ? go('Start a campaign', '/brand') : btn('Live campaigns', 'cmd:campaigns'), go('Dashboard', n.brand ? '/brand' : '/dashboard'))],
   )
 
-/** The direct message with everything, once someone has an account and a linked Discord. */
-export const rundownDm = (n: NextData & { commands: [string, string][] }): Message => ({
-  embeds: [
-    card({
-      icon: 'logo',
-      label: 'logoless',
-      title: `You are all set, ${n.name}`,
-      url: SITE_URL,
-      text: n.brand
-        ? 'Your logoless account and this Discord are linked. Here is how campaigns run, and what the server does for you.'
-        : 'Your logoless account and this Discord are linked. Here is everything, in one place, so you can start earning today.',
-      thumb: `${SITE_URL}/logo-lg.png`,
-    }),
-    card({
-      icon: 'book',
-      label: 'How it works',
-      text: n.brand
-        ? join(
-            '**Launch.** Set a rate per 1,000 views and a budget. Creators see it the moment it is live, here and on the site.',
-            '**Watch.** Every submission is posted with the video and its numbers. Views are checked again and again by the site.',
-            '**Pay only for views.** Creators are paid for verified views, out of your budget. When the budget is used, the campaign ends.',
-          )
-        : join(
-            '**1. Choose.** Every live campaign has a card in its artist\'s channel with the rate, what is left of the budget and the brief.',
-            '**2. Post.** Make your content and post it on your own TikTok, YouTube or Instagram.',
-            '**3. Submit.** Press Submit on the card, or `/submit` here. Most are checked in seconds.',
-            '**4. Get paid.** The site checks your views again and again. Every 1,000 verified views pays the campaign\'s rate.',
-            '**5. Withdraw.** To PayPal, from your dashboard. We pay the PayPal fee.',
-          ),
-    }),
-    card({
-      icon: 'help',
-      label: 'Commands',
-      text: join(n.commands.map(([c, d]) => `\`/${c}\` ${d}`).join('\n'), BLANK, small('Type / in any channel to see them all.')),
-    }),
-    card({
-      icon: 'users',
-      label: 'In the server',
-      text: join(
-        '**Artist channels.** One per artist, with a live card for each campaign.',
-        '**Payouts.** Every earning, as it happens. Names are half hidden.',
-        '**Submissions.** Every submission with its video and numbers.',
-        `**Support.** ${n.supportChannel ? `<#${n.supportChannel}>` : '`/support`'} opens a private ticket. The team never messages you first.`,
+/**
+ * The direct message with everything, once someone has an account and a linked Discord. One message in one container, not four embeds
+ * stacked up: a header with the logo, how it works, the commands, what the server does, and two buttons.
+ */
+export const rundownDm = (n: NextData & { commands: [string, string][] }): Message =>
+  v2(
+    container(
+      INK,
+      section([`## You are all set, ${n.name}`, n.brand ? 'Your account and this Discord are linked.' : 'Your account and this Discord are linked. Here is everything in one place.'], thumb(`${SITE_URL}/logo-lg.png`, 'logoless')),
+      sep(),
+      text(
+        join(
+          '### How it works',
+          ...(n.brand
+            ? ['**Launch.** Set a rate per 1,000 views and a budget.', '**Watch.** Every submission is posted with its video and numbers.', '**Pay only for views.** Creators are paid for verified views, out of your budget.']
+            : ['**1. Choose** a live campaign.', '**2. Post** your content on your own TikTok, YouTube or Instagram.', '**3. Submit** it with the button on the card, or `/submit` here.', '**4. Get paid** for every 1,000 verified views, and **withdraw** to PayPal. We pay the fee.']),
+        ),
       ),
-    }),
-  ],
-  components: [row(go('Open dashboard', n.brand ? '/brand' : '/dashboard'), go('Live campaigns', '/'))],
-  allowed_mentions: quiet,
-})
+      sep(),
+      text(join('### Commands', n.commands.map(([c, d]) => `\`/${c}\` ${d}`).join('\n'), small('Type / in any channel to see them all.'))),
+      sep(),
+      text(join('### In the server', `Artist channels with a live card for each campaign, payouts as they happen, and ${n.supportChannel ? `<#${n.supportChannel}>` : '`/support`'} for a private ticket. The team never messages you first.`)),
+      row(go('Open dashboard', n.brand ? '/brand' : '/dashboard'), go('Live campaigns', '/')),
+    ),
+  )
 
 // ---------- payouts channel ----------
 export type PayoutPost = { earningId: string; name: string; cents: number; campaign: string; campaignId?: string | null; views?: number | null; rateCents?: number | null; at: number }

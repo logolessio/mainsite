@@ -114,6 +114,7 @@ export function ProfileStudio() {
         cardEffect: f.cardEffect,
         effectIntensity: f.effectIntensity,
         effectSpeed: f.effectSpeed,
+        show: f.show,
         extras: f.extras,
         ...(pendingAvatar !== undefined ? { avatar: pendingAvatar } : {}),
       })
@@ -169,6 +170,12 @@ export function ProfileStudio() {
     if (!wide) window.setTimeout(() => stage.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
   }
 
+  // the old Privacy page now lives here: a link to #privacy opens it
+  const ready = Boolean(f && loaded)
+  useEffect(() => {
+    if (ready && window.location.hash === '#privacy') setPanel('privacy')
+  }, [ready])
+
   // Escape closes the window
   useEffect(() => {
     if (!panel) return
@@ -198,7 +205,7 @@ export function ProfileStudio() {
       {panel === 'badges' && <BadgesPanel s={s} unlocked={loaded.unlocked} />}
       {panel === 'name' && <NamePanel s={s} />}
       {panel === 'about' && <AboutPanel s={s} />}
-      {panel === 'privacy' && <PrivacyPanel />}
+      {panel === 'privacy' && <PrivacyPanel s={s} />}
       {panel === 'accounts' && <AccountsPanel />}
       {panel === 'import' && <ImportPanel available={loaded.discordImport} linked={loaded.discordLinked} busy={busy} onImport={importDiscord} />}
     </>

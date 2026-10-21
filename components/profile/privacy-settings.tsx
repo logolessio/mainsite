@@ -14,10 +14,10 @@ import { cn } from '@/lib/utils'
 type Privacy = ProfileExtras['privacy']
 type State = { show: ShowMap; privacy: Privacy }
 
-const VIS_ICON: Record<ProfileVisibility, typeof Globe> = { public: Globe, members: Users, private: Lock }
+export const VIS_ICON: Record<ProfileVisibility, typeof Globe> = { public: Globe, members: Users, private: Lock }
 
 /** Plain words for each switch: what turning it on shows, and to whom. */
-const EXPLAIN: Record<ShowKey, string> = {
+export const EXPLAIN: Record<ShowKey, string> = {
   status: 'A green dot on your picture while you are using logoless.',
   joined: 'The month and year you joined.',
   country: 'A two-letter country code, only if you chose a country.',
@@ -199,7 +199,7 @@ function Section({ title, sub, children }: { title: string; sub?: string; childr
   )
 }
 
-function Row({ label, body, checked, onChange }: { label: string; body: string; checked: boolean; onChange: (v: boolean) => void }) {
+export function Row({ label, body, checked, onChange }: { label: string; body: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <li className="flex items-center gap-4 py-3.5 first:pt-1 last:pb-1">
       <span className="min-w-0 flex-1">

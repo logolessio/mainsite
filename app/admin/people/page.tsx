@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { PageHeader } from '@/components/app/ui'
 import { db, nowSec } from '@/lib/db'
 import { ownerEmails, roleHolders } from '@/lib/roles'
+import { sharedIpUserIds } from '@/lib/ip-limit'
 import { pageAdmin } from '@/lib/user'
 import { avatarSrc } from '@/lib/looks'
 
@@ -23,6 +24,7 @@ const FILTERS = [
   { id: 'team', label: 'Team' },
   { id: 'risk', label: 'Extra checks' },
   { id: 'restricted', label: 'Restricted' },
+  { id: 'ip', label: 'Shared network' },
 ]
 
 /** Everyone on logoless, as a short list. Open a person for the whole profile and every action: roles, messages, checks, balance, removal. */
@@ -44,6 +46,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
   if (f === 'new') where.push(`u.created_at > ${t - 7 * 86400}`)
   if (f === 'risk') where.push("u.risk_level != 'low'")
   if (f === 'restricted') where.push("u.status != 'active'")
+  if (f === 'ip') {
+    const ids = await sharedIpUserIds()
+    where.push(ids.length ? `u.id IN (${ids.map((x) => `'${x.replace(/[^\w-]/g, '')}'`).join(',')})` : '0')
+  }
   const d = await db()
   const rows = (
     await d

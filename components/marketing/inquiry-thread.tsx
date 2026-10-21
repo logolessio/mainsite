@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/fields'
 import { cn } from '@/lib/utils'
 
 type Msg = { by: 'admin' | 'you'; text: string; at: number }
-const when = (t: number) => new Date(t * 1000).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+const when = (t: number) => new Date(t * 1000).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })
 
 /** A conversation: the first message, each reply, and a box to add to it. Used by the sender and, with `admin`, by the team. */
 export function InquiryThread({ id, token, subject, first, firstAt, target, initial, status, admin = false, who = 'you' }: { id: string; token?: string; subject: string; first: string; firstAt: number; target?: string; initial: Msg[]; status: string; admin?: boolean; who?: string }) {

@@ -31,9 +31,10 @@ export const slugify = (s: string) =>
     .replace(/^-+|-+$/g, '')
     .slice(0, 40) || 'campaign'
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-/** 2026-12-14 becomes "Dec 14", the short form used across the site. Anything else is passed through. */
+/** 2026-12-14 becomes "14/12/2026", the UK order used across the site. Older values saved as "Dec 14" are shown as "14 Dec". Anything else is passed through. */
 export function shortDate(s: string | null | undefined) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s ?? '')
-  return m ? `${MONTHS[Number(m[2]) - 1]} ${Number(m[3])}` : (s ?? '')
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s ?? '')
+  if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`
+  const old = /^([A-Z][a-z]{2}) (\d{1,2})$/.exec(s ?? '')
+  return old ? `${Number(old[2])} ${old[1]}` : (s ?? '')
 }

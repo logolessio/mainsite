@@ -334,7 +334,7 @@ export function DiscordPanel() {
         )}
         {s.lastTick && (
           <p className="mt-4 text-xs text-mute">
-            Live loop, last run {new Date(s.lastTick.at * 1000).toLocaleTimeString()} ({s.lastTick.ms} ms): {s.lastTick.skipped ?? Object.entries(s.lastTick.parts).map(([k, v]) => `${k} ${v}`).join(' · ')}
+            Live loop, last run {new Date(s.lastTick.at * 1000).toLocaleTimeString('en-GB')} ({s.lastTick.ms} ms): {s.lastTick.skipped ?? Object.entries(s.lastTick.parts).map(([k, v]) => `${k} ${v}`).join(' · ')}
           </p>
         )}
         {access && (

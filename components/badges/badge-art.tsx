@@ -34,7 +34,11 @@ const ticks = (n: number, r1: number, r2: number) =>
 const sunburst = (n: number, rOut: number, rIn: number) =>
   `M${Array.from({ length: n * 2 }, (_, i) => polar(i % 2 === 0 ? rOut : rIn, (i * 180) / n).map((v) => v.toFixed(2)).join(' ')).join('L')}Z`
 
-export function BadgeArt({ badge, size = 40, locked = false, animated = false, className }: { badge: BadgeDef; size?: number; locked?: boolean; animated?: boolean; className?: string }) {
+/**
+ * `fluid` makes it fill whatever holds it (as a square) instead of being a fixed number of pixels; `size` is then only how much detail
+ * to draw, so give it roughly the size it will end up at.
+ */
+export function BadgeArt({ badge, size = 40, locked = false, animated = false, fluid = false, className }: { badge: BadgeDef; size?: number; locked?: boolean; animated?: boolean; fluid?: boolean; className?: string }) {
   const uid = useId().replace(/:/g, '')
   const r = badge.rarity
   const Glyph = ICONS[badge.icon] ?? Star
@@ -45,8 +49,8 @@ export function BadgeArt({ badge, size = 40, locked = false, animated = false, c
   const gs = Math.round(size * (size < 28 ? 0.5 : 0.4))
 
   return (
-    <span className={cn('relative inline-block shrink-0 align-middle', className)} style={{ width: size, height: size }}>
-      <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true" className="absolute inset-0" style={size >= 56 && !locked ? { filter: 'drop-shadow(0 8px 14px rgb(0 0 0 / 0.55))' } : undefined}>
+    <span className={cn('relative inline-block shrink-0 align-middle', fluid && 'block aspect-square w-full', className)} style={fluid ? undefined : { width: size, height: size }}>
+      <svg viewBox="0 0 100 100" width={fluid ? '100%' : size} height={fluid ? '100%' : size} aria-hidden="true" className="absolute inset-0" style={size >= 56 && !locked ? { filter: 'drop-shadow(0 8px 14px rgb(0 0 0 / 0.55))' } : undefined}>
         <defs>
           <linearGradient id={`${uid}r`} x1="0.1" y1="0" x2="0.9" y2="1">
             {(locked ? ([[0, '#4a4a51'], [1, '#26262b']] as [number, string][]) : rim).map(([o, c]) => (
@@ -105,7 +109,7 @@ export function BadgeArt({ badge, size = 40, locked = false, animated = false, c
         )}
       </svg>
       <span aria-hidden="true" className="absolute inset-0 grid place-items-center" style={{ opacity: locked ? 0.3 : 1 }}>
-        <Glyph width={gs} height={gs} strokeWidth={stroke} color="#f3f2ee" style={size >= 40 && !locked ? { filter: 'drop-shadow(0 1px 3px rgb(0 0 0 / 0.7))' } : undefined} />
+        <Glyph width={fluid ? '40%' : gs} height={fluid ? '40%' : gs} strokeWidth={stroke} color="#f3f2ee" style={size >= 40 && !locked ? { filter: 'drop-shadow(0 1px 3px rgb(0 0 0 / 0.7))' } : undefined} />
       </span>
       <span className="sr-only">{badge.name}</span>
     </span>

@@ -167,7 +167,7 @@ export function LaunchCountdown() {
                   <tr key={r.key} className={r.u ? 'opacity-50' : undefined}>
                     <td className="truncate py-2.5 pr-4">{r.e}{r.u ? <span className="ml-2 text-xs text-mute">unsubscribed</span> : null}</td>
                     <td className="py-2.5 pr-4 text-mute">{r.h ? `@${r.h}` : ''}</td>
-                    <td className="py-2.5 text-right text-xs text-mute tabular-nums">{new Date(r.t * 1000).toLocaleDateString()}</td>
+                    <td className="py-2.5 text-right text-xs text-mute tabular-nums">{new Date(r.t * 1000).toLocaleDateString('en-GB')}</td>
                   </tr>
                 ))}
               </tbody>

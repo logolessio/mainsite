@@ -34,7 +34,7 @@ function comparison(views: number) {
 type Slide = { id: string; hue: number; body: React.ReactNode }
 
 function buildSlides(r: Recap): Slide[] {
-  const since = r.sinceSec ? new Date(r.sinceSec * 1000).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : null
+  const since = r.sinceSec ? new Date(r.sinceSec * 1000).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }) : null
   if (r.clips === 0)
     return [
       {

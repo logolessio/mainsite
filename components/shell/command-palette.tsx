@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-  Activity, ArrowUpRight, AtSign, BookOpen, Clock, Code2, Compass, Contrast, Copy, CornerDownLeft, CreditCard, Eye, FileText, Flag, Heart, HelpCircle, Home,
+  Activity, ArrowLeft, ArrowUpRight, AtSign, BookOpen, Clock, Code2, Compass, Contrast, Copy, CornerDownLeft, CreditCard, Eye, FileText, Flag, Heart, HelpCircle, Home,
   Image as ImageIcon, Keyboard, KeyRound, Layers, Link2, Lock, LogIn, LogOut, Mail, Megaphone, MessageSquareText, Moon, Palette, Pause, Plus, Receipt, Rocket,
   Scale, Search, Send, Settings, ShieldCheck, Sparkles, Target, Trash2, Trophy, Type, Unlink, UserRound, Users, Wallet, X, Clapperboard, BarChart3, Bell, CircleDollarSign, Globe,
   type LucideIcon,
@@ -52,6 +52,7 @@ type Row = {
   cover?: string
   hint?: string
   answer?: string
+  faq?: Faq
   /** The command it came from, remembered as recent. */
   cmd?: string
   hay: Haystack
@@ -98,11 +99,13 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
   const [i, setI] = useState(0)
   const [camps, setCamps] = useState<Camp[] | null>(null)
   const [faq, setFaq] = useState<Faq[]>([])
+  const [reading, setReading] = useState<Faq | null>(null)
   const [recent, setRecent] = useState<string[]>([])
   const [ownerHits, setOwnerHits] = useState<{ q: string; hits: { kind: 'person' | 'campaign'; id: string; label: string; sub: string; href: string }[] }>({ q: '', hits: [] })
   const input = useRef<HTMLInputElement>(null)
   const list = useRef<HTMLUListElement>(null)
-  const box = useDialog<HTMLDivElement>(open, onClose, { initial: 'none' })
+  const closeOrBack = useCallback(() => (reading ? setReading(null) : onClose()), [reading, onClose])
+  const box = useDialog<HTMLDivElement>(open, closeOrBack, { initial: 'none' })
 
   const viewer: Viewer = useMemo(() => ({ signedIn: Boolean(user?.signedIn), admin: Boolean(user?.signedIn && user.isAdmin), dev: Boolean(user?.signedIn && (user.isDev || user.isAdmin)) }), [user])
   const handle = user?.signedIn ? user.profile.handle : ''
@@ -111,6 +114,7 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
     if (!open) return
     setQ('')
     setI(0)
+    setReading(null)
     setRecent(readRecent())
     window.setTimeout(() => input.current?.focus(), 30)
     if (camps === null) fetch('/api/search').then((r) => r.json()).then((j: { campaigns?: Camp[] }) => setCamps(j.campaigns ?? [])).catch(() => setCamps([]))
@@ -200,7 +204,7 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
     }))
     const pages: Row[] = items.map((it, n) => ({ key: `n:${it.href}`, label: it.label, sub: area ? `${area} · ${it.href}` : it.href, group: 'Go to', navIcon: it.icon, hint: n < 9 ? `g ${n + 1}` : undefined, hay: haystack(it.label, `${it.section ?? ''} ${area ?? ''}`), act: () => go(it.href), rank: 2 }))
     const answers: Row[] = full
-      ? faq.map((f, n) => ({ key: `f:${n}`, label: f.q, sub: f.a.split(/(?<=[.!?])\s/)[0], group: 'Answers', icon: 'answer' as const, answer: f.a, hay: haystack(f.q, `${f.topic} ${f.a.slice(0, 160)}`), act: () => go('/faq') }))
+      ? faq.map((f, n) => ({ key: `f:${n}`, label: f.q, sub: f.a.split(/(?<=[.!?])\s/)[0], group: 'Answers', icon: 'answer' as const, answer: f.a, faq: f, hay: haystack(f.q, f.topic, f.a), act: () => setReading(f) }))
       : []
     const campaigns: Row[] = (camps ?? []).map((c) => ({ key: `k:${c.id}`, label: c.title, sub: `${c.creator} · ${c.type} · $${c.rate.toFixed(2)} per 1K`, group: 'Campaigns', cover: c.cover, hay: haystack(c.title, `${c.creator} ${c.type} campaign`), act: () => go(`/campaign/${c.id}`) }))
     return [...pages, ...cmds, ...answers, ...campaigns]
@@ -235,13 +239,24 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
       const n = GROUP_ORDER.indexOf(g as (typeof GROUP_ORDER)[number])
       return n < 0 ? 5 : n
     }
-    const hits = all
+    const scored = all
       .map((r) => ({ r, s: score(pq, r.hay) }))
       .filter((x) => x.s > 0 && (x.r.group !== 'Campaigns' || t.length >= 2))
       // things you can do come a touch ahead of answers and campaigns on a near tie; the most used things win an exact tie
       .map((x) => ({ ...x, s: x.s + (x.r.group === 'Answers' ? -0.6 : x.r.group === 'Campaigns' ? -0.3 : 0.4) + (x.r.rank ?? 0) * 0.08 }))
       .sort((a, b) => b.s - a.s || order(a.r.group) - order(b.r.group))
-      .slice(0, 40)
+    // only what is close to the best match, and only a few of each kind: a handful of good results, never a wall of loose ones
+    const cutoff = Math.max(1.2, (scored[0]?.s ?? 0) * 0.45)
+    const room: Record<string, number> = { Answers: 3, Campaigns: 3, other: 6 }
+    const used: Record<string, number> = {}
+    const hits = scored
+      .filter((x) => {
+        if (x.s < cutoff) return false
+        const g = x.r.group === 'Answers' || x.r.group === 'Campaigns' ? x.r.group : 'other'
+        used[g] = (used[g] ?? 0) + 1
+        return used[g] <= room[g]
+      })
+      .slice(0, 9)
       .map((x) => x.r)
     const live: Row[] = area === 'Owner' && ownerHits.q === t ? ownerHits.hits.map((h) => ({ key: `o:${h.kind}:${h.id}`, label: h.label, sub: h.sub, group: h.kind === 'person' ? 'People' : 'Campaigns', icon: h.kind === 'person' ? ('users' as const) : ('megaphone' as const), hay: haystack(h.label), act: () => go(h.href) })) : []
     // never a dead end: there is always somewhere to take the words that were typed
@@ -283,6 +298,8 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
     (idx: number) => {
       const r = rows[idx]
       if (!r) return
+      // an answer is read here, in the box, not on another page
+      if (r.faq) return setReading(r.faq)
       onClose()
       if (r.cmd) remember(r.cmd)
       r.act()
@@ -290,7 +307,20 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
     [rows, onClose],
   )
 
+  const related = useMemo(() => {
+    if (!reading) return []
+    const pq = parseQuery(reading.q)
+    return faq
+      .filter((f) => f.q !== reading.q)
+      .map((f) => ({ f, s: score(pq, haystack(f.q, f.topic, f.a)) }))
+      .filter((x) => x.s > 2)
+      .sort((a, b) => b.s - a.s)
+      .slice(0, 3)
+      .map((x) => x.f)
+  }, [reading, faq])
+
   const onKey = (e: React.KeyboardEvent) => {
+    if (reading) return void (e.key === 'Enter' && e.preventDefault())
     const n = rows.length
     if (!n) return
     if (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey) || (e.ctrlKey && e.key === 'n')) (e.preventDefault(), setI((v) => (v + 1) % n))
@@ -335,7 +365,7 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
               <input
                 ref={input}
                 value={q}
-                onChange={(e) => setQ(e.target.value)}
+                onChange={(e) => (setQ(e.target.value), setReading(null))}
                 placeholder={placeholder}
                 aria-label="Search or do something"
                 role="combobox"
@@ -362,7 +392,45 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
             </div>
             <div aria-hidden="true" className="mx-5 h-px shrink-0 bg-white/[0.07]" />
 
-            <ul ref={list} id="cmd-list" role="listbox" aria-label="Results" className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2 [scrollbar-width:thin]">
+            {reading && (
+              <motion.div key={reading.q} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.24, ease: EASE_OUT }} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 [scrollbar-width:thin] sm:p-6">
+                <button type="button" onClick={() => setReading(null)} className="inline-flex items-center gap-1.5 rounded-pill py-1 pr-2 text-[13px] text-paper/50 transition-colors hover:text-paper">
+                  <ArrowLeft aria-hidden="true" className="size-3.5" /> Back to results
+                </button>
+                <p className="mt-5 text-xs text-paper/45">{reading.topic}</p>
+                <h2 className="mt-1.5 font-display text-[1.65rem] leading-tight">{reading.q}</h2>
+                <div className="mt-4 space-y-3 text-[15px] leading-relaxed text-paper/75">
+                  {reading.a.split(/\n+/).map((p, n) => (
+                    <p key={n}>{p}</p>
+                  ))}
+                </div>
+                {related.length > 0 && (
+                  <div className="mt-7">
+                    <p className="mb-2 text-xs text-paper/45">People also ask</p>
+                    <ul className="grid gap-1">
+                      {related.map((f) => (
+                        <li key={f.q}>
+                          <button type="button" onClick={() => setReading(f)} className="flex w-full items-center justify-between gap-3 rounded-[calc(var(--cmd-r)-8px)] px-3 py-2.5 text-left text-[14px] text-paper/70 transition-colors hover:bg-white/[0.05] hover:text-paper">
+                            <span>{f.q}</span>
+                            <ArrowUpRight aria-hidden="true" className="size-3.5 shrink-0 text-paper/40" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div className="mt-7 flex flex-wrap gap-2">
+                  <button type="button" onClick={() => (onClose(), go('/faq'))} className="inline-flex h-10 items-center rounded-pill bg-paper px-5 text-sm font-medium text-ink transition-colors hover:bg-paper/85">
+                    Open the full Q&amp;A
+                  </button>
+                  <button type="button" onClick={() => (onClose(), go('/contact'))} className="inline-flex h-10 items-center rounded-pill border border-line-strong px-5 text-sm transition-colors hover:bg-white/[0.06]">
+                    Ask the team
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            <ul ref={list} id="cmd-list" hidden={Boolean(reading)} role="listbox" aria-label="Results" className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2 [scrollbar-width:thin]">
               {camps === null && !q && all.length === 0 && <li className="px-4 py-8 text-center text-sm text-mute">Loading…</li>}
               {rows.map((r, idx) => (
                 <li key={r.key} role="presentation">
@@ -407,7 +475,7 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
 
             {/* an answer from the Q&A is read right here, without leaving the page */}
             <AnimatePresence initial={false}>
-              {active?.answer && (
+              {!reading && active?.answer && (
                 <motion.div key="answer" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22, ease: EASE_OUT }} className="shrink-0 overflow-hidden">
                   <div aria-live="polite" className="mx-2 mb-2 max-h-40 overflow-y-auto rounded-[calc(var(--cmd-r)-8px)] border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-[13.5px] leading-relaxed text-paper/70">
                     {active.answer}
