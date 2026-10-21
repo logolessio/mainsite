@@ -26,7 +26,6 @@ export type PageCopy = {
   joinLabel: string
   emailPlaceholder: string
   sendLabel: string
-  verifyLabel: string
   reserveLabel: string
   doneTitle: string
   startTitle: string
@@ -45,7 +44,6 @@ export const DEFAULT_PAGE: PageConfig = {
     joinLabel: 'Join the waitlist',
     emailPlaceholder: 'Your email',
     sendLabel: 'Join',
-    verifyLabel: 'Confirm',
     reserveLabel: 'Reserve it',
     doneTitle: 'You are on the list.',
     startTitle: 'Get started',
@@ -64,7 +62,6 @@ export const COPY_MAX: Record<keyof PageCopy, number> = {
   joinLabel: 32,
   emailPlaceholder: 40,
   sendLabel: 20,
-  verifyLabel: 20,
   reserveLabel: 20,
   doneTitle: 60,
   startTitle: 40,

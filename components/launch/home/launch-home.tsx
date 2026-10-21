@@ -1,6 +1,6 @@
 'use client'
 
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
 import { ArrowUpRight, Globe, Pencil } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { useCallback, useEffect, useState } from 'react'
@@ -57,6 +57,8 @@ export type LaunchHomeProps = {
   items: LinkItem[]
   isOwner: boolean
   signedInAs: string | null
+  /** the site opens by itself when the countdown ends */
+  auto: boolean
   /** signed in, but not let past the coming-soon page */
   locked?: boolean
 }
@@ -87,13 +89,15 @@ export function LaunchHome(props: LaunchHomeProps) {
   const cta = 'group relative inline-flex h-14 w-full items-center justify-center gap-2.5 rounded-pill bg-[var(--acc)] px-8 text-[16px] font-medium text-[var(--on-acc)] shadow-[0_10px_40px_-12px_rgb(var(--acc-rgb)/0.55)] transition-[transform,filter] duration-300 hover:brightness-110 active:scale-[0.98]'
 
   return (
+    // the closed site is drawn without the site's shell, so the reduced-motion setting is applied here too
+    <MotionConfig reducedMotion="user">
     <div className={s.root} style={accentVars(look.accent)}>
       <Backdrop look={look} />
 
       <main id="main" className={cn('relative z-10 mx-auto flex min-h-dvh w-full flex-col items-center px-4 text-center md:px-6', props.links ? 'max-w-[520px] pt-14 pb-10 md:pt-20' : 'max-w-[960px] justify-center pt-14 pb-7 md:pt-16')}>
         <a href="/" aria-label="logoless" className="relative mb-6 block md:mb-7">
           <span className={s.logoHalo} aria-hidden="true" />
-          <span className={cn(s.logo, 'block')} role="img" aria-label="logoless" />
+          <span className={cn(s.logo, 'block')} aria-hidden="true" />
         </a>
 
         {socials.length > 0 && (
@@ -135,7 +139,7 @@ export function LaunchHome(props: LaunchHomeProps) {
           <div className={cn(s.rise, 'mt-8 w-full')} style={{ '--d': '0.85s' } as React.CSSProperties}>
             {soon && draft.end && !opened && (
               <div className="mb-5">
-                <Countdown end={draft.end} compact onOver={onOver} />
+                <Countdown end={draft.end} compact auto={props.auto} onOver={onOver} />
               </div>
             )}
             <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className={cta}>
@@ -153,9 +157,9 @@ export function LaunchHome(props: LaunchHomeProps) {
             </AutoHeight>
 
             {buttons.length > 0 && (
-              <ul className="mt-7 grid w-full gap-2.5">
+              <ul className="mt-7 grid w-full grid-cols-[minmax(0,1fr)] gap-2.5">
                 {buttons.map((l, i) => (
-                  <li key={l.id} className={s.rise} style={{ '--d': `${0.95 + i * 0.06}s` } as React.CSSProperties}>
+                  <li key={l.id} className={cn(s.rise, 'min-w-0')} style={{ '--d': `${0.95 + i * 0.06}s` } as React.CSSProperties}>
                     <a
                       href={l.url}
                       {...(external(l.url) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
@@ -174,11 +178,11 @@ export function LaunchHome(props: LaunchHomeProps) {
           <>
             {draft.end && !opened ? (
               <div className={cn(s.rise, 'mt-8 w-full md:mt-9')} style={{ '--d': '0.8s' } as React.CSSProperties}>
-                <Countdown end={draft.end} onOver={onOver} />
+                <Countdown end={draft.end} auto={props.auto} onOver={onOver} />
               </div>
             ) : opened ? (
               <div className="mt-10">
-                <Countdown end={draft.end ?? 0} />
+                <Countdown end={draft.end ?? 0} auto={props.auto} />
               </div>
             ) : null}
             <div className={cn(s.rise, 'mt-7 w-full max-w-[520px]', !draft.end && 'mt-10')} style={{ '--d': '0.95s' } as React.CSSProperties}>
@@ -234,5 +238,6 @@ export function LaunchHome(props: LaunchHomeProps) {
         </>
       )}
     </div>
+    </MotionConfig>
   )
 }

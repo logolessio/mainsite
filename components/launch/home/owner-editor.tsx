@@ -120,7 +120,7 @@ export function OwnerEditor({ open, onClose, draft, setDraft, mode, setMode, ini
 
           <div className="flex items-center gap-1 px-4 pt-3">
             {TABS.map((t) => (
-              <button key={t.id} type="button" onClick={() => setTab(t.id)} className={cn('relative rounded-pill px-3 py-1.5 text-[13px] transition-colors', tab === t.id ? 'text-ink' : 'text-paper/60 hover:text-paper')}>
+              <button key={t.id} type="button" aria-pressed={tab === t.id} onClick={() => setTab(t.id)} className={cn('relative rounded-pill px-3 py-1.5 text-[13px] transition-colors', tab === t.id ? 'text-ink' : 'text-paper/60 hover:text-paper')}>
                 {tab === t.id && <motion.span layoutId="ed-tab" className="absolute inset-0 rounded-pill bg-paper" transition={{ duration: 0.35, ease: EASE }} />}
                 <span className="relative">{t.label}</span>
               </button>
@@ -234,7 +234,7 @@ export function OwnerEditor({ open, onClose, draft, setDraft, mode, setMode, ini
                 {draft.items.map((l, i) => (
                   <div key={l.id} className="grid gap-2 rounded-2xl border border-white/10 bg-white/[0.025] p-3">
                     <div className="flex gap-2">
-                      <select aria-label="Platform" value={l.platform} onChange={(e) => setItems((all) => all.map((x) => (x.id === l.id ? { ...x, platform: e.target.value } : x)))} className={cn(input, 'w-[42%] py-2 [color-scheme:dark]')}>
+                      <select aria-label="Platform" value={l.platform} onChange={(e) => setItems((all) => all.map((x) => (x.id === l.id ? { ...x, platform: e.target.value } : x)))} className={cn(input, 'w-[46%] shrink-0 px-2 py-2 text-[13px] [color-scheme:dark]')}>
                         {PLATFORMS.map((p) => (
                           <option key={p.id} value={p.id}>
                             {p.label}

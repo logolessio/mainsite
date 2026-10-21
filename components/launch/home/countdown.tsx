@@ -48,7 +48,7 @@ function Tile({ value, label, roll, compact }: { value: number; label: string; r
 }
 
 /** The countdown to the launch. When it reaches zero it says so and offers to come in. */
-export function Countdown({ end, compact = false, onOver }: { end: number; compact?: boolean; onOver?: () => void }) {
+export function Countdown({ end, compact = false, auto = true, onOver }: { end: number; compact?: boolean; auto?: boolean; onOver?: () => void }) {
   const { reduced } = useMotionPrefs()
   const [now, setNow] = useState<number | null>(null)
   useEffect(() => {
@@ -67,6 +67,7 @@ export function Countdown({ end, compact = false, onOver }: { end: number; compa
   const opens = new Date(end * 1000)
   const when = now === null ? '' : opens.toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
 
+  if (over && !auto) return <p className="font-display text-[clamp(1.6rem,3.6vw,2.6rem)] text-paper">The doors open any moment.</p>
   if (over)
     return (
       <div className="flex flex-col items-center gap-4">

@@ -16,6 +16,7 @@ export async function launchHomeData(view?: string | string[]) {
     headline: v.headline,
     text: v.text,
     end: v.end,
+    auto: v.auto,
     page,
     items,
     // the owner (ADMIN_EMAILS) and admins can edit the page; the save routes check again
