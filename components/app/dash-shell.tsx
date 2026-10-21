@@ -20,6 +20,7 @@ import { Palette } from './palette'
 import { setKeyMap } from '@/lib/keys'
 import { PRIMARY } from './primary'
 import { useNavCounts } from './use-nav-counts'
+import gold from './gold.module.css'
 import { RouteTabs } from './section-tabs'
 import type { NavCounts } from '@/lib/nav-counts'
 
@@ -76,9 +77,35 @@ function SideLink({ it, n, active, lit, c, hint, onEnter }: { it: AppNavItem; n:
   )
 }
 
+/**
+ * A sidebar item at the bottom of the menu (Recap). While it glows it has a thin gold edge, gold lettering and a slow sweep of light;
+ * once opened it looks like any other item.
+ */
+function FootLink({ it, glow, lit, active, onEnter }: { it: AppNavItem; glow: boolean; lit: boolean; active: boolean; onEnter: () => void }) {
+  if (!glow) return <SideLink it={it} n={0} active={active} lit={lit} hint={false} onEnter={onEnter} />
+  return (
+    <TransitionLink
+      href={it.href}
+      aria-current={active ? 'page' : undefined}
+      aria-label={`${it.label}, new`}
+      onPointerEnter={(e) => e.pointerType !== 'touch' && onEnter()}
+      onFocus={onEnter}
+      className={cn(gold.gold, 'group relative flex h-11 items-center gap-3 rounded-pill px-4 text-[15px]')}
+    >
+      <span aria-hidden="true" className={gold.ring} />
+      <span aria-hidden="true" className={gold.sheen} />
+      <Icon name={it.icon} aria-hidden="true" className={cn(gold.icon, 'relative size-[18px] shrink-0')} />
+      <span className={cn(gold.text, 'relative')}>{it.label}</span>
+      <span aria-hidden="true" className={cn(gold.dot, 'relative ml-auto size-1.5 rounded-pill')} />
+    </TransitionLink>
+  )
+}
+
 const RECENT_KEY = (area: string) => `ll:recent:${area}`
 
-export function DashShell({ area, items, children }: { area: string; items: AppNavItem[]; children: React.ReactNode }) {
+const NONE: AppNavItem[] = []
+
+export function DashShell({ area, items: menu, footer = NONE, children }: { area: string; items: AppNavItem[]; footer?: AppNavItem[]; children: React.ReactNode }) {
   const pathname = usePathname()
   const { user } = useNavUser()
   const { phase } = useTransitions()
@@ -89,6 +116,15 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
   const [hot, setHot] = useState<string | null>(null) // the sidebar item the pointer (or the keyboard) is on
   const [lifted, setLifted] = useState(false) // the page has scrolled under the top bar
   const top = useRef<HTMLSpanElement>(null)
+  // every page in this area, for the search box, the keyboard and "where am I"; the footer items (Recap) last
+  const items = useMemo(() => [...menu, ...footer], [menu, footer])
+  // the gold goes the moment its page is opened (the server remembers it too, for next time)
+  const [unglowed, setUnglowed] = useState<string[]>([])
+  const glows = (it: AppNavItem) => it.glow === 'gold' && !unglowed.includes(it.href)
+  useEffect(() => {
+    const opened = footer.find((it) => it.glow && isActive(pathname, it))
+    if (opened) setUnglowed((cur) => (cur.includes(opened.href) ? cur : [...cur, opened.href]))
+  }, [pathname, footer])
   const signedIn = user?.signedIn ? user : null
   // the owner dashboard holds the admin and developer pages; its "back" goes to the public site, which is a different address
   const staffArea = area === 'Owner' || area === 'Admin' || area === 'Dev'
@@ -142,7 +178,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
 
   const name = signedIn?.profile.displayName ?? ''
   const initial = (name || signedIn?.profile.handle || '?').slice(0, 1).toUpperCase()
-  const bottom = items.slice(0, 4)
+  const bottom = menu.slice(0, 4)
 
   return (
     <div className="relative z-10 min-h-dvh md:pl-[248px]">
@@ -156,9 +192,9 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
         <p className="px-6 pt-7 pb-3 text-[13px] text-paper/40">{area}</p>
         <nav className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-3 pb-4">
           <ul data-kb-menu className="grid gap-0.5" onPointerLeave={() => setHot(null)} onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && setHot(null)}>
-            {items.map((it, n) => {
+            {menu.map((it, n) => {
               const active = isActive(pathname, it)
-              const heading = it.section && it.section !== items[n - 1]?.section
+              const heading = it.section && it.section !== menu[n - 1]?.section
               const lit = (hot ?? current.href) === it.href
               return (
                 <li key={it.href}>
@@ -169,6 +205,15 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
             })}
           </ul>
         </nav>
+        {footer.length > 0 && (
+          <ul className="grid shrink-0 gap-0.5 px-3 pb-3" onPointerLeave={() => setHot(null)}>
+            {footer.map((it) => (
+              <li key={it.href}>
+                <FootLink it={it} glow={glows(it)} active={isActive(pathname, it)} lit={(hot ?? current.href) === it.href} onEnter={() => setHot(it.href)} />
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="shrink-0 border-t border-line p-3">
           {showOwner && (
             <Go href={ownerHref} className="flex h-10 items-center gap-3 rounded-pill px-4 text-[15px] text-paper/50 transition-colors duration-[450ms] hover:bg-white/[0.07] hover:text-paper hover:duration-[250ms]">
@@ -214,14 +259,14 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
             <span className="text-paper">{current.label}</span>
           </p>
         </div>
-        <button type="button" onClick={() => setPalette(true)} className="mx-6 hidden h-11 w-full max-w-md items-center gap-3 rounded-pill border border-line bg-white/[0.03] px-5 text-left text-[15px] text-paper/45 transition-colors hover:border-line-strong hover:text-paper md:flex">
+        <button type="button" onClick={() => setPalette(true)} className="mx-6 hidden h-11 w-full min-w-0 max-w-md items-center gap-3 rounded-pill border border-line bg-white/[0.03] px-5 text-left text-[15px] text-paper/45 transition-colors hover:border-line-strong hover:text-paper md:flex">
           <Search aria-hidden="true" className="size-4 shrink-0" />
           <span className="min-w-0 flex-1 truncate">Search, or do something</span>
           <kbd className="shrink-0 rounded-md border border-line px-1.5 py-0.5 font-mono text-[11px]">/</kbd>
         </button>
         <div className="flex shrink-0 items-center gap-2">
           {primary && (
-            <TransitionLink href={primary.href} aria-label={primary.label} className="hidden h-10 shrink-0 items-center gap-2 rounded-pill bg-paper px-5 text-[15px] font-medium whitespace-nowrap text-ink transition-colors hover:bg-paper/85 md:inline-flex">
+            <TransitionLink href={primary.href} aria-label={primary.label} className="hidden h-10 shrink-0 items-center gap-2 rounded-pill bg-paper px-5 text-[15px] font-medium whitespace-nowrap text-ink transition-colors hover:bg-paper/85 lg:inline-flex">
               <Plus aria-hidden="true" className="size-4" /> {primary.label}
             </TransitionLink>
           )}
@@ -229,7 +274,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
             <Search aria-hidden="true" className="size-4" />
           </button>
           {primary && (
-            <TransitionLink href={primary.href} aria-label={primary.label} className="grid size-10 place-items-center rounded-pill bg-paper text-ink md:hidden">
+            <TransitionLink href={primary.href} aria-label={primary.label} className="grid size-10 place-items-center rounded-pill bg-paper text-ink lg:hidden">
               <Plus aria-hidden="true" className="size-4" />
             </TransitionLink>
           )}
@@ -278,7 +323,7 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
               </button>
             </div>
             <ul className="no-scrollbar flex-1 overflow-y-auto px-5 py-4">
-              {items.map((it) => (
+              {menu.map((it) => (
                 <li key={it.href} className="border-b border-line">
                   <TransitionLink href={it.href} onClick={() => setMore(false)} className={cn('flex h-14 items-center gap-4 text-lg', isActive(pathname, it) ? 'text-paper' : 'text-paper/60')}>
                     <Icon name={it.icon} aria-hidden="true" className="size-5" />
@@ -287,6 +332,26 @@ export function DashShell({ area, items, children }: { area: string; items: AppN
                   </TransitionLink>
                 </li>
               ))}
+              {footer.map((it) =>
+                glows(it) ? (
+                  <li key={it.href} className="py-3">
+                    <TransitionLink href={it.href} onClick={() => setMore(false)} aria-label={`${it.label}, new`} className={cn(gold.gold, 'relative flex h-14 items-center gap-4 rounded-pill px-5 text-lg')}>
+                      <span aria-hidden="true" className={gold.ring} />
+                      <span aria-hidden="true" className={gold.sheen} />
+                      <Icon name={it.icon} aria-hidden="true" className={cn(gold.icon, 'relative size-5')} />
+                      <span className={cn(gold.text, 'relative')}>{it.label}</span>
+                      <span aria-hidden="true" className={cn(gold.dot, 'relative ml-auto size-2 rounded-pill')} />
+                    </TransitionLink>
+                  </li>
+                ) : (
+                  <li key={it.href} className="border-b border-line">
+                    <TransitionLink href={it.href} onClick={() => setMore(false)} className={cn('flex h-14 items-center gap-4 text-lg', isActive(pathname, it) ? 'text-paper' : 'text-paper/60')}>
+                      <Icon name={it.icon} aria-hidden="true" className="size-5" />
+                      <span>{it.label}</span>
+                    </TransitionLink>
+                  </li>
+                ),
+              )}
               {showOwner && (
                 <li className="border-b border-line">
                   <Go href={ownerHref} onClick={() => setMore(false)} className="flex h-14 items-center gap-4 text-lg text-paper/60">

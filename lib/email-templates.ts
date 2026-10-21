@@ -243,3 +243,29 @@ export function launchUpdateEmail(subject: string, message: string, unsubscribe:
     html: layout({ preheader: first ?? subject, tag: test ? 'Test' : 'Update', title: subject, intro: first ?? '', body: bodyHtml, test }),
   }
 }
+
+/** One notification, or a bundle of them (a digest, or what waited out quiet hours). Each item links to where it happened. */
+export function notificationsEmail(name: string, items: { title: string; body?: string; href?: string | null }[], digest: 'daily' | 'weekly' | null, test = false): Mail {
+  const first = name.trim().slice(0, 60) || 'there'
+  const one = items.length === 1 ? items[0] : null
+  const link = (h?: string | null) => (h ? (h.startsWith('/') ? `${SITE_URL}${h}` : h) : `${SITE_URL}/dashboard/notifications`)
+  const title = one ? one.title : digest === 'weekly' ? 'Your week on logoless' : digest === 'daily' ? 'Your day on logoless' : `${items.length} new notifications`
+  const rows = items
+    .slice(0, 30)
+    .map((n) => `<tr><td style="padding:14px 0;border-top:1px solid #222227"><a href="${esc(link(n.href))}" style="text-decoration:none"><span style="display:block;font:500 15px/1.45 ${SANS};color:#f3f2ee">${esc(n.title)}</span>${n.body ? `<span style="display:block;margin-top:3px;font:400 14px/1.5 ${SANS};color:#9a9aa3">${esc(n.body)}</span>` : ''}</a></td></tr>`)
+    .join('')
+  const settings = `${SITE_URL}/dashboard/notifications/settings`
+  return {
+    subject: `${test ? '[TEST] ' : ''}${title}`,
+    text: `Hi ${first},\n\n${items.map((n) => `- ${n.title}${n.body ? `: ${n.body}` : ''}\n  ${link(n.href)}`).join('\n')}\n\nChoose what we email you: ${settings}\n\nlogoless`,
+    html: layout({
+      preheader: one?.body || items.map((n) => n.title).join(' · '),
+      tag: 'Notifications',
+      title,
+      intro: one ? `Hi ${first}. ${one.body ?? ''}`.trim() : `Hi ${first}. Here is what happened.`,
+      body: `${one ? '' : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px">${rows}</table>`}${button(one ? link(one.href) : `${SITE_URL}/dashboard/notifications`, one ? 'Open it' : 'See them all')}`,
+      note: `You get these because of your notification settings. Change them any time: ${settings}`,
+      test,
+    }),
+  }
+}

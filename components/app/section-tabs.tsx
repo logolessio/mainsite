@@ -10,7 +10,10 @@ import { GlassTabs } from '@/components/ui/glass-tabs'
 export function SectionTabs({ group }: { group: keyof typeof GROUPS }) {
   const pathname = usePathname()
   const saved = useFeature('saved-campaigns')
-  const recap = useFeature('recap')
+  // with "Recap in the sidebar" on, Recap has its own place at the bottom of the sidebar instead of a tab here
+  const recapOn = useFeature('recap')
+  const recapInSidebar = useFeature('recap-sidebar')
+  const recap = recapOn && !recapInSidebar
   const roles = useStaffRoles()
   const g = GROUPS[group]
   const items = g.items.filter((i) => (!i.feature || (i.feature === 'saved-campaigns' ? saved : recap)) && (!i.staff || roles.includes(i.staff)))

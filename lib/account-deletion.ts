@@ -75,6 +75,7 @@ export async function purgeAccount(userId: string, d0: Deletion) {
     d.prepare("DELETE FROM settings WHERE key IN (?1, ?2)").bind(`paypal:${userId}`, key(userId)),
     d.prepare("UPDATE users SET email = ?2, name = NULL, image = NULL, status = 'banned' WHERE id = ?1").bind(userId, `deleted-${userId}@deleted.invalid`),
   ])
+  await (await import('./notify-center')).forgetNotifyData(userId).catch(() => {})
   await auditSafe({ id: null, email: 'system' }, 'account.purged', userId, `choice ${d0.choice}, ${left} cents, was ${email.replace(/^(.).*(@.*)$/, '$1***$2')}`)
 }
 

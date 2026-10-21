@@ -12,6 +12,21 @@ export async function notify(
   n: { kind: NotifyKind; title: string; body?: string; href?: string; dedupe: string },
 ): Promise<boolean> {
   try {
+    // the notification centre (feature switch): each person's own choice of channels, quiet hours and digests
+    const center = await import('./notify-center')
+    if (await center.centerOn()) {
+      const prefs = await center.getPrefs(userId)
+      const d = await db()
+      const res = await d
+        .prepare(
+          `INSERT OR IGNORE INTO notifications (id, user_id, kind, title, body, href, dedupe_key, created_at, muted)
+           VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)`,
+        )
+        .bind(uid(), userId, n.kind, applyWording(n.title).slice(0, 120), applyWording(n.body ?? '').slice(0, 240), n.href ?? null, n.dedupe.slice(0, 120), nowSec(), center.mutedOnSite(prefs, n.kind) ? 1 : 0)
+        .run()
+      if (res.meta.changes === 1) await center.deliver(userId, { kind: n.kind, title: applyWording(n.title), body: n.body ? applyWording(n.body) : undefined, href: n.href }, prefs)
+      return res.meta.changes === 1
+    }
     const d = await db()
     const res = await d
       .prepare(
@@ -38,6 +53,32 @@ export async function notifyFavoriters(campaignId: string, n: { title: string; b
   try {
     const d = await db()
     const t = nowSec()
+    const center = await import('./notify-center')
+    if (await center.centerOn()) {
+      // the same, but hidden for anyone who switched saved-campaign news off for the site, and sent on to anyone who asked for it by email or Discord
+      await d
+        .prepare(
+          `INSERT OR IGNORE INTO notifications (id, user_id, kind, title, body, href, dedupe_key, created_at, muted)
+           SELECT lower(hex(randomblob(16))), f.user_id, 'favorite', ?2, ?3, ?4, ?5, ?6,
+             CASE WHEN json_extract(p.prefs_json, '$.m.favorite.site') = 0 THEN 1 ELSE 0 END
+           FROM favorites f LEFT JOIN notification_prefs p ON p.user_id = f.user_id WHERE f.campaign_id = ?1`,
+        )
+        .bind(campaignId, n.title.slice(0, 120), (n.body ?? '').slice(0, 240), `/campaign/${campaignId}`, `${n.dedupe}`.slice(0, 120), t)
+        .run()
+      const wants = (
+        await d
+          .prepare(
+            `SELECT p.user_id FROM notification_prefs p JOIN favorites f ON f.user_id = p.user_id WHERE f.campaign_id = ?1
+               AND (json_extract(p.prefs_json, '$.m.favorite.email') = 1 OR json_extract(p.prefs_json, '$.m.favorite.discord') = 1)
+               AND EXISTS (SELECT 1 FROM notifications x WHERE x.user_id = p.user_id AND x.dedupe_key = ?2 AND x.created_at = ?3)
+             LIMIT 500`,
+          )
+          .bind(campaignId, `${n.dedupe}`.slice(0, 120), t)
+          .all<{ user_id: string }>()
+      ).results
+      for (const w of wants) await center.deliver(w.user_id, { kind: 'favorite', title: n.title, body: n.body, href: `/campaign/${campaignId}` })
+      return
+    }
     await d
       .prepare(
         `INSERT OR IGNORE INTO notifications (id, user_id, kind, title, body, href, dedupe_key, created_at)
@@ -52,7 +93,8 @@ export async function notifyFavoriters(campaignId: string, n: { title: string; b
 
 export async function unreadCount(userId: string) {
   const d = await db()
-  const r = await d.prepare('SELECT COUNT(*) AS n FROM notifications WHERE user_id = ?1 AND read_at IS NULL').bind(userId).first<{ n: number }>()
+  const hideMuted = await (await import('./notify-center')).centerOn()
+  const r = await d.prepare(`SELECT COUNT(*) AS n FROM notifications WHERE user_id = ?1 AND read_at IS NULL${hideMuted ? ' AND muted = 0' : ''}`).bind(userId).first<{ n: number }>()
   return r?.n ?? 0
 }
 

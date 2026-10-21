@@ -11,6 +11,8 @@ import { type NotifyKind, notify } from './notify'
 export async function reach(userId: string, n: { kind: NotifyKind; title: string; body: string; href?: string; dedupe: string }) {
   const fresh = await notify(userId, n)
   if (!fresh) return false
+  // with the notification centre on, notify() already emailed it (or not) the way the person chose
+  if (await (await import('./notify-center')).centerOn()) return true
   try {
     const pref = await contactPref(userId)
     if ((pref !== 'both' && pref !== 'email') || !(await emailEnabled())) return true

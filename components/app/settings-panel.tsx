@@ -10,6 +10,7 @@ import { DeleteCard } from './account-cards'
 import { ConnectedApps } from './connected-apps'
 import { ContactCard } from './contact-card'
 import { DiscordCard } from './discord-card'
+import { SidebarCard } from './sidebar-card'
 import { JumpBar } from './jump-bar'
 import { ActionButton, Card } from './ui'
 
@@ -53,6 +54,8 @@ export function SettingsPanel({ role }: { role: 'clipper' | 'brand' }) {
       <ContactCard />
 
       <DiscordCard />
+
+      {role === 'clipper' && <SidebarCard />}
 
       <ConnectedApps />
 
