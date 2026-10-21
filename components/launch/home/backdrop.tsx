@@ -84,34 +84,10 @@ function Reels({ wide, reduced }: { wide: boolean; reduced: boolean }) {
   )
 }
 
-/** The page's background: one of its own (reels, glow, black) or a profile banner, then the chosen effect, then a light under the pointer. */
+/** The page's background: one of its own (reels, glow, black) or a profile banner, then the chosen effect. */
 export function Backdrop({ look }: { look: PageLook }) {
-  const { reduced, wide, canHover } = useMotionPrefs()
-  const pointer = useRef<HTMLDivElement>(null)
-  const [lit, setLit] = useState(false)
+  const { reduced, wide } = useMotionPrefs()
   const preset = BANNER_PRESETS.find((b) => b.id === look.bg)
-
-  useEffect(() => {
-    if (!canHover || reduced) return
-    let raf = 0
-    const move = (e: PointerEvent) => {
-      if (e.pointerType !== 'mouse') return
-      cancelAnimationFrame(raf)
-      raf = requestAnimationFrame(() => {
-        pointer.current?.style.setProperty('--px', `${e.clientX}px`)
-        pointer.current?.style.setProperty('--py', `${e.clientY}px`)
-        setLit(true)
-      })
-    }
-    const leave = () => setLit(false)
-    window.addEventListener('pointermove', move, { passive: true })
-    document.documentElement.addEventListener('pointerleave', leave)
-    return () => {
-      cancelAnimationFrame(raf)
-      window.removeEventListener('pointermove', move)
-      document.documentElement.removeEventListener('pointerleave', leave)
-    }
-  }, [canHover, reduced])
 
   return (
     <>
@@ -139,7 +115,6 @@ export function Backdrop({ look }: { look: PageLook }) {
           <CardEffectLayer effect={look.effect} intensity={wide ? look.intensity : Math.round(look.intensity * 0.55)} speed={50} colors={[look.accent, '#ffffff']} />
         </div>
       )}
-      {canHover && !reduced && <div ref={pointer} aria-hidden="true" className={cn(s.pointer, lit && s.pointerOn)} />}
     </>
   )
 }

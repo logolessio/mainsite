@@ -241,7 +241,7 @@ export function ToolsMenu() {
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="border-t border-line px-2 py-3">
-      <h3 className="mb-2 font-mono text-[10px] tracking-widest text-mute uppercase">{title}</h3>
+      <h3 className="mb-2 text-xs text-mute">{title}</h3>
       {children}
     </section>
   )

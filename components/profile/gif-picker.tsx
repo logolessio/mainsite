@@ -128,7 +128,7 @@ export function GifPicker({ onPick, selected, className }: { onPick: (g: GifPick
           </button>
         )}
       </div>
-      <p className="mt-2 text-right text-[10px] tracking-wide text-mute uppercase">Powered by GIPHY</p>
+      <p className="mt-2 text-right text-[11px] text-mute">Powered by GIPHY</p>
     </div>
   )
 }

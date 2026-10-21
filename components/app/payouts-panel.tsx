@@ -2,23 +2,19 @@
 
 import { Check, Loader2, Plus, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
+import { useFeature } from '@/components/shell/features-provider'
 import { Field, Input } from '@/components/ui/fields'
 import { cents, type Finance, getFinance, withdraw } from '@/lib/finance-client'
 import { cn } from '@/lib/utils'
 import { SITE } from '@/lib/site'
+import { WithdrawSheet } from './payout-flow'
+import { PaypalEmails } from './paypal-emails'
 import { Badge, DataTable, EmptyState } from './table'
 import { ActionButton, Card } from './ui'
 
 const date = (s: number) => new Date(s * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 const LABEL: Record<string, string> = { sent: 'Sent', pending: 'Processing', review: 'Being checked', failed: 'Failed', reversed: 'Returned' }
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
-
-async function emailsApi(method: 'POST' | 'DELETE', email: string, makeDefault?: boolean) {
-  const res = await fetch('/api/me/paypal', { method, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, ...(makeDefault === undefined ? {} : { makeDefault }) }) })
-  const j = (await res.json().catch(() => ({}))) as { error?: string; email?: string; emails?: string[] }
-  if (!res.ok) throw new Error(j.error ?? 'Could not save that.')
-  return j
-}
 
 /** Withdrawing, and the PayPal emails you can be paid at. It lives on the Earnings page. */
 export function PayoutsPanel() {
@@ -28,8 +24,9 @@ export function PayoutsPanel() {
   const [busy, setBusy] = useState(false)
   const [emails, setEmails] = useState<string[]>([])
   const [pick, setPick] = useState('')
-  const [adding, setAdding] = useState('')
   const [amount, setAmount] = useState('')
+  const ceremony = useFeature('payout-ceremony')
+  const [sheet, setSheet] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -51,33 +48,6 @@ export function PayoutsPanel() {
   const minCents = SITE.minPayoutUsd * 100
   const can = Boolean(fin?.ready) && available >= minCents && EMAIL_RE.test(pick) && !busy
 
-  const add = async () => {
-    const e = adding.trim().toLowerCase()
-    if (!EMAIL_RE.test(e) || busy) return
-    setBusy(true)
-    setError('')
-    try {
-      const j = await emailsApi('POST', e, emails.length === 0)
-      setEmails(j.emails ?? [])
-      setPick(e)
-      setAdding('')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save that.')
-    }
-    setBusy(false)
-  }
-  const remove = async (e: string) => {
-    if (busy) return
-    setBusy(true)
-    try {
-      const j = await emailsApi('DELETE', e)
-      setEmails(j.emails ?? [])
-      if (pick === e) setPick(j.email ?? j.emails?.[0] ?? '')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not remove that.')
-    }
-    setBusy(false)
-  }
   const doWithdraw = async () => {
     setBusy(true)
     setError('')
@@ -110,46 +80,60 @@ export function PayoutsPanel() {
       )}
 
       <Card title="Withdraw to PayPal" sub={`We pay PayPal's fees. Whatever you withdraw is what arrives. From $${SITE.minPayoutUsd}.`}>
+        {ceremony ? (
+          <div className="grid gap-8">
+            <div className="flex flex-wrap items-end justify-between gap-5">
+              <div>
+                <p className="text-sm text-mute">Available to withdraw</p>
+                <p className="mt-1 font-display text-[clamp(2.4rem,8vw,3.4rem)] leading-none tabular-nums">{cents(available)}</p>
+                {available < minCents && <p className="mt-2 text-sm text-mute">You can withdraw once you have ${SITE.minPayoutUsd} available.</p>}
+              </div>
+              <ActionButton onClick={() => setSheet(true)} disabled={!fin?.ready || available < minCents || emails.length === 0} className="h-12 px-7">
+                Withdraw
+              </ActionButton>
+            </div>
+            {emails.length === 0 && available >= minCents && <p className="-mt-4 text-sm text-mute">Add a PayPal email below first. That is where the money goes.</p>}
+            <div>
+              <h3 className="mb-3 font-sans text-[15px] font-medium">Your PayPal emails</h3>
+              <PaypalEmails
+                emails={emails}
+                defaultEmail={fin?.paypalEmail ?? ''}
+                onChange={(r) => {
+                  setEmails(r.emails)
+                  setPick((cur) => (cur && r.emails.includes(cur) ? cur : r.email || r.emails[0] || ''))
+                  setFin((f) => (f ? { ...f, paypalEmail: r.email, paypalEmails: r.emails } : f))
+                }}
+              />
+            </div>
+            <WithdrawSheet
+              open={sheet}
+              onClose={() => setSheet(false)}
+              availableCents={available}
+              minCents={minCents}
+              emails={emails}
+              defaultEmail={fin?.paypalEmail ?? ''}
+              initialPick={pick}
+              onSent={() => void load()}
+              onSaved={(r) => {
+                setEmails(r.emails)
+                setFin((f) => (f ? { ...f, paypalEmail: r.email, paypalEmails: r.emails } : f))
+              }}
+            />
+          </div>
+        ) : (
         <div className="grid gap-6">
           <fieldset>
-            <legend className="mb-2 text-sm text-mute">Send it to</legend>
-            {emails.length > 0 && (
-              <div className="grid gap-2" role="radiogroup" aria-label="PayPal email">
-                {emails.map((e) => (
-                  <div key={e} className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      role="radio"
-                      aria-checked={pick === e}
-                      tabIndex={pick === e || (!emails.includes(pick) && e === emails[0]) ? 0 : -1}
-                      onClick={() => setPick(e)}
-                      className={cn('flex h-12 min-w-0 flex-1 items-center gap-3 rounded-2xl border px-4 text-left text-[15px] transition-colors', pick === e ? 'border-paper bg-white/[0.06]' : 'border-line-strong text-paper/80 hover:border-paper/50')}
-                    >
-                      <span className={cn('grid size-5 shrink-0 place-items-center rounded-pill border', pick === e ? 'border-paper bg-paper text-ink' : 'border-line-strong')}>{pick === e && <Check className="size-3" />}</span>
-                      <span className="truncate">{e}</span>
-                    </button>
-                    <button type="button" onClick={() => remove(e)} aria-label={`Remove ${e}`} className="grid size-10 shrink-0 place-items-center rounded-pill text-mute transition-colors hover:bg-white/[0.07] hover:text-paper">
-                      <X className="size-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            {emails.length < 5 && (
-              <form
-                className={cn('flex flex-wrap items-center gap-2', emails.length > 0 && 'mt-3')}
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  void add()
-                }}
-              >
-                <Input type="email" autoComplete="email" aria-label="Add a PayPal email" placeholder={emails.length ? 'Add another PayPal email' : 'you@example.com'} value={adding} onChange={(e) => setAdding(e.target.value)} className="min-w-0 flex-1 sm:max-w-xs" />
-                <ActionButton type="submit" variant="ghost" disabled={busy || !EMAIL_RE.test(adding.trim())}>
-                  <Plus aria-hidden="true" className="size-4" /> Add
-                </ActionButton>
-              </form>
-            )}
-            <p className="mt-2 text-xs text-mute">Any PayPal email you can sign in to. No bank details needed.</p>
+            {emails.length > 0 && <legend className="mb-3 text-sm text-mute">Send it to</legend>}
+            <PaypalEmails
+              emails={emails}
+              defaultEmail={fin?.paypalEmail ?? ''}
+              pick={pick}
+              onPick={setPick}
+              onChange={(r) => {
+                setEmails(r.emails)
+                setFin((f) => (f ? { ...f, paypalEmail: r.email, paypalEmails: r.emails } : f))
+              }}
+            />
           </fieldset>
 
           <form
@@ -183,6 +167,7 @@ export function PayoutsPanel() {
             )}
           </form>
         </div>
+        )}
       </Card>
 
       <div>

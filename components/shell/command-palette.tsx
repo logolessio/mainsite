@@ -366,7 +366,7 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
               {camps === null && !q && all.length === 0 && <li className="px-4 py-8 text-center text-sm text-mute">Loading…</li>}
               {rows.map((r, idx) => (
                 <li key={r.key} role="presentation">
-                  {r.head && <p className="px-3 pt-3 pb-1.5 text-[11px] font-medium tracking-wide text-paper/40 uppercase first:pt-1.5">{r.head}</p>}
+                  {r.head && <p className="px-3 pt-3 pb-1.5 text-xs text-paper/45 first:pt-1.5">{r.head}</p>}
                   <button
                     id={`cmd-${idx}`}
                     role="option"

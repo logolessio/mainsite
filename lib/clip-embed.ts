@@ -42,7 +42,7 @@ export function embedSrc(platform: string, id: string | null, raw: string): stri
   if (!id) return null
   const e = encodeURIComponent(id)
   if (platform === 'youtube') return `https://www.youtube-nocookie.com/embed/${e}?autoplay=1&playsinline=1&rel=0&modestbranding=1`
-  if (platform === 'tiktok') return `https://www.tiktok.com/player/v1/${e}?autoplay=1&loop=1&rel=0&description=1&music_info=1`
+  if (platform === 'tiktok') return `https://www.tiktok.com/player/v1/${e}?embed_from=oembed&music_info=1&description=1&autoplay=1&muted=1&loop=1`
   if (platform === 'instagram') return `https://www.instagram.com/${/\/reels?\//.test(raw) ? 'reel' : 'p'}/${e}/embed/captioned/`
   if (platform === 'x') return `https://platform.twitter.com/embed/Tweet.html?id=${e}&theme=dark&dnt=true`
   return null

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Field, Input } from '@/components/ui/fields'
+import { PaypalEmails } from './paypal-emails'
 import { GlassTabs } from '@/components/ui/glass-tabs'
 import { money } from '@/lib/format'
 import { ActionButton, Card } from './ui'
@@ -9,51 +9,33 @@ import { ActionButton, Card } from './ui'
 type Choice = 'return' | 'logoless'
 type State = { availableCents: number; pendingCents: number; deletion: { at: number; choice: string } | null; graceDays: number }
 
-/** The one address payouts go to. Creators only need an email. */
+/** The PayPal emails payouts go to. Creators only need an email. */
 export function PayPalCard() {
-  const [email, setEmail] = useState('')
-  const [saved, setSaved] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [emails, setEmails] = useState<string[] | null>(null)
+  const [def, setDef] = useState('')
   useEffect(() => {
     fetch('/api/me/paypal', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : null))
-      .then((j: { email?: string } | null) => {
-        setEmail(j?.email ?? '')
-        setSaved(j?.email ?? '')
+      .then((j: { email?: string; emails?: string[] } | null) => {
+        setEmails(j?.emails ?? [])
+        setDef(j?.email ?? '')
       })
-      .catch(() => {})
+      .catch(() => setEmails([]))
   }, [])
-  const save = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (busy) return
-    setBusy(true)
-    setMsg(null)
-    const res = await fetch('/api/me/paypal', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email }) }).catch(() => null)
-    const j = (await res?.json().catch(() => ({}))) as { error?: string }
-    setBusy(false)
-    if (res?.ok) {
-      setSaved(email.trim().toLowerCase())
-      setMsg({ ok: true, text: email ? 'Saved.' : 'Removed.' })
-    } else setMsg({ ok: false, text: j?.error ?? 'Could not save that.' })
-  }
   return (
-    <Card title="Get paid">
-      <form onSubmit={save}>
-        <Field label="PayPal email" hint="We pay out to this address. No bank details needed.">
-          <Input type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </Field>
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <ActionButton type="submit" variant="ghost" disabled={busy || email.trim().toLowerCase() === saved}>
-            {busy ? 'Saving…' : 'Save'}
-          </ActionButton>
-          {msg && (
-            <span role={msg.ok ? 'status' : 'alert'} className={msg.ok ? 'text-sm text-mute' : 'text-sm text-signal'}>
-              {msg.text}
-            </span>
-          )}
-        </div>
-      </form>
+    <Card title="Get paid" sub="We pay PayPal's fees, so whatever you withdraw is what arrives.">
+      {emails === null ? (
+        <div role="status" aria-busy="true" aria-label="Loading" className="sk h-12 rounded-tile bg-white/[0.04]" />
+      ) : (
+        <PaypalEmails
+          emails={emails}
+          defaultEmail={def}
+          onChange={(r) => {
+            setEmails(r.emails)
+            setDef(r.email)
+          }}
+        />
+      )}
     </Card>
   )
 }

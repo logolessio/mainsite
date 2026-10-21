@@ -90,7 +90,23 @@ function button(href: string, label: string) {
 const metaText = (m?: Meta) => [m?.place ? `Where: ${m.place}` : '', m?.device ? `Device: ${m.device}` : ''].filter(Boolean).join('\n')
 
 /** The "confirm your email" code, or the "reset your password" code. The code is digits only, so nothing a person typed ever reaches the HTML. */
-export function codeEmail(code: string, kind: 'signup' | 'reset' | 'verify', test = false, meta?: Meta): Mail {
+export function codeEmail(code: string, kind: 'signup' | 'reset' | 'verify' | 'payout', test = false, meta?: Meta): Mail {
+  if (kind === 'payout') {
+    const t = test ? '[TEST] ' : ''
+    return {
+      subject: `${t}${code} is your logoless payout code`,
+      text: [test ? 'THIS IS A TEST from the admin panel.\n' : '', 'Confirm a payout email', '', `Your code is ${code}`, 'It works for 10 minutes and can be used once.', '', 'You asked to add a PayPal email for payouts. Only enter this code on logoless. Anyone who has it could send your earnings to their own PayPal.', '', metaText(meta)].join('\n'),
+      html: layout({
+        preheader: `${code} is your code. It works for 10 minutes.`,
+        tag: test ? 'Test' : 'Security',
+        title: test ? 'Confirm a payout email (test)' : 'Confirm a payout email',
+        intro: 'Enter this code on logoless to add the PayPal email you just typed. Your earnings can be sent there once it is added.',
+        body: `${codeBoxes(code)}${expiry()}${details(meta)}`,
+        note: 'If you did not ask to add a payout email, do not share this code and change your password. Nothing has been added.',
+        test,
+      }),
+    }
+  }
   const signup = kind === 'signup' || kind === 'verify'
   const title = kind === 'verify' ? 'Confirm it is you' : signup ? 'Confirm your email' : 'Reset your password'
   const intro = kind === 'verify' ? 'Enter this code on the page you came from to finish setting up your logoless account.' : signup ? 'Enter this code on the page you came from to finish creating your logoless account.' : 'Enter this code, then choose a new password.'

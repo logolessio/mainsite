@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowDown, ArrowUp, Check, Loader2, Plus, Trash2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { COPY_MAX, PAGE_ACCENTS, PAGE_BACKGROUNDS, type PageConfig, type PageCopy, type PageMode } from '@/lib/launch-page'
+import { COPY_MAX, PAGE_ACCENTS, PAGE_ALIGNS, PAGE_BACKGROUNDS, PAGE_FONTS, PAGE_ROWS, PAGE_SHAPES, PAGE_SIZES, PAGE_SOCIALS, type PageConfig, type PageCopy, type PageMode } from '@/lib/launch-page'
 import { BANNER_PRESETS, CARD_EFFECTS } from '@/lib/profile-style'
 import { type LinkItem, MAX_LINKS, PLATFORMS } from '@/lib/socials'
 import { cn } from '@/lib/utils'
@@ -21,7 +21,6 @@ const TABS: { id: Tab; label: string }[] = [
 ]
 
 const WORDS: { key: keyof PageCopy; label: string; long?: boolean; group: string }[] = [
-  { key: 'kicker', label: 'Small label above the headline', group: 'Coming soon' },
   { key: 'joinLabel', label: 'Waitlist button on /links', group: 'Coming soon' },
   { key: 'emailPlaceholder', label: 'Email field', group: 'Coming soon' },
   { key: 'sendLabel', label: 'Email button', group: 'Coming soon' },
@@ -184,6 +183,15 @@ export function OwnerEditor({ open, onClose, draft, setDraft, mode, setMode, ini
 
             {tab === 'look' && (
               <div className="grid gap-5">
+                <Group title="Layout">
+                  <Choice name="Alignment" value={draft.page.look.align} options={PAGE_ALIGNS} onChange={(align) => setLook({ align })} />
+                  <Choice name="Link buttons" value={draft.page.look.rows} options={PAGE_ROWS} onChange={(rows) => setLook({ rows })} />
+                  <Choice name="Corners" value={draft.page.look.shape} options={PAGE_SHAPES} onChange={(shape) => setLook({ shape })} />
+                  <Choice name="Headline font" value={draft.page.look.font} options={PAGE_FONTS} onChange={(font) => setLook({ font })} />
+                  <Choice name="Size" value={draft.page.look.size} options={PAGE_SIZES} onChange={(size) => setLook({ size })} />
+                  <Choice name="Social icons" value={draft.page.look.socials} options={PAGE_SOCIALS} onChange={(socials) => setLook({ socials })} />
+                  <Choice name="Logo" value={draft.page.look.logo ? 'show' : 'hide'} options={[{ id: 'show', label: 'Shown' }, { id: 'hide', label: 'Hidden' }] as const} onChange={(v) => setLook({ logo: v === 'show' })} />
+                </Group>
                 <div>
                   <p className={label}>Background</p>
                   <div className="grid grid-cols-3 gap-2">
@@ -304,10 +312,26 @@ const swap = <T,>(a: T[], i: number, j: number) => {
   return b
 }
 
+/** A row of choices where one is on. */
+function Choice<T extends string>({ name, value, options, onChange }: { name: string; value: T; options: readonly { id: T; label: string; note?: string }[]; onChange: (v: T) => void }) {
+  return (
+    <div>
+      <p className={label}>{name}</p>
+      <div role="radiogroup" aria-label={name} className="flex flex-wrap gap-1.5">
+        {options.map((o) => (
+          <button key={o.id} type="button" role="radio" aria-checked={value === o.id} title={o.note} onClick={() => onChange(o.id)} className={cn('rounded-pill border px-3 py-1.5 text-[12.5px] transition-colors', value === o.id ? 'border-paper bg-paper text-ink' : 'border-white/12 text-paper/70 hover:border-white/30 hover:text-paper')}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="grid gap-3">
-      <p className="text-[11px] font-semibold tracking-[0.14em] text-paper/40 uppercase">{title}</p>
+      <p className="text-[13px] font-medium text-paper/60">{title}</p>
       {children}
     </section>
   )

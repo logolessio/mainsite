@@ -28,7 +28,7 @@ export default async function DiscordStep({ searchParams }: { searchParams: Prom
   const problem = PROBLEM[(await searchParams).discord ?? '']
   return (
     <main className="mx-auto flex min-h-[80svh] max-w-md flex-col items-center justify-center px-6 py-16 text-center">
-      <p className="text-[13px] tracking-[0.2em] text-mute uppercase">{s.linked ? 'All done' : 'Last step'}</p>
+      <p className="text-sm text-mute">{s.linked ? 'All done' : 'Last step'}</p>
       <h1 className="mt-4 font-display text-4xl tracking-[-0.03em] md:text-5xl">{s.linked ? 'You are in.' : 'Link your Discord'}</h1>
       <p className="mt-4 text-[17px] text-mute">
         {s.linked

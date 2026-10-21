@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 import { cn } from '@/lib/utils'
-import s from './launch-home.module.css'
 
 const EASE = [0.22, 1, 0.36, 1] as const
 
@@ -36,13 +35,13 @@ function Digit({ v, roll }: { v: string; roll: boolean }) {
 function Tile({ value, label, roll, compact }: { value: number; label: string; roll: boolean; compact: boolean }) {
   const t = String(Math.min(value, 999)).padStart(2, '0')
   return (
-    <div className={cn(s.glass, 'flex min-w-0 flex-1 flex-col items-center rounded-card', compact ? 'px-1.5 pt-2 pb-2.5' : 'px-2 pt-3 pb-3.5 md:pt-4 md:pb-4')}>
-      <div aria-hidden="true" className={cn('font-display text-paper tabular-nums', compact ? 'text-[clamp(1.9rem,7vw,2.8rem)] leading-[1.18]' : 'text-[clamp(2.3rem,8vw,4.4rem)] leading-[1.18]')}>
+    <div className="flex min-w-0 flex-1 flex-col items-center">
+      <div aria-hidden="true" className={cn('font-display text-paper tabular-nums', compact ? 'text-[clamp(1.9rem,7vw,2.6rem)] leading-[1.18]' : 'text-[clamp(2.3rem,8vw,4.4rem)] leading-[1.18]')}>
         {[...t].map((c, i) => (
           <Digit key={t.length - i} v={c} roll={roll} />
         ))}
       </div>
-      <span className={cn('mt-2 text-[10.5px] font-medium tracking-[0.16em] text-paper/45 uppercase md:text-[11.5px]', !compact && 'md:mt-3')}>{label}</span>
+      <span className={cn('mt-1 text-[12px] text-paper/45 md:text-[13px]', !compact && 'md:mt-2')}>{label}</span>
     </div>
   )
 }
@@ -80,7 +79,7 @@ export function Countdown({ end, compact = false, auto = true, onOver }: { end: 
 
   return (
     <div className="w-full">
-      <div role="timer" aria-label={p ? `${p.d} days, ${p.h} hours, ${p.m} minutes and ${p.s} seconds left` : 'Countdown'} className={cn('mx-auto flex w-full gap-2 md:gap-3', compact ? 'max-w-[400px]' : 'max-w-[620px]')}>
+      <div role="timer" aria-label={p ? `${p.d} days, ${p.h} hours, ${p.m} minutes and ${p.s} seconds left` : 'Countdown'} className={cn('mx-auto flex w-full divide-x divide-white/10', compact ? 'max-w-[400px]' : 'max-w-[620px]')}>
         {p ? (
           <>
             <Tile value={p.d} label="Days" roll={!reduced} compact={compact} />
@@ -90,9 +89,9 @@ export function Countdown({ end, compact = false, auto = true, onOver }: { end: 
           </>
         ) : (
           ['Days', 'Hours', 'Minutes', 'Seconds'].map((l) => (
-            <div key={l} className={cn(s.glass, 'flex flex-1 flex-col items-center rounded-card', compact ? 'px-1.5 pt-2 pb-2.5' : 'px-2 pt-3 pb-3.5 md:pt-4 md:pb-4')}>
-              <span aria-hidden="true" className={cn('font-display text-paper/25', compact ? 'text-[clamp(1.9rem,7vw,2.8rem)] leading-[1.18]' : 'text-[clamp(2.3rem,8vw,4.4rem)] leading-[1.18]')}>--</span>
-              <span className="mt-2 text-[10.5px] font-medium tracking-[0.16em] text-paper/45 uppercase md:text-[11.5px]">{l}</span>
+            <div key={l} className="flex flex-1 flex-col items-center">
+              <span aria-hidden="true" className={cn('font-display text-paper/25', compact ? 'text-[clamp(1.9rem,7vw,2.6rem)] leading-[1.18]' : 'text-[clamp(2.3rem,8vw,4.4rem)] leading-[1.18]')}>--</span>
+              <span className="mt-1 text-[12px] text-paper/45 md:text-[13px]">{l}</span>
             </div>
           ))
         )}

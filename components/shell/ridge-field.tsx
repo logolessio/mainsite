@@ -87,8 +87,6 @@ export function RidgeField() {
     let sy = -9999
     let lean = 0
     let energy = 0
-    let lastX = 0
-    let lastY = 0
     let boost = 0
 
     const build = () => {
@@ -249,36 +247,16 @@ export function RidgeField() {
       }
     }
 
-    const onMove = (e: PointerEvent) => {
-      energy = Math.min(40, energy + Math.hypot(e.clientX - lastX, e.clientY - lastY) * 0.12)
-      lastX = e.clientX
-      lastY = e.clientY
-      mx = e.clientX
-      my = e.clientY
-    }
-    const onLeave = () => {
-      mx = my = -9999
-    }
-    const onDown = () => {
-      boost = 1
-    }
-
     resize()
     window.addEventListener('resize', resize)
     if (reduced) draw(0)
     else {
-      window.addEventListener('pointermove', onMove, { passive: true })
-      window.addEventListener('pointerdown', onDown, { passive: true })
-      document.addEventListener('pointerleave', onLeave)
       raf = requestAnimationFrame(loop)
     }
     return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener(DOT_EVENT, onDots)
       window.removeEventListener('resize', resize)
-      window.removeEventListener('pointermove', onMove)
-      window.removeEventListener('pointerdown', onDown)
-      document.removeEventListener('pointerleave', onLeave)
     }
   }, [reduced])
 

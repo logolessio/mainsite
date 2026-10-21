@@ -25,22 +25,14 @@ function accentVars(hex: string) {
   return { '--acc': hex, '--acc-rgb': `${r} ${g} ${b}`, '--on-acc': lum > 0.6 ? '#000' : '#fff' } as React.CSSProperties
 }
 
-/** Each word of the headline rises on its own, a beat after the one before. Screen readers get the line whole. */
-function Words({ text, delay }: { text: string; delay: number }) {
-  return (
-    <>
-      <span className="sr-only">{text}</span>
-      <span aria-hidden="true">
-        {text.split(' ').map((w, i, all) => (
-          <span key={`${i}-${w}`} className={s.word} style={{ '--i': i, '--d': `${delay}s` } as React.CSSProperties}>
-            {w}
-            {i < all.length - 1 ? ' ' : ''}
-          </span>
-        ))}
-      </span>
-    </>
-  )
-}
+/** The corners of the buttons, from the page's Shape choice. */
+const SHAPE = { pill: 'rounded-pill', round: 'rounded-panel', square: 'rounded-chip' } as const
+/** The headline and the buttons, from the page's Size choice. */
+const HEAD = {
+  small: { links: 'text-[clamp(1.7rem,6vw,2.3rem)]', full: 'text-[clamp(2rem,5vw,3.6rem)]', row: 'h-12 text-[15px]', cta: 'h-12 text-[15px]' },
+  medium: { links: 'text-[clamp(2.1rem,7vw,3.1rem)]', full: 'text-[clamp(2.5rem,6.4vw,5rem)]', row: 'h-14 text-[16px]', cta: 'h-14 text-[16px]' },
+  large: { links: 'text-[clamp(2.6rem,8.5vw,3.8rem)]', full: 'text-[clamp(3rem,7.6vw,6.2rem)]', row: 'h-16 text-[17px]', cta: 'h-16 text-[17px]' },
+} as const
 
 const external = (url: string) => !/^https:\/\/(www\.)?logoless\.io(\/|$)/.test(url) && !url.startsWith('/')
 
@@ -86,7 +78,35 @@ export function LaunchHome(props: LaunchHomeProps) {
     if (soon) void fetch('/api/launch/waitlist', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ step: 'hello' }) }).catch(() => undefined)
   }, [soon])
 
-  const cta = 'group relative inline-flex h-14 w-full items-center justify-center gap-2.5 rounded-pill bg-[var(--acc)] px-8 text-[16px] font-medium text-[var(--on-acc)] shadow-[0_10px_40px_-12px_rgb(var(--acc-rgb)/0.55)] transition-[transform,filter] duration-300 hover:brightness-110 active:scale-[0.98]'
+  const left = look.align === 'left'
+  const shape = SHAPE[look.shape]
+  const size = HEAD[look.size]
+  const cta = cn('group relative inline-flex w-full items-center justify-center gap-2.5 bg-[var(--acc)] px-8 font-medium text-[var(--on-acc)] transition-[background-color,transform] duration-300 hover:bg-[color-mix(in_srgb,var(--acc)_88%,transparent)] active:scale-[0.985]', shape, size.cta)
+  const rowStyle = {
+    outline: 'border border-white/15 hover:border-white/35 hover:bg-white/[0.04]',
+    solid: 'bg-paper text-ink hover:bg-paper/90',
+    minimal: 'border border-transparent hover:bg-white/[0.06]',
+  }[look.rows]
+  const iconTone = look.rows === 'solid' ? 'text-ink/70' : 'text-paper/70'
+
+  const socialRow =
+    socials.length > 0 && look.socials !== 'off' ? (
+      <ul aria-label="logoless elsewhere" className={cn('flex flex-wrap items-center gap-1', left ? 'justify-start' : 'justify-center')}>
+        {socials.map((l) => (
+          <li key={l.id}>
+            <a
+              href={l.url}
+              aria-label={l.label}
+              title={l.label}
+              {...(external(l.url) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+              className="grid size-11 place-items-center rounded-full text-paper/60 transition-colors duration-300 hover:text-paper focus-visible:text-paper"
+            >
+              {l.platform === 'website' ? <Globe aria-hidden="true" className="size-5" /> : <BrandIcon name={l.platform} className="size-5" />}
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : null
 
   return (
     // the closed site is drawn without the site's shell, so the reduced-motion setting is applied here too
@@ -94,57 +114,36 @@ export function LaunchHome(props: LaunchHomeProps) {
     <div className={s.root} style={accentVars(look.accent)}>
       <Backdrop look={look} />
 
-      <main id="main" className={cn('relative z-10 mx-auto flex min-h-dvh w-full flex-col items-center px-4 text-center md:px-6', props.links ? 'max-w-[520px] pt-14 pb-10 md:pt-20' : 'max-w-[960px] justify-center pt-14 pb-7 md:pt-16')}>
-        <a href="/" aria-label="logoless" className="relative mb-6 block md:mb-7">
-          <span className={s.logoHalo} aria-hidden="true" />
-          <span className={cn(s.logo, 'block')} aria-hidden="true" />
-        </a>
-
-        {socials.length > 0 && (
-          <ul aria-label="logoless elsewhere" className="flex flex-wrap items-center justify-center gap-2 md:gap-2.5">
-            {socials.map((l, i) => (
-              <li key={l.id} className={s.social} style={{ '--i': i } as React.CSSProperties}>
-                <a
-                  href={l.url}
-                  aria-label={l.label}
-                  title={l.label}
-                  {...(external(l.url) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                  className="grid size-11 place-items-center rounded-full text-paper/70 transition-[transform,color] duration-300 hover:-translate-y-0.5 hover:text-paper focus-visible:-translate-y-0.5 focus-visible:text-paper md:size-12"
-                >
-                  {l.platform === 'website' ? <Globe aria-hidden="true" className="size-5" /> : <BrandIcon name={l.platform} className="size-5" />}
-                </a>
-              </li>
-            ))}
-          </ul>
+      <main id="main" className={cn('relative z-10 mx-auto flex min-h-dvh w-full flex-col px-5 md:px-6', left ? 'items-start text-left' : 'items-center text-center', props.links ? 'max-w-[480px] pt-14 pb-10 md:pt-20' : 'max-w-[960px] justify-center pt-14 pb-7 md:pt-16')}>
+        {look.logo && (
+          <a href="/" aria-label="logoless" className={cn(s.rise, 'mb-7 block md:mb-8')}>
+            <span className={cn(s.logo, 'block')} aria-hidden="true" />
+          </a>
         )}
 
-        <div className={cn('flex w-full flex-col items-center', props.links ? 'mt-9' : 'mt-9 md:mt-10')}>
-          {soon && copy.kicker && (
-            <p className={cn(s.rise, s.glass, 'mb-5 inline-flex items-center gap-2.5 rounded-pill px-3.5 py-1.5 text-[12.5px] font-medium tracking-[0.06em] text-paper/80')} style={{ '--d': '0.45s' } as React.CSSProperties}>
-              <span className={s.dot} aria-hidden="true" />
-              {copy.kicker}
-            </p>
-          )}
-          <h1 key={headline} className={cn('font-display tracking-[-0.01em] text-balance', props.links ? 'text-[clamp(2.1rem,7vw,3.1rem)] leading-[1.04]' : 'text-[clamp(2.5rem,6.4vw,5rem)] leading-[1.02]')}>
-            <Words text={headline} delay={0.5} />
+        {look.socials === 'top' && socialRow && <div className={cn(s.rise, '-mt-1 mb-6')} style={{ '--d': '0.1s' } as React.CSSProperties}>{socialRow}</div>}
+
+        <div className={cn('flex w-full flex-col', left ? 'items-start' : 'items-center')}>
+          <h1 key={headline} className={cn(s.rise, 'tracking-[-0.015em] text-balance', look.font === 'serif' ? 'font-display leading-[1.04]' : 'font-sans font-semibold leading-[1.08] tracking-[-0.03em]', props.links ? size.links : size.full)} style={{ '--d': '0.15s' } as React.CSSProperties}>
+            {headline}
           </h1>
           {text && (
-            <p key={text} className={cn(s.rise, 'mt-4 max-w-[34rem] text-[16px] leading-relaxed text-paper/60 text-pretty md:mt-5 md:text-[17.5px]')} style={{ '--d': '0.7s' } as React.CSSProperties}>
+            <p key={text} className={cn(s.rise, 'mt-4 max-w-[34rem] text-[16px] leading-relaxed text-paper/60 text-pretty md:mt-5 md:text-[17px]')} style={{ '--d': '0.25s' } as React.CSSProperties}>
               {text}
             </p>
           )}
         </div>
 
         {props.links ? (
-          <div className={cn(s.rise, 'mt-8 w-full')} style={{ '--d': '0.85s' } as React.CSSProperties}>
+          <div className={cn(s.rise, 'mt-9 w-full')} style={{ '--d': '0.35s' } as React.CSSProperties}>
             {soon && draft.end && !opened && (
-              <div className="mb-5">
+              <div className="mb-6">
                 <Countdown end={draft.end} compact auto={props.auto} onOver={onOver} />
               </div>
             )}
             <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className={cta}>
               {soon ? copy.joinLabel : copy.startTitle}
-              <ArrowUpRight aria-hidden="true" className={cn('size-5 transition-transform duration-500', open ? 'rotate-[135deg]' : 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5')} />
+              <ArrowUpRight aria-hidden="true" className={cn('size-[18px] transition-transform duration-500', open ? 'rotate-[135deg]' : 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5')} />
             </button>
             <AutoHeight>
               <AnimatePresence initial={false}>
@@ -157,17 +156,17 @@ export function LaunchHome(props: LaunchHomeProps) {
             </AutoHeight>
 
             {buttons.length > 0 && (
-              <ul className="mt-7 grid w-full grid-cols-[minmax(0,1fr)] gap-2.5">
-                {buttons.map((l, i) => (
-                  <li key={l.id} className={cn(s.rise, 'min-w-0')} style={{ '--d': `${0.95 + i * 0.06}s` } as React.CSSProperties}>
+              <ul className="mt-6 grid w-full grid-cols-[minmax(0,1fr)] gap-2.5">
+                {buttons.map((l) => (
+                  <li key={l.id} className="min-w-0">
                     <a
                       href={l.url}
                       {...(external(l.url) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                      className={cn(s.glass, s.sheen, 'group flex h-[60px] items-center gap-3.5 rounded-pill pr-5 pl-2.5 text-left transition-[transform,border-color] duration-300 hover:border-white/25 active:scale-[0.985]')}
+                      className={cn('group flex items-center gap-3.5 px-5 transition-[background-color,border-color,transform] duration-300 active:scale-[0.985]', shape, size.row, rowStyle, left ? 'text-left' : 'text-left')}
                     >
-                      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white/[0.07]">{l.platform === 'website' ? <Globe aria-hidden="true" className="size-[18px]" /> : <BrandIcon name={l.platform} className="size-[18px]" />}</span>
-                      <span className="min-w-0 flex-1 truncate text-[16px]">{l.label}</span>
-                      <ArrowUpRight aria-hidden="true" className="size-[18px] shrink-0 text-paper/40 transition-[transform,color] duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-paper" />
+                      <span className={cn('shrink-0', iconTone)}>{l.platform === 'website' ? <Globe aria-hidden="true" className="size-5" /> : <BrandIcon name={l.platform} className="size-5" />}</span>
+                      <span className="min-w-0 flex-1 truncate">{l.label}</span>
+                      <ArrowUpRight aria-hidden="true" className={cn('size-[18px] shrink-0 transition-[transform,opacity] duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5', look.rows === 'solid' ? 'text-ink/50' : 'text-paper/30 group-hover:text-paper')} />
                     </a>
                   </li>
                 ))}
@@ -177,7 +176,7 @@ export function LaunchHome(props: LaunchHomeProps) {
         ) : soon ? (
           <>
             {draft.end && !opened ? (
-              <div className={cn(s.rise, 'mt-8 w-full md:mt-9')} style={{ '--d': '0.8s' } as React.CSSProperties}>
+              <div className={cn(s.rise, 'mt-9 w-full md:mt-10')} style={{ '--d': '0.35s' } as React.CSSProperties}>
                 <Countdown end={draft.end} auto={props.auto} onOver={onOver} />
               </div>
             ) : opened ? (
@@ -185,15 +184,17 @@ export function LaunchHome(props: LaunchHomeProps) {
                 <Countdown end={draft.end ?? 0} auto={props.auto} />
               </div>
             ) : null}
-            <div className={cn(s.rise, 'mt-7 w-full max-w-[520px]', !draft.end && 'mt-10')} style={{ '--d': '0.95s' } as React.CSSProperties}>
+            <div className={cn(s.rise, 'mt-8 w-full max-w-[520px]', !draft.end && 'mt-10')} style={{ '--d': '0.45s' } as React.CSSProperties}>
               <Waitlist copy={copy} />
             </div>
           </>
         ) : (
-          <div className={cn(s.rise, 'mt-10 w-full max-w-[440px]')} style={{ '--d': '0.8s' } as React.CSSProperties}>
+          <div className={cn(s.rise, 'mt-10 w-full max-w-[440px]')} style={{ '--d': '0.35s' } as React.CSSProperties}>
             <GetStarted copy={copy} signedIn={Boolean(props.signedInAs)} />
           </div>
         )}
+
+        {look.socials === 'bottom' && socialRow && <div className={cn(s.rise, 'mt-10')} style={{ '--d': '0.5s' } as React.CSSProperties}>{socialRow}</div>}
 
         {props.locked && props.signedInAs && (
           <p className="mt-10 max-w-sm text-[13.5px] leading-relaxed text-paper/40">

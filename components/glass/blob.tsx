@@ -340,7 +340,7 @@ export function GlassMenu<T extends string>({
 
   return (
     <div ref={box} className={cn('relative inline-block', className)}>
-      <GlassSurface shine flat className="inline-block">
+      <GlassSurface flat className="inline-block">
         <button type="button" aria-haspopup="listbox" aria-expanded={open} aria-label={label} onClick={() => setOpen((o) => !o)} className="relative z-10 flex h-11 items-center gap-3 rounded-full pr-4 pl-5 text-[15px] outline-none focus-visible:ring-2 focus-visible:ring-paper/60">
           <span>{current?.label}</span>
           <motion.svg animate={{ rotate: open ? 180 : 0 }} transition={{ type: 'spring', stiffness: 500, damping: 30 }} width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">

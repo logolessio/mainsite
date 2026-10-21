@@ -129,9 +129,11 @@ type TikTokItem = { id?: string; desc?: string; createTime?: string | number; au
 
 async function tiktok(url: string): Promise<ClipMeta> {
   const m = blank(postId('tiktok', url))
-  const [oembed, page] = await Promise.allSettled([
+  const [oembed, page, preview] = await Promise.allSettled([
     getJson<{ title?: string; author_name?: string; thumbnail_url?: string; embed_product_id?: string }>(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`),
     getText(url, { 'user-agent': BROWSER, 'accept-language': 'en-US,en;q=0.9' }),
+    // the same page as link previews see it: TikTok sends these robots the picture and the poster's name even when it sends a person to the log in page
+    getText(url, { 'user-agent': 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)', 'accept-language': 'en-US,en;q=0.9' }),
   ])
   if (oembed.status === 'fulfilled') {
     const o = oembed.value.data
@@ -165,6 +167,18 @@ async function tiktok(url: string): Promise<ClipMeta> {
       /* TikTok changed its page; the oEmbed answer is still used */
     }
   } else if (page.status === 'fulfilled' && page.value.status === 404) m.gone = true
+  // a thumbnail and the poster's name, when nothing else gave them
+  if (!m.thumb && preview.status === 'fulfilled' && preview.value.html) {
+    const og = (prop: string) => new RegExp(`<meta[^>]+property="${prop}"[^>]+content="([^"]*)"`, 'i').exec(preview.value.html)?.[1]
+    const img = og('og:image')
+    if (img) {
+      m.thumb = decode(img)
+      m.ok = true
+      m.gone = false
+    }
+    const who = /^TikTok\s*[·|-]\s*(.+)$/.exec(decode(og('og:title') ?? ''))?.[1]
+    if (who && !m.author) m.author = text(who, 80)
+  }
   return m
 }
 

@@ -20,11 +20,53 @@ const neutral = (hex: string) => {
   return Math.max(r, g, b) - Math.min(r, g, b) <= 14
 }
 
-export type PageLook = { bg: string; effect: CardEffect; accent: string; intensity: number }
+/** How the page is laid out and how its buttons look. Every one of these is a choice in the owner's editor. */
+export const PAGE_ALIGNS = [
+  { id: 'center', label: 'Centred' },
+  { id: 'left', label: 'Left' },
+] as const
+export const PAGE_ROWS = [
+  { id: 'outline', label: 'Outline', note: 'A thin line round each link' },
+  { id: 'solid', label: 'Solid', note: 'White buttons' },
+  { id: 'minimal', label: 'Text only', note: 'No box, just the link' },
+] as const
+export const PAGE_SHAPES = [
+  { id: 'pill', label: 'Pill' },
+  { id: 'round', label: 'Rounded' },
+  { id: 'square', label: 'Square' },
+] as const
+export const PAGE_FONTS = [
+  { id: 'serif', label: 'Serif', note: 'The site headline font' },
+  { id: 'sans', label: 'Sans', note: 'The plain interface font' },
+] as const
+export const PAGE_SIZES = [
+  { id: 'small', label: 'Small' },
+  { id: 'medium', label: 'Medium' },
+  { id: 'large', label: 'Large' },
+] as const
+export const PAGE_SOCIALS = [
+  { id: 'top', label: 'Under the logo' },
+  { id: 'bottom', label: 'At the bottom' },
+  { id: 'off', label: 'Hidden' },
+] as const
+
+type Id<T extends readonly { id: string }[]> = T[number]['id']
+export type PageLook = {
+  bg: string
+  effect: CardEffect
+  accent: string
+  intensity: number
+  align: Id<typeof PAGE_ALIGNS>
+  rows: Id<typeof PAGE_ROWS>
+  shape: Id<typeof PAGE_SHAPES>
+  font: Id<typeof PAGE_FONTS>
+  size: Id<typeof PAGE_SIZES>
+  socials: Id<typeof PAGE_SOCIALS>
+  /** the logo at the top */
+  logo: boolean
+}
 
 export type PageCopy = {
-  /** the small label above the headline while the site is closed */
-  kicker: string
   /** the headline and the line under it once the site is open */
   liveHeadline: string
   liveText: string
@@ -44,7 +86,6 @@ export type PageConfig = { copy: PageCopy; look: PageLook }
 
 export const DEFAULT_PAGE: PageConfig = {
   copy: {
-    kicker: 'Coming soon',
     liveHeadline: 'Views have value.',
     liveText: 'Clip campaigns from artists, streamers and brands. Post the clip, get paid for every thousand views.',
     joinLabel: 'Join the waitlist',
@@ -57,12 +98,11 @@ export const DEFAULT_PAGE: PageConfig = {
     signupLabel: 'Create an account',
     loginLabel: 'Log in',
   },
-  look: { bg: 'reels', effect: 'none', accent: '#f3f2ee', intensity: 40 },
+  look: { bg: 'void', effect: 'none', accent: '#f3f2ee', intensity: 40, align: 'center', rows: 'outline', shape: 'pill', font: 'serif', size: 'medium', socials: 'top', logo: true },
 }
 
 /** How long each piece of text may be. The editor and the server both use these. */
 export const COPY_MAX: Record<keyof PageCopy, number> = {
-  kicker: 32,
   liveHeadline: 90,
   liveText: 240,
   joinLabel: 32,
@@ -78,6 +118,8 @@ export const COPY_MAX: Record<keyof PageCopy, number> = {
 export const COPY_KEYS = Object.keys(COPY_MAX) as (keyof PageCopy)[]
 
 const HEX = /^#[0-9a-f]{6}$/i
+/** A choice from a list, or the default when it is anything else. */
+const pick = <T extends readonly { id: string }[]>(list: T, v: unknown, fallback: Id<T>): Id<T> => (list.some((o) => o.id === v) ? (v as Id<T>) : fallback)
 const oneLine = (v: unknown, max: number) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max) : '')
 
 /** Anything from the database or the browser, made safe: unknown keys dropped, bad values replaced by the defaults. */
@@ -94,6 +136,13 @@ export function cleanPage(input: unknown): PageConfig {
     effect: typeof l.effect === 'string' && CARD_EFFECT_IDS.includes(l.effect) ? (l.effect as CardEffect) : DEFAULT_PAGE.look.effect,
     accent: typeof l.accent === 'string' && HEX.test(l.accent) && neutral(l.accent) ? l.accent.toLowerCase() : DEFAULT_PAGE.look.accent,
     intensity: typeof l.intensity === 'number' && Number.isFinite(l.intensity) ? Math.round(Math.min(100, Math.max(0, l.intensity))) : DEFAULT_PAGE.look.intensity,
+    align: pick(PAGE_ALIGNS, l.align, DEFAULT_PAGE.look.align),
+    rows: pick(PAGE_ROWS, l.rows, DEFAULT_PAGE.look.rows),
+    shape: pick(PAGE_SHAPES, l.shape, DEFAULT_PAGE.look.shape),
+    font: pick(PAGE_FONTS, l.font, DEFAULT_PAGE.look.font),
+    size: pick(PAGE_SIZES, l.size, DEFAULT_PAGE.look.size),
+    socials: pick(PAGE_SOCIALS, l.socials, DEFAULT_PAGE.look.socials),
+    logo: typeof l.logo === 'boolean' ? l.logo : DEFAULT_PAGE.look.logo,
   }
   return { copy, look }
 }

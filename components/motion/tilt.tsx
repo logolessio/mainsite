@@ -15,14 +15,12 @@ export function Tilt3D({
   children,
   className,
   max = 8,
-  glare = true,
   global = false,
   perspective = 1200,
 }: {
   children: React.ReactNode
   className?: string
   max?: number
-  glare?: boolean
   global?: boolean
   perspective?: number
 }) {
@@ -62,9 +60,6 @@ export function Tilt3D({
     <div ref={ref} onPointerMove={local} onPointerLeave={reset} style={{ perspective }} className={cn('tilt relative', className)}>
       <motion.div style={on ? { rotateX, rotateY, transformStyle: 'preserve-3d' } : undefined} className="relative rounded-[inherit]">
         {children}
-        {/* The light rides on the tilted card itself and is clipped to its rounded shape, so it moves with the card (and with anything
-            that floats the whole tilt) and never shows past the corners or stops short at a square edge. */}
-        {glare && on && <div aria-hidden="true" className="sheen-sweep pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]" />}
       </motion.div>
     </div>
   )

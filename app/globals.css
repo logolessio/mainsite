@@ -406,19 +406,6 @@
 }
 
 /* Diagonal light band that crosses a surface once on hover. */
-.sheen-sweep::after {
-  content: '';
-  position: absolute;
-  inset: -20% auto -20% 0;
-  width: 40%;
-  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.16), transparent);
-  transform: translateX(-160%) skewX(-18deg);
-  transition: transform 0s;
-}
-.tilt:hover .sheen-sweep::after {
-  transform: translateX(380%) skewX(-18deg);
-  transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
-}
 
 /* Slow levitation for the campaign card and its ground shadow. Transform only, so it stays on the GPU. */
 @keyframes float {
@@ -1154,14 +1141,6 @@ html[data-app] [data-site-nav] {
     inset 0 1px 0 rgb(243 242 238 / 0.32),
     inset 0 0 26px rgb(243 242 238 / 0.1),
     0 22px 44px -16px rgb(0 0 0 / 0.85);
-}
-.gs-spot {
-  opacity: 0;
-  background: radial-gradient(120px circle at var(--mx, 50%) var(--my, 50%), rgb(255 255 255 / 0.2), transparent 70%);
-  transition: opacity 0.3s;
-}
-.gs-shine:hover .gs-spot {
-  opacity: 1;
 }
 
 /* a very slow push-in on the film's picture while its trailer plays (a transform only, so it costs the processor nothing) */

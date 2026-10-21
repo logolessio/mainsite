@@ -1,5 +1,6 @@
 'use client'
 
+import { checkEmail, cleanEmail } from '@/lib/email-check'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Check, Copy, Loader2, Mail, X } from 'lucide-react'
 import { signIn, signOut } from 'next-auth/react'
@@ -384,11 +385,18 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
     hello: 'Your profile page is ready.',
   }
 
+  // a likely fix for a mistyped email ("gmial.com"), offered as a button
+  const suggestion = id === 'paypal' || id === 'email' ? checkEmail(text).suggestion : null
+
   // What each text step expects, and the answer we show as the person types.
   const judge = async (v: string): Promise<Verdict> => {
-    if (id === 'email') return EMAIL_RE.test(v) ? { ok: true, msg: 'Looks good' } : { ok: false, msg: 'That does not look like an email address' }
+    if (id === 'email' || id === 'paypal') {
+      const c = checkEmail(v)
+      if (!c.ok) return { ok: false, msg: c.problem || (id === 'paypal' ? 'That does not look like a PayPal email' : 'That does not look like an email address') }
+      if (c.suggestion) return { ok: true, msg: `Did you mean ${c.suggestion}?` }
+      return { ok: true, msg: id === 'paypal' ? 'Earnings will be sent here' : 'Looks good' }
+    }
     if (id === 'password') return v.length < 10 ? { ok: false, msg: `${10 - v.length} more ${10 - v.length === 1 ? 'character' : 'characters'}` } : { ok: true, msg: v.length >= 14 ? 'Strong' : 'Good' }
-    if (id === 'paypal') return EMAIL_RE.test(v) ? { ok: true, msg: 'Earnings will be sent here' } : { ok: false, msg: 'That does not look like a PayPal email' }
     if (id === 'handle') {
       const h = v.toLowerCase()
       if (looseHandles) {
@@ -500,11 +508,11 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       if (shown.st !== 'ok') return
       if (!preview) {
         setBusy(true)
-        const res = await fetch('/api/me/paypal', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: v }) }).catch(() => null)
+        const res = await fetch('/api/me/paypal', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: cleanEmail(v) }) }).catch(() => null)
         setBusy(false)
         if (!res?.ok) return setForced({ st: 'bad', msg: 'We could not save that. Try again, or add it later in Settings.' })
       }
-      patch({ paypal: v })
+      patch({ paypal: cleanEmail(v) })
       return go('name')
     }
     if (id === 'name') {
@@ -786,6 +794,11 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                     {id !== 'code' && (
                       <button type="submit" disabled={busy || !canContinue} className={primary}>
                         {busy ? 'One moment' : 'Continue'}
+                      </button>
+                    )}
+                    {(id === 'paypal' || id === 'email') && suggestion && (
+                      <button type="button" onClick={() => (setText(suggestion), setForced(null))} className={quiet}>
+                        Use {suggestion}
                       </button>
                     )}
                     {id === 'paypal' && (

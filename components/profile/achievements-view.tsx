@@ -228,7 +228,7 @@ export function AchievementsView({ board = false }: { board?: boolean }) {
             const R = RARITY_STYLE[b.rarity]
             return (
               <motion.li key={b.id} layout initial={false} exit={{ opacity: 0, scale: 0.94 }} transition={{ delay: Math.min(i * 0.03, 0.4), duration: 0.5, ease: EASE_OUT }}>
-                <Tilt3D max={7} glare={false} className="rounded-card">
+                <Tilt3D max={7} className="rounded-card">
                   <button
                     type="button"
                     onClick={() => setOpen(b)}
@@ -278,7 +278,7 @@ export function AchievementsView({ board = false }: { board?: boolean }) {
                   <button type="button" aria-label="Close" onClick={() => setOpen(null)} className="absolute top-4 right-4 z-10 grid size-9 place-items-center rounded-pill hover:bg-white/10">
                     <X className="size-4" />
                   </button>
-                  <Tilt3D max={12} glare={false} className="relative mx-auto w-fit">
+                  <Tilt3D max={12} className="relative mx-auto w-fit">
                     <BadgeArt badge={b} size={230} locked={!got} animated />
                   </Tilt3D>
                   <p className={cn('relative mt-4 text-[11px]', got ? R.text : 'text-mute')}>{R.label} · {b.points} points</p>
@@ -334,7 +334,7 @@ function BadgeGrid({ shown, data, onOpen }: { shown: BadgeDef[]; data: Data; onO
               )}
               <BadgeArt badge={b} size={96} locked={!got} className="relative max-w-[56%]" />
               <span className="relative mt-2 line-clamp-1 text-sm leading-tight font-medium">{b.name}</span>
-              <span className="relative mt-0.5 text-[10px] font-medium tracking-wide uppercase" style={{ color: got ? RARITY_BORDER[b.rarity].replace(/[\d.]+\)$/, '1)') : undefined }}>
+              <span className="relative mt-0.5 text-[11px] font-medium" style={{ color: got ? RARITY_BORDER[b.rarity].replace(/[\d.]+\)$/, '1)') : undefined }}>
                 {R.label}
               </span>
             </button>

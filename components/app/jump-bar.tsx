@@ -10,7 +10,18 @@ import { cn } from '@/lib/utils'
  */
 export function JumpBar({ items }: { items: { id: string; label: string }[] }) {
   const [on, setOn] = useState(items[0]?.id ?? '')
+  const [stuck, setStuck] = useState(false)
   const lockUntil = useRef(0)
+  const rest = useRef<HTMLSpanElement>(null)
+
+  // the bar has no backdrop while it sits in its place; once the page has scrolled under it, it gets a soft one that fades out below
+  useEffect(() => {
+    const el = rest.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver(([e]) => setStuck(!e.isIntersecting), { rootMargin: '-73px 0px 0px 0px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
 
   useEffect(() => {
     const els = items.map((i) => document.getElementById(i.id)).filter((e): e is HTMLElement => Boolean(e))
@@ -39,21 +50,30 @@ export function JumpBar({ items }: { items: { id: string; label: string }[] }) {
   }, [items])
 
   return (
-    <nav aria-label="On this page" className="no-scrollbar sticky top-[72px] z-20 -mx-5 mb-6 flex gap-1.5 overflow-x-auto bg-ink/90 px-5 py-3 md:-mx-10 md:px-10">
-      {items.map((i) => (
-        <a
-          key={i.id}
-          href={`#${i.id}`}
-          aria-current={on === i.id ? 'true' : undefined}
-          onClick={() => {
-            setOn(i.id)
-            lockUntil.current = Date.now() + 1100
-          }}
-          className={cn('h-9 shrink-0 rounded-pill border px-4 text-sm leading-9 transition-colors duration-300', on === i.id ? 'border-line-strong bg-white/[0.08] text-paper' : 'border-transparent text-paper/50 hover:text-paper')}
-        >
-          {i.label}
-        </a>
-      ))}
-    </nav>
+    <>
+      <span ref={rest} aria-hidden="true" className="block h-px" />
+      <nav
+        aria-label="On this page"
+        className={cn(
+          'no-scrollbar sticky top-[72px] z-20 -mx-5 mb-6 flex gap-1.5 overflow-x-auto px-5 py-3 transition-[background-color,backdrop-filter] duration-300 md:-mx-10 md:px-10',
+          stuck && 'bg-ink/75 backdrop-blur-md [mask-image:linear-gradient(to_bottom,#000_80%,transparent)]',
+        )}
+      >
+        {items.map((i) => (
+          <a
+            key={i.id}
+            href={`#${i.id}`}
+            aria-current={on === i.id ? 'true' : undefined}
+            onClick={() => {
+              setOn(i.id)
+              lockUntil.current = Date.now() + 1100
+            }}
+            className={cn('h-9 shrink-0 rounded-pill border px-4 text-sm leading-9 transition-colors duration-300', on === i.id ? 'border-line-strong bg-white/[0.08] text-paper' : 'border-transparent text-paper/50 hover:text-paper')}
+          >
+            {i.label}
+          </a>
+        ))}
+      </nav>
+    </>
   )
 }

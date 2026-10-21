@@ -148,7 +148,6 @@ export function SubmissionsFeed({ initial, campaigns, filters: start, signedIn, 
   return (
     <div>
       <header className="max-w-3xl">
-        <p className="text-xs text-mute">Submissions</p>
         <h1 className="mt-4 font-display text-[clamp(2.8rem,7vw,5.6rem)] leading-[0.95] tracking-tight">Every clip, as it lands.</h1>
         <p className="mt-5 max-w-xl text-pretty text-lg leading-relaxed text-paper/65">
           The clips creators post for campaigns on logoless. Watch them here, rate the best ones and meet the people who made them.

@@ -75,7 +75,6 @@ export function StatsBoard({ initial }: { initial: Board }) {
     <div>
       <header className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-2xl">
-          <p className="text-xs text-mute">Stats</p>
           <h1 className="mt-4 font-display text-[clamp(2.8rem,7vw,5.6rem)] leading-[0.95] tracking-tight">The numbers, live.</h1>
           <p className="mt-5 max-w-xl text-pretty text-lg leading-relaxed text-paper/65">Who is bringing in the views, which clips are flying and which campaigns are biggest. People only appear by the numbers they chose to show.</p>
         </div>
