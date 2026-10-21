@@ -1321,3 +1321,18 @@ html.calm .top-veil {
 .calm-timer {
   animation: calm-timer linear forwards;
 }
+
+/* the "paid in the last day" ticker: one slow drift, the row is repeated so the loop has no gap */
+@keyframes ll-ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.ll-ticker {
+  animation: ll-ticker 40s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ll-ticker {
+    animation: none;
+  }
+}

@@ -14,6 +14,7 @@ export const metadata: Metadata = { title: 'Saved campaigns | logoless', robots:
 export default async function Page() {
   if (!(await featureOn('saved-campaigns'))) notFound()
   const user = await pageUser()
+  const calendar = await featureOn('calendar-feed')
   const d = await db()
   const rows = (
     await d
@@ -23,7 +24,7 @@ export default async function Page() {
   ).results.map(toCampaign)
   return (
     <>
-      <PageHeader title="Saved campaigns" sub="Campaigns you've hearted that are still live. Heart one to hear when it changes." actions={<ActionLink href="/">Find more</ActionLink>} />
+      <PageHeader title="Saved campaigns" sub="Campaigns you've hearted that are still live. Heart one to hear when it changes." actions={<div className="flex flex-wrap gap-2">{calendar && <ActionLink href="/api/me/calendar.ics" variant="ghost">Add end dates to my calendar</ActionLink>}<ActionLink href="/">Find more</ActionLink></div>} />
       {rows.length === 0 ? (
         <EmptyState icon="Megaphone" title="Nothing saved yet" body="Open a campaign and press the heart. It will wait for you here." action={<ActionLink href="/">Browse campaigns</ActionLink>} />
       ) : (

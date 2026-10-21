@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { connection } from 'next/server'
 import { CampaignSheet } from '@/components/campaign/campaign-sheet'
+import { CampaignMore } from '@/components/extras/campaign-more'
 import { CampaignBackdrop, CampaignExtrasBlock } from '@/components/campaign/campaign-extras'
 import { getExtras } from '@/lib/campaign-extras'
 import { Breadcrumbs, Related } from '@/components/marketing/breadcrumbs'
@@ -23,12 +24,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: gone ? `${gone.title} has ended | logoless` : 'Campaign not found | logoless', robots: { index: false } }
   }
   const title = `${campaign.title} by ${campaign.creator} | logoless`
+  // with the share cards switched on, a shared link shows a picture card (cover, rate, budget left) instead of the bare cover
+  const card = (await featureOn('campaign-share-cards')) ? `${SITE.url}/api/discord/card/campaign/${encodeURIComponent(campaign.id)}` : campaign.cover
   return {
     title,
     description: campaign.summary.slice(0, 200),
     alternates: { canonical: `/campaign/${campaign.id}` },
-    openGraph: { title: `${campaign.title} by ${campaign.creator}`, description: campaign.summary.slice(0, 200), images: [campaign.cover] },
-    twitter: { card: 'summary_large_image', title: `${campaign.title} by ${campaign.creator}`, description: campaign.summary.slice(0, 200), images: [campaign.cover] },
+    openGraph: { title: `${campaign.title} by ${campaign.creator}`, description: campaign.summary.slice(0, 200), images: [card] },
+    twitter: { card: 'summary_large_image', title: `${campaign.title} by ${campaign.creator}`, description: campaign.summary.slice(0, 200), images: [card] },
   }
 }
 
@@ -74,6 +77,7 @@ export default async function CampaignPage({ params, searchParams }: Props) {
       <div className="px-4 pt-8 pb-16 md:pt-12">
         <CampaignSheet campaign={campaign} leftPct={leftPct} preview={dry} inline extra={extras ? <CampaignExtrasBlock x={extras} /> : undefined} />
       </div>
+      <CampaignMore campaign={campaign} />
       <Related links={[{ href: '/', label: 'All campaigns' }, { href: '/for-creators', label: 'How creators earn' }, { href: '/faq', label: "Q&A" }]} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }} />
     </main>

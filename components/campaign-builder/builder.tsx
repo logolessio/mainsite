@@ -134,7 +134,7 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt, edit, init
       }
       const at = STEPS.findIndex((s) => s.id === startAt)
       // a draft is already started, so the "what are you launching" screen is skipped
-      const first = saved && (saved.title || saved.summary) && !edit ? 1 : 0
+      const first = (saved && (saved.title || saved.summary) && !edit) || (initial && !edit) ? 1 : 0
       const to = saved && at > 0 ? at : first
       if (to > 0) {
         setStep(to)

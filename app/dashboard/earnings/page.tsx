@@ -5,6 +5,7 @@ import { CountUp } from '@/components/app/count-up'
 import { EarningsChart } from '@/components/app/earnings-chart'
 import { Badge, DataTable, EmptyState } from '@/components/app/table'
 import { Card, PageHeader } from '@/components/app/ui'
+import { RecordsBar } from '@/components/extras/records-bar'
 import { db, nowSec } from '@/lib/db'
 import { balances } from '@/lib/ledger'
 import { pageUser } from '@/lib/user'
@@ -46,6 +47,7 @@ export default async function Page() {
       <div className="mb-6">
         <PayoutsPanel />
       </div>
+      <RecordsBar />
       <Bento>
         <Tile className="p-7 md:col-span-6 xl:col-span-6">
           <p className="text-sm text-mute">Lifetime earned</p>

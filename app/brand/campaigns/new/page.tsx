@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { CampaignBuilder } from '@/components/campaign-builder/builder'
 import { CampaignWizard } from '@/components/app/campaign-wizard'
 import { PageHeader } from '@/components/app/ui'
+import { draftFor } from '@/lib/campaign-edit'
+import { campaignRow } from '@/lib/campaigns-db'
 import { featureOn } from '@/lib/features'
 import { balances } from '@/lib/ledger'
 import { paypalReady } from '@/lib/paypal'
@@ -9,9 +11,12 @@ import { pageUser } from '@/lib/user'
 
 export const metadata: Metadata = { title: 'New campaign | logoless', robots: { index: false } }
 
-export default async function Page({ searchParams }: { searchParams: Promise<{ step?: string; paid?: string }> }) {
+export default async function Page({ searchParams }: { searchParams: Promise<{ step?: string; paid?: string; from?: string }> }) {
   const user = await pageUser()
   const [b, builder, q] = await Promise.all([balances(user.id), featureOn('campaign-builder'), searchParams])
+  // a copy of an earlier campaign of theirs: the builder opens already filled in, with "(copy)" on the name
+  const from = builder && q.from && (await featureOn('campaign-duplicate')) ? await campaignRow(q.from) : null
+  const initial = from && from.brand_user_id === user.id ? { ...(await draftFor(from)), title: `${from.title} (copy)`.slice(0, 60) } : undefined
   if (builder) {
     return (
       <>
@@ -21,7 +26,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ s
             Payment received. Your balance is updated, so carry on where you were.
           </p>
         )}
-        <CampaignBuilder balanceCents={b.brand} paypalReady={await paypalReady()} startAt={q.step} />
+        <CampaignBuilder balanceCents={b.brand} paypalReady={await paypalReady()} startAt={q.step} initial={initial} />
       </>
     )
   }

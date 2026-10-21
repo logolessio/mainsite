@@ -5,6 +5,7 @@ import { Badge, EmptyState } from '@/components/app/table'
 import { Card, PageHeader } from '@/components/app/ui'
 import { SetupBanner } from '@/components/app/setup-banner'
 import { ClientTour, TourButton } from '@/components/brand/client-tour'
+import { CampaignHealth } from '@/components/extras/campaign-health'
 import { FirstSubmissionGuide } from '@/components/brand/first-submission-guide'
 import { MilestoneCelebration } from '@/components/brand/milestone-celebration'
 import { MilestoneProgress } from '@/components/brand/milestone-progress'
@@ -93,6 +94,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ t
       {milestone && <MilestoneCelebration milestone={milestone.milestone} views={milestone.views} top={milestone.top} />}
 
       <SetupBanner steps={steps} guide="/brand/setup" />
+
+      <CampaignHealth userId={user.id} />
 
       <div data-tour="stats">
       <Card>

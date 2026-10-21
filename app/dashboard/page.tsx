@@ -3,6 +3,8 @@ import { ActionLink } from '@/components/app/action-link'
 import { EarnGoal } from '@/components/app/earn-goal'
 import { CountUp } from '@/components/app/count-up'
 import { SetupBanner } from '@/components/app/setup-banner'
+import { ForYou } from '@/components/extras/for-you'
+import { GrowthCards } from '@/components/extras/growth-cards'
 import { PageHeader } from '@/components/app/ui'
 import { Badge, EmptyState } from '@/components/app/table'
 import { TransitionLink } from '@/components/shell/transition-link'
@@ -67,6 +69,10 @@ export default async function Page() {
       </section>
 
       <EarnGoal />
+
+      <GrowthCards userId={user.id} />
+
+      <ForYou userId={user.id} />
 
         <section aria-label="Recent submissions" className="mt-16">
           <div className="flex items-end justify-between border-b border-line pb-4">

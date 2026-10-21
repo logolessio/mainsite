@@ -4,11 +4,13 @@ import { Badge, EmptyState } from '@/components/app/table'
 import { PageHeader } from '@/components/app/ui'
 import { CampaignActions, MoveBudget } from '@/components/brand/campaign-actions'
 import { CampaignJourney } from '@/components/brand/campaign-journey'
+import { ShareReportButton } from '@/components/extras/share-report-button'
 import { pendingAsks } from '@/lib/campaign-review'
 import { ClientTour } from '@/components/brand/client-tour'
 import { allCaps } from '@/lib/campaign-caps'
 import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
 import { db } from '@/lib/db'
+import { featureOn } from '@/lib/features'
 import { pageUser } from '@/lib/user'
 import { applyWording } from '@/lib/wording'
 
@@ -51,6 +53,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ r
       .all<Row>()
   ).results
   const caps = await allCaps()
+  const dup = await featureOn('campaign-duplicate')
   const asks = await pendingAsks(rows.filter((r) => r.status === 'requested').map((r) => r.id))
   const movable = rows.filter((r) => ['live', 'paused', 'awaiting_payment', 'paid'].includes(r.status)).map((r) => ({ id: r.id, title: r.title, free: Math.max(0, r.budget_cents - r.spent) / 100 }))
 
@@ -94,7 +97,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ r
                     {applyWording(`${usd(r.spent)} of ${usd(r.budget_cents)} paid to creators · ${r.views.toLocaleString()} views · ${r.clips} ${r.clips === 1 ? 'clip' : 'clips'}`)}
                   </p>
                 </div>
-                <div data-tour={n === 0 ? 'campaign-actions' : undefined}>
+                <div data-tour={n === 0 ? 'campaign-actions' : undefined} className="flex flex-wrap items-center gap-2">
+                {['live', 'paused', 'ended'].includes(r.status) && <ShareReportButton id={r.id} />}
+                {dup && <a href={`/brand/campaigns/new?from=${r.id}`} className="inline-flex h-9 items-center rounded-pill border border-line-strong px-3.5 text-sm transition-colors hover:bg-white/[0.06]">Duplicate</a>}
                 <CampaignActions c={{ id: r.id, title: r.title, status: r.status, budget: Math.round(r.budget_cents / 100), spent: r.spent, poolCents: r.pool, adminPaused: r.paused_by === 'admin', capPerPost: (caps[r.id]?.perPostCents ?? 0) / 100, capPerUser: (caps[r.id]?.perUserCents ?? 0) / 100 }} />
                 </div>
               </li>

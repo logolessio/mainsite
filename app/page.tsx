@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { DashboardView } from '@/components/browse/dashboard-view'
+import { ClipOfTheWeek } from '@/components/extras/clip-of-week'
+import { LiveTicker } from '@/components/extras/live-ticker'
 import { connection } from 'next/server'
 import { LiveNumbers } from '@/components/marketing/live-numbers'
 import { endedCampaigns, liveCampaigns } from '@/lib/campaigns-db'
@@ -25,6 +27,8 @@ export default async function CampaignsPage({
   return (
     <main className={`${CONTAINER} pt-18 pb-32`}>
       <DashboardView campaigns={campaigns} ended={ended} startTour={tour === '1'} />
+      <LiveTicker />
+      <ClipOfTheWeek />
       {stats && (dev || worthShowing(stats)) && <LiveNumbers stats={stats} preview={dev && !worthShowing(stats)} />}
     </main>
   )

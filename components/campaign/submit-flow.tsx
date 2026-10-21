@@ -5,6 +5,7 @@ import { ArrowLeft, Check, Loader2, X } from 'lucide-react'
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { BrandIcon, PLATFORM_LABEL } from '@/components/brand-icon'
+import { PreCheck } from '@/components/extras/pre-check'
 import { useNavUser } from '@/components/shell/nav-user'
 import { type Campaign, type Platform, usd } from '@/lib/campaigns'
 import { EASE_OUT } from '@/lib/layout'
@@ -194,8 +195,9 @@ export function SubmitFlow({ campaign, onBack, onClose, preview }: { campaign: C
             <>
               <h2 className="font-display text-3xl md:text-4xl">Paste the link</h2>
               <p className="mt-3 text-white/55">The link to your post on {campaign.platforms.map((p) => PLATFORM_LABEL[p]).join(', ').replace(/, ([^,]*)$/, ' or $1')}.</p>
+              <PreCheck campaign={campaign} />
               <form
-                className="mt-8 w-full max-w-sm"
+                className="mt-6 w-full max-w-sm"
                 onSubmit={(e) => {
                   e.preventDefault()
                   checkLink()

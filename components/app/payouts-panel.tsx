@@ -26,6 +26,7 @@ export function PayoutsPanel() {
   const [pick, setPick] = useState('')
   const [amount, setAmount] = useState('')
   const ceremony = useFeature('payout-ceremony')
+  const receipts = useFeature('payout-receipts')
   const [sheet, setSheet] = useState(false)
 
   const load = useCallback(async () => {
@@ -178,6 +179,7 @@ export function PayoutsPanel() {
             { key: 'd', header: 'Date', render: (r) => date(r.created_at) },
             { key: 's', header: 'Status', render: (r) => <Badge tone={r.status === 'sent' ? 'good' : r.status === 'pending' || r.status === 'review' ? 'warn' : 'bad'}>{LABEL[r.status] ?? r.status}</Badge> },
             { key: 'a', header: 'Amount', render: (r) => cents(r.amount_cents), className: 'text-right' },
+            ...(receipts ? [{ key: 'r', header: '', render: (r: { id: string }) => <a href={`/dashboard/payouts/receipt/${r.id}`} className="text-sm text-mute underline underline-offset-4 hover:text-paper">Receipt</a>, className: 'text-right' }] : []),
           ]}
           empty={<EmptyState title="No withdrawals yet" body="Completed payouts show here." />}
         />
