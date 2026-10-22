@@ -1548,9 +1548,13 @@ html[data-themes] body {
   transition: background-color 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 /* the reveal (components/shell/theme-toggle.tsx): the new look is unmasked in a growing circle over a still picture of the old one, so the
-   browser's own crossfade is turned off, and the colour fade above is paused so the new look is drawn already settled */
+   browser's own crossfade is turned off, and every colour fade on the page (the page's own, and each button's and link's) is paused while it
+   runs, so the new look is drawn already settled. Without this, dozens of buttons fade from their old colours inside the circle and after it,
+   which shows as a flicker. */
 html[data-theme-switch],
-html[data-theme-switch] body {
+html[data-theme-switch] *,
+html[data-theme-switch] *::before,
+html[data-theme-switch] *::after {
   transition: none !important;
 }
 html[data-theme-switch]::view-transition-old(root),
