@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { Check, Plus, RotateCcw } from 'lucide-react'
 import { useId } from 'react'
+import { ColorPicker } from '@/components/ui/color-picker'
 import { cn } from '@/lib/utils'
 
 /** A titled block of controls inside a studio panel. */
@@ -68,10 +69,15 @@ export function Swatches({ label, value, options, onChange, extra }: { label?: s
             {v === c && <Check className="size-3.5 mix-blend-difference" />}
           </button>
         ))}
-        <label className={cn('relative grid size-8 cursor-pointer place-items-center overflow-hidden rounded-pill border-2 text-mute', custom ? 'border-paper' : 'border-dashed border-line-strong')} style={custom ? { background: value } : undefined} title="Any colour">
-          {!custom && <Plus className="size-3.5" />}
-          <input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="absolute inset-0 cursor-pointer opacity-0" aria-label={`Custom colour${label ? ` for ${label}` : ''}`} />
-        </label>
+        <ColorPicker
+          value={value}
+          onChange={onChange}
+          label={label}
+          className={cn('relative grid size-8 cursor-pointer place-items-center overflow-hidden rounded-pill border-2 text-mute transition-transform hover:scale-110', custom ? 'border-paper' : 'border-dashed border-line-strong')}
+          style={custom ? { background: value } : undefined}
+        >
+          {!custom && <Plus aria-hidden="true" className="size-3.5" />}
+        </ColorPicker>
         {extra}
       </div>
     </div>

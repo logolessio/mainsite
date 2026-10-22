@@ -194,7 +194,7 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
             <Pencil2 label="Edit card colours and effect" onClick={() => onEdit('card')} />
           </div>
         )}
-        <h1 className="flex flex-wrap items-center gap-x-2.5 gap-y-1 leading-tight">
+        <h1 data-keep-case className="flex flex-wrap items-center gap-x-2.5 gap-y-1 leading-tight">
           <Hot onEdit={onEdit} target="name" label="Change your name, font and effect" as="span" className="min-w-0">
             <span
               style={nameVars}

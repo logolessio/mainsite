@@ -9,8 +9,10 @@ import { ActionButton, Card, PanelSkeleton, Toggle } from '@/components/app/ui'
 import { BrandIcon } from '@/components/brand-icon'
 import { NAV_USER_REFRESH } from '@/components/shell/nav-user'
 import { useFeature } from '@/components/shell/features-provider'
+import { ColorPicker } from '@/components/ui/color-picker'
 import { Field, Input, Select, Textarea } from '@/components/ui/fields'
 import { BADGE_BY_ID } from '@/lib/badges-defs'
+import { countryList } from '@/lib/countries'
 import { uploadImage } from '@/lib/image-client'
 import { EASE_OUT } from '@/lib/layout'
 import { PROFILE_FONT_CLASS } from '@/lib/profile-fonts'
@@ -244,7 +246,7 @@ export function ProfileEditor() {
                 <Field label="Country (optional)">
                   <Select value={f.country ?? ''} onChange={(e) => set('country', e.target.value || null)}>
                     <option value="">Prefer not to say</option>
-                    {['US', 'GB', 'CA', 'AU', 'DE', 'FR', 'SG', 'NL', 'SE', 'BR', 'IN', 'NG', 'ZA', 'PH', 'ID', 'MX', 'JP', 'KR'].map((c) => <option key={c} value={c}>{c}</option>)}
+                    {countryList().map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
                   </Select>
                 </Field>
 
@@ -466,10 +468,9 @@ function Swatches({ label, value, options, onChange }: { label: string; value: s
         {options.map((c) => (
           <button key={c} type="button" onClick={() => onChange(c)} aria-label={c} aria-pressed={value.toLowerCase() === c} className={cn('size-8 rounded-pill border-2 transition-transform hover:scale-110', value.toLowerCase() === c ? 'border-paper' : 'border-transparent')} style={{ background: c }} />
         ))}
-        <label className="relative grid size-8 cursor-pointer place-items-center overflow-hidden rounded-pill border border-dashed border-line-strong text-[10px] text-mute">
+        <ColorPicker value={value} onChange={onChange} label={label} className="relative grid size-8 cursor-pointer place-items-center overflow-hidden rounded-pill border border-dashed border-line-strong text-[10px] text-mute">
           +
-          <input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="absolute inset-0 cursor-pointer opacity-0" aria-label={`Custom ${label}`} />
-        </label>
+        </ColorPicker>
       </div>
     </div>
   )

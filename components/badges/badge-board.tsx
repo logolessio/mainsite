@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { Loader2, Plus, X } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BADGES, BADGE_BY_ID, MAX_EQUIPPED, type BadgeDef } from '@/lib/badges-defs'
 import { cn } from '@/lib/utils'
 import { BadgeArt, RARITY_STYLE } from './badge-art'
@@ -14,7 +14,10 @@ type Drag = { id: string; from: 'slot' | 'shelf'; index: number; x: number; y: n
  * down to take it off. Pressing an earned badge adds it, and the small cross on a slot takes it off, so nothing needs a mouse.
  * Equipped badges move with the arrow keys. On touch screens, press and hold a badge to pick it up.
  */
-export function BadgeBoard({ unlocked, equipped, onChange, saving, compact = false }: { unlocked: string[]; equipped: string[]; onChange: (next: string[]) => void; saving?: boolean; compact?: boolean }) {
+export function BadgeBoard({ unlocked, equipped: equippedRaw, onChange, saving, compact = false }: { unlocked: string[]; equipped: string[]; onChange: (next: string[]) => void; saving?: boolean; compact?: boolean }) {
+  // what is on the profile, cleaned: only badges that exist, each one once (a badge listed twice, or one that has since been removed, used to leave an empty gap or an
+  // invisible tile in the row)
+  const equipped = useMemo(() => [...new Set(equippedRaw)].filter((id) => BADGE_BY_ID[id]).slice(0, MAX_EQUIPPED), [equippedRaw])
   const [drag, setDrag] = useState<Drag | null>(null)
   const dragRef = useRef<Drag | null>(null)
   dragRef.current = drag
@@ -159,7 +162,7 @@ export function BadgeBoard({ unlocked, equipped, onChange, saving, compact = fal
           return (
             <li key={i} data-badge-slot={i} className="min-w-0">
               {b ? (
-                <motion.div layout="position" layoutId={`board-${b.id}`} transition={{ type: 'spring', stiffness: 420, damping: 36 }}>
+                <motion.div key={b.id} layout="position" initial={false} transition={{ type: 'spring', stiffness: 420, damping: 36 }}>
                   <div
                     role="button"
                     tabIndex={0}
@@ -207,7 +210,7 @@ export function BadgeBoard({ unlocked, equipped, onChange, saving, compact = fal
           <ul className={cn('grid gap-2.5', compact ? 'grid-cols-[repeat(auto-fill,minmax(58px,1fr))]' : 'grid-cols-[repeat(auto-fill,minmax(68px,1fr))]')}>
             <AnimatePresence initial={false}>
               {shelf.map((b) => (
-                <motion.li key={b.id} layout="position" layoutId={`board-${b.id}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ type: 'spring', stiffness: 420, damping: 36 }} className="min-w-0">
+                <motion.li key={b.id} layout="position" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ type: 'spring', stiffness: 420, damping: 36 }} className="min-w-0">
                   <div
                     role="button"
                     tabIndex={0}

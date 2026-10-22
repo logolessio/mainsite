@@ -1663,3 +1663,184 @@ html.calm .gf-grain {
     animation: none;
   }
 }
+
+/* the effect picker's little scenes (components/profile/effect-picker.tsx): still until you point at one or have it chosen, then they drift by exactly one tile, so the loop has no seam */
+.fx-pattern {
+  animation: fx-drift 4.5s linear infinite;
+  animation-play-state: paused;
+}
+.fx-tile:hover .fx-pattern,
+.fx-tile[aria-pressed='true'] .fx-pattern {
+  animation-play-state: running;
+}
+@keyframes fx-drift {
+  to {
+    background-position: var(--dx, 0px) var(--dy, 0px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-pattern {
+    animation: none;
+  }
+}
+
+/* a name somebody chose keeps its capitals and small letters, whatever the headings around it do */
+html[data-look='anubis'] [data-keep-case] {
+  text-transform: none !important;
+}
+
+/* ------------------------------------------------------------------------------------------------------------------------------
+   The dashboard's search bar (components/app/search-pill.tsx). Pointing at it wakes it: a light follows the pointer inside (--mx and --my), a bright arc runs
+   round the edge, the search chip leans towards the pointer (--ix and --iy), a caret blinks after the words, the keys light up and a sheen sweeps across.
+   ------------------------------------------------------------------------------------------------------------------------------ */
+@property --sp-ang {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+.sp {
+  --mx: 50%;
+  --my: 50%;
+  --ix: 0px;
+  --iy: 0px;
+}
+.sp-under {
+  background: rgb(255 31 56 / 0.34);
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-premium, ease);
+}
+.sp:hover .sp-under,
+.sp:focus-within .sp-under {
+  opacity: 1;
+}
+.sp-edge {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.22), rgb(255 255 255 / 0.08) 55%, rgb(255 255 255 / 0.05));
+  transition:
+    background 0.5s var(--ease-premium, ease),
+    box-shadow 0.5s var(--ease-premium, ease);
+}
+.sp:hover .sp-edge,
+.sp:focus-within .sp-edge {
+  background: linear-gradient(180deg, rgb(255 90 110 / 0.55), rgb(255 31 56 / 0.16) 60%, rgb(255 31 56 / 0.1));
+  box-shadow:
+    0 0 0 1px rgb(255 31 56 / 0.1),
+    0 18px 40px -22px rgb(255 31 56 / 0.6);
+}
+.sp-ring {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  padding: 1.5px;
+  pointer-events: none;
+  opacity: 0;
+  background: conic-gradient(from var(--sp-ang), transparent 0deg, transparent 215deg, rgb(255 31 56 / 0.85) 285deg, rgb(255 190 120) 325deg, transparent 350deg);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  transition: opacity 0.45s var(--ease-premium, ease);
+  animation: sp-spin 2.8s linear infinite;
+}
+.sp:hover .sp-ring,
+.sp:focus-within .sp-ring {
+  opacity: 1;
+}
+.sp-body {
+  background: linear-gradient(180deg, rgb(17 17 17), rgb(6 6 6));
+  transition:
+    color 0.3s,
+    transform 0.35s var(--ease-premium, ease);
+}
+.sp:hover .sp-body,
+.sp-body:focus-visible {
+  color: var(--paper);
+}
+.sp-body:active {
+  transform: scale(0.992);
+}
+.sp-spot {
+  opacity: 0;
+  transition: opacity 0.4s;
+  background: radial-gradient(220px circle at var(--mx) var(--my), rgb(255 70 100 / 0.24), rgb(150 90 255 / 0.1) 45%, transparent 72%);
+}
+.sp:hover .sp-spot {
+  opacity: 1;
+}
+.sp-sheen {
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.08), transparent);
+  transform: translateX(0) skewX(-18deg);
+  transition: transform 0.9s ease-out;
+}
+.sp:hover .sp-sheen {
+  transform: translateX(420%) skewX(-18deg);
+}
+.sp-chip {
+  background: rgb(255 255 255 / 0.06);
+  color: rgb(255 255 255 / 0.7);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
+  transform: translate(var(--ix), var(--iy));
+  transition:
+    background 0.35s,
+    color 0.35s,
+    transform 0.18s ease-out;
+}
+.sp:hover .sp-chip {
+  background: rgb(255 31 56 / 0.24);
+  color: #fff;
+}
+.sp-lens {
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.sp:hover .sp-lens {
+  transform: rotate(-12deg) scale(1.15);
+}
+.sp-caret {
+  opacity: 0;
+}
+.sp:hover .sp-caret {
+  opacity: 1;
+  animation: sp-blink 1s steps(1) infinite;
+}
+.sp-key {
+  background: rgb(255 255 255 / 0.05);
+  border-color: rgb(255 255 255 / 0.14);
+  color: rgb(255 255 255 / 0.65);
+  transition:
+    border-color 0.3s,
+    color 0.3s,
+    transform 0.3s var(--ease-premium, ease),
+    box-shadow 0.3s;
+}
+.sp:hover .sp-key {
+  border-color: rgb(255 80 100 / 0.55);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px -8px rgb(255 31 56 / 0.8);
+}
+.sp:hover .sp-key:nth-child(2) {
+  transition-delay: 0.05s;
+}
+@keyframes sp-spin {
+  to {
+    --sp-ang: 360deg;
+  }
+}
+@keyframes sp-blink {
+  50% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sp-ring,
+  .sp-caret {
+    animation: none;
+  }
+  .sp-sheen {
+    display: none;
+  }
+}

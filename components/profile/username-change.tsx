@@ -219,7 +219,7 @@ export function UsernameChange({ handle, loose, onChanged }: { handle: string; l
                       {status.kind === 'checking' && 'Checking…'}
                       {status.kind === 'ok' && `@${next} is free. It can be yours.`}
                       {status.kind === 'bad' && status.message}
-                      {status.kind === 'idle' && (value && clean(value, loose) === handle ? 'That is the one you have now.' : loose ? 'Letters, numbers, dots, dashes and underscores, 3 to 20.' : 'Letters, numbers and underscores, 3 to 20.')}
+                      {status.kind === 'idle' && (value && clean(value, loose) === handle ? 'That is the one you have now.' : loose ? 'Letters, numbers, dots, dashes and underscores, 1 to 20.' : 'Letters, numbers and underscores, 1 to 20.')}
                     </p>
 
                     {status.kind === 'bad' && status.suggestions && status.suggestions.length > 0 && (

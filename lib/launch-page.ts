@@ -150,6 +150,6 @@ export function cleanPage(input: unknown): PageConfig {
 /** Which state the page is drawn in: closed (countdown and waitlist), open (Get started), or the /links page (either of those, plus the link buttons). */
 export type PageMode = 'soon' | 'live'
 
-/** A username for the waitlist: 3 to 20 lowercase letters, numbers, dots and underscores. A dot cannot start or end it, or come twice in a row. */
-export const WAITLIST_HANDLE_RE = /^(?=.{3,20}$)(?!\.)(?!.*\.\.)[a-z0-9._]+(?<!\.)$/
+/** A username for the waitlist: 1 to 20 lowercase letters, numbers, dots and underscores. A dot can be first or last but not twice in a row, and it cannot be dots alone. */
+export const WAITLIST_HANDLE_RE = /^(?=.*[a-z0-9_])(?!.*\.\.)[a-z0-9._]{1,20}$/
 export const normHandle = (raw: string) => raw.trim().toLowerCase().replace(/^@/, '')

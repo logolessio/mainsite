@@ -41,6 +41,40 @@ function CmdGlyph({ icon }: { icon: CmdIcon }) {
 }
 
 type Camp = { id: string; title: string; creator: string; type: string; cover: string; rate: number }
+type Person = { handle: string; name: string; avatar: string; views: number | null; trusted: boolean }
+
+/** What the results can be narrowed to. A shortcut typed first in the box picks one: > actions, / pages, # campaigns, @ people, ? answers. */
+type Scope = 'all' | 'actions' | 'pages' | 'campaigns' | 'people' | 'answers'
+const SCOPES: { id: Scope; label: string; key: string }[] = [
+  { id: 'all', label: 'All', key: '' },
+  { id: 'actions', label: 'Actions', key: '>' },
+  { id: 'pages', label: 'Pages', key: '/' },
+  { id: 'campaigns', label: 'Campaigns', key: '#' },
+  { id: 'people', label: 'People', key: '@' },
+  { id: 'answers', label: 'Answers', key: '?' },
+]
+const PREFIX: Record<string, Scope> = { '>': 'actions', '/': 'pages', '#': 'campaigns', '@': 'people', '?': 'answers' }
+const scopeOf = (group: string): Scope | null => (group === 'Go to' || group === 'Pages' || group === 'Legal' ? 'pages' : group === 'Campaigns' ? 'campaigns' : group === 'People' ? 'people' : group === 'Answers' ? 'answers' : group === 'Search' ? null : 'actions')
+
+/** The words that were typed, picked out in a label so it is plain why a result is there. */
+function Mark({ text, q }: { text: string; q: string }) {
+  const words = [...new Set(q.toLowerCase().split(/[^a-z0-9@]+/).filter((w) => w.length >= 1))].sort((a, b) => b.length - a.length).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  if (!words.length) return <>{text}</>
+  const parts = text.split(new RegExp(`(${words.join('|')})`, 'ig'))
+  return (
+    <>
+      {parts.map((p, n) =>
+        n % 2 === 1 ? (
+          <mark key={n} className="rounded-[3px] bg-[rgb(255_31_56/0.2)] px-px text-paper">
+            {p}
+          </mark>
+        ) : (
+          p
+        ),
+      )}
+    </>
+  )
+}
 type Faq = { q: string; a: string; topic: string }
 type Row = {
   key: string
@@ -55,6 +89,8 @@ type Row = {
   faq?: Faq
   /** The command it came from, remembered as recent. */
   cmd?: string
+  /** Stays in the box instead of closing it (a recent search puts its words back in the field). */
+  stay?: boolean
   hay: Haystack
   act: () => void
   rank?: number
@@ -72,6 +108,25 @@ const readRecent = (): string[] => {
 const remember = (id: string) => {
   try {
     localStorage.setItem(RECENT_KEY, JSON.stringify([id, ...readRecent().filter((x) => x !== id)].slice(0, 6)))
+  } catch {
+    /* private window: nothing remembered */
+  }
+}
+
+const QUERY_KEY = 'logoless:cmd-queries'
+const readQueries = (): string[] => {
+  try {
+    const v = JSON.parse(localStorage.getItem(QUERY_KEY) ?? '[]')
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').slice(0, 5) : []
+  } catch {
+    return []
+  }
+}
+const rememberQuery = (q: string) => {
+  const t = q.trim()
+  if (t.length < 2) return
+  try {
+    localStorage.setItem(QUERY_KEY, JSON.stringify([t, ...readQueries().filter((x) => x.toLowerCase() !== t.toLowerCase())].slice(0, 5)))
   } catch {
     /* private window: nothing remembered */
   }
@@ -101,6 +156,9 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
   const [faq, setFaq] = useState<Faq[]>([])
   const [reading, setReading] = useState<Faq | null>(null)
   const [recent, setRecent] = useState<string[]>([])
+  const [scope, setScope] = useState<Scope>('all')
+  const [queries, setQueries] = useState<string[]>([])
+  const [people, setPeople] = useState<{ q: string; list: Person[] }>({ q: '', list: [] })
   const [ownerHits, setOwnerHits] = useState<{ q: string; hits: { kind: 'person' | 'campaign'; id: string; label: string; sub: string; href: string }[] }>({ q: '', hits: [] })
   const input = useRef<HTMLInputElement>(null)
   const list = useRef<HTMLUListElement>(null)
@@ -115,6 +173,8 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
     setQ('')
     setI(0)
     setReading(null)
+    setScope('all')
+    setQueries(readQueries())
     setRecent(readRecent())
     window.setTimeout(() => input.current?.focus(), 30)
     if (camps === null) fetch('/api/search').then((r) => r.json()).then((j: { campaigns?: Camp[] }) => setCamps(j.campaigns ?? [])).catch(() => setCamps([]))
@@ -138,6 +198,23 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
     }, 160)
     return () => window.clearTimeout(timer)
   }, [q, open, area])
+
+  // creators with a public page are found on the server as the letters are typed (only when the directory is switched on)
+  useEffect(() => {
+    const t = q.trim()
+    if (!open || !features['creator-directory'] || t.length < 2 || (scope !== 'all' && scope !== 'people')) return
+    const ctl = new AbortController()
+    const timer = window.setTimeout(() => {
+      fetch(`/api/search?q=${encodeURIComponent(t)}`, { signal: ctl.signal })
+        .then((r) => (r.ok ? r.json() : { people: [] }))
+        .then((j: { people?: Person[] }) => setPeople({ q: t, list: j.people ?? [] }))
+        .catch(() => {})
+    }, 180)
+    return () => {
+      window.clearTimeout(timer)
+      ctl.abort()
+    }
+  }, [q, open, scope, features])
 
   /** Goes to an address, crossing between the public site and the owner dashboard (two addresses in production) when it has to. */
   const go = useCallback(
@@ -210,6 +287,41 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
     return [...pages, ...cmds, ...answers, ...campaigns]
   }, [viewer, features, full, items, area, faq, camps, runCommand, go])
 
+  // everything that matches the words typed, best first, whatever it is (the list below narrows it to what is wanted, and the chips count it)
+  const scoredAll = useMemo(() => {
+    const t = q.trim()
+    if (!t) return []
+    const pq = parseQuery(t)
+    const order = (g: string) => {
+      const n = GROUP_ORDER.indexOf(g as (typeof GROUP_ORDER)[number])
+      return n < 0 ? 5 : n
+    }
+    return (
+      all
+        .map((r) => ({ r, s: score(pq, r.hay) }))
+        .filter((x) => x.s > 0 && (x.r.group !== 'Campaigns' || t.length >= 2))
+        // things you can do come a touch ahead of answers and campaigns on a near tie; the most used things win an exact tie
+        .map((x) => ({ ...x, s: x.s + (x.r.group === 'Answers' ? -0.6 : x.r.group === 'Campaigns' ? -0.3 : 0.4) + (x.r.rank ?? 0) * 0.08 }))
+        .sort((a, b) => b.s - a.s || order(a.r.group) - order(b.r.group))
+    )
+  }, [q, all])
+
+  const counts = useMemo(() => {
+    const out: Record<Scope, number> = { all: 0, actions: 0, pages: 0, campaigns: 0, people: 0, answers: 0 }
+    const t = q.trim()
+    if (!t) return out
+    const cutoff = Math.max(1.2, (scoredAll[0]?.s ?? 0) * 0.45)
+    for (const x of scoredAll) {
+      if (x.s < cutoff) continue
+      const sc = scopeOf(x.r.group)
+      if (sc) out[sc]++
+    }
+    if (people.q === t) out.people += people.list.length
+    if (area === 'Owner' && ownerHits.q === t) for (const h of ownerHits.hits) out[h.kind === 'person' ? 'people' : 'campaigns']++
+    out.all = out.actions + out.pages + out.campaigns + out.people + out.answers
+    return out
+  }, [q, scoredAll, people, ownerHits, area])
+
   const rows = useMemo<(Row & { head?: string })[]>(() => {
     const t = q.trim()
     const byKey = new Map(all.map((r) => [r.key, r]))
@@ -221,6 +333,19 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
         seen.add(r.key)
         out.push({ ...r, head })
       }
+      // narrowed to one kind with nothing typed: the first of that kind
+      if (scope !== 'all') {
+        const of = all.filter((r) => scopeOf(r.group) === scope)
+        const sorted = scope === 'actions' ? [...of].sort((a, b) => (b.rank ?? 0) - (a.rank ?? 0)) : of
+        sorted.slice(0, scope === 'pages' ? 24 : scope === 'actions' ? 14 : 8).forEach((r) => push(r, SCOPES.find((x) => x.id === scope)?.label ?? ''))
+        let lastHead = ''
+        return out.map((r) => {
+          const show = r.head !== lastHead
+          lastHead = r.head ?? ''
+          return show ? r : { ...r, head: undefined }
+        })
+      }
+      queries.slice(0, 3).forEach((text) => push({ key: `q:${text}`, label: text, group: 'Recent searches', icon: 'clock', stay: true, hay: haystack(''), act: () => (setQ(text), input.current?.focus()) }, 'Recent searches'))
       const lastRecent = [...recent.map((id) => byKey.get(`c:${id}`)), ...recents.map((h) => byKey.get(`n:${h}`))].filter(Boolean).slice(0, 3)
       lastRecent.forEach((r) => push(r, 'Recent'))
       suggestedIds(viewer, area).forEach((id) => push(byKey.get(`c:${id}`), 'Suggested'))
@@ -234,30 +359,25 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
         return show ? r : { ...r, head: undefined }
       })
     }
-    const pq = parseQuery(t)
-    const order = (g: string) => {
-      const n = GROUP_ORDER.indexOf(g as (typeof GROUP_ORDER)[number])
-      return n < 0 ? 5 : n
-    }
-    const scored = all
-      .map((r) => ({ r, s: score(pq, r.hay) }))
-      .filter((x) => x.s > 0 && (x.r.group !== 'Campaigns' || t.length >= 2))
-      // things you can do come a touch ahead of answers and campaigns on a near tie; the most used things win an exact tie
-      .map((x) => ({ ...x, s: x.s + (x.r.group === 'Answers' ? -0.6 : x.r.group === 'Campaigns' ? -0.3 : 0.4) + (x.r.rank ?? 0) * 0.08 }))
-      .sort((a, b) => b.s - a.s || order(a.r.group) - order(b.r.group))
+    const inScope = scoredAll.filter((x) => scope === 'all' || scopeOf(x.r.group) === scope)
     // only what is close to the best match, and only a few of each kind: a handful of good results, never a wall of loose ones
-    const cutoff = Math.max(1.2, (scored[0]?.s ?? 0) * 0.45)
-    const room: Record<string, number> = { Answers: 3, Campaigns: 3, other: 6 }
+    // (narrowed to one kind there is room for more, and a looser match is allowed)
+    const cutoff = Math.max(scope === 'all' ? 1.2 : 1, (inScope[0]?.s ?? 0) * (scope === 'all' ? 0.45 : 0.35))
+    const room: Record<string, number> = scope === 'all' ? { Answers: 3, Campaigns: 3, other: 6 } : { Answers: 12, Campaigns: 12, other: 12 }
     const used: Record<string, number> = {}
-    const hits = scored
+    const hits = inScope
       .filter((x) => {
         if (x.s < cutoff) return false
         const g = x.r.group === 'Answers' || x.r.group === 'Campaigns' ? x.r.group : 'other'
         used[g] = (used[g] ?? 0) + 1
         return used[g] <= room[g]
       })
-      .slice(0, 9)
+      .slice(0, scope === 'all' ? 9 : 14)
       .map((x) => x.r)
+    const peopleRows: Row[] =
+      scope === 'all' || scope === 'people'
+        ? (people.q === t ? people.list : []).slice(0, scope === 'all' ? 3 : 8).map((p) => ({ key: `p:${p.handle}`, label: p.name, sub: `@${p.handle}${p.views != null ? ` · ${p.views.toLocaleString('en-GB')} views` : ''}`, group: 'People', cover: p.avatar, hay: haystack(''), act: () => go(`/@${p.handle}`) }))
+        : []
     const live: Row[] = area === 'Owner' && ownerHits.q === t ? ownerHits.hits.map((h) => ({ key: `o:${h.kind}:${h.id}`, label: h.label, sub: h.sub, group: h.kind === 'person' ? 'People' : 'Campaigns', icon: h.kind === 'person' ? ('users' as const) : ('megaphone' as const), hay: haystack(h.label), act: () => go(h.href) })) : []
     // never a dead end: there is always somewhere to take the words that were typed
     const fallback: Row[] = [
@@ -271,8 +391,9 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
           ]
         : []),
     ]
-    const found = [...hits, ...live]
-    const tail = found.length >= 6 ? fallback.slice(0, 1) : fallback
+    const liveInScope = scope === 'all' ? live : live.filter((r) => scopeOf(r.group) === scope)
+    const found = [...hits, ...liveInScope, ...peopleRows]
+    const tail = scope !== 'all' ? [] : found.length >= 6 ? fallback.slice(0, 1) : fallback
     return [...found.map((r, n) => (n === 0 ? { ...r, head: 'Best match' } : n === 1 ? { ...r, head: 'Results' } : r)), ...tail.map((r, n) => (n === 0 ? { ...r, head: 'Or' } : r))]
 
     function searchCampaigns(words: string) {
@@ -287,7 +408,7 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
         document.getElementById('campaigns')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       } else go('/')
     }
-  }, [q, all, recent, recents, viewer, area, ownerHits, full, go, pathname])
+  }, [q, all, scoredAll, scope, queries, people, recent, recents, viewer, area, ownerHits, full, go, pathname])
 
   useEffect(() => setI(0), [q])
   useEffect(() => {
@@ -300,11 +421,14 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
       if (!r) return
       // an answer is read here, in the box, not on another page
       if (r.faq) return setReading(r.faq)
+      // a recent search only puts its words back in the box
+      if (r.stay) return r.act()
+      rememberQuery(q)
       onClose()
       if (r.cmd) remember(r.cmd)
       r.act()
     },
-    [rows, onClose],
+    [rows, onClose, q],
   )
 
   const related = useMemo(() => {
@@ -321,6 +445,7 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
 
   const onKey = (e: React.KeyboardEvent) => {
     if (reading) return void (e.key === 'Enter' && e.preventDefault())
+    if (e.key === 'Backspace' && !q && scope !== 'all') return void (e.preventDefault(), setScope('all'))
     const n = rows.length
     if (!n) return
     if (e.key === 'ArrowDown' || (e.key === 'Tab' && !e.shiftKey) || (e.ctrlKey && e.key === 'n')) (e.preventDefault(), setI((v) => (v + 1) % n))
@@ -331,7 +456,9 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
   }
 
   const active = rows[i]
-  const placeholder = !full ? 'Search campaigns and pages' : viewer.signedIn ? 'Search, or type what you want to do' : 'Search campaigns, pages and answers'
+  const scopeLabel = SCOPES.find((x) => x.id === scope)?.label.toLowerCase() ?? ''
+  const placeholder = scope !== 'all' ? `Search ${scopeLabel}` : !full ? 'Search campaigns and pages' : viewer.signedIn ? 'Search, or type what you want to do' : 'Search campaigns, pages and answers'
+  const scopeOn = (id: Scope) => id === 'all' || id === 'pages' || id === 'campaigns' || (id === 'actions' && full) || (id === 'answers' && full) || (id === 'people' && (Boolean(features['creator-directory']) || area === 'Owner'))
 
   return (
     <AnimatePresence>
@@ -365,7 +492,15 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
               <input
                 ref={input}
                 value={q}
-                onChange={(e) => (setQ(e.target.value), setReading(null))}
+                onChange={(e) => {
+                  const v = e.target.value
+                  // a shortcut key typed first narrows the results to one kind: > actions, / pages, # campaigns, @ people, ? answers
+                  if (scope === 'all' && v.length >= 1 && PREFIX[v[0]]) {
+                    setScope(PREFIX[v[0]])
+                    setQ(v.slice(1))
+                  } else setQ(v)
+                  setReading(null)
+                }}
                 placeholder={placeholder}
                 aria-label="Search or do something"
                 role="combobox"
@@ -391,6 +526,29 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
               </button>
             </div>
             <div aria-hidden="true" className="mx-5 h-px shrink-0 bg-white/[0.07]" />
+
+            {!reading && (
+              <div role="tablist" aria-label="Narrow the results" className="flex shrink-0 items-center gap-1.5 overflow-x-auto px-4 pt-2.5 pb-1 [scrollbar-width:none]">
+                {SCOPES.filter((sc) => scopeOn(sc.id)).map((sc) => {
+                  const on = scope === sc.id
+                  const n = q.trim() ? counts[sc.id] : 0
+                  return (
+                    <button
+                      key={sc.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={on}
+                      onClick={() => (setScope(sc.id), input.current?.focus())}
+                      className={cn('inline-flex h-7 shrink-0 items-center gap-1.5 rounded-pill border px-3 text-[12px] transition-colors', on ? 'border-paper/60 bg-paper/10 text-paper' : 'border-white/[0.08] text-paper/55 hover:border-white/25 hover:text-paper')}
+                    >
+                      {sc.label}
+                      {n > 0 && <span className="font-mono text-[10.5px] text-paper/50 tabular-nums">{n}</span>}
+                      {sc.key && !on && <kbd className="hidden font-mono text-[10px] text-paper/35 sm:inline">{sc.key}</kbd>}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
 
             {reading && (
               <motion.div key={reading.q} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.24, ease: EASE_OUT }} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 [scrollbar-width:thin] sm:p-6">
@@ -432,6 +590,16 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
 
             <ul ref={list} id="cmd-list" hidden={Boolean(reading)} role="listbox" aria-label="Results" className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2 [scrollbar-width:thin]">
               {camps === null && !q && all.length === 0 && <li className="px-4 py-8 text-center text-sm text-mute">Loading…</li>}
+              {rows.length === 0 && scope !== 'all' && (
+                <li role="presentation" className="grid justify-items-center gap-3 px-4 py-10 text-center text-sm text-mute">
+                  <span>{q.trim() ? `Nothing under ${scopeLabel} for “${q.trim()}”.` : scope === 'people' ? 'Type a name to find creators.' : `Type to search ${scopeLabel}.`}</span>
+                  {q.trim() && (
+                    <button type="button" onClick={() => (setScope('all'), input.current?.focus())} className="rounded-pill border border-line-strong px-4 py-1.5 text-[13px] text-paper transition-colors hover:bg-white/[0.06]">
+                      Look in everything
+                    </button>
+                  )}
+                </li>
+              )}
               {rows.map((r, idx) => (
                 <li key={r.key} role="presentation">
                   {r.head && <p className="px-3 pt-3 pb-1.5 text-xs text-paper/45 first:pt-1.5">{r.head}</p>}
@@ -459,7 +627,7 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
                       )}
                     </span>
                     <span className="relative min-w-0 flex-1">
-                      <span className="block truncate text-[15px] leading-tight">{r.label}</span>
+                      <span className="block truncate text-[15px] leading-tight">{q.trim() && r.group !== 'Search' ? <Mark text={r.label} q={q} /> : r.label}</span>
                       {r.sub && <span className="mt-0.5 block truncate text-[12.5px] text-paper/45">{r.sub}</span>}
                     </span>
                     {r.hint ? (

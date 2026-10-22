@@ -44,7 +44,7 @@ type Data = {
 type St = 'idle' | 'checking' | 'ok' | 'bad'
 type Verdict = { ok: boolean; msg: string } | null
 
-const HANDLE_RE = /^[a-z0-9_]{3,20}$/
+const HANDLE_RE = /^[a-z0-9_]{1,20}$/
 const VERIFIABLE = ['tiktok', 'youtube', 'instagram']
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const SETTLE_MS = 5200 // "setting things up" always takes a moment: it is part of the welcome, not a delay
@@ -408,7 +408,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
         const r = await checkHandle(h)
         return r.available ? { ok: true, msg: `@${h} is yours` } : { ok: false, msg: r.message?.replace(/\.$/, '') ?? 'Already taken' }
       }
-      if (!HANDLE_RE.test(h)) return { ok: false, msg: 'Use 3 to 20 letters, numbers or underscores' }
+      if (!HANDLE_RE.test(h)) return { ok: false, msg: 'Use 1 to 20 letters, numbers or underscores' }
       const free = preview ? true : await checkHandleAvailable(h)
       return free ? { ok: true, msg: `@${h} is yours` } : { ok: false, msg: 'Already taken' }
     }

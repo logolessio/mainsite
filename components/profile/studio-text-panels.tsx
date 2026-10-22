@@ -6,6 +6,7 @@ import { ActionButton, Toggle } from '@/components/app/ui'
 import { BrandIcon, type BrandName } from '@/components/brand-icon'
 import { useFeature } from '@/components/shell/features-provider'
 import { Field, Input, Select, Textarea } from '@/components/ui/fields'
+import { countryList, countryName } from '@/lib/countries'
 import { PROFILE_FONT_CLASS } from '@/lib/profile-fonts'
 import { PROFILE_VISIBILITY, type ProfileExtras } from '@/lib/profile-extras'
 import { CLIPPING_PLATFORMS, DEFAULT_SHOW, FONT_OPTIONS, LINK_PLATFORMS, NAME_EFFECTS, SHOW_OPTIONS, type ProfileView, type ShowKey, type ShowMap } from '@/lib/profile-style'
@@ -22,7 +23,6 @@ const ANGLED = ['gradient', 'rainbow', 'chrome', 'shimmer']
 const MOVING = ['gradient', 'neon', 'glow', 'rainbow', 'chrome', 'glitch', 'shimmer']
 
 const FIELD = 'h-11 rounded-tile'
-const COUNTRIES = ['US', 'GB', 'CA', 'AU', 'DE', 'FR', 'SG', 'NL', 'SE', 'BR', 'IN', 'NG', 'ZA', 'PH', 'ID', 'MX', 'JP', 'KR']
 
 const set = <K extends keyof ProfileView>(s: Studio, k: K, v: ProfileView[K]) => s.setF((c) => (c ? { ...c, [k]: v } : c))
 
@@ -85,11 +85,13 @@ export function AboutPanel({ s }: { s: Studio }) {
       <Field label="Country (optional)">
         <Select className={FIELD} value={f.country ?? ''} onChange={(e) => set(s, 'country', e.target.value || null)}>
           <option value="">Prefer not to say</option>
-          {COUNTRIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
+          {countryList().map((c) => (
+            <option key={c.code} value={c.code}>
+              {c.name}
             </option>
           ))}
+          {/* a code that is saved but not in the list is still shown, so opening the page never drops it */}
+          {f.country && !countryList().some((c) => c.code === f.country) && <option value={f.country}>{countryName(f.country)}</option>}
         </Select>
       </Field>
     </div>

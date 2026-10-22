@@ -242,14 +242,14 @@ export type ShowKey = (typeof SHOW_OPTIONS)[number]['key']
 export type ShowMap = Record<ShowKey, boolean>
 export const DEFAULT_SHOW = Object.fromEntries(SHOW_OPTIONS.map((o) => [o.key, o.on])) as ShowMap
 
-/** The original username rule: 3 to 20 letters, numbers or underscores. New and changed usernames use it while `username-punctuation` is off. */
-export const HANDLE_RE = /^[a-z0-9_]{3,20}$/
+/** The original username rule: 1 to 20 letters, numbers or underscores. New and changed usernames use it while `username-punctuation` is off. */
+export const HANDLE_RE = /^[a-z0-9_]{1,20}$/
 /**
- * The looser rule (switch `username-punctuation`): dots and dashes too, but never first, never last and never two in a row.
- * Underscores stay allowed anywhere, so every username that passes HANDLE_RE passes this one as well. Looking up an existing
- * username always uses this rule, so a page for "luna.ray" keeps working whether the switch is on or off.
+ * The looser rule (switch `username-punctuation`): dots and dashes too, anywhere including first and last, but never two in a row and never
+ * on their own (there has to be a letter, a number or an underscore in it). Every username that passes HANDLE_RE passes this one as well.
+ * Looking up an existing username always uses this rule, so a page for "luna.ray" keeps working whether the switch is on or off.
  */
-export const HANDLE_RE_LOOSE = /^(?=[a-z0-9_.-]{3,20}$)[a-z0-9_]+(?:[.-][a-z0-9_]+)*$/
+export const HANDLE_RE_LOOSE = /^(?=.*[a-z0-9_])(?!.*[.-]{2})[a-z0-9_.-]{1,20}$/
 /** Names that look official. Only the owner account may use them, so nobody can pose as staff. */
 export const RESERVED_WORDS = ['logoless', 'admin', 'administrator', 'support', 'staff', 'official', 'moderator', 'mod', 'help', 'security', 'billing', 'team', 'system', 'root', 'null', 'undefined', 'api', 'www']
 export const HANDLE_RESERVED_MSG = 'That name is reserved. Please pick another.'
@@ -270,11 +270,11 @@ export function isReservedHandle(h: string, loose = false) {
 export function handleProblem(raw: string, { loose = false, isAdmin = false }: { loose?: boolean; isAdmin?: boolean } = {}): string | null {
   const h = normHandle(raw)
   if (!loose) {
-    if (!HANDLE_RE.test(h)) return 'Use 3 to 20 letters, numbers or underscores.'
+    if (!HANDLE_RE.test(h)) return 'Use 1 to 20 letters, numbers or underscores.'
   } else if (!HANDLE_RE_LOOSE.test(h)) {
-    if (h.length < 3 || h.length > 20) return 'Use 3 to 20 characters.'
+    if (h.length < 1 || h.length > 20) return 'Use 1 to 20 characters.'
     if (/[^a-z0-9_.-]/.test(h)) return 'Use letters, numbers, dots, dashes and underscores only.'
-    if (/^[.-]|[.-]$/.test(h)) return 'A dot or dash cannot come first or last.'
+    if (!/[a-z0-9_]/.test(h)) return 'Add at least one letter, number or underscore.'
     return 'Dots and dashes cannot be next to each other.'
   }
   if (!isAdmin && isReservedHandle(h, loose)) return HANDLE_RESERVED_MSG
@@ -282,7 +282,7 @@ export function handleProblem(raw: string, { loose = false, isAdmin = false }: {
 }
 
 /** The hint shown next to a username field. */
-export const handleHint = (loose: boolean) => (loose ? 'Letters, numbers, dots, dashes and underscores.' : 'Letters, numbers and underscores.')
+export const handleHint = (loose: boolean) => (loose ? 'Letters, numbers, dots, dashes and underscores, 1 to 20.' : 'Letters, numbers and underscores, 1 to 20.')
 
 /** Drops what a username field cannot hold while someone types (dots and dashes stay with `loose`). */
 export const handleChars = (v: string, loose: boolean) => v.toLowerCase().replace(loose ? /[^a-z0-9_.-]/g : /[^a-z0-9_]/g, '')
@@ -296,7 +296,6 @@ export function suggestHandle(name: string, loose: boolean) {
     .replace(/\s+/g, '.')
     .replace(/[^a-z0-9_.-]/g, '')
     .replace(/([.-])[.-]+/g, '$1')
-    .replace(/^[.-]+/, '')
     .slice(0, 20)
     .replace(/[.-]+$/, '')
 }

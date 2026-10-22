@@ -50,10 +50,10 @@ export type Signup = { e: string; h: string | null; t: number; u?: number }
 /** Why a username cannot be reserved, or null if it is free. */
 export async function handleProblem(raw: string, forEmailKey?: string): Promise<string | null> {
   const h = normHandle(raw)
-  if (h.length < 3) return 'At least 3 characters.'
+  if (h.length < 1) return 'Pick a username.'
   if (h.length > 20) return 'Up to 20 characters.'
   if (/[^a-z0-9._]/.test(h)) return 'Letters, numbers, dots and underscores only.'
-  if (!WAITLIST_HANDLE_RE.test(h)) return 'A dot cannot start or end it, or come twice in a row.'
+  if (!WAITLIST_HANDLE_RE.test(h)) return /^\.+$/.test(h) ? 'Add at least one letter, number or underscore.' : 'Two dots cannot come in a row.'
   if (isReservedHandle(h, true)) return 'That name is kept by logoless.'
   const d = await db()
   if (await d.prepare('SELECT 1 AS x FROM profiles WHERE handle = ?1').bind(h).first()) return 'That one is taken.'

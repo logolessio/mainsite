@@ -178,7 +178,7 @@ export function validHandle(raw: string, isAdmin: boolean, loose = false) {
     if (problem) throw new HttpError(400, problem)
     return h
   }
-  if (!HANDLE_RE.test(h)) throw new HttpError(400, 'Usernames are 3 to 20 letters, numbers or underscores.')
+  if (!HANDLE_RE.test(h)) throw new HttpError(400, 'Usernames are 1 to 20 letters, numbers or underscores.')
   if (!isAdmin && RESERVED_WORDS.some((w) => h.includes(w))) throw new HttpError(400, 'That name is reserved. Please pick another.')
   return h
 }

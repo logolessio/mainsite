@@ -24,7 +24,7 @@ export const POST = route(async (req: Request) => {
   const email = normEmail(parsed.data.email)
   if (!validEmail(email)) throw new HttpError(400, 'Enter a valid email address.')
   if ((await rolesForEmail(email)).includes('admin')) return json({ owner: true })
-  if (parsed.data.handle && !HANDLE_RE.test(parsed.data.handle.trim().toLowerCase().replace(/^@/, ''))) throw new HttpError(400, 'Use 3 to 20 letters, numbers or underscores.')
+  if (parsed.data.handle && !HANDLE_RE.test(parsed.data.handle.trim().toLowerCase().replace(/^@/, ''))) throw new HttpError(400, 'Use 1 to 20 letters, numbers or underscores.')
   try {
     const r = await addSignup(email, parsed.data.handle)
     return json({ ok: true, handle: r.handle, already: r.already })
@@ -38,6 +38,6 @@ export const POST = route(async (req: Request) => {
 export const GET = route(async (req: Request) => {
   await limit(req, { name: 'launch-handle', max: 90, windowSec: 600 })
   const h = (new URL(req.url).searchParams.get('h') ?? '').trim().toLowerCase().replace(/^@/, '')
-  const problem = HANDLE_RE.test(h) ? await handleProblem(h) : 'Use 3 to 20 letters, numbers or underscores.'
+  const problem = HANDLE_RE.test(h) ? await handleProblem(h) : 'Use 1 to 20 letters, numbers or underscores.'
   return json(problem ? { ok: false, problem } : { ok: true })
 })

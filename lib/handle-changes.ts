@@ -58,11 +58,11 @@ export async function recordHandleChange(userId: string, from: string, to: strin
 /** Three nearby usernames that are free right now, for when the one that was asked for is taken. */
 export async function freeAlternatives(wanted: string, loose: boolean): Promise<string[]> {
   const base = wanted.replace(/[^a-z0-9_.-]/g, '').replace(/^[.-]+|[.-]+$/g, '').slice(0, 16)
-  if (base.length < 3) return []
+  if (base.length < 1) return []
   const n = () => Math.floor(10 + Math.random() * 90)
   const sep = loose ? ['.', '_', '-'] : ['_']
   const pool = [`${base}_${n()}`.slice(0, 20), `the${base}`.slice(0, 20), `${base}${n()}`.slice(0, 20), `${base}${sep[Math.floor(Math.random() * sep.length)]}x`.slice(0, 20), `real${base}`.slice(0, 20), `${base}${new Date().getFullYear() % 100}`.slice(0, 20)]
-  const unique = [...new Set(pool)].filter((h) => h !== wanted && h.length >= 3)
+  const unique = [...new Set(pool)].filter((h) => h !== wanted && h.length >= 1)
   try {
     const d = await db()
     const marks = unique.map((_, i) => `?${i + 1}`).join(',')

@@ -89,7 +89,7 @@ export function Waitlist({ copy, autoFocus = false, preview = null }: { copy: Pa
     if (!h) return setAvail(null)
     if (mine && h === mine) return setAvail({ ok: true })
     if (!WAITLIST_HANDLE_RE.test(h)) {
-      setAvail(h.length < 3 ? null : { ok: false, problem: h.endsWith('.') ? 'A dot cannot end it.' : 'That is not a valid username.' })
+      setAvail(h.length < 1 ? null : { ok: false, problem: /^\.+$/.test(h) ? 'Add a letter, number or underscore.' : h.includes('..') ? 'Two dots cannot come in a row.' : 'That is not a valid username.' })
       return
     }
     setAvail('checking')
@@ -281,7 +281,7 @@ export function Waitlist({ copy, autoFocus = false, preview = null }: { copy: Pa
                 {copy.reserveLabel}
               </button>
             </div>
-            <Note id="wl-handle-note" error={error || (avail && avail !== 'checking' && !avail.ok ? (avail.problem ?? '') : '')} hint="3 to 20 letters, numbers, dots or underscores. It is held for you until we open." />
+            <Note id="wl-handle-note" error={error || (avail && avail !== 'checking' && !avail.ok ? (avail.problem ?? '') : '')} hint="1 to 20 letters, numbers, dots or underscores. It is held for you until we open." />
           </motion.form>
         ) : (
           <motion.div key="done" {...step} className="flex flex-col items-center text-center">

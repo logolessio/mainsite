@@ -1,6 +1,6 @@
 'use client'
 
-import { Ban, Binary, Bug, Check, CircleDot, CloudRain, Droplets, Film, Flame, Flower2, ImagePlus, Leaf, Loader2, PartyPopper, Rocket, Snowflake, Sparkles, Star, Sun, Trash2, Tv, Upload, Video, Waves, Wind, Zap, type LucideIcon } from 'lucide-react'
+import { Check, ImagePlus, Loader2, Trash2, Upload, Video , type LucideIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { BadgeBoard } from '@/components/badges/badge-board'
 import { uploadBackground, uploadBanner, uploadBgVideo, uploadImage } from '@/lib/image-client'
@@ -13,9 +13,10 @@ import {
   type BgKind,
   type ProfileExtras,
 } from '@/lib/profile-extras'
-import { ACCENT_SWATCHES, BANNER_PRESETS, CARD_EFFECTS, DOT_SWATCHES, type ProfileView } from '@/lib/profile-style'
+import { ACCENT_SWATCHES, BANNER_PRESETS, CARD_EFFECTS, DOT_SWATCHES, type CardEffect, type ProfileView } from '@/lib/profile-style'
 import { cn } from '@/lib/utils'
 import { BG_PAINTERS, hexRgb } from './backdrop-effects'
+import { EffectPicker } from './effect-picker'
 import { GifPicker } from './gif-picker'
 import { LookPicker } from './look-picker'
 import { bannerStyle } from './profile-card'
@@ -291,7 +292,7 @@ export function BannerPanel({ s }: { s: Studio }) {
 }
 
 // ================================================================= card
-export const EFFECT_ICONS: Record<string, LucideIcon> = { none: Ban, snow: Snowflake, rain: CloudRain, embers: Flame, sparkle: Sparkles, stars: Star, aurora: Waves, fireflies: Bug, petals: Flower2, bubbles: CircleDot, lightning: Zap, smoke: Wind, leaves: Leaf, confetti: PartyPopper, fireworks: Rocket, rays: Sun, caustics: Droplets, code: Binary, film: Film, vhs: Tv }
+export { EFFECT_ICONS } from './effect-picker'
 
 export function CardPanel({ s }: { s: Studio }) {
   const { f, ex } = s
@@ -304,18 +305,8 @@ export function CardPanel({ s }: { s: Studio }) {
           <Swatches label="Accent" value={f.accent2} options={ACCENT_SWATCHES} onChange={(v) => set('accent2', v)} />
         </div>
       </Group>
-      <Group title="Card effect" hint="Moves over the whole card">
-        <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
-          {CARD_EFFECTS.map((o) => {
-            const Icon = EFFECT_ICONS[o.id] ?? Ban
-            return (
-              <Tile key={o.id} on={f.cardEffect === o.id} onClick={() => set('cardEffect', o.id)} className="flex flex-col items-center gap-1 px-1 py-2.5 text-[11px]">
-                <Icon className="size-[18px]" />
-                {o.label}
-              </Tile>
-            )
-          })}
-        </div>
+      <Group title="Card effect" hint={CARD_EFFECTS.find((o) => o.id === f.cardEffect)?.label ?? ''}>
+        <EffectPicker value={f.cardEffect} onChange={(id) => set('cardEffect', id as CardEffect)} options={CARD_EFFECTS} />
       </Group>
       {f.cardEffect !== 'none' && (
         <div className="grid gap-4 rounded-2xl border border-line bg-ink/50 p-4">
@@ -455,18 +446,8 @@ export function BackgroundPanel({ s }: { s: Studio }) {
       {g.kind !== 'default' && g.kind !== 'color' && <Slider label="Darken" hint="Keeps your card easy to read" value={g.dim} onChange={(dim) => ex('bg', { dim })} normal={35} />}
 
       <div className="border-t border-line pt-6">
-        <Group title="Overlay" hint="Floats over the whole page">
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-            {OVERLAY_EFFECTS.map((e) => {
-              const Icon = EFFECT_ICONS[e.id] ?? Ban
-              return (
-                <Tile key={e.id} on={o.effect === e.id} onClick={() => ex('overlay', { effect: e.id })} className="flex flex-col items-center gap-1 px-1 py-2.5 text-[11px]">
-                  <Icon className="size-[18px]" />
-                  {e.label}
-                </Tile>
-              )
-            })}
-          </div>
+        <Group title="Overlay" hint={OVERLAY_EFFECTS.find((e) => e.id === o.effect)?.label ?? ''}>
+          <EffectPicker value={o.effect} onChange={(id) => ex('overlay', { effect: id as (typeof OVERLAY_EFFECTS)[number]['id'] })} options={OVERLAY_EFFECTS} />
         </Group>
         {o.effect !== 'none' && (
           <div className="mt-4 grid gap-4 rounded-2xl border border-line bg-ink/50 p-4">

@@ -243,13 +243,13 @@ export function ProfileStudio() {
         </div>
       </div>
 
-      {/* the page itself: it moves aside to make room for the window on a wide screen */}
-      <div className={wide && panel ? 'transition-[padding] duration-500 xl:pr-[444px]' : 'transition-[padding] duration-500'}>
+      {/* the page itself: it stays exactly where it is, and the window floats over it */}
+      <div>
         <StudioPreview view={deferred ?? f} onEdit={open} stageRef={stage} />
         <p className="mt-3 text-center text-xs text-mute">The numbers on the card are examples.</p>
       </div>
 
-      {/* wide screens: the window sits beside the page, so the page is always in view */}
+      {/* wide screens: the window floats over the right of the page, which does not move */}
       <AnimatePresence>
         {wide && panel && (
           <motion.aside
