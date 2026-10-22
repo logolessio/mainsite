@@ -9,12 +9,12 @@ const KEY = 'logoless:theme'
 const SIZE = 'size-11'
 
 /**
- * The sun and moon button beside Search (switch "light-mode"). It sets data-theme="light" on the page, which globals.css turns into the light
+ * The sun and moon button beside Search (switch "light-theme"). It sets data-theme="light" on the page, which globals.css turns into the light
  * look, and remembers the choice on this device; the small script in the page head puts it back before anything is drawn, so there is no flash.
  * It shows where it will take you: a sun while the site is dark, a moon while it is light.
  */
 export function ThemeToggle() {
-  const on = useFeature('light-mode')
+  const on = useFeature('light-theme')
   const [light, setLight] = useState(false)
   useEffect(() => setLight(document.documentElement.dataset.theme === 'light'), [])
   if (!on) return null

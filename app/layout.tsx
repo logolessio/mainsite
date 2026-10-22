@@ -192,7 +192,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         data-scroll-behavior="smooth"
         data-look={look ? 'anubis' : undefined}
         data-surfaces={fs.on['solid-surfaces'] ? 'solid' : undefined}
-        data-themes={fs.on['light-mode'] ? '1' : undefined}
+        data-themes={fs.on['light-theme'] ? '1' : undefined}
         data-font={look ? 'schibsted' : font.id === 'inter' ? undefined : font.id}
         data-kind={kind}
         data-ui={look || uiFace ? '1' : undefined}
@@ -216,7 +216,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       data-scroll-behavior="smooth"
       data-look={look ? 'anubis' : undefined}
       data-surfaces={fs.on['solid-surfaces'] ? 'solid' : undefined}
-      data-themes={fs.on['light-mode'] ? '1' : undefined}
+      data-themes={fs.on['light-theme'] ? '1' : undefined}
       data-font={look ? 'schibsted' : font.id === 'inter' ? undefined : font.id}
       data-kind={kind}
       data-ui={look || uiFace ? '1' : undefined}

@@ -1538,7 +1538,7 @@ html[data-look='anubis'] main p a:not([class]) {
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------------
-   Light mode (switch "light-mode"). The dark site is turned light at the root: the whole page is inverted (black becomes a soft off-white,
+   Light mode (switch "light-theme"). The dark site is turned light at the root: the whole page is inverted (black becomes a soft off-white,
    the near-white text becomes near-black) and the hue is turned half way round so the reds and blues come back as themselves. Everything that
    is a picture is turned back, so photos, covers, videos and avatars keep their own colours. Because it works on what is drawn, every colour
    written anywhere in the site follows, with nothing to keep in step. Choose what must stay as it is with data-keep-theme.
