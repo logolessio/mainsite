@@ -482,13 +482,23 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
             exit={{ opacity: 0, y: -6, scale: 0.985, transition: { duration: 0.14, ease: EASE_OUT } }}
             transition={SPRING_POP}
             onMouseDown={(e) => e.stopPropagation()}
+            onPointerMove={(e) => {
+              // the light inside the box follows the pointer: two variables, nothing is drawn again for it
+              const r = e.currentTarget.getBoundingClientRect()
+              e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+              e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
+            }}
             onKeyDown={onKey}
             // one radius for the box and, inside its 8px of padding, the same curve less 8px for every row, so the corners nest
             style={{ ['--cmd-r' as string]: 'calc(26px * var(--round, 1))' }}
-            className="flex max-h-[calc(100dvh-24px)] w-full max-w-[640px] flex-col overflow-hidden rounded-[var(--cmd-r)] border border-white/[0.09] bg-[#0b0b0e]/[0.94] shadow-[0_1px_0_0_rgb(255_255_255/0.06)_inset,0_50px_120px_-30px_rgb(0_0_0/0.95),0_0_0_1px_rgb(0_0_0/0.5)] backdrop-blur-2xl backdrop-saturate-150 sm:max-h-[min(640px,76vh)]"
+            className="cmdk relative isolate flex max-h-[calc(100dvh-24px)] w-full max-w-[640px] flex-col overflow-hidden rounded-[var(--cmd-r)] border border-white/[0.09] bg-[#0b0b0e]/[0.94] shadow-[0_1px_0_0_rgb(255_255_255/0.06)_inset,0_50px_120px_-30px_rgb(0_0_0/0.95),0_30px_90px_-44px_rgb(255_31_56/0.4),0_0_0_1px_rgb(0_0_0/0.5)] backdrop-blur-2xl backdrop-saturate-150 sm:max-h-[min(640px,76vh)]"
           >
+            {/* the light that follows the pointer, the bright arc that runs round the edge, and a sweep of light when it opens */}
+            <span aria-hidden="true" className="cmd-spot pointer-events-none absolute inset-0 -z-10" />
+            <span aria-hidden="true" className="sp-ring sp-ring-on" />
+            <span aria-hidden="true" className="cmd-sweep pointer-events-none absolute inset-y-0 -left-1/3 -z-10 w-1/3" />
             <div className="flex shrink-0 items-center gap-3 px-5">
-              <Search aria-hidden="true" className="size-[18px] shrink-0 text-paper/45" />
+              <Search aria-hidden="true" className={cn('size-[18px] shrink-0 transition-colors duration-300', q ? 'text-[var(--red,#ededed)]' : 'text-paper/45')} />
               <input
                 ref={input}
                 value={q}
@@ -512,7 +522,7 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
                 autoCorrect="off"
                 spellCheck={false}
                 enterKeyHint="go"
-                className="h-[60px] min-w-0 flex-1 bg-transparent text-[17px] outline-none placeholder:text-paper/35"
+                className="h-[60px] min-w-0 flex-1 bg-transparent text-[17px] caret-[var(--red,currentColor)] outline-none placeholder:text-paper/35"
               />
               {q ? (
                 <button type="button" aria-label="Clear" onClick={() => (setQ(''), input.current?.focus())} className="grid size-8 shrink-0 place-items-center rounded-pill text-paper/45 transition-colors hover:bg-white/10 hover:text-paper">
@@ -539,7 +549,7 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
                       role="tab"
                       aria-selected={on}
                       onClick={() => (setScope(sc.id), input.current?.focus())}
-                      className={cn('inline-flex h-7 shrink-0 items-center gap-1.5 rounded-pill border px-3 text-[12px] transition-colors', on ? 'border-paper/60 bg-paper/10 text-paper' : 'border-white/[0.08] text-paper/55 hover:border-white/25 hover:text-paper')}
+                      className={cn('inline-flex h-7 shrink-0 items-center gap-1.5 rounded-pill border px-3 text-[12px] transition-colors', on ? 'border-[rgb(255_70_90/0.6)] bg-[rgb(255_31_56/0.12)] text-paper' : 'border-white/[0.08] text-paper/55 hover:border-white/25 hover:text-paper')}
                     >
                       {sc.label}
                       {n > 0 && <span className="font-mono text-[10.5px] text-paper/50 tabular-nums">{n}</span>}
@@ -613,7 +623,7 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
                     onClick={() => choose(idx)}
                     className={cn('relative flex min-h-[52px] w-full items-center gap-3 rounded-[calc(var(--cmd-r)-8px)] px-3 py-2 text-left transition-colors duration-150', idx === i ? 'text-paper' : 'text-paper/75')}
                   >
-                    {idx === i && <motion.span layoutId="cmd-hl" transition={{ type: 'spring', stiffness: 700, damping: 48, mass: 0.6 }} className="absolute inset-0 rounded-[inherit] bg-white/[0.075] shadow-[inset_0_0_0_1px_rgb(255_255_255/0.05)]" />}
+                    {idx === i && <motion.span layoutId="cmd-hl" transition={{ type: 'spring', stiffness: 700, damping: 48, mass: 0.6 }} className="absolute inset-0 rounded-[inherit] bg-white/[0.075] shadow-[inset_0_0_0_1px_rgb(255_255_255/0.05)] after:absolute after:inset-y-2.5 after:left-0 after:w-[2px] after:rounded-full after:bg-[var(--red,#ededed)] after:shadow-[0_0_10px_rgb(255_31_56/0.9)]" />}
                     <span className={cn('relative grid size-9 shrink-0 place-items-center overflow-hidden rounded-[calc(var(--cmd-r)-14px)] border transition-colors', idx === i ? 'border-white/15 bg-white/[0.08] text-paper' : 'border-white/[0.07] bg-white/[0.03] text-paper/60')}>
                       {r.cover ? (
                         // eslint-disable-next-line @next/next/no-img-element

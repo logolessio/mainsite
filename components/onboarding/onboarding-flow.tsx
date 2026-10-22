@@ -2,7 +2,8 @@
 
 import { checkEmail, cleanEmail } from '@/lib/email-check'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowRight, Check, Copy, Loader2, Mail, X } from 'lucide-react'
+import { Logo } from '@/components/logo'
+import { ArrowLeft, ArrowRight, Check, Copy, Loader2, Mail, X } from 'lucide-react'
 import { signIn, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -50,7 +51,28 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const SETTLE_MS = 5200 // "setting things up" always takes a moment: it is part of the welcome, not a delay
 
 const primary = 'inline-flex h-14 items-center justify-center rounded-pill bg-paper px-10 text-[17px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-30'
-const quiet = 'text-[15px] text-mute underline underline-offset-4 transition-colors hover:text-paper'
+const quiet = 'text-[15px] text-mute underline decoration-dotted underline-offset-4 transition-colors hover:text-paper'
+
+/** Which part of getting set up each question belongs to: the small label above it. */
+const SECTION: Record<Id, string> = {
+  welcome: 'Welcome',
+  role: 'Welcome',
+  method: 'Your account',
+  email: 'Your account',
+  password: 'Your account',
+  code: 'Your account',
+  paypal: 'Getting paid',
+  name: 'Your page',
+  handle: 'Your page',
+  pictures: 'Your page',
+  accounts: 'Your accounts',
+  verify: 'Your accounts',
+  happy: 'Nearly there',
+  saving: 'Setting up',
+  hello: 'All set',
+  tour: 'All set',
+  done: 'All set',
+}
 
 const wait = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms))
 
@@ -93,7 +115,7 @@ function Typed({ text, onDone, onReady, speed = 24 }: { text: string; onDone?: (
       <span className="sr-only">{text}</span>
       <span aria-hidden="true">
         {text.slice(0, n)}
-        <span className={cn('ml-0.5 inline-block h-[0.9em] w-[3px] translate-y-[0.1em] bg-current', n >= text.length && 'animate-pulse')} />
+        <span className={cn('ml-1 inline-block h-[0.9em] w-[0.42em] translate-y-[0.1em] bg-[var(--red,currentColor)]', n >= text.length && 'animate-pulse')} />
         <span className="invisible">{text.slice(n)}</span>
       </span>
     </h1>
@@ -139,12 +161,12 @@ function StatusIcon({ st }: { st: St }) {
           </motion.span>
         )}
         {st === 'ok' && (
-          <motion.span key="o" initial={{ opacity: 0, scale: 0.3, rotate: -40 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ type: 'spring', stiffness: 480, damping: 18 }} className="grid size-6 place-items-center rounded-pill bg-emerald-500 text-white">
+          <motion.span key="o" initial={{ opacity: 0, scale: 0.3, rotate: -40 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0 }} transition={{ type: 'spring', stiffness: 480, damping: 18 }} className="grid size-6 place-items-center rounded-pill bg-[var(--teal,#10b981)] text-black">
             <Check className="size-4" strokeWidth={3} />
           </motion.span>
         )}
         {st === 'bad' && (
-          <motion.span key="b" initial={{ opacity: 0, scale: 0.3 }} animate={{ opacity: 1, scale: 1, x: [0, -4, 4, -3, 3, 0] }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} className="grid size-6 place-items-center rounded-pill bg-red-500 text-white">
+          <motion.span key="b" initial={{ opacity: 0, scale: 0.3 }} animate={{ opacity: 1, scale: 1, x: [0, -4, 4, -3, 3, 0] }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} className="grid size-6 place-items-center rounded-pill bg-[var(--red,#ef4444)] text-white">
             <X className="size-4" strokeWidth={3} />
           </motion.span>
         )}
@@ -157,27 +179,33 @@ function StatusIcon({ st }: { st: St }) {
 function AnswerField({ id, value, onChange, st, msg, prefix, ...rest }: { id: string; value: string; onChange: (v: string) => void; st: St; msg: string; prefix?: string } & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'id' | 'prefix'>) {
   return (
     <div className="w-full max-w-md">
-      <div className={cn('relative flex items-baseline border-b pb-3 transition-colors duration-300', st === 'ok' ? 'border-emerald-500' : st === 'bad' ? 'border-red-500' : 'border-line-strong focus-within:border-paper')}>
+      <div className={cn('relative flex items-baseline border-b pb-3 transition-colors duration-300', st === 'ok' ? 'border-[var(--teal,#10b981)]' : st === 'bad' ? 'border-[var(--red,#ef4444)]' : 'border-line-strong focus-within:border-[var(--red,#ededed)]')}>
         {prefix && <span className="mr-0.5 text-2xl text-mute">{prefix}</span>}
         <input id={id} autoFocus value={value} onChange={(e) => onChange(e.target.value)} className={cn('w-full rounded-none bg-transparent pr-9 text-2xl outline-none placeholder:text-paper/30', prefix ? 'text-left' : 'text-center')} {...rest} />
         <StatusIcon st={st} />
       </div>
-      <p role="status" aria-live="polite" className={cn('mt-3 min-h-[1.25rem] text-sm transition-colors', st === 'ok' ? 'text-emerald-500' : st === 'bad' ? 'text-red-500' : 'text-mute')}>
+      <p role="status" aria-live="polite" className={cn('mt-3 min-h-[1.25rem] text-sm transition-colors', st === 'ok' ? 'text-[var(--teal,#10b981)]' : st === 'bad' ? 'text-[var(--red,#ef4444)]' : 'text-mute')}>
         {st === 'checking' ? 'Checking' : msg}
       </p>
     </div>
   )
 }
 
-/** Choices as big words side by side. Pointing at one makes it grow and the others step back. */
+/** Choices as two tiles: a number, the big word and what it means. Pointing at one lights its edge in red and lifts it. */
 function SplitChoice({ options }: { options: { label: string; hint: string; onClick: () => void }[] }) {
   return (
-    <div className="flex w-full max-w-xl divide-x divide-line-strong [&:hover>button:not(:hover)]:opacity-35">
-      {options.map((o) => (
-        <button key={o.label} type="button" onClick={o.onClick} className="group flex flex-1 flex-col items-center px-4 py-6 text-center outline-none transition-[transform,opacity] duration-300 hover:scale-[1.04] focus-visible:scale-[1.04]">
-          <span className="font-display text-[clamp(1.8rem,5vw,3rem)] leading-none">{o.label}</span>
-          <span className="mt-3 max-w-[11rem] text-sm leading-snug text-mute">{o.hint}</span>
-          <ArrowRight aria-hidden="true" className="mt-4 size-5 -translate-x-2 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100" />
+    <div className="grid w-full max-w-xl gap-3 sm:grid-cols-2">
+      {options.map((o, n) => (
+        <button
+          key={o.label}
+          type="button"
+          onClick={o.onClick}
+          className="group relative flex flex-col items-start rounded-card border border-line-strong bg-white/[0.02] p-6 text-left outline-none transition-[transform,border-color,background-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-[rgb(255_70_90/0.65)] hover:bg-white/[0.05] hover:shadow-[0_24px_60px_-30px_rgb(255_31_56/0.75)] focus-visible:-translate-y-1 focus-visible:border-[rgb(255_70_90/0.65)] focus-visible:ring-2 focus-visible:ring-[rgb(255_31_56/0.4)] active:translate-y-0"
+        >
+          <span className="font-mono text-[11px] tracking-[0.14em] text-mute">{String(n + 1).padStart(2, '0')}</span>
+          <span className="mt-9 font-display text-[clamp(1.8rem,5vw,2.6rem)] leading-none">{o.label}</span>
+          <span className="mt-3 max-w-[14rem] text-sm leading-snug text-mute">{o.hint}</span>
+          <ArrowRight aria-hidden="true" className="absolute top-6 right-6 size-5 -translate-x-2 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100" />
         </button>
       ))}
     </div>
@@ -252,9 +280,9 @@ function SettleOrb({ line, note }: { line: string; note: string }) {
   const C = 2 * Math.PI * 190
   return (
     <div role="status" aria-live="polite" className="relative mx-auto grid aspect-square w-[min(78vw,25rem)] place-items-center">
-      <svg aria-hidden="true" viewBox="0 0 400 400" className="absolute inset-0 -rotate-90">
+      <svg aria-hidden="true" viewBox="0 0 400 400" className="absolute inset-0 -rotate-90 drop-shadow-[0_0_10px_rgb(255_31_56/0.55)]">
         <circle cx="200" cy="200" r="190" fill="none" stroke="currentColor" strokeOpacity=".2" strokeWidth="2" />
-        <circle cx="200" cy="200" r="190" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeDasharray={C} className="orb-fill" style={{ ['--c' as string]: C, animationDuration: `${SETTLE_MS}ms` }} />
+        <circle cx="200" cy="200" r="190" fill="none" stroke="var(--red, currentColor)" strokeWidth="3" strokeLinecap="round" strokeDasharray={C} className="orb-fill" style={{ ['--c' as string]: C, animationDuration: `${SETTLE_MS}ms` }} />
       </svg>
       <div className="relative px-[19%] text-center">
         <h1 className="font-display text-[clamp(1.7rem,4.4vw,2.5rem)] leading-[1.08]">{line}</h1>
@@ -647,7 +675,11 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
   return createPortal(
     <main className="fixed inset-0 z-[60] overflow-y-auto text-center">
       <AnimatePresence>{id === 'saving' && !reduced && liquidLoader && <LiquidFill key="liquid" />}</AnimatePresence>
-      <div aria-hidden="true" className="fixed top-0 left-0 z-[70] h-[2px] bg-paper transition-[width] duration-700 ease-out" style={{ width: `${progress * 100}%` }} />
+      <div aria-hidden="true" className="fixed inset-x-0 top-0 z-[69] h-[2px] bg-white/[0.07]" />
+      <div aria-hidden="true" className="fixed top-0 left-0 z-[70] h-[2px] bg-[var(--red,#ededed)] shadow-[0_0_12px_rgb(255_31_56/0.8)] transition-[width] duration-700 ease-out" style={{ width: `${progress * 100}%` }} />
+      <Link href="/" aria-label="logoless home" className="fixed top-5 left-5 z-[70] block opacity-80 transition-opacity hover:opacity-100 max-sm:top-4 max-sm:left-4">
+        <Logo className="h-8 md:h-9" />
+      </Link>
       {preview && (
         <div className="fixed top-4 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-3 rounded-pill border border-line-strong bg-ink/90 py-1.5 pr-1.5 pl-4 text-[13px] text-mute backdrop-blur">
           Preview. Nothing here is saved.
@@ -658,13 +690,14 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       )}
 
       {/* The line always starts at the same height, so nothing moves while it is typed. */}
-      <div className="mx-auto w-full max-w-2xl px-6 pt-[20vh] pb-28 mix-blend-difference">
+      <div className={cn('mx-auto w-full max-w-2xl px-6 pt-[18vh] pb-28', id === 'saving' && !reduced && liquidLoader && 'mix-blend-difference')}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.16 }}>
             {id === 'saving' ? (
               <SettleOrb line={line} note={settling} />
             ) : (
               <>
+            <p className="eyebrow mb-6 justify-center text-[11px]">{SECTION[id]}</p>
             <Typed
               text={line}
               onReady={() => setReady(true)}
@@ -725,14 +758,14 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                             setPicking(m.key)
                             void m.run()
                           }}
-                          className={cn('group flex w-full items-center gap-4 rounded-[calc(1.7rem*var(--round,1))] border border-line-strong p-3.5 pr-5 text-left outline-none transition-[transform,border-color,background-color,opacity] duration-300 hover:-translate-y-0.5 hover:border-paper/70 hover:bg-paper/[0.05] focus-visible:ring-2 focus-visible:ring-paper/60 active:translate-y-0 active:scale-[0.99]', busy && !mine && 'opacity-35')}
+                          className={cn('group flex w-full items-center gap-4 rounded-card border border-line-strong bg-white/[0.02] p-3.5 pr-5 text-left outline-none transition-[transform,border-color,background-color,box-shadow,opacity] duration-300 hover:-translate-y-0.5 hover:border-[rgb(255_70_90/0.6)] hover:bg-white/[0.05] hover:shadow-[0_18px_44px_-28px_rgb(255_31_56/0.7)] focus-visible:ring-2 focus-visible:ring-[rgb(255_31_56/0.4)] active:translate-y-0 active:scale-[0.99]', busy && !mine && 'opacity-35')}
                         >
-                          <span className="grid size-12 shrink-0 place-items-center rounded-pill bg-paper text-ink">{m.icon}</span>
+                          <span className="grid size-12 shrink-0 place-items-center rounded-tile border border-line-strong bg-white/[0.05] text-paper transition-colors duration-300 group-hover:border-[rgb(255_70_90/0.5)] group-hover:bg-[rgb(255_31_56/0.12)]">{m.icon}</span>
                           <span className="min-w-0 flex-1">
                             <span className="block text-[17px] font-medium leading-tight">{mine ? `Opening ${m.key === 'google' ? 'Google' : 'Discord'}` : m.title}</span>
                             <span className="mt-0.5 block text-sm text-mute">{m.sub}</span>
                           </span>
-                          <span className="grid size-9 shrink-0 place-items-center rounded-pill border border-line-strong transition-colors duration-300 group-hover:border-paper group-hover:bg-paper group-hover:text-ink">
+                          <span className="grid size-9 shrink-0 place-items-center rounded-tile border border-line-strong transition-colors duration-300 group-hover:border-paper group-hover:bg-paper group-hover:text-ink">
                             {mine ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
                           </span>
                         </button>
@@ -849,7 +882,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                       ['youtube', 'YouTube', '@channel'],
                       ['instagram', 'Instagram', '@username'],
                     ] as const).map(([key, label, ph]) => (
-                      <label key={key} className="flex h-14 items-center gap-3 rounded-pill border border-line-strong px-5 focus-within:border-paper">
+                      <label key={key} className="flex h-14 items-center gap-3 rounded-tile border border-line-strong bg-white/[0.02] px-5 transition-[border-color,box-shadow] focus-within:border-[rgb(255_70_90/0.7)] focus-within:shadow-[0_0_0_3px_rgb(255_31_56/0.12)]">
                         <BrandIcon name={key} className="size-5 shrink-0 text-mute" />
                         <span className="sr-only">{label}</span>
                         <input
@@ -947,8 +980,8 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       </div>
 
       {canBack && id !== 'saving' && id !== 'verify' && id !== 'hello' && id !== 'tour' && id !== 'done' && id !== 'happy' && (
-        <button type="button" onClick={back} className="fixed bottom-6 left-1/2 -translate-x-1/2 text-[15px] text-mute transition-colors hover:text-paper">
-          Back
+        <button type="button" onClick={back} className="group fixed bottom-6 left-1/2 inline-flex -translate-x-1/2 items-center gap-2 rounded-tile px-3 py-2 text-[14px] text-mute transition-colors hover:text-paper">
+          <ArrowLeft aria-hidden="true" className="size-4 transition-transform duration-300 group-hover:-translate-x-0.5" /> Back
         </button>
       )}
     </main>,
