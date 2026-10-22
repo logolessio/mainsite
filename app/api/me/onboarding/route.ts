@@ -55,7 +55,7 @@ export const POST = route(async (req: Request) => {
       ...(a.avatarKey ? { avatar: a.avatarKey } : {}),
       ...(links.length ? { links } : {}),
       ...(a.niches?.length ? { niches: a.niches } : {}),
-    })
+    }, { firstHandle: true })
   } else {
     await saveProfile(user, { ...(a.company ? { displayName: a.company } : {}), ...(a.avatarKey ? { avatar: a.avatarKey } : {}), ...(links.length ? { links } : {}) })
     // brands are leads: tell the team who just arrived and what they want

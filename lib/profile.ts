@@ -1,4 +1,5 @@
 import { db, nowSec } from './db'
+import { assertCanChangeHandle, recordHandleChange } from './handle-changes'
 import { HttpError } from './http'
 import { hmacHex, safeEqual } from './crypto'
 import { setting } from './db'
@@ -245,7 +246,7 @@ export type ProfileInput = {
 }
 
 /** Applies a profile edit. Returns which customisations actually changed, for achievements. */
-export async function saveProfile(user: UserRow, input: ProfileInput) {
+export async function saveProfile(user: UserRow, input: ProfileInput, opts: { /** A first username (onboarding, an invite) is not a change: it is not held to the weekly limit or logged. */ firstHandle?: boolean } = {}) {
   const d = await db()
   const cur = await ensureProfile(user)
   const next = { ...cur }
@@ -254,6 +255,7 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
   if (input.handle !== undefined && input.handle.trim().toLowerCase().replace(/^@/, '') !== cur.handle) {
     next.handle = validHandle(input.handle, user.role === 'admin', await featureOn('username-punctuation'))
     if (await reservedByAnother(next.handle, user.email)) throw new HttpError(409, 'That username was reserved by someone on the waitlist.')
+    if (!opts.firstHandle) await assertCanChangeHandle(user.id, user.role === 'admin')
     changed.push('handle')
   }
   if (input.displayName !== undefined) {
@@ -417,6 +419,9 @@ export async function saveProfile(user: UserRow, input: ProfileInput) {
     if (/UNIQUE/i.test(e instanceof Error ? e.message : '')) throw new HttpError(409, 'That username is taken.')
     throw e
   }
+  if (changed.includes('handle') && !opts.firstHandle) await recordHandleChange(user.id, cur.handle, next.handle)
+  // The name people see is the account's name everywhere (the greeting on the dashboard, emails, the team's lists), so the two never differ.
+  if (next.display_name !== cur.display_name) await d.prepare('UPDATE users SET name = ?2 WHERE id = ?1').bind(user.id, next.display_name).run().catch(() => null)
   // A statement of its own, so the rest of a save still works on a database that has not had 0014 applied yet.
   if (extrasJson !== null) {
     try {

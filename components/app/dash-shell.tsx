@@ -1,10 +1,11 @@
 'use client'
 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { ArrowUpRight, Ellipsis, LogOut, Plus, Search, ShieldCheck, X } from 'lucide-react'
+import { ArrowUpRight, Ellipsis, LogOut, Plus, ShieldCheck, X } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { SearchPill } from '@/components/app/search-pill'
 import { Icon } from '@/components/icons'
 import { Logo } from '@/components/logo'
 import { useNavUser } from '@/components/shell/nav-user'
@@ -266,11 +267,7 @@ export function DashShell({ area, items: menu, footer = NONE, children }: { area
             <span className="text-paper">{current.label}</span>
           </p>
         </div>
-        <button type="button" onClick={() => setPalette(true)} className="mx-6 hidden h-11 w-full min-w-0 max-w-md items-center gap-3 rounded-pill border border-line bg-white/[0.03] px-5 text-left text-[15px] text-paper/45 transition-colors hover:border-line-strong hover:text-paper md:flex">
-          <Search aria-hidden="true" className="size-4 shrink-0" />
-          <span className="min-w-0 flex-1 truncate">Search, or do something</span>
-          <kbd className="shrink-0 rounded-md border border-line px-1.5 py-0.5 font-mono text-[11px]">/</kbd>
-        </button>
+        <SearchPill onOpen={() => setPalette(true)} className="mx-6 hidden w-full min-w-0 max-w-lg md:block" />
         <div className="flex shrink-0 items-center gap-2">
           {primary && (
             <TransitionLink href={primary.href} aria-label={primary.label} className="hidden h-10 shrink-0 items-center gap-2 rounded-pill bg-paper px-5 text-[15px] font-medium whitespace-nowrap text-ink transition-colors hover:bg-paper/85 lg:inline-flex">

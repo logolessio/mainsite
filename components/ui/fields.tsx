@@ -23,7 +23,7 @@ export function Field({
   )
 }
 
-export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
+export function Input(props: React.ComponentProps<'input'>) {
   return <input {...props} className={cn(inputCls, props.className)} />
 }
 

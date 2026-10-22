@@ -32,7 +32,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ s
     country: data.country && data.country.length === 2 ? data.country : null,
     links,
     ...(data.avatar ? { avatar: data.avatar } : {}),
-  })
+  }, { firstHandle: true })
   const d = await db()
   await d.prepare('UPDATE artist_invites SET last_active_at = ?2 WHERE id = ?1').bind(inv.id, nowSec()).run()
   await audit({ id: user.id, email: user.email }, 'invite.profile', inv.slug, `@${profile.handle}`)

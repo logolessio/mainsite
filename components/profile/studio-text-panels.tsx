@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import { nameSpeed } from './profile-card'
 import { EXPLAIN, Row, VIS_ICON } from './privacy-settings'
 import { Group, Slider, Tile } from './studio-controls'
+import { UsernameChange } from './username-change'
 import type { Studio } from './studio-panels'
 
 /** Name effects that have a direction worth turning. */
@@ -74,9 +75,7 @@ export function AboutPanel({ s }: { s: Studio }) {
   const punctuation = useFeature('username-punctuation')
   return (
     <div className="grid gap-5">
-      <Field label="Username" hint={`logoless.io/@${f.handle}`}>
-        <Input className={FIELD} value={f.handle} maxLength={20} onChange={(e) => set(s, 'handle', e.target.value.toLowerCase().replace(punctuation ? /[^a-z0-9_.-]/g : /[^a-z0-9_]/g, ''))} />
-      </Field>
+      <UsernameChange handle={f.handle} loose={punctuation} onChanged={s.handleSaved} />
       <Field label="Pronouns (optional)">
         <Input className={FIELD} value={f.pronouns} maxLength={30} placeholder="e.g. she/her" onChange={(e) => set(s, 'pronouns', e.target.value)} />
       </Field>

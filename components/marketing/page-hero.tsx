@@ -27,7 +27,7 @@ export function PageHero({
       <Words as="h1" align="left" immediate text={title} className="max-w-[16ch] font-display text-[clamp(2.8rem,7.6vw,7rem)] leading-[0.96]" />
       <div className="mt-10 grid gap-8 md:mt-14 md:grid-cols-12">
         <Reveal delay={0.35} className="md:col-span-4">
-          <p className="text-[15px] text-paper/45"><T>{eyebrow}</T></p>
+          <p className="eyebrow text-[15px] text-paper/45"><T>{eyebrow}</T></p>
         </Reveal>
         <div className="md:col-span-6 md:col-start-6">
           {lede && (

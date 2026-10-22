@@ -99,6 +99,17 @@ export async function pageUser() {
   if (!email) redirect('/login')
   const u = await findOrCreateUser(email, session.user?.name, session.user?.image)
   if (u.status === 'banned') redirect('/login')
+  // The name on the profile is the account's name: an account whose profile name was changed before the two were kept together is brought in step here.
+  try {
+    const d = await db()
+    const p = await d.prepare('SELECT display_name FROM profiles WHERE user_id = ?1').bind(u.id).first<{ display_name: string }>()
+    if (p?.display_name && p.display_name !== u.name) {
+      await d.prepare('UPDATE users SET name = ?2 WHERE id = ?1').bind(u.id, p.display_name).run()
+      u.name = p.display_name
+    }
+  } catch {
+    /* the page still opens with the name it had */
+  }
   return u
 }
 

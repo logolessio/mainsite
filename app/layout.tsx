@@ -32,8 +32,9 @@ import { SITE } from '@/lib/site'
 import './globals.css'
 
 // Every typeface the dev dashboard can switch the site to. Only the one in use is downloaded: the others are declared but not preloaded.
-// The standard look is Gloock for headers and titles with Inter for everything else, so those two are preloaded and the rest wait until they are chosen.
-const inter = Inter({ subsets: ['latin'], variable: '--font-f-inter', display: 'swap' })
+// The standard look is the Anubis one: IBM Plex Mono for the words and Schibsted Grotesk Black for the big titles, so those two are preloaded and the rest wait until they are chosen
+// (Inter and Gloock, the look before it, come back only if the Anubis look is undone).
+const inter = Inter({ subsets: ['latin'], variable: '--font-f-inter', display: 'swap', preload: false })
 const tight = Inter_Tight({ subsets: ['latin'], weight: ['300', '400', '500', '600'], variable: '--font-f-inter-tight', display: 'swap', preload: false })
 const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-mono-face' })
 const geist = Geist({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-geist' })
@@ -47,14 +48,14 @@ const instrument = Instrument_Serif({ subsets: ['latin'], display: 'swap', prelo
 const fraunces = Fraunces({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-fraunces' })
 const playfair = Playfair_Display({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-playfair' })
 const jetbrains = JetBrains_Mono({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-jetbrains-mono' })
-const plexMono = IBM_Plex_Mono({ subsets: ['latin'], display: 'swap', preload: false, weight: ['400', '500', '600'], variable: '--font-f-ibm-plex-mono' })
+const plexMono = IBM_Plex_Mono({ subsets: ['latin'], display: 'swap', weight: ['400', '500', '600'], variable: '--font-f-ibm-plex-mono' })
 const spaceMono = Space_Mono({ subsets: ['latin'], display: 'swap', preload: false, weight: ['400', '700'], variable: '--font-f-space-mono' })
 const bricolage = Bricolage_Grotesque({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-bricolage' })
 const funnelDisplay = Funnel_Display({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-funnel-display' })
 const funnelSans = Funnel_Sans({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-funnel-sans' })
 const hanken = Hanken_Grotesk({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-hanken' })
 const instrumentSans = Instrument_Sans({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-instrument-sans' })
-const schibsted = Schibsted_Grotesk({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-schibsted' })
+const schibsted = Schibsted_Grotesk({ subsets: ['latin'], display: 'swap', variable: '--font-f-schibsted' })
 const specialGothic = Special_Gothic({ subsets: ['latin'], display: 'swap', preload: false, adjustFontFallback: false, variable: '--font-f-special-gothic' })
 const hostGrotesk = Host_Grotesk({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-host' })
 const familjen = Familjen_Grotesk({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-familjen' })
@@ -66,7 +67,7 @@ const wix = Wix_Madefor_Display({ subsets: ['latin'], display: 'swap', preload: 
 const syne = Syne({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-syne' })
 const newsreader = Newsreader({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-newsreader' })
 const youngSerif = Young_Serif({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-young-serif' })
-const gloock = Gloock({ subsets: ['latin'], display: 'swap', weight: '400', variable: '--font-f-gloock' })
+const gloock = Gloock({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-gloock' })
 const bodoni = Bodoni_Moda({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-bodoni' })
 const martian = Martian_Mono({ subsets: ['latin'], display: 'swap', preload: false, variable: '--font-f-martian' })
 const dmMono = DM_Mono({ subsets: ['latin'], display: 'swap', preload: false, weight: ['300', '400', '500'], variable: '--font-f-dm-mono' })
@@ -158,12 +159,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     ...(figuresFace ? { '--font-figures': `var(${figuresFace.var})` } : {}),
     ...(monoFace ? { '--font-mono-pick': `var(${monoFace.var})` } : {}),
   }
-  // The Anubis look (a switch the owner pushes): one grotesk for the words, one mono for the small print, whatever was chosen in Design
+  // The Anubis look (live; undo it on the dev site to go back): IBM Plex Mono for all the words, buttons and menus, and Schibsted Grotesk Black for
+  // the big titles and figures, whatever was chosen in Design
   const look = fs.on['anubis-look'] === true
   if (look) {
-    fontVars['--font-body'] = 'var(--font-f-schibsted)'
+    fontVars['--font-body'] = 'var(--font-f-ibm-plex-mono)'
     fontVars['--font-display-face'] = 'var(--font-f-schibsted)'
-    ;(fontVars as Record<string, string>)['--font-ui'] = 'var(--font-f-schibsted)'
+    ;(fontVars as Record<string, string>)['--font-ui'] = 'var(--font-f-ibm-plex-mono)'
     ;(fontVars as Record<string, string>)['--font-figures'] = 'var(--font-f-schibsted)'
     ;(fontVars as Record<string, string>)['--font-mono-pick'] = 'var(--font-f-ibm-plex-mono)'
   }
@@ -187,12 +189,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <html
         lang="en"
         suppressHydrationWarning
+        data-scroll-behavior="smooth"
         data-look={look ? 'anubis' : undefined}
         data-font={look ? 'schibsted' : font.id === 'inter' ? undefined : font.id}
         data-kind={kind}
         data-ui={look || uiFace ? '1' : undefined}
         data-figures={look || figuresFace ? '1' : undefined}
-        style={{ ...fontVars, ...roundnessVars(parseRoundness(design.design_roundness)) } as React.CSSProperties}
+        style={{ ...fontVars, ...(look ? {} : roundnessVars(parseRoundness(design.design_roundness))) } as React.CSSProperties}
         className={`${FONT_CLASSES} bg-ink`}
       >
         <head>
@@ -208,12 +211,13 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html
       lang="en"
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
       data-look={look ? 'anubis' : undefined}
       data-font={look ? 'schibsted' : font.id === 'inter' ? undefined : font.id}
       data-kind={kind}
       data-ui={look || uiFace ? '1' : undefined}
       data-figures={look || figuresFace ? '1' : undefined}
-      style={{ ...fontVars, ...roundnessVars(parseRoundness(design.design_roundness)) } as React.CSSProperties}
+      style={{ ...fontVars, ...(look ? {} : roundnessVars(parseRoundness(design.design_roundness))) } as React.CSSProperties}
       className={`${FONT_CLASSES} bg-ink`}
     >
       <head>

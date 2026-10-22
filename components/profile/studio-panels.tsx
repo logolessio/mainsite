@@ -28,6 +28,8 @@ export type Studio = {
   ex: <K extends keyof ProfileExtras>(k: K, patch: Partial<ProfileExtras[K]>) => void
   setPendingAvatar: (v: string | null | undefined) => void
   onError: (msg: string) => void
+  /** The username was changed and saved on its own (see UsernameChange): the page takes it up without counting as an unsaved edit. */
+  handleSaved: (handle: string) => void
 }
 
 const err = (e: unknown, fallback: string) => (e instanceof Error ? e.message : fallback)

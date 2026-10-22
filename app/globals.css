@@ -1405,19 +1405,42 @@ html.calm .top-veil {
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------------
-   The Anubis look (feature switch "anubis-look"): a blue-black base with violet in the lines, Schibsted Grotesk set heavy and tight in capitals
-   for the big words, and IBM Plex Mono for the small print. The fonts themselves are put in place in app/layout.tsx; the moving gradient is the
-   site's own background canvas (components/shell/gradient-field.tsx), recoloured.
+   The Anubis look (feature switch "anubis-look", live): the Anubis page's colours (pure black, #ededed, the red #ff1f38 with blue, teal and
+   amber kept for small touches) set the way underclip sets things: hairline borders, tight 6px corners, small quiet labels, a lot of air and one
+   slow easing for every move. Schibsted Grotesk Black for the big words, IBM Plex Mono for everything you read. The fonts themselves are put in
+   place in app/layout.tsx; the moving gradient is the site's own background canvas (components/shell/gradient-field.tsx), recoloured.
    ------------------------------------------------------------------------------------------------------------------------------ */
 html[data-look='anubis'] {
-  --ink: #05050a;
-  --surface: #0a0a12;
-  --raised: #12121c;
-  --line: rgb(206 198 255 / 0.12);
-  --line-strong: rgb(206 198 255 / 0.24);
-  --mute: rgb(236 232 255 / 0.6);
-  --ring: rgb(196 170 255 / 0.55);
+  --ink: #000000;
+  --paper: #ededed;
+  --signal: #ff1f38;
+  --surface: #0a0a0a;
+  --raised: #141414;
+  --line: rgb(255 255 255 / 0.09);
+  --line-strong: rgb(255 255 255 / 0.17);
+  --mute: rgb(255 255 255 / 0.62);
+  --ring: rgb(255 31 56 / 0.65);
+  --round: 0.5; /* panels 8px, cards 10px, tiles 6px */
+  --pill: 6px; /* buttons, fields and chips */
+  --red: #ff1f38;
+  --blue: #4ba9dc;
+  --teal: #2ed0b0;
+  --amber: #ffc857;
+  --ease-premium: cubic-bezier(0.2, 0.8, 0.2, 1);
+  scrollbar-width: thin;
+  scrollbar-color: #2a2a2a transparent;
 }
+/* the words: IBM Plex Mono, set a hair tight like the Anubis page does */
+html[data-look='anubis'] body {
+  letter-spacing: -0.01em;
+}
+/* headings that are not the big display titles are Plex Mono in capitals, as the section heads on the Anubis page are */
+html[data-look='anubis'] :is(h1, h2, h3, h4, h5, h6):not(.font-display) {
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+/* the big titles: Schibsted Grotesk, Black for page titles and ExtraBold below that */
 html[data-look='anubis'] .font-display:not(.tabular-nums) {
   text-transform: uppercase;
   font-weight: 800;
@@ -1425,16 +1448,91 @@ html[data-look='anubis'] .font-display:not(.tabular-nums) {
   line-height: 0.95;
   word-spacing: 0;
 }
+html[data-look='anubis'] h1.font-display:not(.tabular-nums) {
+  font-weight: 900;
+}
 html[data-look='anubis'] .font-display.tabular-nums {
   font-weight: 800;
   letter-spacing: -0.04em;
   font-variant-numeric: normal; /* at this size the tabular dot and comma gap the figures out */
 }
 html[data-look='anubis'] :is(.text-xs, [class*='text-[10px]'], [class*='text-[10.5px]'], [class*='text-[11px]'], [class*='text-[12px]'], kbd, code) {
-  font-family: var(--font-mono-pick), ui-monospace, monospace;
-  letter-spacing: 0.015em;
+  letter-spacing: 0.01em; /* the tiniest print gets a little air back */
 }
 html[data-look='anubis'] ::selection {
-  background: rgb(176 140 255 / 0.4);
+  background: rgb(255 31 56 / 0.4);
   color: #fff;
+}
+
+/* the quiet label above a heading: a red dot and small capitals in the mono, like underclip's "What it does" and Anubis's section marks */
+html[data-look='anubis'] .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+html[data-look='anubis'] .eyebrow::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 99px;
+  background: var(--red);
+  box-shadow: 0 0 0 3px rgb(255 31 56 / 0.16), 0 0 14px rgb(255 31 56 / 0.7);
+}
+
+/* panels, cards and sheets: a hairline and a little depth instead of a glow */
+html[data-look='anubis'] .glass {
+  background: linear-gradient(180deg, rgb(20 20 20 / 0.9), rgb(8 8 8 / 0.88));
+  border: 1px solid var(--line-strong);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.07),
+    0 28px 60px -28px rgb(0 0 0 / 0.95);
+}
+/* the keys: a little cap with a thicker lower edge */
+html[data-look='anubis'] kbd {
+  border-bottom-width: 2px;
+  background: rgb(255 255 255 / 0.05);
+}
+
+/* the red rails: two hairlines at the edges of the page column, as on the Anubis page. Marketing pages only (see GradientField). */
+.gf-rails {
+  display: none;
+}
+@media (min-width: 1480px) {
+  html[data-look='anubis'] .gf-rails {
+    display: block;
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(rgb(255 31 56 / 0.5), rgb(255 31 56 / 0.5)) calc(50% - 680px) 0 / 1px 100% no-repeat,
+      linear-gradient(rgb(255 31 56 / 0.5), rgb(255 31 56 / 0.5)) calc(50% + 680px) 0 / 1px 100% no-repeat;
+    -webkit-mask-image: linear-gradient(#000 0%, rgb(0 0 0 / 0.35) 55%, transparent 100%);
+    mask-image: linear-gradient(#000 0%, rgb(0 0 0 / 0.35) 55%, transparent 100%);
+    opacity: 0.55;
+  }
+}
+
+/* the main buttons answer a hover with a hairline of red and a soft glow under them, and lift a hair */
+html[data-look='anubis'] :is(a, button).bg-paper {
+  transition:
+    box-shadow 0.4s var(--ease-premium),
+    transform 0.4s var(--ease-premium),
+    background-color 0.2s;
+}
+html[data-look='anubis'] :is(a, button).bg-paper:hover:not(:disabled) {
+  box-shadow:
+    0 0 0 1px rgb(255 31 56 / 0.6),
+    0 14px 34px -14px rgb(255 31 56 / 0.65);
+  transform: translateY(-1px);
+}
+/* links inside running text are underlined with dots, as on the Anubis page */
+html[data-look='anubis'] main p a:not([class]) {
+  text-decoration: underline dotted;
+  text-underline-offset: 4px;
 }

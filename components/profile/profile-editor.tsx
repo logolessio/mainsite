@@ -21,7 +21,6 @@ import {
   DOT_SWATCHES,
   FONT_OPTIONS,
   CLIPPING_PLATFORMS,
-  handleChars,
   LINK_PLATFORMS,
   NAME_EFFECTS,
   SHOW_OPTIONS,
@@ -35,6 +34,7 @@ import { bannerStyle, ProfileCard } from './profile-card'
 import { LookPicker } from './look-picker'
 import { MiniDots } from './mini-dots'
 import { ProfileTheme } from './profile-theme'
+import { UsernameChange } from './username-change'
 import { LiquidGlass } from '@/components/ui/liquid-glass'
 
 type Loaded = { profile: ProfileView; unlocked: string[]; discordImport: boolean; discordLinked: boolean }
@@ -230,10 +230,16 @@ export function ProfileEditor() {
                     }}
                   />
                 </Field>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Username" hint={looseHandles ? `logoless.io/@${f.handle} · Letters, numbers, dots, dashes and underscores` : `logoless.io/@${f.handle}`}><Input value={f.handle} maxLength={20} onChange={(e) => set('handle', handleChars(e.target.value, looseHandles))} /></Field>
-                  <Field label="Pronouns (optional)"><Input value={f.pronouns} maxLength={30} placeholder="e.g. she/her" onChange={(e) => set('pronouns', e.target.value)} /></Field>
-                </div>
+                <UsernameChange
+                  handle={f.handle}
+                  loose={looseHandles}
+                  onChanged={(h) => {
+                    setF((c) => (c ? { ...c, handle: h } : c))
+                    setLoaded((l) => (l ? { ...l, profile: { ...l.profile, handle: h } } : l))
+                    window.dispatchEvent(new Event(NAV_USER_REFRESH))
+                  }}
+                />
+                <Field label="Pronouns (optional)"><Input value={f.pronouns} maxLength={30} placeholder="e.g. she/her" onChange={(e) => set('pronouns', e.target.value)} /></Field>
                 <Field label="About me" hint={`${f.bio.length}/400`}><Textarea value={f.bio} maxLength={400} rows={4} onChange={(e) => set('bio', e.target.value)} /></Field>
                 <Field label="Country (optional)">
                   <Select value={f.country ?? ''} onChange={(e) => set('country', e.target.value || null)}>

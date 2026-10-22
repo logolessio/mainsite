@@ -186,7 +186,18 @@ export function ProfileStudio() {
 
   if (!f || !loaded) return <StudioSkeleton error={error} />
 
-  const s: Studio = { f, setF, ex, setPendingAvatar, onError: (m) => setError(m) }
+  const s: Studio = {
+    f,
+    setF,
+    ex,
+    setPendingAvatar,
+    onError: (m) => setError(m),
+    handleSaved: (handle) => {
+      setF((c) => (c ? { ...c, handle } : c))
+      setLoaded((l) => (l ? { ...l, profile: { ...l.profile, handle } } : l))
+      window.dispatchEvent(new Event(NAV_USER_REFRESH))
+    },
+  }
   const previewLinks = f.links
     .filter((l) => CLIPPING_PLATFORMS.includes(l.platform) && !f.extras.privacy.hiddenLinks.includes(l.platform))
     .map((l) => ({ platform: l.platform, href: l.url, label: LINK_PLATFORMS.find((p) => p.id === l.platform)?.label ?? l.platform }))
