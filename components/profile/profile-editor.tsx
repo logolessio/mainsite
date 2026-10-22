@@ -208,7 +208,7 @@ export function ProfileEditor() {
             {tab === 'profile' && (
               <div className="grid gap-7">
                 <div className="flex items-center gap-5">
-                  <button type="button" onClick={() => avatarInput.current?.click()} className="group relative grid size-24 shrink-0 place-items-center overflow-hidden rounded-pill border border-line-strong bg-raised" aria-label="Change profile picture">
+                  <button type="button" onClick={() => avatarInput.current?.click()} className="group relative grid size-24 shrink-0 place-items-center overflow-hidden rounded-full border border-line-strong bg-raised" aria-label="Change profile picture">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     {f.avatar ? <img src={f.avatar} alt="" className="size-full object-cover" referrerPolicy="no-referrer" /> : <Camera className="size-6 text-mute" />}
                     <span className="absolute inset-0 grid place-items-center bg-ink/60 opacity-0 transition-opacity group-hover:opacity-100">{busy === 'avatar' ? <Loader2 className="size-5 animate-spin" /> : <Camera className="size-5" />}</span>

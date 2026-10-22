@@ -141,7 +141,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ q
                 <Link data-kb-focus href={`/admin/people/${p.id}`} className="group flex items-center gap-4 px-5 py-4 transition-colors duration-300 hover:bg-white/[0.04]">
                   {p.avatar ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.avatar} alt="" className="size-11 shrink-0 rounded-pill object-cover" />
+                    <img src={p.avatar} alt="" className="size-11 shrink-0 rounded-full object-cover" />
                   ) : (
                     <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-pill bg-white/[0.06] text-sm">{p.name.slice(0, 1).toUpperCase()}</span>
                   )}

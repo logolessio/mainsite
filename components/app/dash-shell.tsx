@@ -235,7 +235,7 @@ export function DashShell({ area, items: menu, footer = NONE, children }: { area
         {/* the card is drawn at once, empty, and filled in when the details arrive, so the sidebar never grows a piece after loading */}
         <div className="shrink-0 p-3">
           <div className="flex items-center gap-3 rounded-2xl border border-line bg-white/[0.03] p-3">
-            <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-pill border border-line-strong bg-white/[0.05] text-sm">
+            <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full border border-line-strong bg-white/[0.05] text-sm">
               {signedIn?.profile.avatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={signedIn.profile.avatar} alt="" className="size-full object-cover" />

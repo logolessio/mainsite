@@ -35,7 +35,7 @@ export default async function Page({ params }: Props) {
       <Breadcrumbs trail={[{ name: 'Creators', href: '/creators' }, { name: c.name }]} />
       <div className="mt-10 flex flex-wrap items-center gap-6">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={c.avatar} alt="" className="size-24 rounded-pill object-cover" />
+        <img src={c.avatar} alt="" className="size-24 rounded-full object-cover" />
         <div className="min-w-0">
           <h1 className="font-display text-5xl leading-tight tracking-[-0.03em] md:text-6xl">{c.name}</h1>
           <p className="mt-1 text-mute">

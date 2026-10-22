@@ -88,7 +88,7 @@ export function Avatar({ src, name, size = 40, className }: { src: string | null
   const initial = (name.trim()[0] ?? '?').toUpperCase()
   return (
     <span
-      className={cn('relative grid shrink-0 place-items-center overflow-hidden rounded-pill border border-line-strong bg-raised font-medium', className)}
+      className={cn('relative grid shrink-0 place-items-center overflow-hidden rounded-full border border-line-strong bg-raised font-medium', className)}
       style={{ width: size, height: size, fontSize: size * 0.4 }}
     >
       {src && !failed ? (
@@ -138,7 +138,7 @@ function ProfileIcon({ onNavigate, menuOpen }: { onNavigate?: () => void; menuOp
   return (
     // the preview is for a mouse or the keyboard only, and never while the menu is open (the menu already shows you)
     <div className="relative" onPointerEnter={(e) => e.pointerType === 'mouse' && show()} onPointerLeave={(e) => e.pointerType === 'mouse' && hide()} onFocus={(e) => (e.target as HTMLElement).matches(':focus-visible') && show()} onBlur={hide}>
-      <TransitionLink href={`/@${p.handle}`} onClick={onNavigate} aria-label={`Your profile, @${p.handle}`} className="block rounded-pill">
+      <TransitionLink href={`/@${p.handle}`} onClick={onNavigate} aria-label={`Your profile, @${p.handle}`} className="block rounded-full">
         <Avatar src={p.avatar} name={p.displayName} size={44} />
       </TransitionLink>
       <AnimatePresence>

@@ -51,8 +51,11 @@ export function GradientField() {
   const ref = useRef<HTMLCanvasElement>(null)
   const { reduced } = useMotionPrefs()
   const look = useFeature('anubis-look')
+  const path = usePathname() ?? ''
   // the red rails belong to the public pages; the dashboards have a sidebar and their own edges
-  const inApp = /^\/(dashboard|brand|admin|owner|dev)(\/|$)/.test(usePathname() ?? '')
+  const inApp = /^\/(dashboard|brand|admin|owner|dev)(\/|$)/.test(path)
+  // a profile (its page, or the editor with the live preview) has backgrounds and effects of its own to animate: the glows behind it ease off
+  const slow = /^\/(@|u\/|dashboard\/profile)/.test(path)
 
   useEffect(() => {
     const canvas = ref.current
@@ -180,7 +183,7 @@ export function GradientField() {
       raf = requestAnimationFrame(loop)
       const d = document.documentElement.dataset
       if (document.hidden || d.tour || d.modal) return
-      if (now - last < (look ? 20 : 40)) return // about 24 frames a second (50 for the Anubis glows, which move a lot)
+      if (now - last < (look ? (slow ? 66 : 33) : 40)) return // about 24 frames a second; 30 for the Anubis glows, 15 on the profile pages, which animate plenty of their own
       last = now
       draw(now / 1000)
     }
@@ -201,7 +204,7 @@ export function GradientField() {
       window.removeEventListener('resize', onResize)
       window.removeEventListener('pointermove', onPointer)
     }
-  }, [reduced, look])
+  }, [reduced, look, slow])
 
   return (
     <div aria-hidden="true" className="gradient-field pointer-events-none fixed inset-0 z-0 overflow-hidden">

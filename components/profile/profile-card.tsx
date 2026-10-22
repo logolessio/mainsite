@@ -171,17 +171,17 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
         style={{ top: 'calc(100% - 48px)' }}
         className="absolute left-4 z-20"
       >
-        <div className="relative size-[96px] rounded-pill ring-[7px] ring-[var(--card)]" style={{ boxShadow: `0 0 0 7px var(--card), 0 0 40px -6px ${view.accent}` }}>
-          <div className="size-full overflow-hidden rounded-pill bg-raised">
+        <div className="relative size-[96px] rounded-full ring-[7px] ring-[var(--card)]" style={{ boxShadow: `0 0 0 7px var(--card), 0 0 40px -6px ${view.accent}` }}>
+          <div className="size-full overflow-hidden rounded-full bg-raised">
             <AvatarFace view={view} studio={studio} />
           </div>
           {onEdit && <Pencil2 label="Edit profile picture" onClick={() => onEdit('avatar')} className="absolute -top-1 -right-2 z-10 size-8" />}
           {view.show.status && (
             <span
               title={view.online ? 'Online' : 'Offline'}
-              className={cn('absolute right-0 bottom-0 size-6 rounded-pill border-[5px] border-[var(--card)]', view.online ? 'bg-[#23a55a]' : 'bg-[#80848e]')}
+              className={cn('absolute right-0 bottom-0 size-6 rounded-full border-[5px] border-[var(--card)]', view.online ? 'bg-[#23a55a]' : 'bg-[#80848e]')}
             >
-              {view.online && <span aria-hidden="true" className="absolute inset-0 animate-ping rounded-pill bg-[#23a55a]/60" />}
+              {view.online && <span aria-hidden="true" className="absolute inset-0 animate-ping rounded-full bg-[#23a55a]/60" />}
             </span>
           )}
         </div>

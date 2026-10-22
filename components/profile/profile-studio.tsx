@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { Download, ExternalLink, Image as ImageIcon, Pencil, X } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { NAV_USER_REFRESH } from '@/components/shell/nav-user'
 import { UnsavedBar } from '@/components/ui/unsaved-bar'
 import { useUnsavedGuard } from '@/hooks/use-unsaved-guard'
@@ -90,7 +90,11 @@ export function ProfileStudio() {
 
   const ex = useCallback(<K extends keyof ProfileExtras>(k: K, patch: Partial<ProfileExtras[K]>) => setF((c) => (c ? { ...c, extras: { ...c.extras, [k]: { ...c.extras[k], ...patch } } } : c)), [])
 
-  const dirty = Boolean(f && loaded && (pendingAvatar !== undefined || JSON.stringify(f) !== JSON.stringify(loaded.profile)))
+  // compared again only when the profile itself changes, not on every render
+  const dirty = useMemo(() => Boolean(f && loaded && (pendingAvatar !== undefined || JSON.stringify(f) !== JSON.stringify(loaded.profile))), [f, loaded, pendingAvatar])
+  // the live preview follows the profile a moment behind: the fields you are typing in or dragging stay instant, and the heavy part (the card, its effects and the
+  // background) is drawn when there is time, so a slider never has to wait for it
+  const deferred = useDeferredValue(f)
 
   const save = async (): Promise<boolean> => {
     if (!f) return false
@@ -164,11 +168,14 @@ export function ProfileStudio() {
     }
   }
 
-  const open = (t: Panel) => {
-    setPanel(t)
-    // on a narrower screen the window rises from the bottom, so the page is brought to the top of the screen above it
-    if (!wide) window.setTimeout(() => stage.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
-  }
+  const open = useCallback(
+    (t: Panel) => {
+      setPanel(t)
+      // on a narrower screen the window rises from the bottom, so the page is brought to the top of the screen above it
+      if (!wide) window.setTimeout(() => stage.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
+    },
+    [wide],
+  )
 
   // the old Privacy page now lives here: a link to #privacy opens it
   const ready = Boolean(f && loaded)
@@ -198,9 +205,6 @@ export function ProfileStudio() {
       window.dispatchEvent(new Event(NAV_USER_REFRESH))
     },
   }
-  const previewLinks = f.links
-    .filter((l) => CLIPPING_PLATFORMS.includes(l.platform) && !f.extras.privacy.hiddenLinks.includes(l.platform))
-    .map((l) => ({ platform: l.platform, href: l.url, label: LINK_PLATFORMS.find((p) => p.id === l.platform)?.label ?? l.platform }))
   const discard = () => {
     setF(loaded.profile)
     setPendingAvatar(undefined)
@@ -241,24 +245,7 @@ export function ProfileStudio() {
 
       {/* the page itself: it moves aside to make room for the window on a wide screen */}
       <div className={wide && panel ? 'transition-[padding] duration-500 xl:pr-[444px]' : 'transition-[padding] duration-500'}>
-        <div className="relative overflow-hidden rounded-card border border-line bg-black">
-          <ProfileBackdrop scope="box" bg={f.extras.bg} overlay={f.extras.overlay} color={f.dotColor} accents={[f.accent, f.accent2]} />
-          <button type="button" onClick={() => open('background')} className="absolute top-3 left-3 z-30 inline-flex h-9 items-center gap-1.5 rounded-pill border border-white/25 bg-black/65 px-3 text-xs text-white backdrop-blur-md transition-colors hover:bg-black/85">
-            <ImageIcon aria-hidden="true" className="size-3.5" /> Background <Pencil aria-hidden="true" className="size-3" />
-          </button>
-          <div ref={stage} className="relative z-10 flex scroll-mt-5 justify-center px-3 pt-16 pb-12 sm:px-6 sm:pt-20">
-            <ProfileCard
-              preview
-              isOwner
-              studio
-              className="w-full max-w-[480px]"
-              onEdit={open}
-              view={f}
-              stats={{ ...(f.show.clips ? { clips: 12 } : {}), ...(f.show.views ? { views: 48200 } : {}), ...(f.show.earnings ? { earnedCents: 32000 } : {}), ...(f.show.campaigns ? { campaigns: 4 } : {}) }}
-              links={previewLinks}
-            />
-          </div>
-        </div>
+        <StudioPreview view={deferred ?? f} onEdit={open} stageRef={stage} />
         <p className="mt-3 text-center text-xs text-mute">The numbers on the card are examples.</p>
       </div>
 
@@ -334,3 +321,32 @@ function StudioSkeleton({ error }: { error: string }) {
   if (error) return <p className="text-mute">{error}</p>
   return <div role="status" aria-busy="true" aria-label="Loading" className="sk h-[640px] rounded-card border border-line bg-white/[0.03]" />
 }
+
+/**
+ * The page as people will see it: the backdrop, the Background button and the card. It is a piece of its own that only draws again when the (deferred)
+ * profile or the way to open a window changes, never because something else in the editor did (a window opening, a save, a message).
+ */
+const StudioPreview = memo(function StudioPreview({ view, onEdit, stageRef }: { view: ProfileView; onEdit: (t: Panel) => void; stageRef: React.RefObject<HTMLDivElement | null> }) {
+  const links = useMemo(
+    () =>
+      view.links
+        .filter((l) => CLIPPING_PLATFORMS.includes(l.platform) && !view.extras.privacy.hiddenLinks.includes(l.platform))
+        .map((l) => ({ platform: l.platform, href: l.url, label: LINK_PLATFORMS.find((p) => p.id === l.platform)?.label ?? l.platform })),
+    [view.links, view.extras.privacy.hiddenLinks],
+  )
+  const stats = useMemo(
+    () => ({ ...(view.show.clips ? { clips: 12 } : {}), ...(view.show.views ? { views: 48200 } : {}), ...(view.show.earnings ? { earnedCents: 32000 } : {}), ...(view.show.campaigns ? { campaigns: 4 } : {}) }),
+    [view.show.clips, view.show.views, view.show.earnings, view.show.campaigns],
+  )
+  return (
+    <div className="relative overflow-hidden rounded-card border border-line bg-black">
+      <ProfileBackdrop scope="box" bg={view.extras.bg} overlay={view.extras.overlay} color={view.dotColor} accents={[view.accent, view.accent2]} />
+      <button type="button" onClick={() => onEdit('background')} className="absolute top-3 left-3 z-30 inline-flex h-9 items-center gap-1.5 rounded-pill border border-white/25 bg-black/65 px-3 text-xs text-white backdrop-blur-md transition-colors hover:bg-black/85">
+        <ImageIcon aria-hidden="true" className="size-3.5" /> Background <Pencil aria-hidden="true" className="size-3" />
+      </button>
+      <div ref={stageRef} className="relative z-10 flex scroll-mt-5 justify-center px-3 pt-16 pb-12 sm:px-6 sm:pt-20">
+        <ProfileCard preview isOwner studio className="w-full max-w-[480px]" onEdit={onEdit} view={view} stats={stats} links={links} />
+      </div>
+    </div>
+  )
+})

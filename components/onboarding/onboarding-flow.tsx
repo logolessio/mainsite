@@ -191,7 +191,7 @@ function ProfilePill({ data, onAvatar, onBanner, busy }: { data: Data; onAvatar?
   const letter = (data.name.trim()[0] ?? data.handle[0] ?? '').toUpperCase()
   return (
     <div className="flex w-fit max-w-full items-center gap-3 rounded-card border border-line-strong p-3 [--h:clamp(5.5rem,22vw,7.5rem)]">
-      <button type="button" disabled={!editable} onClick={onAvatar} aria-label="Profile picture" style={data.avatarUrl ? undefined : { background: avatarCss(look) }} className={cn('relative grid size-[var(--h)] shrink-0 place-items-center overflow-hidden rounded-pill outline-none', editable && 'transition-transform hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-paper/60')}>
+      <button type="button" disabled={!editable} onClick={onAvatar} aria-label="Profile picture" style={data.avatarUrl ? undefined : { background: avatarCss(look) }} className={cn('relative grid size-[var(--h)] shrink-0 place-items-center overflow-hidden rounded-full outline-none', editable && 'transition-transform hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-paper/60')}>
         {data.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={data.avatarUrl} alt="Your profile picture" className="size-full object-cover" />

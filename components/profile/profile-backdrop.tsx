@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 import { bgVideoSrc, giphyImage, noiseLayer, tintHex, type ProfileExtras } from '@/lib/profile-extras'
 import type { CardEffect } from '@/lib/profile-style'
@@ -72,6 +72,16 @@ function LoopVideo({ src }: { src: string }) {
   return <video ref={ref} src={src} muted loop playsInline autoPlay={!reduced} preload="auto" disablePictureInPicture className="absolute inset-0 size-full object-cover" />
 }
 
+/** The value, once it has stopped changing for `ms` (at once the first time): dragging a slider or a colour does not rebuild something heavy on every step. */
+function useSettled<T>(value: T, ms: number): T {
+  const [v, setV] = useState(value)
+  useEffect(() => {
+    const t = window.setTimeout(() => setV(value), ms)
+    return () => window.clearTimeout(t)
+  }, [value, ms])
+  return v
+}
+
 const WARM: Partial<Record<keyof typeof BG_PAINTERS, number>> = { warp: 40, bokeh: 20, matrix: 60, constellation: 5 }
 
 function EffectCanvas({ effect, color, accents, base, intensity, speed, page }: { effect: keyof typeof BG_PAINTERS; color: string; accents: [string, string]; base: string; intensity: number; speed: number; page: boolean }) {
@@ -79,6 +89,9 @@ function EffectCanvas({ effect, color, accents, base, intensity, speed, page }: 
   const { reduced } = useMotionPrefs()
   const live = useRef(speed)
   live.current = speed
+  // what the painter is built from (everything but the speed, which it reads as it goes) is only taken up once it has settled
+  const wanted = useMemo(() => ({ color, a0: accents[0], a1: accents[1], base, intensity }), [color, accents[0], accents[1], base, intensity]) // eslint-disable-line react-hooks/exhaustive-deps
+  const built = useSettled(wanted, 150)
 
   useEffect(() => {
     const cv = ref.current
@@ -99,7 +112,7 @@ function EffectCanvas({ effect, color, accents, base, intensity, speed, page }: 
       cv.width = Math.round(w * dpr)
       cv.height = Math.round(h * dpr)
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      paint = BG_PAINTERS[effect]({ w, h, c: hexRgb(color), p: hexRgb(accents[0]), q: hexRgb(accents[1]), base: hexRgb(base), k: intensity / 100 })
+      paint = BG_PAINTERS[effect]({ w, h, c: hexRgb(built.color), p: hexRgb(built.a0), q: hexRgb(built.a1), base: hexRgb(built.base), k: built.intensity / 100 })
     }
     const draw = (dt: number) => {
       ctx.clearRect(0, 0, w, h)
@@ -150,7 +163,7 @@ function EffectCanvas({ effect, color, accents, base, intensity, speed, page }: 
       io.disconnect()
       document.removeEventListener('visibilitychange', onVis)
     }
-  }, [effect, color, accents[0], accents[1], base, intensity, page, reduced]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [effect, built, page, reduced]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return <canvas ref={ref} className="absolute inset-0 size-full" />
 }

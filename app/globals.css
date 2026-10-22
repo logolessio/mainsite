@@ -1615,8 +1615,9 @@ html[data-surfaces='solid'] [data-search-pill] [data-sheen] {
    reduced motion and phones.
    ------------------------------------------------------------------------------------------------------------------------------ */
 html[data-look='anubis'] .gradient-field canvas[data-bg] {
-  filter: blur(22px) saturate(1.4) contrast(1.05);
-  transform: scale(1.12); /* the blur eats the edge, so the picture is a little larger than the screen */
+  /* no CSS filter here: a blur over a picture that changes fifty times a second is what made pages heavy. The picture is already tiny and stretched, so
+     it is soft by nature, and the colours are drawn as rich as they should be. */
+  image-rendering: auto;
 }
 html[data-look='anubis'] .gf-grid {
   opacity: 0.32;
@@ -1624,33 +1625,36 @@ html[data-look='anubis'] .gf-grid {
 .gf-grain {
   display: none;
 }
+/* the grain: two plain layers laid over the colour (no blend mode, so the browser only has to put one picture on another): light speckle that shows on the
+   black, dark speckle that shows on the glow. The layer is a little bigger than the screen and jumps to a new place a few times a second, like film, which
+   the browser does on its own without redrawing anything. */
 html[data-look='anubis'] .gf-grain {
   display: block;
   position: absolute;
-  inset: -60%;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='n' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='linear' slope='0' intercept='1'/></feComponentTransfer></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-  background-size: 260px 260px;
-  mix-blend-mode: overlay;
-  opacity: 0.55;
+  inset: -6%;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/></svg>");
+  background-size: 220px 220px;
+  opacity: 0.2;
   animation: gf-grain 0.8s steps(1) infinite;
+  will-change: transform;
 }
 html[data-look='anubis'] .gf-grain::after {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/></svg>");
-  background-size: 200px 200px;
-  opacity: 0.16;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='170' height='170'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch' seed='7'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/></svg>");
+  background-size: 170px 170px;
+  opacity: 0.5;
 }
 @keyframes gf-grain {
   0% { transform: translate(0, 0); }
-  12% { transform: translate(-3%, -4%); }
-  25% { transform: translate(-7%, 3%); }
-  37% { transform: translate(4%, -6%); }
-  50% { transform: translate(-4%, 5%); }
-  62% { transform: translate(6%, 2%); }
-  75% { transform: translate(-6%, -2%); }
-  87% { transform: translate(3%, 6%); }
+  12% { transform: translate(-2%, -3%); }
+  25% { transform: translate(-4%, 2%); }
+  37% { transform: translate(3%, -4%); }
+  50% { transform: translate(-3%, 3%); }
+  62% { transform: translate(4%, 1%); }
+  75% { transform: translate(-4%, -1%); }
+  87% { transform: translate(2%, 4%); }
 }
 html.calm .gf-grain {
   animation: none;

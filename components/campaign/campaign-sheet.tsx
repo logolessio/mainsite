@@ -95,7 +95,8 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
     </div>
   )
   const cover = (
-    <div className="aspect-square overflow-hidden rounded-card bg-white/10 max-md:size-24 max-md:shrink-0 max-md:rounded-card">
+    // on a wide sheet the cover is at least square and takes up whatever height the other column has over, so the player ends level with the info and nothing is left empty
+    <div className={cn('aspect-square overflow-hidden rounded-card bg-white/10 max-md:size-24 max-md:shrink-0 max-md:rounded-card', wide && 'grow')}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <FadeImg src={campaign.cover} alt={`Cover of ${campaign.title} by ${campaign.creator}`} className="size-full scale-[1.07] object-cover" />
     </div>
@@ -187,7 +188,7 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
       ) : (
         <div className={cn(wide ? 'grid grid-cols-[minmax(0,9fr)_minmax(0,11fr)] gap-8' : 'grid gap-5')}>
           {wide ? (
-            <div className="flex min-w-0 flex-col gap-3 self-start">
+            <div className="flex min-w-0 flex-col gap-3">
               {cover}
               <PreviewPlayer campaign={campaign} />
             </div>

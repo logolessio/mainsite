@@ -11,7 +11,7 @@ export function CreatorCard({ c, campaigns }: { c: Creator; campaigns: { id: str
     <li className="flex flex-col rounded-card border border-line bg-white/[0.02] p-5">
       <div className="flex items-center gap-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={c.avatar} alt="" className="size-14 shrink-0 rounded-pill object-cover" />
+        <img src={c.avatar} alt="" className="size-14 shrink-0 rounded-full object-cover" />
         <div className="min-w-0">
           <Link href={`/@${c.handle}`} className="block truncate text-lg leading-tight underline-offset-4 hover:underline">
             {c.name}

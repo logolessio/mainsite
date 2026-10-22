@@ -61,7 +61,7 @@ export function FilterBar({
       initial={false}
       rootClassName="relative z-[14] mx-auto mb-10 w-fit max-w-full md:mb-14"
       rounded="rounded-card md:rounded-pill"
-      className="flex flex-wrap items-center justify-center gap-1 p-1.5 md:px-3"
+      className="flex flex-wrap items-center justify-center gap-1 p-1"
     >
       <div role="group" aria-label="Category" className="flex flex-wrap justify-center gap-0.5">
         {categories.map((c) => (
