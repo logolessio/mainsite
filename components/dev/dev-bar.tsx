@@ -27,7 +27,7 @@ export function DevBar() {
   return (
     <>
       <div className="fixed right-4 bottom-4 z-[150] flex items-center gap-2 max-md:bottom-[8.75rem]">
-        <LiquidGlass as="span" rootClassName="hidden sm:block" className="inline-flex items-center gap-2 px-4 py-2.5 font-mono text-[11px] tracking-[0.18em] text-mute uppercase" look={{ zRadius: 10 }}>
+        <LiquidGlass as="span" rootClassName="hidden h-12 sm:block" className="flex h-full items-center gap-2 px-5 font-mono text-[11px] tracking-[0.18em] text-mute uppercase" look={{ zRadius: 10 }}>
           <FlaskConical className="size-3.5" /> Dev site
         </LiquidGlass>
         <button type="button" onClick={() => setOpen(true)} className="inline-flex h-12 items-center gap-2 rounded-pill bg-paper px-6 text-[15px] font-medium text-ink shadow-[0_20px_50px_-12px_rgb(0_0_0/0.9)] transition-all hover:bg-paper/85 active:scale-95">
