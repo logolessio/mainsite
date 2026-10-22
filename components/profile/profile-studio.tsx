@@ -259,7 +259,7 @@ export function ProfileStudio() {
             initial={{ opacity: 0, x: 28 }}
             animate={{ opacity: 1, x: 0, transition: { duration: 0.34, ease: EASE_OUT } }}
             exit={{ opacity: 0, x: 20, transition: { duration: 0.18 } }}
-            className="fixed top-[92px] right-6 bottom-24 z-40 flex w-[420px] flex-col overflow-hidden rounded-card border border-line-strong bg-[#0d0d0f] shadow-[0_40px_100px_-30px_rgb(0_0_0/0.95)]"
+            className="fixed top-[92px] right-6 z-40 flex max-h-[calc(100dvh-92px-6rem)] w-[420px] flex-col overflow-hidden rounded-card border border-line-strong bg-[#0d0d0f] shadow-[0_40px_100px_-30px_rgb(0_0_0/0.95)]"
           >
             <WindowHeader title={PANEL_TITLE[panel]} onClose={() => setPanel(null)} />
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5">{body}</div>
