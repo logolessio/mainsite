@@ -128,7 +128,7 @@ export const faceById = (id: string | null | undefined) => FACES.find((f) => f.i
 
 export const ROLES: { id: Role; label: string; hint: string; setting: string; sample: string; cssVar: string }[] = [
   { id: 'headline', label: 'Headlines', hint: 'The big titles and the headings of every page.', setting: 'design_font_headline', sample: 'Your views have value.', cssVar: '--font-display-face' },
-  { id: 'body', label: 'Body text', hint: 'Paragraphs, descriptions and everything that is read.', setting: 'design_font_body', sample: 'Join a campaign, post your content, and earn for every 1,000 verified views.', cssVar: '--font-body' },
+  { id: 'body', label: 'Body text', hint: 'Paragraphs, descriptions and everything that is read.', setting: 'design_font_body', sample: 'Join a campaign, post and get paid for your views.', cssVar: '--font-body' },
   { id: 'ui', label: 'Buttons and menus', hint: 'Buttons, tabs, menus, fields and labels.', setting: 'design_font_ui', sample: 'Start earning', cssVar: '--font-ui' },
   { id: 'figures', label: 'Big numbers', hint: 'Balances, totals and the large figures.', setting: 'design_font_figures', sample: '$12,480.00', cssVar: '--font-figures' },
   { id: 'mono', label: 'Code and small print', hint: 'Anything set in a monospaced face.', setting: 'design_font_mono_face', sample: 'logoless.io/@you  ·  26,000 views', cssVar: '--font-mono-pick' },

@@ -127,7 +127,7 @@ export function DashboardView({ campaigns, ended = [], startTour }: { campaigns:
         <h1 id="hero-title" className="font-display text-[clamp(2.6rem,7vw,5.2rem)] leading-[0.98]">
           Your views have value.
         </h1>
-        <p className="mt-6 max-w-md text-lg leading-relaxed text-paper/60">Join a campaign, post your content, and earn for every 1,000 verified views.</p>
+        <p className="mt-6 max-w-md text-lg leading-relaxed text-paper/60">Join a campaign, post and get paid for your views.</p>
         {!signedIn ? (
           <TransitionLink href="/onboarding" className="mt-9 inline-flex h-12 items-center rounded-pill bg-paper px-8 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85">
             Get started
