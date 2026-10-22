@@ -308,7 +308,8 @@ export function ProfileCard({ view, stats, links, isOwner, preview = false, clas
   )
 
   return (
-    <div className="flex flex-col items-center">
+    // a profile is designed by its owner on dark, and its effects are drawn in light colours: it keeps the dark palette in light mode
+    <div data-keep-theme className="flex flex-col items-center">
       {!preview && <ProfileTheme dot={view.dotColor} />}
       {preview ? (
         card

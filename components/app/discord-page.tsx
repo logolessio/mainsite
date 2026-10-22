@@ -182,7 +182,7 @@ export function DiscordPage() {
             <ul className="divide-y divide-line">
               {o.roles.map((r) => (
                 <li key={r.id} className="flex items-center gap-4 py-3.5 first:pt-0 last:pb-0">
-                  <span aria-hidden="true" className="size-3 shrink-0 rounded-pill" style={{ background: 'rgb(243 242 238)', opacity: r.have ? 0.9 : 0.25 }} />
+                  <span aria-hidden="true" className="size-3 shrink-0 rounded-pill" style={{ background: 'var(--paper)', opacity: r.have ? 0.9 : 0.25 }} />
                   <span className="min-w-0 flex-1">
                     <span className={cn('block text-[15px]', !r.have && 'text-paper/55')}>{r.name}</span>
                     <span className="block text-[13px] text-paper/40">{r.how}</span>

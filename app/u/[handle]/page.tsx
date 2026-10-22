@@ -88,7 +88,7 @@ export default async function ProfilePage({ params }: Props) {
   }
 
   return (
-    <main className="relative grid min-h-dvh place-items-center px-4 py-24">
+    <main data-keep-theme className="relative grid min-h-dvh place-items-center bg-ink px-4 py-24">
       <TransitionLink href="/" aria-label="logoless home" className="fixed top-5 left-5 z-50 block">
         <Logo />
       </TransitionLink>

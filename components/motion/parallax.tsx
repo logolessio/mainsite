@@ -36,7 +36,7 @@ export function DriftWord({ text, from = '10%', to = '-30%' }: { text: string; f
   return (
     <div ref={ref} aria-hidden="true" className="pointer-events-none overflow-hidden py-6 select-none">
       <motion.p
-        style={{ x, WebkitTextStroke: '1px rgb(243 242 238 / 0.16)' }}
+        style={{ x, WebkitTextStroke: '1px color-mix(in srgb, var(--paper) 16%, transparent)' }}
         className="font-display font-display-thin will-change-transform whitespace-nowrap text-[26vw] leading-[0.8] text-transparent"
       >
         {text}

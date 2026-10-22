@@ -49,7 +49,7 @@ export function Slider({ label, hint, value, onChange, min = 0, max = 100, step 
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        style={{ background: `linear-gradient(90deg, rgb(255 255 255 / 0.85) ${pct}%, rgb(255 255 255 / 0.12) ${pct}%)` }}
+        style={{ background: `linear-gradient(90deg, color-mix(in srgb, var(--color-white) 85%, transparent) ${pct}%, color-mix(in srgb, var(--color-white) 12%, transparent) ${pct}%)` }}
         className="mt-2 h-1.5 w-full cursor-pointer appearance-none rounded-pill [&::-moz-range-thumb]:size-5 [&::-moz-range-thumb]:rounded-pill [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-paper [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-pill [&::-webkit-slider-thumb]:bg-paper [&::-webkit-slider-thumb]:shadow-[0_0_0_4px_rgb(255_255_255/0.12)]"
       />
     </div>

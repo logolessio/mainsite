@@ -30,7 +30,7 @@ export function ProfileBackdrop({ bg, overlay, color, accents, scope = 'page', c
   const show = bg.kind !== 'default' || overlay.effect !== 'none' || !page
   if (!show) return null
   return (
-    <div aria-hidden="true" className={cn(page ? 'pointer-events-none fixed inset-0 z-0' : 'pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]', className)} style={{ background: bg.kind === 'default' ? (page ? undefined : 'radial-gradient(120% 80% at 50% 0%, #1a1a1f, #050506)') : bg.color }}>
+    <div aria-hidden="true" data-keep-theme className={cn(page ? 'pointer-events-none fixed inset-0 z-0' : 'pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]', className)} style={{ background: bg.kind === 'default' ? (page ? undefined : 'radial-gradient(120% 80% at 50% 0%, #1a1a1f, #050506)') : bg.color }}>
       {bg.kind === 'effect' && <EffectCanvas effect={bg.effect} color={color} accents={accents} base={bg.color} intensity={bg.intensity} speed={bg.speed} page={page} />}
       {bg.kind === 'image' && bg.image && (
         // eslint-disable-next-line @next/next/no-img-element

@@ -346,7 +346,7 @@ function Coach({ run, onMove, onClose }: { run: Run; onMove: (i: number) => void
           </mask>
         </defs>
         <rect width="100%" height="100%" fill="rgb(0 0 0 / 0.74)" mask={`url(#${maskId})`} />
-        {box && <motion.rect initial={false} animate={{ x: hole.x, y: hole.y, width: hole.w, height: hole.h, opacity: shown ? 1 : 0 }} transition={move} rx={18} fill="none" stroke="rgb(243 242 238 / 0.55)" strokeWidth={1.5} />}
+        {box && <motion.rect initial={false} animate={{ x: hole.x, y: hole.y, width: hole.w, height: hole.h, opacity: shown ? 1 : 0 }} transition={move} rx={18} fill="none" stroke="color-mix(in srgb, var(--paper) 55%, transparent)" strokeWidth={1.5} />}
       </svg>
 
       <motion.div

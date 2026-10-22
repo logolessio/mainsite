@@ -6,15 +6,16 @@
 export function LightField() {
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-      {/* huge, soft vignette: a smooth multi-stop falloff plus a blurred inner shadow so there is no visible edge */}
+      {/* huge, soft vignette: a smooth multi-stop falloff plus a blurred inner shadow so there is no visible edge. It fades to the page colour, so it
+          is a dark vignette on the dark site and a pale one in light mode */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 72% 68% at 50% 54%, transparent 0%, transparent 26%, rgb(0 0 0 / 0.22) 42%, rgb(0 0 0 / 0.58) 58%, rgb(0 0 0 / 0.88) 74%, rgb(0 0 0 / 0.98) 88%, #000 100%)',
+            'radial-gradient(ellipse 72% 68% at 50% 54%, transparent 0%, transparent 26%, color-mix(in srgb, var(--ink) 22%, transparent) 42%, color-mix(in srgb, var(--ink) 58%, transparent) 58%, color-mix(in srgb, var(--ink) 88%, transparent) 74%, color-mix(in srgb, var(--ink) 98%, transparent) 88%, var(--ink) 100%)',
         }}
       />
-      <div className="absolute inset-0" style={{ boxShadow: 'inset 0 0 32vmin 16vmin #000' }} />
+      <div className="absolute inset-0" style={{ boxShadow: 'inset 0 0 32vmin 16vmin var(--ink)' }} />
       {/* fine film grain, painted once */}
       <div
         className="absolute inset-0 opacity-[0.07]"
