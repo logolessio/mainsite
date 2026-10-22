@@ -17,6 +17,7 @@ export const POST = route(async (req: Request) => {
   await protect(req, { name: 'favorite', max: 60, windowSec: 600, userId: user.id })
   const { campaignId, on } = await body<{ campaignId?: string; on?: boolean }>(req, 1024)
   if (!campaignId || typeof on !== 'boolean') throw new HttpError(400, 'Invalid request.')
+  if (campaignId.startsWith('sample-')) throw new HttpError(400, 'This is a sample campaign on the dev site, so it cannot be saved.')
   const d = await db()
   if (on) {
     const c = await d.prepare("SELECT id FROM campaigns WHERE id = ?1 AND status IN ('live','paused')").bind(campaignId).first()

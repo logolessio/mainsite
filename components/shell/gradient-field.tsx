@@ -29,17 +29,22 @@ type Glow = {
   squash: number
   breathe: number
   bp: number
+  /** it also turns a little as it floats: how far it turns (radians) */
+  turn: number
   phase: number
   alpha: number
+  /** how much the glow slides when the page scrolls (the further ones slide less), as a fraction of the screen height per screen scrolled */
+  depth: number
 }
 
 type Cloud = { cx: number; cy: number; rx: number; ry: number; stops: [number, string][]; sway: [number, number]; period: number; phase: number; spin: number; breathe: number }
 
 /**
  * A soft gradient that drifts and changes shape behind everything, with a faint grid over it. In the standard look it is black and white; in the
- * Anubis look it is the Anubis page's red, blue, teal and amber, floating around and breathing.
+ * Anubis look it is the Anubis page's red, blue, teal and amber (and the pink, violet and sky blue between them), floating round, breathing, swaying,
+ * sliding with the scroll and following the pointer, softened and under a layer of moving film grain (see globals.css).
  * It is painted on a tiny canvas (about 200 pixels across) that the browser stretches over the screen, so it costs almost
- * nothing to move, and soft gradients lose nothing when stretched. 24 frames a second, paused when the tab is hidden or a
+ * nothing to move, and soft gradients lose nothing when stretched. 24 frames a second (50 in the Anubis look), paused when the tab is hidden or a
  * sheet is open. Calm mode and reduced motion keep one still frame.
  */
 export function GradientField() {
@@ -65,27 +70,42 @@ export function GradientField() {
       canvas.height = h
     }
 
-    // The Anubis look: the colours of the Anubis page (its red, blue, teal and amber, over the deep navy it uses for panels) as glows that are added to
-    // one another on black, so where two meet they make a third. Each one floats around the screen on a long lap of its own and breathes: it swells and
-    // shrinks while it gets brighter and dimmer, and no two breathe together, so the light seems to move through the page.
+    // The Anubis look: the colours of the Anubis page (its red, blue, teal and amber, with the pink, violet and sky blue they make where they meet) as glows
+    // that are added to one another on black. Each one floats round the screen on a quick lap of its own and breathes: it swells and shrinks while it
+    // brightens and dims, and no two breathe together. The whole picture also sways slowly round the middle, slides as the page scrolls, and one warm glow
+    // follows the pointer, so there is always something moving.
     const GLOWS: Glow[] = [
-      { rgb: '255,31,56', x: 0.2, y: 0.14, ax: 0.3, ay: 0.3, px: 57, py: 71, r: 0.8, squash: 0.82, breathe: 0.3, bp: 11, phase: 0, alpha: 0.34 },
-      { rgb: '75,169,220', x: 0.82, y: 0.38, ax: 0.28, ay: 0.32, px: 67, py: 53, r: 0.74, squash: 0.9, breathe: 0.26, bp: 13, phase: 2.1, alpha: 0.28 },
-      { rgb: '46,208,176', x: 0.5, y: 1.0, ax: 0.32, ay: 0.26, px: 61, py: 47, r: 0.8, squash: 0.6, breathe: 0.32, bp: 9.5, phase: 4.0, alpha: 0.22 },
-      { rgb: '255,200,87', x: 0.72, y: 0.78, ax: 0.34, ay: 0.3, px: 43, py: 59, r: 0.38, squash: 1, breathe: 0.4, bp: 8, phase: 5.3, alpha: 0.1 },
+      { rgb: '255,31,56', x: 0.18, y: 0.12, ax: 0.38, ay: 0.34, px: 29, py: 37, r: 0.8, squash: 0.8, breathe: 0.38, bp: 6.5, turn: 0.7, phase: 0, alpha: 0.42, depth: 0.2 },
+      { rgb: '255,45,150', x: 0.38, y: 0.55, ax: 0.36, ay: 0.3, px: 23, py: 31, r: 0.52, squash: 0.9, breathe: 0.42, bp: 5.2, turn: 1.1, phase: 1.3, alpha: 0.3, depth: 0.35 },
+      { rgb: '45,95,255', x: 0.86, y: 0.3, ax: 0.34, ay: 0.36, px: 33, py: 27, r: 0.8, squash: 0.85, breathe: 0.34, bp: 7.4, turn: 0.6, phase: 2.1, alpha: 0.39, depth: 0.15 },
+      { rgb: '75,169,220', x: 0.7, y: 0.72, ax: 0.38, ay: 0.3, px: 26, py: 41, r: 0.52, squash: 1, breathe: 0.4, bp: 5.9, turn: 0.9, phase: 3.2, alpha: 0.27, depth: 0.5 },
+      { rgb: '46,208,176', x: 0.45, y: 1.0, ax: 0.4, ay: 0.28, px: 31, py: 24, r: 0.74, squash: 0.6, breathe: 0.38, bp: 6.8, turn: 0.5, phase: 4.0, alpha: 0.24, depth: 0.3 },
+      { rgb: '140,70,255', x: 0.1, y: 0.85, ax: 0.3, ay: 0.32, px: 38, py: 28, r: 0.56, squash: 0.85, breathe: 0.4, bp: 8.1, turn: 0.8, phase: 4.7, alpha: 0.255, depth: 0.4 },
+      { rgb: '255,200,87', x: 0.78, y: 0.9, ax: 0.36, ay: 0.3, px: 21, py: 34, r: 0.36, squash: 1, breathe: 0.45, bp: 4.8, turn: 0, phase: 5.3, alpha: 0.15, depth: 0.6 },
     ]
-    const glowStops = GLOWS.map((g) => soft(g.rgb, 1, 1, 0.85))
+    const glowStops = GLOWS.map((g) => soft(g.rgb, 1, 1, 0.8))
+    const pointerStops = soft('255,140,110', 1, 1, 1)
     const navyStops = soft('2,34,51', 1, 1)
+    const patchStops = soft('0,0,0', 1, 1)
+    // the pointer, eased (so the glow trails after it), as fractions of the screen
+    const ptr = { x: 0.5, y: 0.4, tx: 0.5, ty: 0.4, on: 0 }
+    const onPointer = (e: PointerEvent) => {
+      ptr.tx = e.clientX / Math.max(1, window.innerWidth)
+      ptr.ty = e.clientY / Math.max(1, window.innerHeight)
+      ptr.on = 1
+    }
     const drawLook = (t: number) => {
       ctx.globalCompositeOperation = 'source-over'
       ctx.globalAlpha = 1
       ctx.fillStyle = '#000'
       ctx.fillRect(0, 0, w, h)
       const m = Math.max(w, h)
-      const paint = (cx: number, cy: number, rx: number, ry: number, stops: [number, string][], alpha: number) => {
+      const tau = Math.PI * 2
+      const paint = (cx: number, cy: number, rx: number, ry: number, rot: number, stops: [number, string][], alpha: number) => {
         ctx.save()
         ctx.globalAlpha = Math.max(0, Math.min(1, alpha))
         ctx.translate(cx, cy)
+        ctx.rotate(rot)
         ctx.scale(rx, ry)
         const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1)
         for (const [o, col] of stops) g.addColorStop(o, col)
@@ -93,22 +113,34 @@ export function GradientField() {
         ctx.fillRect(-1, -1, 2, 2)
         ctx.restore()
       }
-      // a wide wash of navy under everything, breathing very slowly, so the black is a deep blue-black
-      paint(0.5 * w, 0.42 * h, 0.95 * m, 0.7 * m, navyStops, 0.85 + 0.15 * Math.sin((t / 17) * Math.PI * 2))
+      // a wide wash of navy under everything, breathing slowly, so the black is a deep blue-black
+      paint(0.5 * w, 0.42 * h, 0.95 * m, 0.7 * m, 0, navyStops, 0.85 + 0.15 * Math.sin((t / 13) * tau))
+      // the whole picture sways round the middle, and slides as the page scrolls
+      const sway = 0.34 * Math.sin((t / 47) * tau) + 0.12 * Math.sin((t / 19) * tau + 1)
+      const cs = Math.cos(sway)
+      const sn = Math.sin(sway)
+      const scroll = typeof window === 'undefined' ? 0 : window.scrollY / Math.max(1, window.innerHeight)
       ctx.globalCompositeOperation = 'lighter'
       GLOWS.forEach((g, i) => {
-        const tau = Math.PI * 2
-        const cx = (g.x + g.ax * Math.sin((t / g.px) * tau + g.phase)) * w
-        const cy = (g.y + g.ay * Math.sin((t / g.py) * tau + g.phase * 1.7)) * h
+        let gx = g.x + g.ax * Math.sin((t / g.px) * tau + g.phase)
+        let gy = g.y + g.ay * Math.sin((t / g.py) * tau + g.phase * 1.7) - scroll * g.depth * 0.6
+        const dx = gx - 0.5
+        const dy = gy - 0.5
+        gx = 0.5 + dx * cs - dy * sn
+        gy = 0.5 + dx * sn + dy * cs
         const b = Math.sin((t / g.bp) * tau + g.phase)
         const size = g.r * m * (1 + g.breathe * b)
-        paint(cx, cy, size, size * g.squash, glowStops[i], g.alpha * (0.8 + 0.3 * b))
+        paint(gx * w, gy * h, size, size * (g.squash + 0.12 * Math.sin((t / (g.bp * 2.3)) * tau)), g.turn * Math.sin((t / (g.py * 1.4)) * tau + g.phase), glowStops[i], g.alpha * (0.78 + 0.34 * b))
       })
+      // a warm glow that trails after the pointer
+      ptr.x += (ptr.tx - ptr.x) * 0.045
+      ptr.y += (ptr.ty - ptr.y) * 0.045
+      if (ptr.on) paint(ptr.x * w, ptr.y * h, 0.34 * m, 0.34 * m, 0, pointerStops, 0.2 + 0.04 * Math.sin((t / 3.4) * tau))
       // a soft dark patch drifting behind the middle of the page, so the glow gathers round the edges and the words always sit on something calm
       ctx.globalCompositeOperation = 'source-over'
-      const dx = 0.5 + 0.08 * Math.sin((t / 83) * Math.PI * 2)
-      const dy = 0.45 + 0.06 * Math.sin((t / 97) * Math.PI * 2 + 1)
-      paint(dx * w, dy * h, 0.46 * m, 0.3 * m, soft('0,0,0', 1, 1), 0.7 + 0.08 * Math.sin((t / 14) * Math.PI * 2))
+      const px = 0.5 + 0.1 * Math.sin((t / 61) * tau)
+      const py = 0.45 + 0.07 * Math.sin((t / 73) * tau + 1)
+      paint(px * w, py * h, 0.46 * m, 0.3 * m, 0, patchStops, 0.6 + 0.08 * Math.sin((t / 11) * tau))
       ctx.globalAlpha = 1
     }
 
@@ -148,7 +180,7 @@ export function GradientField() {
       raf = requestAnimationFrame(loop)
       const d = document.documentElement.dataset
       if (document.hidden || d.tour || d.modal) return
-      if (now - last < (look ? 33 : 40)) return // about 24 frames a second (30 for the Anubis glows, which breathe)
+      if (now - last < (look ? 20 : 40)) return // about 24 frames a second (50 for the Anubis glows, which move a lot)
       last = now
       draw(now / 1000)
     }
@@ -162,10 +194,12 @@ export function GradientField() {
     cs = clouds()
     draw(performance.now() / 1000) // a first frame at once, so the page never starts out flat black
     window.addEventListener('resize', onResize)
+    if (look && !reduced) window.addEventListener('pointermove', onPointer, { passive: true })
     if (!reduced) raf = requestAnimationFrame(loop)
     return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', onResize)
+      window.removeEventListener('pointermove', onPointer)
     }
   }, [reduced, look])
 
@@ -173,6 +207,7 @@ export function GradientField() {
     <div aria-hidden="true" className="gradient-field pointer-events-none fixed inset-0 z-0 overflow-hidden">
       <canvas ref={ref} data-bg className="absolute inset-0 h-full w-full" />
       <span className="gf-grid" />
+      {look && <span className="gf-grain" />}
       {!inApp && <span className="gf-rails" />}
     </div>
   )

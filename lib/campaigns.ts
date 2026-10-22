@@ -23,6 +23,8 @@ export type Campaign = {
   capPerUser?: number
   /** Pinned to the top of the browse page by the owner. */
   pinned?: boolean
+  /** A made-up campaign shown on the dev site only (lib/sample-campaigns.ts). It can be looked at but nothing real can be done with it. */
+  sample?: true
 }
 
 export const usd = (n: number, digits = 0) =>

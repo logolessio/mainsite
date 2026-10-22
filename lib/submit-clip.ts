@@ -4,6 +4,7 @@ import { checkClip, type Check } from './clip-check'
 import { db, nowSec, uid } from './db'
 import { HttpError } from './http'
 import { isFake } from './campaigns-db'
+import { isSampleId } from './sample-campaigns'
 import { notify, notifyAdmins } from './notify'
 import { getSetting } from './settings'
 
@@ -22,6 +23,7 @@ export type SubmitResult = { id: string; status: 'approved' | 'declined' | 'revi
  */
 export async function submitClip(user: { id: string; email: string }, campaignId: string, platform: string | undefined, rawUrl: string | undefined): Promise<SubmitResult> {
   if ((await getSetting('submissions_paused')) === '1') throw new HttpError(503, 'Submissions are paused for a moment. Please try again soon.')
+  if (isSampleId(campaignId)) throw new HttpError(400, 'This is a sample campaign on the dev site, so it cannot take clips.')
   if (!platform || !(platform in CLIP_HOSTS)) throw new HttpError(400, 'Pick a platform.')
   let u: URL
   try {

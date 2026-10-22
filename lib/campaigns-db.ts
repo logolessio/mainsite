@@ -2,6 +2,7 @@ import type { Campaign, Platform } from './campaigns'
 import { shortDate } from './campaign-input'
 import { allCaps, getCaps } from './campaign-caps'
 import { db } from './db'
+import { devSampleCampaigns, isSampleId } from './sample-campaigns'
 import { pinnedIds } from './settings'
 
 /** Hides leftover test rows (old "mock-" campaigns and the made-up "sample" ones) until the owner runs scripts/remove-fake-campaigns.sql. */
@@ -62,8 +63,14 @@ export function toCampaign(r: CampaignRow): Campaign {
   }
 }
 
-/** Campaigns people can browse and clip. Paused, ended and unpaid ones are not listed. */
+/** Campaigns people can browse and clip. Paused, ended and unpaid ones are not listed. On the dev address the made-up sample campaigns come after the real ones. */
 export async function liveCampaigns(): Promise<Campaign[]> {
+  const real = await realLiveCampaigns()
+  const samples = await devSampleCampaigns()
+  return samples.length ? [...real, ...samples] : real
+}
+
+async function realLiveCampaigns(): Promise<Campaign[]> {
   try {
     const d = await db()
     const rows = (await d.prepare(`SELECT * FROM campaigns WHERE status = 'live' AND ${NOT_FAKE} ORDER BY launched_at DESC, created_at DESC`).all<CampaignRow>()).results
@@ -89,6 +96,7 @@ export async function liveCampaigns(): Promise<Campaign[]> {
 }
 
 export async function liveCampaign(id: string): Promise<Campaign | null> {
+  if (isSampleId(id)) return (await devSampleCampaigns()).find((c) => c.id === id) ?? null
   try {
     const d = await db()
     const r = await d.prepare("SELECT * FROM campaigns WHERE id = ?1 AND status = 'live'").bind(id).first<CampaignRow>()

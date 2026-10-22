@@ -86,7 +86,10 @@ export function CampaignSheet({ campaign, onClose, leftPct = null, inline = fals
 
   const heading = (
     <div className="min-w-0">
-      <p className="text-sm text-white/50">{campaign.type}</p>
+      <p className="text-sm text-white/50">
+        {campaign.type}
+        {campaign.sample && <span className="ml-2 rounded-pill border border-white/20 px-2 py-0.5 text-[10px] tracking-[0.12em] text-white/60 uppercase">Sample</span>}
+      </p>
       <h2 className="mt-1 line-clamp-2 font-display text-3xl leading-[1] md:text-[2.3rem]">{campaign.title}</h2>
       <p className="mt-1.5 truncate text-white/60">by {campaign.creator}</p>
     </div>
