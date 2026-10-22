@@ -45,6 +45,23 @@ const grain = (size: number, strength = 0.5) =>
 export const bannerCss = (l: Look) => `${grain(200)} 0 0/200px 200px, radial-gradient(110% 150% at 12% 0%, ${l.light} 0%, transparent 62%), linear-gradient(135deg, ${l.mid} 0%, ${l.dark} 100%)`
 export const avatarCss = (l: Look) => `${grain(120)} 0 0/120px 120px, radial-gradient(100% 100% at 25% 15%, ${l.light} 0%, transparent 70%), linear-gradient(150deg, ${l.mid} 0%, ${l.dark} 100%)`
 
+// ---------- the small previews in the picker ----------
+// The picker tiles are small, so the big banner's grain (white specks on a dark picture) looks like dirt at that size. Here the grain is grey noise
+// that is blended in with soft-light: it lightens and darkens a hair, so the colour stays clean and only the surface feels printed. Put
+// `background-blend-mode: soft-light, normal, normal, normal` next to this (LOOK_TILE_BLEND).
+const tileGrain = (size: number) =>
+  `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='.9 .9 .9 0 -.35 .9 .9 .9 0 -.35 .9 .9 .9 0 -.35 0 0 0 0 1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`
+
+export const LOOK_TILE_BLEND = 'soft-light, normal, normal, normal'
+
+/** A picker tile: fine grain over a bright glow at the top left, a second softer glow at the bottom right, over the look's gradient. */
+export const lookTileCss = (l: Look) =>
+  `${tileGrain(160)} 0 0/160px 160px, radial-gradient(95% 120% at 8% 0%, ${l.light} 0%, transparent 62%), radial-gradient(70% 90% at 104% 108%, ${l.light}66 0%, transparent 70%), linear-gradient(135deg, ${l.mid} 0%, ${l.dark} 100%)`
+
+/** The little picture on a tile: a glassy sphere with a highlight, the way a profile picture sits on the banner. */
+export const lookOrbCss = (l: Look) =>
+  `radial-gradient(60% 50% at 34% 24%, rgb(255 255 255 / 0.55) 0%, transparent 100%), radial-gradient(120% 120% at 28% 20%, ${l.light} 0%, ${l.mid} 58%, ${l.dark} 100%)`
+
 /** The picture itself as an SVG, for the picture route (it works in an <img>, which a CSS background cannot). */
 export function lookSvg(l: Look, kind: 'avatar' | 'banner', letter?: string) {
   const w = kind === 'avatar' ? 256 : 1200

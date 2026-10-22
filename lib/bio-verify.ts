@@ -99,6 +99,8 @@ export async function readProfile(platform: Platform, handle: string): Promise<R
     if (!res.ok) return { ok: false, why: `The platform answered with an error (${res.status}), so we could not read the page.` }
     const html = (await res.text()).slice(0, 8_000_000)
     const lower = html.toLowerCase()
+    // TikTok answers 200 for an account that does not exist and says so inside the page data (10221 and 10202 are "no such user")
+    if (platform === 'tiktok' && /"statusCode":(10221|10202)\b/.test(html)) return { ok: false, why: 'We could not find that account. Check the username.' }
     // is this really that account's page? (a captcha or a login wall will not mention the name)
     if (!lower.includes(handle.toLowerCase())) return { ok: false, why: 'We could not read that profile from here (the platform may be blocking automatic reading).' }
     if (platform === 'instagram' && !/og:description|"biography"/i.test(html)) return { ok: false, why: 'Instagram does not show profiles to automatic readers, so we cannot read it from here.' }
@@ -193,6 +195,17 @@ export async function start(userId: string, platform: Platform): Promise<{ ok: t
   }
   const s = (await statesFor(userId)).find((x) => x.platform === platform)
   return s ? { ok: true, state: s } : { ok: false, error: 'Could not start that.' }
+}
+
+export type LookupResult = { status: 'found' } | { status: 'missing'; message: string } | { status: 'unknown' }
+
+/** Does this linked account exist? Said as soon as it is added, so a mistyped username is caught before a code is made. `unknown` means the site would not let us look. */
+export async function lookup(userId: string, platform: Platform): Promise<LookupResult> {
+  const l = await linked(userId, platform)
+  if ('error' in l) return { status: 'unknown' }
+  const read = await readProfile(platform, l.handle)
+  if (read.ok) return { status: 'found' }
+  return /could not find/i.test(read.why) ? { status: 'missing', message: read.why } : { status: 'unknown' }
 }
 
 export type CheckResult = { status: 'verified' } | { status: 'not-found'; message: string } | { status: 'unreadable'; message: string } | { status: 'error'; message: string }

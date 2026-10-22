@@ -1,12 +1,28 @@
 // The emails logoless sends. Pure functions (no secrets, no database) so the admin page can preview them too.
 // Email clients are fussy, so everything is tables with inline styles, and it still looks right with images off.
+//
+// The look is the site's own (the Anubis look, see app/globals.css): pure black, #ededed, the red #ff1f38 with teal and amber for small touches,
+// hairline borders, 6 to 10px corners, IBM Plex Mono for what is read and Schibsted Grotesk Black for the big words. The soft coloured light behind
+// the top is a picture (public/email/glow.jpg) because email cannot animate or run a canvas; with images off it is plain black and nothing is lost.
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string)
 
 export const SITE_URL = 'https://logoless.io'
 const LOGO = `${SITE_URL}/logo-sm.png`
-const MONO = "'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace"
-const SANS = "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif"
+const GLOW = `${SITE_URL}/email/glow.jpg`
+const MONO = "'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace"
+const DISPLAY = "'Schibsted Grotesk','Arial Black','Helvetica Neue',Helvetica,Arial,sans-serif"
+
+// the site's colours, as flat values (email clients do not do variables)
+const PAPER = '#ededed'
+const BODY = '#b8b8b8'
+const MUTE = '#8a8a8a'
+const QUIET = '#686868'
+const LINE = '#2b2b2b'
+const RULE = '#1d1d1d'
+const RED = '#ff1f38'
+const TEAL = '#2ed0b0'
+const AMBER = '#ffc857'
 
 export type Meta = { place?: string | null; device?: string | null }
 export type Mail = { subject: string; text: string; html: string }
@@ -19,46 +35,71 @@ type Layout = {
   body: string // already-escaped HTML
   note?: string // small print under the body
   test?: boolean
+  keepCase?: boolean // the title holds a name or a typed word, so it is not set in capitals
 }
 
-const SERIF = "Gloock,Georgia,'Times New Roman',Times,serif"
+/** The small label with a coloured dot in front: the site's .eyebrow. */
+const eyebrow = (text: string, dot = RED, margin = '0 0 26px') =>
+  `<p style="margin:${margin};font:500 11px/1 ${MONO};letter-spacing:.14em;text-transform:uppercase;color:${BODY}"><span style="color:${dot};font-size:10px;line-height:1;vertical-align:1px">&#9679;</span>&nbsp;&nbsp;${esc(text)}</p>`
 
 function layout(l: Layout) {
   const banner = l.test
-    ? `<tr><td style="padding:0 0 14px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="left" style="background:#111114;border:1px solid #2a2a30;border-radius:12px;padding:10px 14px;font:500 12px/1.4 ${SANS};color:#a2a2a9">Test email from the admin panel. Nothing was created.</td></tr></table></td></tr>`
+    ? `<tr><td style="padding:0 0 14px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="left" bgcolor="#14110a" style="background:#14110a;border:1px solid #3a3118;border-radius:6px;padding:11px 14px">${eyebrow('Test email from the admin panel. Nothing was created.', AMBER, '0')}</td></tr></table></td></tr>`
     : ''
   return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"><title>${esc(l.title)}</title>
-<link href="https://fonts.googleapis.com/css2?family=Gloock&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"><meta name="x-apple-disable-message-reformatting"><title>${esc(l.title)}</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@800;900&display=swap" rel="stylesheet">
 <style>
-  body{margin:0!important;padding:0!important;background:#050506;-webkit-text-size-adjust:100%}
-  a{color:#f3f2ee}
+  body{margin:0!important;padding:0!important;background:#000;-webkit-text-size-adjust:100%}
+  a{color:${PAPER}}
   a[x-apple-data-detectors]{color:inherit!important;text-decoration:none!important;font:inherit!important}
-  @media (max-width:560px){
-    .wrap{padding:24px 14px 32px!important}
-    .card{padding:34px 24px 30px!important}
-    .code{font-size:32px!important}
+  ::selection{background:rgba(255,31,56,.4);color:#fff}
+  @media (max-width:600px){
+    .glow{background-size:100% auto!important}
+    .wrap{padding:22px 12px 32px!important}
+    .card{padding:30px 22px 26px!important}
+    .code{font-size:30px!important;letter-spacing:.24em!important}
     .h1{font-size:32px!important}
   }
 </style></head>
-<body style="margin:0;background:#050506">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#050506;font-size:1px;line-height:1px">${esc(l.preheader)}&#8199;&zwnj;&#8199;&zwnj;&#8199;&zwnj;&#8199;&zwnj;&#8199;&zwnj;&#8199;&zwnj;</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#050506" style="background:#050506"><tr><td align="center" class="wrap" style="padding:48px 16px 56px">
-<table role="presentation" width="540" cellpadding="0" cellspacing="0" style="width:100%;max-width:540px">
+<body style="margin:0;background:#000">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#000;font-size:1px;line-height:1px">${esc(l.preheader)}&#8199;&zwnj;&#8199;&zwnj;&#8199;&zwnj;&#8199;&zwnj;&#8199;&zwnj;&#8199;&zwnj;</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#000000" style="background:#000"><tr><td align="center" class="wrap glow" background="${GLOW}" bgcolor="#000000" style="background:#000 url(${GLOW}) no-repeat center top;background-size:600px auto;padding:34px 16px 56px">
+<table role="presentation" width="560" cellpadding="0" cellspacing="0" style="width:100%;max-width:560px">
 ${banner}
-<tr><td align="left" style="padding:0 6px 28px"><a href="${SITE_URL}" style="text-decoration:none"><img src="${LOGO}" width="46" height="34" alt="logoless" style="display:block;border:0;width:46px;height:34px;font:600 18px/34px ${SANS};color:#f3f2ee"></a></td></tr>
-<tr><td class="card" bgcolor="#0b0b0d" style="background:#0b0b0d;background-image:linear-gradient(180deg,#151518 0,#0b0b0d 300px);border:1px solid #26262b;border-radius:28px;padding:48px 44px 40px;text-align:left">
-  <h1 class="h1" style="margin:0 0 16px;font:400 38px/1.1 ${SERIF};letter-spacing:-.01em;color:#f3f2ee">${esc(l.title)}</h1>
-  <p style="margin:0 0 34px;max-width:420px;font:400 16px/1.65 ${SANS};color:#a2a2a9">${esc(l.intro)}</p>
+<tr><td align="left" style="padding:0 2px 26px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+  <td align="left"><a href="${SITE_URL}" style="text-decoration:none"><img src="${LOGO}" width="45" height="34" alt="logoless" style="display:block;border:0;width:45px;height:34px;font:600 16px/34px ${MONO};color:${PAPER}"></a></td>
+  <td align="right" style="font:500 11px/1 ${MONO};letter-spacing:.14em;text-transform:uppercase"><a href="${SITE_URL}" style="color:${BODY};text-decoration:none">logoless.io</a></td>
+</tr></table></td></tr>
+<tr><td class="card" bgcolor="#080808" style="background:#080808;background:rgba(8,8,8,.86);border:1px solid ${LINE};border-radius:10px;padding:40px 38px 34px;text-align:left">
+  ${eyebrow(l.tag)}
+  <h1 class="h1" style="margin:0 0 18px;font:900 40px/.98 ${DISPLAY};letter-spacing:${l.keepCase ? '-.025em' : '-.035em'};${l.keepCase ? '' : 'text-transform:uppercase;'}color:${PAPER}">${esc(l.title)}</h1>
+  <p style="margin:0 0 32px;max-width:440px;font:400 14px/1.75 ${MONO};color:${BODY};word-break:break-word;overflow-wrap:anywhere">${esc(l.intro)}</p>
   ${l.body}
-  ${l.note ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:38px 0 0"><tr><td style="border-top:1px solid #222227;padding:20px 0 0;font:400 13px/1.65 ${SANS};color:#80808a">${esc(l.note)}</td></tr></table>` : ''}
+  ${l.note ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:28px 0 0"><tr><td style="border-top:1px solid ${RULE};padding:18px 0 0;font:400 12px/1.75 ${MONO};color:${MUTE};word-break:break-word;overflow-wrap:anywhere">${esc(l.note)}</td></tr></table>` : ''}
 </td></tr>
-<tr><td align="left" style="padding:26px 8px 0;font:400 12px/1.8 ${SANS};color:#6c6c75">
-  Sent by logoless because someone used this address on <a href="${SITE_URL}" style="color:#9a9aa3">logoless.io</a>.<br>
-  <a href="${SITE_URL}/legal/terms" style="color:#9a9aa3">Terms</a> &nbsp;·&nbsp; <a href="${SITE_URL}/legal/privacy" style="color:#9a9aa3">Privacy</a> &nbsp;·&nbsp; <a href="${SITE_URL}/contact" style="color:#9a9aa3">Help</a>
+<tr><td align="left" style="padding:24px 4px 0;font:400 11px/1.9 ${MONO};color:${QUIET}">
+  Sent by logoless because someone used this address on <a href="${SITE_URL}" style="color:${MUTE}">logoless.io</a>.<br>
+  <a href="${SITE_URL}/legal/terms" style="color:${MUTE};text-decoration:none;letter-spacing:.1em;text-transform:uppercase">Terms</a> &nbsp;<span style="color:${RED}">/</span>&nbsp; <a href="${SITE_URL}/legal/privacy" style="color:${MUTE};text-decoration:none;letter-spacing:.1em;text-transform:uppercase">Privacy</a> &nbsp;<span style="color:${RED}">/</span>&nbsp; <a href="${SITE_URL}/contact" style="color:${MUTE};text-decoration:none;letter-spacing:.1em;text-transform:uppercase">Help</a>
 </td></tr>
 </table></td></tr></table></body></html>`
 }
+
+/** A little label in capitals inside a panel (the panels' own heading). */
+const label = (text: string, margin = '0 0 8px') => `<p style="margin:${margin};font:500 10px/1 ${MONO};letter-spacing:.16em;text-transform:uppercase;color:${MUTE}">${esc(text)}</p>`
+
+/** A hairline panel, like the site's cards. `inner` is already-escaped HTML. */
+const panel = (inner: string, margin = '0') =>
+  `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:${margin}"><tr><td align="left" bgcolor="#050505" style="background:#050505;border:1px solid ${LINE};border-radius:8px;padding:16px 18px">${inner}</td></tr></table>`
+
+/** Rows of a key and a value between hairlines. */
+const rowsTable = (rows: [string, string][], margin: string, valueSize = 12) =>
+  `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:${margin}">${rows
+    .map(
+      ([k, v]) =>
+        `<tr><td align="left" style="padding:13px 0;border-top:1px solid ${RULE};font:500 10px/1.4 ${MONO};letter-spacing:.14em;text-transform:uppercase;color:${QUIET}">${esc(k)}</td><td align="right" style="padding:13px 0;border-top:1px solid ${RULE};font:500 ${valueSize}px/1.4 ${MONO};color:${PAPER}">${esc(v)}</td></tr>`,
+    )
+    .join('')}</table>`
 
 /**
  * The code in one panel, as one piece of text, so selecting it (a double click, a long press) takes all six digits and pasting gives
@@ -66,24 +107,25 @@ ${banner}
  */
 function codeBoxes(code: string) {
   const digits = code.replace(/\D/g, '').slice(0, 6)
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0"><tr><td align="center" bgcolor="#101013" style="background:#101013;border:1px solid #2c2c32;border-radius:20px;padding:30px 12px"><span class="code" style="display:inline-block;padding-left:.34em;font:600 44px/1.1 ${MONO};letter-spacing:.34em;color:#ffffff;-webkit-user-select:all;user-select:all">${esc(digits)}</span></td></tr></table>`
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0"><tr><td align="center" bgcolor="#050505" style="background:#050505;border:1px solid ${LINE};border-top:2px solid ${RED};border-radius:8px;padding:22px 12px 28px">${label('Your code', '0 0 16px')}<span class="code" style="display:inline-block;padding-left:.3em;font:600 44px/1.1 ${MONO};letter-spacing:.3em;color:#ffffff;-webkit-user-select:all;user-select:all">${esc(digits)}</span></td></tr></table>`
 }
 
 function expiry() {
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0 0"><tr><td align="left" style="font:500 13px/1.4 ${SANS};color:#8a8a93">Works for 10 minutes</td><td align="right" style="font:500 13px/1.4 ${SANS};color:#8a8a93">Single use</td></tr></table>`
+  const side = `font:500 11px/1.4 ${MONO};letter-spacing:.06em;color:${MUTE}`
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0 0"><tr><td align="left" style="${side}"><span style="color:${TEAL};font-size:10px">&#9679;</span>&nbsp; Works for 10 minutes</td><td align="right" style="${side}">Single use</td></tr></table>`
 }
 
 function details(meta?: Meta) {
-  const rows = [meta?.place ? ['Where', meta.place] : null, meta?.device ? ['Device', meta.device] : null].filter(Boolean) as string[][]
-  if (!rows.length) return ''
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:26px 0 0">${rows
-    .map(([k, v]) => `<tr><td align="left" style="padding:12px 0;border-top:1px solid #222227;font:400 13px/1 ${SANS};color:#6c6c75">${esc(k)}</td><td align="right" style="padding:12px 0;border-top:1px solid #222227;font:500 13px/1 ${SANS};color:#c3c3ca">${esc(v)}</td></tr>`)
-    .join('')}</table>`
+  const rows = [meta?.place ? ['Where', meta.place] : null, meta?.device ? ['Device', meta.device] : null].filter(Boolean) as [string, string][]
+  return rows.length ? rowsTable(rows, '26px 0 0') : ''
 }
 
-function button(href: string, label: string) {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0"><tr><td bgcolor="#f3f2ee" style="background:#f3f2ee;border-radius:999px"><a href="${esc(href)}" style="display:inline-block;padding:16px 34px;font:600 15px/1 ${SANS};color:#050506;text-decoration:none;border-radius:999px">${esc(label)}</a></td></tr></table>`
+function button(href: string, text: string) {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0"><tr><td bgcolor="${PAPER}" style="background:${PAPER};border-radius:6px"><a href="${esc(href)}" style="display:inline-block;padding:15px 24px;font:600 12px/1 ${MONO};letter-spacing:.08em;text-transform:uppercase;color:#000000;text-decoration:none;border-radius:6px">${esc(text)}&nbsp;&nbsp;&rarr;</a></td></tr></table>`
 }
+
+/** A short line of small print under a button. `inner` is already-escaped HTML. */
+const aside = (inner: string, margin = '18px 0 0') => `<p style="margin:${margin};font:400 12px/1.7 ${MONO};color:${MUTE};word-break:break-word;overflow-wrap:anywhere">${inner}</p>`
 
 const metaText = (m?: Meta) => [m?.place ? `Where: ${m.place}` : '', m?.device ? `Device: ${m.device}` : ''].filter(Boolean).join('\n')
 
@@ -130,7 +172,7 @@ export function alreadyMemberEmail(test = false, meta?: Meta): Mail {
       tag: test ? 'Test' : 'Account',
       title: 'You already have an account',
       intro: 'Someone tried to sign up with this address, but it is already registered. Log in instead.',
-      body: `${button(`${SITE_URL}/login`, 'Log in')}<p style="margin:18px 0 0;font:400 13px/1.5 ${SANS};color:#80808a">Forgot your password? Choose <a href="${SITE_URL}/forgot-password" style="color:#bdbdc4">Forgot your password</a> on the login page.</p>${details(meta)}`,
+      body: `${button(`${SITE_URL}/login`, 'Log in')}${aside(`Forgot your password? Choose <a href="${SITE_URL}/forgot-password" style="color:${PAPER}">Forgot your password</a> on the login page.`)}${details(meta)}`,
       note,
       test,
     }),
@@ -149,9 +191,10 @@ export function inviteEmail(artistName: string, url: string, test = false): Mail
       tag: test ? 'Test' : 'Invitation',
       title: `Hey ${first}`,
       intro: 'Your private logoless page is ready. Set up your artist page, launch your first campaign and get clippers posting your music.',
-      body: `${button(url, 'Open my page')}<p style="margin:18px 0 0;font:400 13px/1.5 ${SANS};color:#80808a">Or paste this into your browser:<br><span style="color:#bdbdc4">${esc(url)}</span></p>`,
+      body: `${button(url, 'Open my page')}${aside(`Or paste this into your browser:<br><span style="color:${BODY};word-break:break-all">${esc(url)}</span>`)}`,
       note,
       test,
+      keepCase: true,
     }),
   }
 }
@@ -161,8 +204,8 @@ export function accountDeletedEmail(name: string, reason: string, money: string,
   const first = name.trim().slice(0, 60) || 'there'
   const why = reason.trim().slice(0, 280)
   const note = 'This was done by a person on the logoless team. If you think it is a mistake, write to us through the contact page and we will look again.'
-  const reasonBlock = why ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 22px"><tr><td align="left" style="background:#111114;border:1px solid #26262b;border-radius:16px;padding:14px 18px"><p style="margin:0 0 6px;font:600 11px/1 ${SANS};letter-spacing:.12em;text-transform:uppercase;color:#80808a">Reason given</p><p style="margin:0;font:400 15px/1.5 ${SANS};color:#e4e4e8">${esc(why)}</p></td></tr></table>` : ''
-  const moneyBlock = money ? `<p style="margin:0 0 24px;max-width:400px;font:400 14px/1.55 ${SANS};color:#a2a2a9">${esc(money)}</p>` : ''
+  const reasonBlock = why ? panel(`${label('Reason given', '0 0 10px')}<p style="margin:0;font:400 14px/1.6 ${MONO};color:${PAPER}">${esc(why)}</p>`, '0 0 22px') : ''
+  const moneyBlock = money ? `<p style="margin:0 0 24px;max-width:420px;font:400 13px/1.7 ${MONO};color:${BODY}">${esc(money)}</p>` : ''
   return {
     subject: `${test ? '[TEST] ' : ''}Your logoless account has been deleted`,
     text: `${test ? 'THIS IS A TEST from the admin panel.\n\n' : ''}Hi ${first},\n\nA member of the logoless team has deleted your account.${why ? `\n\nReason given: ${why}` : ''}${money ? `\n\n${money}` : ''}\n\nYour profile, linked accounts and saved details have been removed. Records we are required to keep, like payment history, stay without your name.\n\nIf you think this is a mistake, write to us: ${SITE_URL}/contact\n\nlogoless`,
@@ -247,10 +290,8 @@ export function waitlistWelcomeEmail(input: { email: string; handle: string | nu
     ['Joined', when],
     ...(input.position ? ([['Place on the list', `#${input.position.toLocaleString('en-US')}`]] as [string, string][]) : []),
   ]
-  const table = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px">${rows
-    .map(([k, v]) => `<tr><td align="left" style="padding:13px 0;border-top:1px solid #222227;font:400 13px/1.3 ${SANS};color:#6c6c75">${esc(k)}</td><td align="right" style="padding:13px 0;border-top:1px solid #222227;font:500 14px/1.3 ${SANS};color:#e4e4e8">${esc(v)}</td></tr>`)
-    .join('')}</table>`
-  const leave = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:30px 0 0"><tr><td align="left" style="background:#111114;border:1px solid #26262b;border-radius:16px;padding:16px 18px"><p style="margin:0 0 6px;font:600 11px/1 ${SANS};letter-spacing:.12em;text-transform:uppercase;color:#80808a">Changed your mind?</p><p style="margin:0;font:400 14px/1.6 ${SANS};color:#c3c3ca">One click on <a href="${esc(input.unsubscribe)}" style="color:#f3f2ee">unsubscribe</a> takes you off the list and frees your username. There is nothing to confirm and no account to delete. Every email we send about the launch has the same link at the bottom.</p></td></tr></table>`
+  const table = rowsTable(rows, '0 0 28px', 13)
+  const leave = panel(`${label('Changed your mind?', '0 0 10px')}<p style="margin:0;font:400 13px/1.7 ${MONO};color:${BODY}">One click on <a href="${esc(input.unsubscribe)}" style="color:${PAPER}">unsubscribe</a> takes you off the list and frees your username. There is nothing to confirm and no account to delete. Every email we send about the launch has the same link at the bottom.</p>`, '30px 0 0')
   return {
     subject: `${test ? '[TEST] ' : ''}${input.handle ? `@${input.handle} is yours` : 'You are on the logoless waitlist'}`,
     text: `${test ? 'THIS IS A TEST from the admin panel.\n\n' : ''}You are on the logoless waitlist.\n\nWhat you signed up with:\n${rows.map(([k, v]) => `${k}: ${v}`).join('\n')}\n\nWe will email this address when logoless opens, and only about the launch.\n\nChanged your mind? One click takes you off the list and frees your username:\n${input.unsubscribe}\n\nlogoless · ${SITE_URL}`,
@@ -261,6 +302,7 @@ export function waitlistWelcomeEmail(input: { email: string; handle: string | nu
       intro: 'Thanks for joining the logoless waitlist. Here is everything you signed up with. We will email this address when the doors open, and only about the launch.',
       body: `${table}${button(SITE_URL, 'Visit logoless')}${leave}`,
       test,
+      keepCase: Boolean(input.handle),
     }),
   }
 }
@@ -291,6 +333,7 @@ export function plainMessageEmail(name: string, title: string, text: string, hre
       body: link ? button(link, 'Open it') : '',
       note: 'This message came from a person on the logoless team.',
       test,
+      keepCase: true,
     }),
   }
 }
@@ -299,11 +342,11 @@ export function plainMessageEmail(name: string, title: string, text: string, hre
 export function launchUpdateEmail(subject: string, message: string, unsubscribe: string, test = false): Mail {
   const paras = message.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean).slice(0, 12)
   const [first, ...rest] = paras
-  const bodyHtml = `${rest.map((p) => `<p style="margin:0 0 16px;font:400 16px/1.65 ${SANS};color:#c3c3ca">${esc(p).replace(/\n/g, '<br>')}</p>`).join('')}${button(SITE_URL, 'Open logoless')}<p style="margin:26px 0 0;font:400 12px/1.6 ${SANS};color:#6c6c75">You are getting this because you signed up on the logoless launch page. <a href="${esc(unsubscribe)}" style="color:#9a9aa3">Unsubscribe</a>.</p>`
+  const bodyHtml = `${rest.map((p) => `<p style="margin:0 0 16px;font:400 14px/1.75 ${MONO};color:${BODY};word-break:break-word;overflow-wrap:anywhere">${esc(p).replace(/\n/g, '<br>')}</p>`).join('')}${button(SITE_URL, 'Open logoless')}${aside(`You are getting this because you signed up on the logoless launch page. <a href="${esc(unsubscribe)}" style="color:${PAPER}">Unsubscribe</a>.`, '26px 0 0')}`
   return {
     subject: `${test ? '[TEST] ' : ''}${subject}`,
     text: `${test ? 'THIS IS A TEST from the admin panel.\n\n' : ''}${paras.join('\n\n')}\n\n${SITE_URL}\n\nUnsubscribe: ${unsubscribe}\n\nlogoless`,
-    html: layout({ preheader: first ?? subject, tag: test ? 'Test' : 'Update', title: subject, intro: first ?? '', body: bodyHtml, test }),
+    html: layout({ preheader: first ?? subject, tag: test ? 'Test' : 'Update', title: subject, intro: first ?? '', body: bodyHtml, test, keepCase: true }),
   }
 }
 
@@ -315,7 +358,7 @@ export function notificationsEmail(name: string, items: { title: string; body?: 
   const title = one ? one.title : digest === 'weekly' ? 'Your week on logoless' : digest === 'daily' ? 'Your day on logoless' : `${items.length} new notifications`
   const rows = items
     .slice(0, 30)
-    .map((n) => `<tr><td style="padding:14px 0;border-top:1px solid #222227"><a href="${esc(link(n.href))}" style="text-decoration:none"><span style="display:block;font:500 15px/1.45 ${SANS};color:#f3f2ee">${esc(n.title)}</span>${n.body ? `<span style="display:block;margin-top:3px;font:400 14px/1.5 ${SANS};color:#9a9aa3">${esc(n.body)}</span>` : ''}</a></td></tr>`)
+    .map((n) => `<tr><td style="padding:15px 0;border-top:1px solid ${RULE}"><a href="${esc(link(n.href))}" style="text-decoration:none"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td><span style="display:block;font:500 13px/1.5 ${MONO};color:${PAPER}">${esc(n.title)}</span>${n.body ? `<span style="display:block;margin-top:4px;font:400 12px/1.6 ${MONO};color:${MUTE}">${esc(n.body)}</span>` : ''}</td><td align="right" width="28" style="font:500 14px/1 ${MONO};color:${RED}">&rarr;</td></tr></table></a></td></tr>`)
     .join('')
   const settings = `${SITE_URL}/dashboard/notifications/settings`
   return {
@@ -329,6 +372,7 @@ export function notificationsEmail(name: string, items: { title: string; body?: 
       body: `${one ? '' : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px">${rows}</table>`}${button(one ? link(one.href) : `${SITE_URL}/dashboard/notifications`, one ? 'Open it' : 'See them all')}`,
       note: `You get these because of your notification settings. Change them any time: ${settings}`,
       test,
+      keepCase: true,
     }),
   }
 }

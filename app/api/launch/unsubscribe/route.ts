@@ -5,18 +5,18 @@ const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&
 const page = (title: string, text: string, ok: boolean) =>
   new Response(
     `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta name="color-scheme" content="dark"><title>${esc(title)} | logoless</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@800;900&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#000;color:#f3f2ee;font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;padding:24px;overflow:hidden}
-body:before{content:'';position:fixed;inset:-20%;background:radial-gradient(40% 36% at 50% 38%,rgb(243 242 238/.09),transparent 70%);pointer-events:none}
-main{position:relative;max-width:440px;text-align:center;animation:in .9s cubic-bezier(.22,1,.36,1) both}
-img{height:46px;width:auto;margin:0 auto 34px;display:block;opacity:.95}
-.mark{width:56px;height:56px;margin:0 auto 22px;border-radius:999px;display:grid;place-items:center;background:${ok ? '#f3f2ee' : 'transparent'};color:#000;border:1px solid rgb(243 242 238/.25)}
-.mark svg{width:24px;height:24px;stroke-dasharray:30;stroke-dashoffset:30;animation:draw .7s .35s cubic-bezier(.22,1,.36,1) forwards}
-h1{font:400 clamp(30px,7vw,42px)/1.1 Georgia,'Times New Roman',serif;margin:0 0 14px;letter-spacing:-.01em}
-p{margin:0;color:#a2a2a9}a{color:#f3f2ee;text-underline-offset:4px}.links{margin-top:30px;font-size:14px;color:#6c6c75}
-@keyframes in{from{opacity:0;transform:translateY(16px);filter:blur(10px)}}@keyframes draw{to{stroke-dashoffset:0}}
-@media (prefers-reduced-motion:reduce){main,.mark svg{animation:none;stroke-dashoffset:0}}
-</style></head><body><main><img src="/logo-sm.png" alt="logoless"><div class="mark">${ok ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="#f3f2ee" stroke-width="2.2" stroke-linecap="round"><path d="M12 7v6M12 17h.01"/></svg>'}</div><h1>${esc(title)}</h1><p>${esc(text)}</p><p class="links"><a href="/">logoless.io</a></p></main></body></html>`,
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:#000 url(/email/glow.jpg) no-repeat center top/min(1200px,100%) auto;color:#ededed;font:14px/1.75 'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:24px}
+main{position:relative;width:100%;max-width:460px;text-align:left;padding:38px 36px 32px;border:1px solid #2b2b2b;border-radius:10px;background:rgba(8,8,8,.86);animation:in .9s cubic-bezier(.2,.8,.2,1) both}
+img{height:34px;width:auto;margin:0 0 30px;display:block}
+.eyebrow{display:flex;align-items:center;gap:.65rem;margin:0 0 22px;font-size:11px;line-height:1;letter-spacing:.14em;text-transform:uppercase;color:#b8b8b8}
+.eyebrow:before{content:'';width:6px;height:6px;border-radius:99px;background:${ok ? '#2ed0b0' : '#ff1f38'};box-shadow:0 0 0 3px ${ok ? 'rgb(46 208 176/.16)' : 'rgb(255 31 56/.16)'},0 0 14px ${ok ? 'rgb(46 208 176/.7)' : 'rgb(255 31 56/.7)'}}
+h1{font:900 clamp(30px,8vw,40px)/.98 'Schibsted Grotesk','Arial Black','Helvetica Neue',Helvetica,Arial,sans-serif;margin:0 0 16px;letter-spacing:-.03em;text-transform:uppercase}
+p{margin:0;color:#b8b8b8}a{color:#ededed;text-underline-offset:4px}.links{margin-top:28px;padding-top:18px;border-top:1px solid #1d1d1d;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#686868}
+@keyframes in{from{opacity:0;transform:translateY(14px)}}
+@media (prefers-reduced-motion:reduce){main{animation:none}}
+</style></head><body><main><img src="/logo-sm.png" alt="logoless"><p class="eyebrow">${ok ? 'Done' : 'Something is wrong'}</p><h1>${esc(title)}</h1><p>${esc(text)}</p><p class="links"><a href="/">logoless.io</a></p></main></body></html>`,
     { status: ok ? 200 : 400, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } },
   )
 

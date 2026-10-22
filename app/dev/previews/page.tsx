@@ -58,11 +58,6 @@ export default async function Page() {
                 Open
               </Link>
             </Row>
-            <Row title="Prove they are yours" body="The step after sign-up where each account is confirmed with a code in its bio. Nothing is requested in a preview.">
-              <Link href="/onboarding?preview=1&step=verify" className={btn}>
-                Open
-              </Link>
-            </Row>
           </div>
         </Card>
 

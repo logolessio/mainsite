@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight, Check, Copy, Loader2, Mail, X } from 'lucide-rea
 import { signIn, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BrandIcon } from '@/components/brand-icon'
 import { useDesign } from '@/components/shell/design-provider'
@@ -17,14 +17,13 @@ import { ensureHuman } from '@/lib/human-client'
 import { uploadImage } from '@/lib/image-client'
 import { LookPicker } from '@/components/profile/look-picker'
 import { Tour } from './tour'
-import { ConnectAccounts } from './connect-accounts'
-import { VerifyAccounts } from './verify-accounts'
+import { AccountsStep, type AccountsStatus } from './accounts-step'
 import { avatarCss, bannerCss, lookById, lookFor, lookKey } from '@/lib/looks'
 import { checkHandle, checkHandleAvailable, resendEmailCode, verifyEmailCode } from '@/lib/onboarding'
 import { handleHint, handleProblem, suggestHandle } from '@/lib/profile-style'
 import { cn } from '@/lib/utils'
 
-type Id = 'welcome' | 'role' | 'method' | 'email' | 'password' | 'code' | 'paypal' | 'name' | 'handle' | 'pictures' | 'accounts' | 'happy' | 'saving' | 'verify' | 'hello' | 'tour' | 'done'
+type Id = 'welcome' | 'role' | 'method' | 'email' | 'password' | 'code' | 'paypal' | 'name' | 'handle' | 'pictures' | 'accounts' | 'happy' | 'saving' | 'hello' | 'tour' | 'done'
 
 type Data = {
   role: Role | null
@@ -46,11 +45,10 @@ type St = 'idle' | 'checking' | 'ok' | 'bad'
 type Verdict = { ok: boolean; msg: string } | null
 
 const HANDLE_RE = /^[a-z0-9_]{1,20}$/
-const VERIFIABLE = ['tiktok', 'youtube', 'instagram']
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const SETTLE_MS = 5200 // "setting things up" always takes a moment: it is part of the welcome, not a delay
 
-const primary = 'inline-flex h-14 items-center justify-center rounded-pill bg-paper px-10 text-[17px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-30'
+const primary = 'inline-flex h-12 items-center justify-center gap-2 rounded-pill bg-paper px-8 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-30'
 const quiet = 'text-[15px] text-mute underline decoration-dotted underline-offset-4 transition-colors hover:text-paper'
 
 /** Which part of getting set up each question belongs to: the small label above it. */
@@ -66,7 +64,6 @@ const SECTION: Record<Id, string> = {
   handle: 'Your page',
   pictures: 'Your page',
   accounts: 'Your accounts',
-  verify: 'Your accounts',
   happy: 'Nearly there',
   saving: 'Setting up',
   hello: 'All set',
@@ -77,8 +74,9 @@ const SECTION: Record<Id, string> = {
 const wait = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms))
 
 /**
- * Types a line out one letter at a time. The letters that are still to come are already on the page (invisible), so the line
- * takes its final shape from the first letter and nothing below it ever moves. Reduced motion shows it at once.
+ * Types a line out one letter at a time. Every letter is on the page from the first frame, in its final place, and only fades in: the words
+ * are kept whole (they never break in the middle) and the cursor takes up no width, so nothing about the line, or anything below it, can move
+ * while it is typed. Reduced motion shows it at once.
  */
 function Typed({ text, onDone, onReady, speed = 24 }: { text: string; onDone?: () => void; onReady?: () => void; speed?: number }) {
   const [n, setN] = useState(0)
@@ -110,13 +108,39 @@ function Typed({ text, onDone, onReady, speed = 24 }: { text: string; onDone?: (
     }
     if (n >= text.length && text.length) done.current?.()
   }, [n, text])
+  const words = useMemo(() => {
+    let at = 0
+    return text.split(' ').map((w) => {
+      const start = at
+      at += w.length + 1
+      return { w, start }
+    })
+  }, [text])
+  const cursor = (
+    <span aria-hidden="true" className="relative inline-block h-0 w-0 align-baseline">
+      <span className={cn('absolute bottom-[-0.12em] left-[0.05em] block h-[0.95em] w-[0.08em] rounded-full bg-[var(--red,currentColor)] shadow-[0_0_14px_rgb(255_31_56/0.7)]', n >= text.length && 'animate-pulse')} />
+    </span>
+  )
   return (
     <h1 className="min-h-[2.2em] font-display text-[clamp(2rem,5.4vw,3.6rem)] leading-[1.08]">
       <span className="sr-only">{text}</span>
       <span aria-hidden="true">
-        {text.slice(0, n)}
-        <span className={cn('ml-1 inline-block h-[0.9em] w-[0.42em] translate-y-[0.1em] bg-[var(--red,currentColor)]', n >= text.length && 'animate-pulse')} />
-        <span className="invisible">{text.slice(n)}</span>
+        {words.map(({ w, start }, wi) => (
+          <Fragment key={wi}>
+            {wi > 0 && ' '}
+            <span className="inline-block whitespace-nowrap">
+              {Array.from(w).map((c, ci) => (
+                <Fragment key={ci}>
+                  {n - start === ci && cursor}
+                  <span className="transition-[opacity,filter] duration-300 ease-out" style={{ opacity: start + ci < n ? 1 : 0, filter: start + ci < n ? 'blur(0)' : 'blur(6px)' }}>
+                    {c}
+                  </span>
+                </Fragment>
+              ))}
+              {n - start === w.length && cursor}
+            </span>
+          </Fragment>
+        ))}
       </span>
     </h1>
   )
@@ -296,7 +320,7 @@ function SettleOrb({ line, note }: { line: string; note: string }) {
   )
 }
 
-const STEP_ORDER: Id[] = ['welcome', 'role', 'method', 'email', 'password', 'code', 'paypal', 'name', 'handle', 'pictures', 'accounts', 'happy', 'saving', 'verify', 'hello', 'tour', 'done']
+const STEP_ORDER: Id[] = ['welcome', 'role', 'method', 'email', 'password', 'code', 'paypal', 'name', 'handle', 'pictures', 'accounts', 'happy', 'saving', 'hello', 'tour', 'done']
 
 /**
  * `preview` is an admin's dry run: it starts as a stranger would (signed out), every question works, and nothing is sent to the
@@ -326,7 +350,8 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
   const [tick, setTick] = useState(0) // which reassuring line to show while things are set up
   const [copied, setCopied] = useState(false)
   const [picking, setPicking] = useState<string | null>(null) // which sign-in card was pressed
-  const [data, setData] = useState<Data>({ role: initialRole ?? (startAt !== 'welcome' ? 'clipper' : null), email: sessionUser?.email ?? '', paypal: '', name: sessionUser?.name || (startAt !== 'welcome' ? 'Luna Ray' : ''), handle: startAt !== 'welcome' ? 'luna_ray' : '', avatarKey: null, avatarUrl: null, bannerKey: null, bannerUrl: null, lookId: startAt !== 'welcome' ? lookFor('luna_ray').id : '', linked: startAt === 'verify' ? { tiktok: 'luna_ray', youtube: '@lunaray', instagram: 'luna.ray' } : {} })
+  const [acc, setAcc] = useState<AccountsStatus>({ added: 0, settled: 0, loaded: false }) // how the accounts step stands: how many were added, how many are proven
+  const [data, setData] = useState<Data>({ role: initialRole ?? (startAt !== 'welcome' ? 'clipper' : null), email: sessionUser?.email ?? '', paypal: '', name: sessionUser?.name || (startAt !== 'welcome' ? 'Luna Ray' : ''), handle: startAt !== 'welcome' ? 'luna_ray' : '', avatarKey: null, avatarUrl: null, bannerKey: null, bannerUrl: null, lookId: startAt !== 'welcome' ? lookFor('luna_ray').id : '', linked: {} })
   const [signedIn, setSignedIn] = useState(Boolean(sessionUser))
   const [verifyMode, setVerifyMode] = useState(false) // the code step is proving a signed-in account, not finishing an email sign-up
   const [accountEmail, setAccountEmail] = useState<string | null>(sessionUser?.email || null) // the address of the account they signed in with
@@ -387,8 +412,6 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
         return 'Are you happy with how it looks?'
       case 'saving':
         return 'Setting things up.'
-      case 'verify':
-        return 'Prove they are yours.'
       case 'hello':
         return `Welcome, ${first}.`
       case 'tour':
@@ -404,12 +427,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
     paypal: 'That is where your earnings go. You can change it later.',
     handle: `This is your address on logoless. ${handleHint(looseHandles)}`,
     pictures: 'Pick a ready-made look, or tap the circle and the wide part to upload your own. You can change it any time.',
-    accounts: checks
-      ? 'Add the accounts you post from, so we can match your submissions to you. Next you prove each one is yours with a short code in its bio. Skip it if you like: it is in your dashboard when you are ready.'
-      : 'Add the accounts you post from, so we can match your submissions to you. Skip it if you like: it is in your dashboard when you are ready.',
-    verify: checks
-      ? 'Put the code in each bio, then press Check. Submissions from verified accounts are checked automatically; unverified ones wait for a manual check.'
-      : 'Put a short code in each bio and we confirm the account is yours. Submissions from verified accounts are checked automatically.',
+    accounts: 'Add each account you post from and prove it is yours with a short code in its bio, right here. Skip it if you like: it is in your dashboard when you are ready.',
     saving: 'This only takes a moment.',
     hello: 'Your profile page is ready.',
   }
@@ -633,8 +651,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       return setId('happy')
     }
     setReady(false)
-    // creators who added accounts are asked to prove them with a code in the bio, right away while the accounts are fresh in mind
-    setId(!brand && VERIFIABLE.some((p) => (data.linked[p] ?? '').trim()) ? 'verify' : 'hello')
+    setId('hello')
   }
 
   useEffect(() => {
@@ -872,36 +889,23 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
 
               {id === 'accounts' && (
                 <>
-                  {checks && !preview ? (
-                    // with the checks on, adding an account and proving it is one thing: Connect, the username, the code in the bio, the check
-                    <ConnectAccounts linked={data.linked} onLinked={(p, h) => patch({ linked: { ...data.linked, [p]: h } })} />
-                  ) : (
-                  <div className="grid w-full max-w-sm gap-3">
-                    {([
-                      ['tiktok', 'TikTok', '@username'],
-                      ['youtube', 'YouTube', '@channel'],
-                      ['instagram', 'Instagram', '@username'],
-                    ] as const).map(([key, label, ph]) => (
-                      <label key={key} className="flex h-14 items-center gap-3 rounded-tile border border-line-strong bg-white/[0.02] px-5 transition-[border-color,box-shadow] focus-within:border-[rgb(255_70_90/0.7)] focus-within:shadow-[0_0_0_3px_rgb(255_31_56/0.12)]">
-                        <BrandIcon name={key} className="size-5 shrink-0 text-mute" />
-                        <span className="sr-only">{label}</span>
-                        <input
-                          value={data.linked[key] ?? ''}
-                          onChange={(e) => patch({ linked: { ...data.linked, [key]: e.target.value.replace(/\s/g, '').slice(0, 60) } })}
-                          placeholder={ph}
-                          autoCapitalize="none"
-                          autoCorrect="off"
-                          spellCheck={false}
-                          className="min-w-0 flex-1 bg-transparent text-[16px] outline-none placeholder:text-mute/60"
-                        />
-                      </label>
-                    ))}
-                  </div>
-                  )}
-                  <div className="mt-8 flex flex-col items-center gap-4">
-                    <button type="button" className={primary} onClick={() => go('happy')}>
-                      {Object.values(data.linked).some((v) => v.trim()) ? 'Continue' : 'Skip for now'}
+                  <AccountsStep
+                    preview={preview}
+                    onLinked={(platform, handle) =>
+                      setData((d) => {
+                        const linked = { ...d.linked }
+                        if (handle) linked[platform] = handle
+                        else delete linked[platform]
+                        return { ...d, linked }
+                      })
+                    }
+                    onStatus={setAcc}
+                  />
+                  <div className="mt-8 flex flex-col items-center gap-3">
+                    <button type="button" className={primary} disabled={!acc.loaded || acc.added > acc.settled} onClick={() => go('happy')}>
+                      {acc.added === 0 ? 'Skip for now' : 'Continue'}
                     </button>
+                    {acc.added > acc.settled && <p className="max-w-xs text-[13px] leading-relaxed text-mute">Check each account you added, or remove it, to carry on.</p>}
                   </div>
                 </>
               )}
@@ -921,8 +925,6 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                   </div>
                 </>
               )}
-
-              {id === 'verify' && <VerifyAccounts linked={data.linked} preview={preview} onDone={() => go('hello')} buttonClass={primary} quietClass={quiet} inline={checks} />}
 
               {id === 'hello' && (
                 <>
@@ -979,7 +981,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
         )}
       </div>
 
-      {canBack && id !== 'saving' && id !== 'verify' && id !== 'hello' && id !== 'tour' && id !== 'done' && id !== 'happy' && (
+      {canBack && id !== 'saving' && id !== 'hello' && id !== 'tour' && id !== 'done' && id !== 'happy' && (
         <button type="button" onClick={back} className="group fixed bottom-6 left-1/2 inline-flex -translate-x-1/2 items-center gap-2 rounded-tile px-3 py-2 text-[14px] text-mute transition-colors hover:text-paper">
           <ArrowLeft aria-hidden="true" className="size-4 transition-transform duration-300 group-hover:-translate-x-0.5" /> Back
         </button>
