@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { ArrowUpRight, Ellipsis, LogOut, Plus, ShieldCheck, X } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Ellipsis, LogOut, Plus, ShieldCheck, X } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -80,8 +80,8 @@ function SideLink({ it, n, active, lit, c, hint, onEnter }: { it: AppNavItem; n:
 }
 
 /**
- * A sidebar item at the bottom of the menu (Recap). While it glows it has a thin gold edge, gold lettering and a slow sweep of light;
- * once opened it looks like any other item.
+ * A sidebar item at the bottom of the menu (Recap). While it glows it is a small card of gold foil (see gold.module.css) with the icon on a dark inlay,
+ * the name and a line under it, and an arrow that slides on hover; once opened it looks like any other item.
  */
 function FootLink({ it, glow, lit, active, onEnter }: { it: AppNavItem; glow: boolean; lit: boolean; active: boolean; onEnter: () => void }) {
   if (!glow) return <SideLink it={it} n={0} active={active} lit={lit} hint={false} onEnter={onEnter} />
@@ -92,13 +92,18 @@ function FootLink({ it, glow, lit, active, onEnter }: { it: AppNavItem; glow: bo
       aria-label={`${it.label}, new`}
       onPointerEnter={(e) => e.pointerType !== 'touch' && onEnter()}
       onFocus={onEnter}
-      className={cn(gold.gold, 'group relative flex h-11 items-center gap-3 rounded-pill px-4 text-[15px]')}
+      className={cn(gold.gold, 'group relative flex h-14 items-center gap-3 rounded-card py-0 pr-3.5 pl-2.5')}
     >
-      <span aria-hidden="true" className={gold.ring} />
+      <span aria-hidden="true" className={gold.grain} />
       <span aria-hidden="true" className={gold.sheen} />
-      <Icon name={it.icon} aria-hidden="true" className={cn(gold.icon, 'relative size-[18px] shrink-0')} />
-      <span className={cn(gold.text, 'relative')}>{it.label}</span>
-      <span aria-hidden="true" className={cn(gold.dot, 'relative ml-auto size-1.5 rounded-pill')} />
+      <span aria-hidden="true" className={gold.chip}>
+        <Icon name={it.icon} className={cn(gold.icon, 'size-[17px]')} />
+      </span>
+      <span className="relative min-w-0 flex-1">
+        <span className={gold.title}>{it.label}</span>
+        <span className={gold.sub}>Your story so far</span>
+      </span>
+      <ArrowRight aria-hidden="true" className={cn(gold.arrow, 'relative size-4')} />
     </TransitionLink>
   )
 }

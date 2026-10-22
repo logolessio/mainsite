@@ -1799,6 +1799,23 @@ html.calm .gf-grain {
   animation-duration: 10s;
   animation-delay: -3s;
 }
+/* the cover in the arch settles in slowly as it arrives */
+.hero-zoom {
+  animation: hero-zoom 6s ease-out both;
+}
+@keyframes hero-zoom {
+  from {
+    scale: 1.1;
+  }
+  to {
+    scale: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-zoom {
+    animation: none;
+  }
+}
 @keyframes hero-float {
   50% {
     translate: 0 -7px;

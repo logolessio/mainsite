@@ -1,66 +1,125 @@
-/* The gold sidebar item (Recap, until it has been opened). Quiet on purpose: a thin gold edge, gold lettering and one slow
-   sweep of light every few seconds. No sweep in calm mode or for people who asked for less motion. */
+/* The gold sidebar item (Recap, until it has been opened): a small card of gold foil. The metal is one long gradient that slowly shifts, so the light
+   moves across it; a fine grain sits on top like brushed foil; a narrow glint crosses it every few seconds; and the icon sits on a dark chip like an
+   inlay. Lettering is a deep brown on the gold, so it reads at a glance. No movement in calm mode or for people who asked for less. */
 
 .gold {
   isolation: isolate;
   overflow: hidden;
-  background: linear-gradient(180deg, rgb(243 210 122 / 0.11), rgb(243 210 122 / 0.03));
-  box-shadow: 0 12px 30px -16px rgb(212 165 55 / 0.55);
-  transition: background-color 0.3s, box-shadow 0.3s;
+  color: #2b1c05;
+  background: linear-gradient(125deg, #8c6618 0%, #d6a638 15%, #f4d985 31%, #fff3c4 44%, #ebc25c 58%, #c1912f 78%, #86601a 100%);
+  background-size: 240% 100%;
+  background-position: 8% 0;
+  box-shadow:
+    inset 0 1px 0 rgb(255 250 225 / 0.85),
+    inset 0 -1px 0 rgb(96 64 8 / 0.55),
+    inset 0 0 0 1px rgb(255 232 160 / 0.22),
+    0 16px 34px -16px rgb(214 166 56 / 0.75),
+    0 2px 6px -2px rgb(0 0 0 / 0.65);
+  transition:
+    transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: drift 10s ease-in-out infinite alternate;
 }
 .gold:hover,
 .gold:focus-visible {
-  box-shadow: 0 14px 34px -14px rgb(212 165 55 / 0.7);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgb(255 252 235 / 0.95),
+    inset 0 -1px 0 rgb(96 64 8 / 0.55),
+    inset 0 0 0 1px rgb(255 236 170 / 0.35),
+    0 20px 40px -14px rgb(224 176 64 / 0.9),
+    0 2px 6px -2px rgb(0 0 0 / 0.65);
+}
+.gold:active {
+  transform: translateY(0) scale(0.99);
 }
 
-/* a 1px edge drawn with a gradient (the middle of the box is masked away) */
-.ring {
+/* fine dark grain, like brushed foil */
+.grain {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(120deg, #7a5a17, #e9c56c 28%, #fff4d2 44%, #d0a03a 62%, #6e5114);
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
   pointer-events: none;
-  opacity: 0.9;
+  opacity: 0.2;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .16  0 0 0 0 .1  0 0 0 0 .02  0 0 0 1.5 -.3'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 140px 140px;
 }
 
+/* the glint */
 .sheen {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(105deg, transparent 38%, rgb(255 242 205 / 0.16) 50%, transparent 62%);
-  background-size: 260% 100%;
-  background-position: 130% 0;
-  animation: sweep 6s cubic-bezier(0.45, 0, 0.2, 1) infinite;
   pointer-events: none;
-}
-
-.text {
-  background: linear-gradient(100deg, #cf9f3a 0%, #f2d488 32%, #fffaf0 50%, #f2d488 68%, #cf9f3a 100%);
+  background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 0.6) 50%, transparent 62%);
   background-size: 260% 100%;
   background-position: 130% 0;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  font-weight: 500;
-  animation: sweep 6s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+  animation: sweep 5.5s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+.gold:hover .sheen,
+.gold:focus-visible .sheen {
+  animation-duration: 1.6s;
 }
 
+/* the icon on a dark inlay */
+.chip {
+  position: relative;
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  place-items: center;
+  border-radius: 8px;
+  color: #f6dc8a;
+  background: linear-gradient(160deg, #3d2906, #1d1203);
+  box-shadow:
+    inset 0 1px 0 rgb(255 235 170 / 0.28),
+    inset 0 0 0 1px rgb(0 0 0 / 0.35),
+    0 3px 8px -2px rgb(60 38 4 / 0.55);
+}
 .icon {
-  color: #efcd78;
-  filter: drop-shadow(0 0 6px rgb(239 205 120 / 0.45));
+  filter: drop-shadow(0 0 5px rgb(246 220 138 / 0.55));
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.gold:hover .icon,
+.gold:focus-visible .icon {
+  transform: rotate(14deg) scale(1.12);
 }
 
-.dot {
-  background: #f3d27a;
-  box-shadow: 0 0 10px 1px rgb(243 210 122 / 0.75);
+.title {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.005em;
+  text-shadow: 0 1px 0 rgb(255 244 200 / 0.55);
+}
+.sub {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgb(43 28 5 / 0.68);
 }
 
+.arrow {
+  flex: none;
+  color: rgb(43 28 5 / 0.72);
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.gold:hover .arrow,
+.gold:focus-visible .arrow {
+  transform: translateX(3px);
+}
+
+@keyframes drift {
+  to {
+    background-position: 92% 0;
+  }
+}
 @keyframes sweep {
   0% {
     background-position: 130% 0;
@@ -72,14 +131,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sheen,
-  .text {
+  .gold,
+  .sheen {
     animation: none;
-    background-position: 50% 0;
   }
 }
-:global(html.calm) .sheen,
-:global(html.calm) .text {
+:global(html.calm) .gold,
+:global(html.calm) .sheen {
   animation: none;
-  background-position: 50% 0;
 }
