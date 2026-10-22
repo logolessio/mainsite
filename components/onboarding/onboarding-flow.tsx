@@ -121,7 +121,7 @@ function Typed({ text, onDone, onReady, speed = 24 }: { text: string; onDone?: (
   }, [text])
   const cursor = (
     <span aria-hidden="true" className="relative inline-block h-0 w-0 align-baseline">
-      <span className={cn('absolute bottom-[-0.12em] left-[0.05em] block h-[0.95em] w-[0.08em] rounded-full bg-[var(--red,currentColor)] shadow-[0_0_14px_rgb(255_31_56/0.7)]', n >= text.length && 'animate-pulse')} />
+      <span className={cn('absolute bottom-[-0.12em] left-[0.05em] block h-[0.95em] w-[0.08em] rounded-full bg-[linear-gradient(180deg,#ff1f38,#ffc857,#2ed0b0,#4ba9dc)] shadow-[0_0_14px_rgb(75_169_220/0.6)]', n >= text.length && 'animate-pulse')} />
     </span>
   )
   return (
@@ -227,7 +227,7 @@ function SplitChoice({ options }: { options: { label: string; hint: string; onCl
           key={o.label}
           type="button"
           onClick={o.onClick}
-          className="group relative flex flex-col items-start rounded-card border border-line-strong bg-white/[0.02] p-6 text-left outline-none transition-[transform,border-color,background-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-[rgb(255_70_90/0.65)] hover:bg-white/[0.05] hover:shadow-[0_24px_60px_-30px_rgb(255_31_56/0.75)] focus-visible:-translate-y-1 focus-visible:border-[rgb(255_70_90/0.65)] focus-visible:ring-2 focus-visible:ring-[rgb(255_31_56/0.4)] active:translate-y-0"
+          className="mc-edge group relative flex flex-col items-start rounded-card border border-line-strong bg-white/[0.02] p-6 text-left outline-none transition-[transform,border-color,background-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-transparent hover:bg-white/[0.05] hover:shadow-[-14px_24px_60px_-34px_rgb(255_31_56/0.6),14px_24px_60px_-34px_rgb(75_169_220/0.55)] focus-visible:-translate-y-1 focus-visible:border-transparent active:translate-y-0"
         >
           <span className="font-mono text-[11px] tracking-[0.14em] text-mute">{String(n + 1).padStart(2, '0')}</span>
           <span className="mt-9 font-display text-[clamp(1.8rem,5vw,2.6rem)] leading-none">{o.label}</span>
@@ -702,7 +702,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
     <main className="fixed inset-0 z-[60] overflow-y-auto text-center">
       <AnimatePresence>{id === 'saving' && !reduced && liquidLoader && <LiquidFill key="liquid" />}</AnimatePresence>
       <div aria-hidden="true" className="fixed inset-x-0 top-0 z-[69] h-[2px] bg-white/[0.07]" />
-      <div aria-hidden="true" className="fixed top-0 left-0 z-[70] h-[2px] bg-[var(--red,#ededed)] shadow-[0_0_12px_rgb(255_31_56/0.8)] transition-[width] duration-700 ease-out" style={{ width: `${progress * 100}%` }} />
+      <div aria-hidden="true" className="fixed top-0 left-0 z-[70] h-[2px] bg-[linear-gradient(90deg,#ff1f38,#ffc857,#2ed0b0,#4ba9dc)] shadow-[0_0_12px_rgb(75_169_220/0.5)] transition-[width] duration-700 ease-out" style={{ width: `${progress * 100}%` }} />
       <Link href="/" aria-label="logoless home" className="fixed top-5 left-5 z-[70] block opacity-80 transition-opacity hover:opacity-100 max-sm:top-4 max-sm:left-4">
         <Logo className="h-8 md:h-9" />
       </Link>
@@ -784,9 +784,9 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                             setPicking(m.key)
                             void m.run()
                           }}
-                          className={cn('group flex w-full items-center gap-4 rounded-card border border-line-strong bg-white/[0.02] p-3.5 pr-5 text-left outline-none transition-[transform,border-color,background-color,box-shadow,opacity] duration-300 hover:-translate-y-0.5 hover:border-[rgb(255_70_90/0.6)] hover:bg-white/[0.05] hover:shadow-[0_18px_44px_-28px_rgb(255_31_56/0.7)] focus-visible:ring-2 focus-visible:ring-[rgb(255_31_56/0.4)] active:translate-y-0 active:scale-[0.99]', busy && !mine && 'opacity-35')}
+                          className={cn('mc-edge group flex w-full items-center gap-4 rounded-card border border-line-strong bg-white/[0.02] p-3.5 pr-5 text-left outline-none transition-[transform,border-color,background-color,box-shadow,opacity] duration-300 hover:-translate-y-0.5 hover:border-transparent hover:bg-white/[0.05] hover:shadow-[-12px_18px_44px_-30px_rgb(255_31_56/0.55),12px_18px_44px_-30px_rgb(75_169_220/0.5)] active:translate-y-0 active:scale-[0.99]', busy && !mine && 'opacity-35')}
                         >
-                          <span className="grid size-12 shrink-0 place-items-center rounded-tile border border-line-strong bg-white/[0.05] text-paper transition-colors duration-300 group-hover:border-[rgb(255_70_90/0.5)] group-hover:bg-[rgb(255_31_56/0.12)]">{m.icon}</span>
+                          <span className="grid size-12 shrink-0 place-items-center rounded-tile border border-line-strong bg-white/[0.05] text-paper transition-colors duration-300 group-hover:bg-white/[0.1]">{m.icon}</span>
                           <span className="min-w-0 flex-1">
                             <span className="block text-[17px] font-medium leading-tight">{mine ? `Opening ${m.key === 'google' ? 'Google' : 'Discord'}` : m.title}</span>
                             <span className="mt-0.5 block text-sm text-mute">{m.sub}</span>

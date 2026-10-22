@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
-import { SiteArt } from './site-art'
 import { useFeature } from './features-provider'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 
@@ -211,7 +210,6 @@ export function GradientField() {
     <div aria-hidden="true" className="gradient-field pointer-events-none fixed inset-0 z-0 overflow-hidden">
       <canvas ref={ref} data-bg className="absolute inset-0 h-full w-full" />
       <span className="gf-grid" />
-      {look && !inApp && !slow && <SiteArt />}
       {look && <span className="gf-grain" />}
       {!inApp && <span className="gf-rails" />}
     </div>

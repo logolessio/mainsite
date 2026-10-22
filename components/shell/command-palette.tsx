@@ -65,7 +65,7 @@ function Mark({ text, q }: { text: string; q: string }) {
     <>
       {parts.map((p, n) =>
         n % 2 === 1 ? (
-          <mark key={n} className="rounded-[3px] bg-[rgb(255_31_56/0.2)] px-px text-paper">
+          <mark key={n} className="bg-transparent bg-[linear-gradient(90deg,#ff1f38,#ffc857,#2ed0b0,#4ba9dc)] bg-[length:100%_2px] bg-bottom bg-no-repeat text-paper">
             {p}
           </mark>
         ) : (
@@ -491,14 +491,13 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
             onKeyDown={onKey}
             // one radius for the box and, inside its 8px of padding, the same curve less 8px for every row, so the corners nest
             style={{ ['--cmd-r' as string]: 'calc(26px * var(--round, 1))' }}
-            className="cmdk relative isolate flex max-h-[calc(100dvh-24px)] w-full max-w-[640px] flex-col overflow-hidden rounded-[var(--cmd-r)] border border-white/[0.09] bg-[#0b0b0e]/[0.94] shadow-[0_1px_0_0_rgb(255_255_255/0.06)_inset,0_50px_120px_-30px_rgb(0_0_0/0.95),0_30px_90px_-44px_rgb(255_31_56/0.4),0_0_0_1px_rgb(0_0_0/0.5)] backdrop-blur-2xl backdrop-saturate-150 sm:max-h-[min(640px,76vh)]"
+            className="cmdk relative isolate flex max-h-[calc(100dvh-24px)] w-full max-w-[600px] flex-col overflow-hidden rounded-[var(--cmd-r)] border border-white/[0.1] bg-[#0a0a0c]/[0.96] shadow-[0_44px_110px_-30px_rgb(0_0_0/0.95),-40px_40px_100px_-60px_rgb(255_31_56/0.32),40px_40px_100px_-60px_rgb(75_169_220/0.32)] backdrop-blur-2xl backdrop-saturate-150 sm:max-h-[min(600px,74vh)]"
           >
-            {/* the light that follows the pointer, the bright arc that runs round the edge, and a sweep of light when it opens */}
+            {/* the light that follows the pointer, and the arc of colour that runs round the edge */}
             <span aria-hidden="true" className="cmd-spot pointer-events-none absolute inset-0 -z-10" />
             <span aria-hidden="true" className="sp-ring sp-ring-on" />
-            <span aria-hidden="true" className="cmd-sweep pointer-events-none absolute inset-y-0 -left-1/3 -z-10 w-1/3" />
             <div className="flex shrink-0 items-center gap-3 px-5">
-              <Search aria-hidden="true" className={cn('size-[18px] shrink-0 transition-colors duration-300', q ? 'text-[var(--red,#ededed)]' : 'text-paper/45')} />
+              <Search aria-hidden="true" className={cn('size-[17px] shrink-0 transition-colors duration-300', q ? 'text-paper' : 'text-paper/40')} />
               <input
                 ref={input}
                 value={q}
@@ -522,26 +521,24 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
                 autoCorrect="off"
                 spellCheck={false}
                 enterKeyHint="go"
-                className="h-[60px] min-w-0 flex-1 bg-transparent text-[17px] caret-[var(--red,currentColor)] outline-none placeholder:text-paper/35"
+                className="h-14 min-w-0 flex-1 bg-transparent text-[16px] caret-paper outline-none placeholder:text-paper/35"
               />
               {q ? (
                 <button type="button" aria-label="Clear" onClick={() => (setQ(''), input.current?.focus())} className="grid size-8 shrink-0 place-items-center rounded-pill text-paper/45 transition-colors hover:bg-white/10 hover:text-paper">
                   <X className="size-4" />
                 </button>
               ) : (
-                <kbd className="hidden shrink-0 rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-mono text-[11px] text-paper/45 sm:inline">esc</kbd>
+                <kbd className="hidden shrink-0 rounded-[5px] border border-white/10 px-1.5 py-0.5 font-mono text-[10.5px] text-paper/40 sm:inline">esc</kbd>
               )}
               <button type="button" aria-label="Close" onClick={onClose} className="grid size-8 shrink-0 place-items-center rounded-pill text-paper/45 transition-colors hover:bg-white/10 hover:text-paper sm:hidden">
                 <X className="size-4" />
               </button>
             </div>
-            <div aria-hidden="true" className="mx-5 h-px shrink-0 bg-white/[0.07]" />
-
             {!reading && (
-              <div role="tablist" aria-label="Narrow the results" className="flex shrink-0 items-center gap-1.5 overflow-x-auto px-4 pt-2.5 pb-1 [scrollbar-width:none]">
+              <div role="tablist" aria-label="Narrow the results" className="flex shrink-0 items-center gap-0.5 overflow-x-auto px-3 [scrollbar-width:none]">
                 {SCOPES.filter((sc) => scopeOn(sc.id)).map((sc) => {
                   const on = scope === sc.id
-                  const n = q.trim() ? counts[sc.id] : 0
+                  const empty = Boolean(q.trim()) && !on && counts[sc.id] === 0
                   return (
                     <button
                       key={sc.id}
@@ -549,16 +546,16 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
                       role="tab"
                       aria-selected={on}
                       onClick={() => (setScope(sc.id), input.current?.focus())}
-                      className={cn('inline-flex h-7 shrink-0 items-center gap-1.5 rounded-pill border px-3 text-[12px] transition-colors', on ? 'border-[rgb(255_70_90/0.6)] bg-[rgb(255_31_56/0.12)] text-paper' : 'border-white/[0.08] text-paper/55 hover:border-white/25 hover:text-paper')}
+                      className={cn('relative h-9 shrink-0 rounded-tile px-3 text-[13px] transition-colors duration-200', on ? 'text-paper' : empty ? 'text-paper/25' : 'text-paper/50 hover:text-paper')}
                     >
                       {sc.label}
-                      {n > 0 && <span className="font-mono text-[10.5px] text-paper/50 tabular-nums">{n}</span>}
-                      {sc.key && !on && <kbd className="hidden font-mono text-[10px] text-paper/35 sm:inline">{sc.key}</kbd>}
+                      {on && <motion.span layoutId="cmd-tab" transition={{ type: 'spring', stiffness: 600, damping: 44 }} className="absolute inset-x-3 -bottom-px h-[2px] rounded-full bg-[linear-gradient(90deg,#ff1f38,#ffc857,#2ed0b0,#4ba9dc)]" />}
                     </button>
                   )
                 })}
               </div>
             )}
+            <div aria-hidden="true" className="h-px shrink-0 bg-white/[0.07]" />
 
             {reading && (
               <motion.div key={reading.q} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.24, ease: EASE_OUT }} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 [scrollbar-width:thin] sm:p-6">
@@ -612,7 +609,7 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
               )}
               {rows.map((r, idx) => (
                 <li key={r.key} role="presentation">
-                  {r.head && <p className="px-3 pt-3 pb-1.5 text-xs text-paper/45 first:pt-1.5">{r.head}</p>}
+                  {r.head && <p className="px-3 pt-3.5 pb-1 font-mono text-[10px] leading-none tracking-[0.14em] text-paper/35 uppercase first:pt-2">{r.head}</p>}
                   <button
                     id={`cmd-${idx}`}
                     role="option"
@@ -621,31 +618,29 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
                     tabIndex={-1}
                     onMouseMove={() => i !== idx && setI(idx)}
                     onClick={() => choose(idx)}
-                    className={cn('relative flex min-h-[52px] w-full items-center gap-3 rounded-[calc(var(--cmd-r)-8px)] px-3 py-2 text-left transition-colors duration-150', idx === i ? 'text-paper' : 'text-paper/75')}
+                    className={cn('relative flex h-11 w-full items-center gap-3 rounded-[calc(var(--cmd-r)-8px)] px-3 text-left transition-colors duration-150', idx === i ? 'text-paper' : 'text-paper/70')}
                   >
-                    {idx === i && <motion.span layoutId="cmd-hl" transition={{ type: 'spring', stiffness: 700, damping: 48, mass: 0.6 }} className="absolute inset-0 rounded-[inherit] bg-white/[0.075] shadow-[inset_0_0_0_1px_rgb(255_255_255/0.05)] after:absolute after:inset-y-2.5 after:left-0 after:w-[2px] after:rounded-full after:bg-[var(--red,#ededed)] after:shadow-[0_0_10px_rgb(255_31_56/0.9)]" />}
-                    <span className={cn('relative grid size-9 shrink-0 place-items-center overflow-hidden rounded-[calc(var(--cmd-r)-14px)] border transition-colors', idx === i ? 'border-white/15 bg-white/[0.08] text-paper' : 'border-white/[0.07] bg-white/[0.03] text-paper/60')}>
+                    {idx === i && <motion.span layoutId="cmd-hl" transition={{ type: 'spring', stiffness: 700, damping: 48, mass: 0.6 }} className="absolute inset-0 rounded-[inherit] bg-white/[0.06] after:absolute after:inset-y-2.5 after:left-0 after:w-[2px] after:rounded-full after:bg-[linear-gradient(180deg,#ff1f38,#ffc857,#2ed0b0,#4ba9dc)]" />}
+                    <span className={cn('relative grid shrink-0 place-items-center overflow-hidden transition-colors', r.cover ? 'size-8 rounded-[6px]' : 'size-6', idx === i ? 'text-paper' : 'text-paper/50')}>
                       {r.cover ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={r.cover} alt="" className="size-full object-cover" />
                       ) : r.icon ? (
                         <CmdGlyph icon={r.icon} />
                       ) : r.navIcon ? (
-                        <Icon name={r.navIcon} aria-hidden="true" className="size-4" />
+                        <Icon name={r.navIcon} aria-hidden="true" className="size-[17px]" />
                       ) : (
-                        <ArrowUpRight aria-hidden="true" className="size-4" />
+                        <ArrowUpRight aria-hidden="true" className="size-[17px]" />
                       )}
                     </span>
-                    <span className="relative min-w-0 flex-1">
-                      <span className="block truncate text-[15px] leading-tight">{q.trim() && r.group !== 'Search' ? <Mark text={r.label} q={q} /> : r.label}</span>
-                      {r.sub && <span className="mt-0.5 block truncate text-[12.5px] text-paper/45">{r.sub}</span>}
+                    <span className="relative flex min-w-0 flex-1 items-baseline gap-2.5">
+                      <span className="shrink-0 max-w-[70%] truncate text-[14.5px] leading-none">{q.trim() && r.group !== 'Search' ? <Mark text={r.label} q={q} /> : r.label}</span>
+                      {r.sub && <span className="min-w-0 truncate text-[12.5px] leading-none text-paper/35">{r.sub}</span>}
                     </span>
                     {r.hint ? (
-                      <kbd className="relative hidden shrink-0 rounded-md border border-white/10 px-1.5 py-0.5 font-mono text-[11px] text-paper/45 sm:inline">{r.hint}</kbd>
-                    ) : q && r.group !== 'Search' ? (
-                      <span className="relative hidden shrink-0 text-[11px] text-paper/35 sm:inline">{r.group}</span>
+                      <kbd className="relative hidden shrink-0 rounded-[5px] border border-white/10 px-1.5 py-0.5 font-mono text-[10.5px] text-paper/40 sm:inline">{r.hint}</kbd>
                     ) : null}
-                    <CornerDownLeft aria-hidden="true" className={cn('relative size-3.5 shrink-0 text-paper/45 transition-opacity', idx === i ? 'opacity-100' : 'opacity-0')} />
+                    <CornerDownLeft aria-hidden="true" className={cn('relative size-3.5 shrink-0 text-paper/40 transition-opacity', idx === i ? 'opacity-100' : 'opacity-0')} />
                   </button>
                 </li>
               ))}
@@ -655,22 +650,21 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
             <AnimatePresence initial={false}>
               {!reading && active?.answer && (
                 <motion.div key="answer" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22, ease: EASE_OUT }} className="shrink-0 overflow-hidden">
-                  <div aria-live="polite" className="mx-2 mb-2 max-h-40 overflow-y-auto rounded-[calc(var(--cmd-r)-8px)] border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-[13.5px] leading-relaxed text-paper/70">
+                  <div aria-live="polite" className="mx-2 mb-2 max-h-40 overflow-y-auto rounded-[calc(var(--cmd-r)-8px)] bg-white/[0.04] px-4 py-3 text-[13px] leading-relaxed text-paper/65">
                     {active.answer}
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <div className="flex shrink-0 items-center justify-between gap-3 border-t border-white/[0.07] px-5 py-2.5 text-[12px] text-paper/40">
+            <div className="flex shrink-0 items-center justify-between gap-3 border-t border-white/[0.07] px-4 py-2 text-[11.5px] text-paper/35">
               <span className="hidden items-center gap-3 sm:flex">
-                <span className="flex items-center gap-1"><Kbd>↑</Kbd><Kbd>↓</Kbd> move</span>
-                <span className="flex items-center gap-1"><Kbd>↵</Kbd> open</span>
-                <span className="flex items-center gap-1"><Kbd>esc</Kbd> close</span>
+                <span className="flex items-center gap-1.5"><Kbd>↑</Kbd><Kbd>↓</Kbd> move</span>
+                <span className="flex items-center gap-1.5"><Kbd>↵</Kbd> open</span>
               </span>
               <span className="sm:hidden">{rows.length ? `${rows.length} ${rows.length === 1 ? 'result' : 'results'}` : ''}</span>
-              <button type="button" onClick={() => (onClose(), window.setTimeout(() => window.dispatchEvent(new Event('logoless:help')), 60))} className="inline-flex items-center gap-1.5 rounded-pill px-2 py-1 transition-colors hover:bg-white/[0.06] hover:text-paper">
-                <Keyboard aria-hidden="true" className="size-3.5" /> Shortcuts <Kbd>?</Kbd>
+              <button type="button" aria-label="Keyboard shortcuts" onClick={() => (onClose(), window.setTimeout(() => window.dispatchEvent(new Event('logoless:help')), 60))} className="inline-flex items-center gap-1.5 rounded-[6px] px-1.5 py-1 transition-colors hover:bg-white/[0.06] hover:text-paper">
+                Shortcuts <Kbd>?</Kbd>
               </button>
             </div>
           </motion.div>

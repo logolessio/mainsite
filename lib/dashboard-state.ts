@@ -1,6 +1,5 @@
 import { db, nowSec } from './db'
 import { featureState } from './features'
-import { creatorSetup } from './setup-steps'
 
 /**
  * Small things the creator dashboard remembers per person: when they last opened their recap, and which optional pages they took
@@ -9,8 +8,6 @@ import { creatorSetup } from './setup-steps'
 export const OPTIONAL_PAGES = ['discord'] as const
 export type OptionalPage = (typeof OPTIONAL_PAGES)[number]
 
-/** Recap appears once there is something worth looking back on. */
-export const RECAP_MIN = { approvedClips: 1, views: 1000 }
 /** It glows gold again when it has not been opened for this long. */
 export const RECAP_GLOW_AFTER_SEC = 90 * 86400
 
@@ -53,23 +50,8 @@ export async function setPageHidden(userId: string, page: OptionalPage, hidden: 
   return next
 }
 
-/** Set-up is done when every needed step is (getting paid the first time is a milestone, not set-up, so it does not count). */
-async function onboarded(user: { id: string; email: string }) {
-  const steps = await creatorSetup(user)
-  return steps.every((s) => s.optional || s.id === 'paid' || s.done)
-}
-
-async function enoughForRecap(userId: string) {
-  const d = await db()
-  const r = await d
-    .prepare("SELECT COALESCE(SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END), 0) AS approved, COALESCE(SUM(views_verified), 0) AS views FROM submissions WHERE user_id = ?1")
-    .bind(userId)
-    .first<{ approved: number; views: number }>()
-  return (r?.approved ?? 0) >= RECAP_MIN.approvedClips && (r?.views ?? 0) >= RECAP_MIN.views
-}
-
 export type SidebarExtras = {
-  /** null = no Recap in the sidebar (switched off, set-up not finished, or not enough yet). */
+  /** null = no Recap in the sidebar (switched off). It is always there otherwise: nobody has to earn it first. */
   recap: { gold: boolean } | null
   /** Show the Discord page in the sidebar. */
   discord: boolean
@@ -85,8 +67,7 @@ export async function sidebarExtras(user: { id: string; email: string }): Promis
     const discordAvailable = on['discord-page'] === true
     let recap: SidebarExtras['recap'] = null
     if (on.recap && on['recap-sidebar']) {
-      const [ready, enough] = await Promise.all([onboarded(user), enoughForRecap(user.id)])
-      if (ready && enough) recap = { gold: state.recapSeenAt === null || nowSec() - state.recapSeenAt >= RECAP_GLOW_AFTER_SEC }
+      recap = { gold: state.recapSeenAt === null || nowSec() - state.recapSeenAt >= RECAP_GLOW_AFTER_SEC }
     }
     return { recap, discord: discordAvailable && !state.hidden.includes('discord'), discordAvailable }
   } catch {

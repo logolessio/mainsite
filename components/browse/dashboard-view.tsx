@@ -16,6 +16,7 @@ import { EndingSoon } from './ending-soon'
 import { FilterBar, type SortKey } from './filter-bar'
 import { GlassSearch } from './glass-search'
 import { GuidedTour } from './guided-tour'
+import { HeroGraphics } from './hero-graphics'
 import { NoCampaigns } from './no-campaigns'
 
 export function DashboardView({ campaigns, ended = [], startTour }: { campaigns: Campaign[]; ended?: EndedCampaign[]; startTour: boolean }) {
@@ -122,19 +123,20 @@ export function DashboardView({ campaigns, ended = [], startTour }: { campaigns:
         ref={hero}
         aria-labelledby="hero-title"
         style={heroMotion ? { y: heroY, opacity: heroOpacity, scale: heroScale } : undefined}
-        className="mx-auto flex max-w-3xl origin-top flex-col items-center pt-14 pb-12 text-center md:pt-24 md:pb-16"
+        className="relative mx-auto flex max-w-3xl origin-top flex-col items-center pt-14 pb-12 text-center md:pt-24 md:pb-16"
       >
+        <HeroGraphics signedIn={signedIn} smartCta={smartCta} />
         <h1 id="hero-title" className="font-display text-[clamp(2.6rem,7vw,5.2rem)] leading-[0.98]">
           Your views have value.
         </h1>
         <p className="mt-6 max-w-md text-lg leading-relaxed text-paper/60">Join a campaign, post and get paid for your views.</p>
         {!signedIn ? (
-          <TransitionLink href="/onboarding" className="mt-9 inline-flex h-12 items-center rounded-pill bg-paper px-8 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85">
+          <TransitionLink href="/onboarding" className="mt-9 inline-flex h-12 items-center rounded-pill bg-paper px-8 xl:hidden text-[15px] font-medium text-ink transition-colors hover:bg-paper/85">
             Get started
           </TransitionLink>
         ) : (
           smartCta && (
-            <TransitionLink href="/dashboard" className="mt-9 inline-flex h-12 items-center rounded-pill bg-paper px-8 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85">
+            <TransitionLink href="/dashboard" className="mt-9 inline-flex h-12 items-center rounded-pill bg-paper px-8 xl:hidden text-[15px] font-medium text-ink transition-colors hover:bg-paper/85">
               Dashboard
             </TransitionLink>
           )
