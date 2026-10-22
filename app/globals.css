@@ -1547,6 +1547,20 @@ html[data-themes],
 html[data-themes] body {
   transition: background-color 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+/* the reveal (components/shell/theme-toggle.tsx): the new look is unmasked in a growing circle over a still picture of the old one, so the
+   browser's own crossfade is turned off, and the colour fade above is paused so the new look is drawn already settled */
+html[data-theme-switch],
+html[data-theme-switch] body {
+  transition: none !important;
+}
+html[data-theme-switch]::view-transition-old(root),
+html[data-theme-switch]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+html[data-theme-switch]::view-transition-new(root) {
+  z-index: 1;
+}
 html[data-theme='light'] {
   color-scheme: light;
   --ink: #f6f3ee;
