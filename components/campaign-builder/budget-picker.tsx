@@ -44,11 +44,11 @@ function InlineNumber({ value, onChange, prefix, label, decimal, width }: { valu
  * The budget, set either way round: "I want 250,000 views for $500" or "$500 at $2 per 1,000 views". The other number is worked
  * out live, with the fee and the total, and anything creators could not be paid is explained in plain words.
  */
-export function BudgetPicker({ value, onChange, minBudget = SITE.minCampaignBudgetUsd, maxBudget = SITE.maxTopUpUsd * 10 }: { value: BudgetValue; onChange: (patch: Partial<BudgetValue>) => void; minBudget?: number; maxBudget?: number }) {
+export function BudgetPicker({ value, onChange, minBudget = SITE.minCampaignBudgetUsd, maxBudget = SITE.maxTopUpUsd * 10, feeFree = false }: { value: BudgetValue; onChange: (patch: Partial<BudgetValue>) => void; minBudget?: number; maxBudget?: number; /** one of the brand's first campaigns, which carry no fee */ feeFree?: boolean }) {
   const budget = Number(value.budget) || 0
   const plan = budgetPlan(value.mode, budget, Number(value.rate) || 0, Number(value.views) || 0)
   const budgetErr = value.budget && (budget < minBudget || budget > maxBudget) ? `Between ${usd(minBudget)} and ${usd(maxBudget)}.` : ''
-  const fee = (budget * SITE.platformFeePct) / 100
+  const fee = feeFree ? 0 : (budget * SITE.platformFeePct) / 100
   const ok = !plan.problem && !budgetErr
 
   // switching keeps the numbers in step, so the other sentence opens on the same plan
@@ -139,7 +139,7 @@ export function BudgetPicker({ value, onChange, minBudget = SITE.minCampaignBudg
           <dl className="grid content-start gap-2 text-sm">
             {[
               ['Paid to creators', usd(budget, 2)],
-              [`Our fee (${SITE.platformFeePct}%, on top)`, usd(fee, 2)],
+              [feeFree ? `Our fee (none on your first ${SITE.freeFeeCampaigns} campaigns)` : `Our fee (${SITE.platformFeePct}%, on top)`, usd(fee, 2)],
               ['The most it can cost', usd(budget + fee, 2)],
             ].map(([k, v], i) => (
               <div key={k} className={cn('flex items-baseline justify-between gap-4', i === 2 && 'border-t border-line pt-2 text-paper')}>

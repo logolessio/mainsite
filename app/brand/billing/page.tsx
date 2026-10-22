@@ -6,6 +6,7 @@ import { PayCampaignButton } from '@/components/app/pay-campaign-button'
 import { Badge, DataTable, EmptyState } from '@/components/app/table'
 import { Card, PageHeader } from '@/components/app/ui'
 import { db } from '@/lib/db'
+import { campaignIsFeeFree } from '@/lib/fee-free'
 import { money } from '@/lib/format'
 import { balances } from '@/lib/ledger'
 import { costFor, startNeeded } from '@/lib/ledger-math'
@@ -44,6 +45,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
   // what the balance would pay for: the fee comes on top of what clippers earn
   const views = avg > 0 ? Math.floor((b.brand / (1 + 0.15) / avg) * 1000) : 0
 
+  // the waiting campaigns that are among the brand's first few carry no fee, so they need less to start
+  const freeWaiting = new Set((await Promise.all(waiting.results.map(async (w) => ((await campaignIsFeeFree(w.id)) ? w.id : null)))).filter((x): x is string => x !== null))
   return (
     <>
       <PageHeader title="Balance" sub="One balance for all your campaigns. Creators are paid out of it as they earn, and we cover PayPal's fees on every deposit." />
@@ -70,14 +73,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
       {waiting.results.length > 0 && (
         <div className="mt-8 grid gap-3">
           {waiting.results.map((w) => {
-            const need = startNeeded(w.budget_cents)
+            const free = freeWaiting.has(w.id)
+            const need = startNeeded(w.budget_cents, free)
             return (
               <Card key={w.id}>
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <p className="text-lg">{w.title} is approved</p>
                     <p className="mt-1 text-sm text-mute">
-                      {b.brand >= need ? 'Your balance covers the start. Nothing is charged until creators earn.' : `Add ${money(need - b.brand)} or more first. Up to ${money(costFor(w.budget_cents))} can be spent in total, only as creators earn.`}
+                      {b.brand >= need ? 'Your balance covers the start. Nothing is charged until creators earn.' : `Add ${money(need - b.brand)} or more first. Up to ${money(costFor(w.budget_cents, free))} can be spent in total, only as creators earn.`}
                     </p>
                   </div>
                   <PayCampaignButton id={w.id} />

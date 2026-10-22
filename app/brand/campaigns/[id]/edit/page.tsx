@@ -5,6 +5,7 @@ import { CampaignBuilder } from '@/components/campaign-builder/builder'
 import { draftFor } from '@/lib/campaign-edit'
 import { pendingAsks } from '@/lib/campaign-review'
 import { campaignRow } from '@/lib/campaigns-db'
+import { campaignIsFeeFree } from '@/lib/fee-free'
 import { featureOn } from '@/lib/features'
 import { pageUser } from '@/lib/user'
 
@@ -21,7 +22,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   return (
     <>
       <PageHeader title="Fix your campaign" sub="Change what you need to, then send it back. It stays in review and nothing is charged." />
-      <CampaignBuilder balanceCents={0} paypalReady={false} edit={{ id, note: ask }} initial={await draftFor(row)} />
+      <CampaignBuilder balanceCents={0} paypalReady={false} edit={{ id, note: ask }} initial={await draftFor(row)} feeFree={await campaignIsFeeFree(id)} />
     </>
   )
 }

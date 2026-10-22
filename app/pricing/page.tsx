@@ -22,7 +22,7 @@ export default function Page() {
       <section className={`${CONTAINER} pb-24 md:pb-36`}>
         <div className="grid gap-12 md:grid-cols-2 md:gap-10">
           {[
-            { who: 'Brands', big: `${SITE.platformFeePct}%`, line: 'added on top of what creators earn', points: ['You set the budget and the rate', `A $1,000 budget costs $${(1000 + (1000 * SITE.platformFeePct) / 100).toLocaleString()}`, 'You only pay for verified views', "We pay PayPal's fees on every deposit", 'A single editable balance for each campaign, unused money is still yours.']},
+            { who: 'Brands', big: `${SITE.platformFeePct}%`, line: 'added on top of what creators earn', points: ['You set the budget and the rate', `Your first ${SITE.freeFeeCampaigns} campaigns carry no fee at all`, `A $1,000 budget costs $${(1000 + (1000 * SITE.platformFeePct) / 100).toLocaleString()}`, 'You only pay for verified views', "We pay PayPal's fees on every deposit", 'A single editable balance for each campaign, unused money is still yours.']},
             { who: 'Creators', big: 'Free', line: 'to join and to submit content', points: ['No joining or submission fee', 'You keep everything a campaign pays you', `Withdraw from $${SITE.minPayoutUsd} to any PayPal email`, "We pay PayPal's fees, so everyone gets what they paid for (literally)"] },
           ].map((c, i) => (
             <Reveal key={c.who} delay={i * 0.06} className="rounded-[calc(2rem*var(--round,1))] border border-line p-8 md:p-10">

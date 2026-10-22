@@ -86,7 +86,7 @@ export default function Page() {
           stats={[
             { value: '3', label: 'Platforms', note: 'TikTok, YouTube and Instagram' },
             { value: '2h', label: 'Between view checks', note: 'TikTok and YouTube views are looked at again about every two hours' },
-            { value: `${SITE.platformFeePct}%`, label: 'Our fee', note: 'Paid by brands on top, never taken from creators' },
+            { value: `${SITE.platformFeePct}%`, label: 'Our fee', note: `Paid by brands on top, never taken from creators. None on a brand's first ${SITE.freeFeeCampaigns} campaigns` },
             { value: `$${SITE.minPayoutUsd}`, label: 'Smallest payout', note: 'The least you can withdraw to PayPal at once' },
           ]}
         />
@@ -95,7 +95,7 @@ export default function Page() {
       <div id="fair">
         <Compare
           left={{ title: 'Creators', items: ['Join any campaign for free', 'Keep everything a campaign pays you', 'No follower minimum', 'Withdraw to PayPal whenever you like', 'See the reason when a submission is turned down'] }}
-          right={{ title: 'Brands and artists', items: ['Set your own budget and rate', 'Pay only for views we verify', 'Your budget is a hard cap', 'Turn down any submission', 'What you do not spend stays yours'] }}
+          right={{ title: 'Brands and artists', items: ['Set your own budget and rate', `No fee on your first ${SITE.freeFeeCampaigns} campaigns`, 'Pay only for views we verify', 'Your budget is a hard cap', 'Turn down any submission', 'What you do not spend stays yours'] }}
         />
       </div>
 

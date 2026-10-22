@@ -107,7 +107,7 @@ function restore(raw: unknown): Draft | null {
  * Making a campaign, one step at a time: the basics, the audio, the artwork, the brief, the budget (as views for a price, or a
  * rate), funds, then a last look. What is typed is kept on this device, so coming back from PayPal or a refresh loses nothing.
  */
-export function CampaignBuilder({ balanceCents, paypalReady, startAt, edit, initial }: { balanceCents: number; paypalReady: boolean; startAt?: string; /** Fixing a request that is in review: its id, and what the team asked for. */ edit?: { id: string; note?: string }; initial?: Partial<Draft> }) {
+export function CampaignBuilder({ balanceCents, paypalReady, startAt, edit, initial, feeFree = false }: { balanceCents: number; paypalReady: boolean; startAt?: string; /** one of the brand's first campaigns, which carry no fee */ feeFree?: boolean; /** Fixing a request that is in review: its id, and what the team asked for. */ edit?: { id: string; note?: string }; initial?: Partial<Draft> }) {
   const { navigate } = useTransitions()
   const STEPS = edit ? ALL_STEPS.filter((x) => x.id !== 'start' && x.id !== 'funds') : ALL_STEPS
   const [d, setD] = useState<Draft>(() => (initial ? (restore({ ...BLANK, ...initial }) ?? BLANK) : BLANK))
@@ -165,7 +165,7 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt, edit, init
   const budget = Number(d.budget) || 0
   const plan = budgetPlan(d.mode, budget, Number(d.rate) || 0, Number(d.views) || 0)
   const budgetCents = Math.round(budget * 100)
-  const need = startNeeded(budgetCents)
+  const need = startNeeded(budgetCents, feeFree)
   const short = Math.max(0, need - balanceCents)
   const music = d.type === 'Music'
 
@@ -439,10 +439,10 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt, edit, init
               <>
                 <Ask sub="Creators are paid for every 1,000 verified views, out of your balance, as they earn. The budget is the most this campaign can ever pay.">Set the budget.</Ask>
                 <Rise i={0}>
-                  <BudgetPicker value={{ budget: d.budget, mode: d.mode, rate: d.rate, views: d.views }} onChange={(p) => set(p)} />
+                  <BudgetPicker value={{ budget: d.budget, mode: d.mode, rate: d.rate, views: d.views }} onChange={(p) => set(p)} feeFree={feeFree} />
                 </Rise>
                 <Rise i={1} className="mt-6">
-                  <Estimates rate={plan.rate} views={plan.views} budget={budget} endsOn={d.endsOn} />
+                  <Estimates rate={plan.rate} views={plan.views} budget={budget} endsOn={d.endsOn} feeFree={feeFree} />
                 </Rise>
                 <Rise i={2} className="mt-8 grid gap-5 sm:grid-cols-3">
                   <BigInput label="End date" hint="Optional" type="date" value={d.endsOn} onChange={(e) => set({ endsOn: e.target.value })} />
@@ -460,24 +460,24 @@ export function CampaignBuilder({ balanceCents, paypalReady, startAt, edit, init
                     <p className="text-xs tracking-wide text-mute">Your balance</p>
                     <p className="mt-2 font-display text-6xl leading-none font-medium tabular-nums">{money(balanceCents)}</p>
                     <div className="mt-5 h-2 overflow-hidden rounded-pill bg-white/10">
-                      <motion.div className="h-full rounded-pill bg-paper" initial={{ width: 0 }} animate={{ width: `${Math.min(100, (balanceCents / Math.max(1, costFor(budgetCents))) * 100)}%` }} transition={{ duration: 0.8, ease: EASE_OUT }} />
+                      <motion.div className="h-full rounded-pill bg-paper" initial={{ width: 0 }} animate={{ width: `${Math.min(100, (balanceCents / Math.max(1, costFor(budgetCents, feeFree))) * 100)}%` }} transition={{ duration: 0.8, ease: EASE_OUT }} />
                     </div>
                     <p className="mt-3 text-sm text-mute">
-                      {money(balanceCents)} of {money(costFor(budgetCents))}, the most the whole campaign can cost.{' '}
+                      {money(balanceCents)} of {money(costFor(budgetCents, feeFree))}, the most the whole campaign can cost.{' '}
                       {short > 0 ? `Add at least ${money(short)} to start.` : 'That covers the start; top up any time as it runs.'}
                     </p>
                     {paypalReady ? (
                       <div className="mt-7">
                         <Label>Add with PayPal</Label>
                         <div className="flex flex-wrap gap-2">
-                          {[...new Set([Math.max(SITE.minTopUpUsd, Math.ceil(short / 100)), Math.ceil(costFor(budgetCents) / 100), 250, 1000])]
+                          {[...new Set([Math.max(SITE.minTopUpUsd, Math.ceil(short / 100)), Math.ceil(costFor(budgetCents, feeFree) / 100), 250, 1000])]
                             .filter((n) => n >= SITE.minTopUpUsd && n <= SITE.maxTopUpUsd && (short === 0 || n * 100 >= short))
                             .sort((a, b) => a - b)
                             .slice(0, 4)
                             .map((n) => (
                               <Chip key={n} on={Number(topUp) === n} onClick={() => setTopUp(String(n))}>
                                 {usd(n)}
-                                {n === Math.ceil(costFor(budgetCents) / 100) ? ' · the whole budget' : ''}
+                                {n === Math.ceil(costFor(budgetCents, feeFree) / 100) ? ' · the whole budget' : ''}
                               </Chip>
                             ))}
                         </div>
@@ -638,12 +638,12 @@ function Readiness({ d, problem, budget, className }: { d: Draft; problem: boole
 }
 
 /** What a budget is likely to look like in practice, in plain numbers. A guide, never a promise. */
-function Estimates({ rate, views, budget, endsOn }: { rate: number; views: number; budget: number; endsOn: string }) {
+function Estimates({ rate, views, budget, endsOn, feeFree }: { rate: number; views: number; budget: number; endsOn: string; feeFree: boolean }) {
   if (!(budget > 0) || !(rate > 0)) return null
   const clipsLow = Math.max(1, Math.round(views / 20000))
   const clipsHigh = Math.max(clipsLow, Math.round(views / 5000))
   const days = endsOn ? Math.max(0, Math.ceil((Date.parse(`${endsOn}T23:59:59`) - Date.now()) / 86400000)) : 0
-  const cost = costFor(Math.round(budget * 100)) / 100
+  const cost = costFor(Math.round(budget * 100), feeFree) / 100
   return (
     <div className="rounded-card border border-line-strong bg-white/[0.03] p-5 md:p-6">
       <p className="text-sm font-medium">What to expect</p>
@@ -651,7 +651,7 @@ function Estimates({ rate, views, budget, endsOn }: { rate: number; views: numbe
         <Stat k="Views it buys" v={views.toLocaleString('en-US')} />
         <Stat k="Clips to use it all" v={`about ${clipsLow.toLocaleString('en-US')} to ${clipsHigh.toLocaleString('en-US')}`} sub="at 5,000 to 20,000 views each" />
         <Stat k="A 20,000-view clip earns" v={usd((20000 / 1000) * rate)} />
-        <Stat k="The most it can cost you" v={usd(cost)} sub="the budget plus our fee, only as creators earn" />
+        <Stat k="The most it can cost you" v={usd(cost)} sub={feeFree ? "the budget, with no fee on this one, only as creators earn" : "the budget plus our fee, only as creators earn"} />
         {days > 0 && <Stat k="To use it by the end date" v={`${Math.ceil(views / days).toLocaleString('en-US')} views a day`} sub={`${days} ${days === 1 ? 'day' : 'days'} left`} />}
       </dl>
       <p className="mt-4 text-xs text-mute">A rough guide, not a promise. How fast it moves depends on the music, the rate and who picks it up.</p>

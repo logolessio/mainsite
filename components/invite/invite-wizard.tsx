@@ -36,6 +36,8 @@ type Props = {
   pkg?: boolean
   /** An admin's dry run (?preview=1): every step works and looks real, and nothing is sent or saved. */
   preview?: boolean
+  /** This campaign is one of the brand's first few, which carry no platform fee. */
+  feeFree?: boolean
 }
 
 const KEY_LINKS = ['spotify', 'applemusic', 'instagram', 'tiktok', 'youtube'] as const
@@ -50,7 +52,7 @@ const label = (id: string) => LINK_PLATFORMS.find((p) => p.id === id)?.label ?? 
 const usd = (n: number) => `$${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
 const money = (c: number) => `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
-export function InviteWizard({ slug, artistName, email, initialStep, initialData, campaign: initialCampaign, flash, pkg = false, preview = false }: Props) {
+export function InviteWizard({ slug, artistName, email, initialStep, initialData, campaign: initialCampaign, flash, pkg = false, preview = false, feeFree = false }: Props) {
   const STEPS = stepsFor(pkg)
   const looseHandles = useFeature('username-punctuation')
   const idx = (id: StepId) => STEPS.findIndex((s) => s.id === id)
@@ -225,7 +227,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
     setBusy(true)
     setError('')
     try {
-      const short = startNeeded(campaign.budgetCents) - (balance ?? 0)
+      const short = startNeeded(campaign.budgetCents, feeFree) - (balance ?? 0)
       const { url } = await startDeposit(Math.max(10, Math.ceil(short / 100)), pkg ? `/${slug}` : undefined)
       window.location.href = url
     } catch (e) {
@@ -647,9 +649,9 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
 
                 {current.id === 'money' && pkg && (
                   <>
-                    <Ask sub="Creators earn for every 1,000 verified views, paid from your balance as they earn. You never pay more than the budget plus our fee.">Set the budget.</Ask>
+                    <Ask sub={`Creators earn for every 1,000 verified views, paid from your balance as they earn. ${feeFree ? 'You never pay more than the budget: your first campaigns carry no fee.' : 'You never pay more than the budget plus our fee.'}`}>Set the budget.</Ask>
                     <Rise i={0}>
-                      <BudgetPicker value={{ budget: data.budget ?? '', mode: data.budgetMode ?? 'views', rate: data.rate ?? '', views: data.views ?? '' }} onChange={(p) => set({ ...(p.budget !== undefined ? { budget: p.budget } : {}), ...(p.mode ? { budgetMode: p.mode } : {}), ...(p.rate !== undefined ? { rate: p.rate } : {}), ...(p.views !== undefined ? { views: p.views } : {}) })} minBudget={SITE.minInviteBudgetUsd} maxBudget={SITE.maxTopUpUsd} />
+                      <BudgetPicker value={{ budget: data.budget ?? '', mode: data.budgetMode ?? 'views', rate: data.rate ?? '', views: data.views ?? '' }} onChange={(p) => set({ ...(p.budget !== undefined ? { budget: p.budget } : {}), ...(p.mode ? { budgetMode: p.mode } : {}), ...(p.rate !== undefined ? { rate: p.rate } : {}), ...(p.views !== undefined ? { views: p.views } : {}) })} minBudget={SITE.minInviteBudgetUsd} maxBudget={SITE.maxTopUpUsd} feeFree={feeFree} />
                     </Rise>
                     <Rise i={1} className="mt-8">
                       <BigInput label="End date" hint="Optional" type="date" value={data.endsOn ?? ''} onChange={(e) => set({ endsOn: e.target.value })} className="max-w-xs" />
@@ -695,7 +697,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                           </p>
                           <p className="mt-1 text-lg text-mute">verified views</p>
                           <p className="mt-5 text-sm leading-relaxed text-mute">
-                            {usd(budget || 0)} at {usd(rate || 0)} per 1,000 views. Creators earn all of it. Our {SITE.platformFeePct}% fee is added on top, so you pay {usd((budget || 0) * (1 + SITE.platformFeePct / 100))} in all.
+                            {usd(budget || 0)} at {usd(rate || 0)} per 1,000 views. Creators earn all of it. {feeFree ? `There is no fee on this one, so you pay ${usd(budget || 0)} in all.` : `Our ${SITE.platformFeePct}% fee is added on top, so you pay ${usd((budget || 0) * (1 + SITE.platformFeePct / 100))} in all.`}
                           </p>
                         </motion.div>
                       </Rise>
@@ -786,14 +788,14 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                     <Rise i={0}>
                       <div className="rounded-card border border-line-strong bg-white/[0.04] p-6 md:p-8">
                         <p className="text-xs tracking-wide text-mute">{campaign.title}</p>
-                        <p className="mt-2 font-display text-6xl font-medium tabular-nums md:text-7xl">{money(costFor(campaign.budgetCents))}</p>
+                        <p className="mt-2 font-display text-6xl font-medium tabular-nums md:text-7xl">{money(costFor(campaign.budgetCents, feeFree))}</p>
                         <p className="mt-2 text-sm text-mute">
-                          {money(campaign.budgetCents)} for creators + {money(feeFor(campaign.budgetCents))} fee ({SITE.platformFeePct}%, added on top)
+                          {feeFree ? `${money(campaign.budgetCents)} for creators, and no fee on this one (your first ${SITE.freeFeeCampaigns} campaigns carry none)` : `${money(campaign.budgetCents)} for creators + ${money(feeFor(campaign.budgetCents))} fee (${SITE.platformFeePct}%, added on top)`}
                         </p>
                         <ul className="mt-6 grid gap-3 text-sm text-mute">
                           {[
-                            [CreditCard, balance === null ? 'Paid from your logoless balance as creators earn. You add money to it with PayPal, and we cover PayPal\'s fees.' : `Your balance is ${money(balance)}. ${balance >= startNeeded(campaign.budgetCents) ? 'It covers the start. Nothing is charged until creators earn.' : `Add ${money(startNeeded(campaign.budgetCents) - balance)} or more with PayPal first.`}`],
-                            [ShieldCheck, 'Creators earn the whole budget, only for verified views. Our fee is on top, never taken from them.'],
+                            [CreditCard, balance === null ? 'Paid from your logoless balance as creators earn. You add money to it with PayPal, and we cover PayPal\'s fees.' : `Your balance is ${money(balance)}. ${balance >= startNeeded(campaign.budgetCents, feeFree) ? 'It covers the start. Nothing is charged until creators earn.' : `Add ${money(startNeeded(campaign.budgetCents, feeFree) - balance)} or more with PayPal first.`}`],
+                            [ShieldCheck, feeFree ? 'Creators earn the whole budget, only for verified views. There is no fee on this campaign.' : 'Creators earn the whole budget, only for verified views. Our fee is on top, never taken from them.'],
                             [Sparkles, 'It goes live as soon as you start it. Creators only get paid for views we verify.'],
                           ].map(([Ic, t], i) => {
                             const I = Ic as typeof CreditCard
@@ -805,9 +807,9 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
                           })}
                         </ul>
                         <div className="mt-8 flex flex-wrap items-center gap-3">
-                          {balance !== null && balance < startNeeded(campaign.budgetCents) ? (
+                          {balance !== null && balance < startNeeded(campaign.budgetCents, feeFree) ? (
                             <button type="button" onClick={addFunds} disabled={busy} className="inline-flex h-14 items-center gap-2 rounded-pill bg-paper px-8 text-base font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:opacity-50">
-                              {busy ? <Loader2 className="size-5 animate-spin" /> : <Wallet className="size-5" />} Add {money(Math.max(1000, Math.ceil((startNeeded(campaign.budgetCents) - balance) / 100) * 100))} with PayPal
+                              {busy ? <Loader2 className="size-5 animate-spin" /> : <Wallet className="size-5" />} Add {money(Math.max(1000, Math.ceil((startNeeded(campaign.budgetCents, feeFree) - balance) / 100) * 100))} with PayPal
                             </button>
                           ) : (
                             <button type="button" onClick={pay} disabled={busy || balance === null} className="inline-flex h-14 items-center gap-2 rounded-pill bg-paper px-8 text-base font-medium text-ink transition-all hover:bg-paper/85 active:scale-95 disabled:opacity-50">

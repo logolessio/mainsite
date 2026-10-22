@@ -3,6 +3,7 @@ import { campaignRow } from '@/lib/campaigns-db'
 import { db, nowSec } from '@/lib/db'
 import { protect } from '@/lib/guard'
 import { HttpError, json, route } from '@/lib/http'
+import { campaignIsFeeFree } from '@/lib/fee-free'
 import { balances, startNeeded } from '@/lib/ledger'
 import { notify, notifyAdmins } from '@/lib/notify'
 import { announceCampaign } from '@/lib/discord/outbound'
@@ -20,7 +21,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
   if (!c || c.brand_user_id !== user.id) throw new HttpError(404, 'Campaign not found.')
   if (c.status !== 'awaiting_payment') throw new HttpError(409, c.status === 'requested' ? 'We are still reviewing this request.' : 'This campaign does not need starting.')
 
-  const need = startNeeded(c.budget_cents)
+  const need = startNeeded(c.budget_cents, await campaignIsFeeFree(c.id))
   const have = (await balances(user.id)).brand
   if (have < need) throw new HttpError(402, `Add $${(Math.max(0, need - have) / 100).toFixed(2)} or more to your balance first. Add funds, then start it.`)
 

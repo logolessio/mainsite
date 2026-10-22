@@ -9,6 +9,7 @@ import { db, nowSec, uid } from './db'
 import { announceCampaign } from './discord/outbound'
 import { HttpError } from './http'
 import { pinnedIds, setSetting } from './settings'
+import { campaignIsFeeFree } from './fee-free'
 import { balances, budgetLeft, costFor, creditEarning, releasePool, startNeeded } from './ledger'
 import { allowedPayout, getCaps } from './campaign-caps'
 import { finishCampaign, warnEnding } from './campaign-end'
@@ -60,7 +61,8 @@ export async function campaignAction(actor: Actor, ip: string | null, id: string
       await addTrail(id, { at: t, by: actor.email, kind: 'accept', text: a.note ?? '' })
       if (!c.brand_user_id) throw new HttpError(409, 'This campaign has no owner to bill.')
       // One balance pays for every campaign as clippers earn. If it already covers the start, the campaign simply goes live.
-      const covered = (await balances(c.brand_user_id)).brand >= startNeeded(c.budget_cents)
+      const feeFree = await campaignIsFeeFree(id)
+      const covered = (await balances(c.brand_user_id)).brand >= startNeeded(c.budget_cents, feeFree)
       if (covered) {
         await d.prepare("UPDATE campaigns SET status = 'live', admin_note = COALESCE(?2, admin_note), launched_at = ?3, paid_at = ?3, updated_at = ?3 WHERE id = ?1").bind(id, a.note ?? null, t).run()
         await notify(c.brand_user_id, { kind: 'campaign', title: `${c.title} is live`, body: 'We approved it and your balance covers it, so clippers can start posting now.', href: `/campaign/${id}`, dedupe: `camp-live:${id}` })
@@ -68,7 +70,7 @@ export async function campaignAction(actor: Actor, ip: string | null, id: string
         await announceCampaign(id)
       } else {
         await set('awaiting_payment', a.note ?? null)
-        await notify(c.brand_user_id, { kind: 'campaign', title: `${c.title} is approved`, body: `Add at least $${(startNeeded(c.budget_cents) / 100).toLocaleString()} to your balance and press start. You only pay as clippers earn.`, href: '/brand/balance', dedupe: `camp-accepted:${id}` })
+        await notify(c.brand_user_id, { kind: 'campaign', title: `${c.title} is approved`, body: `Add at least $${(startNeeded(c.budget_cents, feeFree) / 100).toLocaleString()} to your balance and press start. You only pay as clippers earn.`, href: '/brand/balance', dedupe: `camp-accepted:${id}` })
       }
       break
     }
@@ -95,7 +97,7 @@ export async function campaignAction(actor: Actor, ip: string | null, id: string
       // Only a paid campaign can go live: the funds must be in its pool.
       if (c.status !== 'paid') throw new HttpError(409, c.status === 'live' ? 'It is already live.' : 'A campaign can only launch after the artist has paid.')
       const pool = await d.prepare("SELECT COALESCE(SUM(amount_cents),0) AS p FROM ledger WHERE account = 'campaign' AND campaign_id = ?1").bind(id).first<{ p: number }>()
-      if ((pool?.p ?? 0) < costFor(c.budget_cents)) throw new HttpError(409, 'The campaign pool does not match its budget. Check the payment in PayPal.')
+      if ((pool?.p ?? 0) < costFor(c.budget_cents, await campaignIsFeeFree(id))) throw new HttpError(409, 'The campaign pool does not match its budget. Check the payment in PayPal.')
       await d.prepare("UPDATE campaigns SET status = 'live', launched_at = ?2, updated_at = ?2 WHERE id = ?1").bind(id, t).run()
       if (c.brand_user_id) {
         await notify(c.brand_user_id, { kind: 'campaign', title: `${c.title} is live`, body: 'Clippers can see it and start posting.', href: `/campaign/${id}`, dedupe: `camp-live:${id}` })

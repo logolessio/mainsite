@@ -11,6 +11,7 @@ import { CAMPAIGN_STATUS } from '@/lib/campaign-status'
 import { reviewData, type Check as CheckT } from '@/lib/campaign-review'
 import { toCampaign } from '@/lib/campaigns-db'
 import { money, when } from '@/lib/format'
+import { campaignIsFeeFree } from '@/lib/fee-free'
 import { startNeeded } from '@/lib/ledger-math'
 import { pageAdmin } from '@/lib/user'
 import { cn } from '@/lib/utils'
@@ -111,7 +112,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         <aside className="grid min-w-0 content-start gap-6 xl:sticky xl:top-24 xl:self-start">
           <Card title="Decide">
             <div className="p-6 pt-4">
-              <ReviewDecision id={row.id} title={row.title} status={row.status} level={verdict.level} budget={money(row.budget_cents)} startNeeded={money(startNeeded(row.budget_cents))} />
+              <ReviewDecision id={row.id} title={row.title} status={row.status} level={verdict.level} budget={money(row.budget_cents)} startNeeded={money(startNeeded(row.budget_cents, await campaignIsFeeFree(row.id)))} />
             </div>
           </Card>
 

@@ -8,6 +8,7 @@ import { InviteWizard } from '@/components/invite/invite-wizard'
 import { db, nowSec } from '@/lib/db'
 import { clientSlugOf } from '@/lib/client-host'
 import { featureOn } from '@/lib/features'
+import { campaignIsFeeFree, feeFreeLeft } from '@/lib/fee-free'
 import { stepsFor } from '@/lib/invite-shared'
 import { inviteBySlug, maskEmail, parseData } from '@/lib/invites'
 import { getSession } from '@/lib/session'
@@ -70,6 +71,8 @@ export default async function Page({ params, searchParams }: Props) {
   if (inv.user_id !== user.id) return <InviteBlocked kind="taken" slug={slug} />
 
   const camp = inv.campaign_id ? await d.prepare('SELECT id, title, status, budget_cents FROM campaigns WHERE id = ?1').bind(inv.campaign_id).first<{ id: string; title: string; status: string; budget_cents: number }>() : null
+  // one of the brand's first campaigns carries no fee: this one if it is already made, the next one if it is not
+  const feeFree = camp ? await campaignIsFeeFree(camp.id) : (await feeFreeLeft(user.id)) > 0
   return (
     <InviteWizard
       slug={slug}
@@ -80,6 +83,7 @@ export default async function Page({ params, searchParams }: Props) {
       campaign={camp ? { id: camp.id, title: camp.title, status: camp.status, budgetCents: camp.budget_cents } : null}
       flash={q.paid ? 'paid' : q.cancelled ? 'cancelled' : null}
       pkg={pkg}
+      feeFree={feeFree}
     />
   )
 }

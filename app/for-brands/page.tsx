@@ -53,6 +53,7 @@ export default function Page() {
       <Principles
         title="Good to know"
         items={[
+          { title: `Your first ${SITE.freeFeeCampaigns} campaigns are free of our fee`, body: `Creators earn what the campaign pays them, and you pay exactly that: no platform fee on your first ${SITE.freeFeeCampaigns} campaigns. After those, our ${SITE.platformFeePct}% fee is added on top and shown before you start.` },
           { title: 'Your budget is a hard cap', body: `The budget you set is the most a campaign can pay creators. Money leaves your balance only as submissions earn it, and our ${SITE.platformFeePct}% fee is added on top and shown before you start.` },
           { title: 'Your funds are safe with us', body: 'Your account has one simple pot to manage, campaigns are funded from it and you can add and withdraw as much or as little as you like.' },
           { title: 'You can say no', body: "You also have the right to turn down any submitted content. Our staff and automated systems will also check all details for you." },

@@ -3,6 +3,7 @@ import { getExtras } from './campaign-extras'
 import type { CampaignExtras } from './campaign-extras-shared'
 import { RATE_MAX, RATE_MIN, viewsFor } from './campaign-extras-shared'
 import { campaignRow, type CampaignRow } from './campaigns-db'
+import { campaignIsFeeFree } from './fee-free'
 import { balances } from './ledger'
 import { startNeeded } from './ledger-math'
 import { SITE } from './site'
@@ -61,6 +62,7 @@ export async function reviewData(id: string): Promise<ReviewData | null> {
         .first<{ id: string; email: string; since: number; role: string; risk: string; riskWhy: string | null; handle: string | null }>()
     : null
   const bal = row.brand_user_id ? (await balances(row.brand_user_id)).brand : 0
+  const feeFree = await campaignIsFeeFree(row.id)
   const history = row.brand_user_id
     ? (
         await d
@@ -112,8 +114,8 @@ export async function reviewData(id: string): Promise<ReviewData | null> {
   add('Money', 'budget', 'Budget', budget < SITE.minCampaignBudgetUsd ? 'fail' : 'pass', `$${budget.toLocaleString('en-US')}, and the smallest allowed is $${SITE.minCampaignBudgetUsd}.`)
   add('Money', 'rate', 'Rate per 1,000 views', rate < RATE_MIN || rate > RATE_MAX ? 'fail' : rate < 1 ? 'warn' : rate > 20 ? 'warn' : 'pass', `$${rate.toFixed(2)}. ${rate < 1 ? 'Low: clippers may skip it.' : rate > 20 ? 'Very high: check it is not a typing slip.' : 'A normal rate.'}`)
   add('Money', 'views', 'What the budget buys', views < 10_000 ? 'warn' : views > 100_000_000 ? 'warn' : 'pass', `About ${views.toLocaleString('en-US')} views in total. ${views < 10_000 ? 'Very small: it will end after a handful of clips.' : ''}`.trim())
-  const covered = bal >= startNeeded(row.budget_cents)
-  add('Money', 'balance', 'Brand balance', owner ? (covered ? 'pass' : 'warn') : 'fail', owner ? (covered ? `$${(bal / 100).toLocaleString('en-US')} covers the start, so accepting takes it straight to live.` : `$${(bal / 100).toLocaleString('en-US')} on their balance. Accepting asks them to add $${(startNeeded(row.budget_cents) / 100).toLocaleString('en-US')} first.`) : 'No account is attached to bill.')
+  const covered = bal >= startNeeded(row.budget_cents, feeFree)
+  add('Money', 'balance', 'Brand balance', owner ? (covered ? 'pass' : 'warn') : 'fail', owner ? (covered ? `$${(bal / 100).toLocaleString('en-US')} covers the start, so accepting takes it straight to live.` : `$${(bal / 100).toLocaleString('en-US')} on their balance. Accepting asks them to add $${(startNeeded(row.budget_cents, feeFree) / 100).toLocaleString('en-US')} first.`) : 'No account is attached to bill.')
 
   // ---- audio and pictures
   const sound = Boolean(extras.audio || extras.sounds.length || extras.spotify.length || row.preview_url)
@@ -144,7 +146,7 @@ export async function reviewData(id: string): Promise<ReviewData | null> {
       ? { level: 'look' as const, headline: `${warns} ${warns === 1 ? 'thing needs' : 'things need'} a look before you accept.` }
       : { level: 'ready' as const, headline: 'Every check passes. Read it once, then accept.' }
 
-  return { row, extras, checks, verdict, owner: owner ? { ...owner, balanceCents: bal, startCents: startNeeded(row.budget_cents) } : null, history, lookalikes, trail, clippers }
+  return { row, extras, checks, verdict, owner: owner ? { ...owner, balanceCents: bal, startCents: startNeeded(row.budget_cents, feeFree) } : null, history, lookalikes, trail, clippers }
 }
 
 /** Adds a line to a campaign's review trail (what the team decided and said, oldest first). Kept in settings, so no database change is needed. */

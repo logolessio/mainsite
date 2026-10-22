@@ -1,11 +1,12 @@
 import { CONTAINER } from '@/lib/layout'
+import { SITE } from '@/lib/site'
 import { Reveal } from '@/components/motion/reveal'
 
 /** One of our promises, said loudly: PayPal's own charges are on us, for deposits and for payouts. */
 export function FeePromise({ audience = 'both' }: { audience?: 'brands' | 'clippers' | 'both' }) {
   const lines =
     audience === 'brands'
-      ? ['Not only do we offer far cheaper rates compared to other sites, we also fully cover all transaction fees meaning that you get every penny of value you paid for.', 'We know how annoying it can be to discover, random, unwanted fees so we do our best to make funding campaigns as easy and stream-lined as possible.']
+      ? ['Not only do we offer far cheaper rates compared to other sites, we also fully cover all transaction fees meaning that you get every penny of value you paid for.', 'We know how annoying it can be to discover, random, unwanted fees so we do our best to make funding campaigns as easy and stream-lined as possible.', `And your first ${SITE.freeFeeCampaigns} campaigns carry no platform fee from us either.`]
       : audience === 'clippers'
         ? ['Whatever you withdraw is the amount we send to your PayPal.', "We cover ALL PayPal transaction fees and don't take a single cut from your earnings."]
         : ['Brands are credited every dollar they add, and creators are sent every dollar they withdraw.', 'No deposit fee, no withdrawal fee, and nothing taken from what creators earn.']

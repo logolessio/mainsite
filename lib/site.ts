@@ -21,6 +21,7 @@ export const SITE = {
   },
   // Business rules shown in copy. Keep in sync with the backend.
   platformFeePct: 15, // charged to the brand ON TOP of what clippers are paid, never taken out of a clipper's earnings
+  freeFeeCampaigns: 5, // a brand's first campaigns (counted by when each was made, rejected ones not counted) carry no platform fee at all: see lib/fee-free.ts
   minPayoutUsd: 10,
   minTopUpUsd: 10, // the smallest amount a brand can add in one go (enforced when adding funds)
   minInviteBudgetUsd: 100, // the smallest budget on an artist's private campaign link

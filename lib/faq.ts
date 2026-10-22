@@ -129,7 +129,11 @@ export const FAQ: Record<'Creators' | 'Brands' | 'Money' | 'Account', Faq[]> = {
     },
     {
       q: `What is the ${fee}% fee?`,
-      a: `It is how Logoless is paid. Brands pay ${fee}% on top of what creators earn per withdraw, so $1,000 of payouts costs $${example}. It is never taken out of a creators earnings.`,
+      a: `It is how Logoless is paid. Brands pay ${fee}% on top of what creators earn per withdraw, so $1,000 of payouts costs $${example}. It is never taken out of a creators earnings. A brand's first ${SITE.freeFeeCampaigns} campaigns carry no fee at all.`,
+    },
+    {
+      q: 'Are any campaigns free of the fee?',
+      a: `Yes. A brand's first ${SITE.freeFeeCampaigns} campaigns carry no platform fee at all: creators are paid exactly the same, and the brand pays only what creators earn. Campaigns are counted in the order they were made, and one we turn down does not use up a free place.`,
     },
     {
       q: 'How long until I can withdraw?',

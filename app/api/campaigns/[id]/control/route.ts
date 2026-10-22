@@ -4,6 +4,7 @@ import { campaignRow } from '@/lib/campaigns-db'
 import { db, nowSec } from '@/lib/db'
 import { protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
+import { campaignIsFeeFree } from '@/lib/fee-free'
 import { balances, startNeeded } from '@/lib/ledger'
 import { requireUser } from '@/lib/user'
 
@@ -33,7 +34,7 @@ export const POST = route(async (req: Request, { params }: { params: Promise<{ i
   if (c.status !== 'paused') throw new HttpError(409, 'Only a paused campaign can be started again.')
   if (by?.value !== 'brand' && by?.value !== 'balance') throw new HttpError(403, 'We paused this campaign. Contact us to start it again.')
   const have = (await balances(user.id)).brand
-  if (have < startNeeded(c.budget_cents)) throw new HttpError(402, 'Add funds to your balance first, then start it again.')
+  if (have < startNeeded(c.budget_cents, await campaignIsFeeFree(c.id))) throw new HttpError(402, 'Add funds to your balance first, then start it again.')
   await d.prepare("UPDATE campaigns SET status = 'live', updated_at = ?2 WHERE id = ?1 AND status = 'paused'").bind(id, t).run()
   await d.prepare('DELETE FROM settings WHERE key = ?1').bind(`paused-by:${id}`).run()
   await auditSafe({ id: user.id, email: user.email }, 'campaign.resumed', id, 'by brand')

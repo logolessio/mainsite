@@ -62,7 +62,7 @@ export function AddFunds({ ready }: { ready: boolean }) {
         </p>
       )}
       <p className="text-xs leading-relaxed text-mute">
-        This goes into your logoless balance, one pot for all your campaigns. Creators are paid out of it as they earn, plus our {SITE.platformFeePct}% fee on top. <span className="text-paper/80">We cover PayPal&apos;s fees, so every dollar you add is a dollar you can spend.</span>
+        This goes into your logoless balance, one pot for all your campaigns. Creators are paid out of it as they earn, plus our {SITE.platformFeePct}% fee on top (none on your first {SITE.freeFeeCampaigns} campaigns). <span className="text-paper/80">We cover PayPal&apos;s fees, so every dollar you add is a dollar you can spend.</span>
       </p>
     </form>
   )

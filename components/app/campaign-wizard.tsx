@@ -20,7 +20,7 @@ const usd = (n: number) => `$${n.toLocaleString('en-US', { maximumFractionDigits
  * One short page instead of four steps. The essentials are up front (name, cover, brief, rate and budget); the rest sits under
  * "More options". Nothing is charged: the campaign draws from the brand's balance as clippers earn, up to the budget.
  */
-export function CampaignWizard({ balanceCents = 0 }: { balanceCents?: number }) {
+export function CampaignWizard({ balanceCents = 0, feeFree = false }: { balanceCents?: number; feeFree?: boolean }) {
   const { navigate } = useTransitions()
   const [d, setD] = useState(BLANK)
   const [restored, setRestored] = useState(false)
@@ -68,7 +68,7 @@ export function CampaignWizard({ balanceCents = 0 }: { balanceCents?: number }) 
   const rate = Number(d.rate) || 0
   const budget = Number(d.budget) || 0
   const maxViews = rate > 0 ? Math.floor((budget / rate) * 1000) : 0
-  const total = budget * (1 + SITE.platformFeePct / 100)
+  const total = budget * (1 + (feeFree ? 0 : SITE.platformFeePct) / 100)
   const balance = balanceCents / 100
   const valid = d.title.trim().length >= 2 && d.creator.trim().length >= 2 && d.platforms.length > 0 && d.summary.trim().length >= 20 && rate >= 0.5 && budget >= SITE.minCampaignBudgetUsd
   const lines = (v: string) => v.split('\n').map((x) => x.trim()).filter(Boolean)
@@ -223,7 +223,7 @@ export function CampaignWizard({ balanceCents = 0 }: { balanceCents?: number }) 
       <div className="grid gap-4 lg:sticky lg:top-24">
         <Card title="What it costs">
           <p className="text-sm leading-relaxed text-mute">
-            Nothing up front. At {usd(rate)} per 1,000 views, {usd(budget)} pays for up to <span className="text-paper">{maxViews.toLocaleString()}</span> verified views. Creators keep all of it. Our {SITE.platformFeePct}% fee comes on top, so the most this can ever cost is <span className="text-paper">{usd(total)}</span>, taken from your balance only as creators earn.
+            Nothing up front. At {usd(rate)} per 1,000 views, {usd(budget)} pays for up to <span className="text-paper">{maxViews.toLocaleString()}</span> verified views. Creators keep all of it. {feeFree ? `There is no fee on this one: your first ${SITE.freeFeeCampaigns} campaigns carry none, so` : `Our ${SITE.platformFeePct}% fee comes on top, so`} the most this can ever cost is <span className="text-paper">{usd(total)}</span>, taken from your balance only as creators earn.
           </p>
           <p className="mt-4 text-sm text-mute">
             Balance: <span className="text-paper tabular-nums">{usd(balance)}</span>.{' '}

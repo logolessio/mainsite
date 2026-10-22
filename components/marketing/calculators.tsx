@@ -89,7 +89,7 @@ export function BrandCalculator() {
               <p className="text-[11px] text-mute">It buys up to</p>
               <p className="mt-3 font-display text-6xl tabular-nums md:text-7xl">{views.toLocaleString()}</p>
               <p className="mt-1 text-lg text-mute">verified views</p>
-              <p className="mt-6 text-sm leading-relaxed text-mute">{applyWording(`Creators earn the whole $${budget.toLocaleString()}. We add our ${SITE.platformFeePct}% fee on top ($${fee.toLocaleString()} here), so you pay $${total.toLocaleString()} in all, and anything you don't spend can be refunded.`)}</p>
+              <p className="mt-6 text-sm leading-relaxed text-mute">{applyWording(`Creators earn the whole $${budget.toLocaleString()}. We add our ${SITE.platformFeePct}% fee on top ($${fee.toLocaleString()} here), so you pay $${total.toLocaleString()} in all, and anything you don't spend can be refunded. Your first ${SITE.freeFeeCampaigns} campaigns carry no fee at all.`)}</p>
             </div>
           </div>
         </Reveal>

@@ -128,7 +128,7 @@ export async function brandSetup(user: { id: string; email: string }): Promise<S
       id: 'funds',
       title: 'Add funds',
       short: 'One balance pays for every campaign.',
-      why: `Creators are paid out of your balance as they earn, up to each campaign's budget cap. A ${SITE.platformFeePct}% fee is added on top and shown before you start. You can add from $${SITE.minTopUpUsd}.`,
+      why: `Creators are paid out of your balance as they earn, up to each campaign's budget cap. A ${SITE.platformFeePct}% fee is added on top and shown before you start, except on your first ${SITE.freeFeeCampaigns} campaigns, which carry none. You can add from $${SITE.minTopUpUsd}.`,
       how: ['Open Balance.', 'Press Add funds and choose an amount.', 'Pay with PayPal. The whole amount is credited to your balance.'],
       done: Boolean(funded),
       href: '/brand/balance',

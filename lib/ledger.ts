@@ -1,6 +1,7 @@
 import { type D1Database, db, nowSec, uid } from './db'
 import { HttpError } from './http'
 import { logEvent } from './log'
+import { campaignIsFeeFree } from './fee-free'
 import { costFor, feeFor, startNeeded } from './ledger-math'
 import { SITE } from './site'
 
@@ -66,7 +67,7 @@ export async function fundFromBalance(brandUserId: string, campaignId: string, p
   if (!Number.isInteger(payoutBudgetCents) || payoutBudgetCents <= 0) throw new HttpError(400, 'Enter a valid amount.')
   const d = await db()
   const t = nowSec()
-  const cost = costFor(payoutBudgetCents)
+  const cost = costFor(payoutBudgetCents, await campaignIsFeeFree(campaignId))
   const spendId = uid()
   const poolId = uid()
   const results = await d.batch([
@@ -158,7 +159,9 @@ export async function creditEarning(input: {
   const clipper = await d.prepare('SELECT risk_level, status FROM users WHERE id = ?1').bind(clipperId).first<{ risk_level: string; status: string }>()
   if (!clipper || clipper.status !== 'active') throw new HttpError(400, 'That account cannot be paid right now.')
 
-  const fee = feeFor(payoutCents)
+  // one of the brand's first campaigns (lib/fee-free.ts): the clipper is paid exactly the same, the brand just pays no fee on top
+  const feeFree = await campaignIsFeeFree(campaignId)
+  const fee = feeFor(payoutCents, feeFree)
   const draw = payoutCents + fee // what the brand pays
   const t = nowSec()
   const release = t + SITE.holdDays * (clipper.risk_level === 'low' ? 1 : 2) * 86400
@@ -215,7 +218,7 @@ export async function creditEarning(input: {
     }
     throw new PayError('balance', 'The brand’s balance is too low, so nothing was paid. The campaign was paused and the brand was told.')
   }
-  logEvent({ kind: 'money', name: 'earning credited', detail: `${campaignId} → ${clipperId}: clipper $${(payoutCents / 100).toFixed(2)}, fee on top $${(fee / 100).toFixed(2)}, brand paid $${(draw / 100).toFixed(2)} from ${fromPool ? 'the campaign pool' : 'the balance'}` })
+  logEvent({ kind: 'money', name: 'earning credited', detail: `${campaignId} → ${clipperId}: clipper $${(payoutCents / 100).toFixed(2)}, fee on top $${(fee / 100).toFixed(2)}${feeFree ? ' (no fee: one of the brand\'s first campaigns)' : ''}, brand paid $${(draw / 100).toFixed(2)} from ${fromPool ? 'the campaign pool' : 'the balance'}` })
   return { gross: draw, fee, net: payoutCents, releasesAt: release }
 }
 
