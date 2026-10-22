@@ -1450,6 +1450,17 @@ html[data-look='anubis'] .font-display:not(.tabular-nums) {
 html[data-look='anubis'] h1.font-display:not(.tabular-nums) {
   font-weight: 900;
 }
+/* the slight hard shadow the Anubis page puts under its title (2px 2px #000 at 151px), scaled to the size of each heading and never under 1px */
+html[data-look='anubis'] :is(h1, h2, h3, .font-display):not([data-no-shadow]) {
+  text-shadow: max(1px, 0.0133em) max(1px, 0.0133em) 0 #000;
+}
+/* in light mode the type is dark, so a black copy under it would only thicken it */
+html[data-theme='light'] :is(h1, h2, h3, .font-display) {
+  text-shadow: none;
+}
+html[data-theme='light'] [data-keep-theme] :is(h1, h2, h3, .font-display) {
+  text-shadow: max(1px, 0.0133em) max(1px, 0.0133em) 0 #000;
+}
 html[data-look='anubis'] .font-display.tabular-nums {
   font-weight: 800;
   letter-spacing: -0.04em;
@@ -1728,9 +1739,9 @@ html[data-look='anubis'] .gf-grain {
   display: block;
   position: absolute;
   inset: -6%;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.4 -.18'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.2 -.14'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/></svg>");
   background-size: 220px 220px;
-  opacity: 0.42;
+  opacity: 0.26;
   animation: gf-grain 0.8s steps(1) infinite;
   will-change: transform;
 }
@@ -1738,9 +1749,9 @@ html[data-look='anubis'] .gf-grain::after {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='170' height='170'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch' seed='7'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.4 -.18'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='170' height='170'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch' seed='7'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.2 -.14'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/></svg>");
   background-size: 170px 170px;
-  opacity: 0.85;
+  opacity: 0.6;
 }
 @keyframes gf-grain {
   0% { transform: translate(0, 0); }
@@ -1758,6 +1769,170 @@ html.calm .gf-grain {
 @media (prefers-reduced-motion: reduce), (max-width: 767px) {
   html[data-look='anubis'] .gf-grain {
     animation: none;
+  }
+}
+
+/* ---------- the line graphics behind the public pages (components/shell/site-art.tsx) ---------- */
+.gf-art {
+  display: none;
+}
+html[data-look='anubis'] .gf-art {
+  display: block;
+  position: absolute;
+  inset: 0;
+  color: var(--paper);
+}
+.gf-rings {
+  position: absolute;
+  left: 50%;
+  top: 41%;
+  width: min(150vmin, 1500px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+}
+.gf-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.gf-spin {
+  animation: gf-turn 200s linear infinite;
+  will-change: transform;
+}
+.gf-orbit {
+  will-change: transform;
+}
+.gf-orbit-a {
+  animation: gf-turn 46s linear infinite;
+}
+.gf-orbit-b {
+  animation: gf-turn 31s linear infinite reverse;
+}
+.gf-ping {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgb(255 31 56 / 0.5);
+  opacity: 0;
+  animation: gf-ping 10.2s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+  will-change: transform, opacity;
+}
+@keyframes gf-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes gf-ping {
+  0% {
+    transform: scale(0.1);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.55;
+  }
+  36%,
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+/* four corner marks, and a ruler down each side with a longer tick every fifth */
+.gf-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 0 solid color-mix(in srgb, var(--paper) 46%, transparent);
+}
+.gf-corner-tl {
+  top: 10px;
+  left: 10px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+.gf-corner-tr {
+  top: 10px;
+  right: 10px;
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+.gf-corner-bl {
+  bottom: 10px;
+  left: 10px;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+.gf-corner-br {
+  bottom: 10px;
+  right: 10px;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+.gf-ruler {
+  display: none;
+}
+.gf-tag {
+  display: none;
+}
+@media (min-width: 1200px) {
+  .gf-ruler {
+    display: block;
+    position: absolute;
+    top: 50%;
+    height: 46vh;
+    width: 14px;
+    translate: 0 -50%;
+    background:
+      repeating-linear-gradient(to bottom, color-mix(in srgb, var(--paper) 40%, transparent) 0 1px, transparent 1px 50px) 0 0 / 14px 100% no-repeat,
+      repeating-linear-gradient(to bottom, color-mix(in srgb, var(--paper) 27%, transparent) 0 1px, transparent 1px 10px) 0 0 / 6px 100% no-repeat;
+    -webkit-mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent);
+    mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent);
+  }
+  .gf-ruler-l {
+    left: 14px;
+  }
+  .gf-ruler-r {
+    right: 14px;
+    scale: -1 1;
+  }
+  .gf-tag {
+    display: block;
+    position: absolute;
+    right: 38px;
+    top: 50%;
+    writing-mode: vertical-rl;
+    rotate: 180deg;
+    translate: 0 -50%;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: color-mix(in srgb, var(--paper) 48%, transparent);
+  }
+}
+@media (max-width: 767px) {
+  .gf-spin,
+  .gf-orbit,
+  .gf-ping {
+    display: none;
+  }
+}
+html.calm :is(.gf-spin, .gf-orbit, .gf-ping) {
+  animation: none;
+}
+html.calm .gf-ping {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gf-spin,
+  .gf-orbit,
+  .gf-ping {
+    animation: none;
+  }
+  .gf-ping {
+    display: none;
   }
 }
 
