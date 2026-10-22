@@ -18,12 +18,13 @@ import { uploadImage } from '@/lib/image-client'
 import { LookPicker } from '@/components/profile/look-picker'
 import { Tour } from './tour'
 import { AccountsStep, type AccountsStatus } from './accounts-step'
+import { VerifyAccounts } from './verify-accounts'
 import { avatarCss, bannerCss, lookById, lookFor, lookKey } from '@/lib/looks'
 import { checkHandle, checkHandleAvailable, resendEmailCode, verifyEmailCode } from '@/lib/onboarding'
 import { handleHint, handleProblem, suggestHandle } from '@/lib/profile-style'
 import { cn } from '@/lib/utils'
 
-type Id = 'welcome' | 'role' | 'method' | 'email' | 'password' | 'code' | 'paypal' | 'name' | 'handle' | 'pictures' | 'accounts' | 'happy' | 'saving' | 'hello' | 'tour' | 'done'
+type Id = 'welcome' | 'role' | 'method' | 'email' | 'password' | 'code' | 'paypal' | 'name' | 'handle' | 'pictures' | 'accounts' | 'happy' | 'saving' | 'verify' | 'hello' | 'tour' | 'done'
 
 type Data = {
   role: Role | null
@@ -45,6 +46,7 @@ type St = 'idle' | 'checking' | 'ok' | 'bad'
 type Verdict = { ok: boolean; msg: string } | null
 
 const HANDLE_RE = /^[a-z0-9_]{1,20}$/
+const VERIFIABLE = ['tiktok', 'youtube', 'instagram']
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const SETTLE_MS = 5200 // "setting things up" always takes a moment: it is part of the welcome, not a delay
 
@@ -64,6 +66,7 @@ const SECTION: Record<Id, string> = {
   handle: 'Your page',
   pictures: 'Your page',
   accounts: 'Your accounts',
+  verify: 'Your accounts',
   happy: 'Nearly there',
   saving: 'Setting up',
   hello: 'All set',
@@ -320,7 +323,7 @@ function SettleOrb({ line, note }: { line: string; note: string }) {
   )
 }
 
-const STEP_ORDER: Id[] = ['welcome', 'role', 'method', 'email', 'password', 'code', 'paypal', 'name', 'handle', 'pictures', 'accounts', 'happy', 'saving', 'hello', 'tour', 'done']
+const STEP_ORDER: Id[] = ['welcome', 'role', 'method', 'email', 'password', 'code', 'paypal', 'name', 'handle', 'pictures', 'accounts', 'happy', 'saving', 'verify', 'hello', 'tour', 'done']
 
 /**
  * `preview` is an admin's dry run: it starts as a stranger would (signed out), every question works, and nothing is sent to the
@@ -412,6 +415,8 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
         return 'Are you happy with how it looks?'
       case 'saving':
         return 'Setting things up.'
+      case 'verify':
+        return 'Prove they are yours.'
       case 'hello':
         return `Welcome, ${first}.`
       case 'tour':
@@ -427,7 +432,10 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
     paypal: 'That is where your earnings go. You can change it later.',
     handle: `This is your address on logoless. ${handleHint(looseHandles)}`,
     pictures: 'Pick a ready-made look, or tap the circle and the wide part to upload your own. You can change it any time.',
-    accounts: 'Add each account you post from and prove it is yours with a short code in its bio, right here. Skip it if you like: it is in your dashboard when you are ready.',
+    accounts: checks
+      ? 'Add each account you post from and prove it is yours with a short code in its bio, right here. Skip it if you like: it is in your dashboard when you are ready.'
+      : 'Add the accounts you post from, so we can match your submissions to you. Skip it if you like: it is in your dashboard when you are ready.',
+    verify: 'Put a short code in each bio and we confirm the account is yours. Submissions from verified accounts are checked automatically.',
     saving: 'This only takes a moment.',
     hello: 'Your profile page is ready.',
   }
@@ -651,7 +659,8 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       return setId('happy')
     }
     setReady(false)
-    setId('hello')
+    // with `onboarding-checks` on, accounts were proven as they were added; without it, creators prove them now, while they are fresh in mind
+    setId(!checks && !brand && VERIFIABLE.some((p) => (data.linked[p] ?? '').trim()) ? 'verify' : 'hello')
   }
 
   useEffect(() => {
@@ -698,7 +707,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
         <Logo className="h-8 md:h-9" />
       </Link>
       {preview && (
-        <div className="fixed top-4 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-3 rounded-pill border border-line-strong bg-ink/90 py-1.5 pr-1.5 pl-4 text-[13px] text-mute backdrop-blur">
+        <div className="fixed top-4 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-3 rounded-pill border border-line-strong bg-ink/90 py-1.5 pr-1.5 pl-4 text-[13px] whitespace-nowrap text-mute backdrop-blur max-sm:top-3.5 max-sm:gap-2 max-sm:pl-3 max-sm:text-[12px]">
           Preview. Nothing here is saved.
           <Link href="/admin/previews" className="inline-flex h-8 items-center rounded-pill bg-paper px-4 text-ink">
             Exit
@@ -887,7 +896,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                 </>
               )}
 
-              {id === 'accounts' && (
+              {id === 'accounts' && checks && (
                 <>
                   <AccountsStep
                     preview={preview}
@@ -910,6 +919,37 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                 </>
               )}
 
+              {id === 'accounts' && !checks && (
+                <>
+                  <div className="grid w-full max-w-sm gap-3">
+                    {([
+                      ['tiktok', 'TikTok', '@username'],
+                      ['youtube', 'YouTube', '@channel'],
+                      ['instagram', 'Instagram', '@username'],
+                    ] as const).map(([key, label, ph]) => (
+                      <label key={key} className="flex h-14 items-center gap-3 rounded-tile border border-line-strong bg-white/[0.02] px-5 transition-[border-color,box-shadow] focus-within:border-[rgb(255_70_90/0.7)] focus-within:shadow-[0_0_0_3px_rgb(255_31_56/0.12)]">
+                        <BrandIcon name={key} className="size-5 shrink-0 text-mute" />
+                        <span className="sr-only">{label}</span>
+                        <input
+                          value={data.linked[key] ?? ''}
+                          onChange={(e) => patch({ linked: { ...data.linked, [key]: e.target.value.replace(/\s/g, '').slice(0, 60) } })}
+                          placeholder={ph}
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          className="min-w-0 flex-1 bg-transparent text-[16px] outline-none placeholder:text-mute/60"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                  <div className="mt-8 flex flex-col items-center gap-4">
+                    <button type="button" className={primary} onClick={() => go('happy')}>
+                      {Object.values(data.linked).some((v) => v.trim()) ? 'Continue' : 'Skip for now'}
+                    </button>
+                  </div>
+                </>
+              )}
+
               {id === 'happy' && (
                 <>
                   <ProfilePill data={data} />
@@ -925,6 +965,8 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
                   </div>
                 </>
               )}
+
+              {id === 'verify' && <VerifyAccounts linked={data.linked} preview={preview} onDone={() => go('hello')} buttonClass={primary} quietClass={quiet} inline={false} />}
 
               {id === 'hello' && (
                 <>
@@ -981,8 +1023,8 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
         )}
       </div>
 
-      {canBack && id !== 'saving' && id !== 'hello' && id !== 'tour' && id !== 'done' && id !== 'happy' && (
-        <button type="button" onClick={back} className="group fixed bottom-6 left-1/2 inline-flex -translate-x-1/2 items-center gap-2 rounded-tile px-3 py-2 text-[14px] text-mute transition-colors hover:text-paper">
+      {canBack && id !== 'saving' && id !== 'verify' && id !== 'hello' && id !== 'tour' && id !== 'done' && id !== 'happy' && (
+        <button type="button" onClick={back} className="group fixed bottom-5 left-1/2 z-[70] inline-flex -translate-x-1/2 items-center gap-2 rounded-pill border border-line bg-ink/80 px-4 py-2 text-[14px] text-mute backdrop-blur-md transition-colors hover:border-line-strong hover:text-paper">
           <ArrowLeft aria-hidden="true" className="size-4 transition-transform duration-300 group-hover:-translate-x-0.5" /> Back
         </button>
       )}
