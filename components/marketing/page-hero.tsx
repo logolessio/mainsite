@@ -2,6 +2,7 @@ import { Reveal } from '@/components/motion/reveal'
 import { Words } from '@/components/motion/words'
 import { T } from '@/components/shell/copy-provider'
 import { LinkedLede } from './linked-lede'
+import { HeroBadges, type HeroBadgeProps, HeroPath } from './anubis'
 import { CONTAINER } from '@/lib/layout'
 import { cn } from '@/lib/utils'
 
@@ -13,17 +14,25 @@ export function PageHero({
   eyebrow,
   title,
   lede,
+  badges,
+  path = true,
   children,
 }: {
   eyebrow: string
   title: string
   lede?: string
+  /** Two round badges at the right of the title (wide screens). */
+  badges?: HeroBadgeProps
+  /** The hairline under the hero that turns a corner into an arrow (wide screens). */
+  path?: boolean
   /** Kept so older pages still compile. Every hero is left aligned now. */
   align?: 'left' | 'right' | 'center'
   children?: React.ReactNode
 }) {
   return (
-    <header className={cn(CONTAINER, 'pt-10 pb-20 md:pt-16 md:pb-28')}>
+    <header className={cn(CONTAINER, 'pt-10 pb-20 md:pt-16', path ? 'md:pb-40' : 'md:pb-28')}>
+      <div className="relative">
+      {badges && <HeroBadges {...badges} />}
       <Words as="h1" align="left" immediate text={title} className="max-w-[16ch] font-display text-[clamp(2.8rem,7.6vw,7rem)] leading-[0.96]" />
       <div className="mt-10 grid gap-8 md:mt-14 md:grid-cols-12">
         <Reveal delay={0.35} className="md:col-span-4">
@@ -41,6 +50,8 @@ export function PageHero({
             </Reveal>
           )}
         </div>
+      </div>
+      {path && <HeroPath />}
       </div>
     </header>
   )

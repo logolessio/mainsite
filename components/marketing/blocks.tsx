@@ -41,7 +41,10 @@ export function SectionTitle({
   )
 }
 
-/** The closing call to action: one big line and the buttons under it. */
+/**
+ * The closing call to action: one big line and the buttons under it, in a box with a red hairline round it and a band of red stipple down each side, the
+ * way the last box on the Anubis page is drawn.
+ */
 export function CtaBand({
   title,
   href,
@@ -56,17 +59,23 @@ export function CtaBand({
   secondaryLabel?: string
 }) {
   return (
-    <section className="border-t border-line py-32 md:py-52">
+    <section className="py-20 md:py-36">
       <div className={cn(CONTAINER)}>
-        <Words as="h2" align="left" text={title} className="max-w-[12ch] font-display text-[clamp(3.4rem,9vw,9.5rem)] leading-[0.9] tracking-[-0.045em]" />
-        <Reveal delay={0.25} className="mt-14 flex flex-wrap items-center gap-3">
-          <PillLink href={href}><T>{label}</T></PillLink>
-          {secondaryHref && (
-            <PillLink href={secondaryHref} variant="ghost">
-              <T>{secondaryLabel ?? ''}</T>
-            </PillLink>
-          )}
-        </Reveal>
+        <div className="grid grid-cols-[22px_1fr_22px] border border-[rgb(var(--c-red)/0.6)] sm:grid-cols-[40px_1fr_40px] md:grid-cols-[72px_1fr_72px]">
+          <span aria-hidden="true" className="stipple border-r border-[rgb(var(--c-red)/0.6)]" />
+          <div className="px-6 py-14 md:px-16 md:py-28">
+            <Words as="h2" align="left" text={title} className="max-w-[12ch] font-display text-[clamp(3rem,8vw,8rem)] leading-[0.9] tracking-[-0.045em]" />
+            <Reveal delay={0.25} className="mt-12 flex flex-wrap items-center gap-3">
+              <PillLink href={href}><T>{label}</T></PillLink>
+              {secondaryHref && (
+                <PillLink href={secondaryHref} variant="ghost">
+                  <T>{secondaryLabel ?? ''}</T>
+                </PillLink>
+              )}
+            </Reveal>
+          </div>
+          <span aria-hidden="true" className="stipple border-l border-[rgb(var(--c-red)/0.6)]" />
+        </div>
       </div>
     </section>
   )

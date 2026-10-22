@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { PageToc } from '@/components/marketing/anubis'
 import { CtaBand } from '@/components/marketing/blocks'
 import { Breadcrumbs, Related } from '@/components/marketing/breadcrumbs'
 import { BrandCalculator } from '@/components/marketing/calculators'
@@ -15,16 +16,27 @@ export const metadata: Metadata = {
   alternates: { canonical: '/for-brands' },
 }
 
+const TOC = [
+  { id: 'fees', label: 'Fees' },
+  { id: 'how', label: 'How we work' },
+  { id: 'calculator', label: 'Calculator' },
+  { id: 'good', label: 'Good to know' },
+]
+
 export default function Page() {
   return (
     <main>
+      <PageToc items={TOC} />
       <Breadcrumbs trail={[{ name: 'For brands' }]} />
-      <PageHero eyebrow="For brands and artists" title="Are you tired of paying for empty views?" lede="Turn one song, stream or launch into hundreds of submissions on TikTok, YouTube and Instagram. We streamline getting your content to the audience it deserves. Never pay for 'empty views' again.">
+      <PageHero eyebrow="For brands and artists" title="Are you tired of paying for empty views?" lede="Turn one song, stream or launch into hundreds of submissions on TikTok, YouTube and Instagram. We streamline getting your content to the audience it deserves. Never pay for 'empty views' again." badges={{ solid: { href: '/onboarding?role=brand', top: 'Brands', bottom: 'Launch one' }, outline: { href: '/for-creators', label: 'Creators' } }}>
         <PillLink href="/onboarding?role=brand">Launch a campaign</PillLink>
       </PageHero>
 
-      <FeePromise audience="brands" />
+      <div id="fees">
+        <FeePromise audience="brands" />
+      </div>
       <RolePreview role="brand" />
+      <div id="how">
       <Steps
         title="How we work"
         steps={[
@@ -33,7 +45,11 @@ export default function Page() {
           { title: 'See the results', body: 'Our creators post exactly what you described and get paid for their views. Your media gets the views it deserves.' },
         ]}
       />
-      <BrandCalculator />
+      </div>
+      <div id="calculator">
+        <BrandCalculator />
+      </div>
+      <div id="good">
       <Principles
         title="Good to know"
         items={[
@@ -43,6 +59,7 @@ export default function Page() {
           { title: 'Money stays yours', body: 'What you do not spend stays in your balance, and you can ask for it back. If you over funded a campaign or changed your mind, recovering your unspent money is simple.' },
         ]}
       />
+      </div>
       <CtaBand title="Launch your first campaign" href="/onboarding?role=brand" label="Launch a campaign" />
       <Related links={[{ href: '/pricing', label: 'Pricing' }, { href: '/faq', label: "Q&A" }, { href: '/case-studies', label: 'Case studies' }]} />
     </main>

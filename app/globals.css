@@ -1799,6 +1799,25 @@ html.calm .gf-grain {
   animation-duration: 10s;
   animation-delay: -3s;
 }
+/* the hairline under a page's hero fades in a moment after the title */
+.hero-path {
+  animation: path-in 1.4s 0.9s ease-out both;
+}
+@keyframes path-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-path {
+    animation: none;
+  }
+}
+/* a band of fine red dots, for the sides of a box (see CtaBand) */
+.stipple {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='s' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='1' seed='4'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 .12  0 0 0 0 .22  0 0 0 12 -6.4'/></filter><rect width='100%25' height='100%25' filter='url(%23s)'/></svg>");
+  background-size: 160px 160px;
+}
 /* the cover in the arch settles in slowly as it arrives */
 .hero-zoom {
   animation: hero-zoom 6s ease-out both;
