@@ -139,7 +139,7 @@ const SITE_LD = (sameAs: string[]) => ({
 })
 
 /** The reading preferences (calm mode, larger text, contrast, underlined links) are applied before the first paint, so a page never reflows after it has appeared. */
-const HEAD_SCRIPT = <script dangerouslySetInnerHTML={{ __html: "try{var c=document.documentElement.classList,l=localStorage;l.getItem('logoless:calm')==='1'&&c.add('calm');l.getItem('logoless:text')==='large'&&c.add('text-large');l.getItem('logoless:contrast')==='high'&&c.add('contrast');l.getItem('logoless:links')==='underline'&&c.add('underline-links')}catch(e){}" }} />
+const HEAD_SCRIPT = <script dangerouslySetInnerHTML={{ __html: "try{var c=document.documentElement.classList,l=localStorage;l.getItem('logoless:calm')==='1'&&c.add('calm');l.getItem('logoless:text')==='large'&&c.add('text-large');l.getItem('logoless:contrast')==='high'&&c.add('contrast');l.getItem('logoless:links')==='underline'&&c.add('underline-links');var d=document.documentElement;d.dataset.themes&&l.getItem('logoless:theme')==='light'&&(d.dataset.theme='light')}catch(e){}" }} />
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   // Site text can be edited by the owner, so every page is built per request with the current wording.
@@ -191,6 +191,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         suppressHydrationWarning
         data-scroll-behavior="smooth"
         data-look={look ? 'anubis' : undefined}
+        data-surfaces={fs.on['solid-surfaces'] ? 'solid' : undefined}
+        data-themes={fs.on['light-mode'] ? '1' : undefined}
         data-font={look ? 'schibsted' : font.id === 'inter' ? undefined : font.id}
         data-kind={kind}
         data-ui={look || uiFace ? '1' : undefined}
@@ -213,6 +215,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       suppressHydrationWarning
       data-scroll-behavior="smooth"
       data-look={look ? 'anubis' : undefined}
+      data-surfaces={fs.on['solid-surfaces'] ? 'solid' : undefined}
+      data-themes={fs.on['light-mode'] ? '1' : undefined}
       data-font={look ? 'schibsted' : font.id === 'inter' ? undefined : font.id}
       data-kind={kind}
       data-ui={look || uiFace ? '1' : undefined}

@@ -41,12 +41,13 @@ export function SearchPill({ onOpen, className }: { onOpen: () => void; classNam
           onClick={onOpen}
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
+          data-search-pill
           aria-label="Search, or do something"
           aria-keyshortcuts="/ Control+K Meta+K"
           className="relative flex h-12 w-full min-w-0 items-center gap-3 overflow-hidden rounded-pill bg-[linear-gradient(180deg,rgb(17_17_17)_0%,rgb(6_6_6)_100%)] py-0 pr-3 pl-1.5 text-left text-[14px] text-paper/65 transition-[color,transform] duration-300 outline-none group-hover/pill:text-paper focus-visible:text-paper active:scale-[0.99]"
         >
           {/* a sheen that sweeps across once on hover */}
-          <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 -skew-x-[18deg] bg-gradient-to-r from-transparent via-white/[0.07] to-transparent transition-transform duration-[900ms] ease-out group-hover/pill:translate-x-[420%]" />
+          <span aria-hidden="true" data-sheen className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 -skew-x-[18deg] bg-gradient-to-r from-transparent via-white/[0.07] to-transparent transition-transform duration-[900ms] ease-out group-hover/pill:translate-x-[420%]" />
           <span className="relative grid size-9 shrink-0 place-items-center rounded-full bg-white/[0.06] text-paper/70 shadow-[inset_0_1px_0_rgb(255_255_255/0.08)] transition-colors duration-300 group-hover/pill:bg-[rgb(255_31_56/0.2)] group-hover/pill:text-white">
             <Search aria-hidden="true" className="size-[15px]" />
           </span>

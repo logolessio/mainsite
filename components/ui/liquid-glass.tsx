@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, type ElementType, type ReactNode } from 'react'
+import { useFeature } from '@/components/shell/features-provider'
 import { attachGlass, type Look } from '@/lib/liquid-glass'
 import { cn } from '@/lib/utils'
 
@@ -8,6 +9,7 @@ import { cn } from '@/lib/utils'
  * A pane of real liquid glass. `rootClassName` is the layout of the whole thing (width, margin, sticky...), `rounded` its corners,
  * `className` the glass itself (padding, flex...). Everything inside is ordinary content on top of the glass.
  * Before the glass library is ready, and wherever it cannot run, the CSS glass (.glass-liquid) is what is drawn.
+ * With the `solid-surfaces` switch on there is no glass at all: the shader never starts and the CSS draws one flat, slightly grainy surface.
  */
 export function LiquidGlass({
   as: Tag = 'div',
@@ -35,12 +37,13 @@ export function LiquidGlass({
   const root = useRef<HTMLDivElement>(null)
   const glass = useRef<HTMLElement>(null)
   const lookKey = JSON.stringify(look ?? {})
+  const solid = useFeature('solid-surfaces')
 
   useEffect(() => {
-    if (flat || !root.current || !glass.current) return
+    if (flat || solid || !root.current || !glass.current) return
     return attachGlass(root.current, glass.current, look ?? {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lookKey, flat])
+  }, [lookKey, flat, solid])
 
   return (
     <div ref={root} className={cn('lg-root relative', rounded, rootClassName)} style={rootStyle}>

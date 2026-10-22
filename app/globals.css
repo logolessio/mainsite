@@ -1536,3 +1536,74 @@ html[data-look='anubis'] main p a:not([class]) {
   text-decoration: underline dotted;
   text-underline-offset: 4px;
 }
+
+/* ------------------------------------------------------------------------------------------------------------------------------
+   Light mode (switch "light-mode"). The dark site is turned light at the root: the whole page is inverted (black becomes a soft off-white,
+   the near-white text becomes near-black) and the hue is turned half way round so the reds and blues come back as themselves. Everything that
+   is a picture is turned back, so photos, covers, videos and avatars keep their own colours. Because it works on what is drawn, every colour
+   written anywhere in the site follows, with nothing to keep in step. Choose what must stay as it is with data-keep-theme.
+   ------------------------------------------------------------------------------------------------------------------------------ */
+html[data-themes] {
+  transition: filter 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+html[data-theme='light'] {
+  filter: invert(0.96) hue-rotate(180deg);
+}
+html[data-theme='light'] :is(img, video, iframe, canvas:not([data-bg]), [data-keep-theme], [style*='background-image']):not([data-logo]) {
+  filter: invert(1) hue-rotate(180deg);
+}
+/* a picture inside something that was already turned back is not turned back twice */
+html[data-theme='light'] :is([data-keep-theme], [style*='background-image']) :is(img, video, iframe, canvas) {
+  filter: none;
+}
+html[data-theme='light'] ::selection {
+  background: rgb(255 31 56 / 0.25);
+  color: inherit;
+}
+
+/* ------------------------------------------------------------------------------------------------------------------------------
+   Solid surfaces (switch "solid-surfaces"). The liquid glass is gone: every glass surface is one flat colour with a hairline edge and a fine
+   film of grain, nothing that bends, drifts or shimmers. Nothing runs for it either (components/ui/liquid-glass.tsx never starts the shader).
+   ------------------------------------------------------------------------------------------------------------------------------ */
+html[data-surfaces='solid'] {
+  --solid: #0e0e0e;
+  --solid-up: #171717;
+  --solid-line: rgb(255 255 255 / 0.11);
+  --solid-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.12'/></svg>");
+}
+html[data-surfaces='solid'] :is(.glass-liquid, .glass, .lg-glass) {
+  background: var(--solid-grain) 0 0 / 180px 180px, var(--solid);
+  border: 1px solid var(--solid-line);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.05),
+    0 12px 28px -18px rgb(0 0 0 / 0.9);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+/* the selection lens inside tabs and menus: the same surface, a step lighter */
+html[data-surfaces='solid'] .glass-liquid.glass-lens {
+  background: var(--solid-grain) 0 0 / 180px 180px, var(--solid-up);
+  border-color: rgb(255 255 255 / 0.18);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07);
+}
+html[data-surfaces='solid'] .glass-liquid.glass-lifted {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 18px 36px -16px rgb(0 0 0 / 0.9);
+}
+/* the light that drifted inside the glass, the diagonal sheen, and the layers the shader drew into */
+html[data-surfaces='solid'] .glass-liquid::before,
+html[data-surfaces='solid'] .glass-liquid::after,
+html[data-surfaces='solid'] .lg-glass::before,
+html[data-surfaces='solid'] .lg-glass::after,
+html[data-surfaces='solid'] :is(.lg-scene, .lg-light),
+html[data-surfaces='solid'] .lg-glass > canvas {
+  display: none;
+}
+/* the dashboards' search bar */
+html[data-surfaces='solid'] [data-search-pill] {
+  background: var(--solid-grain) 0 0 / 180px 180px, var(--solid);
+}
+html[data-surfaces='solid'] [data-search-pill] [data-sheen] {
+  display: none;
+}

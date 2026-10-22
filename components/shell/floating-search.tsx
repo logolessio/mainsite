@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { useFeature } from './features-provider'
 import { useSignedIn } from './nav-user'
 import { openSearch } from './spotlight'
+import { ThemeToggle } from './theme-toggle'
 
 /** Pages that are one small flow of their own and have no search box to open. */
 const HIDDEN = ['/onboarding', '/@', '/u/', '/links', '/launch']
@@ -60,6 +61,7 @@ export function FloatingSearch({ raised = false }: { raised?: boolean }) {
         <span className="hidden lg:inline">Search</span>
         <kbd className="hidden rounded-pill bg-white/[0.08] px-2.5 py-1 font-mono text-[11px] text-paper/60 lg:inline">{mod} K</kbd>
       </LiquidGlass>
+      <ThemeToggle />
       <LiquidGlass
         as="button"
         type="button"
