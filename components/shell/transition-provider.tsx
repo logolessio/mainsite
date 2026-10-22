@@ -23,9 +23,9 @@ type TransitionContextValue = {
 const TransitionContext = createContext<TransitionContextValue | null>(null)
 
 /**
- * Changing page is one calm move: the page you are on blurs and fades away upwards while the next is on its way, and the next one
- * rises into place out of a blur (see .page-leave and .page-enter in globals.css). Nothing else moves, there is no cross-fade of two
- * pages on top of each other and no shared element gliding between them, so there is never a moment where the old words change into the new.
+ * Changing page is one calm move: the page you are on stays until the next one is ready, and then the next fades up into place (see .page-enter
+ * in globals.css). Nothing disappears while waiting, there is no cross-fade of two pages on top of each other and no shared element gliding between
+ * them, so there is never a moment where the screen is empty or the old words change into the new.
  */
 export function TransitionProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -72,8 +72,9 @@ export function TransitionProvider({ children }: { children: React.ReactNode }) 
       void askLeave().then((ok) => {
         if (!ok) return // there is work in the page that has not been saved
         if (target !== pathname) {
+          // the page you are on stays exactly as it is until the next one is ready (it used to blur away at once, which left the screen empty for as long
+          // as the next page took, and read as the site loading twice); the progress line and, if it is slow, a small spinner say that it is on its way
           setPending(true)
-          if (!reduced) setLeaving(pathname)
           // a link must never do nothing: if the page has not arrived after a few seconds (a stalled request, a stuck transition), load it the plain way
           window.setTimeout(() => {
             if (window.location.pathname === pathname) window.location.assign(href)

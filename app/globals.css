@@ -921,12 +921,11 @@ main:focus {
 @keyframes page-enter {
   from {
     opacity: 0;
-    transform: translate3d(0, 24px, 0);
-    filter: blur(14px);
+    transform: translate3d(0, 10px, 0);
   }
 }
 .page-enter {
-  animation: page-enter 0.64s var(--ease-out) backwards;
+  animation: page-enter 0.3s var(--ease-out) backwards;
 }
 .page-leave {
   opacity: 0;

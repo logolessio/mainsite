@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
+import { Spinner } from '@/components/ui/loader'
 import { useTransitions } from './transition-provider'
 
 /**
@@ -14,6 +15,14 @@ export function NavProgress() {
   const [on, setOn] = useState(false)
   const [finishing, setFinishing] = useState(false)
   const shown = useRef(false)
+  const [spin, setSpin] = useState(false)
+
+  // a small spinner as well, for a page that is taking longer than a moment
+  useEffect(() => {
+    if (!pending) return setSpin(false)
+    const t = window.setTimeout(() => setSpin(true), 450)
+    return () => window.clearTimeout(t)
+  }, [pending])
 
   useEffect(() => {
     if (pending) {
@@ -34,7 +43,22 @@ export function NavProgress() {
   }, [pending])
 
   return (
-    <AnimatePresence>
+    <>
+      <AnimatePresence>
+        {spin && (
+          <motion.div
+            key="spin"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4, transition: { duration: 0.18 } }}
+            transition={{ duration: 0.22 }}
+            className="pointer-events-none fixed top-4 left-1/2 z-[300] grid -translate-x-1/2 place-items-center rounded-full border border-line-strong bg-ink/80 p-2.5 backdrop-blur"
+          >
+            <Spinner label="Loading the next page" className="size-5" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
       {on && (
         <motion.div key="np" aria-hidden="true" initial={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.25 } }} className="pointer-events-none fixed inset-x-0 top-0 z-[300] h-[2px] bg-transparent">
           <motion.div
@@ -46,5 +70,6 @@ export function NavProgress() {
         </motion.div>
       )}
     </AnimatePresence>
+    </>
   )
 }
