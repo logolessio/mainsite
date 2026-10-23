@@ -58,6 +58,32 @@ export const startCard = (): Message =>
     [row(btn('Get started', 'start:go'))],
   )
 
+/**
+ * The answer to the Get started button while the site is closed behind the launch page (the account pages are not open yet, so sending someone
+ * there would only show them the countdown). It says when the doors open and what to do in the meantime, all of it possible from here.
+ */
+export const preLaunchCard = (end: number | null): Message =>
+  msg(
+    [
+      card({
+        icon: 'spark',
+        label: 'Before we open',
+        title: end ? 'logoless opens soon' : 'You are early',
+        text: join(
+          end ? `The doors open <t:${end}:F>, <t:${end}:R>.` : 'The site opens soon.',
+          'Until then this server is the home of logoless: chat, ask questions, and watch the campaigns arrive here first.',
+          BLANK,
+          '**1.** Log in with Discord on logoless.io. It holds your account and gives you your roles here.',
+          '**2.** Reserve your username on the launch page, so nobody takes it.',
+          '**3.** Say hello in the community channels and tell us what you post and where.',
+          BLANK,
+          small('When we open, a message here and in your direct messages will tell you what to do next.'),
+        ),
+      }),
+    ],
+    [row(go('Log in with Discord', '/login'), go('Reserve your username', '/'))],
+  )
+
 export type StartState = 'new' | 'unfinished' | 'ready'
 /** The answer to the Get started button, only for the person who pressed it. One link button. */
 export const startReplyCard = (state: StartState, url: string): Message =>

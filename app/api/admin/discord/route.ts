@@ -35,6 +35,7 @@ const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('tick') }),
   z.object({ action: z.literal('make-roles') }),
   z.object({ action: z.literal('make-places') }),
+  z.object({ action: z.literal('make-community') }),
   z.object({ action: z.literal('welcome-me') }),
 ])
 
@@ -182,6 +183,19 @@ export const POST = route(async (req: Request) => {
     const savedCfg = await saveDiscordConfig(next)
     await audit(actor, `discord.${a.action}`, null, made.join(', ') || 'nothing missing', ip)
     return json({ ok: true, made, cfg: savedCfg })
+  }
+  if (a.action === 'make-community') {
+    // general chat, introductions, help, ideas, the command channel, two voice lounges and the private team channels: only what is missing, by name
+    if (!cfg.guildId) throw new HttpError(409, 'Save your server ID first.')
+    const { buildCommunity } = await import('@/lib/discord/server-build')
+    let r: { made: string[]; skipped: string[] }
+    try {
+      r = await buildCommunity(cfg)
+    } catch (e) {
+      throw new HttpError(502, e instanceof Error ? e.message : 'Discord would not make the channels.')
+    }
+    await audit(actor, 'discord.make-community', null, r.made.join(', ') || 'nothing missing', ip)
+    return json({ ok: true, ...r })
   }
   if (a.action === 'artists') {
     const { syncAllArtists } = await import('@/lib/discord/campaigns')

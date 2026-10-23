@@ -317,6 +317,9 @@ export function DiscordPanel() {
           <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('make-places', async () => { const j = (await call({ action: 'make-places' })) as { made?: string[] }; return j.made?.length ? `Made ${j.made.join(', ')} and saved their IDs.` : 'Every category and channel already has an ID.' })}>
             {busy === 'make-places' && <Loader2 className="size-4 animate-spin" />} Make the missing categories and channels
           </button>
+          <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('make-community', async () => { const j = (await call({ action: 'make-community' })) as { made?: string[]; skipped?: string[] }; return j.made?.length ? `Made ${j.made.join(', ')}.${j.skipped?.some((s) => s.startsWith('Team')) ? ' The team channels were skipped until a staff or team role is set.' : ''}` : 'Every community channel is already there.' })}>
+            {busy === 'make-community' && <Loader2 className="size-4 animate-spin" />} Make the community channels (chat, help, voice, team)
+          </button>
           <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('tick', async () => { const j = (await call({ action: 'tick' })) as { skipped?: string; parts?: Record<string, string> }; return j.skipped ? `Skipped: ${j.skipped}.` : Object.entries(j.parts ?? {}).map(([k, v]) => `${k}: ${v}`).join(' · ') })}>
             {busy === 'tick' && <Loader2 className="size-4 animate-spin" />} Run the live loop now
           </button>

@@ -1,7 +1,9 @@
 import { db, nowSec } from '../db'
 import { featureOn } from '../features'
+import { launchView } from '../launch'
+import { allSettings } from '../settings'
 import { botReady, followUp, sendDm, siteUrl } from './api'
-import { nextStepsCard, rundownDm, startReplyCard, type NextData, type StartState } from './cards-more'
+import { nextStepsCard, preLaunchCard, rundownDm, startReplyCard, type NextData, type StartState } from './cards-more'
 import { getDiscordConfig } from './config'
 import { discordIdFor, userByDiscord } from './link'
 import { memberKinds, syncRoles } from './roles'
@@ -62,6 +64,9 @@ export async function startPressed(a: { discordId: string; appId: string; token:
   await put(pressKey(a.discordId), JSON.stringify({ app: a.appId, token: a.token, at: nowSec() }))
   const userId = await userByDiscord(a.discordId)
   const state: StartState = !userId ? 'new' : (await onboarded(userId)) ? 'ready' : 'unfinished'
+  // while the site is closed behind the launch page, its sign-up and onboarding pages cannot be opened: say when it opens and what to do here meanwhile
+  const launch = launchView(await allSettings())
+  if (launch.closed && state !== 'ready') return preLaunchCard(launch.end)
   if (state === 'ready' && userId) {
     // already set up: the next steps are the answer itself, and the rundown goes out if it never did
     await background(welcomeOnce(userId, { skipFollowUp: true }))
