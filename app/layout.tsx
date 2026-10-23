@@ -19,6 +19,7 @@ import { featureState, requestHost } from '@/lib/features'
 import { headers } from 'next/headers'
 import { parseChoices } from '@/lib/design-choices'
 import { effectiveFont, faceById, fontById } from '@/lib/fonts'
+import { isBetaHost } from '@/lib/beta-host'
 import { launchExempt, launchView, linksExempt } from '@/lib/launch'
 import { launchHomeData } from '@/lib/launch-home'
 import { LaunchPage } from '@/components/launch/launch-page'
@@ -121,7 +122,8 @@ const baseMetadata: Metadata = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const fs = await featureState()
-  return fs.dev ? { ...baseMetadata, robots: { index: false, follow: false } } : baseMetadata
+  // the dev address and the pre-launch sign-up are not for search engines
+  return fs.dev || isBetaHost(await requestHost()) ? { ...baseMetadata, robots: { index: false, follow: false } } : baseMetadata
 }
 
 export const viewport: Viewport = {
@@ -186,8 +188,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const path = reqHeaders.get('x-path') ?? '/'
   // with the new page (launch-links) /links stays open too, and the closed site shows the new page
   const newLaunch = fs.on['launch-links'] === true
-  const shut = launch.closed && !fs.dev && !/^(owner|admin|scroll)\./i.test(host) && !isAdmin && !launchExempt(path) && !(newLaunch && linksExempt(path))
-  if (shut) {
+  // beta.logoless.io (the pre-launch sign-up) and the sign-in hop it uses are pages of their own: none of the site around them, and never behind the launch page
+  const bare = isBetaHost(host) || /^\/join(\/|$)/.test(path)
+  const shut = !bare && launch.closed && !fs.dev && !/^(owner|admin|scroll)\./i.test(host) && !isAdmin && !launchExempt(path) && !(newLaunch && linksExempt(path))
+  if (shut || bare) {
     return (
       <html
         lang="en"
@@ -208,7 +212,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         </head>
         <body className="antialiased">
           <FeaturesProvider dev={fs.dev} on={featuresOn}>
-            {newLaunch ? <LaunchHome {...await launchHomeData('soon')} locked /> : <LaunchPage end={launch.end} headline={launch.headline} text={launch.text} signedInAs={session?.user?.email ?? null} />}
+            {bare ? children : newLaunch ? <LaunchHome {...await launchHomeData('soon')} locked /> : <LaunchPage end={launch.end} headline={launch.headline} text={launch.text} signedInAs={session?.user?.email ?? null} />}
           </FeaturesProvider>
         </body>
       </html>

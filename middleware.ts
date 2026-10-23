@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { isBetaHost } from '@/lib/beta-host'
 import { clientSlugOf } from '@/lib/client-host'
 
 const MAIN = 'https://logoless.io'
@@ -17,6 +18,21 @@ export function middleware(req: NextRequest) {
   headers.delete('x-path')
   headers.delete('x-client-host')
   headers.set('x-path', p) // the launch page needs to know which page was asked for (the legal pages stay open behind it)
+
+  // beta.logoless.io is the pre-launch sign-up and nothing else: its one page is /onboarding (the bare address opens it), the site's API answers here too
+  // (the sign-in cookie is shared across *.logoless.io), the legal pages live on the main address, and every other path comes back to the sign-up.
+  if (isBetaHost(host)) {
+    if (p.startsWith('/api/') || p === '/onboarding') {
+      headers.set('x-path', '/onboarding')
+      return NextResponse.next({ request: { headers } })
+    }
+    if (p === '/') {
+      headers.set('x-path', '/onboarding')
+      return NextResponse.rewrite(new URL(`/onboarding${search}`, req.url), { request: { headers } })
+    }
+    if (/^\/legal(\/|$)/.test(p) && host.endsWith('.logoless.io')) return NextResponse.redirect(`${MAIN}${p}${search}`, 307)
+    return NextResponse.redirect(new URL('/onboarding', req.url), 307)
+  }
 
   // A client's own address (kxng.logoless.io): its home is that client's private page, which is logoless.io/<name> inside the code.
   // The page itself checks the client-links switch. The site's API answers here too (same worker, and the sign-in cookie is shared

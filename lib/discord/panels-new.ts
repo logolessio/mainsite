@@ -1,5 +1,6 @@
 import type { Message } from './api'
 import { chan } from './ui'
+import { BETA_ONBOARDING } from '../beta-host'
 import { LEGAL_LINKS } from '../site'
 import { embedCard, embedMessage, panel, pbtn, plink } from './look'
 
@@ -44,20 +45,34 @@ export function welcomePanel(links: { rules: string; guildId: string }, notice: 
         text: 'logoless pays creators for the views their edits get. Artists and brands will post campaigns here first. Right now we are gathering our **founding members**, so be one of them.',
         notice,
         fields: [
-          { name: '✨ 1. Make your account', value: 'Right here in Discord, with an emailed code. It takes a minute.', inline: false },
-          { name: '🔗 2. Link your accounts', value: 'Add the TikTok, YouTube or Instagram you post from and prove it is yours with a code in your bio. Verified creators get picked first for campaigns.', inline: false },
-          { name: '💸 3. Add PayPal (optional)', value: 'So you are ready to be paid from your first campaign.', inline: false },
-          { name: '🏅 Founding member', value: 'Everyone who sets up before we open gets the Founding member role.', inline: false },
+          { name: '🏅 1. Become a founding member', value: 'Press the button below. Sign in with Discord, add a profile and, if you like, your PayPal. It takes about a minute.', inline: false },
+          { name: '🔓 2. The community opens', value: 'You land straight back here with the **Founding member** role, which opens general chat and the other community channels.', inline: false },
+          { name: '🔗 3. Prove your accounts', value: 'Link your TikTok, YouTube or Instagram with `/verify` and prove it with a code in your bio. Verified creators get picked first for campaigns.', inline: false },
         ],
       }),
-      [pbtn('Get started', 'start:go', 'green', '🚀'), ...rules],
+      [plink('Become a founding member', BETA_ONBOARDING, '🏅'), ...rules],
     )
   }
   return embedMessage(embedCard({ title: '👋 Welcome to logoless', text: 'Join campaigns from artists, streamers and brands. Post your content and get paid for every 1,000 verified views.', notice, fields: STEPS.map((s) => ({ ...s, inline: false })) }), [pbtn('Get started', 'start:go', 'green', '🚀'), pbtn('Live campaigns', 'panel:campaigns', 'blurple', '🎬'), ...rules])
 }
 
-/** What the Get started button answers while the site is closed. */
-export function preLaunchPanel(end: number | null): Message {
+/** What the Get started button answers while the site is closed. `member` is set once the person has finished the sign-up (or is waiting for a look). */
+export function preLaunchPanel(end: number | null, member?: { n: number | null; held: boolean }): Message {
+  if (member?.n) {
+    return embedMessage(
+      embedCard({
+        title: `🏅 You are founding member #${member.n}`,
+        text: 'Your Founding member role is on, so the community channels are open. Link your TikTok, YouTube or Instagram next, so verified creators like you are picked first when campaigns start.',
+      }),
+      [pbtn('Link an account', 'acct:link', 'green', '🔗'), pbtn('Add PayPal', 'pay:link', 'grey', '💸')],
+    )
+  }
+  if (member?.held) {
+    return embedMessage(
+      embedCard({ title: '⏳ Your sign-up is being checked', text: 'We look at a few sign-ups by hand to keep bots out. You will get the Founding member role, and a message from us here, as soon as yours is cleared.' }),
+      [plink('Open my sign-up', BETA_ONBOARDING, '🏅')],
+    )
+  }
   return embedMessage(
     embedCard({
       title: end ? '🚧 logoless opens soon' : '🚧 You are early',
@@ -65,13 +80,12 @@ export function preLaunchPanel(end: number | null): Message {
         end ? `The doors open <t:${end}:F>, <t:${end}:R>. There are no campaigns yet: we are gathering our founding members first.` : 'The site opens soon. There are no campaigns yet: we are gathering our founding members first.',
         'Until then this server is the home of logoless. The first campaigns will be announced here.',
         '',
-        '**1.** Make your account right here (no website needed).',
-        '**2.** Link your TikTok, YouTube or Instagram and prove it is yours. Verified creators come first.',
-        '**3.** Add your PayPal (optional), so you are ready to be paid.',
-        '**4.** Say hello in the community channels.',
+        '**1.** Press the button: sign in with Discord, add a profile and, if you like, your PayPal.',
+        '**2.** You come straight back here with the **Founding member** role, which opens the community channels.',
+        '**3.** Link your TikTok, YouTube or Instagram and prove it is yours. Verified creators come first.',
       ].join('\n'),
     }),
-    [pbtn('Make my account', 'acct:join', 'green', '✨'), pbtn('Link an account', 'acct:link', 'grey', '🔗'), pbtn('Add PayPal', 'pay:link', 'grey', '💸')],
+    [plink('Become a founding member', BETA_ONBOARDING, '🏅'), pbtn('Link an account', 'acct:link', 'grey', '🔗'), pbtn('Add PayPal', 'pay:link', 'grey', '💸')],
   )
 }
 

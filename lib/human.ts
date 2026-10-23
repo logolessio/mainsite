@@ -36,7 +36,10 @@ export async function humanCookie(req: Request) {
   const exp = Math.floor(Date.now() / 1000) + TTL
   const sig = await hmacHex(await secret(), `human|${exp}|${await ipHash(req)}`)
   const secure = new URL(req.url).protocol === 'https:' || req.headers.get('x-forwarded-proto') === 'https'
-  return `${COOKIE}=${exp}.${sig}; Max-Age=${TTL}; Path=/; HttpOnly; SameSite=Lax${secure ? '; Secure' : ''}`
+  // shared by logoless.io and beta.logoless.io (the pre-launch sign-up), so a person is checked once and not again on the other address
+  const host = (req.headers.get('host') ?? new URL(req.url).host).toLowerCase().split(':')[0]
+  const shared = host === 'logoless.io' || host.endsWith('.logoless.io')
+  return `${COOKIE}=${exp}.${sig}; Max-Age=${TTL}; Path=/; HttpOnly; SameSite=Lax${secure ? '; Secure' : ''}${shared ? '; Domain=.logoless.io' : ''}`
 }
 
 export async function hasHuman(req: Request) {

@@ -12,17 +12,17 @@ import type { DiscordConfig } from './config'
  */
 type Chan = { id: string; name: string; type: number; parent_id?: string | null }
 type Spec = { name: string; type?: 0 | 2; topic?: string; slowmode?: number; skipIf?: boolean }
-type Group = { name: string; staffOnly?: boolean; channels: Spec[] }
+type Group = { name: string; staffOnly?: boolean; /** only people with the Founding member role (and the staff) can see it */ foundingOnly?: boolean; channels: Spec[] }
 
 const VIEW = 1024
 const SEND = 2048
-const CONNECT = 1 << 20
 const HISTORY = 65536
 const EMBED = 16384
 
 export const COMMUNITY_GROUPS = (cfg: DiscordConfig): Group[] => [
   {
     name: 'Community',
+    foundingOnly: true,
     channels: [
       { name: 'general', topic: 'Talk about anything logoless: campaigns, edits, ideas.', slowmode: 3 },
       { name: 'introductions', topic: 'Say hi. Who you are, what you post and where.', slowmode: 30 },
@@ -45,6 +45,48 @@ export const COMMUNITY_GROUPS = (cfg: DiscordConfig): Group[] => [
   },
 ]
 
+type Overwrite = { id: string; type: number; allow: string; deny: string }
+const staffOverwrites = (cfg: DiscordConfig, bot: Overwrite, staffRoles: string[]): Overwrite[] => [
+  { id: cfg.guildId, type: 0, allow: '0', deny: String(VIEW) },
+  bot,
+  ...staffRoles.map((id) => ({ id, type: 0, allow: String(VIEW + SEND + HISTORY), deny: '0' })),
+]
+/**
+ * Everyone is shut out; the Founding member role (and the staff) can see the place. Sending, reacting, joining a voice channel and the rest still come from the @everyone
+ * role's own permissions. Only permissions the bot has itself are put in an overwrite (Discord refuses the others), which is why this is just View channel.
+ */
+const foundingOverwrites = (cfg: DiscordConfig, bot: Overwrite, staffRoles: string[]): Overwrite[] => [
+  { id: cfg.guildId, type: 0, allow: '0', deny: String(VIEW) },
+  bot,
+  { id: cfg.roles.founding, type: 0, allow: String(VIEW), deny: '0' },
+  ...staffRoles.map((id) => ({ id, type: 0, allow: String(VIEW + SEND + HISTORY), deny: '0' })),
+]
+
+/**
+ * Shuts the Community category and every channel inside it to everyone but the Founding member role and the staff: this is what the pre-launch sign-up
+ * hands out. It replaces the permission overwrites on those channels (one call each), so anything set by hand on them is overwritten; nothing is renamed, moved or deleted.
+ */
+export async function lockCommunity(cfg: DiscordConfig): Promise<{ locked: string[]; note?: string }> {
+  if (!cfg.roles.founding) throw new Error('Make the Founding member role first (the "Make the missing roles" button), then lock the community.')
+  const list = await discord<Chan[]>('GET', `/guilds/${cfg.guildId}/channels`)
+  if (!list.ok || !list.json) throw new Error(explainDiscord(list, 'the server'))
+  const category = list.json.find((c) => c.type === 4 && c.name.toLowerCase() === 'community')
+  if (!category) return { locked: [], note: 'There is no Community category yet. Make the community channels first.' }
+  const me = await discord<{ id: string }>('GET', '/users/@me')
+  if (!me.ok || !me.json) throw new Error(explainDiscord(me))
+  const bot = { id: me.json.id, type: 1, allow: String(VIEW + SEND + EMBED + HISTORY + 16), deny: '0' }
+  const staffRoles = [cfg.roles.staff, cfg.roles.team, cfg.roles.admin].filter(Boolean)
+  const overwrites = foundingOverwrites(cfg, bot, staffRoles)
+  const locked: string[] = []
+  for (const c of [category, ...list.json.filter((x) => x.parent_id === category.id)]) {
+    const res = await discord<Chan>('PATCH', `/channels/${c.id}`, { permission_overwrites: overwrites })
+    if (!res.ok) throw new Error(explainDiscord(res, c.type === 4 ? 'the Community category' : `#${c.name}`))
+    locked.push(c.type === 4 ? `${c.name} (category)` : `${c.type === 2 ? '' : '#'}${c.name}`)
+    await new Promise((r) => setTimeout(r, 300))
+  }
+  return { locked }
+}
+
 export async function buildCommunity(cfg: DiscordConfig): Promise<{ made: string[]; skipped: string[] }> {
   const made: string[] = []
   const skipped: string[] = []
@@ -62,7 +104,11 @@ export async function buildCommunity(cfg: DiscordConfig): Promise<{ made: string
       skipped.push(`${g.name} (set the staff or team role first, so the private channels are not left open)`)
       continue
     }
-    const hidden = g.staffOnly ? [{ id: cfg.guildId, type: 0, allow: '0', deny: String(VIEW) }, bot, ...staffRoles.map((id) => ({ id, type: 0, allow: String(VIEW + SEND + HISTORY + CONNECT), deny: '0' }))] : []
+    if (g.foundingOnly && !cfg.roles.founding) {
+      skipped.push(`${g.name} (make the Founding member role first, so the community is not left open to everyone)`)
+      continue
+    }
+    const hidden = g.staffOnly ? staffOverwrites(cfg, bot, staffRoles) : g.foundingOnly ? foundingOverwrites(cfg, bot, staffRoles) : []
     let parent = have(g.name, 4)?.id
     if (!parent) {
       const res = await discord<Chan>('POST', `/guilds/${cfg.guildId}/channels`, { name: g.name, type: 4, permission_overwrites: hidden })
@@ -80,7 +126,7 @@ export async function buildCommunity(cfg: DiscordConfig): Promise<{ made: string
       const body: Record<string, unknown> = { name: c.name, type, parent_id: parent }
       if (c.topic) body.topic = c.topic
       if (c.slowmode) body.rate_limit_per_user = c.slowmode
-      if (g.staffOnly) body.permission_overwrites = hidden // spelled out, so the channel is private from the first moment whatever Discord does about syncing with the category
+      if (g.staffOnly || g.foundingOnly) body.permission_overwrites = hidden // spelled out, so the channel is private from the first moment whatever Discord does about syncing with the category
       const res = await discord<Chan>('POST', `/guilds/${cfg.guildId}/channels`, body)
       if (!res.ok || !res.json?.id) throw new Error(explainDiscord(res, 'the server'))
       list.json.push(res.json)

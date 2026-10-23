@@ -14,6 +14,7 @@ type Status = {
   cfg: DiscordConfig
   linked: number
   audience: { members: number | null; accounts: number; linked: number; withAccounts: number; verified: { tiktok: number; youtube: number; instagram: number }; verifiedPeople: number; tiktokFollowers: number; paypal: number; line: string } | null
+  prelaunch: { founding: number; started: number; page: string; held: { userId: string; name: string; handle: string | null; email: string; at: number; flags: string[]; country: string | null; org: string | null; device: string; discordDays: number | null }[] } | null
   commands: number
   samples: { id: string; label: string; group: string }[]
   endpoint: string
@@ -130,6 +131,52 @@ export function DiscordPanel() {
       </div>
       {tab === 'setup' && (
         <>
+      {s.prelaunch && (
+        <Card title="Pre-launch sign-up">
+          <p className="mb-3 text-sm text-mute">
+            The one page open while the site is shut: <a href={s.prelaunch.page} target="_blank" rel="noopener noreferrer" className="text-paper underline underline-offset-4">{s.prelaunch.page.replace('https://', '')}</a>. People sign in with Discord, add a profile and (if they like) PayPal, and come back to the
+            server with the Founding member role. The sign-up note in #get-started links here. Odd-looking sign-ups (a throwaway Discord account, a script, many from one network) wait here for you.
+          </p>
+          <dl className="grid grid-cols-3 gap-x-6">
+            {([
+              ['Founding members', s.prelaunch.founding],
+              ['Started', s.prelaunch.started],
+              ['Waiting for a look', s.prelaunch.held.length],
+            ] as [string, number][]).map(([k, v]) => (
+              <div key={k}>
+                <dt className="text-xs text-mute">{k}</dt>
+                <dd className="font-display text-2xl">{v.toLocaleString('en-US')}</dd>
+              </div>
+            ))}
+          </dl>
+          {s.prelaunch.held.length > 0 && (
+            <ul className="mt-4 divide-y divide-line rounded-panel border border-line">
+              {s.prelaunch.held.map((h) => (
+                <li key={h.userId} className="flex flex-wrap items-center gap-3 p-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm">
+                      {h.name}
+                      {h.handle ? <span className="text-mute"> @{h.handle}</span> : null}
+                    </p>
+                    <p className="truncate text-xs text-mute">
+                      {h.email} · {h.country ?? 'unknown country'}
+                      {h.org ? ` · ${h.org}` : ''} · {h.device}
+                      {h.discordDays !== null ? ` · Discord ${h.discordDays}d old` : ''}
+                    </p>
+                    <p className="mt-1 text-xs text-amber-300">{h.flags.join(' · ') || 'No flags'}</p>
+                  </div>
+                  <button type="button" disabled={Boolean(busy)} className={solid} onClick={() => run(`pre-${h.userId}`, async () => (await call({ action: 'prelaunch-decide', userId: h.userId, approve: true }), `${h.name} is in. They have the role and a message.`))}>
+                    {busy === `pre-${h.userId}` && <Loader2 className="size-4 animate-spin" />} Let in
+                  </button>
+                  <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run(`pre-${h.userId}`, async () => (await call({ action: 'prelaunch-decide', userId: h.userId, approve: false }), `${h.name} was turned down.`))}>
+                    Turn down
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
+      )}
       {s.audience && (
         <Card title="Your numbers, for artists">
           <p className="mb-3 text-sm text-mute">What you can put on the table when you reach out. Read live: the member count comes from Discord, the rest from the accounts people set up here.</p>
@@ -269,7 +316,7 @@ export function DiscordPanel() {
           <div className="grid gap-4 sm:grid-cols-3">
             {(['linked', 'founding', 'clipper', 'creator', 'brand', 'developer', 'admin', 'team', 'staff'] as const).map((k) => (
               <label key={k} className="grid gap-1.5">
-                <span className="text-xs text-mute">{{ linked: 'Linked members', founding: 'Founding members (joined before launch)', clipper: 'Clippers', creator: 'Artists (run campaigns)', brand: 'Brands', developer: 'Developers', admin: 'Admins', team: 'Team', staff: 'Staff (can see tickets)' }[k]}</span>
+                <span className="text-xs text-mute">{{ linked: 'Linked members', founding: 'Founding members (finished the pre-launch sign-up)', clipper: 'Clippers', creator: 'Artists (run campaigns)', brand: 'Brands', developer: 'Developers', admin: 'Admins', team: 'Team', staff: 'Staff (can see tickets)' }[k]}</span>
                 <input className={input} inputMode="numeric" value={cfg.roles[k]} onChange={(e) => set({ roles: { ...cfg.roles, [k]: digits(e.target.value) } })} placeholder="Role ID" />
               </label>
             ))}
@@ -344,6 +391,9 @@ export function DiscordPanel() {
           </button>
           <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('make-community', async () => { const j = (await call({ action: 'make-community' })) as { made?: string[]; skipped?: string[] }; return j.made?.length ? `Made ${j.made.join(', ')}.${j.skipped?.some((s) => s.startsWith('Team')) ? ' The team channels were skipped until a staff or team role is set.' : ''}` : 'Every community channel is already there.' })}>
             {busy === 'make-community' && <Loader2 className="size-4 animate-spin" />} Make the community channels (chat, help, voice, team)
+          </button>
+          <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('lock-community', async () => { const j = (await call({ action: 'lock-community' })) as { locked?: string[]; note?: string }; return j.locked?.length ? `Locked ${j.locked.length} places to the Founding member role and the staff.` : (j.note ?? 'Nothing to lock.') })}>
+            {busy === 'lock-community' && <Loader2 className="size-4 animate-spin" />} Lock the community to founding members
           </button>
           <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('tick', async () => { const j = (await call({ action: 'tick' })) as { skipped?: string; parts?: Record<string, string> }; return j.skipped ? `Skipped: ${j.skipped}.` : Object.entries(j.parts ?? {}).map(([k, v]) => `${k}: ${v}`).join(' · ') })}>
             {busy === 'tick' && <Loader2 className="size-4 animate-spin" />} Run the live loop now

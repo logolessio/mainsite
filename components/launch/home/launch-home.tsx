@@ -6,6 +6,7 @@ import { signOut } from 'next-auth/react'
 import { useCallback, useEffect, useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
 import { IntroLogo } from '@/components/logo-intro'
+import { RingButton } from '@/components/prelaunch/ring'
 import { GradientField } from '@/components/shell/gradient-field'
 import type { PageConfig, PageMode } from '@/lib/launch-page'
 import type { LinkItem } from '@/lib/socials'
@@ -18,6 +19,7 @@ import { OwnerEditor, type Draft } from './owner-editor'
 import { AutoHeight, Waitlist } from './waitlist'
 
 const EASE = [0.22, 1, 0.36, 1] as const
+const STOCK_TEXT = 'Reserve your username and we will email you the moment the doors open.'
 
 function accentVars(hex: string) {
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex) ?? ['', 'f3', 'f2', 'ee']
@@ -70,15 +72,18 @@ export function LaunchHome(props: LaunchHomeProps) {
   const { copy, look } = draft.page
   const soon = mode === 'soon'
   const headline = soon ? draft.headline : copy.liveHeadline
-  const text = soon ? draft.text : copy.liveText
   const socials = draft.items.filter((l) => l.footer)
   const buttons = draft.items.filter((l) => l.page)
   const onOver = useCallback(() => setOpened(true), [])
+  // while the site is closed the one thing to do is join the Discord (the owner's Discord link under Socials and links); without one the waitlist stays
+  const discord = soon ? draft.items.find((l) => l.platform === 'discord' && /^https:\/\//.test(l.url)) : undefined
+  // the stock line talks about reserving a username (the waitlist); with the Discord button in its place it says what the button is for. Words the owner wrote themselves are never touched.
+  const text = soon ? (discord && draft.text === STOCK_TEXT ? 'Join the Discord to be first in the moment the doors open.' : draft.text) : copy.liveText
 
   // the device cookie for the one-spot-per-device check (marked as the owner's here when the owner is signed in)
   useEffect(() => {
-    if (soon) void fetch('/api/launch/waitlist', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ step: 'hello' }) }).catch(() => undefined)
-  }, [soon])
+    if (soon && !discord) void fetch('/api/launch/waitlist', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ step: 'hello' }) }).catch(() => undefined)
+  }, [soon, discord])
 
   const left = look.align === 'left'
   const shape = SHAPE[look.shape]
@@ -92,7 +97,7 @@ export function LaunchHome(props: LaunchHomeProps) {
 
   const socialRow =
     !props.links && socials.length > 0 && look.socials !== 'off' ? (
-      <ul aria-label="logoless elsewhere" className={cn('flex flex-wrap items-center gap-1', left ? 'justify-start' : 'justify-center')}>
+      <ul aria-label="logoless elsewhere" className={cn('flex flex-wrap items-center', discord ? 'gap-2' : 'gap-1', left ? 'justify-start' : 'justify-center')}>
         {socials.map((l) => (
           <li key={l.id}>
             <a
@@ -100,9 +105,9 @@ export function LaunchHome(props: LaunchHomeProps) {
               aria-label={l.label}
               title={l.label}
               {...(external(l.url) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-              className="grid size-11 place-items-center rounded-full text-paper/60 transition-colors duration-300 hover:text-paper focus-visible:text-paper"
+              className={cn('grid place-items-center rounded-full text-paper/60 transition-colors duration-300 hover:text-paper focus-visible:text-paper', discord ? 'size-12 hover:bg-white/[0.06]' : 'size-11')}
             >
-              {l.platform === 'website' ? <Globe aria-hidden="true" className="size-5" /> : <BrandIcon name={l.platform} className="size-5" />}
+              {l.platform === 'website' ? <Globe aria-hidden="true" className={discord ? 'size-6' : 'size-5'} /> : <BrandIcon name={l.platform} className={discord ? 'size-6' : 'size-5'} />}
             </a>
           </li>
         ))}
@@ -124,7 +129,7 @@ export function LaunchHome(props: LaunchHomeProps) {
           </a>
         )}
 
-        {look.socials === 'top' && socialRow && <div className={cn(s.rise, '-mt-1 mb-6')} style={{ '--d': '0.1s' } as React.CSSProperties}>{socialRow}</div>}
+        {look.socials === 'top' && !discord && socialRow && <div className={cn(s.rise, '-mt-1 mb-6')} style={{ '--d': '0.1s' } as React.CSSProperties}>{socialRow}</div>}
 
         <div className={cn('flex w-full flex-col', left ? 'items-start' : 'items-center')}>
           <h1 key={headline} className={cn(s.rise, 'tracking-[-0.015em] text-balance', look.font === 'serif' ? 'font-display leading-[1.04]' : 'font-sans font-semibold leading-[1.08] tracking-[-0.03em]', props.links ? size.links : size.full)} style={{ '--d': '0.15s' } as React.CSSProperties}>
@@ -144,9 +149,16 @@ export function LaunchHome(props: LaunchHomeProps) {
                 <Countdown end={draft.end} compact auto={props.auto} onOver={onOver} />
               </div>
             )}
-            <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className={cta}>
-              {soon ? copy.joinLabel : copy.startTitle}
-            </button>
+            {discord ? (
+              <RingButton href={discord.url} external>
+                <BrandIcon name="discord" className="size-5" />
+                Join Discord
+              </RingButton>
+            ) : (
+              <button type="button" aria-expanded={open} onClick={() => setOpen((o) => !o)} className={cta}>
+                {soon ? copy.joinLabel : copy.startTitle}
+              </button>
+            )}
             <AutoHeight>
               <AnimatePresence initial={false}>
                 {open && (
@@ -184,8 +196,15 @@ export function LaunchHome(props: LaunchHomeProps) {
                 <Countdown end={draft.end ?? 0} auto={props.auto} />
               </div>
             ) : null}
-            <div className={cn(s.rise, 'mt-8 w-full max-w-[520px]', !draft.end && 'mt-10')} style={{ '--d': '0.45s' } as React.CSSProperties}>
-              <Waitlist copy={copy} />
+            <div className={cn(s.rise, 'mt-8 w-full', discord ? 'max-w-[400px]' : 'max-w-[520px]', !draft.end && 'mt-10')} style={{ '--d': '0.45s' } as React.CSSProperties}>
+              {discord ? (
+                <RingButton href={discord.url} external>
+                  <BrandIcon name="discord" className="size-5" />
+                  Join Discord
+                </RingButton>
+              ) : (
+                <Waitlist copy={copy} />
+              )}
             </div>
           </>
         ) : (
@@ -194,7 +213,7 @@ export function LaunchHome(props: LaunchHomeProps) {
           </div>
         )}
 
-        {look.socials === 'bottom' && socialRow && <div className={cn(s.rise, 'mt-10')} style={{ '--d': '0.5s' } as React.CSSProperties}>{socialRow}</div>}
+        {(look.socials === 'bottom' || (discord && look.socials !== 'off')) && socialRow && <div className={cn(s.rise, discord ? 'mt-8' : 'mt-10')} style={{ '--d': '0.5s' } as React.CSSProperties}>{socialRow}</div>}
 
         {props.locked && props.signedInAs && (
           <p className="mt-10 max-w-sm text-[13.5px] leading-relaxed text-paper/40">

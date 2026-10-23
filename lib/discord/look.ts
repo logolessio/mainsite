@@ -28,7 +28,7 @@ export const prow = (...b: Button[]): Component => ({ type: 1, components: b.sli
 /** The line that says the service is not open yet, shown on the welcome and setup messages for as long as the launch page is up. */
 export function notice(end: number | null): string {
   const when = end ? `It opens <t:${end}:D> (<t:${end}:R>). ` : ''
-  return `🚧 **logoless is not live yet, so there are no campaigns yet.** ${when}We are gathering our founding members first. Set up your account and link your accounts now, and you will be ready (and verified) when the first campaigns arrive here.`
+  return `🚧 **logoless is not live yet, so there are no campaigns yet.** ${when}We are gathering our founding members first. Become one now and link your accounts, and you will be ready (and verified) when the first campaigns arrive here.`
 }
 
 /** An embed in the new look: a titled card with the gradient along the bottom. */

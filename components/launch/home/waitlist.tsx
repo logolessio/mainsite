@@ -15,7 +15,7 @@ import s from './launch-home.module.css'
 const EASE = [0.22, 1, 0.36, 1] as const
 
 /** Grows and shrinks smoothly to whatever is inside it. */
-export function AutoHeight({ children, className }: { children: React.ReactNode; className?: string }) {
+export function AutoHeight({ children, className, margin = 24 }: { children: React.ReactNode; className?: string; /** how far past its edges what is inside may still show (a glow), in pixels */ margin?: number }) {
   const inner = useRef<HTMLDivElement>(null)
   const [h, setH] = useState<number | 'auto'>('auto')
   const { reduced } = useMotionPrefs()
@@ -27,7 +27,7 @@ export function AutoHeight({ children, className }: { children: React.ReactNode;
     return () => ro.disconnect()
   }, [])
   return (
-    <motion.div className={cn('relative', className)} initial={false} animate={{ height: h }} transition={reduced ? { duration: 0 } : { duration: 0.5, ease: EASE }} style={{ overflow: 'clip', overflowClipMargin: 24 }}>
+    <motion.div className={cn('relative', className)} initial={false} animate={{ height: h }} transition={reduced ? { duration: 0 } : { duration: 0.5, ease: EASE }} style={{ overflow: 'clip', overflowClipMargin: margin }}>
       <div ref={inner}>{children}</div>
     </motion.div>
   )

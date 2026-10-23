@@ -10,8 +10,21 @@ possible into **proven creators** (an account made, a TikTok, YouTube or Instagr
 numbers to show artists when you ask them for campaigns.
 
 - Every setup message says so: logoless is not live yet, there are no campaigns yet, we are gathering founding members, and it opens on the date.
-- Members make their account, link and prove their accounts, and (optionally) add PayPal, all inside Discord.
-- Everyone who sets up before the site opens gets the **Founding member** role (made by "Make the missing roles"; the bot keeps it in step).
+- **The pre-launch sign-up is a web page: https://beta.logoless.io/onboarding.** The welcome message in #get-started (and the answer to the Get started
+  button) links to it. A person signs in with Discord (which also puts them in the server), adds a name, a username and, if they like, where they post,
+  optionally adds PayPal (confirmed with a code emailed to the account, same as the site), and finishes. They are then given the **Founding member** role
+  and told so in a direct message, and "Open Discord" takes them back to #general. Google can be added next to Discord as a second way to sign in (optional).
+- **The Founding member role is what opens the community channels.** Press "Make the community channels" (new ones are made visible to that role only) or,
+  if the channels already exist, "Lock the community to founding members". Everyone else only sees the welcome, rules and information channels.
+- **Bots:** the sign-up is behind Cloudflare's quick check (Turnstile) and writes down where each person came from (a keyed hash of the network address,
+  the country and network name, the kind of device, how old the Discord account is). A sign-up that looks odd (a script, Tor, a Discord account under 4
+  days old, three other sign-ups from the same network, a filled-in hidden field, or two smaller flags together) is **held**: the person sees "almost
+  there" and you see it under Pre-launch sign-up in the owner dashboard (Discord page, Setup tab) with the reasons, and press Let in or Turn down. Letting
+  one in gives the role and sends them a message.
+- Everything still works inside Discord too (`/join`, `/verify`, `/paypal`, `/accounts`, `/payments`): linking and proving a TikTok, YouTube or
+  Instagram, and adding PayPal. The main site's own sign-up (logoless.io/onboarding) opens with the site.
+- While the site is shut, logoless.io shows only the coming-soon page: the countdown, a **Join Discord** button (the Discord link under Socials and
+  links) and all the socials. beta.logoless.io shows only the sign-up; every other address on it comes back to the sign-up, and once the site opens it sends people to logoless.io.
 - While the site is closed there is no balance, no withdraw button and no campaign list (those would only lead nowhere): `/withdraw` says there is
   nothing to withdraw yet, `/campaigns` says there are none, and the payment panel only offers adding PayPal. All of it comes back by itself when the site opens.
 - **Your numbers** (owner dashboard, Discord page, Setup tab; also `/admin audience` in Discord): server members, accounts made, accounts with Discord
@@ -37,11 +50,14 @@ numbers to show artists when you ask them for campaigns.
    Clipper, Brand, Artist, Developer, Team, Admin). A bot cannot give a role that sits above its own.
 3. **Make the missing categories and channels.** Fills the payouts and submissions channels (read-only for members) and the tickets, artists and
    inactive categories if any are missing.
-4. **Make the community channels.** New: general, introductions, clip-showcase, edit-help, ideas-and-feedback, off-topic, bot-commands, two voice
-   lounges, and a private Team category (team-chat, mod-queue) that only the staff, team and admin roles can see. It only adds what is missing and
-   never touches anything that already exists. Drag the new Community category up under the Welcome and Info ones.
+4. **Make the community channels.** General, introductions, clip-showcase, edit-help, ideas-and-feedback, off-topic, bot-commands, two voice
+   lounges (all visible only to the Founding member role and the staff; skipped with a note until that role exists, so make the roles first), and a
+   private Team category (team-chat, mod-queue) that only the staff, team and admin roles can see. It only adds what is missing and never touches
+   anything that already exists. Drag the new Community category up under the Welcome and Info ones.
+   **Lock the community to founding members** does the same for a Community category that already exists (it replaces the permissions on that
+   category and the channels in it, so anything set by hand on them is overwritten; nothing is renamed, moved or deleted).
 5. **Register commands.** Needed whenever the command list changes. The newest commands (`/join`, `/verify`, `/accounts`, `/paypal`, `/payments`, `/withdraw`) only appear after this.
-6. Post the panels: **get-started, rules, site, support, status** (the "Post" buttons). Then, in the channels where you want them, type `/admin panel` and pick **Manage accounts** and **Payment details**. If the get-started or rules message is already posted, post it again to get the new look (delete the old one).
+6. Post the panels: **get-started, rules, site, support, status**. The get-started one now links to the web sign-up; post it again (delete the old message) to get the new button (the "Post" buttons). Then, in the channels where you want them, type `/admin panel` and pick **Manage accounts** and **Payment details**. If the rules message is already posted, post it again to get the new look (delete the old one).
 7. **Make artist channels and cards**, then **Run the live loop now**.
 8. **Send a test message** and **Send me the welcome rundown** to see what members see.
 
@@ -87,15 +103,16 @@ While the site is closed, a member can do all of this without the website:
 
 ## 4. What still needs the site
 
-While the site is closed, only the log in page, the legal pages and /links are open, so nobody but the owner can do these yet. After Dec 1 they
-need the site: finishing a profile (onboarding), and brands creating and funding campaigns. Making an account, linking and proving social accounts,
-adding PayPal and withdrawing can all be done in Discord now.
+While the site is closed, only the log in page, the legal pages, /links and the sign-in hop (/join, used by beta.logoless.io) are open on logoless.io, and
+beta.logoless.io/onboarding is the one sign-up. After Dec 1 the main site's own onboarding (role choice, brands) opens, and brands can create and fund
+campaigns. Founding members keep their role and their profile. Making an account, linking and proving social accounts, adding PayPal and withdrawing can all
+be done in Discord now.
 
 ## 5. To make Discord truly stand on its own (not built yet)
 
 Done now: `/join`, `/verify`, `/paypal` and `/withdraw` (section 3b). Still missing, in the order I would build them:
 
-1. Finishing a profile (name, picture, bio) from Discord.
+1. Finishing a profile (picture, bio) from Discord (name and username are on the web sign-up).
 2. `/waitlist`: reserve a username from Discord while the site is closed.
 3. Brands starting a campaign from a form in Discord.
 

@@ -20,6 +20,7 @@ import { requireAdmin } from '@/lib/user'
 import { featureOn } from '@/lib/features'
 import { lastTick } from '@/lib/discord/tick'
 import { audience, pitchLine } from '@/lib/discord/audience'
+import { heldSignups, preCounts } from '@/lib/prelaunch'
 
 /** Permissions the bot asks for when it is added: see channels, send messages, embed links, read history, manage roles and manage channels (for tickets). */
 const PERMISSIONS = 268520464
@@ -38,6 +39,8 @@ const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('make-roles') }),
   z.object({ action: z.literal('make-places') }),
   z.object({ action: z.literal('make-community') }),
+  z.object({ action: z.literal('lock-community') }),
+  z.object({ action: z.literal('prelaunch-decide'), userId: z.string().min(8).max(64), approve: z.boolean() }),
   z.object({ action: z.literal('welcome-me') }),
 ])
 
@@ -57,6 +60,7 @@ export const GET = route(async () => {
     cfg,
     linked: (linked?.n ?? 0) + (byLogin?.n ?? 0),
     audience: await audience().then(async (a) => ({ ...a, line: pitchLine(a) })).catch(() => null),
+    prelaunch: { ...(await preCounts()), held: await heldSignups(), page: 'https://beta.logoless.io/onboarding' },
     commands: COMMANDS.length,
     lastTick: await lastTick(),
     samples: sampleList(),
@@ -199,6 +203,27 @@ export const POST = route(async (req: Request) => {
     }
     await audit(actor, 'discord.make-community', null, r.made.join(', ') || 'nothing missing', ip)
     return json({ ok: true, ...r })
+  }
+  if (a.action === 'lock-community') {
+    if (!cfg.guildId) throw new HttpError(409, 'Save your server ID first.')
+    const { lockCommunity } = await import('@/lib/discord/server-build')
+    try {
+      const r = await lockCommunity(cfg)
+      await audit(actor, 'discord.lock-community', null, r.locked.join(', ') || r.note || 'nothing', ip)
+      return json({ ok: true, ...r })
+    } catch (e) {
+      throw new HttpError(502, e instanceof Error ? e.message : 'Discord would not change the channels.')
+    }
+  }
+  if (a.action === 'prelaunch-decide') {
+    // a sign-up that was held for a look: let it in (the role is given and they are told) or turn it down
+    const { decidePre } = await import('@/lib/prelaunch')
+    const { tellDecision } = await import('@/lib/discord/prelaunch')
+    const s = await decidePre(a.userId, a.approve)
+    if (!s) throw new HttpError(404, 'That sign-up was not found.')
+    await tellDecision(a.userId, a.approve, s.n ?? null)
+    await audit(actor, `discord.prelaunch-${a.approve ? 'approve' : 'deny'}`, a.userId, s.flags.join('; ') || 'no flags', ip)
+    return json({ ok: true, n: s.n ?? null })
   }
   if (a.action === 'artists') {
     const { syncAllArtists } = await import('@/lib/discord/campaigns')

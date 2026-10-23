@@ -56,7 +56,7 @@ export async function wantedRoles(userId: string) {
   const wanted = new Set<string>()
   if (!k) return { cfg, wanted, managed, kinds: null }
   if (ro.linked) wanted.add(ro.linked)
-  // a founding member made their account before the site opened: everyone who joins while the launch page is up, and the ones who made one earlier
+  // a founding member finished the pre-launch sign-up (and was not held back for a look)
   if (ro.founding && (await isFounding(userId))) wanted.add(ro.founding)
   if (ro.clipper && k.clipper) wanted.add(ro.clipper)
   if (ro.brand && k.brand) wanted.add(ro.brand)
@@ -71,15 +71,10 @@ export async function wantedRoles(userId: string) {
   return { cfg, wanted, managed, kinds: k }
 }
 
-/** Did this person make their account before the site opened (or is the site still closed)? */
+/** Was this person let in as a founding member through the pre-launch sign-up (beta.logoless.io/onboarding)? They keep the role after the site opens. */
 async function isFounding(userId: string): Promise<boolean> {
-  try {
-    const [row, launch] = await Promise.all([(await db()).prepare('SELECT created_at FROM users WHERE id = ?1').bind(userId).first<{ created_at: number }>(), import('../settings').then((m) => m.allSettings()).then(async (s) => (await import('../launch')).launchView(s))])
-    if (!row) return false
-    return launch.closed || (launch.end !== null && row.created_at < launch.end)
-  } catch {
-    return false
-  }
+  const { isFoundingMember } = await import('../prelaunch')
+  return isFoundingMember(userId)
 }
 
 /** Brings someone's roles in the server in line with their account: gives the ones they have earned, takes away ones they should not have. */

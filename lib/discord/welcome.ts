@@ -67,7 +67,11 @@ export async function startPressed(a: { discordId: string; appId: string; token:
   const state: StartState = !userId ? 'new' : (await onboarded(userId)) ? 'ready' : 'unfinished'
   // while the site is closed behind the launch page, its sign-up and onboarding pages cannot be opened: say when it opens and what to do here meanwhile
   const launch = launchView(await allSettings())
-  if (launch.closed && state !== 'ready') return preLaunchPanel(launch.end)
+  if (launch.closed) {
+    const { getPre } = await import('../prelaunch')
+    const pre = userId ? await getPre(userId) : null
+    return preLaunchPanel(launch.end, pre ? { n: pre.n ?? null, held: Boolean(pre.held && !pre.n) } : undefined)
+  }
   if (state === 'ready' && userId) {
     // already set up: the next steps are the answer itself, and the rundown goes out if it never did
     await background(welcomeOnce(userId, { skipFollowUp: true }))

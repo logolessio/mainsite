@@ -1,19 +1,30 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
+import { isBetaHost, joinBaseFor } from '@/lib/beta-host'
 import { db } from '@/lib/db'
-import { featureOn } from '@/lib/features'
+import { featureOn, requestHost } from '@/lib/features'
+import { launchView } from '@/lib/launch'
+import { allSettings } from '@/lib/settings'
 import { getSession } from '@/lib/session'
 import { emailProven, isVerified } from '@/lib/verification'
 import { OnboardingFlow } from '@/components/onboarding/onboarding-flow'
+import { PreLaunchOnboarding } from '@/components/prelaunch/onboarding'
 
 export const metadata: Metadata = {
   title: 'Get started | logoless',
   description: 'Create your account, link your socials, set up your profile and get paid, all in one guided flow.',
 }
 
-export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ role?: string; preview?: string; step?: string; ref?: string }> }) {
-  const { role, preview, step, ref } = await searchParams
+export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ role?: string; preview?: string; step?: string; ref?: string; google?: string }> }) {
+  const { role, preview, step, ref, google } = await searchParams
+  // beta.logoless.io/onboarding is the pre-launch sign-up: the one page open while the rest of the site is shut. Once the site opens it is the normal sign-up on logoless.io.
+  const host = await requestHost()
+  if (isBetaHost(host)) {
+    const launch = launchView(await allSettings())
+    if (!launch.closed) redirect(host.startsWith('beta.localhost') ? `http://${host.replace('beta.', '')}/onboarding` : 'https://logoless.io/onboarding')
+    return <PreLaunchOnboarding end={launch.end} joinBase={joinBaseFor(host)} notice={google === 'taken' || google === 'owner' || google === 'used' ? google : null} />
+  }
   const session = await getSession()
   const user = session?.user ? { name: session.user.name ?? '', email: session.user.email ?? '' } : null
   // an admin's dry run: nothing is saved (see the Previews page in the admin area)
