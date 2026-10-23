@@ -1,4 +1,5 @@
 import { setting } from '../db'
+import { primeIcons } from './icon-prime'
 import { tidy } from './ui'
 
 // DISCORD_API_BASE is only for tests on a developer machine (a stand-in for Discord). It is never set on Cloudflare.
@@ -16,7 +17,7 @@ export type Embed = {
   author?: { name: string; icon_url?: string; url?: string }
   timestamp?: string
 }
-export type Component = { type: 1; components: ({ type: 2; style: 1 | 2 | 3 | 4 | 5; label: string; custom_id?: string; url?: string; emoji?: { name: string }; disabled?: boolean })[] }
+export type Component = { type: 1; components: ({ type: 2; style: 1 | 2 | 3 | 4 | 5; label: string; custom_id?: string; url?: string; emoji?: { name: string; id?: string }; /** one of our gradient icons: becomes the button's emoji when the message is sent (see ui.ts) */ icon?: string; disabled?: boolean })[] }
 /** A part of a Components V2 message (a container, a text display, a media gallery...): see v2.ts. */
 export type V2Node = { type: number; [key: string]: unknown }
 export type Message = { /** Words written by a person: posted exactly as they are (no wording changes, no emoji removed). */ raw?: boolean; content?: string; embeds?: Embed[]; components?: (Component | V2Node)[]; flags?: number; allowed_mentions?: { parse?: string[]; users?: string[]; roles?: string[] } }
@@ -30,6 +31,7 @@ export type Call<T = unknown> = { ok: boolean; status: number; json: T | null }
 export async function discord<T = unknown>(method: string, path: string, body?: unknown, timeoutMs = 6000): Promise<Call<T>> {
   const token = await setting('DISCORD_BOT_TOKEN')
   if (!token) return { ok: false, status: 0, json: null }
+  if (isMessagePath(path)) await primeIcons() // the gradient icons in a message need to be known before it is built (see ui.ts)
   try {
     const res = await fetch(`${API}${path}`, {
       method,
@@ -65,6 +67,7 @@ export async function registerCommands(appId: string, guildId: string | null, co
 
 /** Edits the reply to a slash command that was answered with "thinking…". No bot token needed: the interaction token is the key. */
 export async function editOriginal(appId: string, interactionToken: string, m: Message) {
+  await primeIcons()
   try {
     await fetch(`${API}/webhooks/${appId}/${interactionToken}/messages/@original`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(tidy(m)), signal: AbortSignal.timeout(8000) })
   } catch {
@@ -77,8 +80,9 @@ export async function editOriginal(appId: string, interactionToken: string, m: M
  * this is the only way a bot can put a message in a channel that one person alone can see.
  */
 export async function followUp(appId: string, interactionToken: string, m: Message, ephemeral = true): Promise<boolean> {
+  await primeIcons()
   try {
-    const res = await fetch(`${API}/webhooks/${appId}/${interactionToken}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...tidy(m), ...(ephemeral ? { flags: 64 } : {}) }), signal: AbortSignal.timeout(8000) })
+    const res = await fetch(`${API}/webhooks/${appId}/${interactionToken}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...tidy(m), ...(ephemeral ? { flags: (m.flags ?? 0) | 64 } : {}) }), signal: AbortSignal.timeout(8000) })
     return res.ok
   } catch {
     return false

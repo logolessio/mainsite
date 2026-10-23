@@ -72,7 +72,7 @@ export async function purgeAccount(userId: string, d0: Deletion) {
     d.prepare('DELETE FROM notifications WHERE user_id = ?1').bind(userId),
     d.prepare('DELETE FROM uploads WHERE user_id = ?1').bind(userId),
     d.prepare('DELETE FROM badges_unlocked WHERE user_id = ?1').bind(userId),
-    d.prepare("DELETE FROM settings WHERE key IN (?1, ?2)").bind(`paypal:${userId}`, key(userId)),
+    d.prepare("DELETE FROM settings WHERE key IN (?1, ?2, ?3, ?4)").bind(`paypal:${userId}`, key(userId), `prelaunch:${userId}`, `discord:welcomed-public:${userId}`),
     d.prepare("UPDATE users SET email = ?2, name = NULL, image = NULL, status = 'banned' WHERE id = ?1").bind(userId, `deleted-${userId}@deleted.invalid`),
   ])
   await (await import('./notify-center')).forgetNotifyData(userId).catch(() => {})

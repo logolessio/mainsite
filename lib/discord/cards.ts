@@ -118,7 +118,7 @@ export const balanceCard = (b: BalanceData): Message =>
         ],
       }),
     ],
-    [row(pbtn('Withdraw', 'wd:start', 'green', '💸'), btn('My numbers', 'cmd:stats'))],
+    [row(pbtn('Withdraw', 'wd:start', 'green', 'wallet'), btn('My numbers', 'cmd:stats'))],
   )
 
 export type SubmissionRow = { status: string; title: string; platform: string; views: number; earnedCents: number }

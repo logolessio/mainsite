@@ -15,7 +15,6 @@ import { TransitionProvider } from './transition-provider'
 import { GradientField } from './gradient-field'
 import { RidgeField } from './ridge-field'
 import { LightField } from './light-field'
-import { PageRails } from './pillar-rails'
 import { NavUserProvider } from './nav-user'
 import { Tracker } from './tracker'
 import { AnnouncementBar } from './announcement-bar'
@@ -43,10 +42,9 @@ export function AppShell({ children, announcement = null, dots = false, links = 
         <Spotlight />
         <LiveToasts />
         <BadgeCelebration />
-        <GradientField rails={false} />
+        <GradientField />
         {dots && <RidgeField />}
         <LightField />
-        <PageRails />
         <SiteNav />
         <StickyCta />
         {announcement && <AnnouncementBar text={announcement.text} href={announcement.href} />}

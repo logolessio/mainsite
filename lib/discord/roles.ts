@@ -51,13 +51,17 @@ export const kindWords = (k: Kinds) =>
 export async function wantedRoles(userId: string) {
   const cfg = await getDiscordConfig()
   const ro = cfg.roles
-  const managed = new Set<string>([ro.linked, ro.founding, ro.clipper, ro.brand, ro.creator, ro.developer, ro.admin, ro.team, ...ro.tiers.map((t) => t.role)].filter(Boolean))
+  const managed = new Set<string>([ro.linked, ro.verified, ro.unverified, ro.founding, ro.clipper, ro.brand, ro.creator, ro.developer, ro.admin, ro.team, ...ro.tiers.map((t) => t.role)].filter(Boolean))
   const k = await memberKinds(userId)
   const wanted = new Set<string>()
   if (!k) return { cfg, wanted, managed, kinds: null }
   if (ro.linked) wanted.add(ro.linked)
-  // a founding member finished the pre-launch sign-up (and was not held back for a look)
-  if (ro.founding && (await isFounding(userId))) wanted.add(ro.founding)
+  // Verified opens the server: they finished the sign-up (and were not held back for a look), they are on the team, or the site is open and they have an account.
+  // Everyone else who has joined is Unverified and sees only #get-started. Founding member is for those let in while the site was still shut.
+  const st = await membership(userId, k)
+  if (ro.verified && st.verified) wanted.add(ro.verified)
+  if (ro.unverified && !st.verified) wanted.add(ro.unverified)
+  if (ro.founding && st.founding) wanted.add(ro.founding)
   if (ro.clipper && k.clipper) wanted.add(ro.clipper)
   if (ro.brand && k.brand) wanted.add(ro.brand)
   if (ro.creator && k.creator) wanted.add(ro.creator)
@@ -71,10 +75,13 @@ export async function wantedRoles(userId: string) {
   return { cfg, wanted, managed, kinds: k }
 }
 
-/** Was this person let in as a founding member through the pre-launch sign-up (beta.logoless.io/onboarding)? They keep the role after the site opens. */
-async function isFounding(userId: string): Promise<boolean> {
-  const { isFoundingMember } = await import('../prelaunch')
-  return isFoundingMember(userId)
+/** Whether someone is a verified member and whether they are a founding one (see wantedRoles). */
+export async function membership(userId: string, k: { admin: boolean; team: boolean }): Promise<{ verified: boolean; founding: boolean }> {
+  const { getPre } = await import('../prelaunch')
+  const [pre, settings] = await Promise.all([getPre(userId), import('../settings').then((m) => m.allSettings())])
+  const { launchView } = await import('../launch')
+  const open = !launchView(settings).closed
+  return { verified: Boolean(pre?.n) || k.admin || k.team || open, founding: Boolean(pre?.n && pre.founding !== false) }
 }
 
 /** Brings someone's roles in the server in line with their account: gives the ones they have earned, takes away ones they should not have. */
@@ -99,7 +106,7 @@ export async function syncRoles(userId: string): Promise<SyncResult> {
  * with campaigns (saved as `creator`) is named Artist, to keep the two apart. Rename any of them in Discord freely.
  * Used by the "Make the missing roles" button, by the config key they are saved under.
  */
-export const ROLE_NAMES: { key: 'linked' | 'founding' | 'clipper' | 'brand' | 'creator' | 'developer' | 'admin' | 'team'; name: string }[] = [
+export const ROLE_NAMES: { key: 'linked' | 'verified' | 'unverified' | 'founding' | 'clipper' | 'brand' | 'creator' | 'developer' | 'admin' | 'team'; name: string }[] = [
   { key: 'admin', name: 'Admin' },
   { key: 'team', name: 'Team' },
   { key: 'developer', name: 'Developer' },
@@ -107,5 +114,7 @@ export const ROLE_NAMES: { key: 'linked' | 'founding' | 'clipper' | 'brand' | 'c
   { key: 'brand', name: 'Brand' },
   { key: 'clipper', name: 'Clipper' },
   { key: 'founding', name: 'Founding member' },
+  { key: 'verified', name: 'Verified' },
+  { key: 'unverified', name: 'Unverified' },
   { key: 'linked', name: 'Linked' },
 ]

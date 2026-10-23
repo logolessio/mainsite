@@ -14,7 +14,8 @@ type Status = {
   cfg: DiscordConfig
   linked: number
   audience: { members: number | null; accounts: number; linked: number; withAccounts: number; verified: { tiktok: number; youtube: number; instagram: number }; verifiedPeople: number; tiktokFollowers: number; paypal: number; line: string } | null
-  prelaunch: { founding: number; started: number; page: string; held: { userId: string; name: string; handle: string | null; email: string; at: number; flags: string[]; country: string | null; org: string | null; device: string; discordDays: number | null }[] } | null
+  prelaunch: { verified: number; founding: number; started: number; page: string; held: { userId: string; name: string; handle: string | null; email: string; at: number; flags: string[]; country: string | null; org: string | null; device: string; discordDays: number | null }[]; signups: { userId: string; name: string; handle: string | null; email: string; discord: string | null; at: number; status: 'member' | 'founding' | 'held' | 'denied' | 'started'; n: number | null; ip: string | null; country: string | null; org: string | null; device: string; ua: string; discordDays: number | null; flags: string[] }[] } | null
+  icons: { have: number; total: number } | null
   commands: number
   samples: { id: string; label: string; group: string }[]
   endpoint: string
@@ -132,15 +133,17 @@ export function DiscordPanel() {
       {tab === 'setup' && (
         <>
       {s.prelaunch && (
-        <Card title="Pre-launch sign-up">
+        <Card title="Sign-ups">
           <p className="mb-3 text-sm text-mute">
-            The one page open while the site is shut: <a href={s.prelaunch.page} target="_blank" rel="noopener noreferrer" className="text-paper underline underline-offset-4">{s.prelaunch.page.replace('https://', '')}</a>. People sign in with Discord, add a profile and (if they like) PayPal, and come back to the
-            server with the Founding member role. The sign-up note in #get-started links here. Odd-looking sign-ups (a throwaway Discord account, a script, many from one network) wait here for you.
+            The one page open while the site is shut: <a href={s.prelaunch.page} target="_blank" rel="noopener noreferrer" className="text-paper underline underline-offset-4">{s.prelaunch.page.replace('https://', '')}</a>. A new member joins the server as Unverified and sees only #get-started, which links here.
+            They sign in with Discord, add a profile and (if they like) PayPal, and come back as Verified, with the Founding member role too while the site is shut. Where each sign-up came from is written down below, network address included.
+            Odd-looking ones (a throwaway Discord account, a script, many from one network) wait for you.
           </p>
-          <dl className="grid grid-cols-3 gap-x-6">
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
             {([
+              ['Verified', s.prelaunch.verified],
               ['Founding members', s.prelaunch.founding],
-              ['Started', s.prelaunch.started],
+              ['Started, not finished', Math.max(0, s.prelaunch.started - s.prelaunch.verified - s.prelaunch.held.length)],
               ['Waiting for a look', s.prelaunch.held.length],
             ] as [string, number][]).map(([k, v]) => (
               <div key={k}>
@@ -165,7 +168,7 @@ export function DiscordPanel() {
                     </p>
                     <p className="mt-1 text-xs text-amber-300">{h.flags.join(' · ') || 'No flags'}</p>
                   </div>
-                  <button type="button" disabled={Boolean(busy)} className={solid} onClick={() => run(`pre-${h.userId}`, async () => (await call({ action: 'prelaunch-decide', userId: h.userId, approve: true }), `${h.name} is in. They have the role and a message.`))}>
+                  <button type="button" disabled={Boolean(busy)} className={solid} onClick={() => run(`pre-${h.userId}`, async () => (await call({ action: 'prelaunch-decide', userId: h.userId, approve: true }), `${h.name} is in. They are Verified and have a message.`))}>
                     {busy === `pre-${h.userId}` && <Loader2 className="size-4 animate-spin" />} Let in
                   </button>
                   <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run(`pre-${h.userId}`, async () => (await call({ action: 'prelaunch-decide', userId: h.userId, approve: false }), `${h.name} was turned down.`))}>
@@ -174,6 +177,47 @@ export function DiscordPanel() {
                 </li>
               ))}
             </ul>
+          )}
+          {s.prelaunch.signups.length > 0 ? (
+            <div className="mt-5 overflow-x-auto rounded-panel border border-line">
+              <table className="w-full min-w-[820px] text-left text-xs">
+                <thead className="text-mute">
+                  <tr className="border-b border-line">
+                    {['When', 'Who', 'Status', 'Network address', 'Where from', 'Device', 'Notes'].map((h) => (
+                      <th key={h} className="px-3 py-2 font-normal">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {s.prelaunch.signups.map((r) => (
+                    <tr key={r.userId} className="border-b border-line align-top last:border-0">
+                      <td className="px-3 py-2 whitespace-nowrap text-mute">{new Date(r.at * 1000).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
+                      <td className="px-3 py-2">
+                        <span className="block text-sm">{r.name}</span>
+                        <span className="block text-mute">{r.handle ? `@${r.handle} · ` : ''}{r.discord ?? r.email}</span>
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        {r.status === 'founding' ? `Founding #${r.n}` : r.status === 'member' ? `Verified #${r.n}` : r.status === 'held' ? 'Waiting' : r.status === 'denied' ? 'Turned down' : 'Started'}
+                      </td>
+                      <td className="px-3 py-2 font-mono whitespace-nowrap">{r.ip ?? '-'}</td>
+                      <td className="px-3 py-2">
+                        {r.country ?? '?'}
+                        <span className="block text-mute">{r.org ?? ''}</span>
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap text-mute">
+                        {r.device}
+                        {r.discordDays !== null ? ` · Discord ${r.discordDays}d` : ''}
+                      </td>
+                      <td className="px-3 py-2 text-amber-300">{r.flags.join(' · ')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-mute">Nobody has signed up yet.</p>
           )}
         </Card>
       )}
@@ -244,7 +288,7 @@ export function DiscordPanel() {
 
       {tab === 'server' && (
         <>
-      <Card title="Server and channels" sub="IDs only. Leave a box empty to turn that part off. “Post it” puts the message in that channel (it is posted again each time you press it).">
+      <Card title="Server and channels" sub="IDs only. Leave a box empty to turn that part off. “Post it” puts the message in that channel. For get-started, rules and support it replaces the bot's earlier copy, so there is only ever one.">
         <div className="grid gap-5">
           <label className="grid gap-1.5">
             <span className="text-xs text-mute">Server ID</span>
@@ -314,9 +358,9 @@ export function DiscordPanel() {
       <Card title="Roles" sub="IDs only. The bot gives and takes these as people link and earn.">
         <div className="grid gap-5">
           <div className="grid gap-4 sm:grid-cols-3">
-            {(['linked', 'founding', 'clipper', 'creator', 'brand', 'developer', 'admin', 'team', 'staff'] as const).map((k) => (
+            {(['linked', 'unverified', 'verified', 'founding', 'clipper', 'creator', 'brand', 'developer', 'admin', 'team', 'staff'] as const).map((k) => (
               <label key={k} className="grid gap-1.5">
-                <span className="text-xs text-mute">{{ linked: 'Linked members', founding: 'Founding members (finished the pre-launch sign-up)', clipper: 'Clippers', creator: 'Artists (run campaigns)', brand: 'Brands', developer: 'Developers', admin: 'Admins', team: 'Team', staff: 'Staff (can see tickets)' }[k]}</span>
+                <span className="text-xs text-mute">{{ linked: 'Linked members', unverified: 'Unverified (joined, not signed up: sees only #get-started)', verified: 'Verified (finished the sign-up: opens the server)', founding: 'Founding members (verified while the site was shut)', clipper: 'Clippers', creator: 'Artists (run campaigns)', brand: 'Brands', developer: 'Developers', admin: 'Admins', team: 'Team', staff: 'Staff (can see tickets)' }[k]}</span>
                 <input className={input} inputMode="numeric" value={cfg.roles[k]} onChange={(e) => set({ roles: { ...cfg.roles, [k]: digits(e.target.value) } })} placeholder="Role ID" />
               </label>
             ))}
@@ -394,6 +438,12 @@ export function DiscordPanel() {
           </button>
           <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('lock-community', async () => { const j = (await call({ action: 'lock-community' })) as { locked?: string[]; note?: string }; return j.locked?.length ? `Locked ${j.locked.length} places to the Founding member role and the staff.` : (j.note ?? 'Nothing to lock.') })}>
             {busy === 'lock-community' && <Loader2 className="size-4 animate-spin" />} Lock the community to founding members
+          </button>
+          <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('lock-server', async () => { let all: string[] = []; for (let n = 0; n < 8; n++) { const j = (await call({ action: 'lock-server' })) as { changed?: string[]; remaining?: number }; all = all.concat(j.changed ?? []); if (!j.remaining) break } return all.length ? `Changed ${all.length} places: a new member now sees only #get-started, and Verified members see the rest.` : 'Already done: a new member sees only #get-started.' })}>
+            {busy === 'lock-server' && <Loader2 className="size-4 animate-spin" />} Lock the server to verified members
+          </button>
+          <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('upload-icons', async () => { let made = 0; let left = 0; let failed: string[] = []; for (let n = 0; n < 6; n++) { const j = (await call({ action: 'upload-icons' })) as { made?: string[]; failed?: string[]; remaining?: number; note?: string }; if (j.note) return j.note; made += j.made?.length ?? 0; failed = failed.concat(j.failed ?? []); left = j.remaining ?? 0; if (!left || !(j.made?.length)) break } return left ? `Uploaded ${made}, ${left} left${failed.length ? ` (could not do: ${failed.join(', ')})` : ''}. Press again.` : `All the gradient icons are on Discord as the bot's emoji${made ? ` (${made} new)` : ''}. Messages use them from the next one sent.` })}>
+            {busy === 'upload-icons' && <Loader2 className="size-4 animate-spin" />} Upload the gradient icons{s.icons ? ` (${s.icons.have} of ${s.icons.total})` : ''}
           </button>
           <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('tick', async () => { const j = (await call({ action: 'tick' })) as { skipped?: string; parts?: Record<string, string> }; return j.skipped ? `Skipped: ${j.skipped}.` : Object.entries(j.parts ?? {}).map(([k, v]) => `${k}: ${v}`).join(' · ') })}>
             {busy === 'tick' && <Loader2 className="size-4 animate-spin" />} Run the live loop now

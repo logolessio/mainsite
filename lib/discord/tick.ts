@@ -1,6 +1,6 @@
 import { db, nowSec, setting } from '../db'
 import { featureOn } from '../features'
-import { botReady, discord, postMessage } from './api'
+import { addRole, botReady, discord, postMessage } from './api'
 import { payoutPostCard, submissionPostCard, withdrawalPostCard, type SubmissionPost } from './cards-more'
 import { getDiscordConfig, type DiscordConfig } from './config'
 import { videoInfo, type VideoInfo } from './video'
@@ -15,6 +15,7 @@ import { videoInfo, type VideoInfo } from './video'
  *  4. payouts: new earnings (and withdrawals sent) are posted in the payouts channel
  *  5. tickets: a ticket whose channel was deleted in Discord is closed on the site
  *  6. roles: a handful of linked members have their roles brought in line with the site
+ *  7. newcomers: people who joined the server and have no role yet are made Unverified (they see only #get-started until they sign up)
  * A lock makes sure two runs never overlap, and a claim row in discord_posts makes sure nothing is ever posted twice.
  */
 export type TickSummary = { at: number; skipped?: string; ms: number; parts: Record<string, string> }
@@ -249,6 +250,35 @@ async function roles(): Promise<string> {
   return `${rows.length} checked, ${changed} changed`
 }
 
+// ---------- newcomers ----------
+/**
+ * Somebody who joins the server from an invite link has no role. Discord only tells a bot about joins over a constant connection, which this site does not keep,
+ * so once a minute the newest part of the member list is looked at and anyone with none of our roles is made Unverified. They can see only #get-started either way
+ * (every other channel is for Verified, see "Lock the server to verified members"): the role is what says so, and what the sign-up takes away again.
+ * Reading the member list needs the "Server Members Intent" switched on for the bot in the Discord developer portal; without it this says so and does nothing.
+ */
+async function newcomers(cfg: DiscordConfig): Promise<string> {
+  const ro = cfg.roles
+  if (!ro.unverified) return 'no Unverified role yet (Make the missing roles)'
+  const after = (await get('discord:cursor:members')) ?? '0'
+  const list = await discord<{ roles: string[]; user?: { id: string; bot?: boolean } }[]>('GET', `/guilds/${cfg.guildId}/members?limit=100&after=${after}`)
+  if (!list.ok) return list.status === 403 ? 'cannot read the member list: switch on Server Members Intent for the bot in the Discord developer portal (Bot, Privileged Gateway Intents)' : `Discord answered ${list.status}`
+  const members = Array.isArray(list.json) ? list.json : []
+  const known = [ro.verified, ro.unverified, ro.founding, ro.admin, ro.team, ro.staff, ro.developer, ro.creator, ro.brand, ro.clipper].filter(Boolean)
+  let given = 0
+  let last = after
+  for (const m of members) {
+    if (!m.user) continue
+    if (given >= 20) break // one run only has so many calls to make; the rest is picked up next time
+    last = m.user.id
+    if (m.user.bot || m.roles.some((r) => known.includes(r))) continue
+    if ((await addRole(cfg.guildId, m.user.id, ro.unverified)).ok) given++
+  }
+  const finished = members.length < 100 && given < 20
+  await put('discord:cursor:members', finished ? '0' : last) // back to the start once the whole list has been looked at
+  return `${members.length} looked at, ${given} made Unverified`
+}
+
 // ---------- the run ----------
 export async function discordTick(o: { force?: boolean } = {}): Promise<TickSummary> {
   const started = Date.now()
@@ -284,6 +314,7 @@ export async function discordTick(o: { force?: boolean } = {}): Promise<TickSumm
     await step('payouts', 'discord-payouts', () => payouts(cfg, until))
     await step('tickets', 'discord-tickets', () => tickets(cfg))
     await step('roles', 'discord-roles', () => roles())
+    await step('newcomers', 'discord-roles', () => newcomers(cfg))
     const summary = out()
     await put('discord:tick-last', JSON.stringify(summary)).catch(() => null)
     return summary

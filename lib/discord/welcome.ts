@@ -70,7 +70,7 @@ export async function startPressed(a: { discordId: string; appId: string; token:
   if (launch.closed) {
     const { getPre } = await import('../prelaunch')
     const pre = userId ? await getPre(userId) : null
-    return preLaunchPanel(launch.end, pre ? { n: pre.n ?? null, held: Boolean(pre.held && !pre.n) } : undefined)
+    return preLaunchPanel(launch.end, pre ? { n: pre.n ?? null, held: Boolean(pre.held && !pre.n), founding: pre.founding !== false } : undefined)
   }
   if (state === 'ready' && userId) {
     // already set up: the next steps are the answer itself, and the rundown goes out if it never did

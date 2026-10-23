@@ -1,4 +1,5 @@
 import { BADGE_BY_ID } from '../badges-defs'
+import { primeIcons } from './icon-prime'
 import { liveCampaigns } from '../campaigns-db'
 import { db, nowSec } from '../db'
 import { FAQ } from '../faq'
@@ -17,7 +18,8 @@ import { accountsPanel, noCampaignsPanel, paymentsPanel } from './panels-new'
 import { launchNotice } from './notice'
 import { setupCommand, setupComponent, setupModal } from './setup-flows'
 import { SAMPLES, SAMPLE_BY_ID } from './samples'
-import { go as goBtn, goTarget, tidy } from './ui'
+import { BAR } from './look'
+import { go as goBtn, goTarget, icon, tidy } from './ui'
 import { addUserReply, closeTicket, openTicket } from './tickets'
 import { getDiscordConfig } from './config'
 import { announceCampaign, logToDiscord, postTo, refreshStatus } from './outbound'
@@ -397,21 +399,21 @@ async function admin(i: Interaction): Promise<Reply> {
       const a = await audience()
       return say(
         {
-          raw: true,
           embeds: [
             {
-              title: '📈 Your numbers',
-              description: `**${pitchLine(a)}**`,
+              author: { name: 'Your numbers', icon_url: icon('chart') },
+              title: pitchLine(a),
               color: 0x8647ff,
               fields: [
                 { name: 'Server members', value: a.members === null ? '?' : a.members.toLocaleString('en-US'), inline: true },
                 { name: 'Accounts made', value: a.accounts.toLocaleString('en-US'), inline: true },
                 { name: 'Discord linked', value: a.linked.toLocaleString('en-US'), inline: true },
                 { name: 'Linked a social account', value: a.withAccounts.toLocaleString('en-US'), inline: true },
-                { name: 'Proven accounts', value: `🎵 ${a.verified.tiktok} · ▶️ ${a.verified.youtube} · 📸 ${a.verified.instagram}`, inline: true },
+                { name: 'Proven accounts', value: `{ic:tiktok} ${a.verified.tiktok} · {ic:youtube} ${a.verified.youtube} · {ic:instagram} ${a.verified.instagram}`, inline: true },
                 { name: 'TikTok followers (proven)', value: a.tiktokFollowers > 0 ? short(a.tiktokFollowers) : '0', inline: true },
                 { name: 'PayPal added', value: a.paypal.toLocaleString('en-US'), inline: true },
               ],
+              image: { url: BAR },
             },
           ],
         },
@@ -696,6 +698,7 @@ async function newer(i: Interaction, env: Env, name: string): Promise<Reply | nu
 
 /** One interaction in, one reply out. Every slow thing goes through `env.defer`. */
 export async function handleInteraction(i: Interaction, env: Env): Promise<Reply> {
+  await primeIcons() // the gradient icons in the replies need to be known before they are built (see ui.ts)
   try {
     if (i.type === 4) return await autocomplete(i)
     if (i.type === 3) return await component(i, env)

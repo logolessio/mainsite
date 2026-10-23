@@ -3,6 +3,7 @@ import type { Message } from './api'
 import * as k from './cards'
 import * as m from './cards-more'
 import { notice } from './look'
+import { welcomeCard, welcomeDmMessage } from './member-cards'
 import * as np from './panels-new'
 import { kindIcon } from './ui'
 
@@ -185,6 +186,10 @@ export const SAMPLES: Sample[] = [
   { id: 'team-log', group: 'Team', label: 'A line in the team log', build: () => k.logCard({ text: 'New ticket from <@0>: My withdrawal has not arrived' }) },
 
   // ---- the bigger bot (cards-more.ts)
+  { id: 'welcome-public', group: 'Get started', label: 'Welcome: the card in the welcome channel (founding member)', build: () => welcomeCard({ name: 'Luna Ray', handle: 'luna_ray', discordId: '0', n: 12, founding: true, avatar: 'https://cdn.discordapp.com/embed/avatars/1.png', at: Math.floor(Date.now() / 1000) }) },
+  { id: 'welcome-public-member', group: 'Get started', label: 'Welcome: the card in the welcome channel (after launch)', build: () => welcomeCard({ name: 'Luna Ray', handle: 'luna_ray', discordId: '0', n: 480, founding: false, avatar: 'https://cdn.discordapp.com/embed/avatars/1.png', at: Math.floor(Date.now() / 1000) }) },
+  { id: 'welcome-dm-founding', group: 'Get started', label: 'Welcome: the direct message (founding member)', build: () => welcomeDmMessage({ name: 'Luna Ray', handle: 'luna_ray', discordId: '0', n: 12, founding: true }, 'https://discord.com/channels/0', notice(Math.floor(Date.now() / 1000) + 38 * 86400)) },
+  { id: 'welcome-dm-member', group: 'Get started', label: 'Welcome: the direct message (verified, not founding)', build: () => welcomeDmMessage({ name: 'Luna Ray', handle: 'luna_ray', discordId: '0', n: 480, founding: false }, 'https://discord.com/channels/0', null) },
   { id: 'start', group: 'Get started', label: 'Get started while the site is closed', build: () => np.preLaunchPanel(Math.floor(Date.now() / 1000) + 38 * 86400) },
   { id: 'start-new', group: 'Get started', label: 'After pressing it: no account yet', build: () => m.startReplyCard('new', 'https://logoless.io/onboarding?ref=discord') },
   { id: 'start-unfinished', group: 'Get started', label: 'After pressing it: linked, profile not finished', build: () => m.startReplyCard('unfinished', 'https://logoless.io/onboarding?ref=discord') },

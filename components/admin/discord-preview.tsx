@@ -2,7 +2,12 @@
 
 import { Fragment } from 'react'
 import type { Component, Embed, Message, V2Node } from '@/lib/discord/api'
+import { setIconCache } from '@/lib/discord/icon-cache'
+import { ICON_NAMES } from '@/lib/discord/icon-names'
 import { tidy } from '@/lib/discord/ui'
+
+// here every gradient icon is shown (as the picture on this site), whether or not the bot's emoji have been uploaded to Discord yet
+setIconCache(Object.fromEntries(ICON_NAMES.map((n) => [n, 'preview'])))
 
 /**
  * Draws a bot message the way Discord does (dark theme), so the team can see every message without sending it. It follows the
@@ -11,7 +16,7 @@ import { tidy } from '@/lib/discord/ui'
 // the bot's pictures live on logoless.io; here they load from this site, so they show before they are deployed
 const local = (url: string) => url.replace(/^https:\/\/logoless\.io/, '')
 
-const TOKEN = /(\*\*[^*]+\*\*|\*[^*\s][^*]*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|<#\d+>|<@&?\d+>|<t:\d+:[a-zA-Z]>)/g
+const TOKEN = /(\*\*[^*]+\*\*|\*[^*\s][^*]*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|<#\d+>|<@&?\d+>|<t:\d+:[a-zA-Z]>|<:lg_[a-z0-9]+:[a-z0-9]+>)/g
 
 function inline(text: string, key: string) {
   return text.split(TOKEN).map((part, n) => {
@@ -23,6 +28,10 @@ function inline(text: string, key: string) {
     if (part.startsWith('[')) {
       const m = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(part)
       return m ? <span key={k} className="text-[#00a8fc]">{m[1]}</span> : part
+    }
+    if (part.startsWith('<:lg_')) {
+      // eslint-disable-next-line @next/next/no-img-element
+      return <img key={k} src={`/discord/icons/${part.slice(5, part.indexOf(':', 5))}.png`} alt="" className="mx-0.5 inline-block size-[1.15em] align-[-0.2em]" />
     }
     if (part.startsWith('<#')) return <span key={k} className="rounded bg-[#3c4270] px-1 text-[#c9cdfb]">#channel</span>
     if (part.startsWith('<@')) return <span key={k} className="rounded bg-[#3c4270] px-1 text-[#c9cdfb]">@member</span>
@@ -94,7 +103,12 @@ function Btn({ c }: { c: Component['components'][number] }) {
   const bg = c.style === 1 ? 'bg-[#5865f2]' : c.style === 3 ? 'bg-[#248046]' : c.style === 4 ? 'bg-[#da373c]' : 'bg-[#4e5058]'
   return (
     <span className={`inline-flex h-8 items-center gap-1.5 rounded-[calc(3px*var(--round,1))] px-4 text-[0.875rem] font-medium text-white ${bg}`}>
-      {c.emoji?.name && <span aria-hidden="true">{c.emoji.name}</span>}
+      {c.emoji?.id ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={`/discord/icons/${c.emoji.name.replace(/^lg_/, '')}.png`} alt="" className="size-4" />
+      ) : c.emoji?.name ? (
+        <span aria-hidden="true">{c.emoji.name}</span>
+      ) : null}
       {c.label}
       {c.url && <span aria-hidden="true" className="ml-0.5 text-[0.7rem]">↗</span>}
     </span>

@@ -28,6 +28,8 @@ type Me = {
   held: boolean
   denied: boolean
   n: number | null
+  /** let in while the site was still shut */
+  founding: boolean
   discordUrl: string | null
 }
 type State = { signedIn: false } | Me
@@ -106,7 +108,7 @@ function Landing({ end, onDiscord, busy, error }: { end: number | null; onDiscor
         <h1 className={title}>Become a founding member.</h1>
         <p className={sub}>
           {opens ? `logoless opens on ${opens}. ` : 'logoless opens soon. '}
-          Set up your account now and you are in the community first, with the Founding member role.
+          Set up your account now and get verified: the whole server opens for you, and you are a founding member for good.
         </p>
         <ul className="mt-6 space-y-2.5 text-[14px] text-paper/70">
           {['Takes about a minute', 'Sign in with Discord, add a profile, done', 'You land straight back in the server'].map((t) => (
@@ -505,10 +507,14 @@ function Done({ me, invite }: { me: Me; /** set when they could not be added to 
         {me.n ? (
           <>
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.05] px-3.5 py-1.5 text-[13px] text-paper/80">
-              <Check aria-hidden="true" className="size-3.5" /> Founding member #{me.n}
+              <Check aria-hidden="true" className="size-3.5" /> {me.founding ? `Founding member #${me.n}` : `Verified member #${me.n}`}
             </span>
-            <h1 className={cn(title, 'mt-5')}>You are in.</h1>
-            <p className={sub}>Your Founding member role is on, so the community channels are open. Say hello, and we will message you the moment the first campaigns go live.</p>
+            <h1 className={cn(title, 'mt-5')}>You are verified.</h1>
+            <p className={sub}>
+              {me.founding
+                ? 'You signed up before we opened, so you are a founding member, and the whole server is open to you. Check your Discord messages: we sent you a welcome.'
+                : 'The whole server is open to you. Check your Discord messages: we sent you a welcome.'}
+            </p>
           </>
         ) : me.denied ? (
           <>
@@ -518,7 +524,7 @@ function Done({ me, invite }: { me: Me; /** set when they could not be added to 
         ) : (
           <>
             <h1 className={title}>Almost there.</h1>
-            <p className={sub}>We check a few sign-ups by hand to keep bots out. Yours is in the queue, and you will get the Founding member role (and a message from us on Discord) as soon as it is cleared.</p>
+            <p className={sub}>We check a few sign-ups by hand to keep bots out. Yours is in the queue, and you will get verified (and a message from us on Discord) as soon as it is cleared.</p>
           </>
         )}
         {(invite || me.discordUrl) && (
@@ -529,7 +535,7 @@ function Done({ me, invite }: { me: Me; /** set when they could not be added to 
             </RingButton>
           </div>
         )}
-        {invite ? <p className="mt-5 text-center text-[13px] leading-relaxed text-paper/40">You are not in the server yet. Join with this button and your Founding member role is added within a few minutes.</p> : null}
+        {invite ? <p className="mt-5 text-center text-[13px] leading-relaxed text-paper/40">You are not in the server yet. Join with this button and your Verified role is added within a few minutes.</p> : null}
         {me.n && !invite ? <p className="mt-5 text-center text-[13px] leading-relaxed text-paper/40">Next: link your TikTok, YouTube or Instagram with /verify in the server. Verified creators are picked first.</p> : null}
       </RingCard>
     </motion.div>

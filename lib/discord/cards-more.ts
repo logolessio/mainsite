@@ -243,7 +243,7 @@ export const campaignPostCard = (c: CampaignPost): Message => {
   const used = 100 - left
   const live = c.status === 'live'
   const platforms = c.platforms.map(platformName).join(', ') || 'Any platform'
-  const head = [`-# 🎤 ${c.creator} · ${CAMP_STATUS[c.status] ?? c.status}`, `## ${cut(c.title, 90)}`, `**💵 ${usd(c.rateCents)} per 1,000 views**${c.endsOn ? `\n-# ⏳ Ends ${c.endsOn}` : ''}`]
+  const head = [`-# {ic:music} ${c.creator} · ${CAMP_STATUS[c.status] ?? c.status}`, `## ${cut(c.title, 90)}`, `**${usd(c.rateCents)} per 1,000 views**${c.endsOn ? `\n-# {ic:clock} Ends ${c.endsOn}` : ''}`]
   const list = (xs: string[]) => xs.slice(0, 4).map((x) => `• ${cut(x, 140)}`).join('\n')
   const file = c.example && isVideoFile(c.example)
   return {
@@ -253,21 +253,20 @@ export const campaignPostCard = (c: CampaignPost): Message => {
         gallery({ url: BAR }),
         c.cover ? section(head, thumb(c.cover, c.title)) : text(head.join('\n')),
         ...(c.summary ? [text(cut(c.summary, 600))] : []),
-        ...(c.clipThis.length ? [sep(), text(`### ✅ Must do\n${list(c.clipThis)}`)] : []),
-        ...(c.offLimits?.length ? [sep(), text(`### 🚫 Must not do\n${list(c.offLimits)}`)] : []),
+        ...(c.clipThis.length ? [sep(), text(`### {ic:check} Must do\n${list(c.clipThis)}`)] : []),
+        ...(c.offLimits?.length ? [sep(), text(`### {ic:cross} Must not do\n${list(c.offLimits)}`)] : []),
         sep(),
-        text(join('### 📋 Campaign info', `💵 **Pays:** ${usd(c.rateCents)} per 1,000 views`, `💰 **Budget:** ${usd(c.budgetCents, true)}`, `📱 **Platforms:** ${platforms}`)),
+        text(join('### {ic:book} Campaign info', `{ic:money} **Pays:** ${usd(c.rateCents)} per 1,000 views`, `{ic:wallet} **Budget:** ${usd(c.budgetCents, true)}`, `{ic:globe} **Platforms:** ${platforms}`)),
         text(join(`**Budget used: ${used}%**`, `\`${bar(used, 24)}\``, small(`${usd(Math.max(0, c.budgetCents - c.paidCents))} of ${usd(c.budgetCents)} left`))),
         sep(),
         // a video file plays here; with none, the picture card with the cover and the budget bar
-        ...(file ? [text('### 🎬 Example edit'), gallery({ url: c.example as string, description: `Example edit for ${c.title}` })] : [gallery({ url: cardImage('campaign', c.id, c.imageVersion), description: c.title })]),
+        ...(file ? [text('### {ic:video} Example edit'), gallery({ url: c.example as string, description: `Example edit for ${c.title}` })] : [gallery({ url: cardImage('campaign', c.id, c.imageVersion), description: c.title })]),
         text(small(`${num(c.approved)} approved · ${num(c.views)} verified views · ${usd(c.paidCents)} paid out · ${num(c.joined)} joined`)),
         live
-          ? prow(plink('Submit content', submitUrl(c.id), '📤'), pbtn('Join', `camp:join:${c.id}`, 'green', '⭐'), ...(c.soundUrl ? [plink('Use the sound', c.soundUrl, '🎵')] : []), ...(c.example && !file ? [plink('Watch the example', c.example, '▶️')] : []))
-          : prow(plink('See live campaigns', '/', '🎬')),
+          ? prow(plink('Submit content', submitUrl(c.id), 'arrow'), pbtn('Join', `camp:join:${c.id}`, 'green', 'plus'), ...(c.soundUrl ? [plink('Use the sound', c.soundUrl, 'music')] : []), ...(c.example && !file ? [plink('Watch the example', c.example, 'video')] : []))
+          : prow(plink('See live campaigns', '/', 'campaign')),
       ),
     ),
-    raw: true,
   }
 }
 
@@ -287,7 +286,7 @@ export const payoutStatusCard = (rows: PayoutRow[], availableCents: number): Mes
         ),
       }),
     ],
-    [row(pbtn('Withdraw', 'wd:start', 'green', '💸'))],
+    [row(pbtn('Withdraw', 'wd:start', 'green', 'wallet'))],
   )
 
 export const rankCard = (a: { place: number | null; of: number; views: number; next?: { name: string; gap: number } | null }): Message =>

@@ -1,4 +1,6 @@
 import { applyWording } from '../wording'
+import { iconIds } from './icon-cache'
+import type { IconName } from './icon-names'
 import type { Component, Embed, Message } from './api'
 
 /**
@@ -16,11 +18,14 @@ export const MUTE = 0x8a8a90
 export const SITE_URL = 'https://logoless.io'
 export const OWNER_URL = 'https://owner.logoless.io'
 
-/** The line icons in public/discord/icons (PNG, because embeds cannot show SVG). */
-export type IconName =
-  | 'bell' | 'book' | 'campaign' | 'chart' | 'check' | 'clip' | 'clock' | 'cross' | 'eye' | 'flag' | 'help' | 'info' | 'link'
-  | 'lock' | 'logo' | 'mail' | 'money' | 'plus' | 'shield' | 'spark' | 'star' | 'ticket' | 'trophy' | 'user' | 'users' | 'wallet'
+/** The gradient icons in public/discord/icons (PNG, because embeds cannot show SVG): see scripts/make-discord-icons.mjs. */
+export type { IconName }
 export const icon = (name: IconName) => `${SITE_URL}/discord/icons/${name}.png`
+/**
+ * A gradient icon inside text (a title, a field, a line of a list): written as a token, and turned into the bot's own emoji of that name when the message is sent
+ * (see `tidy`). Until the icons are uploaded to Discord, or in a place that cannot show them, it is simply left out.
+ */
+export const ic = (name: IconName) => `{ic:${name}}`
 
 type Field = { name: string; value: string; inline?: boolean }
 export type CardOptions = {
@@ -75,14 +80,14 @@ export const num = (n: number) => n.toLocaleString('en-US')
 // ---------- buttons ----------
 type Button = Component['components'][number]
 /** A plain grey button that sends `custom_id` back to the bot. */
-export const btn = (label: string, customId: string): Button => ({ type: 2, style: 2, label: label.slice(0, 80), custom_id: customId.slice(0, 100) })
+export const btn = (label: string, customId: string, withIcon?: IconName): Button => ({ type: 2, style: 2, label: label.slice(0, 80), custom_id: customId.slice(0, 100), ...(withIcon ? { icon: withIcon } : {}) })
 export const row = (...b: Button[]): Component => ({ type: 1, components: b.slice(0, 5) })
 
 /**
  * A button that opens an address: a path on logoless.io (like /campaign/x) or a full https address. Discord draws a small arrow on
  * every link button and that cannot be turned off, but it is the only kind of button that really takes you there.
  */
-export const go = (label: string, where: string): Button => ({ type: 2, style: 5, label: label.slice(0, 80), url: where.startsWith('/') ? `${SITE_URL}${where}` : where })
+export const go = (label: string, where: string, withIcon?: IconName): Button => ({ type: 2, style: 5, label: label.slice(0, 80), url: where.startsWith('/') ? `${SITE_URL}${where}` : where, ...(withIcon ? { icon: withIcon } : {}) })
 
 /** The address of a channel in the server. */
 export const chan = (guildId: string, channelId: string) => `https://discord.com/channels/${guildId}/${channelId}`
@@ -98,18 +103,35 @@ export function goTarget(id: string, guildId?: string): { url: string; label: st
 }
 
 // ---------- tidying a whole message before it is sent ----------
-// no emoji anywhere (the bar, the icons and the words do the job), and the site's wording: clip is submission or content
+// no Unicode emoji anywhere (the gradient icons, the bar and the words do the job), and the site's wording: clip is submission or content.
+// An icon written as {ic:name} becomes the bot's own emoji of that name (<:lg_name:id>) if it has been uploaded, and nothing if not.
 const EMOJI = /[\p{Extended_Pictographic}\u{FE0F}\u{200D}\u{20E3}]/gu
-const clean = (s: string | undefined) => (s === undefined ? s : applyWording(s.replace(EMOJI, '').replace(/ {2,}/g, ' ').trim()))
+const TOKEN = /\{ic:([a-z0-9]+)\}/g
+const emojiOf = (name: string) => {
+  const id = iconIds()[name]
+  return id ? { id, name: `lg_${name}` } : null
+}
+const clean = (s: string | undefined) => {
+  if (s === undefined) return s
+  // the wording is applied to the words only, never to an icon's name
+  const parts = s.split(TOKEN)
+  const joined = parts.map((p, i) => (i % 2 ? (emojiOf(p) ? `<:lg_${p}:${iconIds()[p]}>` : '') : applyWording(p.replace(EMOJI, '')))).join('')
+  return joined.replace(/ {2,}/g, ' ').trim()
+}
 
-/** Every text inside a Components V2 message gets the same treatment: no emoji, the site's wording. */
+/** Every text inside a Components V2 message gets the same treatment: no emoji, the site's wording, icons as the bot's emoji. A button's `icon` becomes its emoji. */
 function tidyNode(n: unknown): unknown {
   if (Array.isArray(n)) return n.map(tidyNode)
   if (n && typeof n === 'object') {
     const out: Record<string, unknown> = {}
-    for (const [k, v] of Object.entries(n as Record<string, unknown>)) {
-      if (k === 'emoji') continue
+    const o = n as Record<string, unknown>
+    for (const [k, v] of Object.entries(o)) {
+      if (k === 'emoji' || k === 'icon') continue
       out[k] = (k === 'content' || k === 'label' || k === 'description' || k === 'placeholder') && typeof v === 'string' ? clean(v) : tidyNode(v)
+    }
+    if (typeof o.icon === 'string') {
+      const e = emojiOf(o.icon)
+      if (e) out.emoji = e
     }
     return out
   }
@@ -132,7 +154,7 @@ export function tidy(message: Message): Message {
       footer: e.footer ? { ...e.footer, text: clean(e.footer.text) ?? '' } : undefined,
       fields: e.fields?.map((f) => ({ ...f, name: clean(f.name) || '-', value: clean(f.value) || '-' })),
     })),
-    components: m.components?.map((r) => ('components' in r && Array.isArray(r.components) ? { ...r, components: (r as Component).components.map((c) => ({ ...c, label: clean(c.label) ?? c.label, emoji: undefined })) } : r)) as Message['components'],
+    components: m.components?.map((r) => ('components' in r && Array.isArray(r.components) ? { ...r, components: (r as Component).components.map(({ icon: withIcon, ...c }) => ({ ...c, label: clean(c.label) ?? c.label, emoji: withIcon ? (emojiOf(withIcon) ?? undefined) : undefined })) } : r)) as Message['components'],
   }
 }
 

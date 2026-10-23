@@ -59,7 +59,7 @@ export async function finishConnect(a: { userId: string; code: string; state: st
   let joined = false
   const cfg = await getDiscordConfig()
   const botToken = await setting('DISCORD_BOT_TOKEN')
-  if (cfg.guildId && botToken && token.scope.includes('guilds.join')) joined = await joinGuild({ botToken, guildId: cfg.guildId, discordId: me.id, accessToken: token.access, roles: cfg.roles.linked ? [cfg.roles.linked] : [] })
+  if (cfg.guildId && botToken && token.scope.includes('guilds.join')) joined = await joinGuild({ botToken, guildId: cfg.guildId, discordId: me.id, accessToken: token.access, roles: [cfg.roles.unverified, cfg.roles.linked].filter(Boolean) })
   if (joined) await syncRoles(a.userId) // someone already in the server did not get the roles above
   // account and Discord both done: the next steps in #get-started and the rundown by direct message, once (see welcome.ts)
   const { welcomeOnce } = await import('./welcome')
@@ -78,7 +78,8 @@ export async function joinAfterSignIn(discordId: string, accessToken: string | u
     const cfg = await getDiscordConfig()
     const botToken = await setting('DISCORD_BOT_TOKEN')
     if (!cfg.guildId || !botToken) return
-    const ok = await joinGuild({ botToken, guildId: cfg.guildId, discordId, accessToken, roles: cfg.roles.linked ? [cfg.roles.linked] : [] })
+    // a new member comes in as Unverified (they see only #get-started until they have signed up); someone already in the server only gets Linked
+    const ok = await joinGuild({ botToken, guildId: cfg.guildId, discordId, accessToken, roles: [cfg.roles.unverified, cfg.roles.linked].filter(Boolean) })
     if (ok && cfg.roles.linked) await addRole(cfg.guildId, discordId, cfg.roles.linked) // already a member: the roles above only apply to new ones
   } catch {
     /* nothing here may stop a sign-in */

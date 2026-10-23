@@ -10,17 +10,23 @@ possible into **proven creators** (an account made, a TikTok, YouTube or Instagr
 numbers to show artists when you ask them for campaigns.
 
 - Every setup message says so: logoless is not live yet, there are no campaigns yet, we are gathering founding members, and it opens on the date.
-- **The pre-launch sign-up is a web page: https://beta.logoless.io/onboarding.** The welcome message in #get-started (and the answer to the Get started
-  button) links to it. A person signs in with Discord (which also puts them in the server), adds a name, a username and, if they like, where they post,
-  optionally adds PayPal (confirmed with a code emailed to the account, same as the site), and finishes. They are then given the **Founding member** role
-  and told so in a direct message, and "Open Discord" takes them back to #general. Google can be added next to Discord as a second way to sign in (optional).
-- **The Founding member role is what opens the community channels.** Press "Make the community channels" (new ones are made visible to that role only) or,
-  if the channels already exist, "Lock the community to founding members". Everyone else only sees the welcome, rules and information channels.
-- **Bots:** the sign-up is behind Cloudflare's quick check (Turnstile) and writes down where each person came from (a keyed hash of the network address,
-  the country and network name, the kind of device, how old the Discord account is). A sign-up that looks odd (a script, Tor, a Discord account under 4
-  days old, three other sign-ups from the same network, a filled-in hidden field, or two smaller flags together) is **held**: the person sees "almost
-  there" and you see it under Pre-launch sign-up in the owner dashboard (Discord page, Setup tab) with the reasons, and press Let in or Turn down. Letting
-  one in gives the role and sends them a message.
+- **How a new member goes through it:**
+  1. They find logoless.io (the coming-soon page: countdown, a Join Discord button, your socials) and join the Discord.
+  2. They are **Unverified** and can see only #get-started. (The bot marks people who join by an invite link within a minute; people who join through the
+     sign-in below come in already marked.)
+  3. #get-started has one button, **Sign up**, which opens https://beta.logoless.io/onboarding. They sign in with Discord (which also adds them to the server),
+     add a name and username, optionally Google and PayPal, and finish. The sign-up page is behind Cloudflare's quick check.
+  4. Where they came from is written down and shown to you: Discord page, Setup tab, **Sign-ups** (network address, country, network name, device, Discord
+     account age, anything odd). The address is kept with the account, for the account limit in the privacy policy, and goes when the account is deleted.
+  5. They are **Verified**: the Unverified role comes off and the rest of the server opens. While the site is still shut they are a **Founding member** too.
+  6. A clean welcome goes up in #welcome (their Discord picture, name, and Founding member #N or Verified member #N), and they get a direct message that
+     says welcome and whether they are a founding member.
+- **Bots:** a sign-up that looks odd (a script, Tor, a Discord account under 4 days old, three other sign-ups from the same network, a filled-in hidden field, or two
+  smaller flags together) is **held**: the person sees "almost there" and you see it at the top of Sign-ups with the reasons, and press Let in or Turn down.
+  Letting one in makes them Verified and sends the same messages.
+- **No emoji.** Every message uses the gradient icons (the logo's colours) instead. They show next to titles and on buttons as the bot's own emoji: press
+  **Upload the gradient icons** once (it uploads a few at a time and keeps going), and they appear in every message from then on. Until then the messages just
+  have no icon in front of their titles (the small icon at the top of a card shows regardless).
 - Everything still works inside Discord too (`/join`, `/verify`, `/paypal`, `/accounts`, `/payments`): linking and proving a TikTok, YouTube or
   Instagram, and adding PayPal. The main site's own sign-up (logoless.io/onboarding) opens with the site.
 - While the site is shut, logoless.io shows only the coming-soon page: the countdown, a **Join Discord** button (the Discord link under Socials and
@@ -46,16 +52,21 @@ numbers to show artists when you ask them for campaigns.
 ## 1. The buttons, in this order (owner.logoless.io/admin/discord)
 
 1. **Check the bot's access.** Fix anything it lists before going on.
-2. **Make the missing roles.** Then, in Discord: Server Settings, Roles, and drag the bot's role *above* all the roles it hands out (Linked,
-   Clipper, Brand, Artist, Developer, Team, Admin). A bot cannot give a role that sits above its own.
+2. **Make the missing roles.** This now includes **Verified** and **Unverified**. Then, in Discord: Server Settings, Roles, and drag the bot's role *above* all the roles
+   it hands out (Linked, Clipper, Brand, Artist, Developer, Team, Admin, Verified, Unverified, Founding member). A bot cannot give a role that sits above its own.
 3. **Make the missing categories and channels.** Fills the payouts and submissions channels (read-only for members) and the tickets, artists and
    inactive categories if any are missing.
-4. **Make the community channels.** General, introductions, clip-showcase, edit-help, ideas-and-feedback, off-topic, bot-commands, two voice
-   lounges (all visible only to the Founding member role and the staff; skipped with a note until that role exists, so make the roles first), and a
-   private Team category (team-chat, mod-queue) that only the staff, team and admin roles can see. It only adds what is missing and never touches
-   anything that already exists. Drag the new Community category up under the Welcome and Info ones.
-   **Lock the community to founding members** does the same for a Community category that already exists (it replaces the permissions on that
-   category and the channels in it, so anything set by hand on them is overwritten; nothing is renamed, moved or deleted).
+4. **Make the community channels.** Welcome (a read-only feed where the bot welcomes each new member), general, introductions, clip-showcase, edit-help,
+   ideas-and-feedback, off-topic, bot-commands, two voice lounges (all visible only to the Verified role and the staff; skipped with a note until that role
+   exists, so make the roles first), and a private Team category (team-chat, mod-queue) that only the staff, team and admin roles can see. It only adds
+   what is missing and never touches anything that already exists. Drag the new Community category up under the Welcome and Info ones.
+   **Lock the community to founding members** is the older button that rebuilds the permissions of the Community category and its channels (it replaces them).
+   **Lock the server to verified members** is the one that matters now: for every channel and category it adds "Verified can see it" and "everyone cannot", and
+   leaves every other permission as it was (a read-only channel stays read-only; the team's private channels are left alone). #get-started stays open to everyone to
+   read, and no one can write in it. Safe to press again. After it, a new member sees only #get-started.
+   **Server Members Intent:** in the Discord developer portal (the application, Bot, Privileged Gateway Intents) switch on *Server Members Intent*. The bot reads
+   the newest members once a minute to mark people who joined by an invite link as Unverified; without it that marking does not happen (the lock still works,
+   because a new member has no role, so they see only #get-started either way). Check the bot's access says whether it is on.
 5. **Register commands.** Needed whenever the command list changes. The newest commands (`/join`, `/verify`, `/accounts`, `/paypal`, `/payments`, `/withdraw`) only appear after this.
 6. Post the panels: **get-started, rules, site, support, status**. The get-started one now links to the web sign-up; post it again (delete the old message) to get the new button (the "Post" buttons). Then, in the channels where you want them, type `/admin panel` and pick **Manage accounts** and **Payment details**. If the rules message is already posted, post it again to get the new look (delete the old one).
 7. **Make artist channels and cards**, then **Run the live loop now**.

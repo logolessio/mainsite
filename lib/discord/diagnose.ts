@@ -64,7 +64,7 @@ export async function checkAccess(cfg: DiscordConfig): Promise<AccessLine[]> {
   lines.push(...(await Promise.all([...channels.map((c) => look(c, false)), ...categories.map((c) => look(c, true))])))
 
   // roles it hands out
-  const wanted: [string, string][] = [['Linked members role', cfg.roles.linked], ['Founding members role', cfg.roles.founding], ['Clippers role', cfg.roles.clipper], ['Brands role', cfg.roles.brand], ['Creators role', cfg.roles.creator], ['Developers role', cfg.roles.developer], ['Admins role', cfg.roles.admin], ['Team role', cfg.roles.team], ['Staff role', cfg.roles.staff], ...cfg.roles.tiers.map((t, n) => [`Earnings role ${n + 1}`, t.role] as [string, string])].filter(([, id]) => id) as [string, string][]
+  const wanted: [string, string][] = [['Linked members role', cfg.roles.linked], ['Verified role', cfg.roles.verified], ['Unverified role', cfg.roles.unverified], ['Founding members role', cfg.roles.founding], ['Clippers role', cfg.roles.clipper], ['Brands role', cfg.roles.brand], ['Creators role', cfg.roles.creator], ['Developers role', cfg.roles.developer], ['Admins role', cfg.roles.admin], ['Team role', cfg.roles.team], ['Staff role', cfg.roles.staff], ...cfg.roles.tiers.map((t, n) => [`Earnings role ${n + 1}`, t.role] as [string, string])].filter(([, id]) => id) as [string, string][]
   if (wanted.length) {
     if (!isAdmin && !(base & MANAGE_ROLES)) lines.push({ label: 'Manage Roles', ok: false, note: 'The bot\'s role does not have Manage Roles, so it cannot hand out roles.' })
     for (const [label, id] of wanted) {
@@ -75,6 +75,15 @@ export async function checkAccess(cfg: DiscordConfig): Promise<AccessLine[]> {
       else if (r.position >= topPos && !isAdmin) lines.push({ label, ok: false, note: `${r.name} sits above the bot's role. Drag the bot's role above it in Server Settings, Roles.` })
       else lines.push({ label, ok: true, note: `${r.name}: the bot can hand it out.` })
     }
+  }
+  // new members are made Unverified by reading the member list, which Discord only allows once "Server Members Intent" is switched on for the bot
+  if (cfg.guildId && cfg.roles.unverified) {
+    const m = await discord<unknown[]>('GET', `/guilds/${cfg.guildId}/members?limit=1`)
+    lines.push(
+      m.ok
+        ? { label: 'Server Members Intent', ok: true, note: 'On: people who join are made Unverified within a minute.' }
+        : { label: 'Server Members Intent', ok: false, note: 'Off. In the Discord developer portal open the application, Bot, Privileged Gateway Intents, and switch on Server Members Intent. Until then people who join by an invite link are not marked Unverified (they still see only #get-started once the server is locked).' },
+    )
   }
   return lines
 }

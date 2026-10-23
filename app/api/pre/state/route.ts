@@ -58,6 +58,7 @@ export const GET = route(async (req: Request) => {
     held: Boolean(pre.held && !pre.n),
     denied: Boolean(pre.denied),
     n: pre.n ?? null,
+    founding: pre.founding !== false,
     discordUrl: await communityUrl(),
   })
 })

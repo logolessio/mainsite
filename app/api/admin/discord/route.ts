@@ -20,7 +20,7 @@ import { requireAdmin } from '@/lib/user'
 import { featureOn } from '@/lib/features'
 import { lastTick } from '@/lib/discord/tick'
 import { audience, pitchLine } from '@/lib/discord/audience'
-import { heldSignups, preCounts } from '@/lib/prelaunch'
+import { heldSignups, preCounts, recentSignups } from '@/lib/prelaunch'
 
 /** Permissions the bot asks for when it is added: see channels, send messages, embed links, read history, manage roles and manage channels (for tickets). */
 const PERMISSIONS = 268520464
@@ -40,6 +40,8 @@ const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('make-places') }),
   z.object({ action: z.literal('make-community') }),
   z.object({ action: z.literal('lock-community') }),
+  z.object({ action: z.literal('upload-icons') }),
+  z.object({ action: z.literal('lock-server') }),
   z.object({ action: z.literal('prelaunch-decide'), userId: z.string().min(8).max(64), approve: z.boolean() }),
   z.object({ action: z.literal('welcome-me') }),
 ])
@@ -60,7 +62,8 @@ export const GET = route(async () => {
     cfg,
     linked: (linked?.n ?? 0) + (byLogin?.n ?? 0),
     audience: await audience().then(async (a) => ({ ...a, line: pitchLine(a) })).catch(() => null),
-    prelaunch: { ...(await preCounts()), held: await heldSignups(), page: 'https://beta.logoless.io/onboarding' },
+    icons: await (async () => { const { primeIcons } = await import('@/lib/discord/icon-prime'); await primeIcons(); return (await import('@/lib/discord/icons')).iconCount() })(),
+    prelaunch: { ...(await preCounts()), held: await heldSignups(), signups: await recentSignups(), page: 'https://beta.logoless.io/onboarding' },
     commands: COMMANDS.length,
     lastTick: await lastTick(),
     samples: sampleList(),
@@ -135,8 +138,17 @@ export const POST = route(async (req: Request) => {
     }
     const res = await postMessage(ok.id, (await ok.msg())!)
     if (!res.ok) throw new HttpError(502, explainDiscord(res, `the ${ok.label} channel`))
-    await audit(actor, 'discord.post', a.what, null, ip)
-    return json({ ok: true })
+    // posting again replaces: the bot's own earlier copy of this panel is taken down (never anyone else's messages, and only in the channels that hold one fixed panel)
+    let replaced = 0
+    if (a.what === 'getStarted' || a.what === 'rules' || a.what === 'support') {
+      const me = await discord<{ id: string }>('GET', '/users/@me')
+      const old = await discord<{ id: string; author?: { id: string } }[]>('GET', `/channels/${ok.id}/messages?limit=25`)
+      for (const m of (Array.isArray(old.json) ? old.json : []).filter((x) => x.author?.id === me.json?.id && x.id !== res.json?.id).slice(0, 8)) {
+        if ((await discord('DELETE', `/channels/${ok.id}/messages/${m.id}`)).ok) replaced++
+      }
+    }
+    await audit(actor, 'discord.post', a.what, replaced ? `replaced ${replaced}` : null, ip)
+    return json({ ok: true, replaced })
   }
   if (a.action === 'tick') {
     // one run of the 30-second loop now, whatever the switches say (the owner asked for it)
@@ -163,7 +175,7 @@ export const POST = route(async (req: Request) => {
       const { ROLE_NAMES } = await import('@/lib/discord/roles')
       for (const r of ROLE_NAMES) {
         if (next.roles[r.key]) continue
-        const res = await discord<{ id: string }>('POST', `/guilds/${cfg.guildId}/roles`, { name: r.name, permissions: '0', hoist: r.key !== 'linked', mentionable: false })
+        const res = await discord<{ id: string }>('POST', `/guilds/${cfg.guildId}/roles`, { name: r.name, permissions: '0', hoist: r.key !== 'linked' && r.key !== 'unverified', mentionable: false })
         if (!res.ok || !res.json?.id) throw new HttpError(502, explainDiscord(res, 'the server'))
         next.roles[r.key] = res.json.id
         made.push(r.name)
@@ -204,6 +216,25 @@ export const POST = route(async (req: Request) => {
     await audit(actor, 'discord.make-community', null, r.made.join(', ') || 'nothing missing', ip)
     return json({ ok: true, ...r })
   }
+  if (a.action === 'lock-server') {
+    // a new member sees only #get-started; the Verified role (and the staff) see the rest. A few channels at a time: the dashboard button presses this until none are left.
+    if (!cfg.guildId) throw new HttpError(409, 'Save your server ID first.')
+    const { lockServer } = await import('@/lib/discord/server-build')
+    try {
+      const r = await lockServer(cfg)
+      await audit(actor, 'discord.lock-server', null, `${r.changed.join(', ') || 'nothing to change'}${r.remaining ? ` (${r.remaining} left)` : ''}`, ip)
+      return json({ ok: true, ...r })
+    } catch (e) {
+      throw new HttpError(502, e instanceof Error ? e.message : 'Discord would not change the channels.')
+    }
+  }
+  if (a.action === 'upload-icons') {
+    // the gradient icons become the bot's own emoji (a few at a time: the dashboard button presses this until none are left)
+    const { uploadIcons } = await import('@/lib/discord/icons')
+    const r = await uploadIcons()
+    await audit(actor, 'discord.upload-icons', null, `${r.made.length} made, ${r.failed.length} failed, ${r.remaining} left`, ip)
+    return json({ ok: true, ...r })
+  }
   if (a.action === 'lock-community') {
     if (!cfg.guildId) throw new HttpError(409, 'Save your server ID first.')
     const { lockCommunity } = await import('@/lib/discord/server-build')
@@ -219,9 +250,11 @@ export const POST = route(async (req: Request) => {
     // a sign-up that was held for a look: let it in (the role is given and they are told) or turn it down
     const { decidePre } = await import('@/lib/prelaunch')
     const { tellDecision } = await import('@/lib/discord/prelaunch')
-    const s = await decidePre(a.userId, a.approve)
+    const { launchView } = await import('@/lib/launch')
+    const { allSettings } = await import('@/lib/settings')
+    const s = await decidePre(a.userId, a.approve, launchView(await allSettings()).closed)
     if (!s) throw new HttpError(404, 'That sign-up was not found.')
-    await tellDecision(a.userId, a.approve, s.n ?? null)
+    await tellDecision(a.userId, a.approve, s.n ?? null, s.founding !== false)
     await audit(actor, `discord.prelaunch-${a.approve ? 'approve' : 'deny'}`, a.userId, s.flags.join('; ') || 'no flags', ip)
     return json({ ok: true, n: s.n ?? null })
   }
