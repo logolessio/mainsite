@@ -1851,22 +1851,6 @@ html.calm .hero-badge {
   }
 }
 
-/* ------------------------------------------------------------------------------------------------------------------------------
-   Headings like the logo (feature switch "logo-headings"): every heading in Arial Bold and all lowercase, the way the word in the logo is set, with a touch of
-   air between the letters (the logo has more, which suits one short word and would tire a sentence). Figures keep their own face, a name somebody chose keeps
-   its capitals, and the hard shadow the Anubis look puts under titles is dropped, because the logo is flat.
-   ------------------------------------------------------------------------------------------------------------------------------ */
-html[data-headings='logo'] :is(h1, h2, h3, h4, h5, h6, .font-display):not(.tabular-nums):not([data-keep-case]) {
-  font-family: Arial, 'Liberation Sans', Arimo, Helvetica, sans-serif;
-  font-weight: 700;
-  text-transform: lowercase;
-  letter-spacing: 0.015em;
-  text-shadow: none;
-}
-html[data-headings='logo'] :is(h1, h2, h3, .font-display):not(.tabular-nums):not([data-keep-case]) {
-  line-height: 1.02;
-}
-
 /* a name somebody chose keeps its capitals and small letters, whatever the headings around it do */
 html[data-look='anubis'] [data-keep-case] {
   text-transform: none !important;
