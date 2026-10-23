@@ -152,7 +152,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
   const goodLinks = (list: string[] | undefined, check: typeof spotifyLink) => (list ?? []).every((l) => !l.trim() || 'url' in check(l))
   const valid: Record<StepId, boolean> = {
     hello: true,
-    you: (data.stageName ?? '').trim().length >= 2 && (looseHandles ? handleProblem(data.handle ?? '', { loose: true }) === null : /^[a-z0-9_]{3,20}$/.test(data.handle ?? '')),
+    you: (data.stageName ?? '').trim().length >= 2 && (looseHandles ? handleProblem(data.handle ?? '', { loose: true }) === null : /^[a-z0-9_]{1,20}$/.test(data.handle ?? '')),
     sound: (data.genres?.length ?? 0) > 0 && (data.pitch ?? '').trim().length >= 10,
     links: linkCount > 0 && Object.keys(links).every((p) => !linkErr(p)),
     look: true,

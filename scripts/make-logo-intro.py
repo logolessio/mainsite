@@ -1,7 +1,10 @@
 # Turns the owner's logo animation ("logoless 2 Comp 1.mp4": white on black, 1440x1080, 18 fps, 42 frames) into a transparent animated image the site can play:
 #   python3 scripts/make-logo-intro.py "/path/to/logoless 2 Comp 1.mp4"
-# It writes public/logo-intro.webp (every frame of the video, white with the video's brightness as transparency, played once) and lib/logo-intro.ts (where the image sits
-# against the static logo, and how long it runs). Needs ffmpeg and Pillow.
+#   python3 scripts/make-logo-intro.py --recolor        (only changes the colours of the existing public/logo-intro.webp, from the stops below)
+# It writes public/logo-intro.webp (every frame of the video, filled with the logo's gradient, with the video's brightness as transparency, played once) and lib/logo-intro.ts
+# (where the image sits against the static logo, and how long it runs). Needs ffmpeg and Pillow.
+#
+# The gradient is the one the still logo is drawn with (lib/logo-gradient.ts): left to right across the word, so the last frame and the still logo are the same picture.
 #
 # Why an image and not CSS: the first version redrew the logo with CSS animations on SVG shapes. Those run on the page's main thread, so while the page was still
 # loading they stuttered, and the easing was only an approximation. An animated image is decoded and timed off the main thread and plays the exact frames.
@@ -22,6 +25,27 @@ PAD = 2              # a little room round the union of all the frames
 # the static wordmark's view box in video pixels (see scripts/make-logo-wordmark.py): the image is placed against it
 VB = (448.0, 478.0, 542.0, 117.0)
 THRESHOLD = 6        # brightness (0-255) above which a pixel counts as part of the logo when finding the box
+# the logo's fill, left to right across the word (keep in step with LOGO_STOPS in lib/logo-gradient.ts)
+STOPS = [(0.0, (255, 31, 56)), (0.28, (255, 45, 150)), (0.55, (150, 80, 255)), (0.8, (70, 120, 255)), (1.0, (75, 169, 220))]
+
+
+def colour_at(t: float):
+    t = min(1.0, max(0.0, t))
+    for (a, ca), (b, cb) in zip(STOPS, STOPS[1:]):
+        if t <= b:
+            k = (t - a) / (b - a)
+            return tuple(round(ca[i] + (cb[i] - ca[i]) * k) for i in range(3))
+    return STOPS[-1][1]
+
+
+def tint(alpha: Image.Image, x0: float, span: float) -> Image.Image:
+    """The logo's gradient as the colour, `alpha` (the video's brightness) as the opacity. `x0` and `span` are where the image sits in the video, in video pixels."""
+    w, h = alpha.size
+    row = Image.new('RGB', (w, 1))
+    row.putdata([colour_at((x0 + (i + 0.5) / w * span - VB[0]) / VB[2]) for i in range(w)])
+    rgba = row.resize((w, h), Image.NEAREST).convert('RGBA')
+    rgba.putalpha(alpha)
+    return rgba
 
 
 def main(video: str) -> None:
@@ -40,9 +64,7 @@ def main(video: str) -> None:
     out = []
     for g in frames:
         crop = g.crop((x0, y0, x1, y1)).resize((w, h), Image.LANCZOS)
-        rgba = Image.new('RGBA', (w, h), (255, 255, 255, 0))
-        rgba.putalpha(crop)                        # white everywhere, the video's brightness as the opacity
-        out.append(rgba)
+        out.append(tint(crop, x0, x1 - x0))        # the gradient everywhere, the video's brightness as the opacity
     # frame lengths in milliseconds that add up to the video's own length (18 fps is 55.56 ms a frame)
     total = round(len(out) * 1000 / FPS)
     cuts = [round((i + 1) * 1000 / FPS) for i in range(len(out))]
@@ -63,7 +85,26 @@ def main(video: str) -> None:
     print(f'{len(out)} frames, {w}x{h}, {total} ms, {os.path.getsize(path) / 1024:.0f} KB; box left {pct(left)}% top {pct(top)}% width {pct(width)}% height {pct(height)}%')
 
 
+def recolor() -> None:
+    """Paints the gradient onto the frames already in public/logo-intro.webp (their opacity is the video's brightness, so nothing else changes)."""
+    import re
+
+    src = open(os.path.join(ROOT, 'lib', 'logo-intro.ts')).read()
+    box = {k: float(v) for k, v in re.findall(r'(left|width): (-?[\d.]+)', src[src.index('INTRO_BOX'):src.index('INTRO_PX')])}
+    x0 = VB[0] + box['left'] / 100 * VB[2]
+    span = box['width'] / 100 * VB[2]
+    path = os.path.join(ROOT, 'public', 'logo-intro.webp')
+    im = Image.open(path)
+    frames, durations = [], []
+    for i in range(im.n_frames):
+        im.seek(i)
+        durations.append(im.info.get('duration', 56))
+        frames.append(tint(im.convert('RGBA').getchannel('A'), x0, span))
+    frames[0].save(path, save_all=True, append_images=frames[1:], duration=durations, loop=1, lossless=True, quality=100, method=6, exact=True)
+    print(f'{len(frames)} frames recoloured, {os.path.getsize(path) / 1024:.0f} KB')
+
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        raise SystemExit('usage: python3 scripts/make-logo-intro.py <video.mp4>')
-    main(sys.argv[1])
+        raise SystemExit('usage: python3 scripts/make-logo-intro.py <video.mp4>   or   --recolor')
+    recolor() if sys.argv[1] == '--recolor' else main(sys.argv[1])

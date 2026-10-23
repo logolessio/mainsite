@@ -1601,9 +1601,9 @@ html[data-theme='light'] body {
     var(--ink);
   background-attachment: fixed;
 }
-/* the logo is drawn in white: it is turned dark on the light palette, and stays white wherever the dark palette is kept */
+/* the logo is filled with a rainbow gradient: on the light palette its lightness is inverted and its colours kept, and it stays as it is wherever the dark palette is kept */
 html[data-theme='light'] [data-logo] {
-  filter: invert(1);
+  filter: invert(1) hue-rotate(180deg);
 }
 html[data-theme='light'] [data-keep-theme] [data-logo] {
   filter: none;

@@ -224,7 +224,7 @@ function Profile({ me, onSaved, onBack }: { me: Me; onSaved: () => void; onBack:
   // is the username free? asked a moment after the last key
   useEffect(() => {
     const h = typedHandle(handle)
-    if (h.length < 3) return setAvail(h ? { ok: false, message: 'At least 3 characters.' } : null)
+    if (!h) return setAvail(null)
     setAvail('checking')
     const ctl = new AbortController()
     const t = window.setTimeout(() => {
@@ -635,11 +635,11 @@ export function PreLaunchOnboarding({ end, joinBase, notice }: { end: number | n
           )}
           <footer className="mt-8 text-center text-[12px] leading-relaxed text-paper/30">
             By continuing you agree to the{' '}
-            <a href="https://logoless.io/legal/terms" target="_blank" rel="noopener noreferrer" className="underline decoration-white/20 underline-offset-2 hover:text-paper/60">
+            <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="underline decoration-white/20 underline-offset-2 hover:text-paper/60">
               Terms
             </a>{' '}
             and{' '}
-            <a href="https://logoless.io/legal/privacy" target="_blank" rel="noopener noreferrer" className="underline decoration-white/20 underline-offset-2 hover:text-paper/60">
+            <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="underline decoration-white/20 underline-offset-2 hover:text-paper/60">
               Privacy Policy
             </a>
             .

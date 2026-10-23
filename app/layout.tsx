@@ -24,6 +24,7 @@ import { launchExempt, launchView, linksExempt } from '@/lib/launch'
 import { launchHomeData } from '@/lib/launch-home'
 import { LaunchPage } from '@/components/launch/launch-page'
 import { LaunchHome } from '@/components/launch/home/launch-home'
+import { BetaLegalFrame } from '@/components/prelaunch/legal-frame'
 import { getOverrides } from '@/lib/copy'
 import { parseRoundness, roundnessVars } from '@/lib/roundness'
 import { allSettings } from '@/lib/settings'
@@ -212,7 +213,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         </head>
         <body className="antialiased">
           <FeaturesProvider dev={fs.dev} on={featuresOn}>
-            {bare ? children : newLaunch ? <LaunchHome {...await launchHomeData('soon')} locked /> : <LaunchPage end={launch.end} headline={launch.headline} text={launch.text} signedInAs={session?.user?.email ?? null} />}
+            {bare ? (isBetaHost(host) && /^\/legal(\/|$)/.test(path) ? <BetaLegalFrame>{children}</BetaLegalFrame> : children) : newLaunch ? <LaunchHome {...await launchHomeData('soon')} locked /> : <LaunchPage end={launch.end} headline={launch.headline} text={launch.text} signedInAs={session?.user?.email ?? null} />}
           </FeaturesProvider>
         </body>
       </html>

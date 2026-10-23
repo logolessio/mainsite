@@ -20,7 +20,7 @@ export function middleware(req: NextRequest) {
   headers.set('x-path', p) // the launch page needs to know which page was asked for (the legal pages stay open behind it)
 
   // beta.logoless.io is the pre-launch sign-up and nothing else: its one page is /onboarding (the bare address opens it), the site's API answers here too
-  // (the sign-in cookie is shared across *.logoless.io), the legal pages live on the main address, and every other path comes back to the sign-up.
+  // (the sign-in cookie is shared across *.logoless.io), the legal pages are open (/legal and every document), and every other path comes back to the sign-up.
   if (isBetaHost(host)) {
     if (p.startsWith('/api/') || p === '/onboarding') {
       headers.set('x-path', '/onboarding')
@@ -30,7 +30,8 @@ export function middleware(req: NextRequest) {
       headers.set('x-path', '/onboarding')
       return NextResponse.rewrite(new URL(`/onboarding${search}`, req.url), { request: { headers } })
     }
-    if (/^\/legal(\/|$)/.test(p) && host.endsWith('.logoless.io')) return NextResponse.redirect(`${MAIN}${p}${search}`, 307)
+    // the legal pages are public here too (they get their own small frame, see components/prelaunch/legal-frame.tsx)
+    if (/^\/legal(\/|$)/.test(p)) return NextResponse.next({ request: { headers } })
     return NextResponse.redirect(new URL('/onboarding', req.url), 307)
   }
 
