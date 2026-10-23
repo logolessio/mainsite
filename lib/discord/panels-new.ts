@@ -83,9 +83,10 @@ export const paymentsPanel = (notice: string | null): Message =>
         { name: '🔗 Link Payment Method', value: 'Add your PayPal email.', inline: true },
         { name: '📋 Manage Payment Methods', value: 'View and remove the PayPal emails you can be paid at.', inline: true },
         { name: '💰 Check Balance', value: 'See what you can withdraw.', inline: true },
+        { name: '🏦 Withdraw', value: 'Send your earnings to your PayPal.', inline: true },
       ],
     }),
-    [pbtn('Link Payment Method', 'pay:link', 'green', '🔗'), pbtn('Manage Payment Methods', 'pay:manage', 'grey', '📋'), pbtn('Check Balance', 'pay:balance', 'blurple', '💰')],
+    [pbtn('Link Payment Method', 'pay:link', 'green', '🔗'), pbtn('Manage Payment Methods', 'pay:manage', 'grey', '📋'), pbtn('Check Balance', 'pay:balance', 'blurple', '💰'), pbtn('Withdraw', 'wd:start', 'grey', '🏦')],
   )
 
 export const supportPanelNew = (): Message =>

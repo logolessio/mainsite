@@ -1,5 +1,11 @@
 import { auditSafe } from '../chain'
 import { db, nowSec } from '../db'
+import { balances, startWithdrawal } from '../ledger'
+import { logEvent } from '../log'
+import { paypalReady } from '../paypal'
+import { reviewReason, sendPayout, setPayoutDestination } from '../payout'
+import { getSetting } from '../settings'
+import { SITE } from '../site'
 import { codeEmail, emailEnabled, plainMessageEmail, sendEmail } from '../email'
 import { checkEmail, maskEmail } from '../email-check'
 import { checkCode, issueCode } from '../email-code'
@@ -263,6 +269,96 @@ async function managePayments(a: Account): Promise<Message> {
   return { ...m, components: [...(m.components ?? []), { type: 1, components: cur.emails.slice(0, 5).map((e, n) => pbtn(`Remove ${maskEmail(e).slice(0, 12)}`, `pay:rm:${n}:${short(e)}`, 'red', '🗑️')) }] }
 }
 
+// ---------- withdrawing ----------
+// Money only ever goes to a PayPal email that was added with a code (see above), never to one typed here. The person sees the exact amount and where it goes,
+// and has two minutes to confirm; confirming reserves the money first (so a double press cannot pay twice) and then sends it, the same steps as the site's withdraw page.
+const money = (cents: number) => `$${(cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+const WITHDRAW_LIFE = 2 * 60
+const wKey = (userId: string) => `discord:withdraw:${userId}`
+
+async function startWithdraw(a: Account, dollars?: number): Promise<Message> {
+  if ((await getSetting('payouts_paused')) === '1') return problem('Withdrawals are paused for a short while. Your balance has not changed.')
+  if (!(await paypalReady())) return problem('Withdrawals are not open yet. Your balance has not changed. You can add your PayPal now, so you are ready.', [pbtn('Add PayPal', 'pay:link', 'green', '💸')])
+  const cur = await paypalEmails(a.id)
+  if (!cur.email) return problem('Add a PayPal email first. A new one is confirmed with a code we email to you, so only you can add it.', [pbtn('Add PayPal', 'pay:link', 'green', '💸')])
+  const b = await balances(a.id)
+  const cents = dollars === undefined ? b.available : Math.round(dollars * 100)
+  if (!Number.isInteger(cents) || cents <= 0) return problem(dollars === undefined ? 'You have nothing to withdraw yet.' : 'Enter a valid amount.', [pbtn('Check balance', 'pay:balance', 'blurple', '💰')])
+  if (cents < SITE.minPayoutUsd * 100) return problem(`The smallest withdrawal is $${SITE.minPayoutUsd}. You have ${money(b.available)} available.`, [pbtn('Check balance', 'pay:balance', 'blurple', '💰')])
+  if (cents > b.available) return problem(`That is more than your available balance of ${money(b.available)}.`, [pbtn('Withdraw everything', 'wd:start', 'green', '💸')])
+  await (await db())
+    .prepare('INSERT INTO settings (key, value, updated_at) VALUES (?1, ?2, ?3) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at')
+    .bind(wKey(a.id), JSON.stringify({ cents, email: cur.email, at: nowSec() }), nowSec())
+    .run()
+  return embedMessage(
+    embedCard({
+      title: '💸 Confirm your withdrawal',
+      text: [`**${money(cents)}** to PayPal **${maskEmail(cur.email)}**.`, 'We cover PayPal’s fees, so the full amount is sent. Some withdrawals are looked at by the team first; you will be told if yours is.', '', '-# Press Confirm within 2 minutes. To pay a different address, cancel and use /payments.'].join('\n'),
+      bar: false,
+    }),
+    [pbtn('Confirm withdrawal', 'wd:ok', 'green', '✅'), pbtn('Cancel', 'wd:no', 'grey', '✖️')],
+  )
+}
+
+/** Takes the waiting confirmation in one step, so two presses cannot both use it. */
+async function claimWithdraw(userId: string): Promise<{ cents: number; email: string } | null> {
+  const r = await (await db()).prepare('DELETE FROM settings WHERE key = ?1 RETURNING value').bind(wKey(userId)).first<{ value: string }>()
+  if (!r) return null
+  try {
+    const p = JSON.parse(r.value) as { cents: number; email: string; at: number }
+    return nowSec() - p.at <= WITHDRAW_LIFE && Number.isInteger(p.cents) && p.cents > 0 ? { cents: p.cents, email: p.email } : null
+  } catch {
+    return null
+  }
+}
+
+async function receiptEmail(a: Account, cents: number, to: string, held: boolean) {
+  try {
+    if (!(await emailEnabled())) return
+    await sendEmail({
+      to: a.email,
+      ...plainMessageEmail(a.name, held ? `Your ${money(cents)} withdrawal is being checked` : `Your ${money(cents)} withdrawal is on its way`, `${money(cents)} to ${maskEmail(to)}, requested from Discord. ${held ? 'We look over some payouts first, which usually takes under a day.' : 'It is on its way to your PayPal.'} If this was not you, change your password and tell us straight away.`),
+      template: 'payout receipt',
+    })
+  } catch {
+    /* a receipt that does not send is not a reason to fail */
+  }
+}
+
+async function confirmWithdraw(a: Account): Promise<Message> {
+  const p = await claimWithdraw(a.id)
+  if (!p) return problem('That took too long, or it was already used. Start again.', [pbtn('Withdraw', 'wd:start', 'green', '💸')])
+  if ((await hit(`dw:${a.id}`, 600)) > 6) return problem('Too many tries. Please wait a few minutes.')
+  if ((await getSetting('payouts_paused')) === '1') return problem('Withdrawals are paused for a short while. Your balance has not changed.')
+  if (!(await paypalReady())) return problem('Withdrawals are not open yet. Your balance has not changed.')
+  // the address must still be on the list (it may have been removed since the confirmation was made)
+  if (!(await paypalEmails(a.id)).emails.includes(p.email)) return problem('That PayPal email is no longer on your list. Your balance has not changed.', [pbtn('Manage payment methods', 'pay:manage', 'grey', '📋')])
+  const user = await userRow(a.id)
+  const reason = await reviewReason(user, null, p.cents)
+  const payoutId = await startWithdrawal(user.id, p.cents)
+  if (!payoutId) return problem('That is more than your available balance now. Your balance has not changed.', [pbtn('Check balance', 'pay:balance', 'blurple', '💰')])
+  await setPayoutDestination(payoutId, p.email)
+  logEvent({ kind: 'money', name: 'withdrawal requested', actor: a.email, detail: `${payoutId} ${money(p.cents)} to ${p.email} from Discord${reason ? ` (held: ${reason})` : ''}` })
+  const held = async (why: string) => {
+    await (await db()).prepare("UPDATE payouts SET status = 'review', review_reason = ?2, updated_at = ?3 WHERE id = ?1 AND status = 'pending'").bind(payoutId, why.slice(0, 300), nowSec()).run()
+    await auditSafe({ id: user.id, email: user.email }, 'payout.held', payoutId, why)
+    await notify(user.id, { kind: 'payout', title: 'Your withdrawal is being checked', body: 'We review some withdrawals before sending them. This usually takes under a day.', href: '/dashboard/earnings#withdraw', dedupe: `payout-held:${payoutId}` })
+    await receiptEmail(a, p.cents, p.email, true)
+    return embedMessage(embedCard({ title: '🕵️ Your withdrawal is being checked', text: `**${money(p.cents)}** to **${maskEmail(p.email)}** is reserved. We look over some withdrawals before sending them, which usually takes under a day. We will message you.`, bar: false }), [pbtn('Check balance', 'pay:balance', 'blurple', '💰')])
+  }
+  if (reason) return held(reason)
+  const sent = await sendPayout(payoutId)
+  if (!sent.ok) {
+    if (sent.held) {
+      await receiptEmail(a, p.cents, p.email, true)
+      return embedMessage(embedCard({ title: '🕵️ Your withdrawal is being checked', text: `**${money(p.cents)}** is reserved while we check it. It will not be lost.`, bar: false }), [pbtn('Check balance', 'pay:balance', 'blurple', '💰')])
+    }
+    return problem(sent.error, [pbtn('Check balance', 'pay:balance', 'blurple', '💰')])
+  }
+  await receiptEmail(a, p.cents, p.email, false)
+  return embedMessage(embedCard({ title: '✅ Withdrawal sent', text: `**${money(p.cents)}** is on its way to **${maskEmail(p.email)}** on PayPal. A receipt is in your email.`, notice: await launchNote() }), [pbtn('Check balance', 'pay:balance', 'blurple', '💰')])
+}
+
 // ---------- the doors: commands, buttons and forms ----------
 const need = async (i: Interaction): Promise<Account | Reply> => (await accountOf(whoami(i).id)) ?? send(await joinPrompt())
 const isReply = (x: Account | Reply): x is Reply => 'type' in x
@@ -270,6 +366,12 @@ const isReply = (x: Account | Reply): x is Reply => 'type' in x
 /** Slash commands: /join, /verify, /paypal, /accounts, /payments. */
 export async function setupCommand(i: Interaction, name: string): Promise<Reply | null> {
   if (name === 'join') return startJoin(i, await accountOf(whoami(i).id))
+  if (name === 'withdraw') {
+    const a = await need(i)
+    if (isReply(a)) return a
+    const v = i.data?.options?.find((o) => o.name === 'amount')?.value
+    return send(await startWithdraw(a, typeof v === 'number' ? v : undefined))
+  }
   if (name === 'verify' || name === 'accounts' || name === 'paypal' || name === 'payments') {
     const a = await need(i)
     if (isReply(a)) return a
@@ -285,9 +387,15 @@ export async function setupCommand(i: Interaction, name: string): Promise<Reply 
 export async function setupComponent(i: Interaction, id: string, env: Env): Promise<Reply | null> {
   if (id === 'acct:join') return startJoin(i, await accountOf(whoami(i).id))
   if (id === 'join:code') return modal('modal:joincode', 'Enter your code', [{ id: 'code', label: 'The 6 digit code from your email', placeholder: '123456', min: 6, max: 6 }])
-  if (!/^(acct|pay):/.test(id)) return null
+  if (!/^(acct|pay|wd):/.test(id)) return null
   const a = await need(i)
   if (isReply(a)) return a
+  if (id === 'wd:start') return send(await startWithdraw(a))
+  if (id === 'wd:no') {
+    await (await db()).prepare('DELETE FROM settings WHERE key = ?1').bind(wKey(a.id)).run()
+    return { type: 7, data: { embeds: [embedCard({ title: '✖️ Cancelled', text: 'Nothing was withdrawn.', bar: false })], components: [] } }
+  }
+  if (id === 'wd:ok') return env.defer(() => confirmWithdraw(a))
   if (id === 'acct:link') return send(embedMessage(embedCard({ title: '🔗 Link an account', text: 'Pick where you post. We look the account up, give you a short code, and you put it in your bio to prove it is yours.', notice: await launchNote(), bar: false }), platformButtons()))
   if (id === 'acct:manage') return send(await manageAccounts(a))
   if (id.startsWith('acct:add:')) {

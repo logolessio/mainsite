@@ -1,6 +1,7 @@
 import type { Health } from '../health'
 import { LEGAL_LINKS, SITE } from '../site'
 import type { Component, Embed, Message } from './api'
+import { pbtn } from './look'
 import { container, sep, text, v2 } from './v2'
 import {
   big, btn, bullets, card, chan, chip, dot, go, icon, INK, join, meter, num, row, small, usd, SITE_URL, OWNER_URL, type IconName,
@@ -29,7 +30,7 @@ export const helpCard = (): Message =>
         label: 'Help',
         title: 'logoless bot',
         text: join(
-          '`/join` `/verify` `/accounts` `/paypal` `/payments`',
+          '`/join` `/verify` `/accounts` `/paypal` `/payments` `/withdraw`',
           '`/campaigns` `/campaign` `/submit` `/submissions` `/earn`',
           '`/stats` `/balance` `/profile` `/badges`',
           '`/leaderboard` `/faq` `/support` `/report`',
@@ -117,7 +118,7 @@ export const balanceCard = (b: BalanceData): Message =>
         ],
       }),
     ],
-    [row(go('Withdraw', '/dashboard/earnings#withdraw'), btn('My numbers', 'cmd:stats'))],
+    [row(pbtn('Withdraw', 'wd:start', 'green', '💸'), btn('My numbers', 'cmd:stats'))],
   )
 
 export type SubmissionRow = { status: string; title: string; platform: string; views: number; earnedCents: number }

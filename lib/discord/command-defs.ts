@@ -15,6 +15,7 @@ export const RAW_COMMANDS = [
   { name: 'accounts', description: 'Your linked accounts: check or remove them', type: 1 },
   { name: 'paypal', description: 'Add a PayPal email to be paid at', type: 1 },
   { name: 'payments', description: 'Your PayPal emails: view or remove them', type: 1 },
+  { name: 'withdraw', description: 'Withdraw your earnings to your PayPal', type: 1, options: [{ type: 10, name: 'amount', description: 'How much, in dollars (leave empty to withdraw everything)', required: false, min_value: 1, max_value: 1_000_000 }] },
   { name: 'unlink', description: 'Disconnect your logoless account from Discord', type: 1 },
   { name: 'profile', description: 'Show a logoless profile', type: 1, options: [{ type: U, name: 'member', description: 'Someone else in the server (leave empty for you)', required: false }] },
   { name: 'stats', description: 'Your submissions, views and earnings', type: 1 },

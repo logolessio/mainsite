@@ -682,7 +682,8 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<Reply
       case 'verify':
       case 'accounts':
       case 'paypal':
-      case 'payments': return (await setupCommand(i, name)) ?? fail('That did not work. Please try again.')
+      case 'payments':
+      case 'withdraw': return (await setupCommand(i, name)) ?? fail('That did not work. Please try again.')
       case 'unlink': {
         const m = await me(whoami(i).id)
         if (!m) return notLinked()

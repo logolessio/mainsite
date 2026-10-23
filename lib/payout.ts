@@ -8,13 +8,17 @@ import { getSetting } from './settings'
 import { PayPalError, paypalReady, sendPayoutTo } from './paypal'
 import type { UserRow } from './user'
 
-/** Decides whether a withdrawal can go straight out, or waits for an admin. Returns the reason if it must wait. */
-export async function reviewReason(user: UserRow, req: Request, cents: number): Promise<string | null> {
+/**
+ * Decides whether a withdrawal can go straight out, or waits for an admin. Returns the reason if it must wait. `req` is the person's own request; a withdrawal
+ * made from Discord has none (the request then comes from Discord's servers, which would always look like a data centre), so the check on the network is skipped for it
+ * and the rest (the account's risk level, large amounts, the daily limit) stand.
+ */
+export async function reviewReason(user: UserRow, req: Request | null, cents: number): Promise<string | null> {
   const reasons: string[] = []
   if (user.risk_level !== 'low') reasons.push(`Extra checks on this account${user.risk_reasons ? ` (${user.risk_reasons})` : ''}`)
 
-  const now = await assessRequest(req)
-  if (now.level === 'elevated') {
+  const now = req ? await assessRequest(req) : null
+  if (now && now.level === 'elevated') {
     reasons.push(`Withdrawal requested from a VPN, proxy or data-centre network (${now.org ?? 'unknown'})`)
     if (user.risk_level === 'low') {
       const d = await db()

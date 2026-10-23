@@ -287,7 +287,7 @@ export const payoutStatusCard = (rows: PayoutRow[], availableCents: number): Mes
         ),
       }),
     ],
-    [row(go('Withdraw', '/dashboard/earnings#withdraw'))],
+    [row(pbtn('Withdraw', 'wd:start', 'green', '💸'))],
   )
 
 export const rankCard = (a: { place: number | null; of: number; views: number; next?: { name: string; gap: number } | null }): Message =>

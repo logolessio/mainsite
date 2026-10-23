@@ -24,7 +24,7 @@ Discord server is the front door. This is the order to set it up in, what to swi
 4. **Make the community channels.** New: general, introductions, clip-showcase, edit-help, ideas-and-feedback, off-topic, bot-commands, two voice
    lounges, and a private Team category (team-chat, mod-queue) that only the staff, team and admin roles can see. It only adds what is missing and
    never touches anything that already exists. Drag the new Community category up under the Welcome and Info ones.
-5. **Register commands.** Needed whenever the command list changes. The newest commands (`/join`, `/verify`, `/accounts`, `/paypal`, `/payments`) only appear after this.
+5. **Register commands.** Needed whenever the command list changes. The newest commands (`/join`, `/verify`, `/accounts`, `/paypal`, `/payments`, `/withdraw`) only appear after this.
 6. Post the panels: **get-started, rules, site, support, status** (the "Post" buttons). Then, in the channels where you want them, type `/admin panel` and pick **Manage accounts** and **Payment details**. If the get-started or rules message is already posted, post it again to get the new look (delete the old one).
 7. **Make artist channels and cards**, then **Run the live loop now**.
 8. **Send a test message** and **Send me the welcome rundown** to see what members see.
@@ -54,7 +54,7 @@ The bot is not allowed to change server-wide settings (it does not have Manage S
 For anyone with a logoless account linked to their Discord (logging in with Discord on logoless.io does the linking and gives the roles):
 
 - `/campaigns`, `/campaign`, `/earn`, `/leaderboard`, `/rank`, `/faq`, `/status`, `/next`, `/help`
-- `/stats`, `/balance`, `/payout`, `/submissions`, `/profile`, `/badges`, `/roles`, `/sync`, `/notifications`
+- `/stats`, `/balance`, `/payout`, `/withdraw`, `/submissions`, `/profile`, `/badges`, `/roles`, `/sync`, `/notifications`
 - `/submit` (send a post to a campaign), `/support` and the Open a ticket button (private channel with the team), `/report`
 - brands: `/brand`; developers: `/dev`; the team: `/admin ...` (stats, queue, lookup, announce, update, campaign, panel, tick)
 - every payout and submission is posted in its channel as a card, and each live campaign gets its own card and artist channel
@@ -66,22 +66,22 @@ While the site is closed, a member can do all of this without the website:
 - **Make an account** (`/join` or the Make an account button): email address, a 6 digit code sent to it, and the Discord is linked at once. A Discord account younger than 4 days is asked to wait (they are the easy way to make many).
 - **Link an account and prove it** (`/verify`, the Link Account button): pick TikTok, YouTube or Instagram, type the username, put the code in the bio, press Check my bio. Instagram cannot be read by a server, so a person on the team checks it by hand.
 - **Add PayPal** (`/paypal`, the Link Payment Method button): the address typed twice, and a code emailed to the *account* email (the same ceremony as the site). Manage or remove them with `/payments`; `/accounts` does the same for linked accounts.
+- **Withdraw** (`/withdraw`, the Withdraw buttons on the balance card and the payment panel): the amount (or everything) and the destination are shown, and the member has 2 minutes to press Confirm. Money only goes to a PayPal email that was added with a code, never one typed here. Confirming reserves the money first (so a double press cannot pay twice) and then sends it through PayPal; the site's own checks apply (smallest withdrawal, pause switch, large amounts and the daily limit wait for you to approve; an account with extra checks waits too). The one check that cannot be done from Discord is the VPN/network look, because the request comes from Discord's servers. A receipt goes to the account email.
 - Every welcome and setup message carries a notice that logoless is not live yet and when it opens, for as long as the launch page is up.
 
 ## 4. What still needs the site
 
 While the site is closed, only the log in page, the legal pages and /links are open, so nobody but the owner can do these yet. After Dec 1 they
-need the site: finishing a profile (onboarding), withdrawing (hold to send), and brands creating and funding campaigns. Making an account, linking and proving
-social accounts, and adding PayPal can all be done in Discord now.
+need the site: finishing a profile (onboarding), and brands creating and funding campaigns. Making an account, linking and proving social accounts,
+adding PayPal and withdrawing can all be done in Discord now.
 
 ## 5. To make Discord truly stand on its own (not built yet)
 
-Done now: `/join`, `/verify` and `/paypal` (section 3b). Still missing, in the order I would build them:
+Done now: `/join`, `/verify`, `/paypal` and `/withdraw` (section 3b). Still missing, in the order I would build them:
 
-1. `/withdraw`: withdraw with a confirm button. This moves money, so it gets the most care.
-2. Finishing a profile (name, picture, bio) from Discord.
-3. `/waitlist`: reserve a username from Discord while the site is closed.
-4. Brands starting a campaign from a form in Discord.
+1. Finishing a profile (name, picture, bio) from Discord.
+2. `/waitlist`: reserve a username from Discord while the site is closed.
+3. Brands starting a campaign from a form in Discord.
 
 ## Launch day (Dec 1, 17:00 GMT)
 
