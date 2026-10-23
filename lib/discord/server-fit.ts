@@ -360,20 +360,26 @@ export async function fitServer(input: DiscordConfig, opts: { skip?: number; loc
   }
 
   // ---------------- the order of the categories ----------------
+  // one move at a time (Discord's bulk reorder left some categories where they were): the category that belongs in a slot takes the place of whatever is there now
   const front = PLAN.map((p) => catFor.get(p.name)?.id).filter(Boolean) as string[]
   const rest = [cfg.artistsCategory, cfg.inactiveCategory, cfg.ticketCategory].filter((id) => id && cats.some((c) => c.id === id)) as string[]
   const wanted = [...front, ...rest]
-  const current = cats.slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0)).map((c) => c.id).filter((id) => wanted.includes(id))
-  if (wanted.length > 1 && front.length === PLAN.length && JSON.stringify(current) !== JSON.stringify(wanted)) {
-    const going = new Set(cats.filter((c) => !keepCats.has(c.id) && OLD_CATEGORIES.includes(norm(c.name)) && !hasMark(c.name)).map((c) => c.id)) // removed by an earlier step
-    const others = cats.filter((c) => !wanted.includes(c.id) && !going.has(c.id)).sort((a, b) => (a.position ?? 0) - (b.position ?? 0)).map((c) => c.id)
-    const all = [...wanted, ...others]
-    ops.push({
-      label: `put the categories in order (was ${cats.slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0)).map((c) => `${c.name} ${c.position}`).join(', ')})`,
-      run: async () => {
-        const res = await call('PATCH', `/guilds/${guild}/channels`, all.map((id, position) => ({ id, position })))
-        if (!res.ok) throw new Error(explainDiscord(res, 'the server'))
-      },
+  if (front.length === PLAN.length) {
+    const ranked = cats.filter((c) => wanted.includes(c.id)).sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+    const slots = ranked.map((c) => c.position ?? 0)
+    const sim = ranked.map((c) => c.id)
+    wanted.forEach((id, i) => {
+      if (sim[i] === id) return
+      sim.splice(sim.indexOf(id), 1)
+      sim.splice(i, 0, id)
+      const name = cats.find((c) => c.id === id)?.name ?? id
+      ops.push({
+        label: `move the ${name} category to place ${i + 1}`,
+        run: async () => {
+          const res = await call('PATCH', `/channels/${id}`, { position: slots[i] })
+          if (!res.ok) throw new Error(explainDiscord(res, `the ${name} category`))
+        },
+      })
     })
   }
 
