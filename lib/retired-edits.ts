@@ -88,4 +88,5 @@ export const RETIRED_EDITS: Record<string, string> = {
   "c_95aabc738fe4f74c": "Why was my submission rejected?",
   "c_c15e581b3d9fcb56": "Q&A",
   "c_ada0118232971aeb": "Join a campaign, post and get paid for your views.",
+  "c_bb99bcb5d1f6e278": "Get paid for your views.",
 }
