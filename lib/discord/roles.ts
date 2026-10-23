@@ -107,14 +107,14 @@ export async function syncRoles(userId: string): Promise<SyncResult> {
  * Used by the "Make the missing roles" button, by the config key they are saved under.
  */
 export const ROLE_NAMES: { key: 'linked' | 'verified' | 'unverified' | 'founding' | 'clipper' | 'brand' | 'creator' | 'developer' | 'admin' | 'team'; name: string }[] = [
-  { key: 'admin', name: 'Admin' },
-  { key: 'team', name: 'Team' },
-  { key: 'developer', name: 'Developer' },
-  { key: 'creator', name: 'Artist' },
-  { key: 'brand', name: 'Brand' },
-  { key: 'clipper', name: 'Clipper' },
-  { key: 'founding', name: 'Founding member' },
-  { key: 'verified', name: 'Verified' },
-  { key: 'unverified', name: 'Unverified' },
-  { key: 'linked', name: 'Linked' },
+  { key: 'admin', name: 'L | Site Admin' },
+  { key: 'team', name: 'L | Team' },
+  { key: 'developer', name: 'L | Developer' },
+  { key: 'creator', name: 'L | Artist' },
+  { key: 'brand', name: 'L | Brand' },
+  { key: 'clipper', name: 'L | Clipper' },
+  { key: 'founding', name: 'L | Founding Member' },
+  { key: 'verified', name: 'L | Verified' },
+  { key: 'unverified', name: 'L | Unverified' },
+  { key: 'linked', name: 'L | Member' },
 ]

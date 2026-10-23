@@ -17,7 +17,12 @@ const get = async (key: string) => (await (await db()).prepare('SELECT value FRO
 const put = async (key: string, value: string) =>
   void (await (await db()).prepare('INSERT INTO settings (key, value, updated_at) VALUES (?1, ?2, ?3) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at').bind(key, value, nowSec()).run())
 
-/** The id of the text channel with this name (found once, then remembered). `look` allows asking Discord; without it only what is remembered is used. */
+/** Other names a channel has gone by: the server was fitted so "general" is now "chat". */
+const ALIASES: Record<string, string[]> = { general: ['general', 'chat'] }
+/** What a channel's name is without the "・" in front of it. */
+const bare = (name: string) => name.toLowerCase().replace(/^[^a-z0-9]+/, '')
+
+/** The id of the text channel with this name, with or without the "・" (found once, then remembered). `look` allows asking Discord; without it only what is remembered is used. */
 async function channelNamed(name: string, look: boolean): Promise<string | null> {
   const cached = await get(`discord:chan:${name}`)
   if (cached) return cached
@@ -27,7 +32,10 @@ async function channelNamed(name: string, look: boolean): Promise<string | null>
   const cfg = await getDiscordConfig()
   if (!cfg.guildId) return null
   const list = await discord<{ id: string; name: string; type: number }[]>('GET', `/guilds/${cfg.guildId}/channels`)
-  const found = (Array.isArray(list.json) ? list.json : []).find((c) => c.type === 0 && c.name === name)?.id ?? null
+  const names = ALIASES[name] ?? [name]
+  const channels = (Array.isArray(list.json) ? list.json : []).filter((c) => c.type === 0)
+  let found: string | null = null
+  for (const n of names) if (!found) found = channels.find((c) => bare(c.name) === n)?.id ?? null
   if (found) await put(`discord:chan:${name}`, found)
   return found
 }
@@ -76,6 +84,18 @@ export async function grantVerified(userId: string, n: number, founding: boolean
     /* the roles can be given again with /sync; finishing the sign-up must not fail because Discord is slow */
   }
   return inServer
+}
+
+/** The welcome card for one person, posted in the welcome channel exactly as a new member's would be, without touching their roles: the owner's preview. */
+export async function previewWelcome(userId: string, n: number, founding: boolean): Promise<{ channel: string } | null> {
+  const did = await discordIdFor(userId)
+  if (!did || !(await botReady())) return null
+  const p = await (await db()).prepare('SELECT p.handle, p.display_name FROM profiles p WHERE p.user_id = ?1').bind(userId).first<{ handle: string; display_name: string }>()
+  const target = (await channelNamed('welcome', true)) ?? (await channelNamed('general', true))
+  if (!target) return null
+  const who: Who = { name: p?.display_name || 'there', handle: p?.handle ?? null, discordId: did, n, founding }
+  const res = await postMessage(target, welcomeCard({ ...who, avatar: await avatarOf(did), at: nowSec() }))
+  return res.ok ? { channel: target } : null
 }
 
 /** A held sign-up was let through (they are made Verified) or turned down (a short, kind message). */

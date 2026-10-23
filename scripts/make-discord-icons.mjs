@@ -62,7 +62,8 @@ for (const f of readdirSync(ICONS).filter((x) => x.endsWith('.svg'))) {
   if (LUCIDE[name] || BRANDS[name]) continue // handled below (a source file of the same name is ignored)
   const src = readFileSync(join(ICONS, f), 'utf8')
   const inner = src.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '').replaceAll('currentColor', 'url(#g)')
-  await png(name, line(inner))
+  // a source drawn as filled shapes (the logo mark) is filled with the gradient; the others are lines
+  await png(name, /<svg[^>]*\sfill="currentColor"/.test(src) ? solid(inner) : line(inner))
 }
 
 // 2) the new line icons, from Lucide

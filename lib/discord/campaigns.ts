@@ -39,7 +39,7 @@ const put = async (key: string, value: string) => {
 const get = async (key: string) => (await (await db()).prepare('SELECT value FROM settings WHERE key = ?1').bind(key).first<{ value: string }>())?.value ?? null
 
 // ---------- artist channels ----------
-const channelName = (creator: string) => creator.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 90) || 'artist'
+const channelName = (creator: string) => '・' + creator.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 90) || 'artist'
 
 /** The channel for an artist: the one set by hand, the one the bot made before, or (when `create`) a new one. */
 export async function artistChannel(creator: string, create: boolean, cfg?: DiscordConfig): Promise<string | null> {

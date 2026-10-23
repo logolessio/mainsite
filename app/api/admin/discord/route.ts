@@ -43,6 +43,9 @@ const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('upload-icons') }),
   z.object({ action: z.literal('lock-server') }),
   z.object({ action: z.literal('server-map') }),
+  z.object({ action: z.literal('fit-server'), skip: z.number().int().min(0).max(500).default(0), lock: z.boolean().default(false) }),
+  z.object({ action: z.literal('apply-logo') }),
+  z.object({ action: z.literal('preview-welcome') }),
   z.object({ action: z.literal('prelaunch-decide'), userId: z.string().min(8).max(64), approve: z.boolean() }),
   z.object({ action: z.literal('welcome-me') }),
 ])
@@ -189,7 +192,7 @@ export const POST = route(async (req: Request) => {
       const hidden = [{ id: cfg.guildId, type: 0, allow: '0', deny: '1024' }, bot, ...staff]
       const readOnly = [{ id: cfg.guildId, type: 0, allow: '0', deny: '2048' }, bot]
       const make = async (name: string, type: 0 | 4, overwrites: object[], parent?: string) => {
-        const res = await discord<{ id: string }>('POST', `/guilds/${cfg.guildId}/channels`, { name, type, permission_overwrites: overwrites, ...(parent ? { parent_id: parent } : {}) })
+        const res = await discord<{ id: string }>('POST', `/guilds/${cfg.guildId}/channels`, { name: type === 4 ? name : `・${name}`, type, permission_overwrites: overwrites, ...(parent ? { parent_id: parent } : {}) })
         if (!res.ok || !res.json?.id) throw new HttpError(502, explainDiscord(res, 'the server'))
         made.push(type === 4 ? `${name} (category)` : `#${name}`)
         return res.json.id
@@ -225,6 +228,53 @@ export const POST = route(async (req: Request) => {
     } catch (e) {
       throw new HttpError(502, e instanceof Error ? e.message : 'Discord would not show the server.')
     }
+  }
+  if (a.action === 'fit-server') {
+    // the roles named "L | …", the channels named "・…", the right categories and who sees what: a few steps at a time, the dashboard button presses until none are left
+    if (!cfg.guildId) throw new HttpError(409, 'Save your server ID first.')
+    const { fitServer } = await import('@/lib/discord/server-fit')
+    let r: Awaited<ReturnType<typeof fitServer>>
+    try {
+      r = await fitServer(cfg, { skip: a.skip, lock: a.lock })
+    } catch (e) {
+      throw new HttpError(502, e instanceof Error ? e.message : 'Discord would not show the server.')
+    }
+    const saved = await saveDiscordConfig(r.cfg)
+    // channels may have been renamed or removed: forget where the welcome and chat were found
+    await (await db()).prepare("DELETE FROM settings WHERE key LIKE 'discord:chan:%' OR key = 'discord:general-channel'").run()
+    await audit(actor, 'discord.fit-server', null, `${r.done.length} done, ${r.failed.length} could not be done, ${r.remaining} left${a.lock ? ' (locked)' : ''}`, ip)
+    return json({ ok: true, done: r.done, failed: r.failed, remaining: r.remaining, notes: r.notes, cfg: saved })
+  }
+  if (a.action === 'apply-logo') {
+    // the logo mark becomes the server's icon, the bot's picture and the logo emoji used in messages
+    if (!cfg.guildId) throw new HttpError(409, 'Save your server ID first.')
+    const { SITE_URL } = await import('@/lib/discord/ui')
+    const pic = await fetch(`${SITE_URL}/discord/server-icon.png?r=${Date.now()}`)
+    if (!pic.ok) throw new HttpError(502, 'The logo picture is not on the site yet.')
+    const bytes = new Uint8Array(await pic.arrayBuffer())
+    let bin = ''
+    for (let i = 0; i < bytes.length; i += 4096) bin += String.fromCharCode(...bytes.subarray(i, i + 4096))
+    const image = `data:image/png;base64,${btoa(bin)}`
+    const steps: { what: string; ok: boolean; note?: string }[] = []
+    const g = await discord('PATCH', `/guilds/${cfg.guildId}`, { icon: image })
+    steps.push({ what: 'server icon', ok: g.ok, note: g.ok ? undefined : explainDiscord(g, 'the server') })
+    const b = await discord('PATCH', '/users/@me', { avatar: image })
+    steps.push({ what: 'bot picture', ok: b.ok, note: b.ok ? undefined : b.status === 429 ? 'Discord only lets the bot change its picture a couple of times an hour: try again later.' : explainDiscord(b) })
+    const { uploadIcons } = await import('@/lib/discord/icons')
+    const e = await uploadIcons({ replace: ['logo'] })
+    steps.push({ what: 'logo emoji', ok: !e.note && !e.failed.includes('logo'), note: e.note })
+    await audit(actor, 'discord.apply-logo', null, steps.map((x) => `${x.what}: ${x.ok ? 'ok' : 'no'}`).join(', '), ip)
+    return json({ ok: true, steps })
+  }
+  if (a.action === 'preview-welcome') {
+    // the welcome card, with the owner's own name and Discord picture, goes up in the welcome channel as a new member's would
+    const { previewWelcome } = await import('@/lib/discord/prelaunch')
+    const { getPre } = await import('@/lib/prelaunch')
+    const pre = await getPre(admin.id)
+    const r = await previewWelcome(admin.id, pre?.n ?? 1, pre?.founding !== false)
+    if (!r) throw new HttpError(409, 'Link your own Discord first (Settings, Connect Discord), and make sure the bot can post in the welcome channel.')
+    await audit(actor, 'discord.preview-welcome', null, null, ip)
+    return json({ ok: true, channel: r.channel })
   }
   if (a.action === 'lock-server') {
     // a new member sees only #get-started; the Verified role (and the staff) see the rest. A few channels at a time: the dashboard button presses this until none are left.

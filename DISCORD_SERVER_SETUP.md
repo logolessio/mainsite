@@ -56,11 +56,19 @@ numbers to show artists when you ask them for campaigns.
    it hands out (Linked, Clipper, Brand, Artist, Developer, Team, Admin, Verified, Unverified, Founding member). A bot cannot give a role that sits above its own.
 3. **Make the missing categories and channels.** Fills the payouts and submissions channels (read-only for members) and the tickets, artists and
    inactive categories if any are missing.
-4. **Make the community channels.** Welcome (a read-only feed where the bot welcomes each new member), general, introductions, clip-showcase, edit-help,
-   ideas-and-feedback, off-topic, bot-commands, two voice lounges (all visible only to the Verified role and the staff; skipped with a note until that role
-   exists, so make the roles first), and a private Team category (team-chat, mod-queue) that only the staff, team and admin roles can see. It only adds
-   what is missing and never touches anything that already exists. Drag the new Community category up under the Welcome and Info ones.
-   **Lock the community to founding members** is the older button that rebuilds the permissions of the Community category and its channels (it replaces them).
+4. **Fit the whole server (names, channels, roles).** One plan for the entire server, pressed as often as you like (it looks first and only does what is not done):
+   - roles: every role becomes **L | …** (the "L™ | " ones too: L | Admin, L | Creator, L | Brand, L | Member, L | Welcome; the bot's own become L | Site Admin,
+     L | Developer, L | Artist, L | Founding Member, L | Verified, L | Unverified) and the three earnings tiers (L | $100 / $1K / $10K Earner) are made;
+   - channels: every channel becomes **・name**. The categories are Welcome (・get-started), Info (・rules ・site ・status), Landing (・news ・updates ・campaigns ・system),
+     Metro (・welcome ・chat ・introductions ・edit-help ・off-topic ・bot-commands ・payouts ・submissions, the ・suggestions and ・help forums, two voice lounges),
+     Help (・support) and Staff (・moderator ・logs ・team-chat), then Artists and Inactive. It adopts what you already have by name, makes only what is missing, puts each
+     channel in its category, fills in an empty topic, and puts the categories in that order;
+   - it also removes the bot's earlier Community and Team categories and their copies (general, ideas-and-feedback, mod-queue) but only when nothing was ever written in them;
+     anything it cannot do (a role above the bot's own role cannot be renamed: drag the bot's role to the top in Server Settings, Roles, and press again) is listed in the answer;
+   - permissions: Verified and the team can see the member channels, read-only ones stay read-only, the team's channels stay the team's. It does **not** hide anything from
+     everyone: that is the lock below, which is yours to press.
+   **Use the new logo** puts the bracket mark (thicker, with the gradient) on the server icon, the bot's picture and the logo emoji (Discord lets the bot change its picture
+   only a couple of times an hour). **Post a welcome preview in the welcome channel** sends the welcome card with your own name and Discord picture, exactly as a new member's.
    **Lock the server to verified members** is the one that matters now: for every channel and category it adds "Verified can see it" and "everyone cannot", and
    leaves every other permission as it was (a read-only channel stays read-only; the team's private channels are left alone). #get-started stays open to everyone to
    read, and no one can write in it. Safe to press again. After it, a new member sees only #get-started.
@@ -72,7 +80,7 @@ numbers to show artists when you ask them for campaigns.
 7. **Make artist channels and cards**, then **Run the live loop now**.
 8. **Send a test message** and **Send me the welcome rundown** to see what members see.
 
-Nothing in these buttons deletes or renames anything.
+Only **Fit the whole server** renames anything (and removes the bot's own empty older copies); the rest only add.
 
 ## 2. Settings only you can change inside Discord
 

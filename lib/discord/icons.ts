@@ -16,14 +16,21 @@ type Emoji = { id: string; name: string }
 
 export type UploadResult = { made: string[]; failed: string[]; remaining: number; total: number; note?: string }
 
-export async function uploadIcons(): Promise<UploadResult> {
+/** `replace`: icons that are already on Discord and are drawn again (each is taken down and uploaded anew, so the new picture shows from the next message). */
+export async function uploadIcons(opts: { replace?: string[] } = {}): Promise<UploadResult> {
   const appId = await setting('DISCORD_APP_ID')
   if (!appId) return { made: [], failed: [], remaining: ICON_NAMES.length, total: ICON_NAMES.length, note: 'DISCORD_APP_ID is not set.' }
   const listed = await discord<{ items?: Emoji[] }>('GET', `/applications/${appId}/emojis`)
   if (!listed.ok) return { made: [], failed: [], remaining: ICON_NAMES.length, total: ICON_NAMES.length, note: `Discord would not list the emoji (status ${listed.status}). Is the bot token right?` }
   const have: Record<string, string> = {}
   for (const e of Array.isArray(listed.json?.items) ? listed.json!.items! : []) if (e.name.startsWith('lg_')) have[e.name.slice(3)] = e.id
+  for (const name of opts.replace ?? []) {
+    if (!have[name]) continue
+    const gone = await discord('DELETE', `/applications/${appId}/emojis/${have[name]}`)
+    if (gone.ok || gone.status === 404) delete have[name]
+  }
   const map: Record<string, string> = { ...iconIds(), ...have }
+  for (const name of opts.replace ?? []) if (!have[name]) delete map[name]
   const todo = ICON_NAMES.filter((n) => !have[n])
   const made: string[] = []
   const failed: string[] = []
