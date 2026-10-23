@@ -3,13 +3,29 @@
 Written Oct 23, 2026, from what the live site says today. The site is closed behind the launch page until **Dec 1 2026, 17:00 GMT**, so for now the
 Discord server is the front door. This is the order to set it up in, what to switch on inside Discord yourself, and what still needs the site.
 
+## The plan until launch
+
+There are no campaigns yet and nothing to withdraw. The job of the server right now is to collect **founding members** and to turn as many of them as
+possible into **proven creators** (an account made, a TikTok, YouTube or Instagram linked and proven with a code in the bio), so that you have real
+numbers to show artists when you ask them for campaigns.
+
+- Every setup message says so: logoless is not live yet, there are no campaigns yet, we are gathering founding members, and it opens on the date.
+- Members make their account, link and prove their accounts, and (optionally) add PayPal, all inside Discord.
+- Everyone who sets up before the site opens gets the **Founding member** role (made by "Make the missing roles"; the bot keeps it in step).
+- While the site is closed there is no balance, no withdraw button and no campaign list (those would only lead nowhere): `/withdraw` says there is
+  nothing to withdraw yet, `/campaigns` says there are none, and the payment panel only offers adding PayPal. All of it comes back by itself when the site opens.
+- **Your numbers** (owner dashboard, Discord page, Setup tab; also `/admin audience` in Discord): server members, accounts made, accounts with Discord
+  linked, people who linked a social account, proven TikToks, YouTubes and Instagrams, the **TikTok followers of the proven accounts added up** (read from
+  the profile at the moment it is proven; YouTube and Instagram do not give a follower count that can be trusted, so they are counted but not added up),
+  and a one-line summary to paste into a message to an artist. The #site card shows the same line while there are no campaigns.
+
 ## Where things stand
 
 - The bot is built and all nine Discord switches are on at logoless.io (get started, payouts, submissions, campaign cards, live numbers, roles,
   tickets, commands, the Discord page).
 - The server is saved in `/admin/discord`: the get-started, rules, site, support, status, news, new-campaigns, system, updates, clips and logs
   channels, the tickets, artists and inactive categories, and the linked, clipper, brand, team and staff roles.
-- **Not filled in yet:** the payouts and submissions channels, the Artist, Developer and Admin roles, the earnings tiers, and any community
+- **Not filled in yet:** the payouts and submissions channels, the Founding member, Artist, Developer and Admin roles, the earnings tiers, and any community
   channels (general chat and so on). Without the payouts and submissions channels those two switches have nowhere to post.
 - The one-button **Get started** used to send people to a sign-up page that the launch page hides. It now answers with the opening date and what
   to do here instead, until the site opens.

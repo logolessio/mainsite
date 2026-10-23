@@ -36,6 +36,23 @@ const STEPS = [
 /** The welcome card in #get-started. `oneButton` is the newer flow (see welcome.ts); both now carry the same card. */
 export function welcomePanel(links: { rules: string; guildId: string }, notice: string | null): Message {
   const rules = links.guildId && links.rules ? [plink('Rules', chan(links.guildId, links.rules), '📜')] : []
+  // while the site is closed (a notice is passed) there are no campaigns to join: the card is about becoming a founding member
+  if (notice) {
+    return embedMessage(
+      embedCard({
+        title: '👋 Welcome to logoless',
+        text: 'logoless pays creators for the views their edits get. Artists and brands will post campaigns here first. Right now we are gathering our **founding members**, so be one of them.',
+        notice,
+        fields: [
+          { name: '✨ 1. Make your account', value: 'Right here in Discord, with an emailed code. It takes a minute.', inline: false },
+          { name: '🔗 2. Link your accounts', value: 'Add the TikTok, YouTube or Instagram you post from and prove it is yours with a code in your bio. Verified creators get picked first for campaigns.', inline: false },
+          { name: '💸 3. Add PayPal (optional)', value: 'So you are ready to be paid from your first campaign.', inline: false },
+          { name: '🏅 Founding member', value: 'Everyone who sets up before we open gets the Founding member role.', inline: false },
+        ],
+      }),
+      [pbtn('Get started', 'start:go', 'green', '🚀'), ...rules],
+    )
+  }
   return embedMessage(embedCard({ title: '👋 Welcome to logoless', text: 'Join campaigns from artists, streamers and brands. Post your content and get paid for every 1,000 verified views.', notice, fields: STEPS.map((s) => ({ ...s, inline: false })) }), [pbtn('Get started', 'start:go', 'green', '🚀'), pbtn('Live campaigns', 'panel:campaigns', 'blurple', '🎬'), ...rules])
 }
 
@@ -45,16 +62,16 @@ export function preLaunchPanel(end: number | null): Message {
     embedCard({
       title: end ? '🚧 logoless opens soon' : '🚧 You are early',
       text: [
-        end ? `The doors open <t:${end}:F>, <t:${end}:R>.` : 'The site opens soon.',
-        'Until then this server is the home of logoless: chat, ask questions, and watch the campaigns arrive here first.',
+        end ? `The doors open <t:${end}:F>, <t:${end}:R>. There are no campaigns yet: we are gathering our founding members first.` : 'The site opens soon. There are no campaigns yet: we are gathering our founding members first.',
+        'Until then this server is the home of logoless. The first campaigns will be announced here.',
         '',
         '**1.** Make your account right here (no website needed).',
-        '**2.** Link your TikTok, YouTube or Instagram and prove it is yours.',
-        '**3.** Add your PayPal, so you are ready to be paid on day one.',
+        '**2.** Link your TikTok, YouTube or Instagram and prove it is yours. Verified creators come first.',
+        '**3.** Add your PayPal (optional), so you are ready to be paid.',
         '**4.** Say hello in the community channels.',
       ].join('\n'),
     }),
-    [pbtn('Make my account', 'acct:join', 'green', '✨'), pbtn('Link an account', 'acct:link', 'grey', '🔗'), pbtn('Add PayPal', 'pay:link', 'grey', '💸'), plink('Log in on the site', '/login', '🔑')],
+    [pbtn('Make my account', 'acct:join', 'green', '✨'), pbtn('Link an account', 'acct:link', 'grey', '🔗'), pbtn('Add PayPal', 'pay:link', 'grey', '💸')],
   )
 }
 
@@ -74,7 +91,20 @@ export const accountsPanel = (notice: string | null): Message =>
   )
 
 export const paymentsPanel = (notice: string | null): Message =>
-  embedMessage(
+  notice
+    ? embedMessage(
+        embedCard({
+          title: '💸 Manage your payment details',
+          text: 'Add the PayPal email you want to be paid at, so you are ready from your very first campaign. A new address is confirmed with a code we email to your account, so nobody else can add one. There is nothing to withdraw until campaigns start.',
+          notice,
+          fields: [
+            { name: '🔗 Link Payment Method', value: 'Add your PayPal email.', inline: true },
+            { name: '📋 Manage Payment Methods', value: 'View and remove the PayPal emails you can be paid at.', inline: true },
+          ],
+        }),
+        [pbtn('Link Payment Method', 'pay:link', 'green', '🔗'), pbtn('Manage Payment Methods', 'pay:manage', 'grey', '📋')],
+      )
+    : embedMessage(
     embedCard({
       title: '💸 Manage your payment details',
       text: 'Use the buttons below to manage how you get paid. A new PayPal address is confirmed with a code we email to your account, so nobody else can add one.',
@@ -87,6 +117,13 @@ export const paymentsPanel = (notice: string | null): Message =>
       ],
     }),
     [pbtn('Link Payment Method', 'pay:link', 'green', '🔗'), pbtn('Manage Payment Methods', 'pay:manage', 'grey', '📋'), pbtn('Check Balance', 'pay:balance', 'blurple', '💰'), pbtn('Withdraw', 'wd:start', 'grey', '🏦')],
+  )
+
+/** What /campaigns and the Live campaigns button answer when there is nothing live. */
+export const noCampaignsPanel = (notice: string | null): Message =>
+  embedMessage(
+    embedCard({ title: '🎬 No campaigns yet', text: notice ? 'The first campaigns are not live yet. They will be announced here the moment they are, and the creators who set up first will be ready.' : 'There are no live campaigns right now. New ones are announced here as soon as they start.', notice, bar: !notice }),
+    notice ? [pbtn('Make my account', 'acct:join', 'green', '✨'), pbtn('Link an account', 'acct:link', 'grey', '🔗')] : [pbtn('Get started', 'start:go', 'green', '🚀')],
   )
 
 export const supportPanelNew = (): Message =>

@@ -34,7 +34,7 @@ export type DiscordConfig = {
    * streamer whose campaigns run here), developer (has an app on the developer page, or the dev role), admin, team (any team role),
    * staff (only read: who can see tickets), and the earnings tiers.
    */
-  roles: { linked: string; clipper: string; brand: string; creator: string; developer: string; admin: string; team: string; staff: string; tiers: { minUsd: number; role: string }[] }
+  roles: { linked: string; founding: string; clipper: string; brand: string; creator: string; developer: string; admin: string; team: string; staff: string; tiers: { minUsd: number; role: string }[] }
   /** Earnings below this are not posted in the payouts channel (the automatic view checks pay in small steps). */
   payoutMinCents: number
   /** One channel per artist: the artist's name (as written on the campaign) and the channel its campaigns are announced in. */
@@ -50,7 +50,7 @@ export const EMPTY: DiscordConfig = {
   ticketCategory: '',
   artistsCategory: '',
   inactiveCategory: '',
-  roles: { linked: '', clipper: '', brand: '', creator: '', developer: '', admin: '', team: '', staff: '', tiers: [] },
+  roles: { linked: '', founding: '', clipper: '', brand: '', creator: '', developer: '', admin: '', team: '', staff: '', tiers: [] },
   payoutMinCents: 100,
   artists: [],
   dm: true,
@@ -93,7 +93,7 @@ export function clean(input: unknown): DiscordConfig {
     ticketCategory: snowflake(i.ticketCategory),
     artistsCategory: snowflake(i.artistsCategory),
     inactiveCategory: snowflake(i.inactiveCategory),
-    roles: { linked: snowflake(ro.linked), clipper: snowflake(ro.clipper), brand: snowflake(ro.brand), creator: snowflake(ro.creator), developer: snowflake(ro.developer), admin: snowflake(ro.admin), team: snowflake(ro.team), staff: snowflake(ro.staff), tiers },
+    roles: { linked: snowflake(ro.linked), founding: snowflake(ro.founding), clipper: snowflake(ro.clipper), brand: snowflake(ro.brand), creator: snowflake(ro.creator), developer: snowflake(ro.developer), admin: snowflake(ro.admin), team: snowflake(ro.team), staff: snowflake(ro.staff), tiers },
     payoutMinCents: i.payoutMinCents === undefined ? 100 : Math.max(0, Math.min(1_000_000, Math.round(Number(i.payoutMinCents) || 0))),
     artists,
     dm: i.dm !== false,

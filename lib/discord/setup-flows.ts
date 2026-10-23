@@ -259,13 +259,14 @@ async function finishPaypal(a: Account, code: string): Promise<Reply> {
   if (await emailEnabled()) {
     await sendEmail({ to: account, ...plainMessageEmail(a.name, 'A payout email was added', `${p.email} was added as a PayPal email for payouts on your logoless account, from Discord. If this was not you, change your password and tell us.`), template: 'payout email added' }).catch(() => null)
   }
-  return send(embedMessage(embedCard({ title: '💸 PayPal added', text: `Payouts will go to **${maskEmail(p.email)}**. We cover PayPal's own fees.`, notice: await launchNote() }), [pbtn('Check balance', 'pay:balance', 'blurple', '💰'), pbtn('Manage payment methods', 'pay:manage', 'grey', '📋')]))
+  return send(embedMessage(embedCard({ title: '💸 PayPal added', text: `Payouts will go to **${maskEmail(p.email)}**. We cover PayPal's own fees.`, notice: await launchNote() }), [...((await launchNote()) ? [] : [pbtn('Check balance', 'pay:balance', 'blurple', '💰')]), pbtn('Manage payment methods', 'pay:manage', 'grey', '📋')]))
 }
 
 async function managePayments(a: Account): Promise<Message> {
   const cur = await paypalEmails(a.id)
   if (!cur.emails.length) return embedMessage(embedCard({ title: '💳 Your payment methods', text: 'No PayPal email yet. Add the one you want to be paid at.', bar: false }), [pbtn('Add PayPal', 'pay:link', 'green', '💸')])
-  const m = embedMessage(embedCard({ title: '💳 Your payment methods', text: cur.emails.map((e) => `${e === cur.email ? '⭐' : '▫️'} **PayPal** · ${maskEmail(e)}${e === cur.email ? ' · default' : ''}`).join('\n'), bar: false }), [pbtn('Add another', 'pay:link', 'green', '💸'), pbtn('Check balance', 'pay:balance', 'blurple', '💰')])
+  const closed = Boolean(await launchNote())
+  const m = embedMessage(embedCard({ title: '💳 Your payment methods', text: cur.emails.map((e) => `${e === cur.email ? '⭐' : '▫️'} **PayPal** · ${maskEmail(e)}${e === cur.email ? ' · default' : ''}`).join('\n'), bar: false }), [pbtn('Add another', 'pay:link', 'green', '💸'), ...(closed ? [] : [pbtn('Check balance', 'pay:balance', 'blurple', '💰')])])
   return { ...m, components: [...(m.components ?? []), { type: 1, components: cur.emails.slice(0, 5).map((e, n) => pbtn(`Remove ${maskEmail(e).slice(0, 12)}`, `pay:rm:${n}:${short(e)}`, 'red', '🗑️')) }] }
 }
 
@@ -277,6 +278,8 @@ const WITHDRAW_LIFE = 2 * 60
 const wKey = (userId: string) => `discord:withdraw:${userId}`
 
 async function startWithdraw(a: Account, dollars?: number): Promise<Message> {
+  // nothing can be earned yet: say so, rather than showing a balance and a Withdraw button that lead nowhere
+  if (await launchNote()) return problem('There is nothing to withdraw yet: logoless has not opened and there are no campaigns. Add your PayPal now and you will be ready.', [pbtn('Manage payment methods', 'pay:manage', 'grey', '📋')])
   if ((await getSetting('payouts_paused')) === '1') return problem('Withdrawals are paused for a short while. Your balance has not changed.')
   if (!(await paypalReady())) return problem('Withdrawals are not open yet. Your balance has not changed. You can add your PayPal now, so you are ready.', [pbtn('Add PayPal', 'pay:link', 'green', '💸')])
   const cur = await paypalEmails(a.id)

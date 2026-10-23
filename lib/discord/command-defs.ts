@@ -74,6 +74,7 @@ export const RAW_COMMANDS = [
     default_member_permissions: '8',
     options: [
       { type: 1, name: 'stats', description: 'The site at a glance' },
+      { type: 1, name: 'audience', description: 'Members, proven creators and combined reach: the numbers for pitching artists' },
       { type: 1, name: 'queue', description: 'How many submissions are waiting, and for which campaigns' },
       { type: 1, name: 'lookup', description: 'Look someone up', options: [{ type: S, name: 'who', description: 'A @handle or an email', required: true }] },
       { type: 1, name: 'announce', description: 'Post an announcement in #news', options: [{ type: S, name: 'title', description: 'Headline', required: true, max_length: 200 }, { type: S, name: 'text', description: 'The message', required: true, max_length: 1500 }] },

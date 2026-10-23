@@ -51,11 +51,13 @@ export const kindWords = (k: Kinds) =>
 export async function wantedRoles(userId: string) {
   const cfg = await getDiscordConfig()
   const ro = cfg.roles
-  const managed = new Set<string>([ro.linked, ro.clipper, ro.brand, ro.creator, ro.developer, ro.admin, ro.team, ...ro.tiers.map((t) => t.role)].filter(Boolean))
+  const managed = new Set<string>([ro.linked, ro.founding, ro.clipper, ro.brand, ro.creator, ro.developer, ro.admin, ro.team, ...ro.tiers.map((t) => t.role)].filter(Boolean))
   const k = await memberKinds(userId)
   const wanted = new Set<string>()
   if (!k) return { cfg, wanted, managed, kinds: null }
   if (ro.linked) wanted.add(ro.linked)
+  // a founding member made their account before the site opened: everyone who joins while the launch page is up, and the ones who made one earlier
+  if (ro.founding && (await isFounding(userId))) wanted.add(ro.founding)
   if (ro.clipper && k.clipper) wanted.add(ro.clipper)
   if (ro.brand && k.brand) wanted.add(ro.brand)
   if (ro.creator && k.creator) wanted.add(ro.creator)
@@ -67,6 +69,17 @@ export async function wantedRoles(userId: string) {
   const top = reached[reached.length - 1]
   if (top) wanted.add(top.role)
   return { cfg, wanted, managed, kinds: k }
+}
+
+/** Did this person make their account before the site opened (or is the site still closed)? */
+async function isFounding(userId: string): Promise<boolean> {
+  try {
+    const [row, launch] = await Promise.all([(await db()).prepare('SELECT created_at FROM users WHERE id = ?1').bind(userId).first<{ created_at: number }>(), import('../settings').then((m) => m.allSettings()).then(async (s) => (await import('../launch')).launchView(s))])
+    if (!row) return false
+    return launch.closed || (launch.end !== null && row.created_at < launch.end)
+  } catch {
+    return false
+  }
 }
 
 /** Brings someone's roles in the server in line with their account: gives the ones they have earned, takes away ones they should not have. */
@@ -91,12 +104,13 @@ export async function syncRoles(userId: string): Promise<SyncResult> {
  * with campaigns (saved as `creator`) is named Artist, to keep the two apart. Rename any of them in Discord freely.
  * Used by the "Make the missing roles" button, by the config key they are saved under.
  */
-export const ROLE_NAMES: { key: 'linked' | 'clipper' | 'brand' | 'creator' | 'developer' | 'admin' | 'team'; name: string }[] = [
+export const ROLE_NAMES: { key: 'linked' | 'founding' | 'clipper' | 'brand' | 'creator' | 'developer' | 'admin' | 'team'; name: string }[] = [
   { key: 'admin', name: 'Admin' },
   { key: 'team', name: 'Team' },
   { key: 'developer', name: 'Developer' },
   { key: 'creator', name: 'Artist' },
   { key: 'brand', name: 'Brand' },
   { key: 'clipper', name: 'Clipper' },
+  { key: 'founding', name: 'Founding member' },
   { key: 'linked', name: 'Linked' },
 ]

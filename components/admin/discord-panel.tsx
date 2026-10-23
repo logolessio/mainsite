@@ -13,6 +13,7 @@ type Status = {
   bot: string | null
   cfg: DiscordConfig
   linked: number
+  audience: { members: number | null; accounts: number; linked: number; withAccounts: number; verified: { tiktok: number; youtube: number; instagram: number }; verifiedPeople: number; tiktokFollowers: number; paypal: number; line: string } | null
   commands: number
   samples: { id: string; label: string; group: string }[]
   endpoint: string
@@ -129,6 +130,30 @@ export function DiscordPanel() {
       </div>
       {tab === 'setup' && (
         <>
+      {s.audience && (
+        <Card title="Your numbers, for artists">
+          <p className="mb-3 text-sm text-mute">What you can put on the table when you reach out. Read live: the member count comes from Discord, the rest from the accounts people set up here.</p>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
+            {([
+              ['Server members', s.audience.members ?? '?'],
+              ['Accounts made', s.audience.accounts],
+              ['With Discord linked', s.audience.linked],
+              ['Linked a social account', s.audience.withAccounts],
+              ['Proven TikToks', s.audience.verified.tiktok],
+              ['Proven YouTubes', s.audience.verified.youtube],
+              ['Proven Instagrams', s.audience.verified.instagram],
+              ['TikTok followers (proven)', s.audience.tiktokFollowers.toLocaleString('en-US')],
+              ['PayPal added', s.audience.paypal],
+            ] as [string, string | number][]).map(([k, v]) => (
+              <div key={k}>
+                <dt className="text-xs text-mute">{k}</dt>
+                <dd className="font-display text-2xl">{typeof v === 'number' ? v.toLocaleString('en-US') : v}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-4 rounded-panel border border-line bg-black/30 px-3 py-2 font-mono text-xs">{s.audience.line}</p>
+        </Card>
+      )}
       <Card title="Is it set up?">
         <ul className="divide-y divide-line">
           <Tick ok={s.has.appId}>DISCORD_APP_ID is set in Cloudflare</Tick>
@@ -242,9 +267,9 @@ export function DiscordPanel() {
       <Card title="Roles" sub="IDs only. The bot gives and takes these as people link and earn.">
         <div className="grid gap-5">
           <div className="grid gap-4 sm:grid-cols-3">
-            {(['linked', 'clipper', 'creator', 'brand', 'developer', 'admin', 'team', 'staff'] as const).map((k) => (
+            {(['linked', 'founding', 'clipper', 'creator', 'brand', 'developer', 'admin', 'team', 'staff'] as const).map((k) => (
               <label key={k} className="grid gap-1.5">
-                <span className="text-xs text-mute">{{ linked: 'Linked members', clipper: 'Clippers', creator: 'Artists (run campaigns)', brand: 'Brands', developer: 'Developers', admin: 'Admins', team: 'Team', staff: 'Staff (can see tickets)' }[k]}</span>
+                <span className="text-xs text-mute">{{ linked: 'Linked members', founding: 'Founding members (joined before launch)', clipper: 'Clippers', creator: 'Artists (run campaigns)', brand: 'Brands', developer: 'Developers', admin: 'Admins', team: 'Team', staff: 'Staff (can see tickets)' }[k]}</span>
                 <input className={input} inputMode="numeric" value={cfg.roles[k]} onChange={(e) => set({ roles: { ...cfg.roles, [k]: digits(e.target.value) } })} placeholder="Role ID" />
               </label>
             ))}

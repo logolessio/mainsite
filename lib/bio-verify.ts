@@ -111,6 +111,25 @@ export async function readProfile(platform: Platform, handle: string): Promise<R
   }
 }
 
+/**
+ * The account's follower count, read from the public page we already fetched to look for the code. TikTok puts it in the page data, exactly; the other two do not
+ * give it up in a form that can be trusted (YouTube's page lists other channels' counts too), so they return null.
+ */
+export function followersFromHtml(platform: Platform, html: string): number | null {
+  if (platform !== 'tiktok') return null
+  const m = /"stats":\{"followerCount":(\d{1,12})\b/.exec(html)
+  return m ? Number(m[1]) : null
+}
+
+/** Remembers an account's follower count at the moment it was proven, for the numbers shown to artists (see lib/discord/audience.ts). */
+async function recordFollowers(userId: string, platform: Platform, handle: string, n: number) {
+  const d = await db()
+  await d
+    .prepare('INSERT INTO settings (key, value, updated_at) VALUES (?1, ?2, ?3) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at')
+    .bind(`acctf:${platform}:${handle.toLowerCase()}`, JSON.stringify({ n, u: userId, at: nowSec() }), nowSec())
+    .run()
+}
+
 /** True when the code is in the page. Compared without case, and a code only ever uses letters, digits and a dash. */
 export const pageHasCode = (html: string, code: string) => html.toUpperCase().includes(code.toUpperCase())
 
@@ -230,6 +249,8 @@ export async function check(userId: string, email: string, platform: Platform): 
     await save(userId, store)
     return { status: 'not-found', message: 'We read your profile but the code is not in the bio yet. Save the bio, wait a minute for the platform to update, then check again.' }
   }
+  const followers = followersFromHtml(platform, read.html)
+  if (followers !== null) await recordFollowers(userId, platform, l.handle, followers).catch(() => null)
   await markVerified(userId, email, platform, l.handle, 'bio', store)
   return { status: 'verified' }
 }

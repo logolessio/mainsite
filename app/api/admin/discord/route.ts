@@ -19,6 +19,7 @@ import { body, HttpError, json, route } from '@/lib/http'
 import { requireAdmin } from '@/lib/user'
 import { featureOn } from '@/lib/features'
 import { lastTick } from '@/lib/discord/tick'
+import { audience, pitchLine } from '@/lib/discord/audience'
 
 /** Permissions the bot asks for when it is added: see channels, send messages, embed links, read history, manage roles and manage channels (for tickets). */
 const PERMISSIONS = 268520464
@@ -55,6 +56,7 @@ export const GET = route(async () => {
     bot,
     cfg,
     linked: (linked?.n ?? 0) + (byLogin?.n ?? 0),
+    audience: await audience().then(async (a) => ({ ...a, line: pitchLine(a) })).catch(() => null),
     commands: COMMANDS.length,
     lastTick: await lastTick(),
     samples: sampleList(),
@@ -118,7 +120,7 @@ export const POST = route(async (req: Request) => {
     const ok = {
       getStarted: { id: cfg.channels.getStarted, label: 'get-started', msg: async () => getStartedMessage(cfg, await featureOn('discord-onboarding'), await launchNotice()) },
       rules: { id: cfg.channels.rules, label: 'rules', msg: () => rulesMessage(cfg) },
-      site: { id: cfg.channels.site, label: 'site', msg: async () => siteMessage(await publicStats()) },
+      site: { id: cfg.channels.site, label: 'site', msg: async () => siteMessage(await publicStats(), (await launchNotice()) ? pitchLine(await audience()) : undefined) },
       support: { id: cfg.channels.support, label: 'support', msg: () => supportPanel() },
       status: { id: cfg.channels.status, label: 'status', msg: () => null },
     }[a.what]

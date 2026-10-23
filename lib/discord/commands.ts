@@ -13,7 +13,7 @@ import { submitClip } from '../submit-clip'
 import { abs, explainDiscord, type Message, siteUrl, postMessage } from './api'
 import * as k from './cards'
 import { getStartedMessage, rulesMessage, siteMessage, statusMessage, supportPanel } from './panels'
-import { accountsPanel, paymentsPanel } from './panels-new'
+import { accountsPanel, noCampaignsPanel, paymentsPanel } from './panels-new'
 import { launchNotice } from './notice'
 import { setupCommand, setupComponent, setupModal } from './setup-flows'
 import { SAMPLES, SAMPLE_BY_ID } from './samples'
@@ -188,6 +188,7 @@ async function cmdBadges(i: Interaction): Promise<Reply> {
 
 async function cmdCampaigns(ephemeral = false): Promise<Reply> {
   const list = (await liveCampaigns()).slice(0, 10)
+  if (list.length === 0) return say(noCampaignsPanel(await launchNotice()), true)
   return say(k.campaignsCard(list.map((c) => ({ id: c.id, title: c.title, creator: c.creator, ratePer1k: c.ratePer1k, leftPct: c.budgetLeftPct ?? 100, platforms: c.platforms }))), ephemeral)
 }
 
@@ -390,6 +391,32 @@ async function admin(i: Interaction): Promise<Reply> {
         if (r.ok && (r.added.length || r.removed.length)) n++
       }
       return ok(`Checked ${users.length} linked members. ${n} had roles changed.`, 'Roles')
+    }
+    case 'audience': {
+      const { audience, pitchLine, short } = await import('./audience')
+      const a = await audience()
+      return say(
+        {
+          raw: true,
+          embeds: [
+            {
+              title: '📈 Your numbers',
+              description: `**${pitchLine(a)}**`,
+              color: 0x8647ff,
+              fields: [
+                { name: 'Server members', value: a.members === null ? '?' : a.members.toLocaleString('en-US'), inline: true },
+                { name: 'Accounts made', value: a.accounts.toLocaleString('en-US'), inline: true },
+                { name: 'Discord linked', value: a.linked.toLocaleString('en-US'), inline: true },
+                { name: 'Linked a social account', value: a.withAccounts.toLocaleString('en-US'), inline: true },
+                { name: 'Proven accounts', value: `🎵 ${a.verified.tiktok} · ▶️ ${a.verified.youtube} · 📸 ${a.verified.instagram}`, inline: true },
+                { name: 'TikTok followers (proven)', value: a.tiktokFollowers > 0 ? short(a.tiktokFollowers) : '0', inline: true },
+                { name: 'PayPal added', value: a.paypal.toLocaleString('en-US'), inline: true },
+              ],
+            },
+          ],
+        },
+        true,
+      )
     }
     case 'panel': {
       const which = String(opt(i, 'which'))
@@ -729,7 +756,8 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<Reply
       case 'site': {
         if (!(await isStaff(i))) return fail('Only the team can post the site card.')
         const stats = await publicStats()
-        const res = await postMessage(i.channel_id!, siteMessage(stats))
+        const { audience: community, pitchLine: line } = await import('./audience')
+        const res = await postMessage(i.channel_id!, siteMessage(stats, (await launchNotice()) ? line(await community()) : undefined))
         return res.ok ? ok('Posted the site card here.') : fail(explainDiscord(res, 'this channel'))
       }
       case 'admin': return await admin(i)
