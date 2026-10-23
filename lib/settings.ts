@@ -27,6 +27,7 @@ export const SETTING_DEFAULTS = {
   design_cover_bar: '0', // 1 = the bar along the bottom of a cover showing how much budget is left
   design_scroll_effects: '0', // 1 = sections fade and slide in as you scroll
   design_liquid_loader: '0', // 1 = the white liquid fill behind the onboarding loader
+  design_light_mode: '0', // 1 = a sun and moon button beside Search lets anyone switch the whole site to the light look; 0 = the site is dark only
   ...COVER_TEXT_DEFAULTS, // how the text on a campaign cover looks (see lib/design-choices.ts)
   ...LAYOUT_DEFAULTS, // how the campaigns are laid out on the browse page
   bg_dots: '0', // 1 = show the rolling dot landscape behind the site (off by default)

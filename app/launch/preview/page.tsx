@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { LaunchHome } from '@/components/launch/home/launch-home'
 import { LaunchPage } from '@/components/launch/launch-page'
+import { GradientField } from '@/components/shell/gradient-field'
 import { featureOn } from '@/lib/features'
 import { allSettings } from '@/lib/settings'
 import { launchView } from '@/lib/launch'
@@ -16,6 +17,7 @@ export default async function Page() {
     const data = await launchHomeData('soon')
     return (
       <div className="fixed inset-0 z-[300] overflow-y-auto bg-ink">
+        <GradientField />
         <LaunchHome {...data} />
       </div>
     )

@@ -15,6 +15,7 @@ const STANDARD: [string, string][] = [
   ['design_cover_bar', '0'],
   ['design_scroll_effects', '0'],
   ['design_liquid_loader', '0'],
+  ['design_light_mode', '0'],
   ['bg_dots', '0'],
   ...ROLE_SETTING_KEYS.map((k): [string, string] => [k, '']),
   ...Object.entries(CHOICE_DEFAULTS),

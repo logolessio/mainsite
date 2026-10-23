@@ -8,7 +8,6 @@
   isolation: isolate;
   min-height: 100dvh;
   overflow-x: clip;
-  background: #000;
   color: var(--paper);
 }
 
@@ -20,7 +19,7 @@
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  background: #000;
+  /* no black of its own: the moving gradient of the site shows behind the reels and glows */
   /* black and white like the rest of the site, whatever background was chosen */
   filter: grayscale(1);
 }
@@ -205,23 +204,6 @@
   filter: grayscale(1);
 }
 
-/* ---------- the logo ---------- */
-
-.logo {
-  position: relative;
-  height: clamp(54px, 8.5vw, 78px);
-  aspect-ratio: 347 / 260;
-  -webkit-mask: url(/logo-sm.png) center / contain no-repeat;
-  mask: url(/logo-sm.png) center / contain no-repeat;
-  background: #f3f2ee;
-  animation: logoIn 0.9s var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) both;
-}
-@keyframes logoIn {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 8px, 0);
-  }
-}
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -287,7 +269,6 @@
   .glowB,
   .frame,
   .scrub::after,
-  .logo,
   .rise,
   .spark {
     animation: none !important;
@@ -305,7 +286,6 @@
 :global(html.calm) .glowB,
 :global(html.calm) .frame,
 :global(html.calm) .scrub::after,
-:global(html.calm) .logo,
 :global(html.calm) .rise,
 :global(html.calm) .spark {
   animation: none !important;

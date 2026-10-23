@@ -65,6 +65,11 @@ export default async function Page() {
             <Switch endpoint={EP} k="design_liquid_loader" label="Liquid fill on the onboarding loader" hint="A white liquid rises behind the setting-up screen. Off: just the ring and the text." on={on('design_liquid_loader')} />
           </ul>
         </Card>
+        <Card title="Appearance">
+          <ul className="divide-y divide-line">
+            <Switch endpoint={EP} k="design_light_mode" label="Light mode" hint="A sun and moon button beside Search lets anyone switch the whole site to a light look. Off: the site is dark only, and anyone who had picked light goes back to dark." on={on('design_light_mode')} />
+          </ul>
+        </Card>
         <Card title="Background">
           <ul className="divide-y divide-line">
             <Switch endpoint={EP} k="bg_dots" label="Dot landscape" hint="The rolling field of dots behind the site. Off: the moving gradient and faint grid are shown instead." on={on('bg_dots')} />

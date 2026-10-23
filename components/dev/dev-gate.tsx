@@ -4,11 +4,13 @@ import { signOut } from 'next-auth/react'
 import { Suspense } from 'react'
 import { AuthCard } from '@/components/auth/auth-card'
 import { IntroLogo } from '@/components/logo-intro'
+import { GradientField } from '@/components/shell/gradient-field'
 
 /** The dev site is for admins only. Everyone else sees this and nothing behind it. */
 export function DevGate({ email }: { email: string | null }) {
   return (
     <div className="fixed inset-0 z-[200] overflow-y-auto bg-ink">
+      <GradientField />
       <div className="mx-auto flex min-h-full max-w-md flex-col items-center px-5 py-12 text-center">
         <IntroLogo className="h-7" />
         <p className="mt-6 inline-flex rounded-pill border border-line-strong px-3.5 py-1.5 font-mono text-[11px] tracking-[0.2em] text-mute uppercase">Test site · admins only</p>

@@ -179,6 +179,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // The launch page: while the owners have it switched on (and the countdown has not ended and opened the site by itself), everyone but an owner
   // sees only the countdown and the sign-up, on the public address. The owner dashboard, the dev address, scroll (a site of its own) and owners themselves are never shut out.
   const launch = launchView(design)
+  // light mode is the owner's choice (Design settings), off unless switched on there; with it off nobody gets the button and anyone who had picked light is back on dark
+  const lightOn = design.design_light_mode === '1'
+  const featuresOn = { ...fs.on, 'light-theme': lightOn }
   const host = await requestHost()
   const path = reqHeaders.get('x-path') ?? '/'
   // with the new page (launch-links) /links stays open too, and the closed site shows the new page
@@ -192,7 +195,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         data-scroll-behavior="smooth"
         data-look={look ? 'anubis' : undefined}
         data-surfaces={fs.on['solid-surfaces'] ? 'solid' : undefined}
-        data-themes={fs.on['light-theme'] ? '1' : undefined}
+        data-themes={lightOn ? '1' : undefined}
         data-font={look ? 'schibsted' : font.id === 'inter' ? undefined : font.id}
         data-kind={kind}
         data-ui={look || uiFace ? '1' : undefined}
@@ -204,7 +207,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 {HEAD_SCRIPT}
         </head>
         <body className="antialiased">
-          {newLaunch ? <LaunchHome {...await launchHomeData('soon')} locked /> : <LaunchPage end={launch.end} headline={launch.headline} text={launch.text} signedInAs={session?.user?.email ?? null} />}
+          <FeaturesProvider dev={fs.dev} on={featuresOn}>
+            {newLaunch ? <LaunchHome {...await launchHomeData('soon')} locked /> : <LaunchPage end={launch.end} headline={launch.headline} text={launch.text} signedInAs={session?.user?.email ?? null} />}
+          </FeaturesProvider>
         </body>
       </html>
     )
@@ -216,7 +221,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       data-scroll-behavior="smooth"
       data-look={look ? 'anubis' : undefined}
       data-surfaces={fs.on['solid-surfaces'] ? 'solid' : undefined}
-      data-themes={fs.on['light-theme'] ? '1' : undefined}
+      data-themes={lightOn ? '1' : undefined}
       data-font={look ? 'schibsted' : font.id === 'inter' ? undefined : font.id}
       data-kind={kind}
       data-ui={look || uiFace ? '1' : undefined}
@@ -230,7 +235,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       </head>
       <body className="antialiased">
         <SkipLink />
-        <FeaturesProvider dev={fs.dev} on={fs.on}>
+        <FeaturesProvider dev={fs.dev} on={featuresOn}>
           <DesignProvider value={{ coverBorder: design.design_cover_border === '1', coverBar: design.design_cover_bar === '1', scrollEffects: design.design_scroll_effects === '1', liquidLoader: design.design_liquid_loader === '1', ...parseChoices(design) }}>
           <CopyProvider overrides={overrides} isAdmin={isAdmin}>
             <AppShell announcement={announcement} dots={design.bg_dots === '1'} links={links} signedIn={Boolean(session?.user?.email)}>{blocked ? <DevGate email={session?.user?.email ?? null} /> : children}</AppShell>

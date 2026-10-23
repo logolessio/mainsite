@@ -5,6 +5,8 @@ import { Globe, Pencil } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { useCallback, useEffect, useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
+import { IntroLogo } from '@/components/logo-intro'
+import { GradientField } from '@/components/shell/gradient-field'
 import type { PageConfig, PageMode } from '@/lib/launch-page'
 import type { LinkItem } from '@/lib/socials'
 import { cn } from '@/lib/utils'
@@ -111,12 +113,14 @@ export function LaunchHome(props: LaunchHomeProps) {
     // the closed site is drawn without the site's shell, so the reduced-motion setting is applied here too
     <MotionConfig reducedMotion="user">
     <div className={s.root} style={accentVars(look.accent)}>
+      {/* the closed site is drawn outside the app shell, so it brings its own copy of the moving gradient; everywhere else the shell's shows through */}
+      {props.locked && <GradientField />}
       <Backdrop look={look} />
 
       <main id="main" className={cn('relative z-10 mx-auto flex min-h-dvh w-full flex-col px-5 md:px-6', left ? 'items-start text-left' : 'items-center text-center', props.links ? 'max-w-[480px] pt-14 pb-10 md:pt-20' : 'max-w-[960px] justify-center pt-14 pb-7 md:pt-16')}>
         {look.logo && (
-          <a href="/" aria-label="logoless" className={cn(s.rise, 'mb-7 block md:mb-8')}>
-            <span className={cn(s.logo, 'block')} aria-hidden="true" />
+          <a href="/" aria-label="logoless" className={cn(s.rise, 'mb-8 block md:mb-10')}>
+            <IntroLogo replay className="h-[clamp(46px,10vw,92px)]" />
           </a>
         )}
 

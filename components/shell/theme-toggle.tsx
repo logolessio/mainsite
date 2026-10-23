@@ -14,7 +14,7 @@ const EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)'
 const REVEAL_MS = 720
 
 /**
- * The sun and moon button beside Search (switch "light-theme"). It sets data-theme="light" on the page, which globals.css turns into the light
+ * The sun and moon button beside Search (shown only while the owner has Light mode switched on under Design). It sets data-theme="light" on the page, which globals.css turns into the light
  * look, and remembers the choice on this device; the small script in the page head puts it back before anything is drawn, so there is no flash.
  * It shows where it will take you: a sun while the site is dark, a moon while it is light.
  *
