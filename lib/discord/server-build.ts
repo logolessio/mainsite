@@ -205,3 +205,19 @@ export async function buildCommunity(cfg: DiscordConfig): Promise<{ made: string
   }
   return { made, skipped }
 }
+
+/** A read-only look at the server: every category and channel (with the permission overwrites in short) and every role, for the owner's dashboard and for planning. */
+export async function serverMap(cfg: DiscordConfig) {
+  const [ch, ro] = await Promise.all([discord<Chan[]>('GET', `/guilds/${cfg.guildId}/channels`), discord<{ id: string; name: string; position: number; managed?: boolean; color: number; hoist: boolean; permissions: string }[]>('GET', `/guilds/${cfg.guildId}/roles`)])
+  if (!ch.ok || !Array.isArray(ch.json)) throw new Error(explainDiscord(ch, 'the server'))
+  const roles = Array.isArray(ro.json) ? ro.json : []
+  const roleName = (id: string) => (id === cfg.guildId ? '@everyone' : roles.find((r) => r.id === id)?.name ?? id)
+  const kind: Record<number, string> = { 0: 'text', 2: 'voice', 4: 'category', 5: 'announcement', 13: 'stage', 15: 'forum' }
+  return {
+    channels: ch.json
+      .slice()
+      .sort((a, b) => a.type === 4 && b.type !== 4 ? -1 : 0)
+      .map((c) => ({ id: c.id, name: c.name, kind: kind[c.type] ?? String(c.type), parent: c.parent_id ? ch.json!.find((x) => x.id === c.parent_id)?.name ?? c.parent_id : null, overwrites: (c.permission_overwrites ?? []).map((o) => `${roleName(o.id)}: ${(big(o.allow) & BigInt(VIEW)) !== BigInt(0) ? '+view ' : ''}${(big(o.deny) & BigInt(VIEW)) !== BigInt(0) ? '-view ' : ''}${(big(o.deny) & BigInt(SEND)) !== BigInt(0) ? '-send' : ''}`.trim()) })),
+    roles: roles.sort((a, b) => b.position - a.position).map((r) => ({ id: r.id, name: r.name, position: r.position, managed: Boolean(r.managed), hoist: r.hoist, color: r.color })),
+  }
+}

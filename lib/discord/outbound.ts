@@ -147,6 +147,7 @@ export async function refreshStatus(force = false): Promise<boolean> {
     if (savedMessage && savedChannel === cfg.channels.status) {
       const edited = await discord('PATCH', `/channels/${savedChannel}/messages/${savedMessage}`, msg)
       if (edited.ok) return true
+      await discord('DELETE', `/channels/${savedChannel}/messages/${savedMessage}`) // an older message in another layout cannot be edited into this one: it is replaced, not left behind
     }
     const posted = await postMessage(cfg.channels.status, msg)
     if (posted.ok && posted.json?.id) {

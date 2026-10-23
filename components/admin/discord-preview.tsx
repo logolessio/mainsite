@@ -172,9 +172,16 @@ function V2Part({ n }: { n: V2Node }) {
   if (n.type === 1) {
     return (
       <div className="flex flex-wrap gap-2">
-        {(n as unknown as Component).components.map((c, k) => (
-          <Btn key={k} c={c} />
-        ))}
+        {(n as unknown as { components: ({ type: number; placeholder?: string; options?: { label: string; description?: string; emoji?: { name: string } }[] } & Component['components'][number])[] }).components.map((c, k) =>
+          (c.type as number) === 3 ? (
+            <span key={k} className="flex h-10 w-full items-center justify-between rounded-[calc(4px*var(--round,1))] border border-[#1e1f22] bg-[#1e1f22] px-3 text-[0.875rem] text-[#949ba4]">
+              {c.placeholder}
+              <span aria-hidden="true" className="text-[0.7rem]">&#9662;</span>
+            </span>
+          ) : (
+            <Btn key={k} c={c} />
+          ),
+        )}
       </div>
     )
   }

@@ -16,6 +16,11 @@ export const INK = 0xf3f2ee
 export const MUTE = 0x8a8a90
 
 export const SITE_URL = 'https://logoless.io'
+/** The violet of the logo's gradient: the bar down the side of a card. */
+export const ACCENT = 0x8647ff
+/** The gradient banner on top of the big messages, and the bar along the bottom of every card. */
+export const BANNER = `${SITE_URL}/discord/gradient-banner.jpg`
+export const BAR = `${SITE_URL}/discord/gradient-bar.png`
 export const OWNER_URL = 'https://owner.logoless.io'
 
 /** The gradient icons in public/discord/icons (PNG, because embeds cannot show SVG): see scripts/make-discord-icons.mjs. */
@@ -43,6 +48,8 @@ export type CardOptions = {
   foot?: string
   /** A grey bar for something that ended or went wrong. */
   mute?: boolean
+  /** The gradient along the bottom: on by default for a card with a title or fields, off for a one-line answer or a card that ended. */
+  bar?: boolean
   time?: boolean | number
 }
 
@@ -52,10 +59,10 @@ export function card(o: CardOptions): Embed {
     title: o.title?.slice(0, 250),
     url: o.url,
     description: o.text?.slice(0, 4000),
-    color: o.mute ? MUTE : INK,
+    color: o.mute ? MUTE : ACCENT,
     fields: o.fields?.slice(0, 12).map((f) => ({ name: f.name.slice(0, 250), value: f.value.slice(0, 1000) || '-', inline: f.inline })),
     thumbnail: o.thumb ? { url: o.thumb } : undefined,
-    image: o.image ? { url: o.image } : undefined,
+    image: o.image ? { url: o.image } : (o.bar ?? (!o.mute && Boolean(o.title || o.fields?.length))) ? { url: BAR } : undefined,
     footer: o.foot ? { text: o.foot.slice(0, 200) } : undefined,
     timestamp: o.time ? new Date(typeof o.time === 'number' ? o.time * 1000 : Date.now()).toISOString() : undefined,
   }

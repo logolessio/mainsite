@@ -1,7 +1,9 @@
 import type { Component, Embed, Message, V2Node } from './api'
 import type { IconName } from './icon-names'
 import { container, gallery, sep, text, v2 } from './v2'
-import { icon, ic, SITE_URL } from './ui'
+import { ACCENT, BANNER, BAR, icon, ic, SITE_URL } from './ui'
+
+export { ACCENT, BANNER, BAR }
 
 /**
  * The look of the bot's setup and welcome messages. One system, so every message reads as part of the same site:
@@ -13,11 +15,6 @@ import { icon, ic, SITE_URL } from './ui'
  *  - buttons: the main one is Discord's blurple (the nearest to the violet of the gradient), the rest grey, a red one only for something that removes
  * Pure data: nothing here reads the database.
  */
-export const BANNER = `${SITE_URL}/discord/gradient-banner.jpg`
-export const BAR = `${SITE_URL}/discord/gradient-bar.png`
-/** The violet of the gradient: the bar down the side of a card. */
-export const ACCENT = 0x8647ff
-
 type Style = 'green' | 'grey' | 'blurple' | 'red'
 // "green" is what the main button was called when it was green; it is the main (blurple) button now
 const STYLE: Record<Style, 1 | 2 | 3 | 4> = { blurple: 1, green: 1, grey: 2, red: 4 }
@@ -70,14 +67,15 @@ export const item = (withIcon: IconName, title: string, body?: string) => `### $
  * A Components V2 card: the gradient banner on top (when asked), a big title with its icon, a line under it in small type, an optional notice, then blocks of
  * text with a divider between each, the gradient bar, and the buttons. At most ten parts fit in a container, so the blocks are the ones to keep few.
  */
-export function panel(o: { banner?: boolean; accent?: number; icon?: IconName; title: string; sub?: string; notice?: string | null; blocks: string[]; buttons?: Button[]; bar?: boolean }): Message {
+export function panel(o: { banner?: boolean; accent?: number; icon?: IconName; title: string; sub?: string; notice?: string | null; blocks: string[]; /** parts (a drop-down menu) after each block, by position */ after?: Record<number, (V2Node | Component)[]>; buttons?: Button[]; bar?: boolean }): Message {
   const parts: (V2Node | Component)[] = []
   if (o.banner) parts.push(gallery({ url: BANNER }))
   parts.push(text(`# ${o.icon ? `${ic(o.icon)} ` : ''}${o.title}${o.sub ? `\n-# ${o.sub}` : ''}`))
   if (o.notice) parts.push(text(`> ${o.notice}`))
-  o.blocks.forEach((b) => {
+  o.blocks.forEach((b, n) => {
     parts.push(sep())
     parts.push(text(b))
+    if (o.after?.[n]) parts.push(...o.after[n])
   })
   if (o.bar !== false) parts.push(gallery({ url: BAR }))
   if (o.buttons?.length) parts.push(prow(...o.buttons))

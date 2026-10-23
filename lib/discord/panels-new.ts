@@ -3,6 +3,8 @@ import { chan } from './ui'
 import { BETA_ONBOARDING } from '../beta-host'
 import { LEGAL_LINKS } from '../site'
 import { item, panel, pbtn, plink } from './look'
+import { FAQ_PICKS, REASONS } from './support-menu'
+import { selectRow } from './v2'
 
 /**
  * The welcome and setup messages in the site's look (see look.ts): the rules, the get-started message, the accounts and payments panels, the support card and the
@@ -149,11 +151,20 @@ export const noCampaignsPanel = (notice: string | null): Message =>
     buttons: notice ? [plink('Sign up', BETA_ONBOARDING, 'arrow'), pbtn('Link an account', 'acct:link', 'grey', 'link')] : [pbtn('Get started', 'start:go', 'green', 'sparkles')],
   })
 
+/** The support panel: one menu to read an answer, one to open a ticket for a reason. The answers and the tickets are private to the person who picks. */
 export const supportPanelNew = (): Message =>
   panel({
+    banner: true,
     icon: 'help',
-    title: 'Need a hand?',
-    sub: 'Open a private ticket. Only you and the team can see it.',
-    blocks: [],
-    buttons: [pbtn('Open a ticket', 'ticket:open', 'green', 'ticket'), plink('Questions', '/faq', 'help')],
+    title: 'Support',
+    sub: 'Find an answer in a few seconds, or talk to a person.',
+    blocks: [
+      item('book', 'Read an answer', 'Pick a question. Only you see the answer. More are one `/faq` away.'),
+      item('ticket', 'Open a ticket', 'Pick what it is about and tell us what happened. Only you and the team can see a ticket.'),
+    ],
+    after: {
+      0: [selectRow('faq:pick', 'Pick a question', FAQ_PICKS.map((f) => ({ label: f.q, value: String(f.index), description: f.group })))],
+      1: [selectRow('ticket:reason', 'What is it about?', REASONS.map((r) => ({ label: r.label, value: r.key, description: r.description, icon: r.icon })))],
+    },
+    buttons: [plink('All the questions', '/faq', 'help'), pbtn('Open a ticket', 'ticket:open', 'grey', 'ticket')],
   })

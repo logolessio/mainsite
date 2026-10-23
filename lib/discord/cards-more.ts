@@ -1,6 +1,6 @@
 import type { Component, Embed, Message } from './api'
-import { big, btn, card, chan, chip, dot, go, INK, join, MUTE, num, row, small, usd, SITE_URL } from './ui'
-import { ACCENT, BAR, pbtn, plink, prow } from './look'
+import { ACCENT, BAR, big, btn, card, chan, chip, dot, go, ic, join, MUTE, num, row, small, usd, SITE_URL } from './ui'
+import { pbtn, plink, prow } from './look'
 import { container, gallery, isVideoFile, sep, section, text, thumb, v2 } from './v2'
 
 /**
@@ -37,7 +37,7 @@ export const platformName = (p: string) => PLATFORM[p] ?? p
 /** The link that opens a campaign straight on its submit step. */
 export const submitUrl = (campaignId: string) => `${SITE_URL}/campaign/${encodeURIComponent(campaignId)}?submit=1`
 /** The address of a picture card made by the site (see app/api/discord/card). `v` changes when the picture should change, so Discord fetches it again. */
-export const cardImage = (kind: 'payout' | 'campaign', id: string, v?: string | number) => `${SITE_URL}/api/discord/card/${kind}/${encodeURIComponent(id)}${v !== undefined ? `?v=${encodeURIComponent(String(v))}` : ''}`
+export const cardImage = (kind: 'payout' | 'campaign' | 'progress', id: string, v?: string | number) => `${SITE_URL}/api/discord/card/${kind}/${encodeURIComponent(id)}${v !== undefined ? `?v=${encodeURIComponent(String(v))}` : ''}`
 
 // ---------- get started ----------
 /** The message in #get-started: one button. It answers with a link only that person sees (see welcome.ts). */
@@ -110,7 +110,7 @@ export const nextStepsCard = (n: NextData): Message =>
 export const rundownDm = (n: NextData & { commands: [string, string][] }): Message =>
   v2(
     container(
-      INK,
+      ACCENT,
       section([`## You are all set, ${n.name}`, n.brand ? 'Your account and this Discord are linked.' : 'Your account and this Discord are linked. Here is everything in one place.'], thumb(`${SITE_URL}/logo-lg.png`, 'logoless')),
       sep(),
       text(
@@ -235,39 +235,45 @@ export type CampaignPost = {
 }
 const CAMP_STATUS: Record<string, string> = { live: 'Live', paused: 'Paused', ended: 'Ended' }
 /**
- * The card in an artist's channel, laid out like a brief: the cover and the pay, what to make and what not to, the numbers and the
- * budget bar, an example edit that plays right in the card (when it is a video file), and the buttons. Built with Components V2.
+ * The card in an artist's channel, laid out like a brief (the way the bots people already know show one): the title with the cover beside it and the song link under it,
+ * what must be done and what must not, the campaign's numbers, a completion bar in the gradient, how people are paid, an example edit that plays right in the card
+ * (when it is a video file), when it was last updated, and the button to submit. Built with Components V2; no emoji, the gradient icons in front of the headings.
  */
 export const campaignPostCard = (c: CampaignPost): Message => {
   const left = pctLeft(c.budgetCents, c.paidCents)
   const used = 100 - left
   const live = c.status === 'live'
   const platforms = c.platforms.map(platformName).join(', ') || 'Any platform'
-  const head = [`-# {ic:music} ${c.creator} · ${CAMP_STATUS[c.status] ?? c.status}`, `## ${cut(c.title, 90)}`, `**${usd(c.rateCents)} per 1,000 views**${c.endsOn ? `\n-# {ic:clock} Ends ${c.endsOn}` : ''}`]
   const list = (xs: string[]) => xs.slice(0, 4).map((x) => `• ${cut(x, 140)}`).join('\n')
   const file = c.example && isVideoFile(c.example)
-  return {
-    ...v2(
-      container(
-        live ? ACCENT : MUTE,
-        gallery({ url: BAR }),
-        c.cover ? section(head, thumb(c.cover, c.title)) : text(head.join('\n')),
-        ...(c.summary ? [text(cut(c.summary, 600))] : []),
-        ...(c.clipThis.length ? [sep(), text(`### {ic:check} Must do\n${list(c.clipThis)}`)] : []),
-        ...(c.offLimits?.length ? [sep(), text(`### {ic:cross} Must not do\n${list(c.offLimits)}`)] : []),
-        sep(),
-        text(join('### {ic:book} Campaign info', `{ic:money} **Pays:** ${usd(c.rateCents)} per 1,000 views`, `{ic:wallet} **Budget:** ${usd(c.budgetCents, true)}`, `{ic:globe} **Platforms:** ${platforms}`)),
-        text(join(`**Budget used: ${used}%**`, `\`${bar(used, 24)}\``, small(`${usd(Math.max(0, c.budgetCents - c.paidCents))} of ${usd(c.budgetCents)} left`))),
-        sep(),
-        // a video file plays here; with none, the picture card with the cover and the budget bar
-        ...(file ? [text('### {ic:video} Example edit'), gallery({ url: c.example as string, description: `Example edit for ${c.title}` })] : [gallery({ url: cardImage('campaign', c.id, c.imageVersion), description: c.title })]),
-        text(small(`${num(c.approved)} approved · ${num(c.views)} verified views · ${usd(c.paidCents)} paid out · ${num(c.joined)} joined`)),
-        live
-          ? prow(plink('Submit content', submitUrl(c.id), 'arrow'), pbtn('Join', `camp:join:${c.id}`, 'green', 'plus'), ...(c.soundUrl ? [plink('Use the sound', c.soundUrl, 'music')] : []), ...(c.example && !file ? [plink('Watch the example', c.example, 'video')] : []))
-          : prow(plink('See live campaigns', '/', 'campaign')),
-      ),
+  const head = [
+    `## [${cut(c.title, 90)}](${SITE_URL}/campaign/${encodeURIComponent(c.id)})`,
+    `-# ${c.creator} · ${CAMP_STATUS[c.status] ?? c.status}${c.endsOn ? ` · ends ${c.endsOn}` : ''}`,
+    ...(c.soundUrl ? [`**Song link**\n${c.soundUrl}`] : []),
+  ]
+  return v2(
+    container(
+      live ? ACCENT : MUTE,
+      c.cover ? section(head, thumb(c.cover, c.title)) : text(head.join('\n')),
+      ...(c.summary ? [text(cut(c.summary, 600))] : []),
+      ...(c.clipThis.length ? [sep(), text(`### ${ic('check')} MUST DO\n${list(c.clipThis)}`)] : []),
+      ...(c.offLimits?.length ? [text(`### ${ic('cross')} MUST NOT DO\n${list(c.offLimits)}`)] : []),
+      sep(),
+      text(join(`### ${ic('book')} Campaign info`, `${ic('money')} **Pays:** ${usd(c.rateCents)} per 1,000 views`, `${ic('wallet')} **Budget:** ${usd(c.budgetCents, true)}`, `${ic('globe')} **Platform:** ${platforms}`)),
+      text(`**Completion: ${used}%**`),
+      gallery({ url: cardImage('progress', String(used), used), description: `${used}% complete` }),
+      text(small(`${usd(Math.max(0, c.budgetCents - c.paidCents))} of ${usd(c.budgetCents)} left · ${num(c.approved)} approved · ${num(c.views)} verified views · ${usd(c.paidCents)} paid out · ${num(c.joined)} joined`)),
+      sep(),
+      text(`### ${ic('paypal')} Payment methods\nPayPal`),
+      // a video file plays here; with none, the picture card with the cover and the budget bar
+      ...(file ? [text(`### ${ic('video')} Example edit`), gallery({ url: c.example as string, description: `Example edit for ${c.title}` })] : []),
+      text(small(`logoless · updated <t:${Math.floor(Date.now() / 1000)}:R>`)),
+      gallery({ url: BAR }),
+      live
+        ? prow(plink('Submit content', submitUrl(c.id), 'arrow'), pbtn('Join', `camp:join:${c.id}`, 'green', 'plus'), ...(c.example && !file ? [plink('Watch the example', c.example, 'video')] : []))
+        : prow(plink('See live campaigns', '/', 'campaign')),
     ),
-  }
+  )
 }
 
 // ---------- newer commands ----------

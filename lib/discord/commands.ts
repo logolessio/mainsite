@@ -1,5 +1,6 @@
 import { BADGE_BY_ID } from '../badges-defs'
 import { primeIcons } from './icon-prime'
+import { FAQ_FLAT, REASONS } from './support-menu'
 import { liveCampaigns } from '../campaigns-db'
 import { db, nowSec } from '../db'
 import { FAQ } from '../faq'
@@ -52,6 +53,8 @@ export type Interaction = {
   data?: {
     name?: string
     custom_id?: string
+    /** what was picked in a drop-down menu */
+    values?: string[]
     options?: Option[]
     resolved?: { users?: Record<string, DUser> }
     components?: { components: { custom_id: string; value: string }[] }[]
@@ -498,6 +501,19 @@ async function component(i: Interaction, env: Env): Promise<Reply> {
   if (id === 'cmd:queue') return admin({ ...i, data: { ...i.data, options: [{ name: 'queue', type: 1 }] } })
   if (id === 'panel:link') return notLinked() // buttons on older messages
   if (id.startsWith('camp:join:')) return joinCampaign(i, id.split(':')[2])
+  // the two menus on the support panel: an answer (private to whoever picked), and a ticket for a reason (a short form first)
+  if (id === 'faq:pick') {
+    const f = FAQ_FLAT[Number(i.data?.values?.[0])]
+    return f ? say(k.faqCard({ q: f.q, a: f.a, group: f.group })) : fail('That question is out of date. Try `/faq`.')
+  }
+  if (id === 'ticket:reason') {
+    const r = REASONS.find((x) => x.key === i.data?.values?.[0])
+    if (!r) return fail('That choice is out of date. Open the panel again.')
+    return modal(`modal:ticket:${r.key}`, `Ticket: ${r.label}`.slice(0, 45), [
+      ...(r.key === 'other' ? [{ id: 'subject', label: 'What is it about?', style: 1 as const, min: 3, max: 80, placeholder: 'A few words' }] : []),
+      { id: 'text', label: 'Tell us what happened', style: 2 as const, min: 3, max: 1000, placeholder: 'The more we know, the faster we can help.' },
+    ])
+  }
   if (id === 'panel:support' || id === 'ticket:open') return modal('modal:ticket', 'Open a ticket', [{ id: 'subject', label: 'What is it about?', style: 1, min: 3, max: 80, placeholder: 'e.g. My withdrawal has not arrived' }, { id: 'text', label: 'Tell us what happened', style: 2, min: 3, max: 1000 }])
   if (id.startsWith('ticket:reply:')) {
     const inq = await getInquiry(id.split(':')[2])
@@ -523,6 +539,16 @@ async function modalSubmit(i: Interaction, env: Env): Promise<Reply> {
     if (setup) return setup
   }
   if (id === 'modal:support') return cmdSupport(i, value('text'))
+  if (id.startsWith('modal:ticket:')) {
+    const r = REASONS.find((x) => x.key === id.split(':')[2])
+    if (!r) return fail('That ticket form is out of date. Open the panel again.')
+    const u = whoami(i)
+    const m = await me(u.id)
+    const subject = r.key === 'other' ? value('subject') : r.label
+    const res = await openTicket({ discordId: u.id, discordName: u.global_name ?? u.username, user: m ? { id: m.id, handle: m.handle, name: m.name } : null, subject, message: value('text') })
+    if (!res.ok) return fail(res.message)
+    return say(k.ticketOpenedCard({ ref: res.inquiry.id, channelId: res.channelId, linked: Boolean(m) }))
+  }
   if (id === 'modal:ticket') {
     const u = whoami(i)
     const m = await me(u.id)

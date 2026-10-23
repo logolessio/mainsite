@@ -1,10 +1,10 @@
 import type { Health } from '../health'
 import { LEGAL_LINKS, SITE } from '../site'
 import type { Component, Embed, Message } from './api'
-import { pbtn } from './look'
-import { container, sep, text, v2 } from './v2'
+import { item, panel, pbtn, plink, prow } from './look'
+import { container, gallery, section, sep, text, thumb, v2 } from './v2'
 import {
-  big, btn, bullets, card, chan, chip, dot, go, icon, INK, join, meter, num, row, small, usd, SITE_URL, OWNER_URL, type IconName,
+  ACCENT, BANNER, BAR, big, btn, bullets, card, chan, chip, dot, go, ic, icon, INK, join, meter, num, row, small, usd, SITE_URL, OWNER_URL, type IconName,
 } from './ui'
 
 /**
@@ -299,11 +299,15 @@ export const rulesCard = (links: { rules: string; support: string; getStarted: s
 }
 
 export const siteCard = (stats?: { campaigns: number; paidCents: number }, community?: string): Message => {
-  const live = stats && stats.campaigns > 0 ? dot(`${stats.campaigns} live ${stats.campaigns === 1 ? 'campaign' : 'campaigns'}`, stats.paidCents > 0 && `$${Math.floor(stats.paidCents / 100).toLocaleString('en-US')} paid to creators`) : ''
-  return msg(
-    [card({ icon: 'logo', label: 'logoless.io', title: 'Views have value.', url: SITE_URL, text: join('Campaigns from artists, streamers and brands. Get paid for every 1,000 verified views.', live ? small(live) : community ? small(community) : ''), thumb: logoUrl })],
-    [row(go('Open logoless.io', '/'), go('For creators', '/for-creators'), go('For brands', '/for-brands'))],
-  )
+  const numbers = stats && stats.campaigns > 0 ? [item('campaign', `${stats.campaigns} live ${stats.campaigns === 1 ? 'campaign' : 'campaigns'}`, 'Open to everyone, posted here first.'), ...(stats.paidCents > 0 ? [item('money', `$${Math.floor(stats.paidCents / 100).toLocaleString('en-US')} paid to creators`, 'For verified views, straight to PayPal.')] : [])] : community ? [small(community)] : []
+  return panel({
+    banner: true,
+    icon: 'logo',
+    title: 'Views have value.',
+    sub: 'Campaigns from artists, streamers and brands. Get paid for every 1,000 verified views.',
+    blocks: numbers,
+    buttons: [plink('Open logoless.io', '/', 'globe'), plink('For creators', '/for-creators', 'user'), plink('For brands', '/for-brands', 'campaign')],
+  })
 }
 
 export const getStartedCard = (links: { rules: string; guildId: string }): Message =>
@@ -317,45 +321,59 @@ export const supportPanelCard = (): Message =>
 
 const SERVICE: Record<string, string> = { database: 'Database', signin: 'Sign-in', payments: 'Payments (PayPal)', email: 'Email' }
 export const statusCard = (h: Health): Message => {
-  const line = (ok: boolean, name: string, note?: string) => `${chip(ok ? 'Working' : 'Down')} **${name}**${note ? ` · ${note}` : ''}`
+  const line = (ok: boolean, name: string, note?: string) => `${ok ? ic('check') : ic('cross')} **${name}**${note ? ` · ${note}` : ''}`
   const lines = [line(true, 'Website', 'logoless.io'), ...h.checks.map((c) => line(c.ok, SERVICE[c.id] ?? c.label, c.ok ? (c.ms !== undefined ? `${c.ms} ms` : undefined) : 'not working right now')), line(true, 'Discord bot', 'answering')]
   const allOk = h.checks.every((c) => c.ok)
-  return msg(
-    [card({ icon: allOk ? 'check' : 'flag', label: 'Status', title: allOk ? 'All systems working' : 'Some services need attention', text: join(lines.join('\n'), '', small(`Updated <t:${h.at}:R>`)), mute: !allOk, time: h.at })],
-    [row(go('Open logoless.io', '/'))],
-  )
+  return panel({
+    accent: allOk ? ACCENT : 0xff1f38,
+    icon: allOk ? 'check' : 'flag',
+    title: allOk ? 'All systems working' : 'Some services need attention',
+    sub: `Updated <t:${h.at}:R>`,
+    blocks: [lines.join('\n')],
+    buttons: [plink('Open logoless.io', '/', 'globe')],
+  })
 }
 
 // ---------- announcements ----------
 export const welcomeMemberCard = (a: { name: string; handle: string; bio: string; avatar?: string; banner?: string; member: number; brand: boolean; country?: string | null; platforms: string[]; niches: string[]; discordId?: string | null }): Message => ({
-  content: a.discordId ? `Welcome <@${a.discordId}>` : undefined,
-  embeds: [
-    card({
-      icon: 'users',
-      label: 'New member',
-      title: `Welcome, ${a.name}`,
-      url: `${SITE_URL}/@${a.handle}`,
-      text: join(`**@${a.handle}** just joined logoless.`, a.bio && `“${clip(a.bio, 200)}”`),
-      thumb: a.avatar ?? logoUrl,
-      image: a.banner,
-      fields: [
-        { name: 'Member', value: `#${a.member.toLocaleString('en-US')}`, inline: true },
-        { name: 'Joined as', value: a.brand ? 'A brand' : 'A creator', inline: true },
-        ...(a.country ? [{ name: 'From', value: a.country, inline: true }] : []),
-        ...(a.platforms.length ? [{ name: 'Posts on', value: a.platforms.join(', '), inline: true }] : []),
-        ...(a.niches.length ? [{ name: 'Into', value: a.niches.slice(0, 4).join(', '), inline: true }] : []),
-      ],
-    }),
-  ],
-  components: [row(go('View profile', `/@${a.handle}`))],
+  ...v2(
+    container(
+      ACCENT,
+      gallery({ url: a.banner ?? BANNER }),
+      section(
+        [
+          `## Welcome, ${a.name}`,
+          `${a.discordId ? `<@${a.discordId}> · ` : ''}**[@${a.handle}](${SITE_URL}/@${a.handle})** just joined logoless.`,
+          small(dot(`Member #${a.member.toLocaleString('en-US')}`, a.brand ? 'A brand' : 'A creator', a.country, a.platforms.length ? `Posts on ${a.platforms.join(', ')}` : '', a.niches.length ? `Into ${a.niches.slice(0, 4).join(', ')}` : '')),
+        ],
+        thumb(a.avatar ?? logoUrl, a.name),
+      ),
+      ...(a.bio ? [sep(), text(`“${clip(a.bio, 240)}”`)] : []),
+      gallery({ url: BAR }),
+      prow(plink('View profile', `/@${a.handle}`, 'arrow')),
+    ),
+  ),
   allowed_mentions: a.discordId ? { users: [a.discordId] } : quiet,
 })
 
 export const shoutoutCard = (a: { name: string; handle: string; campaign: string; cents: number | null }): Message =>
-  msg([card({ icon: 'money', label: 'Paid', url: `${SITE_URL}/@${a.handle}`, text: a.cents ? `**${a.name}** just earned **${usd(a.cents)}** on **${a.campaign}**.` : `**${a.name}** just got paid on **${a.campaign}**.` })])
+  panel({
+    icon: 'money',
+    title: a.cents ? `${a.name} earned ${usd(a.cents)}` : `${a.name} got paid`,
+    sub: `On **${a.campaign}**`,
+    blocks: [],
+    buttons: [plink('View profile', `/@${a.handle}`, 'arrow')],
+  })
 
 export const postCard = (a: { where: 'news' | 'updates'; title: string; text: string; url?: string; label?: string }): Message =>
-  msg([card({ icon: 'spark', label: a.where === 'news' ? 'News' : 'Update', title: a.title, url: a.url, text: clip(a.text, 3800), thumb: logoUrl, time: true })], a.url ? [row(go(a.label ?? 'Read more', a.url))] : undefined)
+  panel({
+    banner: true,
+    icon: a.where === 'news' ? 'megaphone' : 'sparkles',
+    title: a.title,
+    sub: `${a.where === 'news' ? 'News' : 'Product update'} · <t:${Math.floor(Date.now() / 1000)}:D>`,
+    blocks: [clip(a.text, 3500)],
+    buttons: a.url ? [plink(a.label ?? 'Read more', a.url, 'arrow')] : undefined,
+  })
 
 // ---------- campaign tracker and announcement ----------
 export type TrackerData = {
@@ -424,36 +442,31 @@ export type AnnounceData = {
   guildId?: string
   getStartedChannel?: string
 }
-export const announceCard = (c: AnnounceData): Message =>
-  msg(
-    [
-      card({
-        icon: 'campaign',
-        label: 'New campaign',
-        title: c.title,
-        url: `${SITE_URL}/campaign/${c.id}`,
-        text: join(`**${c.creator}** just launched a campaign.`, clip(c.summary, 240)),
-        thumb: c.cover,
-        fields: [
-          { name: 'Pays', value: `${usd(c.rateCents)} per 1,000 views`, inline: true },
-          { name: 'Budget', value: usd(c.budgetCents, true), inline: true },
-          { name: 'Platforms', value: c.platforms.join(', ') || 'Any', inline: true },
-        ],
-        foot: c.endsOn ? `Ends ${c.endsOn}` : c.joined ? `${c.joined} joined already` : undefined,
-        time: true,
-      }),
-    ],
-    [row(btn('Join campaign', `camp:join:${c.id}`), go('Open campaign', `/campaign/${c.id}`), ...(c.channelId && c.guildId ? [go('Artist channel', chan(c.guildId, c.channelId))] : []))],
+export const announceCard = (c: AnnounceData): Message => {
+  const url = `${SITE_URL}/campaign/${c.id}`
+  const head = [`## [${c.title}](${url})`, `-# ${ic('music')} ${c.creator} just launched a campaign`, ...(c.summary ? [clip(c.summary, 240)] : [])]
+  return v2(
+    container(
+      ACCENT,
+      c.cover ? section(head, thumb(c.cover, c.title)) : text(head.join('\n')),
+      sep(),
+      text(join('### ' + ic('book') + ' Campaign info', `${ic('money')} **Pays:** ${usd(c.rateCents)} per 1,000 views`, `${ic('wallet')} **Budget:** ${usd(c.budgetCents, true)}`, `${ic('globe')} **Platform:** ${c.platforms.join(', ') || 'Any'}`, c.endsOn ? `${ic('clock')} **Ends:** ${c.endsOn}` : '')),
+      text(small(c.joined ? `${c.joined} joined already` : 'Be one of the first to join')),
+      gallery({ url: BAR }),
+      prow(pbtn('Join campaign', `camp:join:${c.id}`, 'green', 'plus'), plink('Open campaign', `/campaign/${c.id}`, 'arrow'), ...(c.channelId && c.guildId ? [plink('Artist channel', chan(c.guildId, c.channelId), 'hash')] : [])),
+    ),
   )
+}
 
 // ---------- notifications and the team's log ----------
 /** A site notification as a direct message: one small container (a line saying what it is and when, the title, the words, one button), not an embed. */
 export const notificationCard = (n: { kind: string; title: string; body?: string; href?: string; icon: IconName }): Message =>
   v2(
     container(
-      INK,
-      text(join(small(`${n.kind === 'campaign' ? 'Campaign' : n.kind === 'account' ? 'Account' : n.kind === 'earning' || n.kind === 'payout' ? 'Earnings' : 'logoless'} · <t:${Math.floor(Date.now() / 1000)}:R>`), `**${n.title}**`, n.body && clip(n.body, 500))),
-      ...(n.href ? [row(go('Open', n.href))] : []),
+      ACCENT,
+      text(join(small(`${n.kind === 'campaign' ? 'Campaign' : n.kind === 'account' ? 'Account' : n.kind === 'earning' || n.kind === 'payout' ? 'Earnings' : 'logoless'} · <t:${Math.floor(Date.now() / 1000)}:R>`), `### ${ic(n.icon)} ${n.title}`, n.body ? clip(n.body, 600) : '')),
+      gallery({ url: BAR }),
+      ...(n.href ? [prow(plink('Open', n.href, 'arrow'))] : []),
     ),
   )
 

@@ -42,6 +42,7 @@ const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('lock-community') }),
   z.object({ action: z.literal('upload-icons') }),
   z.object({ action: z.literal('lock-server') }),
+  z.object({ action: z.literal('server-map') }),
   z.object({ action: z.literal('prelaunch-decide'), userId: z.string().min(8).max(64), approve: z.boolean() }),
   z.object({ action: z.literal('welcome-me') }),
 ])
@@ -215,6 +216,15 @@ export const POST = route(async (req: Request) => {
     }
     await audit(actor, 'discord.make-community', null, r.made.join(', ') || 'nothing missing', ip)
     return json({ ok: true, ...r })
+  }
+  if (a.action === 'server-map') {
+    if (!cfg.guildId) throw new HttpError(409, 'Save your server ID first.')
+    const { serverMap } = await import('@/lib/discord/server-build')
+    try {
+      return json({ ok: true, ...(await serverMap(cfg)) })
+    } catch (e) {
+      throw new HttpError(502, e instanceof Error ? e.message : 'Discord would not show the server.')
+    }
   }
   if (a.action === 'lock-server') {
     // a new member sees only #get-started; the Verified role (and the staff) see the rest. A few channels at a time: the dashboard button presses this until none are left.

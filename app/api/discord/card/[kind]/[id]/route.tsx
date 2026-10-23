@@ -11,6 +11,7 @@ import { profileByHandle, profileStats } from '@/lib/profile'
  * The picture cards the bot puts in its messages, drawn on the fly (Satori and Resvg, through next/og, which runs on Workers).
  *  - payout/<earning id>: the amount in large type on the site's black background with the logo, the name half hidden
  *  - campaign/<campaign id>: the cover, the rate and a bar of the budget left
+ *  - progress/<percent>: a rounded bar in the logo's gradient, as long as the percentage (the completion bar on a campaign card)
  *  - profile/<handle>: the banner, picture and name in their own colours, up to three numbers they show, and their badges as medals
  * "sample" as the id draws one with made-up numbers (the previews in the admin area use it).
  * The look follows the site: black, the paper white (#f3f2ee), Gloock for figures. It is all in this one file, so it can be
@@ -286,6 +287,31 @@ export async function GET(req: Request, { params }: { params: Promise<{ kind: st
   const origin = new URL(req.url).origin
   try {
     const headers = { 'cache-control': id === 'sample' ? 'public, max-age=300' : 'public, max-age=60, s-maxage=60' }
+    if (kind === 'progress') {
+      // a rounded bar filled with the logo's gradient, the length of the percentage in the id (the words are in the message itself)
+      const pct = Math.max(0, Math.min(100, Math.round(Number(id)) || 0))
+      return new ImageResponse(
+        (
+          <div style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center' }}>
+            <div style={{ display: 'flex', width: '100%', height: 30, borderRadius: 15, border: '2px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', padding: 3 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  width: `${pct}%`,
+                  minWidth: pct > 0 ? 22 : 0,
+                  height: '100%',
+                  borderRadius: 12,
+                  backgroundImage: 'linear-gradient(90deg, #ff1f38, #ff2d96 28%, #9650ff 55%, #4678ff 80%, #4ba9dc)',
+                  backgroundSize: '710px 100%',
+                  backgroundRepeat: 'no-repeat',
+                }}
+              />
+            </div>
+          </div>
+        ),
+        { width: 720, height: 46, headers },
+      )
+    }
     if (kind === 'payout') {
       const p = await payoutData(id)
       if (!p) return new Response('Not found', { status: 404 })
