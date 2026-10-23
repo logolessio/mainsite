@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { ArrowUpRight, Globe } from 'lucide-react'
 import { useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
-import { Logo } from '@/components/logo'
+import { IntroLogo } from '@/components/logo-intro'
 import type { LinkItem } from '@/lib/socials'
 import { cn } from '@/lib/utils'
 
@@ -16,7 +16,7 @@ export function LinksPage({ links, tagline }: { links: LinkItem[]; tagline: stri
   return (
     <main className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[460px] flex-col items-center px-5 pt-16 pb-12 md:pt-24">
       <motion.div initial={false} className="flex flex-col items-center text-center">
-        <Logo play className="h-9 md:h-11" />
+        <IntroLogo replay className="h-9 md:h-11" />
         <h1 className="mt-6 font-display text-4xl leading-none tracking-[-0.04em] md:text-5xl">logoless</h1>
         <p className="mt-3 text-[17px] text-paper/55">{tagline}</p>
       </motion.div>

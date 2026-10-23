@@ -6,7 +6,7 @@ import { signOut } from 'next-auth/react'
 import { useEffect, useRef, useState } from 'react'
 import { GradientField } from '@/components/shell/gradient-field'
 import { LightField } from '@/components/shell/light-field'
-import { Logo } from '@/components/logo'
+import { IntroLogo } from '@/components/logo-intro'
 import { LiquidGlass } from '@/components/ui/liquid-glass'
 import { signInWithProvider } from '@/lib/auth'
 import { cn } from '@/lib/utils'
@@ -140,7 +140,7 @@ export function LaunchPage({ end, headline, text, signedInAs }: { end: number | 
       <GradientField />
       <LightField />
       <a href="/" aria-label="logoless" className="absolute top-6 left-6 z-20 md:top-8 md:left-9">
-        <Logo play className="h-7 md:h-8" />
+        <IntroLogo className="h-7 md:h-8" />
       </a>
 
       <main className="relative z-10 mx-auto flex min-h-dvh max-w-[1200px] flex-col items-center justify-center px-6 py-28 text-center">
