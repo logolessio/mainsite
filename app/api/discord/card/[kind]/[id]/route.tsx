@@ -76,7 +76,7 @@ function PayoutCard({ p, logo }: { p: Payout; logo: string | null }) {
     <div style={{ width: '100%', height: '100%', display: 'flex', position: 'relative', background: INK, color: PAPER, fontFamily: 'Geist', backgroundImage: 'radial-gradient(circle at 78% 40%, rgba(243,242,238,0.10), rgba(0,0,0,0) 55%)' }}>
       {logo && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={logo} alt="" width={620} height={465} style={{ position: 'absolute', right: -60, top: 80, opacity: 0.16 }} />
+        <img src={logo} alt="" width={980} height={211} style={{ position: 'absolute', right: -120, top: 70, opacity: 0.1 }} />
       )}
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '64px 72px', width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 26, color: MUTE, letterSpacing: 6 }}>

@@ -1,10 +1,9 @@
 /**
- * The logoless mark drawn as lines, for the Sign in button. The PNG logo is thin white lines on a 347×260 canvas, which at
- * button size (about 20px tall) broke up and looked cut off. This keeps the same shape, sized to its own edges, and the lines
- * stay the same weight however small it is drawn. It takes the text colour, so it works on light and dark buttons.
+ * The logoless mark drawn as lines, for the Sign in button: the two corner brackets of the logo (the top left and the bottom right one). Drawn as strokes, so
+ * the lines stay the same weight however small it is, and it takes the text colour, so it works on light and dark buttons.
  */
-export const MARK_PATHS = ['M12 12H92L192 172L196 128H268L335 226L143 229Z', 'M12 12V136L137 247H333L335 226', 'M198 130L223 173H193']
-export const MARK_VIEWBOX = '4 4 339 251'
+export const MARK_PATHS = ['M2 9.5V2H15.5', 'M22 8.5V16H8.5']
+export const MARK_VIEWBOX = '0 0 24 18'
 
 export function LogolessMark({ className, stroke = 1.6, title }: { className?: string; stroke?: number; title?: string }) {
   return (

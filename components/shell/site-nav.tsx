@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { isInvitePath } from '@/lib/invite-shared'
 import { useEffect, useRef, useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
-import { Logo } from '@/components/logo'
+import { NavLogo } from '@/components/logo-nav'
 import { EASE_OUT } from '@/lib/layout'
 import { NAV_LINKS } from '@/lib/site'
 import { cn } from '@/lib/utils'
@@ -67,7 +67,7 @@ export function SiteNav() {
             aria-label="logoless home"
             onClick={() => setOpen(false)}
           >
-            <Logo />
+            <NavLogo className="h-6 md:h-7" />
           </TransitionLink>
 
           <div className="pointer-events-auto flex items-center gap-2 md:gap-3">

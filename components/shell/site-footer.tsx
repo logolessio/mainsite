@@ -24,7 +24,7 @@ export function SiteFooter({ links = [] }: { links?: LinkItem[] }) {
       <div className={`${CONTAINER} py-20 md:py-28`}>
         <div className="grid gap-16 md:grid-cols-12 md:gap-10">
           <Reveal className="md:col-span-4">
-            <Logo className="h-12 md:h-14" />
+            <Logo className="h-7 md:h-8" />
             <p className="mt-8 max-w-xs text-[15px] leading-relaxed text-paper/50">
               <T>views have value.</T>
             </p>

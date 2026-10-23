@@ -140,7 +140,7 @@ export function LaunchPage({ end, headline, text, signedInAs }: { end: number | 
       <GradientField />
       <LightField />
       <a href="/" aria-label="logoless" className="absolute top-6 left-6 z-20 md:top-8 md:left-9">
-        <Logo />
+        <Logo play className="h-7 md:h-8" />
       </a>
 
       <main className="relative z-10 mx-auto flex min-h-dvh max-w-[1200px] flex-col items-center justify-center px-6 py-28 text-center">

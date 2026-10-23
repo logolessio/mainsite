@@ -46,7 +46,7 @@ export const GET = route(async (req: Request) => {
       <div style={{ width: '100%', height: '100%', display: 'flex', position: 'relative', background: '#000000', color: PAPER, fontFamily: 'Geist', backgroundImage: 'radial-gradient(circle at 78% 35%, rgba(243,242,238,0.10), rgba(0,0,0,0) 55%)' }}>
         {logo && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={dataUri(logo, 'image/png')} alt="" width={560} height={420} style={{ position: 'absolute', right: -50, top: 90, opacity: 0.14 }} />
+          <img src={dataUri(logo, 'image/png')} alt="" width={980} height={211} style={{ position: 'absolute', right: -120, top: 80, opacity: 0.1 }} />
         )}
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '60px 72px', width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 26, color: MUTE, letterSpacing: 6 }}>

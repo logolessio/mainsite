@@ -10,7 +10,7 @@ export function DevGate({ email }: { email: string | null }) {
   return (
     <div className="fixed inset-0 z-[200] overflow-y-auto bg-ink">
       <div className="mx-auto flex min-h-full max-w-md flex-col items-center px-5 py-12 text-center">
-        <Logo className="h-12" />
+        <Logo play className="h-7" />
         <p className="mt-6 inline-flex rounded-pill border border-line-strong px-3.5 py-1.5 font-mono text-[11px] tracking-[0.2em] text-mute uppercase">Test site · admins only</p>
         <h1 className="mt-5 font-display text-4xl tracking-tight">This is where we try things first.</h1>
         <p className="mt-3 text-mute">Sign in with an admin account to see what is coming. The public site is at logoless.io.</p>

@@ -56,6 +56,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => ({
         return { id: email, email, name: email.split('@')[0] }
       },
     }),
+    // A passkey (Face ID, a fingerprint, a device PIN or a security key): the device signs a challenge from /api/auth/passkey, and the public key we kept checks it.
+    // That is already two things (the device, and the face or finger or PIN that unlocks it), so there is no code to type afterwards.
+    Credentials({
+      id: 'passkey',
+      name: 'Passkey',
+      credentials: { response: {} },
+      async authorize(c, request) {
+        const raw = String(c?.response ?? '')
+        if (!raw || raw.length > 24_000) return null
+        const [{ finishAuthentication }, { db }, { hit, ipHash }, { logEvent }] = await Promise.all([import('./lib/passkeys'), import('./lib/db'), import('./lib/guard'), import('./lib/log')])
+        if ((await hit(`passkey-login:${await ipHash(request)}`, 900)) > 20) return null
+        let response: unknown
+        try {
+          response = JSON.parse(raw)
+        } catch {
+          return null
+        }
+        const email = await finishAuthentication(request, response as never)
+        if (!email) {
+          logEvent({ kind: 'security', name: 'login failed', actor: null, detail: 'passkey not accepted' })
+          return null
+        }
+        // a passkey outlives nothing: if the account is gone, so is the way in
+        const row = await (await db()).prepare('SELECT name FROM users WHERE email = ?1').bind(email).first<{ name: string | null }>()
+        if (!row) return null
+        return { id: email, email, name: row.name ?? email.split('@')[0] }
+      },
+    }),
     // Finishing sign-up: the six-digit code emailed to the address creates the account and signs the person in.
     Credentials({
       id: 'email-code',

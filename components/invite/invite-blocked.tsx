@@ -32,7 +32,7 @@ export function InviteBlocked({ kind, slug, hint }: { kind: keyof typeof COPY; s
       <MovingGradient hue={hue} pointer={pointer} />
       <div className="relative max-w-xl">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, ease: EASE_OUT }}>
-          <Logo className="mx-auto h-12" />
+          <Logo className="mx-auto h-7" />
         </motion.div>
         <motion.h1 initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} transition={{ duration: 1.1, delay: 0.2, ease: EASE_OUT }} className="stage-grot mt-12 text-[clamp(2.2rem,6vw,4.4rem)]">
           {c.title}

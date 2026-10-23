@@ -184,7 +184,7 @@ export function InviteWelcome({ name, slug, state, email, lockedTo, admin }: Pro
         {/* top bar */}
         <header className="sticky top-0 z-40 flex items-start justify-between px-5 pt-5 md:px-10 md:pt-8">
           <motion.a href="/" aria-label="logoless" initial={{ opacity: 0, y: -14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.3, ease: EASE_OUT }} className="grid h-11 place-items-center border border-white/55 bg-black/20 px-4 backdrop-blur-md transition-colors duration-500 hover:bg-white/10">
-            <Logo className="h-6" />
+            <Logo className="h-4" />
           </motion.a>
           <motion.span initial={{ opacity: 0, y: -14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.4, ease: EASE_OUT }} className="grid size-11 place-items-center rounded-full border border-white/55 bg-black/20 backdrop-blur-md" title={email}>
             {email ? <span className="stage-mono text-xs">{email[0]}</span> : <UserRound aria-hidden="true" className="size-4" />}

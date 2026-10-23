@@ -199,7 +199,7 @@ export function DashShell({ area, items: menu, footer = NONE, children }: { area
       <aside aria-label={`${area} navigation`} className="fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col border-r border-line bg-black/80 md:flex">
         <div className="flex h-[72px] shrink-0 items-center border-b border-line px-6">
           <Go href={siteHref} aria-label="logoless home">
-            <Logo className="h-9 md:h-9" />
+            <Logo className="h-5 md:h-5" />
           </Go>
         </div>
         <p className="px-6 pt-7 pb-3 text-[13px] text-paper/40">{area}</p>
@@ -264,7 +264,7 @@ export function DashShell({ area, items: menu, footer = NONE, children }: { area
       <header className={cn('sticky top-0 z-30 flex h-[72px] items-center justify-between border-b bg-ink/90 px-5 transition-[box-shadow,border-color] duration-300 md:px-10', lifted ? 'border-line-strong shadow-[0_14px_30px_-18px_rgb(0_0_0/0.9)]' : 'border-line')}>
         <div className="flex items-center gap-4">
           <Go href={siteHref} aria-label="logoless home" className="md:hidden">
-            <Logo className="h-8" />
+            <Logo className="h-5" />
           </Go>
           <p className="hidden items-center gap-2 text-[15px] text-paper/45 md:flex">
             <span>{area}</span>

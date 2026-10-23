@@ -305,7 +305,7 @@ export function InviteWizard({ slug, artistName, email, initialStep, initialData
       <MovingGradient hue={hue} pointer={pointer} />
       <div ref={scroller} className="relative h-full overflow-y-auto overscroll-contain">
         <header className="sticky top-0 z-20 flex h-20 items-center justify-between bg-gradient-to-b from-ink from-60% to-transparent px-5 md:px-10">
-          <Logo className="h-10 md:h-11" />
+          <Logo className="h-6 md:h-7" />
           {preview && (
             <a href={`/${slug}`} className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-2 rounded-pill border border-amber-300/40 bg-amber-300/10 px-4 py-1.5 text-xs text-amber-200 sm:inline-flex">
               Preview: nothing is saved · Exit

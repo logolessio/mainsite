@@ -1,10 +1,11 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Loader2 } from 'lucide-react'
+import { FingerprintPattern, Loader2 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
+import { useFeature } from '@/components/shell/features-provider'
 import { useTransitions } from '@/components/shell/transition-provider'
 import { OtpInput } from './email-ui'
 import {
@@ -20,6 +21,7 @@ import {
   needsTwoStep,
 } from '@/lib/auth'
 import { EASE_OUT } from '@/lib/layout'
+import { passkeysSupported, PasskeyCancelled, signInWithPasskey } from '@/lib/passkey-client'
 import { cn } from '@/lib/utils'
 
 type Mode = 'login' | 'signup' | 'forgot'
@@ -59,6 +61,9 @@ export function AuthCard({ mode }: { mode: Mode }) {
   const [second, setSecond] = useState('')
   const [code, setCode] = useState('')
   const [cooldown, setCooldown] = useState(0)
+  const passkeysOn = useFeature('passkeys')
+  const [canPasskey, setCanPasskey] = useState(false)
+  useEffect(() => setCanPasskey(passkeysSupported()), [])
   const [error, setError] = useState(
     params.get('restricted')
       ? 'This account has been restricted. Contact support if you think that is a mistake.'
@@ -88,6 +93,18 @@ export function AuthCard({ mode }: { mode: Mode }) {
       await signInWithProvider(p, mode === 'signup' ? role : undefined, next ?? undefined)
     } catch (e) {
       fail(e)
+      setBusy(false)
+    }
+  }
+
+  const withPasskey = async () => {
+    setBusy(true)
+    setError('')
+    try {
+      await signInWithPasskey()
+      done()
+    } catch (e) {
+      if (!(e instanceof PasskeyCancelled)) fail(e)
       setBusy(false)
     }
   }
@@ -235,6 +252,12 @@ export function AuthCard({ mode }: { mode: Mode }) {
                     <BrandIcon name="discord" className="size-[18px]" />
                     Continue with Discord
                   </ProviderButton>
+                  {mode === 'login' && passkeysOn && canPasskey && (
+                    <ProviderButton disabled={busy} onClick={() => void withPasskey()}>
+                      <FingerprintPattern aria-hidden="true" className="size-[18px]" />
+                      Log in with a passkey
+                    </ProviderButton>
+                  )}
                 </div>
                 <motion.div variants={item} className="my-7 flex items-center gap-4 text-sm text-mute">
                   <span className="h-px flex-1 bg-line" />

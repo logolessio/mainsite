@@ -683,7 +683,7 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
       <div aria-hidden="true" className="fixed inset-x-0 top-0 z-[69] h-[2px] bg-white/[0.07]" />
       <div aria-hidden="true" className="fixed top-0 left-0 z-[70] h-[2px] bg-[linear-gradient(90deg,#ff1f38,#ffc857,#2ed0b0,#4ba9dc)] shadow-[0_0_12px_rgb(75_169_220/0.5)] transition-[width] duration-700 ease-out" style={{ width: `${progress * 100}%` }} />
       <Link href="/" aria-label="logoless home" className="fixed top-5 left-5 z-[70] block opacity-80 transition-opacity hover:opacity-100 max-sm:top-4 max-sm:left-4">
-        <Logo className="h-8 md:h-9" />
+        <Logo className="h-5 md:h-6" />
       </Link>
       {preview && (
         <div className="fixed top-4 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-3 rounded-pill border border-line-strong bg-ink/90 py-1.5 pr-1.5 pl-4 text-[13px] whitespace-nowrap text-mute backdrop-blur max-sm:top-3.5 max-sm:gap-2 max-sm:pl-3 max-sm:text-[12px]">

@@ -64,7 +64,7 @@ function layout(l: Layout) {
 <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="width:100%;max-width:560px">
 ${banner}
 <tr><td align="left" style="padding:0 2px 26px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-  <td align="left"><a href="${SITE_URL}" style="text-decoration:none"><img src="${LOGO}" width="45" height="34" alt="logoless" style="display:block;border:0;width:45px;height:34px;font:600 16px/34px ${MONO};color:${PAPER}"></a></td>
+  <td align="left"><a href="${SITE_URL}" style="text-decoration:none"><img src="${LOGO}" width="124" height="27" alt="logoless" style="display:block;border:0;width:124px;height:27px;font:600 16px/27px ${MONO};color:${PAPER}"></a></td>
   <td align="right" style="font:500 11px/1 ${MONO};letter-spacing:.14em;text-transform:uppercase"><a href="${SITE_URL}" style="color:${BODY};text-decoration:none">logoless.io</a></td>
 </tr></table></td></tr>
 <tr><td class="card" bgcolor="#080808" style="background:#080808;background:rgba(8,8,8,.86);border:1px solid ${LINE};border-radius:10px;padding:40px 38px 34px;text-align:left">
