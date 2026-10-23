@@ -4,7 +4,7 @@ import { PillLink } from '@/components/motion/cta'
 import { Reveal } from '@/components/motion/reveal'
 import { Words } from '@/components/motion/words'
 import { T } from '@/components/shell/copy-provider'
-import { Pillar } from './pillar'
+import { RisingPillar } from './rising-pillar'
 import type { IconName } from '@/components/icons'
 import { CONTAINER } from '@/lib/layout'
 import { cn } from '@/lib/utils'
@@ -63,7 +63,7 @@ export function CtaBand({
     <section className="py-20 md:py-36">
       <div className={cn(CONTAINER)}>
         <div className="grid grid-cols-[22px_1fr_22px] border border-[rgb(var(--c-red)/0.6)] sm:grid-cols-[40px_1fr_40px] md:grid-cols-[72px_1fr_72px]">
-          <Pillar className="[--flutes:2] sm:[--flutes:4] md:[--flutes:7]" />
+          <RisingPillar className="[--flutes:2] sm:[--flutes:4] md:[--flutes:7]" />
           <div className="px-6 py-14 md:px-16 md:py-28">
             <Words as="h2" align="left" text={title} className="max-w-[12ch] font-display text-[clamp(3rem,8vw,8rem)] leading-[0.9] tracking-[-0.045em]" />
             <Reveal delay={0.25} className="mt-12 flex flex-wrap items-center gap-3">
@@ -75,7 +75,7 @@ export function CtaBand({
               )}
             </Reveal>
           </div>
-          <Pillar className="[--flutes:2] sm:[--flutes:4] md:[--flutes:7]" />
+          <RisingPillar delay={0.14} className="[--flutes:2] sm:[--flutes:4] md:[--flutes:7]" />
         </div>
       </div>
     </section>
