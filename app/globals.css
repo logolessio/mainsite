@@ -1474,28 +1474,6 @@ html[data-look='anubis'] ::selection {
   color: var(--color-white);
 }
 
-/* the quiet label above a heading: a red dot and small capitals in the mono, like underclip's "What it does" and Anubis's section marks */
-html[data-look='anubis'] .eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--mute);
-}
-html[data-look='anubis'] .eyebrow::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  flex: none;
-  border-radius: 99px;
-  background: var(--red);
-  box-shadow: 0 0 0 3px rgb(255 31 56 / 0.16), 0 0 14px rgb(255 31 56 / 0.7);
-}
-
 /* panels, cards and sheets: a hairline and a little depth instead of a glow */
 html[data-look='anubis'] .glass {
   background: linear-gradient(180deg, rgb(20 20 20 / 0.9), rgb(8 8 8 / 0.88));
@@ -2074,20 +2052,22 @@ html[data-look='anubis'] [data-keep-case] {
   }
 }
 
-/* the search pop-up (components/shell/command-palette.tsx) wakes up the same way the bar does: its edge has the running arc all the time, a light follows the pointer
-   inside it, and one sweep of light crosses it as it opens */
-.sp-ring-on {
-  opacity: 1;
-  animation-duration: 5.5s;
-}
-.cmd-spot {
-  background:
-    radial-gradient(320px circle at calc(var(--mx, 50%) - 90px) var(--my, 18%), rgb(var(--c-red) / 0.11), transparent 70%),
-    radial-gradient(320px circle at calc(var(--mx, 50%) + 90px) var(--my, 18%), rgb(var(--c-blue) / 0.1), transparent 70%),
-    radial-gradient(300px circle at var(--mx, 50%) calc(var(--my, 18%) + 60px), rgb(var(--c-teal) / 0.07), transparent 70%);
-}
-@media (prefers-reduced-motion: reduce) {
-  .sp-ring-on {
-    animation: none;
-  }
+/* the search pop-up (components/shell/command-palette.tsx): one still hairline of the site's colours, faint on purpose. No arc runs round it and no light follows the pointer. */
+.cmd-edge {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  opacity: 0.32;
+  background: linear-gradient(115deg, rgb(var(--c-red)), rgb(var(--c-amber)) 30%, rgb(var(--c-teal)) 62%, rgb(var(--c-blue)));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
 }

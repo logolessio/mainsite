@@ -29,7 +29,7 @@ export type Mail = { subject: string; text: string; html: string }
 
 type Layout = {
   preheader: string
-  tag: string // small label above the title
+  tag: string // what kind of email this is (not shown; kept for the admin previews)
   title: string
   intro: string
   body: string // already-escaped HTML
@@ -38,13 +38,9 @@ type Layout = {
   keepCase?: boolean // the title holds a name or a typed word, so it is not set in capitals
 }
 
-/** The small label with a coloured dot in front: the site's .eyebrow. */
-const eyebrow = (text: string, dot = RED, margin = '0 0 26px') =>
-  `<p style="margin:${margin};font:500 11px/1 ${MONO};letter-spacing:.14em;text-transform:uppercase;color:${BODY}"><span style="color:${dot};font-size:10px;line-height:1;vertical-align:1px">&#9679;</span>&nbsp;&nbsp;${esc(text)}</p>`
-
 function layout(l: Layout) {
   const banner = l.test
-    ? `<tr><td style="padding:0 0 14px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="left" bgcolor="#14110a" style="background:#14110a;border:1px solid #3a3118;border-radius:6px;padding:11px 14px">${eyebrow('Test email from the admin panel. Nothing was created.', AMBER, '0')}</td></tr></table></td></tr>`
+    ? `<tr><td style="padding:0 0 14px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="left" bgcolor="#14110a" style="background:#14110a;border:1px solid #3a3118;border-radius:6px;padding:11px 14px"><p style="margin:0;font:500 12px/1.5 ${MONO};color:#d8b25a">Test email from the admin panel. Nothing was created.</p></td></tr></table></td></tr>`
     : ''
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"><meta name="x-apple-disable-message-reformatting"><title>${esc(l.title)}</title>
@@ -72,7 +68,6 @@ ${banner}
   <td align="right" style="font:500 11px/1 ${MONO};letter-spacing:.14em;text-transform:uppercase"><a href="${SITE_URL}" style="color:${BODY};text-decoration:none">logoless.io</a></td>
 </tr></table></td></tr>
 <tr><td class="card" bgcolor="#080808" style="background:#080808;background:rgba(8,8,8,.86);border:1px solid ${LINE};border-radius:10px;padding:40px 38px 34px;text-align:left">
-  ${eyebrow(l.tag)}
   <h1 class="h1" style="margin:0 0 18px;font:900 40px/.98 ${DISPLAY};letter-spacing:${l.keepCase ? '-.025em' : '-.035em'};${l.keepCase ? '' : 'text-transform:uppercase;'}color:${PAPER}">${esc(l.title)}</h1>
   <p style="margin:0 0 32px;max-width:440px;font:400 14px/1.75 ${MONO};color:${BODY};word-break:break-word;overflow-wrap:anywhere">${esc(l.intro)}</p>
   ${l.body}

@@ -11,14 +11,14 @@ import { cn } from '@/lib/utils'
  * what this page is on the left, one sentence and the main actions on the right.
  */
 export function PageHero({
-  eyebrow,
   title,
   lede,
   badges,
   path = true,
   children,
 }: {
-  eyebrow: string
+  /** Kept so pages still compile. The small label is no longer shown. */
+  eyebrow?: string
   title: string
   lede?: string
   /** Two round badges at the right of the title (wide screens). */
@@ -35,10 +35,7 @@ export function PageHero({
       {badges && <HeroBadges {...badges} />}
       <Words as="h1" align="left" immediate text={title} className="max-w-[16ch] font-display text-[clamp(2.8rem,7.6vw,7rem)] leading-[0.96]" />
       <div className="mt-10 grid gap-8 md:mt-14 md:grid-cols-12">
-        <Reveal delay={0.35} className="md:col-span-4">
-          <p className="eyebrow text-[15px] text-paper/45"><T>{eyebrow}</T></p>
-        </Reveal>
-        <div className="md:col-span-6 md:col-start-6">
+        <div data-path-from className="md:col-span-6 md:col-start-6">
           {lede && (
             <Reveal delay={0.45}>
               <p className="max-w-[30rem] text-pretty text-lg leading-[1.55] text-paper/65 md:text-[1.375rem]"><LinkedLede text={lede} /></p>

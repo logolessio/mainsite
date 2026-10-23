@@ -53,27 +53,6 @@ const SETTLE_MS = 5200 // "setting things up" always takes a moment: it is part 
 const primary = 'inline-flex h-12 items-center justify-center gap-2 rounded-pill bg-paper px-8 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-30'
 const quiet = 'text-[15px] text-mute underline decoration-dotted underline-offset-4 transition-colors hover:text-paper'
 
-/** Which part of getting set up each question belongs to: the small label above it. */
-const SECTION: Record<Id, string> = {
-  welcome: 'Welcome',
-  role: 'Welcome',
-  method: 'Your account',
-  email: 'Your account',
-  password: 'Your account',
-  code: 'Your account',
-  paypal: 'Getting paid',
-  name: 'Your page',
-  handle: 'Your page',
-  pictures: 'Your page',
-  accounts: 'Your accounts',
-  verify: 'Your accounts',
-  happy: 'Nearly there',
-  saving: 'Setting up',
-  hello: 'All set',
-  tour: 'All set',
-  done: 'All set',
-}
-
 const wait = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms))
 
 /**
@@ -723,7 +702,6 @@ export function OnboardingFlow({ sessionUser: realUser, initialRole, preview = f
               <SettleOrb line={line} note={settling} />
             ) : (
               <>
-            <p className="eyebrow mb-6 justify-center text-[11px]">{SECTION[id]}</p>
             <Typed
               text={line}
               onReady={() => setReady(true)}

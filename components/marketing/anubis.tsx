@@ -1,7 +1,7 @@
 'use client'
 
 import { useReducedMotion } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSignupSwap } from '@/components/motion/cta'
 import { Reveal } from '@/components/motion/reveal'
 import { Words } from '@/components/motion/words'
@@ -49,22 +49,75 @@ export function HeroBadges({ solid, outline }: HeroBadgeProps) {
 }
 
 /**
- * One hairline under the hero: it leaves the left edge, turns a corner, runs along and turns down again into an arrow that points at the first section's
- * right-hand column. Every length is fixed, so the corners are true circles. Wide screens only; it is only a drawing.
+ * One hairline that joins two real things: it leaves from under the hero's button (or, with no button, its sentence), turns a corner, runs along and
+ * turns down again into an arrow that points at the first heading after the hero. The two ends are measured from the page itself (the hero's
+ * `data-path-from` block and the first h2 or h3 that follows it), so it always starts at something and ends at something, whatever the page. It is
+ * measured again when the window changes size and once the entrance animations have settled. Wide screens only; it is only a drawing.
  */
 export function HeroPath() {
-  const line = 'border-paper/65'
+  const host = useRef<HTMLDivElement>(null)
+  const [geo, setGeo] = useState<{ w: number; h: number; d: string; arrow: string; dot: [number, number] } | null>(null)
+
+  useEffect(() => {
+    const root = host.current?.parentElement
+    if (!root) return
+    let raf = 0
+    const measure = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        if (!window.matchMedia('(min-width: 768px)').matches) return setGeo(null)
+        const header = root.closest('header')
+        const main = root.closest('main')
+        const from = root.querySelector<HTMLElement>('[data-path-from]')
+        if (!header || !main || !from) return setGeo(null)
+        const target = [...main.querySelectorAll<HTMLElement>('h2, h3')].find((h) => header.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING)
+        if (!target) return setGeo(null)
+        const rr = root.getBoundingClientRect()
+        const fr = from.getBoundingClientRect()
+        const tr = target.getBoundingClientRect()
+        const sx = fr.left - rr.left + 28
+        const sy = fr.bottom - rr.top + 12
+        const ex = tr.left - rr.left + 16
+        // end above the whole block the heading sits in (a small label may sit over it), not on the label
+        const blockTop = target.parentElement?.getBoundingClientRect().top ?? tr.top
+        const ey = (tr.top - blockTop < 90 ? blockTop : tr.top) - rr.top - 20
+        if (ey - sy < 90) return setGeo(null)
+        const y1 = sy + Math.min(72, Math.max(46, (ey - sy) * 0.28)) // the height of the run along
+        const dx = ex - sx
+        const r = Math.min(28, Math.abs(dx) / 2 - 1)
+        let d: string
+        if (r < 6) d = `M${sx} ${sy}V${ey}`
+        else if (dx < 0) d = `M${sx} ${sy}V${y1 - r}A${r} ${r} 0 0 1 ${sx - r} ${y1}H${ex + r}A${r} ${r} 0 0 0 ${ex} ${y1 + r}V${ey}`
+        else d = `M${sx} ${sy}V${y1 - r}A${r} ${r} 0 0 0 ${sx + r} ${y1}H${ex - r}A${r} ${r} 0 0 1 ${ex} ${y1 + r}V${ey}`
+        const ax = r < 6 ? sx : ex
+        setGeo({ w: Math.ceil(rr.width), h: Math.ceil(ey + 12), d, arrow: `M${ax - 8} ${ey - 6}L${ax} ${ey + 2}L${ax + 8} ${ey - 6}`, dot: [sx, sy] })
+      })
+    }
+    measure()
+    const late = window.setTimeout(measure, 1600) // after the entrance animations have settled
+    window.addEventListener('resize', measure)
+    window.addEventListener('load', measure)
+    void document.fonts?.ready.then(measure)
+    const ro = new ResizeObserver(measure)
+    ro.observe(document.body)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.clearTimeout(late)
+      window.removeEventListener('resize', measure)
+      window.removeEventListener('load', measure)
+      ro.disconnect()
+    }
+  }, [])
+
   return (
-    <div aria-hidden="true" className="hero-path pointer-events-none absolute top-full left-0 hidden h-[104px] w-full md:block">
-      <span className="absolute top-[-3px] left-[-3px] size-[7px] rounded-full bg-paper/75" />
-      <span className={`absolute top-0 left-0 h-[24px] w-px border-l ${line}`} />
-      <span className={`absolute top-[24px] left-0 size-7 rounded-bl-[28px] border-b border-l ${line}`} />
-      <span className={`absolute top-[51px] left-7 h-px w-[calc(50%-36px)] border-b ${line}`} />
-      <span className={`absolute top-[51px] left-[calc(50%-8px)] size-7 rounded-tr-[28px] border-t border-r ${line}`} />
-      <span className={`absolute top-[79px] left-[calc(50%+19px)] h-[12px] w-px border-l ${line}`} />
-      <svg className="absolute top-[90px] left-[calc(50%+11px)] text-paper/65" width="17" height="9" viewBox="0 0 17 9" fill="none">
-        <path d="M1 1l7.5 7L16 1" stroke="currentColor" strokeWidth="1" />
-      </svg>
+    <div ref={host} aria-hidden="true" className="pointer-events-none absolute inset-0 hidden md:block">
+      {geo && (
+        <svg width={geo.w} height={geo.h} className="hero-path absolute top-0 left-0 overflow-visible text-paper/65" fill="none">
+          <circle cx={geo.dot[0]} cy={geo.dot[1]} r="3.5" fill="currentColor" />
+          <path d={geo.d} stroke="currentColor" strokeWidth="1" />
+          <path d={geo.arrow} stroke="currentColor" strokeWidth="1" />
+        </svg>
+      )}
     </div>
   )
 }

@@ -482,20 +482,13 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
             exit={{ opacity: 0, y: -6, scale: 0.985, transition: { duration: 0.14, ease: EASE_OUT } }}
             transition={SPRING_POP}
             onMouseDown={(e) => e.stopPropagation()}
-            onPointerMove={(e) => {
-              // the light inside the box follows the pointer: two variables, nothing is drawn again for it
-              const r = e.currentTarget.getBoundingClientRect()
-              e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
-              e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
-            }}
             onKeyDown={onKey}
             // one radius for the box and, inside its 8px of padding, the same curve less 8px for every row, so the corners nest
             style={{ ['--cmd-r' as string]: 'calc(26px * var(--round, 1))' }}
-            className="cmdk relative isolate flex max-h-[calc(100dvh-24px)] w-full max-w-[600px] flex-col overflow-hidden rounded-[var(--cmd-r)] border border-white/[0.1] bg-[#0a0a0c]/[0.96] shadow-[0_44px_110px_-30px_rgb(0_0_0/0.95),-40px_40px_100px_-60px_rgb(255_31_56/0.32),40px_40px_100px_-60px_rgb(75_169_220/0.32)] backdrop-blur-2xl backdrop-saturate-150 sm:max-h-[min(600px,74vh)]"
+            className="cmdk relative isolate flex max-h-[calc(100dvh-24px)] w-full max-w-[600px] flex-col overflow-hidden rounded-[var(--cmd-r)] border border-white/[0.1] bg-[#0a0a0c]/[0.96] shadow-[0_44px_110px_-30px_rgb(0_0_0/0.95)] backdrop-blur-2xl backdrop-saturate-150 sm:max-h-[min(600px,74vh)]"
           >
-            {/* the light that follows the pointer, and the arc of colour that runs round the edge */}
-            <span aria-hidden="true" className="cmd-spot pointer-events-none absolute inset-0 -z-10" />
-            <span aria-hidden="true" className="sp-ring sp-ring-on" />
+            {/* a still, faint hairline of the site's colours round the edge: nothing moves and nothing follows the pointer */}
+            <span aria-hidden="true" className="cmd-edge" />
             <div className="flex shrink-0 items-center gap-3 px-5">
               <Search aria-hidden="true" className={cn('size-[17px] shrink-0 transition-colors duration-300', q ? 'text-paper' : 'text-paper/40')} />
               <input

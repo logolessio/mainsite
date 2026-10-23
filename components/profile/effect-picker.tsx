@@ -115,7 +115,7 @@ export function EffectPicker({ value, onChange, options }: { value: string; onCh
         if (!ids.length) return null
         return (
           <div key={g.title}>
-            <p className="eyebrow mb-2.5 text-[11px] tracking-[0.14em] text-mute uppercase">{g.title}</p>
+            <p className="mb-2.5 text-[13px] text-mute">{g.title}</p>
             <div className={cn('grid gap-2.5', ids.length % 3 === 0 ? 'grid-cols-3' : 'grid-cols-2')}>
               {ids.map((id) => (
                 <EffectTile key={id} id={id} label={label(id)} on={value === id} onPick={onChange} />

@@ -3,6 +3,8 @@
 import { Search } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { usePillPointer } from '@/components/app/pill-pointer'
+import { Key } from '@/components/app/search-pill'
 import { LiquidGlass } from '@/components/ui/liquid-glass'
 import { isInvitePath } from '@/lib/invite-shared'
 import { cn } from '@/lib/utils'
@@ -31,6 +33,7 @@ export function FloatingSearch({ raised = false }: { raised?: boolean }) {
   const path = usePathname()
   const signedIn = useSignedIn()
   const [mod, setMod] = useState('⌘')
+  const pill = usePillPointer()
   useEffect(() => setMod(/mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent) ? '⌘' : 'Ctrl'), [])
 
   if (!on || HIDDEN.some((p) => path.startsWith(p)) || isInvitePath(path)) return null
@@ -46,21 +49,33 @@ export function FloatingSearch({ raised = false }: { raised?: boolean }) {
 
   return (
     <div data-floating-search className={cn('pointer-events-none fixed right-3 z-[60] flex items-center gap-2 md:right-5', bottom)}>
-      <LiquidGlass
-        as="button"
-        type="button"
-        onClick={openSearch}
-        aria-label="Search, or do something"
-        aria-keyshortcuts="Meta+K /"
-        title={`Search (${mod} K)`}
-        rootClassName="pointer-events-auto"
-        className={cn('flex h-11 items-center justify-center gap-3 text-sm text-mute transition-colors hover:text-paper max-lg:w-11', 'lg:pr-2 lg:pl-4')}
-        look={{ zRadius: 12 }}
-      >
-        <Search aria-hidden="true" className="size-[18px]" />
-        <span className="hidden lg:inline">Search</span>
-        <kbd className="hidden rounded-pill bg-white/[0.08] px-2.5 py-1 font-mono text-[11px] text-paper/60 lg:inline">{mod} K</kbd>
-      </LiquidGlass>
+      {/* the same animated bar as the one in the dashboard's top bar (.sp-* in globals.css): the arc of colour round the edge, the light that follows the pointer, the leaning chip, the keys */}
+      <div ref={pill.wrap} className="sp pointer-events-auto relative" {...pill.bind}>
+        <span aria-hidden="true" className="sp-under pointer-events-none absolute inset-x-4 -bottom-3 h-6 rounded-full blur-xl" />
+        <div className="sp-edge relative rounded-pill p-px">
+          <span aria-hidden="true" className="sp-ring" />
+          <button
+            type="button"
+            onClick={openSearch}
+            data-search-pill
+            aria-label="Search, or do something"
+            aria-keyshortcuts="Meta+K /"
+            title={`Search (${mod} K)`}
+            className="sp-body relative flex h-[42px] items-center gap-2.5 overflow-hidden rounded-pill py-0 pr-2.5 pl-[5px] text-sm text-paper/65 outline-none max-lg:w-[42px] max-lg:justify-center max-lg:pr-[5px]"
+          >
+            <span aria-hidden="true" className="sp-spot pointer-events-none absolute inset-0" />
+            <span aria-hidden="true" data-sheen className="sp-sheen pointer-events-none absolute inset-y-0 -left-1/3 w-1/3" />
+            <span ref={pill.chip} className="sp-chip relative grid size-8 shrink-0 place-items-center rounded-full">
+              <Search aria-hidden="true" className="sp-lens size-[15px]" />
+            </span>
+            <span className="relative hidden lg:inline">Search</span>
+            <span aria-hidden="true" className="sp-keys relative hidden shrink-0 items-center gap-1 lg:flex">
+              <Key>{mod}</Key>
+              <Key>K</Key>
+            </span>
+          </button>
+        </div>
+      </div>
       <ThemeToggle />
       <LiquidGlass
         as="button"

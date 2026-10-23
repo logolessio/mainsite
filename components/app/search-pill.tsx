@@ -1,9 +1,10 @@
 'use client'
 
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Search } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { usePillPointer } from './pill-pointer'
 
 /** The first line is what the bar has always said; the others show, one at a time, what it can do. */
 const HINTS = ['Search, or do something', 'Try "request a payout"', 'Try "find a campaign"', 'Try "open settings"', 'Try "my earnings"']
@@ -17,13 +18,9 @@ const HINTS = ['Search, or do something', 'Try "request a payout"', 'Try "find a
  * written to two variables and nothing is drawn again for it.
  */
 export function SearchPill({ onOpen, className }: { onOpen: () => void; className?: string }) {
-  const reduced = useReducedMotion()
+  const { reduced, hover, wrap, chip, bind } = usePillPointer()
   const [i, setI] = useState(0)
-  const [hover, setHover] = useState(false)
   const [mac, setMac] = useState(false)
-  const wrap = useRef<HTMLDivElement>(null)
-  const chip = useRef<HTMLSpanElement>(null)
-  const frame = useRef(0)
 
   useEffect(() => setMac(/mac|iphone|ipad/i.test(navigator.platform || navigator.userAgent)), [])
   useEffect(() => {
@@ -34,37 +31,9 @@ export function SearchPill({ onOpen, className }: { onOpen: () => void; classNam
   useEffect(() => {
     if (hover) setI(0)
   }, [hover])
-  useEffect(() => () => cancelAnimationFrame(frame.current), [])
-
-  const move = (e: React.PointerEvent) => {
-    if (reduced) return
-    const { clientX, clientY } = e
-    cancelAnimationFrame(frame.current)
-    frame.current = requestAnimationFrame(() => {
-      const w = wrap.current
-      if (!w) return
-      const r = w.getBoundingClientRect()
-      w.style.setProperty('--mx', `${clientX - r.left}px`)
-      w.style.setProperty('--my', `${clientY - r.top}px`)
-      // the chip leans towards the pointer, a few pixels at most
-      const c = chip.current?.getBoundingClientRect()
-      if (c) {
-        const dx = Math.max(-4, Math.min(4, (clientX - (c.left + c.width / 2)) / 26))
-        const dy = Math.max(-3, Math.min(3, (clientY - (c.top + c.height / 2)) / 18))
-        w.style.setProperty('--ix', `${dx.toFixed(2)}px`)
-        w.style.setProperty('--iy', `${dy.toFixed(2)}px`)
-      }
-    })
-  }
-  const leave = () => {
-    setHover(false)
-    const w = wrap.current
-    w?.style.setProperty('--ix', '0px')
-    w?.style.setProperty('--iy', '0px')
-  }
 
   return (
-    <div ref={wrap} className={cn('sp group/pill relative', className)} onPointerEnter={() => setHover(true)} onPointerMove={move} onPointerLeave={leave}>
+    <div ref={wrap} className={cn('sp group/pill relative', className)} {...bind}>
       {/* the soft glow under the bar, which only shows on hover and focus */}
       <span aria-hidden="true" className="sp-under pointer-events-none absolute inset-x-8 -bottom-4 h-8 rounded-full blur-xl" />
       {/* the edge: a one pixel line that lights up, with a bright arc that runs round it while the bar is pointed at */}
@@ -110,6 +79,6 @@ export function SearchPill({ onOpen, className }: { onOpen: () => void; classNam
 }
 
 /** A key as it looks on a keyboard: a little raised cap with a thicker lower edge. */
-function Key({ children }: { children: React.ReactNode }) {
+export function Key({ children }: { children: React.ReactNode }) {
   return <kbd className="sp-key grid h-6 min-w-6 place-items-center rounded-md border border-b-2 px-1.5 font-mono text-[11px] leading-none">{children}</kbd>
 }
