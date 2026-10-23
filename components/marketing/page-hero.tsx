@@ -15,6 +15,7 @@ export function PageHero({
   lede,
   badges,
   path = true,
+  narrow = false,
   children,
 }: {
   /** Kept so pages still compile. The small label is no longer shown. */
@@ -25,6 +26,8 @@ export function PageHero({
   badges?: HeroBadgeProps
   /** The hairline under the hero that turns a corner into an arrow (wide screens). */
   path?: boolean
+  /** Break a short title over two lines (a long single line would run under the round badges). */
+  narrow?: boolean
   /** Kept so older pages still compile. Every hero is left aligned now. */
   align?: 'left' | 'right' | 'center'
   children?: React.ReactNode
@@ -33,7 +36,7 @@ export function PageHero({
     <header className={cn(CONTAINER, 'pt-10 pb-20 md:pt-16', path ? 'md:pb-40' : 'md:pb-28')}>
       <div className="relative">
       {badges && <HeroBadges {...badges} />}
-      <Words as="h1" align="left" immediate text={title} className="max-w-[16ch] font-display text-[clamp(2.8rem,7.6vw,7rem)] leading-[0.96]" />
+      <Words as="h1" align="left" immediate text={title} className={cn('font-display text-[clamp(2.8rem,7.6vw,7rem)] leading-[0.96]', narrow ? 'max-w-[9ch]' : 'max-w-[16ch]')} />
       <div className="mt-10 grid gap-8 md:mt-14 md:grid-cols-12">
         <div data-path-from className="md:col-span-6 md:col-start-6">
           {lede && (

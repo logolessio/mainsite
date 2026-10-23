@@ -21,7 +21,7 @@ export default function Page() {
   return (
     <main>
       <Breadcrumbs trail={[{ name: 'Contact' }]} />
-      <PageHero eyebrow="Contact" title="Say hello" lede="Send us a message right here on the site, or email the right inbox. A real person reads everything." />
+      <PageHero eyebrow="Contact" badges={{ solid: { href: '/faq', top: 'Read the', bottom: 'FAQ' }, outline: { href: '/report', label: 'Report' } }} title="Say hello" lede="Send us a message right here on the site, or email the right inbox. A real person reads everything." />
       <section className={`${CONTAINER} pb-24 md:pb-32`}>
         <div className="grid gap-12 md:grid-cols-12 md:gap-10">
           <div className="md:col-span-5">

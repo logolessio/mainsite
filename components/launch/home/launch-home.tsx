@@ -131,7 +131,32 @@ export function LaunchHome(props: LaunchHomeProps) {
 
         {look.socials === 'top' && !discord && socialRow && <div className={cn(s.rise, '-mt-1 mb-6')} style={{ '--d': '0.1s' } as React.CSSProperties}>{socialRow}</div>}
 
-        <div className={cn('flex w-full flex-col', left ? 'items-start' : 'items-center')}>
+        <div className={cn('relative flex w-full flex-col', left ? 'items-start' : 'items-center')}>
+          {/* the Anubis page's two round badges, one either side of the title at different heights (wide screens): the same two doors as the buttons */}
+          {!props.links && discord && (
+            <div className="pointer-events-none hidden xl:block">
+              <a
+                href={discord.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hero-badge pointer-events-auto absolute top-2 -left-[150px] grid size-[132px] place-items-center rounded-full bg-paper text-center font-mono text-[12px] leading-[1.7] tracking-[0.1em] text-ink uppercase transition-transform duration-500 hover:scale-[1.05]"
+              >
+                <span>
+                  Join
+                  <br />
+                  <span aria-hidden="true">-</span>
+                  <br />
+                  Discord
+                </span>
+              </a>
+              <a
+                href="https://beta.logoless.io/onboarding"
+                className="hero-badge hero-badge-b pointer-events-auto absolute top-[118px] -right-[134px] grid size-[116px] place-items-center rounded-full border border-paper/70 text-center font-mono text-[13px] tracking-[0.12em] text-paper uppercase transition-[transform,background-color,color] duration-500 hover:scale-[1.05] hover:bg-paper hover:text-ink"
+              >
+                Sign up
+              </a>
+            </div>
+          )}
           <h1 key={headline} className={cn(s.rise, 'tracking-[-0.015em] text-balance', look.font === 'serif' ? 'font-display leading-[1.04]' : 'font-sans font-semibold leading-[1.08] tracking-[-0.03em]', props.links ? size.links : size.full)} style={{ '--d': '0.15s' } as React.CSSProperties}>
             {headline}
           </h1>

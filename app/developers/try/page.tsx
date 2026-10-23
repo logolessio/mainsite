@@ -20,7 +20,7 @@ export default async function Page() {
   return (
     <main>
       <Breadcrumbs trail={[{ name: 'Developers', href: '/developers' }, { name: 'Try it' }]} />
-      <PageHero eyebrow="Developers" title="Try it with your own account" lede="Press the button to run a real sign-in with a test app. You will see each step your app goes through, and exactly what it gets back." />
+      <PageHero eyebrow="Developers" badges={{ solid: { href: '/developers/apps', top: 'Register', bottom: 'An app' }, outline: { href: '/developers', label: 'Guide' } }} title="Try it with your own account" lede="Press the button to run a real sign-in with a test app. You will see each step your app goes through, and exactly what it gets back." />
       <section className={`${CONTAINER} pb-24`}>
         <div className="mx-auto max-w-3xl rounded-card border border-line-strong p-6 md:p-10">
           <TrySignIn clientId={app.id} redirectUri={`${origin}${PLAYGROUND_PATH}`} />

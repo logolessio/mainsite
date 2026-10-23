@@ -1,8 +1,8 @@
 /**
  * What the logo is filled with, left to right across the word: the colours of the moving background (components/shell/gradient-field.tsx): its red, pink, violet,
- * electric blue and sky blue glows, at full strength (the background shows them dimmed over navy). The still logo (components/logo.tsx) draws these as an SVG
- * gradient; the animated one (public/logo-intro.webp) has the same colours painted into its frames by scripts/make-logo-intro.py (its STOPS list), so keep the
- * two in step, or run `python3 scripts/make-logo-intro.py --recolor` after changing these.
+ * electric blue and sky blue glows, at full strength (the background shows them dimmed over navy). The still logo is the picture public/logo-mark.svg (written by
+ * `python3 scripts/make-logo-mark-svg.py`, which reads this list); the animated one (public/logo-intro.webp) has the same colours painted into its frames by
+ * `python3 scripts/make-logo-intro.py --recolor` (its STOPS list). After changing the colours, change that list too and run both scripts.
  */
 export const LOGO_STOPS: readonly [offset: number, colour: string][] = [
   [0, '#ff1f38'], // red

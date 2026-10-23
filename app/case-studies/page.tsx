@@ -15,7 +15,7 @@ export default function Page() {
   return (
     <main>
       <Breadcrumbs trail={[{ name: 'Case studies' }]} />
-      <PageHero eyebrow="Case studies" title="Real campaigns, real numbers" lede="We only publish results from campaigns that have finished and been paid. The first ones will appear here as soon as they do.">
+      <PageHero eyebrow="Case studies" badges={{ solid: { href: '/onboarding?role=brand', top: 'Brands', bottom: 'Launch one' }, outline: { href: '/pricing', label: 'Pricing' } }} title="Real campaigns, real numbers" lede="We only publish results from campaigns that have finished and been paid. The first ones will appear here as soon as they do.">
         <PillLink href="/onboarding?role=brand">Run one of the first</PillLink>
       </PageHero>
       <Principles

@@ -23,7 +23,7 @@ export default function Page() {
   return (
     <main>
       <Breadcrumbs trail={[{ name: "Q&A" }]} />
-      <PageHero eyebrow="Q&A" title="Questions, answered" lede="If the answers your looking for aren't here, feel free to contact us." />
+      <PageHero eyebrow="Q&A" badges={{ solid: { href: '/contact', top: 'Still stuck?', bottom: 'Say hello' }, outline: { href: '/pricing', label: 'Pricing' } }} title="Questions, answered" lede="If the answers your looking for aren't here, feel free to contact us." />
       <Section className="pt-0 md:pt-0">
         <FaqTabs />
       </Section>

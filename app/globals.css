@@ -1488,38 +1488,31 @@ html[data-look='anubis'] kbd {
   background: color-mix(in srgb, var(--color-white) 5%, transparent);
 }
 
-/* the red rails: two hairlines at the edges of the page column, as on the Anubis page. Marketing pages only (see GradientField). */
+/* the pillars: a white Greek column at each edge of the page column (a capital under the top bar, a base above the bottom corner), on wide screens only. Public pages
+   only (see GradientField); the column itself is components/marketing/pillar.tsx. */
 .gf-rails {
   display: none;
 }
 @media (min-width: 1480px) {
   html[data-look='anubis'] .gf-rails {
+    --pw: clamp(36px, calc(50vw - 700px - 14px), 84px);
     display: block;
     position: absolute;
     inset: 0;
-    background:
-      linear-gradient(rgb(255 31 56 / 0.5), rgb(255 31 56 / 0.5)) calc(50% - 680px) 0 / 1px 100% no-repeat,
-      linear-gradient(rgb(255 31 56 / 0.5), rgb(255 31 56 / 0.5)) calc(50% + 680px) 0 / 1px 100% no-repeat;
-    -webkit-mask-image: linear-gradient(#000 0%, rgb(0 0 0 / 0.35) 55%, transparent 100%);
-    mask-image: linear-gradient(#000 0%, rgb(0 0 0 / 0.45) 55%, transparent 100%);
-    opacity: 0.8;
+    opacity: 0.78;
   }
-  /* the stipple outside each hairline: fine red dots, as on the edges of the Anubis page's last box */
-  html[data-look='anubis'] .gf-rails::before,
-  html[data-look='anubis'] .gf-rails::after {
-    content: '';
+  /* they stand between the top bar (the logo and the buttons are at the very edges) and the floating buttons at the bottom corner, so nothing is drawn on top of marble */
+  html[data-look='anubis'] .gf-rails > .pillar {
     position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 26px;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='s' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='1' seed='4'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 .12  0 0 0 0 .22  0 0 0 12 -6.4'/></filter><rect width='100%25' height='100%25' filter='url(%23s)'/></svg>");
-    background-size: 160px 160px;
+    top: 92px;
+    bottom: 80px;
+    width: var(--pw);
   }
-  html[data-look='anubis'] .gf-rails::before {
-    left: calc(50% - 680px - 27px);
+  html[data-look='anubis'] .gf-rails > .pillar:first-child {
+    left: calc(50% - 700px - var(--pw));
   }
-  html[data-look='anubis'] .gf-rails::after {
-    left: calc(50% + 680px + 1px);
+  html[data-look='anubis'] .gf-rails > .pillar:last-child {
+    left: calc(50% + 700px);
   }
 }
 
@@ -1795,10 +1788,40 @@ html[data-modal] :is(.gf-grain, .gf-grain::after, .hero-badge) {
     animation: none;
   }
 }
-/* a band of fine red dots, for the sides of a box (see CtaBand) */
-.stipple {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='s' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='1' seed='4'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 .12  0 0 0 0 .22  0 0 0 12 -6.4'/></filter><rect width='100%25' height='100%25' filter='url(%23s)'/></svg>");
-  background-size: 160px 160px;
+/*
+ * A white Greek column (components/marketing/pillar.tsx): a capital with two scrolls on top, a fluted shaft that takes whatever height it is given, and a base. The
+ * flutes are a repeating tile, --flutes of them across the shaft; the roundness is a soft shade down both sides.
+ */
+.pillar {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  --flutes: 7;
+  filter: drop-shadow(0 0 16px rgb(255 255 255 / 0.1));
+}
+.pillar-cap {
+  flex: none;
+  aspect-ratio: 100 / 34;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 34' preserveAspectRatio='none'><defs><linearGradient id='m' x1='0' x2='1'><stop offset='0' stop-color='%23d6cfc0'/><stop offset='.35' stop-color='%23fffdf8'/><stop offset='.72' stop-color='%23eee8da'/><stop offset='1' stop-color='%23c4bcab'/></linearGradient></defs><g fill='url(%23m)' stroke='%23000' stroke-opacity='.28' stroke-width='.6'><rect x='1' y='.5' width='98' height='6' rx='1'/><rect x='4' y='7' width='92' height='9' rx='4.5'/><circle cx='11' cy='14' r='7'/><circle cx='89' cy='14' r='7'/><path d='M15 16.5H85L81 24H19Z'/><rect x='18' y='24' width='64' height='3'/><rect x='18' y='27' width='64' height='7'/></g><g fill='none' stroke='%23000' stroke-opacity='.3' stroke-width='.6'><circle cx='11' cy='14' r='4.2'/><circle cx='89' cy='14' r='4.2'/><path d='M27 17.5V23M36 17.5V23M45 17.5V23M55 17.5V23M64 17.5V23M73 17.5V23' stroke-opacity='.18'/></g><g fill='%23000' fill-opacity='.35'><circle cx='11' cy='14' r='1.6'/><circle cx='89' cy='14' r='1.6'/></g></svg>") center / 100% 100% no-repeat;
+}
+.pillar-base {
+  flex: none;
+  aspect-ratio: 100 / 26;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 26' preserveAspectRatio='none'><defs><linearGradient id='m' x1='0' x2='1'><stop offset='0' stop-color='%23d6cfc0'/><stop offset='.35' stop-color='%23fffdf8'/><stop offset='.72' stop-color='%23eee8da'/><stop offset='1' stop-color='%23c4bcab'/></linearGradient></defs><g fill='url(%23m)' stroke='%23000' stroke-opacity='.28' stroke-width='.6'><rect x='14' y='.5' width='72' height='7' rx='3.5'/><rect x='16' y='7.5' width='68' height='3' fill-opacity='.8'/><rect x='6' y='10' width='88' height='8' rx='4'/><rect x='.5' y='18' width='99' height='7.5' rx='1'/></g></svg>") center / 100% 100% no-repeat;
+}
+.pillar-shaft {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-inline: 18%;
+  background:
+    linear-gradient(90deg, rgb(24 18 36 / 0.5), rgb(24 18 36 / 0) 24%, rgb(24 18 36 / 0) 58%, rgb(24 18 36 / 0.55)),
+    linear-gradient(90deg, rgb(0 0 0 / 0.28), rgb(0 0 0 / 0) 18%, rgb(255 255 255 / 0.55) 46%, rgb(0 0 0 / 0.1) 100%) 0 0 / calc(100% / var(--flutes)) 100% repeat-x,
+    #f4f0e8;
+}
+/* on the light palette the column is carved in dark stone instead */
+html[data-theme='light'] .pillar {
+  filter: invert(1) hue-rotate(180deg) drop-shadow(0 0 12px rgb(0 0 0 / 0.08));
 }
 /* the cover in the arch settles in slowly as it arrives */
 .hero-zoom {

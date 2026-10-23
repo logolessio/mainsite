@@ -13,7 +13,7 @@ export default function Page() {
   return (
     <main>
       <Breadcrumbs trail={[{ name: 'Legal' }]} />
-      <PageHero eyebrow="Legal" title="The fine print" lede="The terms and policies that cover how logoless works." />
+      <PageHero eyebrow="Legal" narrow badges={{ solid: { href: '/contact', top: 'Questions?', bottom: 'Contact us' }, outline: { href: '/faq', label: 'FAQ' } }} title="The fine print" lede="The terms and policies that cover how logoless works." />
       <section className={`${CONTAINER} pb-24 md:pb-40`}>
         <ul className="border-b border-line">
           {LEGAL.map((d, i) => (

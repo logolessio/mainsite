@@ -17,7 +17,7 @@ export default function Page() {
   return (
     <main>
       <Breadcrumbs trail={[{ name: 'Pricing' }]} />
-      <PageHero eyebrow="Pricing" title="No subscription" lede="Brands fund the campaigns, creators upload their content and get paid. We fully cover all transaction fees and take a small sum to cover running this platform. What a creator earns is what they get." />
+      <PageHero eyebrow="Pricing" narrow badges={{ solid: { href: '/onboarding?role=clipper', top: 'Creators', bottom: 'Join free' }, outline: { href: '/for-brands', label: 'Brands' } }} title="No subscription" lede="Brands fund the campaigns, creators upload their content and get paid. We fully cover all transaction fees and take a small sum to cover running this platform. What a creator earns is what they get." />
       <FeePromise />
       <section className={`${CONTAINER} pb-24 md:pb-36`}>
         <div className="grid gap-12 md:grid-cols-2 md:gap-10">

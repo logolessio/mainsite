@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
+import { inAppPath, PillarRails } from './pillar-rails'
 import { useFeature } from './features-provider'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 
@@ -47,13 +48,13 @@ type Cloud = { cx: number; cy: number; rx: number; ry: number; stops: [number, s
  * nothing to move, and soft gradients lose nothing when stretched. 24 frames a second (50 in the Anubis look), paused when the tab is hidden or a
  * sheet is open. Calm mode and reduced motion keep one still frame.
  */
-export function GradientField() {
+export function GradientField({ rails = true }: { /** the pillars at the edges of the page; the site's own shell draws them itself, above its vignette (see PageRails) */ rails?: boolean } = {}) {
   const ref = useRef<HTMLCanvasElement>(null)
   const { reduced } = useMotionPrefs()
   const look = useFeature('anubis-look')
   const path = usePathname() ?? ''
   // the red rails belong to the public pages; the dashboards have a sidebar and their own edges
-  const inApp = /^\/(dashboard|brand|admin|owner|dev)(\/|$)/.test(path)
+  const inApp = inAppPath(path)
   // a profile (its page, or the editor with the live preview) has backgrounds and effects of its own to animate: the glows behind it ease off
   const slow = /^\/(@|u\/|dashboard\/profile)/.test(path)
 
@@ -211,7 +212,7 @@ export function GradientField() {
       <canvas ref={ref} data-bg className="absolute inset-0 h-full w-full" />
       <span className="gf-grid" />
       {look && <span className="gf-grain" />}
-      {!inApp && <span className="gf-rails" />}
+      {rails && !inApp && <PillarRails />}
     </div>
   )
 }

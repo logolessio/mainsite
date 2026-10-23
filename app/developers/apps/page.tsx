@@ -19,7 +19,7 @@ export default async function Page() {
   return (
     <main>
       <Breadcrumbs trail={[{ name: 'Developers', href: '/developers' }, { name: 'Your apps' }]} />
-      <PageHero eyebrow="Developers" title="Your apps" lede="Register an app to get a client id, then add Sign in with logoless to it. The guide is on the Developers page." />
+      <PageHero eyebrow="Developers" badges={{ solid: { href: '/developers', top: 'Read', bottom: 'The guide' }, outline: { href: '/developers/try', label: 'Try it' } }} title="Your apps" lede="Register an app to get a client id, then add Sign in with logoless to it. The guide is on the Developers page." />
       <div className={`${CONTAINER} pb-24`}>
         <AppManager />
       </div>

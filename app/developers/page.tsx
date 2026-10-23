@@ -42,7 +42,7 @@ export default async function Page() {
   return (
     <main>
       <Breadcrumbs trail={[{ name: 'Developers' }]} />
-      <PageHero eyebrow="Developers" title="Sign in with logoless" lede="Let people sign in to your site or app with their logoless account. It is standard OAuth 2.0 and OpenID Connect, so any library you already use will work.">
+      <PageHero eyebrow="Developers" title="Sign in with logoless" badges={{ solid: { href: '/developers/try', top: 'Try it', bottom: 'Live demo' }, outline: { href: '/developers/apps', label: 'Apps' } }} lede="Let people sign in to your site or app with their logoless account. It is standard OAuth 2.0 and OpenID Connect, so any library you already use will work.">
         <div className="flex flex-wrap gap-3">
           <PillLink href="/developers/apps">Register an app</PillLink>
           <LoginWithLogoless />

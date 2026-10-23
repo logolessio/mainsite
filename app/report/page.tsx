@@ -17,7 +17,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ a
   return (
     <main>
       <Breadcrumbs trail={[{ name: 'Report' }]} />
-      <PageHero eyebrow="Report" title="Report something" lede="Pick what is wrong, or write your own. It goes straight to the team, inside the site." />
+      <PageHero eyebrow="Report" narrow badges={{ solid: { href: '/faq', top: 'Read the', bottom: 'FAQ' }, outline: { href: '/contact', label: 'Contact' } }} title="Report something" lede="Pick what is wrong, or write your own. It goes straight to the team, inside the site." />
       <section className={`${CONTAINER} pb-24 md:pb-40`}>
         <div className="grid gap-12 md:grid-cols-12 md:gap-10">
           <div className="max-w-sm md:col-span-4">
