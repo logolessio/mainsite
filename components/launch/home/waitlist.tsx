@@ -207,7 +207,7 @@ export function Waitlist({ copy, autoFocus = false, preview = null }: { copy: Pa
                 {!busy && at !== 'owner' && <ArrowRight className="size-4" aria-hidden="true" />}
               </button>
             </div>
-            <Note error={error} hint="We send a 6-digit code to confirm it is you. One spot per device." />
+            <Note error={error} hint="We will NEVER sell your data or send you anything you wouldn't want to know about." />
           </motion.form>
         ) : at === 'code' ? (
           <motion.div key="code" {...step} className="flex flex-col items-center">
