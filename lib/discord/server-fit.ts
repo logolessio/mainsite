@@ -362,7 +362,8 @@ export async function fitServer(input: DiscordConfig, opts: { skip?: number; loc
   // ---------------- the order of the categories ----------------
   // one move at a time (Discord's bulk reorder left some categories where they were): the category that belongs in a slot takes the place of whatever is there now
   const front = PLAN.map((p) => catFor.get(p.name)?.id).filter(Boolean) as string[]
-  const rest = [cfg.artistsCategory, cfg.inactiveCategory, cfg.ticketCategory].filter((id) => id && cats.some((c) => c.id === id)) as string[]
+  // (the tickets may be kept in one of the planned categories, as they are in Help: it is placed once)
+  const rest = [cfg.artistsCategory, cfg.inactiveCategory, cfg.ticketCategory].filter((id, i, all) => id && cats.some((c) => c.id === id) && !front.includes(id) && all.indexOf(id) === i) as string[]
   const wanted = [...front, ...rest]
   if (front.length === PLAN.length) {
     const ranked = cats.filter((c) => wanted.includes(c.id)).sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
