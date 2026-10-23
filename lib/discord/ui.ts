@@ -20,7 +20,8 @@ export const OWNER_URL = 'https://owner.logoless.io'
 
 /** The gradient icons in public/discord/icons (PNG, because embeds cannot show SVG): see scripts/make-discord-icons.mjs. */
 export type { IconName }
-export const icon = (name: IconName) => `${SITE_URL}/discord/icons/${name}.png`
+// the ?v= is the picture's version: Discord keeps its own copy of every picture by its address, so a changed picture needs a changed address to show (the icons went from white to gradient: v=2)
+export const icon = (name: IconName) => `${SITE_URL}/discord/icons/${name}.png?v=2`
 /**
  * A gradient icon inside text (a title, a field, a line of a list): written as a token, and turned into the bot's own emoji of that name when the message is sent
  * (see `tidy`). Until the icons are uploaded to Discord, or in a place that cannot show them, it is simply left out.
