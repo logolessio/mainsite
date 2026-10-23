@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
 import { Icon, type IconName } from '@/components/icons'
 import type { AppNavItem } from '@/components/app/nav-types'
@@ -18,6 +18,7 @@ import { getCalm, getContrast, getLargeText, getUnderline, setCalm, setContrast,
 import { allowed, COMMANDS, type CmdIcon, type Command, GROUP_ORDER, suggestedIds, type Viewer } from '@/lib/commands'
 import { haystack, type Haystack, parseQuery, score } from '@/lib/fuzzy'
 import { EASE_OUT, SPRING_POP } from '@/lib/layout'
+import { loadCampaigns, loadFaq } from '@/lib/search-warm'
 import { OWNER_URL, SITE_URL_FOR_STAFF } from '@/lib/staff-nav'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
@@ -96,6 +97,44 @@ type Row = {
   rank?: number
 }
 
+/** One result. Memoised: moving the highlight changes `active` on two rows and the other rows are left alone. */
+const ResultRow = memo(function ResultRow({ r, idx, active, q, onHover, onChoose }: { r: Row & { head?: string }; idx: number; active: boolean; q: string; onHover: (idx: number) => void; onChoose: (idx: number) => void }) {
+  return (
+    <li role="presentation">
+      {r.head && <p className="px-3 pt-3.5 pb-1 font-mono text-[10px] leading-none tracking-[0.14em] text-paper/35 uppercase first:pt-2">{r.head}</p>}
+      <button
+        id={`cmd-${idx}`}
+        role="option"
+        aria-selected={active}
+        type="button"
+        tabIndex={-1}
+        onMouseMove={() => onHover(idx)}
+        onClick={() => onChoose(idx)}
+        className={cn('relative z-10 flex h-11 w-full items-center gap-3 rounded-[calc(var(--cmd-r)-8px)] px-3 text-left transition-colors duration-150', active ? 'text-paper' : 'text-paper/70')}
+      >
+        <span className={cn('relative grid shrink-0 place-items-center overflow-hidden transition-colors', r.cover ? 'size-8 rounded-[6px]' : 'size-6', active ? 'text-paper' : 'text-paper/50')}>
+          {r.cover ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={r.cover} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
+          ) : r.icon ? (
+            <CmdGlyph icon={r.icon} />
+          ) : r.navIcon ? (
+            <Icon name={r.navIcon} aria-hidden="true" className="size-[17px]" />
+          ) : (
+            <ArrowUpRight aria-hidden="true" className="size-[17px]" />
+          )}
+        </span>
+        <span className="relative flex min-w-0 flex-1 items-baseline gap-2.5">
+          <span className="shrink-0 max-w-[70%] truncate text-[14.5px] leading-none">{q.trim() && r.group !== 'Search' ? <Mark text={r.label} q={q} /> : r.label}</span>
+          {r.sub && <span className="min-w-0 truncate text-[12.5px] leading-none text-paper/35">{r.sub}</span>}
+        </span>
+        {r.hint ? <kbd className="relative hidden shrink-0 rounded-[5px] border border-white/10 px-1.5 py-0.5 font-mono text-[10.5px] text-paper/40 sm:inline">{r.hint}</kbd> : null}
+        <CornerDownLeft aria-hidden="true" className={cn('relative size-3.5 shrink-0 text-paper/40 transition-opacity', active ? 'opacity-100' : 'opacity-0')} />
+      </button>
+    </li>
+  )
+})
+
 const RECENT_KEY = 'logoless:cmd-recent'
 const readRecent = (): string[] => {
   try {
@@ -151,6 +190,7 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
   const features = useFeatures()
   const full = useFeature('command-actions')
   const [q, setQ] = useState('')
+  const dq = useDeferredValue(q) // the results follow the letters a moment behind: the field itself is never held up
   const [i, setI] = useState(0)
   const [camps, setCamps] = useState<Camp[] | null>(null)
   const [faq, setFaq] = useState<Faq[]>([])
@@ -177,13 +217,9 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
     setQueries(readQueries())
     setRecent(readRecent())
     window.setTimeout(() => input.current?.focus(), 30)
-    if (camps === null) fetch('/api/search').then((r) => r.json()).then((j: { campaigns?: Camp[] }) => setCamps(j.campaigns ?? [])).catch(() => setCamps([]))
-    // the answers are only fetched the first time the box opens, so they cost nothing on a page where it never does
-    if (full && faq.length === 0) {
-      import('@/lib/faq')
-        .then((m) => setFaq(Object.entries(m.FAQ).flatMap(([topic, list]) => list.map((f) => ({ ...f, topic })))))
-        .catch(() => {})
-    }
+    // both are loaded once and kept (and may already be there: see lib/search-warm.ts, started when the pointer reaches a search button)
+    if (camps === null) void loadCampaigns().then(setCamps)
+    if (full && faq.length === 0) void loadFaq().then(setFaq)
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // the owner's search also looks through people and campaigns on the server, as the letters are typed
@@ -289,7 +325,7 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
 
   // everything that matches the words typed, best first, whatever it is (the list below narrows it to what is wanted, and the chips count it)
   const scoredAll = useMemo(() => {
-    const t = q.trim()
+    const t = dq.trim()
     if (!t) return []
     const pq = parseQuery(t)
     const order = (g: string) => {
@@ -304,11 +340,11 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
         .map((x) => ({ ...x, s: x.s + (x.r.group === 'Answers' ? -0.6 : x.r.group === 'Campaigns' ? -0.3 : 0.4) + (x.r.rank ?? 0) * 0.08 }))
         .sort((a, b) => b.s - a.s || order(a.r.group) - order(b.r.group))
     )
-  }, [q, all])
+  }, [dq, all])
 
   const counts = useMemo(() => {
     const out: Record<Scope, number> = { all: 0, actions: 0, pages: 0, campaigns: 0, people: 0, answers: 0 }
-    const t = q.trim()
+    const t = dq.trim()
     if (!t) return out
     const cutoff = Math.max(1.2, (scoredAll[0]?.s ?? 0) * 0.45)
     for (const x of scoredAll) {
@@ -320,10 +356,10 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
     if (area === 'Owner' && ownerHits.q === t) for (const h of ownerHits.hits) out[h.kind === 'person' ? 'people' : 'campaigns']++
     out.all = out.actions + out.pages + out.campaigns + out.people + out.answers
     return out
-  }, [q, scoredAll, people, ownerHits, area])
+  }, [dq, scoredAll, people, ownerHits, area])
 
   const rows = useMemo<(Row & { head?: string })[]>(() => {
-    const t = q.trim()
+    const t = dq.trim()
     const byKey = new Map(all.map((r) => [r.key, r]))
     if (!t) {
       const out: (Row & { head?: string })[] = []
@@ -408,9 +444,28 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
         document.getElementById('campaigns')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       } else go('/')
     }
-  }, [q, all, scoredAll, scope, queries, people, recent, recents, viewer, area, ownerHits, full, go, pathname])
+  }, [dq, all, scoredAll, scope, queries, people, recent, recents, viewer, area, ownerHits, full, go, pathname])
 
   useEffect(() => setI(0), [q])
+  // while the box is open the page behind it holds still: the moving background and the film grain stop (they would be redrawn under the dim all the time)
+  useEffect(() => {
+    if (!open) return
+    document.documentElement.dataset.modal = '1'
+    return () => {
+      delete document.documentElement.dataset.modal
+    }
+  }, [open])
+  // the highlight is one box that slides to the chosen row with a CSS move: no layout animation to measure and spring
+  const hl = useRef<HTMLSpanElement>(null)
+  useLayoutEffect(() => {
+    const el = document.getElementById(`cmd-${i}`)
+    const box = hl.current
+    if (!open || !el || !box) return
+    box.style.transform = `translateY(${el.offsetTop}px)`
+    box.style.height = `${el.offsetHeight}px`
+    box.style.opacity = '1'
+  }, [i, rows, open, reading])
+  const hover = useCallback((idx: number) => setI(idx), [])
   useEffect(() => {
     if (open) document.getElementById(`cmd-${i}`)?.scrollIntoView({ block: 'nearest' })
   }, [i, open])
@@ -469,7 +524,7 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0.16 } }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[130] flex items-start justify-center bg-black/55 px-3 pt-3 backdrop-blur-[6px] sm:px-4 sm:pt-[12vh]"
+          className="fixed inset-0 z-[130] flex items-start justify-center bg-black/62 px-3 pt-3 sm:px-4 sm:pt-[12vh]"
           onMouseDown={onClose}
         >
           <motion.div
@@ -485,7 +540,7 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
             onKeyDown={onKey}
             // one radius for the box and, inside its 8px of padding, the same curve less 8px for every row, so the corners nest
             style={{ ['--cmd-r' as string]: 'calc(26px * var(--round, 1))' }}
-            className="cmdk relative isolate flex max-h-[calc(100dvh-24px)] w-full max-w-[600px] flex-col overflow-hidden rounded-[var(--cmd-r)] border border-white/[0.1] bg-[#0a0a0c]/[0.96] shadow-[0_44px_110px_-30px_rgb(0_0_0/0.95)] backdrop-blur-2xl backdrop-saturate-150 sm:max-h-[min(600px,74vh)]"
+            className="cmdk relative isolate flex max-h-[calc(100dvh-24px)] w-full max-w-[600px] flex-col overflow-hidden rounded-[var(--cmd-r)] border border-white/[0.1] bg-[#0a0a0c]/[0.96] shadow-[0_44px_110px_-30px_rgb(0_0_0/0.95)] sm:max-h-[min(600px,74vh)]"
           >
             {/* a still, faint hairline of the site's colours round the edge: nothing moves and nothing follows the pointer */}
             <span aria-hidden="true" className="cmd-edge" />
@@ -588,7 +643,7 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
               </motion.div>
             )}
 
-            <ul ref={list} id="cmd-list" hidden={Boolean(reading)} role="listbox" aria-label="Results" className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2 [scrollbar-width:thin]">
+            <ul ref={list} id="cmd-list" hidden={Boolean(reading)} role="listbox" aria-label="Results" className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain p-2 [scrollbar-width:thin]">
               {camps === null && !q && all.length === 0 && <li className="px-4 py-8 text-center text-sm text-mute">Loading…</li>}
               {rows.length === 0 && scope !== 'all' && (
                 <li role="presentation" className="grid justify-items-center gap-3 px-4 py-10 text-center text-sm text-mute">
@@ -600,42 +655,9 @@ export function CommandPalette({ open, onClose, area = null, items = [], recents
                   )}
                 </li>
               )}
+              <span ref={hl} aria-hidden="true" className="pointer-events-none absolute inset-x-2 top-0 rounded-[calc(var(--cmd-r)-8px)] bg-white/[0.06] opacity-0 transition-[transform,height] duration-150 ease-out after:absolute after:inset-y-2.5 after:left-0 after:w-[2px] after:rounded-full after:bg-[linear-gradient(180deg,#ff1f38,#ffc857,#2ed0b0,#4ba9dc)]" />
               {rows.map((r, idx) => (
-                <li key={r.key} role="presentation">
-                  {r.head && <p className="px-3 pt-3.5 pb-1 font-mono text-[10px] leading-none tracking-[0.14em] text-paper/35 uppercase first:pt-2">{r.head}</p>}
-                  <button
-                    id={`cmd-${idx}`}
-                    role="option"
-                    aria-selected={idx === i}
-                    type="button"
-                    tabIndex={-1}
-                    onMouseMove={() => i !== idx && setI(idx)}
-                    onClick={() => choose(idx)}
-                    className={cn('relative flex h-11 w-full items-center gap-3 rounded-[calc(var(--cmd-r)-8px)] px-3 text-left transition-colors duration-150', idx === i ? 'text-paper' : 'text-paper/70')}
-                  >
-                    {idx === i && <motion.span layoutId="cmd-hl" transition={{ type: 'spring', stiffness: 700, damping: 48, mass: 0.6 }} className="absolute inset-0 rounded-[inherit] bg-white/[0.06] after:absolute after:inset-y-2.5 after:left-0 after:w-[2px] after:rounded-full after:bg-[linear-gradient(180deg,#ff1f38,#ffc857,#2ed0b0,#4ba9dc)]" />}
-                    <span className={cn('relative grid shrink-0 place-items-center overflow-hidden transition-colors', r.cover ? 'size-8 rounded-[6px]' : 'size-6', idx === i ? 'text-paper' : 'text-paper/50')}>
-                      {r.cover ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={r.cover} alt="" className="size-full object-cover" />
-                      ) : r.icon ? (
-                        <CmdGlyph icon={r.icon} />
-                      ) : r.navIcon ? (
-                        <Icon name={r.navIcon} aria-hidden="true" className="size-[17px]" />
-                      ) : (
-                        <ArrowUpRight aria-hidden="true" className="size-[17px]" />
-                      )}
-                    </span>
-                    <span className="relative flex min-w-0 flex-1 items-baseline gap-2.5">
-                      <span className="shrink-0 max-w-[70%] truncate text-[14.5px] leading-none">{q.trim() && r.group !== 'Search' ? <Mark text={r.label} q={q} /> : r.label}</span>
-                      {r.sub && <span className="min-w-0 truncate text-[12.5px] leading-none text-paper/35">{r.sub}</span>}
-                    </span>
-                    {r.hint ? (
-                      <kbd className="relative hidden shrink-0 rounded-[5px] border border-white/10 px-1.5 py-0.5 font-mono text-[10.5px] text-paper/40 sm:inline">{r.hint}</kbd>
-                    ) : null}
-                    <CornerDownLeft aria-hidden="true" className={cn('relative size-3.5 shrink-0 text-paper/40 transition-opacity', idx === i ? 'opacity-100' : 'opacity-0')} />
-                  </button>
-                </li>
+                <ResultRow key={r.key} r={r} idx={idx} active={idx === i} q={dq} onHover={hover} onChoose={choose} />
               ))}
             </ul>
 

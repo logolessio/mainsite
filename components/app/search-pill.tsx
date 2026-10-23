@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { warmSearch } from '@/lib/search-warm'
 import { cn } from '@/lib/utils'
 import { usePillPointer } from './pill-pointer'
 
@@ -33,7 +34,7 @@ export function SearchPill({ onOpen, className }: { onOpen: () => void; classNam
   }, [hover])
 
   return (
-    <div ref={wrap} className={cn('sp group/pill relative', className)} {...bind}>
+    <div ref={wrap} className={cn('sp group/pill relative', className)} {...bind} onPointerEnter={() => (bind.onPointerEnter(), warmSearch())} onFocus={warmSearch}>
       {/* the soft glow under the bar, which only shows on hover and focus */}
       <span aria-hidden="true" className="sp-under pointer-events-none absolute inset-x-8 -bottom-4 h-8 rounded-full blur-xl" />
       {/* the edge: a one pixel line that lights up, with a bright arc that runs round it while the bar is pointed at */}

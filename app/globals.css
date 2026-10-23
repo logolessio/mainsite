@@ -1777,6 +1777,10 @@ html.calm .gf-grain {
   animation-duration: 10s;
   animation-delay: -3s;
 }
+/* a dialog that sets data-modal on the page (the ⌘K box does) holds the things that loop behind it still */
+html[data-modal] :is(.gf-grain, .gf-grain::after, .hero-badge) {
+  animation-play-state: paused;
+}
 /* the hairline under a page's hero fades in a moment after the title */
 .hero-path {
   animation: path-in 1.4s 0.9s ease-out both;

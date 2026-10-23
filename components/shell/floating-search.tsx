@@ -7,6 +7,7 @@ import { usePillPointer } from '@/components/app/pill-pointer'
 import { Key } from '@/components/app/search-pill'
 import { LiquidGlass } from '@/components/ui/liquid-glass'
 import { isInvitePath } from '@/lib/invite-shared'
+import { warmSearch } from '@/lib/search-warm'
 import { cn } from '@/lib/utils'
 import { useFeature } from './features-provider'
 import { useSignedIn } from './nav-user'
@@ -50,7 +51,7 @@ export function FloatingSearch({ raised = false }: { raised?: boolean }) {
   return (
     <div data-floating-search className={cn('pointer-events-none fixed right-3 z-[60] flex items-center gap-2 md:right-5', bottom)}>
       {/* the same animated bar as the one in the dashboard's top bar (.sp-* in globals.css): the arc of colour round the edge, the light that follows the pointer, the leaning chip, the keys */}
-      <div ref={pill.wrap} className="sp pointer-events-auto relative" {...pill.bind}>
+      <div ref={pill.wrap} className="sp pointer-events-auto relative" {...pill.bind} onPointerEnter={() => (pill.bind.onPointerEnter(), warmSearch())} onFocus={warmSearch} onTouchStart={warmSearch}>
         <span aria-hidden="true" className="sp-under pointer-events-none absolute inset-x-4 -bottom-3 h-6 rounded-full blur-xl" />
         <div className="sp-edge relative rounded-pill p-px">
           <span aria-hidden="true" className="sp-ring" />

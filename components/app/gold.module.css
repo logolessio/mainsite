@@ -140,3 +140,8 @@
 :global(html.calm) .sheen {
   animation: none;
 }
+
+/* while a dialog is open the gold holds still too */
+:global(html[data-modal]) :is(.gold, .sheen) {
+  animation-play-state: paused;
+}
