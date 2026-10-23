@@ -369,7 +369,7 @@ export async function fitServer(input: DiscordConfig, opts: { skip?: number; loc
     const others = cats.filter((c) => !wanted.includes(c.id) && !going.has(c.id)).sort((a, b) => (a.position ?? 0) - (b.position ?? 0)).map((c) => c.id)
     const all = [...wanted, ...others]
     ops.push({
-      label: 'put the categories in order',
+      label: `put the categories in order (was ${cats.slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0)).map((c) => `${c.name} ${c.position}`).join(', ')})`,
       run: async () => {
         const res = await call('PATCH', `/guilds/${guild}/channels`, all.map((id, position) => ({ id, position })))
         if (!res.ok) throw new Error(explainDiscord(res, 'the server'))

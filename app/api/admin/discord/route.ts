@@ -144,7 +144,7 @@ export const POST = route(async (req: Request) => {
     if (!res.ok) throw new HttpError(502, explainDiscord(res, `the ${ok.label} channel`))
     // posting again replaces: the bot's own earlier copy of this panel is taken down (never anyone else's messages, and only in the channels that hold one fixed panel)
     let replaced = 0
-    if (a.what === 'getStarted' || a.what === 'rules' || a.what === 'support') {
+    if (a.what === 'getStarted' || a.what === 'rules' || a.what === 'support' || a.what === 'site') {
       const me = await discord<{ id: string }>('GET', '/users/@me')
       const old = await discord<{ id: string; author?: { id: string } }[]>('GET', `/channels/${ok.id}/messages?limit=25`)
       for (const m of (Array.isArray(old.json) ? old.json : []).filter((x) => x.author?.id === me.json?.id && x.id !== res.json?.id).slice(0, 8)) {

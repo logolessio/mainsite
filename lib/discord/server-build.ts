@@ -14,7 +14,7 @@ import type { DiscordConfig } from './config'
  * `lockServer` brings the channels that already existed in line without touching anything else about them.
  */
 type Overwrite = { id: string; type: number; allow: string; deny: string }
-type Chan = { id: string; name: string; type: number; parent_id?: string | null; permission_overwrites?: Overwrite[] }
+type Chan = { id: string; name: string; type: number; parent_id?: string | null; position?: number; permission_overwrites?: Overwrite[] }
 type Spec = { name: string; type?: 0 | 2; topic?: string; slowmode?: number; skipIf?: boolean; /** members can read it, only the bot and the staff can write in it */ readOnly?: boolean }
 type Group = { name: string; staffOnly?: boolean; /** only Verified members (and the staff) can see it */ membersOnly?: boolean; channels: Spec[] }
 
@@ -217,7 +217,7 @@ export async function serverMap(cfg: DiscordConfig) {
     channels: ch.json
       .slice()
       .sort((a, b) => a.type === 4 && b.type !== 4 ? -1 : 0)
-      .map((c) => ({ id: c.id, name: c.name, kind: kind[c.type] ?? String(c.type), parent: c.parent_id ? ch.json!.find((x) => x.id === c.parent_id)?.name ?? c.parent_id : null, overwrites: (c.permission_overwrites ?? []).map((o) => `${roleName(o.id)}: ${(big(o.allow) & BigInt(VIEW)) !== BigInt(0) ? '+view ' : ''}${(big(o.deny) & BigInt(VIEW)) !== BigInt(0) ? '-view ' : ''}${(big(o.deny) & BigInt(SEND)) !== BigInt(0) ? '-send' : ''}`.trim()) })),
+      .map((c) => ({ id: c.id, name: c.name, position: c.position ?? 0, kind: kind[c.type] ?? String(c.type), parent: c.parent_id ? ch.json!.find((x) => x.id === c.parent_id)?.name ?? c.parent_id : null, overwrites: (c.permission_overwrites ?? []).map((o) => `${roleName(o.id)}: ${(big(o.allow) & BigInt(VIEW)) !== BigInt(0) ? '+view ' : ''}${(big(o.deny) & BigInt(VIEW)) !== BigInt(0) ? '-view ' : ''}${(big(o.deny) & BigInt(SEND)) !== BigInt(0) ? '-send' : ''}`.trim()) })),
     roles: roles.sort((a, b) => b.position - a.position).map((r) => ({ id: r.id, name: r.name, position: r.position, managed: Boolean(r.managed), hoist: r.hoist, color: r.color })),
   }
 }
