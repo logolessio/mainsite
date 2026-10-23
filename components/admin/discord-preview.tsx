@@ -11,13 +11,14 @@ import { tidy } from '@/lib/discord/ui'
 // the bot's pictures live on logoless.io; here they load from this site, so they show before they are deployed
 const local = (url: string) => url.replace(/^https:\/\/logoless\.io/, '')
 
-const TOKEN = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|<#\d+>|<@&?\d+>|<t:\d+:R>)/g
+const TOKEN = /(\*\*[^*]+\*\*|\*[^*\s][^*]*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|<#\d+>|<@&?\d+>|<t:\d+:[a-zA-Z]>)/g
 
 function inline(text: string, key: string) {
   return text.split(TOKEN).map((part, n) => {
     if (!part) return null
     const k = `${key}-${n}`
     if (part.startsWith('**')) return <strong key={k} className="font-semibold text-[#f2f3f5]">{inline(part.slice(2, -2), k)}</strong>
+    if (part.startsWith('*')) return <em key={k}>{inline(part.slice(1, -1), k)}</em>
     if (part.startsWith('`')) return <code key={k} className="rounded bg-[#1e1f22] px-1 py-px font-mono text-[0.85em]">{part.slice(1, -1)}</code>
     if (part.startsWith('[')) {
       const m = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(part)
@@ -36,6 +37,8 @@ function Body({ text, className = '' }: { text: string; className?: string }) {
       {text.split('\n').map((line, n) => {
         if (line.startsWith('## ')) return <p key={n} className="mt-1 mb-0.5 text-[1.5rem] leading-tight font-bold text-[#f2f3f5]">{inline(line.slice(3), `l${n}`)}</p>
         if (line.startsWith('# ')) return <p key={n} className="mt-1 mb-0.5 text-[1.75rem] leading-tight font-bold text-[#f2f3f5]">{inline(line.slice(2), `l${n}`)}</p>
+        if (line.startsWith('### ')) return <p key={n} className="mt-1 text-[1.05rem] leading-snug font-bold text-[#f2f3f5]">{inline(line.slice(4), `l${n}`)}</p>
+        if (line.startsWith('> ')) return <p key={n} className="border-l-4 border-[#4e5058] pl-3">{inline(line.slice(2), `l${n}`)}</p>
         if (line.startsWith('-# ')) return <p key={n} className="text-[0.75rem] leading-snug text-[#949ba4]">{inline(line.slice(3), `l${n}`)}</p>
         return <p key={n} className="min-h-[1.1em] whitespace-pre-wrap">{inline(line, `l${n}`)}</p>
       })}
@@ -84,6 +87,17 @@ function EmbedView({ e }: { e: Embed }) {
         <p className="text-[0.72rem] text-[#949ba4]">{[e.footer?.text, e.timestamp ? 'Today' : ''].filter(Boolean).join(' · ')}</p>
       )}
     </div>
+  )
+}
+
+function Btn({ c }: { c: Component['components'][number] }) {
+  const bg = c.style === 1 ? 'bg-[#5865f2]' : c.style === 3 ? 'bg-[#248046]' : c.style === 4 ? 'bg-[#da373c]' : 'bg-[#4e5058]'
+  return (
+    <span className={`inline-flex h-8 items-center gap-1.5 rounded-[calc(3px*var(--round,1))] px-4 text-[0.875rem] font-medium text-white ${bg}`}>
+      {c.emoji?.name && <span aria-hidden="true">{c.emoji.name}</span>}
+      {c.label}
+      {c.url && <span aria-hidden="true" className="ml-0.5 text-[0.7rem]">↗</span>}
+    </span>
   )
 }
 
@@ -145,10 +159,7 @@ function V2Part({ n }: { n: V2Node }) {
     return (
       <div className="flex flex-wrap gap-2">
         {(n as unknown as Component).components.map((c, k) => (
-          <span key={k} className="inline-flex h-8 items-center rounded-[calc(3px*var(--round,1))] bg-[#4e5058] px-4 text-[0.875rem] font-medium text-white">
-            {c.label}
-            {c.url && <span aria-hidden="true" className="ml-1.5 text-[0.7rem]">↗</span>}
-          </span>
+          <Btn key={k} c={c} />
         ))}
       </div>
     )
@@ -172,10 +183,7 @@ export function MessagePreview({ message }: { message: Message }) {
           {m.components?.map((r, n) => (
             <div key={n} className="flex flex-wrap gap-2">
               {(r as Component).components.map((c, k) => (
-                <span key={k} className="inline-flex h-8 items-center rounded-[calc(3px*var(--round,1))] bg-[#4e5058] px-4 text-[0.875rem] font-medium text-white">
-                  {c.label}
-                  {c.url && <span aria-hidden="true" className="ml-1.5 text-[0.7rem]">↗</span>}
-                </span>
+                <Btn key={k} c={c} />
               ))}
             </div>
           ))}

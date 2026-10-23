@@ -2,6 +2,8 @@ import type { Health } from '../health'
 import type { Message } from './api'
 import * as k from './cards'
 import * as m from './cards-more'
+import { notice } from './look'
+import * as np from './panels-new'
 import { kindIcon } from './ui'
 
 /**
@@ -145,10 +147,12 @@ export const SAMPLES: Sample[] = [
   { id: 'problem', group: 'Commands', label: 'Problem (generic)', build: () => k.problem('That code is not right, or it has expired. Get a new one in **Settings** on logoless.io.') },
 
   // ---- the fixed channels
-  { id: 'rules', group: 'Channels', label: 'Rules', build: () => k.rulesCard({ rules: '', support: '', getStarted: '', guildId: '' }) },
+  { id: 'rules', group: 'Channels', label: 'Rules', build: () => np.rulesPanel({ rules: '', support: '', getStarted: '', guildId: '' }) },
   { id: 'site', group: 'Channels', label: 'Site card', build: () => k.siteCard({ campaigns: 5, paidCents: 1840000 }) },
-  { id: 'get-started', group: 'Channels', label: 'Get started', build: () => k.getStartedCard({ rules: '', guildId: '' }) },
-  { id: 'support-panel', group: 'Channels', label: 'Support panel', build: () => k.supportPanelCard() },
+  { id: 'get-started', group: 'Channels', label: 'Get started', build: () => np.welcomePanel({ rules: '', guildId: '' }, notice(Math.floor(Date.now() / 1000) + 38 * 86400)) },
+  { id: 'accounts-panel', group: 'Channels', label: 'Manage accounts panel', build: () => np.accountsPanel(notice(Math.floor(Date.now() / 1000) + 38 * 86400)) },
+  { id: 'payments-panel', group: 'Channels', label: 'Payment details panel', build: () => np.paymentsPanel(notice(Math.floor(Date.now() / 1000) + 38 * 86400)) },
+  { id: 'support-panel', group: 'Channels', label: 'Support panel', build: () => np.supportPanelNew() },
   { id: 'status-ok', group: 'Channels', label: 'Status: all working', build: () => k.statusCard(health(true)) },
   { id: 'status-down', group: 'Channels', label: 'Status: a service is down', build: () => k.statusCard(health(false)) },
   { id: 'welcome', group: 'Channels', label: 'Welcome a new member', build: () => k.welcomeMemberCard({ name: 'Luna Ray', handle: 'luna_ray', bio: 'Cutting clips since 2021.', member: 1284, brand: false, country: 'United Kingdom', platforms: ['tiktok', 'youtube'], niches: ['Pop', 'Live sets'] }) },
@@ -181,7 +185,7 @@ export const SAMPLES: Sample[] = [
   { id: 'team-log', group: 'Team', label: 'A line in the team log', build: () => k.logCard({ text: 'New ticket from <@0>: My withdrawal has not arrived' }) },
 
   // ---- the bigger bot (cards-more.ts)
-  { id: 'start', group: 'Get started', label: 'Get started (one button)', build: () => m.startCard() },
+  { id: 'start', group: 'Get started', label: 'Get started while the site is closed', build: () => np.preLaunchPanel(Math.floor(Date.now() / 1000) + 38 * 86400) },
   { id: 'start-new', group: 'Get started', label: 'After pressing it: no account yet', build: () => m.startReplyCard('new', 'https://logoless.io/onboarding?ref=discord') },
   { id: 'start-unfinished', group: 'Get started', label: 'After pressing it: linked, profile not finished', build: () => m.startReplyCard('unfinished', 'https://logoless.io/onboarding?ref=discord') },
   { id: 'next-steps', group: 'Get started', label: 'Next steps (only they see it)', build: () => m.nextStepsCard({ name: 'Luna Ray', brand: false, live: 5 }) },

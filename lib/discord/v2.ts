@@ -15,7 +15,7 @@ export const thumb = (url: string, description?: string): V2Node => ({ type: 11,
 export const gallery = (...items: { url: string; description?: string }[]): V2Node => ({ type: 12, items: items.slice(0, 10).map((i) => ({ media: { url: i.url }, ...(i.description ? { description: i.description.slice(0, 1024) } : {}) })) })
 /** Words on the left and a small picture on the right. */
 export const section = (texts: string[], accessory: V2Node): V2Node => ({ type: 9, components: texts.slice(0, 3).map(text), accessory })
-export const container = (color: number, ...children: (V2Node | Component)[]): V2Node => ({ type: 17, accent_color: color, components: children.slice(0, 10) })
+export const container = (color: number, ...children: (V2Node | Component)[]): V2Node => ({ type: 17, accent_color: color, components: children.slice(0, 25) })
 export const v2 = (...top: (V2Node | Component)[]): Message => ({ flags: V2_FLAG, components: top, allowed_mentions: { parse: [] } })
 
 /** A direct video file (not a page): the only kind Discord plays in a message. */

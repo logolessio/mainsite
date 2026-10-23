@@ -24,8 +24,8 @@ Discord server is the front door. This is the order to set it up in, what to swi
 4. **Make the community channels.** New: general, introductions, clip-showcase, edit-help, ideas-and-feedback, off-topic, bot-commands, two voice
    lounges, and a private Team category (team-chat, mod-queue) that only the staff, team and admin roles can see. It only adds what is missing and
    never touches anything that already exists. Drag the new Community category up under the Welcome and Info ones.
-5. **Register commands.** Needed whenever the command list changes.
-6. Post the panels: **get-started, rules, site, support, status** (the "Post" buttons).
+5. **Register commands.** Needed whenever the command list changes. The newest commands (`/join`, `/verify`, `/accounts`, `/paypal`, `/payments`) only appear after this.
+6. Post the panels: **get-started, rules, site, support, status** (the "Post" buttons). Then, in the channels where you want them, type `/admin panel` and pick **Manage accounts** and **Payment details**. If the get-started or rules message is already posted, post it again to get the new look (delete the old one).
 7. **Make artist channels and cards**, then **Run the live loop now**.
 8. **Send a test message** and **Send me the welcome rundown** to see what members see.
 
@@ -59,23 +59,52 @@ For anyone with a logoless account linked to their Discord (logging in with Disc
 - brands: `/brand`; developers: `/dev`; the team: `/admin ...` (stats, queue, lookup, announce, update, campaign, panel, tick)
 - every payout and submission is posted in its channel as a card, and each live campaign gets its own card and artist channel
 
+## 3b. Set up your account from Discord (new)
+
+While the site is closed, a member can do all of this without the website:
+
+- **Make an account** (`/join` or the Make an account button): email address, a 6 digit code sent to it, and the Discord is linked at once. A Discord account younger than 4 days is asked to wait (they are the easy way to make many).
+- **Link an account and prove it** (`/verify`, the Link Account button): pick TikTok, YouTube or Instagram, type the username, put the code in the bio, press Check my bio. Instagram cannot be read by a server, so a person on the team checks it by hand.
+- **Add PayPal** (`/paypal`, the Link Payment Method button): the address typed twice, and a code emailed to the *account* email (the same ceremony as the site). Manage or remove them with `/payments`; `/accounts` does the same for linked accounts.
+- Every welcome and setup message carries a notice that logoless is not live yet and when it opens, for as long as the launch page is up.
+
 ## 4. What still needs the site
 
 While the site is closed, only the log in page, the legal pages and /links are open, so nobody but the owner can do these yet. After Dec 1 they
-need the site: finishing a profile (onboarding), proving a TikTok, YouTube or Instagram account with a code in the bio, adding a PayPal address and
-withdrawing (typed twice, emailed code, hold to send), and brands creating and funding campaigns.
+need the site: finishing a profile (onboarding), withdrawing (hold to send), and brands creating and funding campaigns. Making an account, linking and proving
+social accounts, and adding PayPal can all be done in Discord now.
 
 ## 5. To make Discord truly stand on its own (not built yet)
 
-In the order I would build them. The first three are what a new creator needs to go from nothing to paid without opening the site:
+Done now: `/join`, `/verify` and `/paypal` (section 3b). Still missing, in the order I would build them:
 
-1. `/join`: make an account from Discord with an emailed code (no website visit).
-2. `/verify`: get the bio code and check it for a connected social account.
-3. `/paypal` and `/withdraw`: add the address with the emailed code, then withdraw with a confirm button. This moves money, so it gets the most care.
-4. `/waitlist`: reserve a username from Discord while the site is closed.
-5. Brands starting a campaign from a form in Discord.
+1. `/withdraw`: withdraw with a confirm button. This moves money, so it gets the most care.
+2. Finishing a profile (name, picture, bio) from Discord.
+3. `/waitlist`: reserve a username from Discord while the site is closed.
+4. Brands starting a campaign from a form in Discord.
 
 ## Launch day (Dec 1, 17:00 GMT)
 
 The site opens by itself at that time. Before it: post in #news what changes, check **Check the bot's access** and **Run the live loop now**, and
 make sure at least one real campaign is live so `/campaigns` has something in it.
+
+## Getting members (what Seeder shows, and what I would do)
+
+What Seeder says about itself (seeder.gg, Oct 2026): artists and labels fund campaigns and pay only for counted views, with a hard budget cap and a live
+report link; editors earn per 1,000 views, paid by PayPal or USDT with the PayPal fee covered; live campaigns are announced in its Discord first; it
+covers 14 niches, says thousands of editors see a campaign when it opens, and has its team watch posts and brief more editors when a format starts to
+catch on. I could not find how it grew (no member count, funding or growth story is public), so what follows is my reading, not a fact about them.
+
+1. **Campaigns first, members second.** An empty server does not keep anyone. Have three to five real, funded campaigns live before you push
+   the invite hard (the first 5 campaigns per brand are fee-free, which helps you sign artists).
+2. **Proof of payment is the best advert.** The payouts channel (a card per payout, names half hidden) is exactly this. Make it visible from the
+   invite page and the first message in #get-started.
+3. **The invite goes everywhere the editors already are:** your TikTok bio and the /links page, a pinned comment on every post, in every campaign
+   brief, and on the artists' own pages.
+4. **Run a few edit pages yourself.** Post edits of your live campaigns' songs on TikTok with the invite in the bio. It shows editors that the
+   money is real and it is cheap reach.
+5. **Pay people to bring people.** Seeder shows no referral programme. A bonus per referred editor who gets an approved submission would be
+   a real difference (it needs building: say if you want it).
+6. **Keep the first month busy:** a campaign drop every few days, an edit of the week, the leaderboard and earnings tiers (the roles already exist).
+7. **Track where people come from** with a separate invite link per place (bio, ad, artist) and look at the use counts weekly.
+8. **Protect quality:** verification level Medium, AutoMod on, and approve submissions quickly (people leave when reviews are slow).

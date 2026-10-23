@@ -29,6 +29,7 @@ export const helpCard = (): Message =>
         label: 'Help',
         title: 'logoless bot',
         text: join(
+          '`/join` `/verify` `/accounts` `/paypal` `/payments`',
           '`/campaigns` `/campaign` `/submit` `/submissions` `/earn`',
           '`/stats` `/balance` `/profile` `/badges`',
           '`/leaderboard` `/faq` `/support` `/report`',

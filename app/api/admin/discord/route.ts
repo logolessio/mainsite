@@ -8,6 +8,7 @@ import { SAMPLE_BY_ID, sampleList } from '@/lib/discord/samples'
 import { oauthClient } from '@/lib/discord/connect'
 import { checkAccess } from '@/lib/discord/diagnose'
 import { getStartedMessage, rulesMessage, siteMessage, supportPanel } from '@/lib/discord/panels'
+import { launchNotice } from '@/lib/discord/notice'
 import { publicStats } from '@/lib/public-stats'
 import { COMMANDS } from '@/lib/discord/commands'
 import { clean, getDiscordConfig, saveDiscordConfig } from '@/lib/discord/config'
@@ -115,7 +116,7 @@ export const POST = route(async (req: Request) => {
   }
   if (a.action === 'post') {
     const ok = {
-      getStarted: { id: cfg.channels.getStarted, label: 'get-started', msg: async () => getStartedMessage(cfg, await featureOn('discord-onboarding')) },
+      getStarted: { id: cfg.channels.getStarted, label: 'get-started', msg: async () => getStartedMessage(cfg, await featureOn('discord-onboarding'), await launchNotice()) },
       rules: { id: cfg.channels.rules, label: 'rules', msg: () => rulesMessage(cfg) },
       site: { id: cfg.channels.site, label: 'site', msg: async () => siteMessage(await publicStats()) },
       support: { id: cfg.channels.support, label: 'support', msg: () => supportPanel() },

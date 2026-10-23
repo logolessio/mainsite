@@ -13,6 +13,9 @@ import { submitClip } from '../submit-clip'
 import { abs, explainDiscord, type Message, siteUrl, postMessage } from './api'
 import * as k from './cards'
 import { getStartedMessage, rulesMessage, siteMessage, statusMessage, supportPanel } from './panels'
+import { accountsPanel, paymentsPanel } from './panels-new'
+import { launchNotice } from './notice'
+import { setupCommand, setupComponent, setupModal } from './setup-flows'
 import { SAMPLES, SAMPLE_BY_ID } from './samples'
 import { go as goBtn, goTarget, tidy } from './ui'
 import { addUserReply, closeTicket, openTicket } from './tickets'
@@ -61,7 +64,7 @@ const EPHEMERAL = 64
 const NO_EMBEDS = 4
 export const say = (m: Message | string, ephemeral = true): Reply => {
   const data: Message = tidy(typeof m === 'string' ? { content: m } : m)
-  return { type: 4, data: { ...data, allowed_mentions: data.allowed_mentions ?? { parse: [] }, ...(ephemeral ? { flags: EPHEMERAL } : {}) } }
+  return { type: 4, data: { ...data, allowed_mentions: data.allowed_mentions ?? { parse: [] }, ...(ephemeral ? { flags: (data.flags ?? 0) | EPHEMERAL } : {}) } }
 }
 const fail = (text: string) => say(k.problem(text))
 const ok = (text: string, title?: string) => say(k.done(text, title))
@@ -391,7 +394,8 @@ async function admin(i: Interaction): Promise<Reply> {
     case 'panel': {
       const which = String(opt(i, 'which'))
       const cfg = await getDiscordConfig()
-      const msg = which === 'start' ? getStartedMessage(cfg, await featureOn('discord-onboarding')) : which === 'support' ? supportPanel() : statusMessage(await runHealth())
+      const notice = await launchNotice()
+      const msg = which === 'start' ? getStartedMessage(cfg, await featureOn('discord-onboarding'), notice) : which === 'support' ? supportPanel() : which === 'accounts' ? accountsPanel(notice) : which === 'payments' ? paymentsPanel(notice) : statusMessage(await runHealth())
       const res = await postMessage(i.channel_id!, msg)
       return res.ok ? ok('Posted it here.') : fail(explainDiscord(res, 'this channel'))
     }
@@ -434,8 +438,14 @@ async function joinCampaign(i: Interaction, campaignId: string): Promise<Reply> 
 }
 
 // ---------- buttons, forms and autocomplete ----------
-async function component(i: Interaction): Promise<Reply> {
+async function component(i: Interaction, env: Env): Promise<Reply> {
   const id = i.data?.custom_id ?? ''
+  if (id === 'pay:balance') return cmdBalance(i)
+  {
+    // account setup, linking and proving social accounts, PayPal: see setup-flows.ts
+    const setup = await setupComponent(i, id, env)
+    if (setup) return setup
+  }
   // "Open this" buttons: answer with the address, so the button itself is not a link (those always show an arrow)
   if (id.startsWith('go:')) {
     const t = goTarget(id, i.guild_id ?? (await getDiscordConfig()).guildId)
@@ -476,9 +486,13 @@ async function component(i: Interaction): Promise<Reply> {
   return fail('That button is out of date.')
 }
 
-async function modalSubmit(i: Interaction): Promise<Reply> {
+async function modalSubmit(i: Interaction, env: Env): Promise<Reply> {
   const id = i.data?.custom_id ?? ''
   const value = (name: string) => i.data?.components?.flatMap((r) => r.components).find((c) => c.custom_id === name)?.value ?? ''
+  {
+    const setup = await setupModal(i, id, value, env)
+    if (setup) return setup
+  }
   if (id === 'modal:support') return cmdSupport(i, value('text'))
   if (id === 'modal:ticket') {
     const u = whoami(i)
@@ -657,13 +671,18 @@ async function newer(i: Interaction, env: Env, name: string): Promise<Reply | nu
 export async function handleInteraction(i: Interaction, env: Env): Promise<Reply> {
   try {
     if (i.type === 4) return await autocomplete(i)
-    if (i.type === 3) return await component(i)
-    if (i.type === 5) return await modalSubmit(i)
+    if (i.type === 3) return await component(i, env)
+    if (i.type === 5) return await modalSubmit(i, env)
     const name = i.data?.name
     switch (name) {
       case 'help': return say(k.helpCard())
       case 'ping': return ok('Pong. I am awake.', 'Ping')
       case 'link': return await cmdLink(i)
+      case 'join':
+      case 'verify':
+      case 'accounts':
+      case 'paypal':
+      case 'payments': return (await setupCommand(i, name)) ?? fail('That did not work. Please try again.')
       case 'unlink': {
         const m = await me(whoami(i).id)
         if (!m) return notLinked()
