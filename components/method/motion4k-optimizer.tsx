@@ -20,6 +20,7 @@ import {
   ScanLine,
   Settings2,
   ShieldCheck,
+  Sparkles,
   Upload,
   X,
 } from 'lucide-react'
@@ -30,6 +31,7 @@ import { IntroLogo } from '@/components/logo-intro'
 import { RingButton, RingCard } from '@/components/prelaunch/ring'
 import { GradientField } from '@/components/shell/gradient-field'
 import { cn } from '@/lib/utils'
+import { DEFAULT_MULTIPLIER, patchFrameCount } from './frame-count-patch'
 
 /*
  * Motion4K Optimizer (method.logoless.io). Takes a high resolution, high frame rate edit and makes the file TikTok and Reels treat best:
@@ -457,11 +459,11 @@ class Passes {
 // The whole run
 // ------------------------------------------------------------------------------------------------------------------------------------------------
 
-type StageId = 'spatial' | 'contrast' | 'temporal' | 'export'
+type StageId = 'spatial' | 'contrast' | 'temporal' | 'export' | 'delivery'
 type Live = { stages: Record<StageId, number>; overall: number; speed: number; eta: number | null; finalizing: boolean }
-type Result = { url: string; name: string; bytes: number; encoder: string; seconds: number; audio: 'kept' | 'converted' | 'none' | 'dropped' }
+type Result = { url: string; name: string; bytes: number; encoder: string; seconds: number; audio: 'kept' | 'converted' | 'none' | 'dropped'; delivery: { real: number; declared: number } | null; deliveryError: string | null }
 
-const EMPTY: Live = { stages: { spatial: 0, contrast: 0, temporal: 0, export: 0 }, overall: 0, speed: 0, eta: null, finalizing: false }
+const EMPTY: Live = { stages: { spatial: 0, contrast: 0, temporal: 0, export: 0, delivery: 0 }, overall: 0, speed: 0, eta: null, finalizing: false }
 
 /** H.264 High 4.2 first; older or software encoders get the closest they can do. */
 const H264 = ['avc1.64002A', 'avc1.640028', 'avc1.4D402A', 'avc1.4D4028', 'avc1.42E02A', 'avc1.42E028']
@@ -502,7 +504,7 @@ async function pickEncoder(plan: Plan) {
   throw new Error('This browser cannot encode H.264 at this size. Try Chrome, Edge or Safari on a computer.')
 }
 
-async function patch(p: Probe, plan: Plan, onLive: (l: Live) => void, signal: AbortSignal): Promise<Result> {
+async function patch(p: Probe, plan: Plan, deliveryPatch: boolean, onLive: (l: Live) => void, signal: AbortSignal): Promise<Result> {
   const M = await import('mediabunny')
   const started = performance.now()
   const input = new M.Input({ source: new M.BlobSource(p.file), formats: M.ALL_FORMATS })
@@ -522,7 +524,8 @@ async function patch(p: Probe, plan: Plan, onLive: (l: Live) => void, signal: Ab
 
     // the video track: our own encoder, so the profile, the level and the Rec.709 flags are exactly what we ask for
     const videoOut = new M.EncodedVideoPacketSource('avc')
-    output.addVideoTrack(videoOut, p.fps > 0 && plan.blend ? { frameRate: plan.fps } : {})
+    // a constant frame rate (one timing entry in the file), which the delivery patch builds on
+    output.addVideoTrack(videoOut, { frameRate: plan.fps })
 
     // the audio track: copied as it is when it is AAC, converted to AAC when the browser can, otherwise kept as Opus or left out
     const at = await input.getPrimaryAudioTrack()
@@ -600,7 +603,7 @@ async function patch(p: Probe, plan: Plan, onLive: (l: Live) => void, signal: Ab
       const secs = (now - started) / 1000
       const speed = secs > 0 ? scaled / secs : 0
       onLive({
-        stages: { spatial: Math.min(1, scaled / expectedIn), contrast: Math.min(1, sharpened / expectedOut), temporal: Math.min(1, blended / expectedOut), export: done },
+        stages: { spatial: Math.min(1, scaled / expectedIn), contrast: Math.min(1, sharpened / expectedOut), temporal: Math.min(1, blended / expectedOut), export: done, delivery: 0 },
         overall: done * 0.97,
         speed,
         eta: speed > 0 && scaled > 10 ? Math.max(0, (expectedIn - scaled) / speed) : null,
@@ -685,18 +688,33 @@ async function patch(p: Probe, plan: Plan, onLive: (l: Live) => void, signal: Ab
 
     await Promise.all([feedVideo(), feedAudio?.()])
     live(true)
-    onLive({ stages: { spatial: 1, contrast: 1, temporal: 1, export: 1 }, overall: 0.98, speed: 0, eta: 0, finalizing: true })
+    onLive({ stages: { spatial: 1, contrast: 1, temporal: 1, export: 1, delivery: 0 }, overall: 0.97, speed: 0, eta: 0, finalizing: true })
     await output.finalize()
-    const buffer = target.buffer
-    if (!buffer) throw new Error('The file could not be written.')
+    if (!target.buffer) throw new Error('The file could not be written.')
+    // the delivery pass: the frame-count patch on the finished MP4 (see frame-count-patch.ts). If it cannot be applied, the file is kept as it is.
+    let buffer: ArrayBuffer | Uint8Array = target.buffer
+    let delivery: Result['delivery'] = null
+    let deliveryError: string | null = null
+    if (deliveryPatch) {
+      try {
+        const out = patchFrameCount(target.buffer, { multiplier: DEFAULT_MULTIPLIER })
+        buffer = out.bytes
+        delivery = { real: out.stats.realFrames, declared: out.stats.declaredFrames }
+      } catch (e) {
+        deliveryError = e instanceof Error ? e.message : 'The delivery patch could not be applied.'
+      }
+    }
+    onLive({ stages: { spatial: 1, contrast: 1, temporal: 1, export: 1, delivery: 1 }, overall: 0.99, speed: 0, eta: 0, finalizing: true })
     const name = `${p.file.name.replace(/\.[^.]+$/, '') || 'video'}-tiktok-${plan.width}x${plan.height}-${fpsText(plan.fps)}fps.mp4`
     return {
-      url: URL.createObjectURL(new Blob([buffer], { type: 'video/mp4' })),
+      url: URL.createObjectURL(new Blob([buffer as BlobPart], { type: 'video/mp4' })),
       name,
       bytes: buffer.byteLength,
       encoder: encoderLabel(written),
       seconds: (performance.now() - started) / 1000,
       audio,
+      delivery,
+      deliveryError,
     }
   } catch (e) {
     await output.cancel().catch(() => undefined)
@@ -867,7 +885,7 @@ function Reading({ name }: { name: string }) {
 }
 
 // ---- 2: the split inspector ----
-function Inspector({ probe, plan, preview, onPatch, onReset, warning, clearWarning }: { probe: Probe; plan: Plan; preview: string; onPatch: () => void; onReset: () => void; warning: string; clearWarning: () => void }) {
+function Inspector({ probe, plan, preview, onPatch, onReset, warning, clearWarning, delivery, setDelivery }: { probe: Probe; plan: Plan; preview: string; onPatch: () => void; onReset: () => void; warning: string; clearWarning: () => void; delivery: boolean; setDelivery: (v: boolean) => void }) {
   const [noPreview, setNoPreview] = useState(false)
   const portrait = probe.height > probe.width
   const cards = [
@@ -919,6 +937,26 @@ function Inspector({ probe, plan, preview, onPatch, onReset, warning, clearWarni
             </motion.div>
           ))}
         </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={delivery}
+          onClick={() => setDelivery(!delivery)}
+          className={cn(tile, 'mt-3 flex w-full items-start gap-3 p-4 text-left transition-colors duration-300', delivery ? 'border-white/20 bg-white/[0.06]' : 'hover:bg-white/[0.05]')}
+        >
+          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white/10">
+            <Sparkles aria-hidden="true" className="size-[18px] text-paper/85" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] text-paper">1080p 60fps delivery patch</span>
+            <span className="mt-0.5 block text-[12.5px] leading-snug text-paper/50">
+              Declares {DEFAULT_MULTIPLIER}× the frames so TikTok keeps the upload on its high frame rate path. No pixels change. Unofficial: TikTok can stop honouring it at any time.
+            </span>
+          </span>
+          <span aria-hidden="true" className={cn('relative mt-1 h-6 w-10 shrink-0 rounded-full transition-colors duration-300', delivery ? 'bg-paper' : 'bg-white/15')}>
+            <motion.span className={cn('absolute top-1 left-1 size-4 rounded-full', delivery ? 'bg-ink' : 'bg-paper/70')} initial={false} animate={{ x: delivery ? 16 : 0 }} transition={{ duration: 0.3, ease: EASE }} />
+          </span>
+        </button>
         <AnimatePresence initial={false}>{warning && <Warning onClose={clearWarning}>{warning}</Warning>}</AnimatePresence>
         <div className="mt-6">
           <RingButton onClick={onPatch} disabled={!probe.decodable}>
@@ -929,7 +967,9 @@ function Inspector({ probe, plan, preview, onPatch, onReset, warning, clearWarni
           {probe.decodable
             ? plan.blend
               ? `${fpsText(probe.fps)}fps is blended into 60fps, so the motion of every frame stays in the video.`
-              : `Already ${fpsText(probe.fps)}fps, so every frame is kept as it is.`
+              : probe.fps < 59
+                ? `${fpsText(probe.fps)}fps is kept as it is. For 60fps on TikTok the edit itself has to be 60fps or more.`
+                : `Already ${fpsText(probe.fps)}fps, so every frame is kept as it is.`
             : `This browser cannot decode ${probe.codec}. Export the edit as H.264 or HEVC, or open this page in Safari.`}
         </p>
       </RingCard>
@@ -938,7 +978,7 @@ function Inspector({ probe, plan, preview, onPatch, onReset, warning, clearWarni
 }
 
 // ---- 3: the live processing overlay ----
-function Patching({ probe, plan, live, onCancel }: { probe: Probe; plan: Plan; live: Live; onCancel: () => void }) {
+function Patching({ probe, plan, live, onCancel, delivery }: { probe: Probe; plan: Plan; live: Live; onCancel: () => void; delivery: boolean }) {
   const stages: { id: StageId; icon: typeof Layers; name: string; detail: string; code: string }[] = [
     { id: 'spatial', icon: Maximize2, name: 'Spatial pass', detail: `Aspect-preserving Lanczos-4 downscale, ${probe.width}×${probe.height} to ${plan.width}×${plan.height}`, code: 'lanczos a=4' },
     { id: 'contrast', icon: ScanLine, name: 'Contrast pass', detail: 'Unsharp high-pass mask on luma, so micro detail survives compression', code: UNSHARP },
@@ -950,6 +990,9 @@ function Patching({ probe, plan, live, onCancel }: { probe: Probe; plan: Plan; l
       code: plan.blend ? `tmix · ${fpsText(plan.ratio)}:1` : 'passthrough',
     },
     { id: 'export', icon: PackageCheck, name: 'Export pass', detail: 'H.264 High Profile Level 4.2, Rec.709 colour flags, MP4', code: 'avc1.64002A' },
+    ...(delivery
+      ? [{ id: 'delivery' as const, icon: Sparkles, name: 'Delivery pass', detail: `Frame-count patch: the real frames kept, ${DEFAULT_MULTIPLIER}× declared, so TikTok keeps 1080p 60fps`, code: `stts · ${DEFAULT_MULTIPLIER}× frames` }]
+      : []),
   ]
   const pct = Math.round(live.overall * 100)
   return (
@@ -1050,6 +1093,7 @@ function Done({ probe, plan, result, onAgain }: { probe: Probe; plan: Plan; resu
         <h1 className={cn(title, 'mt-5')}>Ready for TikTok.</h1>
         <p className={sub}>
           {result.encoder}, Rec.709.{' '}
+          {result.delivery ? `Delivery patch applied: ${result.delivery.real.toLocaleString('en-GB')} frames declared as ${result.delivery.declared.toLocaleString('en-GB')}. ` : result.deliveryError ? `The delivery patch could not be applied (${result.deliveryError}), so the file is the plain patched video. ` : ''}
           {result.audio === 'kept' ? 'The sound is copied as it was.' : result.audio === 'converted' ? 'The sound was converted to AAC.' : result.audio === 'dropped' ? 'This browser could not carry the sound across, so the file is silent.' : 'The edit had no sound.'}
         </p>
         <div className={cn(tile, 'mt-6 divide-y divide-white/[0.07]')}>
@@ -1062,6 +1106,11 @@ function Done({ probe, plan, result, onAgain }: { probe: Probe; plan: Plan; resu
             </div>
           ))}
         </div>
+        {result.delivery && (
+          <p className="mt-4 text-[12.5px] leading-relaxed text-paper/40">
+            Played on a computer, the file can show as about {Math.round((result.delivery.declared / result.delivery.real) * probe.duration)} seconds with the last frame held: that is the declared frames, not extra video. Upload it as it is.
+          </p>
+        )}
         <div className="mt-6">
           <RingButton onClick={save}>
             <Download aria-hidden="true" className="size-[18px]" /> Download Patched Video
@@ -1102,6 +1151,7 @@ export function Motion4KOptimizer() {
   const [result, setResult] = useState<Result | null>(null)
   const [unsupported, setUnsupported] = useState<string | null>(null)
   const [readingName, setReadingName] = useState('')
+  const [delivery, setDelivery] = useState(true)
   const abort = useRef<AbortController | null>(null)
   const plan = probe ? planFor(probe) : null
 
@@ -1163,7 +1213,7 @@ export function Motion4KOptimizer() {
     const ctl = new AbortController()
     abort.current = ctl
     try {
-      const r = await patch(probe, plan, setLive, ctl.signal)
+      const r = await patch(probe, plan, delivery, setLive, ctl.signal)
       if (ctl.signal.aborted) return URL.revokeObjectURL(r.url)
       setResult(r)
       setPhase('done')
@@ -1203,7 +1253,7 @@ export function Motion4KOptimizer() {
               ) : phase === 'reading' ? (
                 <Reading name={readingName} />
               ) : (phase === 'inspect' || phase === 'patching') && probe && plan ? (
-                <Inspector probe={probe} plan={plan} preview={preview} onPatch={() => void start()} onReset={reset} warning={warning} clearWarning={() => setWarning('')} />
+                <Inspector probe={probe} plan={plan} preview={preview} onPatch={() => void start()} onReset={reset} warning={warning} clearWarning={() => setWarning('')} delivery={delivery} setDelivery={setDelivery} />
               ) : phase === 'done' && probe && plan && result ? (
                 <Done probe={probe} plan={plan} result={result} onAgain={reset} />
               ) : null}
@@ -1221,7 +1271,7 @@ export function Motion4KOptimizer() {
             .
           </footer>
         </div>
-        <AnimatePresence>{phase === 'patching' && probe && plan && <Patching probe={probe} plan={plan} live={live} onCancel={cancel} />}</AnimatePresence>
+        <AnimatePresence>{phase === 'patching' && probe && plan && <Patching probe={probe} plan={plan} live={live} onCancel={cancel} delivery={delivery} />}</AnimatePresence>
       </main>
     </MotionConfig>
   )
