@@ -20,6 +20,7 @@ import { headers } from 'next/headers'
 import { parseChoices } from '@/lib/design-choices'
 import { effectiveFont, faceById, fontById } from '@/lib/fonts'
 import { isBetaHost } from '@/lib/beta-host'
+import { isMethodHost } from '@/lib/method-host'
 import { launchExempt, launchView, linksExempt } from '@/lib/launch'
 import { launchHomeData } from '@/lib/launch-home'
 import { LaunchPage } from '@/components/launch/launch-page'
@@ -189,8 +190,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const path = reqHeaders.get('x-path') ?? '/'
   // with the new page (launch-links) /links stays open too, and the closed site shows the new page
   const newLaunch = fs.on['launch-links'] === true
-  // beta.logoless.io (the pre-launch sign-up) and the sign-in hop it uses are pages of their own: none of the site around them, and never behind the launch page
-  const bare = isBetaHost(host) || /^\/join(\/|$)/.test(path)
+  // beta.logoless.io (the pre-launch sign-up), the sign-in hop it uses and method.logoless.io (Motion4K Optimizer) are pages of their own: none of the
+  // site around them, and never behind the launch page
+  const bare = isBetaHost(host) || isMethodHost(host) || /^\/join(\/|$)/.test(path)
   const shut = !bare && launch.closed && !fs.dev && !/^(owner|admin|scroll)\./i.test(host) && !isAdmin && !launchExempt(path) && !(newLaunch && linksExempt(path))
   if (shut || bare) {
     return (

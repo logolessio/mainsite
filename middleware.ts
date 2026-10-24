@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { isBetaHost } from '@/lib/beta-host'
+import { isMethodHost, METHOD_HOST } from '@/lib/method-host'
 import { clientSlugOf } from '@/lib/client-host'
 
 const MAIN = 'https://logoless.io'
@@ -33,6 +34,21 @@ export function middleware(req: NextRequest) {
     // the legal pages are public here too (they get their own small frame, see components/prelaunch/legal-frame.tsx)
     if (/^\/legal(\/|$)/.test(p)) return NextResponse.next({ request: { headers } })
     return NextResponse.redirect(new URL('/onboarding', req.url), 307)
+  }
+
+  // method.logoless.io is Motion4K Optimizer and nothing else: its one page is app/method, opened at the bare address. Every other path comes back to it.
+  // Nothing is sent to the server there (the video is processed in the browser), so the site's API is not open on this address.
+  if (isMethodHost(host)) {
+    if (p === '/') {
+      headers.set('x-path', '/method')
+      return NextResponse.rewrite(new URL(`/method${search}`, req.url), { request: { headers } })
+    }
+    return NextResponse.redirect(new URL('/', req.url), 307)
+  }
+  // ...and the tool lives only on its own address: /method on the main site goes there
+  if (p === '/method') {
+    const port = req.nextUrl.port
+    return NextResponse.redirect(host.endsWith('localhost') ? `http://method.localhost${port ? `:${port}` : ''}/${search}` : `https://${METHOD_HOST}/${search}`, 307)
   }
 
   // A client's own address (kxng.logoless.io): its home is that client's private page, which is logoless.io/<name> inside the code.
