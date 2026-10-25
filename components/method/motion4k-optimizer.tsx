@@ -6,10 +6,14 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  ChevronDown,
   Clapperboard,
+  Cpu,
   Download,
+  Eraser,
   ExternalLink,
   Film,
+  FlaskConical,
   Gauge,
   HardDrive,
   Layers,
@@ -20,8 +24,8 @@ import {
   ScanLine,
   Settings2,
   ShieldCheck,
-  Sparkles,
   Upload,
+  Wand2,
   X,
 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -31,28 +35,18 @@ import { IntroLogo } from '@/components/logo-intro'
 import { RingButton, RingCard } from '@/components/prelaunch/ring'
 import { GradientField } from '@/components/shell/gradient-field'
 import { cn } from '@/lib/utils'
-import { DEFAULT_MULTIPLIER, patchFrameCount } from './frame-count-patch'
+import { DEFAULT_MULTIPLIER } from './frame-count-patch'
+import { canEncodeHevc, EMPTY_LIVE, fpsText, patch, planFor, probeFile, supportProblem, testPack, UNSHARP, type Codec, type Live, type Plan, type Probe, type Result, type StageId } from './engine'
 
 /*
- * Motion4K Optimizer (method.logoless.io). Takes a high resolution, high frame rate edit and makes the file TikTok and Reels treat best:
- *
- *   Spatial pass   Lanczos-4 downscale that keeps the aspect ratio, the shortest side capped at 1080 (1080x1080, 1080x1920, 1080x1350, 1920x1080)
- *   Contrast pass  unsharp=5:5:1.0:5:5:0.0, luma only, so fine detail survives the platform's re-compression
- *   Temporal pass  tmix-style blending: above 60fps, every input frame is blended into the 60fps output frame it overlaps, weighted by overlap
- *   Export pass    H.264 High Profile Level 4.2, flagged Rec.709, in an MP4
- *
- * All of it runs on this device: the file is read with Mediabunny (demuxing and muxing in the browser), frames are decoded and encoded with the
- * browser's own video codecs (WebCodecs, hardware accelerated where the device has it) and every pass is a WebGL2 shader on the GPU. Nothing is
- * uploaded: this page makes no network requests with the video. The look is the pre-launch sign-up's (beta.logoless.io): the moving gradient, the intro
- * logo, the rainbow ring panels and buttons.
+ * Motion4K Optimizer (method.logoless.io): the page. The engine (the passes, the encoder, the file) is in engine.ts. The look is the pre-launch
+ * sign-up's (beta.logoless.io): the moving gradient, the intro logo, the rainbow ring panels and buttons.
  */
 
 const EASE = [0.22, 1, 0.36, 1] as const
 const MAX_BYTES = 300 * 1_000_000
 const ACCEPT = '.mp4,.mov,.m4v,.webm,video/mp4,video/quicktime,video/webm'
 const GRAD = 'linear-gradient(90deg, rgb(var(--c-red)), rgb(var(--c-amber)), rgb(var(--c-teal)), rgb(var(--c-blue)))'
-const REC709: VideoColorSpaceInit = { primaries: 'bt709', transfer: 'bt709', matrix: 'bt709', fullRange: false }
-const UNSHARP = 'unsharp=5:5:1.0:5:5:0.0'
 
 const move = {
   initial: { opacity: 0, y: 18, filter: 'blur(8px)' },
@@ -66,40 +60,8 @@ const sub = 'mt-3 text-[15px] leading-relaxed text-paper/55'
 const tile = 'rounded-[calc(18px*var(--round,1))] border border-white/10 bg-white/[0.035]'
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
-// What the file is, and what it becomes
+// How things are shown
 // ------------------------------------------------------------------------------------------------------------------------------------------------
-
-type Probe = {
-  file: File
-  width: number
-  height: number
-  fps: number
-  duration: number
-  codec: string
-  color: string
-  hdr: boolean
-  audio: string | null
-  decodable: boolean
-}
-
-type Plan = { width: number; height: number; fps: number; blend: boolean; ratio: number }
-
-const COMMON_FPS = [23.976, 24, 25, 29.97, 30, 48, 50, 59.94, 60, 72, 90, 100, 119.88, 120, 144, 180, 240]
-/** Measured rates wobble (120.02, 59.9): they are shown and used as the standard rate they are within 1.5% of. */
-const snapFps = (f: number) => {
-  const near = COMMON_FPS.reduce((a, b) => (Math.abs(b - f) < Math.abs(a - f) ? b : a))
-  return Math.abs(near - f) / near < 0.015 ? near : Math.round(f * 100) / 100
-}
-const even = (n: number) => Math.max(2, Math.round(n / 2) * 2)
-
-/** The shortest side is capped at 1080 and the longest at 1920 (H.264 Level 4.2's frame size), never scaled up, the shape kept. Above 60fps the output is 60. */
-function planFor(p: Pick<Probe, 'width' | 'height' | 'fps'>): Plan {
-  const short = Math.min(p.width, p.height)
-  const long = Math.max(p.width, p.height)
-  const s = Math.min(1, 1080 / short, 1920 / long)
-  const blend = p.fps > 61
-  return { width: even(p.width * s), height: even(p.height * s), fps: blend ? 60 : p.fps, blend, ratio: p.fps / (blend ? 60 : p.fps) }
-}
 
 const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : a)
 const NAMED: [number, string][] = [
@@ -124,615 +86,13 @@ function aspectOf(w: number, h: number) {
   return w / g <= 32 && h / g <= 32 ? `${w / g}:${h / g} ${word}` : `${r.toFixed(2)}:1 ${word}`
 }
 
-const CODEC_LABEL: Record<string, string> = { avc: 'H.264', hevc: 'HEVC', vp8: 'VP8', vp9: 'VP9', av1: 'AV1', prores: 'ProRes' }
-function colorOf(space: VideoColorSpaceInit): string {
-  // the DOM types know only a few names; files carry more (Rec.2020, PQ, HLG, P3)
-  const c = space as { primaries?: string | null; transfer?: string | null }
-  const prim = c.primaries === 'bt2020' ? 'Rec.2020' : c.primaries === 'smpte170m' || c.primaries === 'bt470bg' ? 'Rec.601' : c.primaries === 'smpte432' ? 'Display P3' : 'Rec.709'
-  const tf = c.transfer === 'pq' ? ' PQ' : c.transfer === 'hlg' ? ' HLG' : ''
-  return prim + tf
-}
-
 const mb = (n: number) => `${(n / 1_000_000).toFixed(1)} MB`
 const clock = (s: number) => {
   const m = Math.floor(s / 60)
   return `${m}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 }
-const fpsText = (f: number) => (Number.isInteger(f) ? `${f}` : f.toFixed(2).replace(/0$/, ''))
-
 function looksLikeVideo(f: File) {
   return /^video\/(mp4|quicktime|webm|x-m4v)$/i.test(f.type) || /\.(mp4|mov|m4v|webm)$/i.test(f.name)
-}
-
-async function probeFile(file: File): Promise<Probe> {
-  const M = await import('mediabunny')
-  const input = new M.Input({ source: new M.BlobSource(file), formats: M.ALL_FORMATS })
-  try {
-    const vt = await input.getPrimaryVideoTrack()
-    if (!vt) throw new Error('There is no video in this file.')
-    const [width, height, codec, color, hdr, stats, duration, decodable, at] = await Promise.all([
-      vt.getDisplayWidth(),
-      vt.getDisplayHeight(),
-      vt.getCodec(),
-      vt.getColorSpace(),
-      vt.hasHighDynamicRange(),
-      vt.computePacketStats(360),
-      input.computeDuration(),
-      vt.canDecode(),
-      input.getPrimaryAudioTrack(),
-    ])
-    let audio: string | null = null
-    if (at) {
-      const [ac, ch] = await Promise.all([at.getCodec(), at.getNumberOfChannels()])
-      audio = `${(ac ?? 'audio').toUpperCase()} ${ch === 1 ? 'mono' : ch === 2 ? 'stereo' : `${ch} ch`}`
-    }
-    return {
-      file,
-      width,
-      height,
-      fps: snapFps(stats.averagePacketRate),
-      duration,
-      codec: codec ? (CODEC_LABEL[codec] ?? codec.toUpperCase()) : 'Unknown',
-      color: colorOf(color),
-      hdr,
-      audio,
-      decodable,
-    }
-  } finally {
-    input.dispose()
-  }
-}
-
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// The GPU passes: horizontal Lanczos (with the file's rotation), vertical Lanczos into a blend buffer, then the unsharp mask to the output
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-
-const VERT = `#version 300 es
-void main() {
-  vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2));
-  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
-}`
-
-// one Lanczos-4 axis. The kernel is widened by the scale factor when shrinking, so every source pixel counts (a true area-correct downscale).
-const LANCZOS = `
-const float A = 4.0;
-const float PI = 3.141592653589793;
-float sinc(float x) { if (abs(x) < 1e-5) return 1.0; float y = PI * x; return sin(y) / y; }
-float lanczos(float x) { return abs(x) < A ? sinc(x) * sinc(x / A) : 0.0; }
-`
-
-// Horizontal: reads the raw frame through its rotation, writes out-width x source-height. Rows are kept bottom-up, as the framebuffer has them.
-const FRAG_H = `#version 300 es
-precision highp float;
-precision highp int;
-uniform sampler2D uSrc;
-uniform ivec2 uRaw;      // the decoded frame's size, before rotation
-uniform ivec2 uOrient;   // the size as it is shown (after rotation)
-uniform int uRot;        // 0, 90, 180 or 270 (clockwise)
-uniform float uScale;    // source width / output width
-out vec4 o;
-${LANCZOS}
-vec4 fetchShown(ivec2 p) {
-  // p is in shown, top-down pixels; turn it back into the decoded frame's pixel
-  ivec2 r = p;
-  if (uRot == 90) r = ivec2(p.y, uRaw.y - 1 - p.x);
-  else if (uRot == 180) r = ivec2(uRaw.x - 1 - p.x, uRaw.y - 1 - p.y);
-  else if (uRot == 270) r = ivec2(uRaw.x - 1 - p.y, p.x);
-  return texelFetch(uSrc, clamp(r, ivec2(0), uRaw - 1), 0);
-}
-void main() {
-  ivec2 f = ivec2(gl_FragCoord.xy);
-  int row = uOrient.y - 1 - f.y;
-  float s = max(uScale, 1.0);
-  float c = (float(f.x) + 0.5) * uScale - 0.5;
-  int j0 = int(floor(c - A * s)) + 1;
-  int j1 = int(floor(c + A * s));
-  vec4 acc = vec4(0.0);
-  float wsum = 0.0;
-  for (int j = j0; j <= j1; j++) {
-    float w = lanczos((float(j) - c) / s);
-    acc += w * fetchShown(ivec2(clamp(j, 0, uOrient.x - 1), row));
-    wsum += w;
-  }
-  o = clamp(acc / wsum, 0.0, 1.0);
-}`
-
-// Vertical: reads the horizontal pass, writes the output size. Drawn with additive blending, weighted, so frames that share an output frame mix.
-const FRAG_V = `#version 300 es
-precision highp float;
-precision highp int;
-uniform sampler2D uSrc;
-uniform int uSrcH;
-uniform float uScale;    // source height / output height
-out vec4 o;
-${LANCZOS}
-void main() {
-  ivec2 f = ivec2(gl_FragCoord.xy);
-  float s = max(uScale, 1.0);
-  float c = (float(f.y) + 0.5) * uScale - 0.5;
-  int j0 = int(floor(c - A * s)) + 1;
-  int j1 = int(floor(c + A * s));
-  vec4 acc = vec4(0.0);
-  float wsum = 0.0;
-  for (int j = j0; j <= j1; j++) {
-    float w = lanczos((float(j) - c) / s);
-    acc += w * texelFetch(uSrc, ivec2(f.x, clamp(j, 0, uSrcH - 1)), 0);
-    wsum += w;
-  }
-  o = vec4(clamp(acc.rgb / wsum, 0.0, 1.0), 1.0);
-}`
-
-// unsharp=5:5:1.0:5:5:0.0 — a 5x5 luma blur, the difference added back once (amount 1.0), chroma left alone (amount 0.0).
-const FRAG_U = `#version 300 es
-precision highp float;
-precision highp int;
-uniform sampler2D uSrc;
-uniform float uNorm;     // 1 / the total blend weight of this output frame
-uniform float uAmount;
-out vec4 o;
-const vec3 Y = vec3(0.2126, 0.7152, 0.0722);
-void main() {
-  ivec2 f = ivec2(gl_FragCoord.xy);
-  ivec2 hi = textureSize(uSrc, 0) - 1;
-  vec3 rgb = texelFetch(uSrc, f, 0).rgb * uNorm;
-  float blur = 0.0;
-  for (int y = -2; y <= 2; y++)
-    for (int x = -2; x <= 2; x++)
-      blur += dot(texelFetch(uSrc, clamp(f + ivec2(x, y), ivec2(0), hi), 0).rgb, Y);
-  blur = blur * uNorm / 25.0;
-  float luma = dot(rgb, Y);
-  o = vec4(clamp(rgb + uAmount * (luma - blur), 0.0, 1.0), 1.0);
-}`
-
-class Passes {
-  readonly canvas: OffscreenCanvas | HTMLCanvasElement
-  private gl: WebGL2RenderingContext
-  private progH: WebGLProgram
-  private progV: WebGLProgram
-  private progU: WebGLProgram
-  private src: WebGLTexture
-  private mid?: { tex: WebGLTexture; fb: WebGLFramebuffer; w: number; h: number }
-  private acc: { tex: WebGLTexture; fb: WebGLFramebuffer }
-  private raw?: { w: number; h: number }
-  private fallback?: OffscreenCanvas | HTMLCanvasElement
-  private direct = true
-  private weight = 0
-  private readonly float: boolean
-
-  constructor(
-    readonly out: { w: number; h: number },
-    private readonly shown: { w: number; h: number },
-    private readonly rotation: number,
-  ) {
-    this.canvas = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(out.w, out.h) : Object.assign(document.createElement('canvas'), { width: out.w, height: out.h })
-    const gl = this.canvas.getContext('webgl2', { alpha: false, antialias: false, depth: false, stencil: false, premultipliedAlpha: false, preserveDrawingBuffer: true }) as WebGL2RenderingContext | null
-    if (!gl) throw new Error('This browser has no WebGL2, which the passes need.')
-    this.gl = gl
-    this.float = Boolean(gl.getExtension('EXT_color_buffer_float'))
-    this.progH = this.program(FRAG_H)
-    this.progV = this.program(FRAG_V)
-    this.progU = this.program(FRAG_U)
-    this.src = this.texture()
-    this.acc = this.target(out.w, out.h)
-    gl.bindVertexArray(gl.createVertexArray())
-  }
-
-  private program(frag: string) {
-    const gl = this.gl
-    const make = (type: number, code: string) => {
-      const s = gl.createShader(type)!
-      gl.shaderSource(s, code)
-      gl.compileShader(s)
-      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(`Shader: ${gl.getShaderInfoLog(s)}`)
-      return s
-    }
-    const p = gl.createProgram()!
-    gl.attachShader(p, make(gl.VERTEX_SHADER, VERT))
-    gl.attachShader(p, make(gl.FRAGMENT_SHADER, frag))
-    gl.linkProgram(p)
-    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(`Shader: ${gl.getProgramInfoLog(p)}`)
-    return p
-  }
-
-  private texture() {
-    const gl = this.gl
-    const t = gl.createTexture()!
-    gl.bindTexture(gl.TEXTURE_2D, t)
-    for (const [k, v] of [
-      [gl.TEXTURE_MIN_FILTER, gl.NEAREST],
-      [gl.TEXTURE_MAG_FILTER, gl.NEAREST],
-      [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE],
-      [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE],
-    ])
-      gl.texParameteri(gl.TEXTURE_2D, k, v)
-    return t
-  }
-
-  /** A texture to draw into: half float where the device can (no banding when frames are blended), 8 bit otherwise. */
-  private target(w: number, h: number) {
-    const gl = this.gl
-    const tex = this.texture()
-    if (this.float) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, w, h, 0, gl.RGBA, gl.HALF_FLOAT, null)
-    else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
-    const fb = gl.createFramebuffer()!
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0)
-    return { tex, fb, w, h }
-  }
-
-  /** Puts the decoded frame on the GPU (straight from the decoder where the browser allows it, through a 2D canvas where it does not). */
-  private upload(frame: VideoFrame) {
-    const gl = this.gl
-    const w = frame.displayWidth
-    const h = frame.displayHeight
-    this.raw = { w, h }
-    gl.activeTexture(gl.TEXTURE0)
-    gl.bindTexture(gl.TEXTURE_2D, this.src)
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
-    if (this.direct) {
-      try {
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, frame as unknown as TexImageSource)
-        return
-      } catch {
-        this.direct = false
-      }
-    }
-    if (!this.fallback || this.fallback.width !== w || this.fallback.height !== h)
-      this.fallback = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(w, h) : Object.assign(document.createElement('canvas'), { width: w, height: h })
-    const ctx = this.fallback.getContext('2d') as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
-    ctx.drawImage(frame, 0, 0)
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, this.fallback as unknown as TexImageSource)
-  }
-
-  /** The spatial pass for one decoded frame: uploaded and scaled across (the result is kept until the next frame). */
-  spatial(frame: VideoFrame) {
-    const gl = this.gl
-    this.upload(frame)
-    if (!this.mid) this.mid = this.target(this.out.w, this.shown.h)
-    const raw = this.raw!
-    // a frame that arrives already turned (its size is the shown size) is not turned again
-    const turned = (this.rotation === 90 || this.rotation === 270) && raw.w === this.shown.w && raw.h === this.shown.h && raw.w !== raw.h
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.mid.fb)
-    gl.viewport(0, 0, this.out.w, this.shown.h)
-    gl.disable(gl.BLEND)
-    gl.useProgram(this.progH)
-    gl.uniform1i(gl.getUniformLocation(this.progH, 'uSrc'), 0)
-    gl.uniform2i(gl.getUniformLocation(this.progH, 'uRaw'), raw.w, raw.h)
-    gl.uniform2i(gl.getUniformLocation(this.progH, 'uOrient'), this.shown.w, this.shown.h)
-    gl.uniform1i(gl.getUniformLocation(this.progH, 'uRot'), turned ? 0 : this.rotation)
-    gl.uniform1f(gl.getUniformLocation(this.progH, 'uScale'), this.shown.w / this.out.w)
-    gl.drawArrays(gl.TRIANGLES, 0, 3)
-  }
-
-  /** Starts an output frame: the blend buffer is emptied. */
-  begin() {
-    const gl = this.gl
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.acc.fb)
-    gl.viewport(0, 0, this.out.w, this.out.h)
-    gl.clearColor(0, 0, 0, 0)
-    gl.clear(gl.COLOR_BUFFER_BIT)
-    this.weight = 0
-  }
-
-  /** The temporal pass: the last scaled frame is scaled down and added to the output frame with this weight (its share of the frame's time). */
-  blend(weight: number) {
-    const gl = this.gl
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.acc.fb)
-    gl.viewport(0, 0, this.out.w, this.out.h)
-    gl.enable(gl.BLEND)
-    gl.blendEquation(gl.FUNC_ADD)
-    gl.blendColor(0, 0, 0, weight)
-    gl.blendFunc(gl.CONSTANT_ALPHA, gl.ONE)
-    gl.useProgram(this.progV)
-    gl.activeTexture(gl.TEXTURE1)
-    gl.bindTexture(gl.TEXTURE_2D, this.mid!.tex)
-    gl.uniform1i(gl.getUniformLocation(this.progV, 'uSrc'), 1)
-    gl.uniform1i(gl.getUniformLocation(this.progV, 'uSrcH'), this.shown.h)
-    gl.uniform1f(gl.getUniformLocation(this.progV, 'uScale'), this.shown.h / this.out.h)
-    gl.drawArrays(gl.TRIANGLES, 0, 3)
-    gl.disable(gl.BLEND)
-    this.weight += weight
-  }
-
-  /** The contrast pass, drawn to the canvas the encoder reads. */
-  finish() {
-    const gl = this.gl
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-    gl.viewport(0, 0, this.out.w, this.out.h)
-    gl.useProgram(this.progU)
-    gl.activeTexture(gl.TEXTURE2)
-    gl.bindTexture(gl.TEXTURE_2D, this.acc.tex)
-    gl.uniform1i(gl.getUniformLocation(this.progU, 'uSrc'), 2)
-    gl.uniform1f(gl.getUniformLocation(this.progU, 'uNorm'), this.weight > 0 ? 1 / this.weight : 1)
-    gl.uniform1f(gl.getUniformLocation(this.progU, 'uAmount'), 1.0)
-    gl.drawArrays(gl.TRIANGLES, 0, 3)
-    gl.flush()
-    return this.canvas
-  }
-
-  dispose() {
-    this.gl.getExtension('WEBGL_lose_context')?.loseContext()
-  }
-}
-
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-// The whole run
-// ------------------------------------------------------------------------------------------------------------------------------------------------
-
-type StageId = 'spatial' | 'contrast' | 'temporal' | 'export' | 'delivery'
-type Live = { stages: Record<StageId, number>; overall: number; speed: number; eta: number | null; finalizing: boolean }
-type Result = { url: string; name: string; bytes: number; encoder: string; seconds: number; audio: 'kept' | 'converted' | 'none' | 'dropped'; delivery: { real: number; declared: number } | null; deliveryError: string | null }
-
-const EMPTY: Live = { stages: { spatial: 0, contrast: 0, temporal: 0, export: 0, delivery: 0 }, overall: 0, speed: 0, eta: null, finalizing: false }
-
-/** H.264 High 4.2 first; older or software encoders get the closest they can do. */
-const H264 = ['avc1.64002A', 'avc1.640028', 'avc1.4D402A', 'avc1.4D4028', 'avc1.42E02A', 'avc1.42E028']
-function encoderLabel(codec: string) {
-  const prof = codec.slice(5, 7)
-  const level = parseInt(codec.slice(9, 11), 16) / 10
-  return `H.264 ${prof === '64' ? 'High' : prof === '4D' ? 'Main' : 'Baseline'} ${level.toFixed(1)}`
-}
-
-const hex2 = (n: number) => n.toString(16).toUpperCase().padStart(2, '0')
-
-/**
- * Hardware encoders pick the lowest level a stream needs (a 30fps 1080p stream comes out as 4.0). Every stream that meets a level also meets every level
- * above it, so a High profile stream below 4.2 is marked 4.2: in the avcC record and in the sequence parameter set inside it. Returns the codec string
- * the file ends up with.
- */
-function markLevel42(cfg: VideoDecoderConfig): VideoDecoderConfig {
-  const desc = cfg.description
-  if (!desc) return cfg
-  const d = new Uint8Array(desc instanceof ArrayBuffer ? desc.slice(0) : new Uint8Array(desc.buffer, desc.byteOffset, desc.byteLength).slice())
-  if (d.length < 12 || d[0] !== 1 || d[1] !== 0x64 || d[3] >= 0x2a) return cfg
-  d[3] = 0x2a
-  if ((d[5] & 0x1f) >= 1 && (d[8] & 0x1f) === 7) d[11] = 0x2a // the first SPS: 2 length bytes, the NAL header, profile, constraint flags, level
-  return { ...cfg, description: d, codec: `avc1.${hex2(d[1])}${hex2(d[2])}${hex2(d[3])}` }
-}
-
-async function pickEncoder(plan: Plan) {
-  // about 0.16 bits a pixel: 20 Mbps for 1080x1920 at 60fps, well above what TikTok keeps, so its own encoder starts from a clean picture
-  const bitrate = Math.round(Math.min(24e6, Math.max(6e6, plan.width * plan.height * plan.fps * 0.16)))
-  for (const codec of H264) {
-    const config: VideoEncoderConfig = { codec, width: plan.width, height: plan.height, bitrate, framerate: plan.fps, bitrateMode: 'variable', latencyMode: 'quality', avc: { format: 'avc' } }
-    try {
-      if ((await VideoEncoder.isConfigSupported(config)).supported) return config
-    } catch {
-      /* try the next */
-    }
-  }
-  throw new Error('This browser cannot encode H.264 at this size. Try Chrome, Edge or Safari on a computer.')
-}
-
-async function patch(p: Probe, plan: Plan, deliveryPatch: boolean, onLive: (l: Live) => void, signal: AbortSignal): Promise<Result> {
-  const M = await import('mediabunny')
-  const started = performance.now()
-  const input = new M.Input({ source: new M.BlobSource(p.file), formats: M.ALL_FORMATS })
-  const target = new M.BufferTarget()
-  const output = new M.Output({ format: new M.Mp4OutputFormat({ fastStart: 'in-memory' }), target })
-  let encoder: VideoEncoder | null = null
-  let passes: Passes | null = null
-  const stop = () => {
-    if (signal.aborted) throw new DOMException('Stopped', 'AbortError')
-  }
-
-  try {
-    const vt = await input.getPrimaryVideoTrack()
-    if (!vt) throw new Error('There is no video in this file.')
-    const rotation = await vt.getRotation()
-    const config = await pickEncoder(plan)
-
-    // the video track: our own encoder, so the profile, the level and the Rec.709 flags are exactly what we ask for
-    const videoOut = new M.EncodedVideoPacketSource('avc')
-    // a constant frame rate (one timing entry in the file), which the delivery patch builds on
-    output.addVideoTrack(videoOut, { frameRate: plan.fps })
-
-    // the audio track: copied as it is when it is AAC, converted to AAC when the browser can, otherwise kept as Opus or left out
-    const at = await input.getPrimaryAudioTrack()
-    let audio: Result['audio'] = 'none'
-    let feedAudio: (() => Promise<void>) | null = null
-    if (at) {
-      const codec = await at.getCodec()
-      const canAac = await M.canEncodeAudio('aac').catch(() => false)
-      if (codec === 'aac' || (codec === 'opus' && !canAac)) {
-        const src = new M.EncodedAudioPacketSource(codec)
-        output.addAudioTrack(src)
-        audio = 'kept'
-        feedAudio = async () => {
-          const decoderConfig = await at.getDecoderConfig()
-          let first = true
-          for await (const packet of new M.EncodedPacketSink(at).packets()) {
-            stop()
-            await src.add(packet, first && decoderConfig ? { decoderConfig } : undefined)
-            first = false
-          }
-          src.close()
-        }
-      } else if (canAac && (await at.canDecode())) {
-        const src = new M.AudioSampleSource({ codec: 'aac', bitrate: 192_000 })
-        output.addAudioTrack(src)
-        audio = 'converted'
-        feedAudio = async () => {
-          for await (const sample of new M.AudioSampleSink(at).samples()) {
-            stop()
-            await src.add(sample)
-            sample.close()
-          }
-          src.close()
-        }
-      } else audio = 'dropped'
-    }
-    await output.start()
-
-    // packets are handed to the file in the order they come out of the encoder
-    let writing: Promise<void> = Promise.resolve()
-    let encodeError: unknown = null
-    let encoded = 0
-    let written = config.codec // the codec string the file says, once the encoder has described its stream
-    encoder = new VideoEncoder({
-      output: (chunk, meta) => {
-        encoded++
-        let m: EncodedVideoChunkMetadata | undefined = meta
-        if (meta?.decoderConfig) {
-          const dc = markLevel42({ ...meta.decoderConfig, colorSpace: REC709 })
-          written = dc.description ? (() => {
-            const d = dc.description instanceof ArrayBuffer ? new Uint8Array(dc.description) : new Uint8Array(dc.description.buffer, dc.description.byteOffset, dc.description.byteLength)
-            return `avc1.${hex2(d[1])}${hex2(d[2])}${hex2(d[3])}`
-          })() : dc.codec
-          m = { ...meta, decoderConfig: dc }
-        }
-        writing = writing.then(() => videoOut.add(M.EncodedPacket.fromEncodedChunk(chunk), m))
-      },
-      error: (e) => {
-        encodeError = e
-      },
-    })
-    encoder.configure(config)
-
-    const expectedIn = Math.max(1, Math.round(p.duration * p.fps))
-    const expectedOut = Math.max(1, Math.round(p.duration * plan.fps))
-    let scaled = 0
-    let sharpened = 0
-    let blended = 0
-    let lastLive = 0
-    const live = (force = false) => {
-      const now = performance.now()
-      if (!force && now - lastLive < 120) return
-      lastLive = now
-      const done = Math.min(1, encoded / expectedOut)
-      const secs = (now - started) / 1000
-      const speed = secs > 0 ? scaled / secs : 0
-      onLive({
-        stages: { spatial: Math.min(1, scaled / expectedIn), contrast: Math.min(1, sharpened / expectedOut), temporal: Math.min(1, blended / expectedOut), export: done, delivery: 0 },
-        overall: done * 0.97,
-        speed,
-        eta: speed > 0 && scaled > 10 ? Math.max(0, (expectedIn - scaled) / speed) : null,
-        finalizing: false,
-      })
-    }
-
-    const keyEvery = Math.max(1, Math.round(plan.fps)) // a key frame every second
-    let outIndex = 0
-    const emit = async (timestamp: number, duration: number) => {
-      const canvas = passes!.finish()
-      sharpened++
-      const frame = new VideoFrame(canvas, { timestamp: Math.round(timestamp * 1e6), duration: Math.round(duration * 1e6) })
-      // backpressure: never more than a few frames waiting in the encoder
-      while (encoder!.encodeQueueSize > 6) await new Promise<void>((r) => encoder!.addEventListener('dequeue', () => r(), { once: true }))
-      if (encodeError) throw encodeError
-      encoder!.encode(frame, { keyFrame: outIndex % keyEvery === 0 })
-      frame.close()
-      outIndex++
-      live()
-    }
-
-    const feedVideo = async () => {
-      const outDur = 1 / plan.fps
-      let first: number | null = null
-      let current = -1 // the output frame being blended
-      let currentHas = false
-      for await (const sample of new M.VideoSampleSink(vt).samples()) {
-        try {
-          stop()
-          if (first === null) first = sample.timestamp
-          const frame = sample.toVideoFrame()
-          try {
-            if (!passes) passes = new Passes({ w: plan.width, h: plan.height }, { w: p.width, h: p.height }, rotation)
-            passes.spatial(frame)
-          } finally {
-            frame.close()
-          }
-          scaled++
-          const t0 = sample.timestamp - first
-          const d = sample.duration > 0 ? sample.duration : 1 / p.fps
-          if (!plan.blend) {
-            // 60fps or less: one output frame per input frame, at its own time
-            passes.begin()
-            passes.blend(1)
-            blended++
-            await emit(t0, d)
-            continue
-          }
-          // above 60fps: the frame is split over the 60fps frames it overlaps, each part weighted by how much of that frame's time it covers
-          let a = t0
-          const b = t0 + d
-          while (a < b - 1e-9) {
-            const k = Math.floor(a / outDur + 1e-6)
-            const end = Math.min(b, (k + 1) * outDur)
-            if (k !== current) {
-              if (currentHas) {
-                blended++
-                await emit(current * outDur, outDur)
-              }
-              current = k
-              currentHas = false
-              passes.begin()
-            }
-            passes.blend((end - a) / outDur)
-            currentHas = true
-            a = end
-          }
-        } finally {
-          sample.close()
-        }
-      }
-      if (plan.blend && currentHas && passes) {
-        blended++
-        await emit(current * outDur, outDur)
-      }
-      await encoder!.flush()
-      if (encodeError) throw encodeError
-      await writing
-      videoOut.close()
-    }
-
-    await Promise.all([feedVideo(), feedAudio?.()])
-    live(true)
-    onLive({ stages: { spatial: 1, contrast: 1, temporal: 1, export: 1, delivery: 0 }, overall: 0.97, speed: 0, eta: 0, finalizing: true })
-    await output.finalize()
-    if (!target.buffer) throw new Error('The file could not be written.')
-    // the delivery pass: the frame-count patch on the finished MP4 (see frame-count-patch.ts). If it cannot be applied, the file is kept as it is.
-    let buffer: ArrayBuffer | Uint8Array = target.buffer
-    let delivery: Result['delivery'] = null
-    let deliveryError: string | null = null
-    if (deliveryPatch) {
-      try {
-        const out = patchFrameCount(target.buffer, { multiplier: DEFAULT_MULTIPLIER })
-        buffer = out.bytes
-        delivery = { real: out.stats.realFrames, declared: out.stats.declaredFrames }
-      } catch (e) {
-        deliveryError = e instanceof Error ? e.message : 'The delivery patch could not be applied.'
-      }
-    }
-    onLive({ stages: { spatial: 1, contrast: 1, temporal: 1, export: 1, delivery: 1 }, overall: 0.99, speed: 0, eta: 0, finalizing: true })
-    const name = `${p.file.name.replace(/\.[^.]+$/, '') || 'video'}-tiktok-${plan.width}x${plan.height}-${fpsText(plan.fps)}fps.mp4`
-    return {
-      url: URL.createObjectURL(new Blob([buffer as BlobPart], { type: 'video/mp4' })),
-      name,
-      bytes: buffer.byteLength,
-      encoder: encoderLabel(written),
-      seconds: (performance.now() - started) / 1000,
-      audio,
-      delivery,
-      deliveryError,
-    }
-  } catch (e) {
-    await output.cancel().catch(() => undefined)
-    throw e
-  } finally {
-    if (encoder && encoder.state !== 'closed') encoder.close()
-    ;(passes as Passes | null)?.dispose()
-    input.dispose()
-  }
-}
-
-function supportProblem(): string | null {
-  if (typeof window === 'undefined') return null
-  if (!('VideoEncoder' in window) || !('VideoDecoder' in window) || !('VideoFrame' in window))
-    return 'This browser cannot process video on your device. Open this page in Chrome, Edge or Safari on a computer.'
-  const c = document.createElement('canvas')
-  if (!c.getContext('webgl2')) return 'This browser has WebGL2 turned off, which the passes need. Open this page in Chrome, Edge or Safari.'
-  return null
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------
@@ -885,15 +245,87 @@ function Reading({ name }: { name: string }) {
 }
 
 // ---- 2: the split inspector ----
-function Inspector({ probe, plan, preview, onPatch, onReset, warning, clearWarning, delivery, setDelivery }: { probe: Probe; plan: Plan; preview: string; onPatch: () => void; onReset: () => void; warning: string; clearWarning: () => void; delivery: boolean; setDelivery: (v: boolean) => void }) {
+function Toggle({ on }: { on: boolean }) {
+  return (
+    <span aria-hidden="true" className={cn('relative mt-1 h-6 w-10 shrink-0 rounded-full transition-colors duration-300', on ? 'bg-paper' : 'bg-white/15')}>
+      <motion.span className={cn('absolute top-1 left-1 size-4 rounded-full', on ? 'bg-ink' : 'bg-paper/70')} initial={false} animate={{ x: on ? 16 : 0 }} transition={{ duration: 0.3, ease: EASE }} />
+    </span>
+  )
+}
+
+/** One choice in the inspector: an icon, what it does in a line or two, and a switch. */
+function OptionRow({ icon: Icon, name, text, on, onChange, disabled, risky }: { icon: typeof Layers; name: string; text: React.ReactNode; on: boolean; onChange: (v: boolean) => void; disabled?: boolean; risky?: boolean }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      disabled={disabled}
+      onClick={() => onChange(!on)}
+      className={cn(
+        tile,
+        'flex w-full items-start gap-3 p-3.5 text-left transition-colors duration-300 disabled:pointer-events-none disabled:opacity-45',
+        on ? (risky ? 'border-red-400/30 bg-red-500/[0.07]' : 'border-white/20 bg-white/[0.06]') : 'hover:bg-white/[0.05]',
+      )}
+    >
+      <span className={cn('grid size-10 shrink-0 place-items-center rounded-full', risky ? 'bg-red-500/15' : 'bg-white/10')}>
+        <Icon aria-hidden="true" className={cn('size-[18px]', risky ? 'text-red-200' : 'text-paper/85')} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[15px] text-paper">{name}</span>
+        <span className="mt-0.5 block text-[12.5px] leading-snug text-paper/50">{text}</span>
+      </span>
+      <Toggle on={on} />
+    </button>
+  )
+}
+
+type Choices = { interpolate: boolean; cleanup: boolean; codec: Codec; pack: boolean; delivery: boolean }
+
+// ---- 2: the split inspector ----
+function Inspector({
+  probe,
+  plan,
+  preview,
+  onPatch,
+  onReset,
+  warning,
+  clearWarning,
+  choices,
+  setChoices,
+  hevc,
+}: {
+  probe: Probe
+  plan: Plan
+  preview: string
+  onPatch: () => void
+  onReset: () => void
+  warning: string
+  clearWarning: () => void
+  choices: Choices
+  setChoices: (c: Choices) => void
+  hevc: boolean
+}) {
   const [noPreview, setNoPreview] = useState(false)
+  const [advanced, setAdvanced] = useState(choices.delivery)
   const portrait = probe.height > probe.width
+  const set = (c: Partial<Choices>) => setChoices({ ...choices, ...c })
+  const codecName = choices.pack ? 'test pack' : choices.codec === 'hevc' ? 'HEVC Main' : 'H.264 High 4.2'
   const cards = [
     { icon: Maximize2, label: 'Aspect · resolution', value: `${probe.width} × ${probe.height}`, note: aspectOf(probe.width, probe.height) },
     { icon: Gauge, label: 'Frame rate', value: `${fpsText(probe.fps)} FPS`, note: `${probe.codec} · ${probe.color}${probe.hdr ? ' (HDR)' : ''}` },
     { icon: HardDrive, label: 'File size', value: mb(probe.file.size), note: `${clock(probe.duration)}${probe.audio ? ` · ${probe.audio}` : ' · no audio'}` },
-    { icon: MonitorSmartphone, label: 'Target output', value: `${plan.width} × ${plan.height}`, note: `${fpsText(plan.fps)} fps · H.264 High 4.2 · Rec.709` },
+    { icon: MonitorSmartphone, label: 'Target output', value: `${plan.width} × ${plan.height}`, note: `${fpsText(plan.fps)} fps · ${codecName} · Rec.709` },
   ]
+  const note = !probe.decodable
+    ? `This browser cannot decode ${probe.codec}. Export the edit as H.264 or HEVC, or open this page in Safari.`
+    : plan.mode === 'blend'
+      ? `${fpsText(probe.fps)}fps is blended into 60fps, so the motion of every frame stays in the video.`
+      : plan.mode === 'interp'
+        ? `${fpsText(probe.fps)}fps is smoothed to 60fps with in-between frames made from the motion.`
+        : probe.fps < 55
+          ? `${fpsText(probe.fps)}fps is kept as it is. Turn on Smooth to 60fps for a 60fps upload.`
+          : `Already ${fpsText(probe.fps)}fps, so every frame is kept as it is.`
   return (
     <motion.div key="inspect" {...move} className="grid gap-5 md:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] md:items-start">
       <RingCard on className="min-w-0">
@@ -926,7 +358,7 @@ function Inspector({ probe, plan, preview, onPatch, onReset, warning, clearWarni
       <RingCard className="min-w-0">
         <h1 className={cn(title, 'text-[clamp(1.8rem,5vw,2.3rem)]')}>Your edit</h1>
         <p className={sub}>Read from the file on your device. This is what goes in, and what TikTok will get.</p>
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
           {cards.map((c, i) => (
             <motion.div key={c.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: EASE, delay: 0.08 * i }} className={cn(tile, 'p-4', i === 3 && 'border-white/20 bg-white/[0.06]')}>
               <span className="flex items-center gap-2 text-[12px] whitespace-nowrap text-paper/45">
@@ -937,64 +369,114 @@ function Inspector({ probe, plan, preview, onPatch, onReset, warning, clearWarni
             </motion.div>
           ))}
         </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={delivery}
-          onClick={() => setDelivery(!delivery)}
-          className={cn(tile, 'mt-3 flex w-full items-start gap-3 p-4 text-left transition-colors duration-300', delivery ? 'border-white/20 bg-white/[0.06]' : 'hover:bg-white/[0.05]')}
-        >
-          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white/10">
-            <Sparkles aria-hidden="true" className="size-[18px] text-paper/85" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-[15px] text-paper">1080p 60fps delivery patch</span>
-            <span className="mt-0.5 block text-[12.5px] leading-snug text-paper/50">
-              Declares {DEFAULT_MULTIPLIER}× the frames so TikTok keeps the upload on its high frame rate path. No pixels change. Unofficial: TikTok can stop honouring it at any time.
-            </span>
-          </span>
-          <span aria-hidden="true" className={cn('relative mt-1 h-6 w-10 shrink-0 rounded-full transition-colors duration-300', delivery ? 'bg-paper' : 'bg-white/15')}>
-            <motion.span className={cn('absolute top-1 left-1 size-4 rounded-full', delivery ? 'bg-ink' : 'bg-paper/70')} initial={false} animate={{ x: delivery ? 16 : 0 }} transition={{ duration: 0.3, ease: EASE }} />
-          </span>
+
+        <p className="mt-6 mb-3 text-[13px] text-paper/40">How it is made</p>
+        <div className="space-y-2.5">
+          {probe.fps < 55 && (
+            <OptionRow
+              icon={Wand2}
+              name="Smooth to 60fps"
+              text={`Makes real in-between frames from the motion, so a ${fpsText(probe.fps)}fps edit plays at 60fps. Fast cuts and flashes fall back to a soft crossfade.`}
+              on={choices.interpolate}
+              onChange={(v) => set({ interpolate: v })}
+            />
+          )}
+          <OptionRow icon={Eraser} name="Clean-up before TikTok compresses it" text="A light denoise and deband, so TikTok's encoder spends its data on detail instead of grain and steps in gradients." on={choices.cleanup} onChange={(v) => set({ cleanup: v })} />
+          <OptionRow
+            icon={FlaskConical}
+            name="Test pack"
+            text="Three clean versions of this edit (different codecs and bitrates). Post them on a test account and keep whichever TikTok plays best."
+            on={choices.pack}
+            onChange={(v) => set({ pack: v, delivery: v ? false : choices.delivery })}
+          />
+          {!choices.pack && (
+            <div className={cn(tile, 'flex items-center gap-3 p-3.5')}>
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white/10">
+                <Cpu aria-hidden="true" className="size-[18px] text-paper/85" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[15px] text-paper">Codec</span>
+                <span className="mt-0.5 block text-[12.5px] leading-snug text-paper/50">{hevc ? 'Both are accepted by TikTok.' : 'This browser cannot encode HEVC.'}</span>
+              </span>
+              <span className="flex shrink-0 rounded-full border border-white/10 bg-white/[0.04] p-1" role="radiogroup" aria-label="Codec">
+                {(['avc', 'hevc'] as const).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    role="radio"
+                    aria-checked={choices.codec === c}
+                    disabled={c === 'hevc' && !hevc}
+                    onClick={() => set({ codec: c, delivery: c === 'hevc' ? false : choices.delivery })}
+                    className={cn('h-8 rounded-full px-3.5 text-[13px] transition-colors disabled:opacity-35', choices.codec === c ? 'bg-paper text-ink' : 'text-paper/70 hover:text-paper')}
+                  >
+                    {c === 'avc' ? 'H.264' : 'HEVC'}
+                  </button>
+                ))}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <button type="button" onClick={() => setAdvanced(!advanced)} aria-expanded={advanced} className="mt-4 flex items-center gap-1.5 text-[13px] text-paper/40 transition-colors hover:text-paper/70">
+          <ChevronDown aria-hidden="true" className={cn('size-3.5 transition-transform duration-300', advanced && 'rotate-180')} /> Advanced
         </button>
+        <AnimatePresence initial={false}>
+          {advanced && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3, ease: EASE }} className="overflow-hidden">
+              <div className="pt-3">
+                <OptionRow
+                  icon={AlertTriangle}
+                  risky
+                  name="Frame-count patch"
+                  text={`Declares ${DEFAULT_MULTIPLIER}× the frames. Not recommended: TikTok has hidden posts made with it from everyone but their owner, even when they are public. H.264 only, not in the test pack.`}
+                  on={choices.delivery}
+                  disabled={choices.pack || choices.codec === 'hevc'}
+                  onChange={(v) => set({ delivery: v })}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <AnimatePresence initial={false}>{warning && <Warning onClose={clearWarning}>{warning}</Warning>}</AnimatePresence>
         <div className="mt-6">
           <RingButton onClick={onPatch} disabled={!probe.decodable}>
-            Patch Video for TikTok <ArrowRight aria-hidden="true" className="size-[18px]" />
+            {choices.pack ? 'Make the Test Pack' : 'Patch Video for TikTok'} <ArrowRight aria-hidden="true" className="size-[18px]" />
           </RingButton>
         </div>
-        <p className="mt-4 text-center text-[12px] leading-relaxed text-paper/35">
-          {probe.decodable
-            ? plan.blend
-              ? `${fpsText(probe.fps)}fps is blended into 60fps, so the motion of every frame stays in the video.`
-              : probe.fps < 59
-                ? `${fpsText(probe.fps)}fps is kept as it is. For 60fps on TikTok the edit itself has to be 60fps or more.`
-                : `Already ${fpsText(probe.fps)}fps, so every frame is kept as it is.`
-            : `This browser cannot decode ${probe.codec}. Export the edit as H.264 or HEVC, or open this page in Safari.`}
-        </p>
+        <p className="mt-4 text-center text-[12px] leading-relaxed text-paper/35">{note}</p>
       </RingCard>
     </motion.div>
   )
 }
 
 // ---- 3: the live processing overlay ----
-function Patching({ probe, plan, live, onCancel, delivery }: { probe: Probe; plan: Plan; live: Live; onCancel: () => void; delivery: boolean }) {
+type Run = { index: number; total: number; label: string; codec: Codec }
+
+function Patching({ probe, plan, live, onCancel, choices, run }: { probe: Probe; plan: Plan; live: Live; onCancel: () => void; choices: Choices; run: Run }) {
+  const temporal =
+    plan.mode === 'blend'
+      ? { detail: `Sub-frame motion blending, ${fpsText(probe.fps)}fps into a native 60fps container`, code: `tmix · ${fpsText(plan.ratio)}:1` }
+      : plan.mode === 'interp'
+        ? { detail: `Motion-compensated in-between frames, ${fpsText(probe.fps)}fps up to 60fps`, code: 'block match · warp · blend' }
+        : { detail: `${fpsText(probe.fps)}fps is kept, frame for frame`, code: 'passthrough' }
   const stages: { id: StageId; icon: typeof Layers; name: string; detail: string; code: string }[] = [
     { id: 'spatial', icon: Maximize2, name: 'Spatial pass', detail: `Aspect-preserving Lanczos-4 downscale, ${probe.width}×${probe.height} to ${plan.width}×${plan.height}`, code: 'lanczos a=4' },
-    { id: 'contrast', icon: ScanLine, name: 'Contrast pass', detail: 'Unsharp high-pass mask on luma, so micro detail survives compression', code: UNSHARP },
+    { id: 'temporal', icon: Layers, name: 'Temporal pass', ...temporal },
+    ...(choices.cleanup ? [{ id: 'cleanup' as const, icon: Eraser, name: 'Clean-up pass', detail: 'Edge-preserving denoise and deband, before TikTok compresses it', code: 'bilateral 5×5 · deband' }] : []),
+    { id: 'contrast', icon: ScanLine, name: 'Contrast pass', detail: 'Unsharp high-pass mask on luma, then a fine dither to 8 bits', code: UNSHARP },
     {
-      id: 'temporal',
-      icon: Layers,
-      name: 'Temporal pass',
-      detail: plan.blend ? `Sub-frame motion blending, ${fpsText(probe.fps)}fps into a native 60fps container` : `${fpsText(probe.fps)}fps is 60 or lower, so frames are kept 1:1`,
-      code: plan.blend ? `tmix · ${fpsText(plan.ratio)}:1` : 'passthrough',
+      id: 'export',
+      icon: PackageCheck,
+      name: 'Export pass',
+      detail: run.codec === 'hevc' ? 'HEVC Main, Rec.709 colour flags, MP4' : 'H.264 High Profile Level 4.2, Rec.709 colour flags, MP4',
+      code: run.codec === 'hevc' ? 'hvc1.1.6.L123' : 'avc1.64002A',
     },
-    { id: 'export', icon: PackageCheck, name: 'Export pass', detail: 'H.264 High Profile Level 4.2, Rec.709 colour flags, MP4', code: 'avc1.64002A' },
-    ...(delivery
-      ? [{ id: 'delivery' as const, icon: Sparkles, name: 'Delivery pass', detail: `Frame-count patch: the real frames kept, ${DEFAULT_MULTIPLIER}× declared, so TikTok keeps 1080p 60fps`, code: `stts · ${DEFAULT_MULTIPLIER}× frames` }]
+    ...(choices.delivery && !choices.pack && run.codec === 'avc'
+      ? [{ id: 'delivery' as const, icon: AlertTriangle, name: 'Frame-count patch', detail: `The real frames kept, ${DEFAULT_MULTIPLIER}× declared`, code: `stts · ${DEFAULT_MULTIPLIER}× frames` }]
       : []),
   ]
-  const pct = Math.round(live.overall * 100)
+  const pct = Math.round(((run.index + live.overall) / run.total) * 100)
   return (
     <motion.div key="patching" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.35 }} className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/55 px-4 py-10 backdrop-blur-md">
       <motion.div {...move} className="w-full max-w-[520px]">
@@ -1002,7 +484,7 @@ function Patching({ probe, plan, live, onCancel, delivery }: { probe: Probe; pla
           <div className="flex items-end justify-between gap-4">
             <div>
               <h1 className={title}>Patching.</h1>
-              <p className={cn(sub, 'mt-2')}>Keep this tab open. Everything happens on this device.</p>
+              <p className={cn(sub, 'mt-2')}>{run.total > 1 ? `Version ${run.index + 1} of ${run.total}: ${run.label}.` : 'Keep this tab open. Everything happens on this device.'}</p>
             </div>
             <span className="font-display text-[clamp(2.4rem,9vw,3.4rem)] leading-none text-paper tabular-nums" aria-live="polite">
               {pct}%
@@ -1045,15 +527,20 @@ function Patching({ probe, plan, live, onCancel, delivery }: { probe: Probe; pla
 }
 
 // ---- 4: download and the publishing guide ----
-function Done({ probe, plan, result, onAgain }: { probe: Probe; plan: Plan; result: Result; onAgain: () => void }) {
-  const save = () => {
-    const a = document.createElement('a')
-    a.href = result.url
-    a.download = result.name
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-  }
+type Made = Result & { label: string }
+
+function save(r: Result) {
+  const a = document.createElement('a')
+  a.href = r.url
+  a.download = r.name
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+}
+
+function Done({ probe, plan, results, onAgain }: { probe: Probe; plan: Plan; results: Made[]; onAgain: () => void }) {
+  const pack = results.length > 1
+  const first = results[0]
   const guide: { icon: React.ReactNode; text: React.ReactNode }[] = [
     {
       icon: <BrandIcon name="tiktok" className="size-[18px]" />,
@@ -1067,34 +554,41 @@ function Done({ probe, plan, result, onAgain }: { probe: Probe; plan: Plan; resu
         </>
       ),
     },
-    { icon: <Upload aria-hidden="true" className="size-[18px]" />, text: <>Select the downloaded file, {result.name}.</> },
+    { icon: <Upload aria-hidden="true" className="size-[18px]" />, text: pack ? <>Post each version separately, on a test account, with the same caption and sound.</> : <>Select the downloaded file, {first.name}.</> },
     { icon: <Settings2 aria-hidden="true" className="size-[18px]" />, text: <>Make sure “Allow HD uploads” is on before you publish.</> },
-    {
-      icon: (
-        <span className="flex items-center gap-1">
-          <BrandIcon name="apple" className="size-[15px]" />
-          <BrandIcon name="android" className="size-[15px]" />
-        </span>
-      ),
-      text: <>Watch it on a high refresh phone (iPhone ProMotion or a 120Hz Android) for peak sharpness and fluid 60fps playback.</>,
-    },
+    pack
+      ? {
+          icon: <MonitorSmartphone aria-hidden="true" className="size-[18px]" />,
+          text: <>From another account, watch each one on a high refresh phone, or download them and check the resolution and frame rate. Keep the version that comes back sharpest and smoothest, and use it for your edits from now on.</>,
+        }
+      : {
+          icon: (
+            <span className="flex items-center gap-1">
+              <BrandIcon name="apple" className="size-[15px]" />
+              <BrandIcon name="android" className="size-[15px]" />
+            </span>
+          ),
+          text: <>Watch it on a high refresh phone (iPhone ProMotion or a 120Hz Android) for peak sharpness and fluid 60fps playback.</>,
+        },
   ]
   const rows = [
     { label: 'Resolution', from: `${probe.width} × ${probe.height}`, to: `${plan.width} × ${plan.height}` },
     { label: 'Frame rate', from: `${fpsText(probe.fps)} fps`, to: `${fpsText(plan.fps)} fps` },
-    { label: 'Size', from: mb(probe.file.size), to: mb(result.bytes) },
+    ...(pack ? [] : [{ label: 'Size', from: mb(probe.file.size), to: mb(first.bytes) }]),
   ]
+  const seconds = results.reduce((a, r) => a + r.seconds, 0)
   return (
     <motion.div key="done" {...move} className="space-y-5">
       <RingCard on>
         <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.05] px-3.5 py-1.5 text-[13px] text-paper/80">
-          <Check aria-hidden="true" className="size-3.5" /> Patched in {clock(result.seconds)}
+          <Check aria-hidden="true" className="size-3.5" /> Patched in {clock(seconds)}
         </span>
-        <h1 className={cn(title, 'mt-5')}>Ready for TikTok.</h1>
+        <h1 className={cn(title, 'mt-5')}>{pack ? 'Your test pack.' : 'Ready for TikTok.'}</h1>
         <p className={sub}>
-          {result.encoder}, Rec.709.{' '}
-          {result.delivery ? `Delivery patch applied: ${result.delivery.real.toLocaleString('en-GB')} frames declared as ${result.delivery.declared.toLocaleString('en-GB')}. ` : result.deliveryError ? `The delivery patch could not be applied (${result.deliveryError}), so the file is the plain patched video. ` : ''}
-          {result.audio === 'kept' ? 'The sound is copied as it was.' : result.audio === 'converted' ? 'The sound was converted to AAC.' : result.audio === 'dropped' ? 'This browser could not carry the sound across, so the file is silent.' : 'The edit had no sound.'}
+          {pack ? `${results.length} clean versions of the same edit, Rec.709. ` : `${first.encoder}, Rec.709. `}
+          {!pack && first.delivery ? `Frame-count patch applied: ${first.delivery.real.toLocaleString('en-GB')} frames declared as ${first.delivery.declared.toLocaleString('en-GB')}. ` : ''}
+          {!pack && first.deliveryError ? `The frame-count patch could not be applied (${first.deliveryError}), so the file is the plain patched video. ` : ''}
+          {first.audio === 'kept' ? 'The sound is copied as it was.' : first.audio === 'converted' ? 'The sound was converted to AAC.' : first.audio === 'dropped' ? 'This browser could not carry the sound across, so the file is silent.' : 'The edit had no sound.'}
         </p>
         <div className={cn(tile, 'mt-6 divide-y divide-white/[0.07]')}>
           {rows.map((r) => (
@@ -1106,20 +600,38 @@ function Done({ probe, plan, result, onAgain }: { probe: Probe; plan: Plan; resu
             </div>
           ))}
         </div>
-        {result.delivery && (
+        {!pack && first.delivery && (
           <p className="mt-4 text-[12.5px] leading-relaxed text-paper/40">
-            Played on a computer, the file can show as about {Math.round((result.delivery.declared / result.delivery.real) * probe.duration)} seconds with the last frame held: that is the declared frames, not extra video. Upload it as it is.
+            Played on a computer, the file can show as about {Math.round((first.delivery.declared / first.delivery.real) * probe.duration)} seconds with the last frame held: that is the declared frames, not extra video. TikTok has hidden posts made this way from other viewers.
           </p>
         )}
+        {pack ? (
+          <ul className="mt-6 space-y-2.5">
+            {results.map((r, i) => (
+              <li key={r.name} className={cn(tile, 'flex items-center gap-3 p-3.5')}>
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white/10 font-display text-[15px] text-paper">{String.fromCharCode(65 + i)}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15px] text-paper">{r.label}</span>
+                  <span className="block truncate text-[12.5px] text-paper/45">
+                    {r.encoder} · {mb(r.bytes)}
+                  </span>
+                </span>
+                <button type="button" onClick={() => save(r)} className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-white/15 px-4 text-[14px] text-paper transition-colors hover:bg-white/10">
+                  <Download aria-hidden="true" className="size-4" /> Save
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
         <div className="mt-6">
-          <RingButton onClick={save}>
-            <Download aria-hidden="true" className="size-[18px]" /> Download Patched Video
+          <RingButton onClick={() => (pack ? results.forEach((r, i) => window.setTimeout(() => save(r), i * 400)) : save(first))}>
+            <Download aria-hidden="true" className="size-[18px]" /> {pack ? 'Download All Three' : 'Download Patched Video'}
           </RingButton>
         </div>
       </RingCard>
 
       <RingCard>
-        <h2 className="font-display text-[clamp(1.5rem,5vw,1.9rem)] leading-tight text-paper">Publishing guide</h2>
+        <h2 className="font-display text-[clamp(1.5rem,5vw,1.9rem)] leading-tight text-paper">{pack ? 'How to compare' : 'Publishing guide'}</h2>
         <p className={cn(sub, 'mt-2')}>Upload from a computer: the phone app compresses again before it sends.</p>
         <ol className="mt-5 space-y-3">
           {guide.map((g, i) => (
@@ -1140,26 +652,31 @@ function Done({ probe, plan, result, onAgain }: { probe: Probe; plan: Plan; resu
 
 /**
  * method.logoless.io. One card at a time, as on the pre-launch sign-up: the upload pill, the split inspector, the processing overlay on top of it, then the
- * download with the publishing guide.
+ * download (or the test pack) with the guide.
  */
 export function Motion4KOptimizer() {
   const [phase, setPhase] = useState<Phase>('pick')
   const [probe, setProbe] = useState<Probe | null>(null)
   const [preview, setPreview] = useState('')
   const [warning, setWarning] = useState('')
-  const [live, setLive] = useState<Live>(EMPTY)
-  const [result, setResult] = useState<Result | null>(null)
+  const [live, setLive] = useState<Live>(EMPTY_LIVE)
+  const [results, setResults] = useState<Made[]>([])
   const [unsupported, setUnsupported] = useState<string | null>(null)
   const [readingName, setReadingName] = useState('')
-  const [delivery, setDelivery] = useState(true)
+  const [hevc, setHevc] = useState(false)
+  const [choices, setChoices] = useState<Choices>({ interpolate: true, cleanup: true, codec: 'avc', pack: false, delivery: false })
+  const [run, setRun] = useState<Run>({ index: 0, total: 1, label: '', codec: 'avc' })
   const abort = useRef<AbortController | null>(null)
-  const plan = probe ? planFor(probe) : null
+  const plan = probe ? planFor(probe, choices.interpolate) : null
 
-  useEffect(() => setUnsupported(supportProblem()), [])
+  useEffect(() => {
+    setUnsupported(supportProblem())
+    void canEncodeHevc().then(setHevc)
+  }, [])
 
-  // the preview and the result are object URLs: let them go when they are replaced
+  // the preview and the results are object URLs: let them go when they are replaced
   useEffect(() => () => void (preview && URL.revokeObjectURL(preview)), [preview])
-  useEffect(() => () => void (result && URL.revokeObjectURL(result.url)), [result])
+  useEffect(() => () => results.forEach((r) => URL.revokeObjectURL(r.url)), [results])
 
   // a page that is closed mid-run loses the work: ask first, and keep the screen awake while it runs
   useEffect(() => {
@@ -1182,9 +699,9 @@ export function Motion4KOptimizer() {
     abort.current?.abort()
     setProbe(null)
     setPreview('')
-    setResult(null)
+    setResults([])
     setWarning('')
-    setLive(EMPTY)
+    setLive(EMPTY_LIVE)
     setPhase('pick')
   }, [])
 
@@ -1208,21 +725,29 @@ export function Motion4KOptimizer() {
   const start = async () => {
     if (!probe || !plan) return
     setWarning('')
-    setLive(EMPTY)
+    setLive(EMPTY_LIVE)
     setPhase('patching')
     const ctl = new AbortController()
     abort.current = ctl
+    const jobs = choices.pack
+      ? testPack(plan, hevc).map((v) => ({ ...v, delivery: false }))
+      : [{ tag: '', label: choices.codec === 'hevc' ? 'HEVC' : 'H.264', codec: choices.codec, bitrate: undefined as number | undefined, delivery: choices.delivery }]
+    const made: Made[] = []
     try {
-      const r = await patch(probe, plan, delivery, setLive, ctl.signal)
-      if (ctl.signal.aborted) return URL.revokeObjectURL(r.url)
-      setResult(r)
+      for (const [index, job] of jobs.entries()) {
+        setRun({ index, total: jobs.length, label: job.label, codec: job.codec })
+        setLive(EMPTY_LIVE)
+        const r = await patch(probe, plan, { interpolate: choices.interpolate, cleanup: choices.cleanup, codec: job.codec, bitrate: job.bitrate, deliveryPatch: job.delivery }, setLive, ctl.signal, job.tag)
+        made.push({ ...r, label: job.label })
+        if (ctl.signal.aborted) break
+      }
+      if (ctl.signal.aborted) return made.forEach((r) => URL.revokeObjectURL(r.url))
+      setResults(made)
       setPhase('done')
     } catch (e) {
-      if (ctl.signal.aborted || (e instanceof DOMException && e.name === 'AbortError')) {
-        setPhase('inspect')
-        return
-      }
+      made.forEach((r) => URL.revokeObjectURL(r.url))
       setPhase('inspect')
+      if (ctl.signal.aborted || (e instanceof DOMException && e.name === 'AbortError')) return
       setWarning(e instanceof Error && e.message ? e.message : 'Something went wrong while patching. Please try again.')
     } finally {
       if (abort.current === ctl) abort.current = null
@@ -1253,9 +778,9 @@ export function Motion4KOptimizer() {
               ) : phase === 'reading' ? (
                 <Reading name={readingName} />
               ) : (phase === 'inspect' || phase === 'patching') && probe && plan ? (
-                <Inspector probe={probe} plan={plan} preview={preview} onPatch={() => void start()} onReset={reset} warning={warning} clearWarning={() => setWarning('')} delivery={delivery} setDelivery={setDelivery} />
-              ) : phase === 'done' && probe && plan && result ? (
-                <Done probe={probe} plan={plan} result={result} onAgain={reset} />
+                <Inspector probe={probe} plan={plan} preview={preview} onPatch={() => void start()} onReset={reset} warning={warning} clearWarning={() => setWarning('')} choices={choices} setChoices={setChoices} hevc={hevc} />
+              ) : phase === 'done' && probe && plan && results.length ? (
+                <Done probe={probe} plan={plan} results={results} onAgain={reset} />
               ) : null}
             </AnimatePresence>
           </AutoHeight>
@@ -1271,7 +796,7 @@ export function Motion4KOptimizer() {
             .
           </footer>
         </div>
-        <AnimatePresence>{phase === 'patching' && probe && plan && <Patching probe={probe} plan={plan} live={live} onCancel={cancel} delivery={delivery} />}</AnimatePresence>
+        <AnimatePresence>{phase === 'patching' && probe && plan && <Patching probe={probe} plan={plan} live={live} onCancel={cancel} choices={choices} run={run} />}</AnimatePresence>
       </main>
     </MotionConfig>
   )
