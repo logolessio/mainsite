@@ -16,14 +16,14 @@ export const metadata: Metadata = {
   description: 'Create your account, link your socials, set up your profile and get paid, all in one guided flow.',
 }
 
-export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ role?: string; preview?: string; step?: string; ref?: string; google?: string }> }) {
-  const { role, preview, step, ref, google } = await searchParams
+export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ role?: string; preview?: string; step?: string; ref?: string; google?: string; signin?: string; why?: string }> }) {
+  const { role, preview, step, ref, google, signin, why } = await searchParams
   // beta.logoless.io/onboarding is the pre-launch sign-up: the one page open while the rest of the site is shut. Once the site opens it is the normal sign-up on logoless.io.
   const host = await requestHost()
   if (isBetaHost(host)) {
     const launch = launchView(await allSettings())
     if (!launch.closed) redirect(host.startsWith('beta.localhost') ? `http://${host.replace('beta.', '')}/onboarding` : 'https://logoless.io/onboarding')
-    return <PreLaunchOnboarding end={launch.end} joinBase={joinBaseFor(host)} notice={google === 'taken' || google === 'owner' || google === 'used' ? google : null} />
+    return <PreLaunchOnboarding end={launch.end} joinBase={joinBaseFor(host)} notice={google === 'taken' || google === 'owner' || google === 'used' ? google : null} failed={signin === 'failed' ? (why ?? 'Unknown').replace(/[^A-Za-z]/g, '').slice(0, 40) || 'Unknown' : null} />
   }
   const session = await getSession()
   const user = session?.user ? { name: session.user.name ?? '', email: session.user.email ?? '' } : null

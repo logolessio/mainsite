@@ -10,6 +10,7 @@ import { OtpInput } from '@/components/auth/email-ui'
 import { GradientField } from '@/components/shell/gradient-field'
 import { ensureHuman } from '@/lib/human-client'
 import { cn } from '@/lib/utils'
+import { MemberCard } from './member-card'
 import { RingButton, RingCard } from './ring'
 
 const EASE = [0.22, 1, 0.36, 1] as const
@@ -31,8 +32,10 @@ type Me = {
   /** let in while the site was still shut */
   founding: boolean
   discordUrl: string | null
+  /** the number the next member gets */
+  next: number
 }
-type State = { signedIn: false } | Me
+type State = { signedIn: false; next: number } | Me
 
 const STEPS: { id: Exclude<Step, 'done'>; label: string }[] = [
   { id: 'accounts', label: 'Accounts' },
@@ -100,11 +103,16 @@ function Back({ onClick }: { onClick: () => void }) {
 }
 
 // ---- landing (signed out) ----
-function Landing({ end, onDiscord, busy, error }: { end: number | null; onDiscord: () => void; busy: boolean; error: string }) {
+function Landing({ end, next, onDiscord, busy, error }: { end: number | null; next: number | null; onDiscord: () => void; busy: boolean; error: string }) {
   const opens = end ? new Date(end * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : null
   return (
     <motion.div key="landing" {...move}>
       <RingCard on>
+        {next ? (
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.05] px-3.5 py-1.5 text-[13px] text-paper/80">
+            <span aria-hidden="true" className="size-1.5 rounded-full bg-teal-300" /> Next up: founding member #{next}
+          </span>
+        ) : null}
         <h1 className={title}>Become a founding member.</h1>
         <p className={sub}>
           {opens ? `logoless opens on ${opens}. ` : 'logoless opens soon. '}
@@ -266,7 +274,8 @@ function Profile({ me, onSaved, onBack }: { me: Me; onSaved: () => void; onBack:
       <RingCard>
         <h1 className={title}>Your profile</h1>
         <p className={sub}>This is how you show up when campaigns start. You can change it any time.</p>
-        <div className="mt-6 space-y-3">
+        <MemberCard name={name} handle={typedHandle(handle)} image={me.image} n={me.next} className="mt-5" />
+        <div className="mt-5 space-y-3">
           <label className={field}>
             <span className="sr-only">Your name</span>
             <input ref={nameRef} data-bare value={name} onChange={(e) => setName(e.target.value.slice(0, 40))} placeholder="Your name" autoComplete="name" className={input} />
@@ -500,21 +509,41 @@ function PayPal({ me, onFinish, onBack }: { me: Me; onFinish: () => Promise<stri
 }
 
 // ---- the end ----
-function Done({ me, invite }: { me: Me; /** set when they could not be added to the server: the link that gets them in */ invite: string | null }) {
+/** One line of the "what is left" list: a tick when done, an empty ring when not. */
+function Todo({ done, label, hint }: { done: boolean; label: string; hint?: string }) {
+  return (
+    <li className="flex items-start gap-3">
+      <span aria-hidden="true" className={cn('mt-0.5 grid size-5 shrink-0 place-items-center rounded-full border', done ? 'border-teal-300/60 bg-teal-300/15' : 'border-white/20')}>
+        {done ? <Check className="size-3 text-teal-300" /> : null}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className={cn('block text-[14px] leading-snug', done ? 'text-paper/55' : 'text-paper')}>{label}</span>
+        {hint ? <span className="mt-0.5 block text-[12.5px] leading-snug text-paper/40">{hint}</span> : null}
+      </span>
+    </li>
+  )
+}
+
+/** `invite` is set when they could not be added to the server: the link that gets them in. */
+function Done({ me, invite }: { me: Me; invite: string | null }) {
   return (
     <motion.div key="done" {...move}>
       <RingCard on>
         {me.n ? (
           <>
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.05] px-3.5 py-1.5 text-[13px] text-paper/80">
-              <Check aria-hidden="true" className="size-3.5" /> {me.founding ? `Founding member #${me.n}` : `Verified member #${me.n}`}
-            </span>
-            <h1 className={cn(title, 'mt-5')}>You are verified.</h1>
+            <MemberCard name={me.profile.name} handle={me.profile.handle} image={me.image} n={me.n} founding={me.founding} />
+            <h1 className={cn(title, 'mt-6')}>You are verified.</h1>
             <p className={sub}>
               {me.founding
-                ? 'You signed up before we opened, so you are a founding member, and the whole server is open to you. Check your Discord messages: we sent you a welcome.'
-                : 'The whole server is open to you. Check your Discord messages: we sent you a welcome.'}
+                ? 'You signed up before we opened, so you are a founding member for good, and the whole server is open to you. We sent you a welcome on Discord.'
+                : 'The whole server is open to you. We sent you a welcome on Discord.'}
             </p>
+            <ul className="mt-6 space-y-3.5">
+              <Todo done label="Discord connected" />
+              <Todo done label="Verified: the whole server is open" />
+              <Todo done={me.paypal.length > 0} label={me.paypal.length ? 'PayPal added' : 'Add your PayPal'} hint={me.paypal.length ? undefined : 'Any time, with /paypal in the server.'} />
+              <Todo done={false} label="Prove your TikTok, YouTube or Instagram" hint="Use /verify in the server. Verified creators are picked first for campaigns." />
+            </ul>
           </>
         ) : me.denied ? (
           <>
@@ -536,7 +565,6 @@ function Done({ me, invite }: { me: Me; /** set when they could not be added to 
           </div>
         )}
         {invite ? <p className="mt-5 text-center text-[13px] leading-relaxed text-paper/40">You are not in the server yet. Join with this button and your Verified role is added within a few minutes.</p> : null}
-        {me.n && !invite ? <p className="mt-5 text-center text-[13px] leading-relaxed text-paper/40">Next: link your TikTok, YouTube or Instagram with /verify in the server. Verified creators are picked first.</p> : null}
       </RingCard>
     </motion.div>
   )
@@ -546,7 +574,15 @@ function Done({ me, invite }: { me: Me; /** set when they could not be added to 
  * beta.logoless.io/onboarding: the sign-up that is open while the rest of the site is shut. One panel at a time, each with the search bar's rainbow ring; the
  * server says how far a person has got, so a refresh (or coming back later) opens the first step they have not finished.
  */
-export function PreLaunchOnboarding({ end, joinBase, notice }: { end: number | null; joinBase: string; notice: 'taken' | 'owner' | 'used' | null }) {
+/** What to tell someone whose Discord sign-in came back with an error (the code is Auth.js's, and is shown small so the team can find it in the activity log). */
+const failText = (why: string) =>
+  `${
+    why === 'AccessDenied'
+      ? 'Discord says the email on that account is not verified. Verify it in Discord (User Settings, My Account), then try again.'
+      : 'Discord let you in but we could not finish the sign-in. Please try again. If Discord opened its app, finish there and come back to this same browser.'
+  } (reference: ${why})`
+
+export function PreLaunchOnboarding({ end, joinBase, notice, failed }: { end: number | null; joinBase: string; notice: 'taken' | 'owner' | 'used' | null; failed: string | null }) {
   const [state, setState] = useState<State | null>(null)
   const [at, setAt] = useState<Step | 'landing'>('landing')
   const [busy, setBusy] = useState(false)
@@ -557,7 +593,7 @@ export function PreLaunchOnboarding({ end, joinBase, notice }: { end: number | n
 
   const load = useCallback(async () => {
     const r = await call<State>('/api/pre/state')
-    const s: State = r.ok ? r.data : { signedIn: false }
+    const s: State = r.ok ? r.data : { signedIn: false, next: 0 }
     setState(s)
     return s
   }, [])
@@ -565,6 +601,10 @@ export function PreLaunchOnboarding({ end, joinBase, notice }: { end: number | n
   useEffect(() => {
     void load().then((s) => setAt(s.signedIn ? s.step : 'landing'))
   }, [load])
+  // the reason is shown once; the address goes back to the plain one
+  useEffect(() => {
+    if (failed) window.history.replaceState(null, '', window.location.pathname)
+  }, [failed])
 
   const joinUrl = (extra = '') => `${joinBase}?${extra}then=${encodeURIComponent(`${window.location.origin}/onboarding`)}`
   const discord = () => {
@@ -620,7 +660,7 @@ export function PreLaunchOnboarding({ end, joinBase, notice }: { end: number | n
             <AutoHeight margin={72}>
               <AnimatePresence mode="wait" initial={false}>
                 {at === 'landing' || !me ? (
-                  <Landing end={end} onDiscord={discord} busy={busy} error={error || ''} />
+                  <Landing end={end} next={state?.next || null} onDiscord={discord} busy={busy} error={error || (failed ? failText(failed) : '')} />
                 ) : at === 'accounts' ? (
                   <Accounts me={me} notice={noticeText} onNext={() => setAt('profile')} onGoogle={google} onUnlink={unlink} />
                 ) : at === 'profile' ? (

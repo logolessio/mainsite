@@ -138,6 +138,12 @@ export async function finishPre(userId: string, opts: { trap?: boolean; /** the 
   return next
 }
 
+/** The number the next member to be let in will get (shown on the sign-up: "you would be founding member #N"). */
+export async function upcomingNumber(): Promise<number> {
+  const row = await (await db()).prepare("SELECT value FROM settings WHERE key = 'prelaunch-count'").first<{ value: string }>()
+  return Number(row?.value ?? 0) + 1
+}
+
 async function nextNumber(): Promise<number> {
   const row = await (await db())
     .prepare(

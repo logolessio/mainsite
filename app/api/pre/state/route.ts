@@ -4,7 +4,7 @@ import { communityUrl } from '@/lib/discord/prelaunch'
 import { discordIdFor } from '@/lib/discord/link'
 import { db } from '@/lib/db'
 import { paypalEmails } from '@/lib/paypal-emails'
-import { googleOf, startPre } from '@/lib/prelaunch'
+import { googleOf, startPre, upcomingNumber } from '@/lib/prelaunch'
 import { ensureProfile } from '@/lib/profile'
 import { usernameOf } from '@/lib/profile-style'
 import { getSession } from '@/lib/session'
@@ -18,7 +18,7 @@ const mask = (e: string) => e.replace(/^(.{1,2}).*(@.*)$/, '$1***$2')
  */
 export const GET = route(async (req: Request) => {
   const session = await getSession()
-  if (!session?.user?.email) return json({ signedIn: false })
+  if (!session?.user?.email) return json({ signedIn: false, next: await upcomingNumber() })
   const user = await requireUser()
   const [did, ceremony] = await Promise.all([discordIdFor(user.id), featureOn('payout-ceremony')])
   const pre = await startPre(req, user.id, did)
@@ -58,6 +58,7 @@ export const GET = route(async (req: Request) => {
     held: Boolean(pre.held && !pre.n),
     denied: Boolean(pre.denied),
     n: pre.n ?? null,
+    next: await upcomingNumber(),
     founding: pre.founding !== false,
     discordUrl: await communityUrl(),
   })

@@ -70,7 +70,7 @@ export function AuthCard({ mode }: { mode: Mode }) {
       : params.get('error') === 'AccessDenied'
         ? 'That account’s email is not verified. Verify it with Discord or Google, then try again.'
         : params.get('error')
-          ? 'Sign-in did not complete. Please try again.'
+          ? `Sign-in did not complete. Please try again. (reference: ${params.get('error')!.replace(/[^A-Za-z]/g, '').slice(0, 40)})`
           : '',
   )
 

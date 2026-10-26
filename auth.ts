@@ -108,7 +108,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => ({
       },
     }),
   ],
-  pages: { signIn: '/login', error: '/login' },
+  // a failed sign-in lands on /signin-problem, which sends people back to where they started (the pre-launch sign-up, or the login page)
+  pages: { signIn: '/login', error: '/signin-problem' },
   // Why a sign-in failed, in the activity log (Admin, Logs, kind "error"): the person only sees "Sign-in did not complete", so the reason would otherwise be lost
   logger: {
     error(error) {
