@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { isBetaHost } from '@/lib/beta-host'
 import { isMethodHost, METHOD_HOST } from '@/lib/method-host'
+import { isYtHost, YT_HOST } from '@/lib/yt-host'
 import { clientSlugOf } from '@/lib/client-host'
 
 const MAIN = 'https://logoless.io'
@@ -45,7 +46,20 @@ export function middleware(req: NextRequest) {
     }
     return NextResponse.redirect(new URL('/', req.url), 307)
   }
-  // ...and the tool lives only on its own address: /method on the main site goes there
+  // yt.logoless.io is the Side Effects channel plan and nothing else: its one page is app/yt, opened at the bare address. Every other path comes back to it.
+  if (isYtHost(host)) {
+    if (p === '/') {
+      headers.set('x-path', '/yt')
+      return NextResponse.rewrite(new URL(`/yt${search}`, req.url), { request: { headers } })
+    }
+    return NextResponse.redirect(new URL('/', req.url), 307)
+  }
+  // ...and both pages live only on their own addresses: /yt on the main site goes there
+  if (p === '/yt') {
+    const port = req.nextUrl.port
+    return NextResponse.redirect(host.endsWith('localhost') ? `http://yt.localhost${port ? `:${port}` : ''}/${search}` : `https://${YT_HOST}/${search}`, 307)
+  }
+  // ...the tool lives only on its own address: /method on the main site goes there
   if (p === '/method') {
     const port = req.nextUrl.port
     return NextResponse.redirect(host.endsWith('localhost') ? `http://method.localhost${port ? `:${port}` : ''}/${search}` : `https://${METHOD_HOST}/${search}`, 307)

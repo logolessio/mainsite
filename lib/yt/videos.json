@@ -1,0 +1,1256 @@
+{
+  "stylePrefix": "2D animated short film still, original cartoon character Milo (big round pale head, one curly hair strand, huge expressive eyes, oversized burnt-orange hoodie, thick black outlines, soft cel shading), moody cinematic lighting, dark muted background, high contrast, emotional, 16:9 widescreen, no captions, no subtitles, no logos.",
+  "voice": {
+    "id": "pNInz6obpgDQGcFmaJgB",
+    "name": "Adam",
+    "model": "eleven_multilingual_v2"
+  },
+  "videos": [
+    {
+      "id": "001-tiktok-7-days",
+      "number": "001",
+      "title": "What 7 Days Without TikTok Does to Your Brain",
+      "package": {
+        "title": "What 7 Days Without TikTok Does to Your Brain",
+        "backupTitles": [
+          "I Deleted TikTok for 7 Days. Here's What Happened.",
+          "What Quitting TikTok Does to Your Brain"
+        ],
+        "thumbText": "DAY *7.*",
+        "thumbPrompt": "Close-up of Milo (big round pale head, one curly hair strand, huge exhausted red-rimmed eyes, dark eye bags, oversized burnt-orange hoodie) in a dark bedroom at night, his face lit harsh blue from a glowing phone he is holding, sweat drop, half his face in shadow, character placed in the lower-middle of the frame with empty dark space at the top for text, 2D animated short film style, thick black outlines, high contrast, 16:9, no text",
+        "description": "Milo opens TikTok for five minutes. He looks up and it's 1 AM.\n\nSo he deletes it for 7 days. This is what actually happens to your brain: the phantom thumb, the brutal boredom of day 2, the \"just switch apps\" trap on day 3, and what changes by day 7.\n\nTake the challenge: 7 days, starting today. Comment which day you made it to.\n\n⏱️ Chapters\n0:00 Five minutes\n0:25 Day 1: The thumb\n0:52 Day 2: The boredom\n1:25 Day 3: The trap\n1:55 Day 4: Quiet\n2:20 Day 5: Attention\n2:45 Day 6: The time\n3:15 Day 7\n\n📚 Further reading\nChiossi et al. (2023), short-form video use and prospective memory\n\"Short video addiction\" and attention: a growing body of research. Search Google Scholar for \"short video addiction attention\"\n\nSide Effects is an animated channel about what everyday things actually do to you. New film every 2 days.\n\n#tiktok #dopamine #screentime #selfimprovement #animation",
+        "tags": [
+          "tiktok",
+          "quitting tiktok",
+          "7 days without tiktok",
+          "dopamine detox",
+          "screen time",
+          "social media addiction",
+          "doomscrolling",
+          "attention span",
+          "short form content",
+          "brain",
+          "self improvement",
+          "animated short film",
+          "phone addiction"
+        ],
+        "pinned": "What day did you make it to? Be honest 👇",
+        "shorts": "scenes 28–30 (\"Two hours a day... more than a month of your waking life. Every single year.\") as a 9:16 Short titled \"TikTok Is Stealing a Month of Your Life Every Year\".",
+        "factChecks": [
+          "\"Researchers have linked heavy short-video use to weaker focus, and to forgetting things you meant to do\": Chiossi et al. 2023 (CHI) on TikTok-style switching and prospective memory, plus several studies on short-video addiction and attention. Kept deliberately as \"linked\", not \"proven to cause\".",
+          "2 h/day × 365 = 730 h/yr. 730 ÷ 16 waking h = ~45 days, so \"more than a month of waking life\" holds.",
+          "Days 4 and 6 are written as Milo's experience and \"what people describe\", not as clinical claims. Keep them that way."
+        ]
+      },
+      "seconds": 227.001,
+      "status": {
+        "script": true,
+        "voice": true,
+        "images": 0,
+        "thumbBg": false,
+        "rendered": true
+      },
+      "thumbnail": "/yt/001-tiktok-7-days/thumbnail.png",
+      "voiceover": "/yt/001-tiktok-7-days/voiceover.mp3",
+      "scenes": [
+        {
+          "n": 1,
+          "motion": "zoom_in",
+          "shot": "Milo slumped on a couch at night in a dark living room, opening his phone, wall clock reads 9:00, face lit blue by the screen",
+          "text": "Milo opens TikTok for five minutes.",
+          "start": 0.0
+        },
+        {
+          "n": 2,
+          "motion": "zoom_in",
+          "shot": "close-up of Milo's exhausted face lit by his phone, red tired eyes, wall clock behind him reads 1:07",
+          "text": "He looks up. It's one in the morning.",
+          "start": 2.439
+        },
+        {
+          "n": 3,
+          "motion": "static",
+          "shot": "Milo staring blankly at the phone, an empty thought bubble above his head",
+          "text": "And he can't remember a single video he watched.",
+          "start": 4.982
+        },
+        {
+          "n": 4,
+          "motion": "zoom_in",
+          "shot": "Milo's thumb pressing \"delete app\" on his phone, determined expression, dark room",
+          "text": "So he makes a deal with himself. Seven days. No TikTok.",
+          "start": 7.954000000000001
+        },
+        {
+          "n": 5,
+          "motion": "zoom_out",
+          "shot": "Milo standing alone in the centre of a dark empty space, phone in hand, a single spotlight above him, cinematic title-card composition",
+          "text": "Here's what actually happens to your brain when you do that.",
+          "start": 13.724
+        },
+        {
+          "n": 6,
+          "motion": "static",
+          "shot": "a big hand-drawn chalk number \"1\" glowing on a dark wall, Milo small in the corner looking at it",
+          "text": "Day one.",
+          "start": 17.335
+        },
+        {
+          "n": 7,
+          "motion": "zoom_in",
+          "shot": "extreme close-up of Milo's thumb hovering over a phone home screen with an empty gap where an app used to be",
+          "text": "The first thing Milo notices isn't peace. It's his thumb.",
+          "start": 19.019
+        },
+        {
+          "n": 8,
+          "motion": "pan_right",
+          "shot": "Milo unlocking his phone again and again, multiple ghosted copies of his hand showing the repeated motion",
+          "text": "He unlocks his phone again and again. He swipes to where the app used to be. Nothing's there.",
+          "start": 23.036
+        },
+        {
+          "n": 9,
+          "motion": "zoom_out",
+          "shot": "Milo in the middle of a glowing circular loop of three simple icons: a yawning face, a phone, a small spark of light",
+          "text": "That's not weakness. It's a habit loop. Feel a tiny bit bored. Reach for the phone. Get a reward. You've run that loop thousands of times. It doesn't disappear just because the app did.",
+          "start": 29.944
+        },
+        {
+          "n": 10,
+          "motion": "static",
+          "shot": "chalk number \"2\" on a dark wall, Milo slumped against the wall beneath it",
+          "text": "Day two. Boredom hits like a wall.",
+          "start": 42.425
+        },
+        {
+          "n": 11,
+          "motion": "pan_left",
+          "shot": "wide shot of Milo waiting in a long grey queue at a shop, arms hanging, looking at nothing, everyone else on phones",
+          "text": "Waiting in line. Waiting for the microwave. Sitting on the bus. Every tiny gap in his day used to be filled.",
+          "start": 46.233
+        },
+        {
+          "n": 12,
+          "motion": "zoom_in",
+          "shot": "Milo alone at a kitchen table in silence, ticking clock on the wall, cold blue light",
+          "text": "Now it's just silence. And it feels awful.",
+          "start": 53.524
+        },
+        {
+          "n": 13,
+          "motion": "pan_right",
+          "shot": "Milo looking out of a rainy window, calm grey city outside, soft reflection on the glass",
+          "text": "But that feeling is the point. When everything you watch is fast, loud, and new every few seconds, normal life starts to feel unbearably slow. Take the feed away, and slow is all that's left. So your brain has to get used to it again.",
+          "start": 56.961
+        },
+        {
+          "n": 14,
+          "motion": "zoom_in",
+          "shot": "chalk number \"3\" on a dark wall, Milo in bed at night gripping his pillow, a phone glowing on the nightstand",
+          "text": "Day three. The cravings are the worst today.",
+          "start": 72.924
+        },
+        {
+          "n": 15,
+          "motion": "shake",
+          "shot": "Milo guiltily scrolling a different short-video app under his blanket, sweat drop on his forehead",
+          "text": "So he opens a different app instead. Different logo. Same endless feed.",
+          "start": 76.245
+        },
+        {
+          "n": 16,
+          "motion": "pan_right",
+          "shot": "three identical phones side by side, each showing an endless vertical video feed, Milo's reflection in all three",
+          "text": "This is the trap most people fall into. They don't quit the habit. They just switch the app.",
+          "start": 81.888
+        },
+        {
+          "n": 17,
+          "motion": "zoom_out",
+          "shot": "Milo walking down a dark hallway carrying his phone at arm's length toward a drawer in another room",
+          "text": "Milo catches himself. And he puts the phone in another room.",
+          "start": 87.391
+        },
+        {
+          "n": 18,
+          "motion": "zoom_in",
+          "shot": "Milo asleep peacefully in bed, moonlight through the window, bedside clock reads 11:40",
+          "text": "That night, something strange happens. He's asleep before midnight.",
+          "start": 92.569
+        },
+        {
+          "n": 19,
+          "motion": "static",
+          "shot": "chalk number \"4\" on a wall, soft warm morning light coming through a window",
+          "text": "Day four.",
+          "start": 98.885
+        },
+        {
+          "n": 20,
+          "motion": "zoom_in",
+          "shot": "Milo waking up in bed in warm morning sunlight, reaching toward an empty nightstand",
+          "text": "He wakes up, and for the first time in months, he doesn't reach for his phone. Because it isn't there.",
+          "start": 100.487
+        },
+        {
+          "n": 21,
+          "motion": "zoom_out",
+          "shot": "Milo lying on his back staring at the ceiling, calm, small soft clouds of thought floating above him",
+          "text": "He just lies there for a minute. Thinking his own thoughts. Not somebody else's video.",
+          "start": 107.0
+        },
+        {
+          "n": 22,
+          "motion": "zoom_in",
+          "shot": "side view of Milo's head with a cloud of static and scribbles fading away into calm empty space",
+          "text": "A lot of people who try this describe the same thing. Their head feels quieter. Less noise. Less of that restless, buzzing feeling.",
+          "start": 113.839
+        },
+        {
+          "n": 23,
+          "motion": "pan_right",
+          "shot": "chalk number \"5\" on a wall, Milo sitting in an armchair reading a book under a warm lamp",
+          "text": "Day five. Milo reads ten pages of a book.",
+          "start": 123.522
+        },
+        {
+          "n": 24,
+          "motion": "shake",
+          "shot": "flashback with a cold blue tint: Milo impatiently tapping \"skip\" on a short video, irritated face",
+          "text": "Ten pages doesn't sound like much. But a week ago, he couldn't sit through a two-minute video without skipping.",
+          "start": 128.374
+        },
+        {
+          "n": 25,
+          "motion": "pan_left",
+          "shot": "a small glowing rabbit hopping frantically between dozens of floating phone screens inside a giant outline of Milo's head",
+          "text": "When you jump from clip to clip all day, you train your attention to jump too. Researchers have linked heavy short-video use to weaker focus, and to forgetting things you meant to do.",
+          "start": 135.607
+        },
+        {
+          "n": 26,
+          "motion": "zoom_out",
+          "shot": "the same small rabbit now sitting still and calm in an open green field inside the outline of Milo's head",
+          "text": "The good news is that attention is trainable. In both directions.",
+          "start": 147.089
+        },
+        {
+          "n": 27,
+          "motion": "static",
+          "shot": "chalk number \"6\" on a wall, Milo standing in his room looking around with an awkward amount of free time",
+          "text": "Day six. Milo has a weird amount of time.",
+          "start": 151.64
+        },
+        {
+          "n": 28,
+          "motion": "pan_left",
+          "shot": "warm montage: Milo walking outside at golden hour, Milo cleaning his messy room, Milo smiling on a phone call",
+          "text": "He goes for a walk. He cleans his room. He calls a friend he hasn't spoken to in months.",
+          "start": 154.821
+        },
+        {
+          "n": 29,
+          "motion": "zoom_in",
+          "shot": "Milo standing in front of a giant mountain of hourglasses, the number \"14 HOURS\" glowing above it",
+          "text": "Two hours a day doesn't feel like much when it's broken into tiny pieces. But add it up, and that's fourteen hours a week. More than seven hundred hours a year.",
+          "start": 160.22
+        },
+        {
+          "n": 30,
+          "motion": "zoom_in",
+          "shot": "calendar pages flying off a wall and getting sucked into a glowing phone screen, Milo watching in shock",
+          "text": "That's more than a month of your waking life. Every single year.",
+          "start": 170.599
+        },
+        {
+          "n": 31,
+          "motion": "zoom_out",
+          "shot": "chalk number \"7\" on a wall, golden sunrise light pouring into the room",
+          "text": "Day seven.",
+          "start": 175.568
+        },
+        {
+          "n": 32,
+          "motion": "static",
+          "shot": "Milo sitting on the edge of his bed, normal expression, honest small half-smile",
+          "text": "Milo isn't a different person. He still gets bored. He still wants to check his phone sometimes.",
+          "start": 177.019
+        },
+        {
+          "n": 33,
+          "motion": "zoom_out",
+          "shot": "Milo sitting on a park bench under a wide open morning sky, calm, birds in the distance",
+          "text": "But something has shifted. Boredom doesn't feel like an emergency anymore. It feels like space.",
+          "start": 183.486
+        },
+        {
+          "n": 34,
+          "motion": "zoom_in",
+          "shot": "close-up of Milo's hesitant thumb tapping \"install\" on the app again",
+          "text": "And when he finally opens TikTok again, just to see...",
+          "start": 190.754
+        },
+        {
+          "n": 35,
+          "motion": "shake",
+          "shot": "Milo wincing as chaotic flashing colours from the phone screen blast across his face",
+          "text": "It feels loud. Fast. Honestly, kind of exhausting.",
+          "start": 195.003
+        },
+        {
+          "n": 36,
+          "motion": "static",
+          "shot": "Milo placing his phone face down on a wooden table in warm light",
+          "text": "He closes it after two minutes.",
+          "start": 199.914
+        },
+        {
+          "n": 37,
+          "motion": "zoom_out",
+          "shot": "Milo walking away from the camera down a path toward the sunrise",
+          "text": "Seven days won't rewire your entire brain. But it's long enough to notice something important.",
+          "start": 201.749
+        },
+        {
+          "n": 38,
+          "motion": "zoom_in",
+          "shot": "close-up of Milo looking up at the sky, warm light on his face, peaceful",
+          "text": "The feed was never helping you rest. It was just filling every gap where rest used to be.",
+          "start": 207.995
+        },
+        {
+          "n": 39,
+          "motion": "zoom_in",
+          "shot": "Milo turning to face the camera with a small determined look, dark background, orange hoodie glowing",
+          "text": "So here's the challenge. Seven days, starting today. Tell me in the comments which day you made it to.",
+          "start": 213.637
+        },
+        {
+          "n": 40,
+          "motion": "static",
+          "shot": "Milo waving goodbye on the left side of the frame, empty dark space on the right for end screen elements",
+          "text": "And if you want to see what else is quietly costing you, I'll see you in the next one.",
+          "start": 219.999
+        }
+      ]
+    },
+    {
+      "id": "002-vaping",
+      "number": "002",
+      "title": "Actually, How Bad Is Vaping?",
+      "package": {
+        "title": "Actually, How Bad Is Vaping?",
+        "backupTitles": [
+          "What Vaping Is Actually Doing to Your Body",
+          "\"It's Just Water Vapour.\" (It Isn't.)"
+        ],
+        "thumbText": "HOW *BAD?*",
+        "thumbPrompt": "Milo (big round pale head, one curly hair strand, huge worried eyes, dark eye bags, oversized burnt-orange hoodie) holding a glowing disposable vape, exhaling a thick swirling cloud that curls around his head, the cloud tinted sickly green-purple, dark background, worried sweating expression, character in the lower-middle of the frame with empty dark space at the top for text, 2D animated short film style, thick black outlines, high contrast, 16:9, no text",
+        "description": "\"It's basically just water vapour.\" It isn't.\n\nNot the scary version. Not the \"it's totally fine\" version. The honest one: what's actually in the cloud, what nicotine does to a developing brain, why a vape is harder to put down than a cigarette, the popcorn lung myth, the 2019 lung injury outbreak, and what happens when you quit.\n\nIf you've quit (or you're trying), comment how long it's been.\n\n⏱️ Chapters\n0:00 \"It's just water vapour\"\n0:20 What's in the cloud\n0:55 Nicotine & your brain\n1:35 Why it's so hard to stop\n2:05 Vaping vs cigarettes\n2:40 Popcorn lung & the 2019 outbreak\n3:20 What we don't know yet\n3:40 What happens when you quit\n\n📚 Sources\nNHS Better Health: Vaping to quit smoking\nCDC: Outbreak of lung injury associated with e-cigarette use (EVALI)\nCDC: Health effects of vaping / nicotine and the adolescent brain\nCancer Research UK: Does vaping cause popcorn lung?\n\nNeed help quitting? US: text \"DITCHVAPE\" to 88709 (Truth Initiative), UK: NHS Smokefree.\n\nSide Effects is an animated channel about what everyday things actually do to you.\n\n#vaping #quitvaping #nicotine #health #animation",
+        "tags": [
+          "vaping",
+          "how bad is vaping",
+          "is vaping bad",
+          "vaping vs smoking",
+          "quit vaping",
+          "nicotine addiction",
+          "popcorn lung",
+          "disposable vape",
+          "nicotine withdrawal",
+          "e cigarette",
+          "lungs",
+          "health",
+          "animated short film"
+        ],
+        "pinned": "How long has it been since your last hit? Day 1 counts too 👇",
+        "shorts": "scene 12 (cigarette ends vs vape never ends) as \"Why Vapes Are Harder to Quit Than Cigarettes\".",
+        "factChecks": [
+          "Aerosol contains metals from coils, and formaldehyde can form at high temperatures: CDC / NASEM 2018 report.",
+          "Brain develops until ~25; nicotine affects attention, learning, mood and impulse control: CDC \"Youth and E-cigarettes\" page.",
+          "Nicotine raises heart rate and blood pressure: standard (CDC/NHS).",
+          "Some disposables contain nicotine equal to several packs: varies by product. Keep the \"some\".",
+          "NHS says vaping is substantially less harmful than smoking: NHS Better Health.",
+          "No confirmed popcorn lung cases from vaping: Cancer Research UK.",
+          "EVALI: 2,807 hospitalized, 68 deaths (CDC, Feb 2020), mostly vitamin E acetate in illicit THC products.",
+          "Youth vaping linked to bronchitic symptoms: McConnell et al. 2017 and later studies.",
+          "Withdrawal worst in the first ~3 days, easing over 2–4 weeks: NHS.",
+          "The video stays \"limited ads\"-safe: no glamorising and no showing how to buy. Keep it that way."
+        ]
+      },
+      "seconds": 251.568,
+      "status": {
+        "script": true,
+        "voice": true,
+        "images": 0,
+        "thumbBg": false,
+        "rendered": false
+      },
+      "thumbnail": "/yt/002-vaping/thumbnail.png",
+      "voiceover": "/yt/002-vaping/voiceover.mp3",
+      "scenes": [
+        {
+          "n": 1,
+          "motion": "zoom_in",
+          "shot": "Milo at a party in dim purple light, a friend holding out a colourful disposable vape to him",
+          "text": "The first time Milo tried a vape, his friend said: \"Relax. It's basically just water vapour.\"",
+          "start": 0.0
+        },
+        {
+          "n": 2,
+          "motion": "shake",
+          "shot": "Milo exhaling a huge sweet-smelling cloud that fills the whole frame",
+          "text": "It isn't.",
+          "start": 6.828
+        },
+        {
+          "n": 3,
+          "motion": "zoom_out",
+          "shot": "Milo standing alone in a dark space surrounded by drifting clouds of vapour, holding a vape, serious expression",
+          "text": "So, actually, how bad is vaping? Not the scary version. Not the \"it's totally fine\" version. The honest one.",
+          "start": 7.9079999999999995
+        },
+        {
+          "n": 4,
+          "motion": "pan_right",
+          "shot": "cutaway diagram style: a vape split open showing a small glowing metal coil, a battery and a tank of coloured liquid",
+          "text": "Inside a vape is a liquid. Usually nicotine, a couple of thick, sweet-tasting bases called propylene glycol and glycerin, and flavourings. A metal coil heats it until it turns into a cloud.",
+          "start": 16.197
+        },
+        {
+          "n": 5,
+          "motion": "zoom_in",
+          "shot": "extreme close-up of tiny glowing particles floating inside a cloud of vapour, dark background",
+          "text": "But that cloud isn't steam. It's an aerosol: tiny droplets and particles. Studies have found traces of metals from the heating coil in it, and when the coil gets very hot, chemicals like formaldehyde can form.",
+          "start": 29.352
+        },
+        {
+          "n": 6,
+          "motion": "static",
+          "shot": "Milo looking down at the vape in his hand, uneasy, the flavour label shows a cartoon mango",
+          "text": "And the flavourings? Most are approved for eating. Breathing them in, every day, for years, is a very different thing, and nobody fully knows what that does yet.",
+          "start": 43.817
+        },
+        {
+          "n": 7,
+          "motion": "zoom_in",
+          "shot": "Milo's head drawn in cross-section showing a glowing brain, warm light pulsing through it",
+          "text": "Then there's the main ingredient. Nicotine.",
+          "start": 55.288
+        },
+        {
+          "n": 8,
+          "motion": "pan_left",
+          "shot": "Milo taking a hit and the glowing brain lighting up with a quick burst of warm light, then immediately dimming",
+          "text": "Nicotine reaches your brain within seconds. It triggers a quick hit of reward. Then it fades, and your brain starts asking for the next one.",
+          "start": 58.644
+        },
+        {
+          "n": 9,
+          "motion": "zoom_in",
+          "shot": "a young Milo silhouette with a brain still under construction, scaffolding and building cranes around it",
+          "text": "And if you're young, this matters more. Your brain keeps developing until around your mid-twenties. Nicotine during those years can affect attention, learning, mood, and impulse control.",
+          "start": 67.92
+        },
+        {
+          "n": 10,
+          "motion": "shake",
+          "shot": "Milo pressing a hand to his chest, a small red heart beating fast with motion lines",
+          "text": "It also raises your heart rate and blood pressure every time you use it.",
+          "start": 80.702
+        },
+        {
+          "n": 11,
+          "motion": "zoom_out",
+          "shot": "Milo lying in bed at night, staring at the ceiling, wide awake, a vape glowing on the nightstand",
+          "text": "This is the part people underestimate. Vaping doesn't feel addictive. Until you try to go a day without it.",
+          "start": 84.394
+        },
+        {
+          "n": 12,
+          "motion": "pan_right",
+          "shot": "side by side: on the left a cigarette that has burned down to the filter, on the right a vape still glowing with a full battery icon",
+          "text": "A cigarette ends. It burns down, and you have to decide to light another one. A vape never ends. There's no natural stopping point. So you just... keep going.",
+          "start": 91.232
+        },
+        {
+          "n": 13,
+          "motion": "zoom_in",
+          "shot": "a disposable vape next to a towering stack of cigarette packs, Milo looking up at the stack in disbelief",
+          "text": "And modern vapes use nicotine salts, which feel smooth instead of harsh. That makes it easy to take in a lot. Some disposables contain as much nicotine as several packs of cigarettes.",
+          "start": 101.6
+        },
+        {
+          "n": 14,
+          "motion": "static",
+          "shot": "chalk text on a dark wall reading \"VS\", a cigarette on one side and a vape on the other, Milo standing between them",
+          "text": "Now, here's the part most anti-vaping videos leave out.",
+          "start": 113.245
+        },
+        {
+          "n": 15,
+          "motion": "zoom_out",
+          "shot": "split scene: a dark polluted smoky side with a cigarette, and a lighter foggy side with a vape, Milo standing on the line between",
+          "text": "Compared to smoking cigarettes, vaping is much less harmful. Cigarette smoke comes from burning tobacco, which creates thousands of chemicals, many of them causing cancer. Health agencies like the UK's NHS say that if you smoke, switching to vaping is a lot safer.",
+          "start": 117.018
+        },
+        {
+          "n": 16,
+          "motion": "zoom_in",
+          "shot": "Milo's face, thoughtful, one eyebrow raised",
+          "text": "But \"less harmful than cigarettes\" is a very low bar. It's like saying jumping off the second floor is safer than jumping off the tenth. True. Still not a great idea if you weren't going to jump at all.",
+          "start": 135.257
+        },
+        {
+          "n": 17,
+          "motion": "pan_left",
+          "shot": "an old faded newspaper-style scene showing a factory with smokestacks and a worker in a mask",
+          "text": "What about \"popcorn lung\"? That's a real disease. It was found in factory workers who breathed in a buttery flavouring called diacetyl.",
+          "start": 147.18
+        },
+        {
+          "n": 18,
+          "motion": "static",
+          "shot": "Milo shrugging, a small question mark above his head",
+          "text": "But there are no confirmed cases of popcorn lung caused by vaping. That one's mostly a myth.",
+          "start": 155.771
+        },
+        {
+          "n": 19,
+          "motion": "zoom_in",
+          "shot": "a dark hospital hallway with cold blue light, an empty hospital bed in the distance",
+          "text": "Then in 2019, thousands of people across America ended up in hospital with severe lung injuries. Sixty-eight of them died.",
+          "start": 161.889
+        },
+        {
+          "n": 20,
+          "motion": "pan_right",
+          "shot": "close-up of an unlabelled, sketchy-looking vape cartridge on a dark table under a single light",
+          "text": "Investigators traced most cases to an additive called vitamin E acetate in illegal THC cartridges. Not normal nicotine vapes. But it showed how fast something you inhale can go wrong when nobody checks what's in it.",
+          "start": 170.922
+        },
+        {
+          "n": 21,
+          "motion": "zoom_out",
+          "shot": "Milo standing on a long road stretching into dark fog, unable to see where it ends",
+          "text": "And here's the honest truth. Vapes have only been popular for about fifteen years. Lung disease from cigarettes took decades to show up. We simply don't know yet what thirty years of vaping does.",
+          "start": 186.096
+        },
+        {
+          "n": 22,
+          "motion": "zoom_in",
+          "shot": "Milo coughing into his elbow, small cough motion lines",
+          "text": "What we do know: studies have linked vaping in young people to more coughing, wheezing, and bronchitis-like symptoms.",
+          "start": 197.81
+        },
+        {
+          "n": 23,
+          "motion": "static",
+          "shot": "Milo dropping a vape into a bin, determined but nervous expression",
+          "text": "So what happens when you quit?",
+          "start": 205.125
+        },
+        {
+          "n": 24,
+          "motion": "shake",
+          "shot": "Milo sitting on the floor against a wall, irritable and restless, scribble cloud above his head",
+          "text": "The first three days are the hardest. Cravings. Irritability. Trouble sleeping. That's nicotine withdrawal, and it's normal.",
+          "start": 207.273
+        },
+        {
+          "n": 25,
+          "motion": "zoom_out",
+          "shot": "Milo walking outside on a cold clear morning, breathing visible, calmer",
+          "text": "After about two to four weeks, the worst of it fades. The cravings come less often, and they get weaker every time you don't give in.",
+          "start": 215.991
+        },
+        {
+          "n": 26,
+          "motion": "zoom_in",
+          "shot": "Milo looking in a mirror in warm morning light, small proud smile",
+          "text": "And your heart rate and blood pressure stop getting that spike every few minutes.",
+          "start": 223.596
+        },
+        {
+          "n": 27,
+          "motion": "zoom_out",
+          "shot": "Milo holding a vape in one open palm, looking at it calmly, wide dark background",
+          "text": "So, how bad is vaping? If you smoke, it's a step down. If you don't, it's a step into something you might not be able to step back out of.",
+          "start": 227.787
+        },
+        {
+          "n": 28,
+          "motion": "zoom_in",
+          "shot": "Milo turning to face the camera, hoodie glowing orange, calm and serious",
+          "text": "The cloud is sweet. The habit isn't. And it's made to be very, very easy to pick up.",
+          "start": 237.098
+        },
+        {
+          "n": 29,
+          "motion": "static",
+          "shot": "Milo waving goodbye on the left side of the frame, empty dark space on the right for end screen elements",
+          "text": "If you've quit, or you're trying, tell me how long it's been in the comments. I'll see you in the next one.",
+          "start": 243.332
+        }
+      ]
+    },
+    {
+      "id": "003-energy-drinks",
+      "number": "003",
+      "title": "What Energy Drinks Actually Do to Your Body",
+      "package": {
+        "title": "What Energy Drinks Actually Do to Your Body",
+        "backupTitles": [
+          "What 1 Energy Drink Does to Your Body (Hour by Hour)",
+          "Energy Drinks Don't Give You Energy."
+        ],
+        "thumbText": "THE *CRASH.*",
+        "thumbPrompt": "Milo (big round pale head, one curly hair strand, oversized burnt-orange hoodie) slumped face-first on a desk surrounded by a pile of crushed empty energy drink cans, one eye open, bloodshot and exhausted, eye bags, sweat drop, harsh cold office light from above, dark background, character in the lower-middle of the frame with empty space at the top for text, 2D animated short film style, thick black outlines, high contrast, 16:9, no text, no brand logos",
+        "description": "That can doesn't give you energy. It borrows it.\n\nMinute by minute, what one energy drink actually does: the sugar spike, the caffeine trick your brain falls for, the crash, why you can't sleep at midnight, and the cycle that makes you need another one tomorrow.\n\nHow many cans a day are you on? Be honest 👇\n\n⏱️ Chapters\n0:00 3 PM\n0:20 Minute 0: the sugar\n0:40 Minute 10: the caffeine trick\n1:20 Minute 45: the peak (and the drop)\n2:05 Hour 5: why you can't sleep\n2:40 The next day\n3:10 Tolerance & withdrawal\n3:40 The real fix\n\n📚 Sources\nFDA: Spilling the Beans: How much caffeine is too much?\nDrake et al. (2013), Caffeine effects on sleep taken 0, 3, or 6 hours before going to bed\nAmerican Heart Association: added sugar recommendations\n\nSide Effects is an animated channel about what everyday things actually do to you.\n\n#energydrink #caffeine #sleep #health #animation",
+        "tags": [
+          "energy drinks",
+          "what energy drinks do to your body",
+          "caffeine",
+          "caffeine crash",
+          "energy drink side effects",
+          "adenosine",
+          "sleep",
+          "caffeine withdrawal",
+          "sugar crash",
+          "tired all the time",
+          "health",
+          "animated short film"
+        ],
+        "pinned": "Cans per day. Go. 👇",
+        "shorts": "scenes 9–10 (adenosine \"not allowed to sit down\") as \"Caffeine Doesn't Wake You Up. It Does This.\"",
+        "factChecks": [
+          "One large regular energy drink can exceed the AHA daily added-sugar limit (36 g men / 25 g women). A 16 oz original Monster is ~54 g. Check whatever can you picture.",
+          "Caffeine per can is ~80 mg (small Red Bull) up to ~300 mg (some performance brands).",
+          "400 mg/day is the FDA's general figure for healthy adults (not for teens or during pregnancy).",
+          "Caffeine half-life is ~5 h on average (it ranges roughly 2 to 10 h).",
+          "Drake et al. 2013: 400 mg caffeine 6 h before bed reduced total sleep by more than 1 h.",
+          "Tolerance via adenosine receptor changes, and withdrawal peaking ~1–2 days after stopping: standard pharmacology. Wording is kept as \"can make more\".",
+          "No brand names or logos on screen. Keep generic cans."
+        ]
+      },
+      "seconds": null,
+      "status": {
+        "script": true,
+        "voice": false,
+        "images": 0,
+        "thumbBg": false,
+        "rendered": false
+      },
+      "thumbnail": "/yt/003-energy-drinks/thumbnail.png",
+      "voiceover": null,
+      "scenes": [
+        {
+          "n": 1,
+          "motion": "zoom_in",
+          "shot": "Milo at his desk at 3 PM, eyelids drooping, a pile of unfinished work, cold office light",
+          "text": "It's three in the afternoon. Milo is exhausted.",
+          "start": null
+        },
+        {
+          "n": 2,
+          "motion": "shake",
+          "shot": "close-up of Milo's hand cracking open a tall energy drink can, fizz spraying out",
+          "text": "So he does what millions of people do every day.",
+          "start": null
+        },
+        {
+          "n": 3,
+          "motion": "zoom_out",
+          "shot": "Milo holding the can up like a trophy in a dark room, the can glowing, an ominous shadow behind him",
+          "text": "That can feels like energy. But it doesn't give you any. It borrows it. And here's how the loan works.",
+          "start": null
+        },
+        {
+          "n": 4,
+          "motion": "static",
+          "shot": "a big chalk-drawn clock on a dark wall reading \"0 MIN\"",
+          "text": "Minute zero.",
+          "start": null
+        },
+        {
+          "n": 5,
+          "motion": "pan_down",
+          "shot": "cutaway of liquid flowing down into Milo's stomach, glowing sugar crystals swirling in it",
+          "text": "The first thing to hit is the sugar. One big can of a regular energy drink can contain more added sugar than you're supposed to have in an entire day.",
+          "start": null
+        },
+        {
+          "n": 6,
+          "motion": "zoom_in",
+          "shot": "Milo's eyes widening with a little burst of light, a small spike graph rising behind him",
+          "text": "Your blood sugar jumps. You feel a quick lift. That's not the caffeine yet. That's the sugar.",
+          "start": null
+        },
+        {
+          "n": 7,
+          "motion": "static",
+          "shot": "chalk clock on the wall reading \"10 MIN\"",
+          "text": "Ten minutes.",
+          "start": null
+        },
+        {
+          "n": 8,
+          "motion": "pan_right",
+          "shot": "a glowing stream of caffeine particles travelling through blood vessels toward Milo's brain",
+          "text": "The caffeine starts getting into your bloodstream. Your heart rate goes up. Your blood pressure rises.",
+          "start": null
+        },
+        {
+          "n": 9,
+          "motion": "zoom_in",
+          "shot": "Milo's brain drawn as a room where little sleepy creatures called adenosine are trying to sit down in chairs",
+          "text": "Here's what's actually happening. All day, your brain builds up a chemical called adenosine. The more of it there is, the more tired you feel. It's basically your body's sleep pressure.",
+          "start": null
+        },
+        {
+          "n": 10,
+          "motion": "shake",
+          "shot": "caffeine molecules drawn as tiny bouncers stealing the chairs so the sleepy creatures can't sit down, the sleepy creatures piling up in the background",
+          "text": "Caffeine doesn't remove that tiredness. It blocks the receptors adenosine plugs into. The tiredness is still there. It's just not allowed to sit down.",
+          "start": null
+        },
+        {
+          "n": 11,
+          "motion": "static",
+          "shot": "chalk clock on the wall reading \"45 MIN\"",
+          "text": "Forty-five minutes.",
+          "start": null
+        },
+        {
+          "n": 12,
+          "motion": "zoom_out",
+          "shot": "Milo typing super fast at his desk, eyes wide, glowing with energy, papers flying",
+          "text": "Caffeine is close to its peak. Milo feels sharp. Focused. Unstoppable.",
+          "start": null
+        },
+        {
+          "n": 13,
+          "motion": "pan_left",
+          "shot": "a small blood sugar graph line plunging down a cliff, Milo's face sliding down with it",
+          "text": "But the sugar is already gone. Your body released insulin to deal with it, and now your blood sugar is dropping. Some people start feeling foggy and irritable right here.",
+          "start": null
+        },
+        {
+          "n": 14,
+          "motion": "zoom_in",
+          "shot": "Milo reaching for a second can on his desk with a slightly guilty expression",
+          "text": "So... a lot of people reach for a second can.",
+          "start": null
+        },
+        {
+          "n": 15,
+          "motion": "static",
+          "shot": "a can label close-up with a big glowing number \"160 MG\"",
+          "text": "A single big can can have anywhere from around eighty to three hundred milligrams of caffeine. For healthy adults, about four hundred a day is the usual upper limit. Two strong cans and you're past it.",
+          "start": null
+        },
+        {
+          "n": 16,
+          "motion": "shake",
+          "shot": "Milo with jittery shaking hands, sweat drops, heart pounding visibly through his hoodie",
+          "text": "Too much shows up as jitters, a racing heart, anxiety, and a stomach that feels wrong.",
+          "start": null
+        },
+        {
+          "n": 17,
+          "motion": "static",
+          "shot": "chalk clock on the wall reading \"5 HOURS\"",
+          "text": "Five hours.",
+          "start": null
+        },
+        {
+          "n": 18,
+          "motion": "zoom_in",
+          "shot": "Milo on the couch at 8 PM, still wide-eyed, an hourglass beside him only half empty",
+          "text": "Caffeine's half-life is about five hours. So if Milo drank that can at three, around half the caffeine is still in his body at eight.",
+          "start": null
+        },
+        {
+          "n": 19,
+          "motion": "pan_right",
+          "shot": "Milo lying in bed at midnight staring at the ceiling, wide awake, the clock reading 12:40",
+          "text": "Which is why, at midnight, he's lying in bed. Tired. But not sleepy.",
+          "start": null
+        },
+        {
+          "n": 20,
+          "motion": "zoom_in",
+          "shot": "Milo finally asleep but shallow, the dream bubble above him flickering and broken",
+          "text": "In one study, caffeine taken even six hours before bed cut people's sleep by more than an hour. And the sleep he does get is lighter.",
+          "start": null
+        },
+        {
+          "n": 21,
+          "motion": "static",
+          "shot": "chalk text on the wall reading \"THE NEXT DAY\"",
+          "text": "The next day.",
+          "start": null
+        },
+        {
+          "n": 22,
+          "motion": "zoom_out",
+          "shot": "Milo slumped at the breakfast table, eyes half shut, looking worse than yesterday",
+          "text": "Now here's the loan coming due. Milo slept badly, so he wakes up more tired than yesterday. And all that blocked-up sleep pressure is still there.",
+          "start": null
+        },
+        {
+          "n": 23,
+          "motion": "zoom_in",
+          "shot": "Milo cracking open a can at 9 AM, sad resigned face",
+          "text": "So he needs a can just to feel normal. Not good. Normal.",
+          "start": null
+        },
+        {
+          "n": 24,
+          "motion": "pan_left",
+          "shot": "a loop drawn as a circle on a dark wall: can, crash, bad sleep, tired, can again, with Milo running around it like a hamster wheel",
+          "text": "That's the cycle. Energy drink. Crash. Bad sleep. Tired. Energy drink. Each one borrowing from tomorrow to pay for today.",
+          "start": null
+        },
+        {
+          "n": 25,
+          "motion": "zoom_in",
+          "shot": "Milo's brain room again, now with many more chairs added for the sleepy creatures",
+          "text": "And over time, your brain adapts. It can make more of those adenosine receptors. So you need more caffeine to feel the same effect. That's tolerance.",
+          "start": null
+        },
+        {
+          "n": 26,
+          "motion": "shake",
+          "shot": "Milo holding his head in pain on a Sunday, no can on the table, a headache drawn as a lightning bolt",
+          "text": "Try skipping a day, and you might get a pounding headache, fatigue, and low mood. That's caffeine withdrawal. It usually peaks a day or two after you stop.",
+          "start": null
+        },
+        {
+          "n": 27,
+          "motion": "pan_right",
+          "shot": "a close-up of a tooth with the shiny surface being slowly washed away by fizzy liquid",
+          "text": "And if it's a daily habit: energy drinks are acidic and sugary, which is a rough combination for your teeth.",
+          "start": null
+        },
+        {
+          "n": 28,
+          "motion": "zoom_out",
+          "shot": "Milo sitting calmly in a café holding a normal small cup of coffee, warm light",
+          "text": "Now, to be fair: caffeine isn't evil. For most healthy adults, moderate amounts are fine. Coffee and tea have been around for centuries.",
+          "start": null
+        },
+        {
+          "n": 29,
+          "motion": "zoom_in",
+          "shot": "Milo looking at the energy drink can in his hand, thoughtful, the can's glow reflecting in his eyes",
+          "text": "The problem with energy drinks is the dose, the sugar, and the timing. Big amounts. Drunk fast. Usually in the afternoon. Usually because you didn't sleep enough in the first place.",
+          "start": null
+        },
+        {
+          "n": 30,
+          "motion": "zoom_out",
+          "shot": "Milo going to bed early, the room dark and calm, his phone charging across the room",
+          "text": "The one thing that actually fixes being tired isn't in a can. It's the thing the can keeps stealing from you.",
+          "start": null
+        },
+        {
+          "n": 31,
+          "motion": "zoom_in",
+          "shot": "Milo waking up in morning sunlight, stretching, genuinely rested, small smile",
+          "text": "Sleep.",
+          "start": null
+        },
+        {
+          "n": 32,
+          "motion": "static",
+          "shot": "Milo waving goodbye on the left side of the frame, empty dark space on the right for end screen elements",
+          "text": "How many cans a day are you on? Be honest in the comments. And I'll see you in the next one.",
+          "start": null
+        }
+      ]
+    }
+  ],
+  "ideas": [
+    {
+      "n": 1,
+      "category": "Phone & internet",
+      "star": true,
+      "limited": false,
+      "title": "What 7 Days Without TikTok Does to Your Brain",
+      "thumb": "DAY 7.",
+      "hook": "He opened it for 5 minutes. He looked up at 1 AM.",
+      "ready": true
+    },
+    {
+      "n": 2,
+      "category": "Phone & internet",
+      "star": true,
+      "limited": false,
+      "title": "What Doomscrolling Before Bed Is Doing to You",
+      "thumb": "2:47 AM.",
+      "hook": "\"Just one more video\" is the most expensive sentence you say all day.",
+      "ready": false
+    },
+    {
+      "n": 3,
+      "category": "Phone & internet",
+      "star": true,
+      "limited": false,
+      "title": "Your Phone Is Making You Bored.",
+      "thumb": "SO BORED.",
+      "hook": "You're never bored, so you're always bored.",
+      "ready": false
+    },
+    {
+      "n": 4,
+      "category": "Phone & internet",
+      "star": false,
+      "limited": false,
+      "title": "What Happens When You Turn Off All Notifications",
+      "thumb": "SILENCE.",
+      "hook": "Milo gets 214 notifications a day. On day 1 he gets zero.",
+      "ready": false
+    },
+    {
+      "n": 5,
+      "category": "Phone & internet",
+      "star": false,
+      "limited": false,
+      "title": "Why You Can't Watch a Movie Without Your Phone",
+      "thumb": "2ND SCREEN.",
+      "hook": "He's watching a film. He's also not watching a film.",
+      "ready": false
+    },
+    {
+      "n": 6,
+      "category": "Phone & internet",
+      "star": false,
+      "limited": false,
+      "title": "What Group Chats Are Doing to Your Anxiety",
+      "thumb": "SEEN.",
+      "hook": "Read at 9:14. No reply.",
+      "ready": false
+    },
+    {
+      "n": 7,
+      "category": "Phone & internet",
+      "star": false,
+      "limited": false,
+      "title": "Actually, How Bad Is Screen Time?",
+      "thumb": "9 HOURS?",
+      "hook": "The average phone is unlocked dozens of times a day. Why?",
+      "ready": false
+    },
+    {
+      "n": 8,
+      "category": "Phone & internet",
+      "star": false,
+      "limited": false,
+      "title": "What 30 Days Without Social Media Did to Milo",
+      "thumb": "DAY 30.",
+      "hook": "The longer, deeper sequel to #1.",
+      "ready": false
+    },
+    {
+      "n": 9,
+      "category": "Substances & drinks",
+      "star": true,
+      "limited": false,
+      "title": "Actually, How Bad Is Vaping?",
+      "thumb": "HOW BAD?",
+      "hook": "\"It's basically just water vapour.\" It isn't.",
+      "ready": true
+    },
+    {
+      "n": 10,
+      "category": "Substances & drinks",
+      "star": true,
+      "limited": false,
+      "title": "What Energy Drinks Actually Do to Your Body",
+      "thumb": "THE CRASH.",
+      "hook": "The can gives you energy. It doesn't. It borrows it.",
+      "ready": true
+    },
+    {
+      "n": 11,
+      "category": "Substances & drinks",
+      "star": true,
+      "limited": false,
+      "title": "Actually, How Bad Is Drinking Every Weekend?",
+      "thumb": "\"JUST WEEKENDS.\"",
+      "hook": "He doesn't have a problem. It's only Friday and Saturday.",
+      "ready": false
+    },
+    {
+      "n": 12,
+      "category": "Substances & drinks",
+      "star": false,
+      "limited": false,
+      "title": "What Quitting Caffeine for 14 Days Feels Like",
+      "thumb": "DAY 3 HEADACHE.",
+      "hook": "The headache on day 2 tells you everything.",
+      "ready": false
+    },
+    {
+      "n": 13,
+      "category": "Substances & drinks",
+      "star": false,
+      "limited": true,
+      "title": "Actually, How Bad Is Smoking Weed Every Day?",
+      "thumb": "EVERY DAY?",
+      "hook": "It's natural. It's legal. So why can't he sleep without it?",
+      "ready": false
+    },
+    {
+      "n": 14,
+      "category": "Substances & drinks",
+      "star": false,
+      "limited": false,
+      "title": "What a Hangover Is Actually Doing to You",
+      "thumb": "WHY?",
+      "hook": "Your body treats alcohol as a poison to get rid of.",
+      "ready": false
+    },
+    {
+      "n": 15,
+      "category": "Substances & drinks",
+      "star": false,
+      "limited": false,
+      "title": "Actually, How Bad Is Nicotine Gum / Pouches?",
+      "thumb": "THE POUCH.",
+      "hook": "No smoke, no vapour. So it's fine, right?",
+      "ready": false
+    },
+    {
+      "n": 16,
+      "category": "Food",
+      "star": true,
+      "limited": false,
+      "title": "What Eating Fast Food Every Day Does to You",
+      "thumb": "EVERY DAY.",
+      "hook": "Cheap, fast, everywhere. What does it cost later?",
+      "ready": false
+    },
+    {
+      "n": 17,
+      "category": "Food",
+      "star": true,
+      "limited": false,
+      "title": "Actually, How Bad Is Sugar?",
+      "thumb": "ADDICTED?",
+      "hook": "He doesn't eat sweets. His breakfast has 40 grams of sugar.",
+      "ready": false
+    },
+    {
+      "n": 18,
+      "category": "Food",
+      "star": false,
+      "limited": false,
+      "title": "What Skipping Meals Is Doing to Your Mood",
+      "thumb": "HANGRY.",
+      "hook": "It's not you. It's your blood sugar.",
+      "ready": false
+    },
+    {
+      "n": 19,
+      "category": "Food",
+      "star": false,
+      "limited": false,
+      "title": "What Ultra-Processed Food Does to Your Body",
+      "thumb": "NOT FOOD?",
+      "hook": "Milo reads the ingredients. He can't pronounce half of them.",
+      "ready": false
+    },
+    {
+      "n": 20,
+      "category": "Food",
+      "star": false,
+      "limited": false,
+      "title": "What Drinking Only Soda Does to You",
+      "thumb": "THE CAN.",
+      "hook": "His water bottle has been empty since 2023.",
+      "ready": false
+    },
+    {
+      "n": 21,
+      "category": "Sleep & body",
+      "star": true,
+      "limited": false,
+      "title": "What Sleeping 5 Hours a Night Does to Your Brain",
+      "thumb": "5 HOURS.",
+      "hook": "He's \"fine\" on 5 hours. Everyone who isn't fine says that.",
+      "ready": false
+    },
+    {
+      "n": 22,
+      "category": "Sleep & body",
+      "star": true,
+      "limited": false,
+      "title": "What Sitting All Day Is Doing to Your Body",
+      "thumb": "STUCK.",
+      "hook": "He walked 900 steps today. 400 were to the fridge.",
+      "ready": false
+    },
+    {
+      "n": 23,
+      "category": "Sleep & body",
+      "star": false,
+      "limited": false,
+      "title": "What Wearing Headphones All Day Does to Your Ears",
+      "thumb": "TOO LOUD.",
+      "hook": "Max volume. Every day. For years.",
+      "ready": false
+    },
+    {
+      "n": 24,
+      "category": "Sleep & body",
+      "star": false,
+      "limited": false,
+      "title": "What Happens When You Stop Exercising",
+      "thumb": "GONE.",
+      "hook": "It took him 6 months to build. It took 6 weeks to lose.",
+      "ready": false
+    },
+    {
+      "n": 25,
+      "category": "Sleep & body",
+      "star": false,
+      "limited": false,
+      "title": "What \"Sleeping In\" on Weekends Does to You",
+      "thumb": "SOCIAL JETLAG.",
+      "hook": "He sleeps 12 hours on Sunday. He feels worse.",
+      "ready": false
+    },
+    {
+      "n": 26,
+      "category": "Sleep & body",
+      "star": false,
+      "limited": false,
+      "title": "Why You're Always Tired (It's Not Sleep)",
+      "thumb": "ALWAYS TIRED.",
+      "hook": "8 hours of sleep. Still exhausted.",
+      "ready": false
+    },
+    {
+      "n": 27,
+      "category": "Mind & habits",
+      "star": true,
+      "limited": false,
+      "title": "What Gaming 8 Hours a Day Does to You",
+      "thumb": "ONE MORE GAME.",
+      "hook": "He wasn't addicted. He just played until 4 AM. Again.",
+      "ready": false
+    },
+    {
+      "n": 28,
+      "category": "Mind & habits",
+      "star": false,
+      "limited": false,
+      "title": "What Procrastination Is Actually Doing to You",
+      "thumb": "TOMORROW.",
+      "hook": "He's not lazy. He's scared.",
+      "ready": false
+    },
+    {
+      "n": 29,
+      "category": "Mind & habits",
+      "star": false,
+      "limited": false,
+      "title": "What Comparing Yourself Online Does to Your Brain",
+      "thumb": "NOT ENOUGH.",
+      "hook": "Everyone's highlight reel vs. his behind-the-scenes.",
+      "ready": false
+    },
+    {
+      "n": 30,
+      "category": "Mind & habits",
+      "star": false,
+      "limited": false,
+      "title": "What Being Alone Every Weekend Does to You",
+      "thumb": "ALONE.",
+      "hook": "He chose to stay in. Again. And again.",
+      "ready": false
+    },
+    {
+      "n": 31,
+      "category": "Mind & habits",
+      "star": false,
+      "limited": false,
+      "title": "What Overthinking Is Really Doing to You",
+      "thumb": "3:17 AM.",
+      "hook": "He replayed one conversation 400 times.",
+      "ready": false
+    },
+    {
+      "n": 32,
+      "category": "Mind & habits",
+      "star": false,
+      "limited": true,
+      "title": "What 30 Days Without Porn Does to Your Brain",
+      "thumb": "DAY 30.",
+      "hook": "Huge in this niche (Day One's \"Lust\" hit ~1M). Limited ads, so use sparingly.",
+      "ready": false
+    },
+    {
+      "n": 33,
+      "category": "Mind & habits",
+      "star": false,
+      "limited": false,
+      "title": "What Talking Badly to Yourself Does to Your Brain",
+      "thumb": "\"IDIOT.\"",
+      "hook": "He'd never say it to a friend. He says it to himself daily.",
+      "ready": false
+    },
+    {
+      "n": 34,
+      "category": "Money",
+      "star": true,
+      "limited": false,
+      "title": "Actually, How Bad Are Sports Betting Apps?",
+      "thumb": "ALL IN.",
+      "hook": "The app is free. The app is designed to make you lose.",
+      "ready": false
+    },
+    {
+      "n": 35,
+      "category": "Money",
+      "star": false,
+      "limited": false,
+      "title": "What \"Buy Now, Pay Later\" Is Doing to You",
+      "thumb": "PAY LATER.",
+      "hook": "Four easy payments. Of money he doesn't have.",
+      "ready": false
+    },
+    {
+      "n": 36,
+      "category": "Money",
+      "star": false,
+      "limited": false,
+      "title": "What Online Shopping at 2 AM Says About You",
+      "thumb": "ADD TO CART.",
+      "hook": "He doesn't need it. He needs the feeling.",
+      "ready": false
+    },
+    {
+      "n": 37,
+      "category": "Money",
+      "star": false,
+      "limited": false,
+      "title": "Actually, How Bad Are Lootboxes / Gacha Games?",
+      "thumb": "ONE MORE PULL.",
+      "hook": "It's not gambling. It just works exactly like gambling.",
+      "ready": false
+    },
+    {
+      "n": 38,
+      "category": "Money",
+      "star": false,
+      "limited": false,
+      "title": "What Subscriptions Are Quietly Costing You",
+      "thumb": "$847/YEAR.",
+      "hook": "He forgot he pays for 9 apps.",
+      "ready": false
+    }
+  ]
+}
