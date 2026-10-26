@@ -109,6 +109,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => ({
     }),
   ],
   pages: { signIn: '/login', error: '/login' },
+  // Why a sign-in failed, in the activity log (Admin, Logs, kind "error"): the person only sees "Sign-in did not complete", so the reason would otherwise be lost
+  logger: {
+    error(error) {
+      console.error(error)
+      const cause = (error as { cause?: { err?: unknown } }).cause
+      const err = (cause?.err ?? cause ?? error) as { message?: string; error?: string; error_description?: string; status?: number }
+      const detail = [(error as { type?: string }).type ?? error.name, err.message, err.error, err.error_description, err.status].filter(Boolean).join(' | ').slice(0, 300)
+      const job = import('./lib/log').then(({ logEvent }) => logEvent({ kind: 'error', name: 'sign-in failed', path: req?.url ? new URL(req.url).pathname : null, req, detail }))
+      void import('@opennextjs/cloudflare').then(({ getCloudflareContext }) => getCloudflareContext().ctx.waitUntil(job)).catch(() => undefined)
+    },
+  },
   events: {
     async signIn({ user, account, isNewUser }) {
       const { logEvent } = await import('./lib/log')

@@ -1,3 +1,4 @@
+import { setting } from '../db'
 import { discord } from './api'
 import type { DiscordConfig } from './config'
 
@@ -85,5 +86,36 @@ export async function checkAccess(cfg: DiscordConfig): Promise<AccessLine[]> {
         : { label: 'Server Members Intent', ok: false, note: 'Off. In the Discord developer portal open the application, Bot, Privileged Gateway Intents, and switch on Server Members Intent. Until then people who join by an invite link are not marked Unverified (they still see only #get-started once the server is locked).' },
     )
   }
+  lines.push(...(await signInLines()))
   return lines
+}
+
+/**
+ * The Discord sign-in is a second use of the same Discord application: people authorise it, and Discord sends them back to logoless.io. If any part of that is
+ * off, the sign-up ends on the login page with "Sign-in did not complete". This asks Discord about each part, without showing any secret.
+ */
+async function signInLines(): Promise<AccessLine[]> {
+  const out: AccessLine[] = []
+  const [id, secret, appId] = await Promise.all([setting('AUTH_DISCORD_ID'), setting('AUTH_DISCORD_SECRET'), setting('DISCORD_APP_ID')])
+  if (!id || !secret) return [{ label: 'Discord sign-in', ok: false, note: 'AUTH_DISCORD_ID or AUTH_DISCORD_SECRET is missing in Cloudflare, so nobody can sign in with Discord.' }]
+  const app = await discord<{ id?: string; redirect_uris?: string[]; bot_require_code_grant?: boolean }>('GET', '/oauth2/applications/@me')
+  if (app.ok && app.json?.id && app.json.id !== id) out.push({ label: 'Discord sign-in application', ok: false, note: `The sign-in uses application …${id.slice(-4)} but the bot is application …${app.json.id.slice(-4)}. They must be the same one, or the bot cannot add people to the server and Discord may refuse the sign-in. Put the bot application's ID (and its client secret) in AUTH_DISCORD_ID and AUTH_DISCORD_SECRET.` })
+  else out.push({ label: 'Discord sign-in application', ok: true, note: `The sign-in and the bot are the same application (…${id.slice(-4)})${appId && appId !== id ? ', but DISCORD_APP_ID differs' : ''}.` })
+  // does Discord accept the client secret? (a token for the application itself: no person is involved)
+  const probe = await fetch('https://discord.com/api/v10/oauth2/token', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded', authorization: `Basic ${btoa(`${id}:${secret}`)}` }, body: 'grant_type=client_credentials&scope=identify' }).catch(() => null)
+  out.push(
+    probe?.ok
+      ? { label: 'Discord client secret', ok: true, note: 'Discord accepts the secret.' }
+      : { label: 'Discord client secret', ok: false, note: `Discord rejected AUTH_DISCORD_SECRET${probe ? ` (status ${probe.status})` : ''}. In the developer portal open the application, OAuth2, Reset Secret, and put the new one in Cloudflare as AUTH_DISCORD_SECRET.` },
+  )
+  const uris = app.json?.redirect_uris
+  if (Array.isArray(uris)) {
+    const need = 'https://logoless.io/api/auth/callback/discord'
+    out.push(
+      uris.includes(need)
+        ? { label: 'Discord redirect address', ok: true, note: `${need} is on the list.` }
+        : { label: 'Discord redirect address', ok: false, note: `Add ${need} under OAuth2, Redirects in the developer portal (it has ${uris.length ? uris.join(', ') : 'none'}).` },
+    )
+  }
+  return out
 }
