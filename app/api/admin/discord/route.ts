@@ -43,9 +43,10 @@ const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('upload-icons') }),
   z.object({ action: z.literal('lock-server') }),
   z.object({ action: z.literal('server-map') }),
-  z.object({ action: z.literal('fit-server'), skip: z.number().int().min(0).max(500).default(0), lock: z.boolean().default(false) }),
+  z.object({ action: z.literal('fit-server'), skip: z.number().int().min(0).max(500).default(0), lock: z.boolean().default(false), baseline: z.boolean().default(false) }),
   z.object({ action: z.literal('apply-logo') }),
   z.object({ action: z.literal('make-event') }),
+  z.object({ action: z.literal('server-log') }),
   z.object({ action: z.literal('preview-welcome') }),
   z.object({ action: z.literal('prelaunch-decide'), userId: z.string().min(8).max(64), approve: z.boolean() }),
   z.object({ action: z.literal('welcome-me') }),
@@ -238,7 +239,7 @@ export const POST = route(async (req: Request) => {
     const { fitServer } = await import('@/lib/discord/server-fit')
     let r: Awaited<ReturnType<typeof fitServer>>
     try {
-      r = await fitServer(cfg, { skip: a.skip, lock: a.lock })
+      r = await fitServer(cfg, { skip: a.skip, lock: a.lock, baseline: a.baseline })
     } catch (e) {
       throw new HttpError(502, e instanceof Error ? e.message : 'Discord would not show the server.')
     }
@@ -268,6 +269,17 @@ export const POST = route(async (req: Request) => {
     steps.push({ what: 'logo emoji', ok: !e.note && !e.failed.includes('logo'), note: e.note })
     await audit(actor, 'discord.apply-logo', null, steps.map((x) => `${x.what}: ${x.ok ? 'ok' : 'no'}`).join(', '), ip)
     return json({ ok: true, steps })
+  }
+  if (a.action === 'server-log') {
+    // a read-only look at what was changed in the server lately (Discord's own audit log): channels and roles made, changed and removed, and by whom
+    if (!cfg.guildId) throw new HttpError(409, 'Save your server ID first.')
+    type Entry = { id: string; user_id: string | null; action_type: number; target_id: string | null; changes?: { key: string; old_value?: unknown; new_value?: unknown }[] }
+    const r = await discord<{ audit_log_entries?: Entry[]; users?: { id: string; username: string }[] }>('GET', `/guilds/${cfg.guildId}/audit-logs?limit=100`)
+    if (!r.ok) throw new HttpError(502, explainDiscord(r, 'the audit log'))
+    const who = (id: string | null) => r.json?.users?.find((u) => u.id === id)?.username ?? id
+    const kind: Record<number, string> = { 10: 'channel made', 11: 'channel changed', 12: 'channel removed', 30: 'role made', 31: 'role changed', 32: 'role removed', 1: 'server changed', 24: 'member updated', 25: 'member roles changed' }
+    const entries = (r.json?.audit_log_entries ?? []).filter((e) => [10, 11, 12, 30, 31, 32].includes(e.action_type)).map((e) => ({ at: Number((BigInt(e.id) >> BigInt(22)) + BigInt(1420070400000)) , by: who(e.user_id), what: kind[e.action_type] ?? String(e.action_type), target: e.target_id, changes: (e.changes ?? []).filter((c) => ['name', 'parent_id', 'type', 'position'].includes(c.key)).map((c) => `${c.key}: ${JSON.stringify(c.old_value ?? null)} -> ${JSON.stringify(c.new_value ?? null)}`) }))
+    return json({ ok: true, entries })
   }
   if (a.action === 'make-event') {
     // the opening day as an event in the server: it shows in the events list with a countdown, and people can mark that they are interested

@@ -1,3 +1,4 @@
+import { db, nowSec } from '../db'
 import { discord, explainDiscord } from './api'
 import type { DiscordConfig } from './config'
 
@@ -13,6 +14,11 @@ import type { DiscordConfig } from './config'
  *  - It makes what is missing, and removes only an older copy the bot itself made (no "・" in the name) that has never had a message in it, and the empty category left behind.
  *  - For permissions it adds what the plan says (Verified and the team can see, a read-only channel cannot be written in) and keeps every other bit. It only hides a
  *    channel from everyone, and opens #get-started to everyone, when `lock` is on: that is the step that shuts the server to new members, so it is the owner's to press.
+ *
+ * It never undoes what the owner does by hand afterwards. The first time it sees a planned channel or category it sets it up; it writes down what it found (the
+ * `discord:fit` setting), and from then on a channel that was moved, renamed or given other permissions stays as it is, and one that was deleted is not made again.
+ * (`baseline` writes that record without changing anything: it is how the server is declared "as the owner wants it" after a manual rearrangement.) Only `lock` still
+ * sets permissions on channels it has seen before, and only a role that is not already called "L | …" is renamed.
  */
 type Overwrite = { id: string; type: number; allow: string; deny: string }
 type Chan = { id: string; name: string; type: number; parent_id?: string | null; position?: number; topic?: string | null; permission_overwrites?: Overwrite[] }
@@ -143,6 +149,34 @@ export type FitResult = { done: string[]; failed: string[]; remaining: number; n
 
 type Op = { label: string; run: () => Promise<void> }
 
+/** What earlier presses found and set, so the fit never undoes what the owner did by hand after it. */
+type FitState = {
+  /** planned channel ("type:name") -> the channel it was and the category it sat in; id "" means it was not there when the plan was first fitted */
+  chans: Record<string, { id: string; parent: string }>
+  /** the planned categories seen so far */
+  cats: string[]
+  /** the order of the categories has been set once (after that it is the owner's) */
+  ordered: boolean
+  /** the earnings roles have been made once */
+  tiers: boolean
+}
+const STATE_KEY = 'discord:fit'
+async function loadState(): Promise<FitState> {
+  try {
+    const row = await (await db()).prepare('SELECT value FROM settings WHERE key = ?1').bind(STATE_KEY).first<{ value: string }>()
+    const j = row ? (JSON.parse(row.value) as Partial<FitState>) : {}
+    return { chans: j.chans ?? {}, cats: j.cats ?? [], ordered: Boolean(j.ordered), tiers: Boolean(j.tiers) }
+  } catch {
+    return { chans: {}, cats: [], ordered: false, tiers: false }
+  }
+}
+async function saveState(state: FitState) {
+  await (await db())
+    .prepare('INSERT INTO settings (key, value, updated_at) VALUES (?1, ?2, ?3) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at')
+    .bind(STATE_KEY, JSON.stringify(state), nowSec())
+    .run()
+}
+
 async function call<T>(method: string, path: string, body?: unknown) {
   let r = await discord<T>(method, path, body)
   if (r.status === 429) {
@@ -156,14 +190,15 @@ async function call<T>(method: string, path: string, body?: unknown) {
 
 /**
  * One press. `skip` is how many steps earlier presses tried and could not do (they stay first in the list, so the next press starts after them).
- * `lock` also hides everything from people without the Verified role and opens #get-started to everyone.
+ * `lock` also hides everything from people without the Verified role and opens #get-started to everyone. `baseline` only writes down what the server looks like now.
  */
-export async function fitServer(input: DiscordConfig, opts: { skip?: number; lock?: boolean } = {}): Promise<FitResult> {
+export async function fitServer(input: DiscordConfig, opts: { skip?: number; lock?: boolean; baseline?: boolean } = {}): Promise<FitResult> {
   const cfg = structuredClone(input)
   const guild = cfg.guildId
   const lock = Boolean(opts.lock)
+  const baseline = Boolean(opts.baseline)
   const notes: string[] = []
-  const [chRes, roleRes] = await Promise.all([discord<Chan[]>('GET', `/guilds/${guild}/channels`), discord<Role[]>('GET', `/guilds/${guild}/roles`)])
+  const [chRes, roleRes, state] = await Promise.all([discord<Chan[]>('GET', `/guilds/${guild}/channels`), discord<Role[]>('GET', `/guilds/${guild}/roles`), loadState()])
   if (!chRes.ok || !Array.isArray(chRes.json)) throw new Error(explainDiscord(chRes, 'the server'))
   if (!roleRes.ok || !Array.isArray(roleRes.json)) throw new Error(explainDiscord(roleRes, 'the server'))
   const chans = chRes.json
@@ -172,10 +207,9 @@ export async function fitServer(input: DiscordConfig, opts: { skip?: number; loc
 
   // ---------------- roles ----------------
   const renameRole = (r: Role, name: string, color?: number) => {
-    const body: Record<string, unknown> = {}
-    if (r.name !== name) body.name = name
+    if (baseline || /^L \| /.test(r.name)) return // already called "L | …" (by the fit or by the owner): theirs
+    const body: Record<string, unknown> = { name }
     if (color !== undefined && r.color === 0) body.color = color
-    if (!Object.keys(body).length) return
     ops.push({
       label: `role ${r.name} -> ${name}`,
       run: async () => {
@@ -191,13 +225,13 @@ export async function fitServer(input: DiscordConfig, opts: { skip?: number; loc
     if (r) {
       planned.add(r.id)
       renameRole(r, p.name, p.color)
-    } else notes.push(`${p.name} is not made yet: press "Make the missing roles".`)
+    } else if (!baseline) notes.push(`${p.name} is not made yet: press "Make the missing roles".`)
   }
   for (const r of roles) {
     if (r.managed || planned.has(r.id) || r.name === '@everyone') continue
     if (/^L™\s*\|\s*/.test(r.name)) renameRole(r, r.name.replace(/^L™\s*\|\s*/, 'L | '))
   }
-  if (cfg.roles.tiers.length === 0) {
+  if (cfg.roles.tiers.length === 0 && !state.tiers && !baseline) {
     for (const t of TIERS) {
       const existing = roles.find((r) => r.name === t.name)
       if (existing) {
@@ -215,6 +249,7 @@ export async function fitServer(input: DiscordConfig, opts: { skip?: number; loc
       })
     }
   }
+  state.tiers = true
 
   // ---------------- who can see what ----------------
   // (the bot has Administrator, so it needs no overwrite of its own)
@@ -247,28 +282,44 @@ export async function fitServer(input: DiscordConfig, opts: { skip?: number; loc
   }
   const catIds = new Map<string, string>() // plan name -> id (filled as categories are made)
   for (const [k, c] of catFor) catIds.set(k, c.id)
+  const gone = new Set<string>() // planned categories the owner removed after the first fit: left out
   for (const cat of PLAN) {
     const have = catFor.get(cat.name)
+    const seen = state.cats.includes(cat.name)
+    const mark = () => void (!state.cats.includes(cat.name) && state.cats.push(cat.name))
     if (!have) {
+      if (seen) {
+        gone.add(cat.name)
+        continue
+      }
+      if (baseline) continue
       ops.push({
         label: `make category ${cat.name}`,
         run: async () => {
           const res = await call<Chan>('POST', `/guilds/${guild}/channels`, { name: cat.name, type: 4, permission_overwrites: withAccess([], cat.access, false, true) })
           if (!res.ok || !res.json?.id) throw new Error(explainDiscord(res, 'the server'))
           catIds.set(cat.name, res.json.id)
+          mark()
         },
       })
+      continue
+    }
+    if (baseline || (seen && !lock)) {
+      mark()
+      continue
+    }
+    const want = withAccess(have.permission_overwrites ?? [], cat.access, false, lock)
+    if (same(have.permission_overwrites ?? [], want)) {
+      mark()
     } else {
-      const want = withAccess(have.permission_overwrites ?? [], cat.access, false, lock)
-      if (!same(have.permission_overwrites ?? [], want)) {
-        ops.push({
-          label: `category ${have.name} permissions`,
-          run: async () => {
-            const res = await call('PATCH', `/channels/${have.id}`, { permission_overwrites: want })
-            if (!res.ok) throw new Error(explainDiscord(res, `the ${have.name} category`))
-          },
-        })
-      }
+      ops.push({
+        label: `category ${have.name} permissions`,
+        run: async () => {
+          const res = await call('PATCH', `/channels/${have.id}`, { permission_overwrites: want })
+          if (!res.ok) throw new Error(explainDiscord(res, `the ${have.name} category`))
+          mark()
+        },
+      })
     }
   }
 
@@ -276,8 +327,11 @@ export async function fitServer(input: DiscordConfig, opts: { skip?: number; loc
   const adopted = new Set<string>()
   const older: Chan[] = [] // copies the bot made before, to remove when empty
   for (const cat of PLAN) {
+    if (gone.has(cat.name)) continue
     for (const w of cat.channels) {
       const type = w.type ?? 0
+      const pk = `${type}:${norm(w.name)}`
+      const memo = state.chans[pk] // set once the plan has been fitted to this channel: after that it is the owner's
       const names = [norm(w.name), ...(w.match ?? [])].filter((x, i, a) => a.indexOf(x) === i)
       const fits = (c: Chan) => c.type === type || (type === 0 && c.type === 5)
       const candidates = chans.filter((c) => fits(c) && !adopted.has(c.id))
@@ -290,25 +344,37 @@ export async function fitServer(input: DiscordConfig, opts: { skip?: number; loc
         adopted.add(keep.id)
         for (const c of candidates) if (c.id !== keep.id && !hasMark(c.name) && names.includes(norm(c.name))) older.push(c)
         for (const n of w.retire ?? []) for (const c of chans) if (!hasMark(c.name) && c.type === 0 && norm(c.name) === n) older.push(c)
-        const parent = catIds.get(cat.name)
-        const wantOw = withAccess(keep.permission_overwrites ?? [], access, readOnly, lock)
-        const body: Record<string, unknown> = {}
-        if (!hasMark(keep.name)) body.name = finalName(w)
-        if (parent && keep.parent_id !== parent) body.parent_id = parent
-        if (!same(keep.permission_overwrites ?? [], wantOw)) body.permission_overwrites = wantOw
-        if (!keep.topic && w.topic && (keep.type === 0 || keep.type === 5)) body.topic = w.topic
         if (w.key && !cfg.channels[w.key]) cfg.channels[w.key] = keep.id
-        if (Object.keys(body).length) {
-          const what = [body.name ? `-> ${body.name}` : '', body.parent_id ? `into ${cat.name}` : '', body.permission_overwrites ? 'who can see it' : '', body.topic ? 'topic' : ''].filter(Boolean).join(', ')
-          ops.push({
-            label: `${keep.name} (${what})`,
-            run: async () => {
-              const res = await call('PATCH', `/channels/${keep.id}`, body)
-              if (!res.ok) throw new Error(explainDiscord(res, `#${keep.name}`))
-            },
-          })
+        const parent = catIds.get(cat.name)
+        const body: Record<string, unknown> = {}
+        if (!memo && !baseline) {
+          if (!hasMark(keep.name)) body.name = finalName(w)
+          if (parent && keep.parent_id !== parent) body.parent_id = parent
+          if (!keep.topic && w.topic && (keep.type === 0 || keep.type === 5)) body.topic = w.topic
         }
+        if ((!memo || lock) && !baseline) {
+          const wantOw = withAccess(keep.permission_overwrites ?? [], access, readOnly, lock)
+          if (!same(keep.permission_overwrites ?? [], wantOw)) body.permission_overwrites = wantOw
+        }
+        if (Object.keys(body).length === 0) {
+          state.chans[pk] = { id: keep.id, parent: keep.parent_id ?? '' }
+          continue
+        }
+        const what = [body.name ? `-> ${body.name}` : '', body.parent_id ? `into ${cat.name}` : '', body.permission_overwrites ? 'who can see it' : '', body.topic ? 'topic' : ''].filter(Boolean).join(', ')
+        ops.push({
+          label: `${keep.name} (${what})`,
+          run: async () => {
+            const res = await call('PATCH', `/channels/${keep.id}`, body)
+            if (!res.ok) throw new Error(explainDiscord(res, `#${keep.name}`))
+            state.chans[pk] = { id: keep.id, parent: (body.parent_id as string | undefined) ?? keep.parent_id ?? '' }
+          },
+        })
       } else if (!w.adoptOnly) {
+        if (memo) continue // it was there and was taken out on purpose: not made again
+        if (baseline) {
+          state.chans[pk] = { id: '', parent: '' }
+          continue
+        }
         ops.push({
           label: `make ${finalName(w)}`,
           run: async () => {
@@ -324,6 +390,7 @@ export async function fitServer(input: DiscordConfig, opts: { skip?: number; loc
             })
             if (!res.ok || !res.json?.id) throw new Error(explainDiscord(res, 'the server'))
             if (w.key) cfg.channels[w.key] = res.json.id
+            state.chans[pk] = { id: res.json.id, parent }
           },
         })
       }
@@ -332,7 +399,7 @@ export async function fitServer(input: DiscordConfig, opts: { skip?: number; loc
 
   // ---------------- copies the bot made earlier, and the categories they leave empty ----------------
   const removed = new Set<string>()
-  for (const c of older) {
+  for (const c of baseline ? [] : older) {
     if (adopted.has(c.id) || removed.has(c.id)) continue
     removed.add(c.id)
     ops.push({
@@ -346,7 +413,7 @@ export async function fitServer(input: DiscordConfig, opts: { skip?: number; loc
     })
   }
   const keepCats = new Set([...catFor.values()].map((c) => c.id))
-  for (const cat of cats) {
+  for (const cat of baseline ? [] : cats) {
     if (keepCats.has(cat.id) || !OLD_CATEGORIES.includes(norm(cat.name)) || hasMark(cat.name)) continue
     ops.push({
       label: `remove the empty ${cat.name} category`,
@@ -361,12 +428,13 @@ export async function fitServer(input: DiscordConfig, opts: { skip?: number; loc
     })
   }
 
-  // ---------------- the order of the categories ----------------
+  // ---------------- the order of the categories (set once; after that it is the owner's) ----------------
   const front = PLAN.map((p) => catFor.get(p.name)?.id).filter(Boolean) as string[]
   // (the tickets may be kept in one of the planned categories, as they are in Help: it is placed once, or Discord is asked for two places for it)
   const rest = [cfg.artistsCategory, cfg.inactiveCategory, cfg.ticketCategory].filter((id, i, all) => id && cats.some((c) => c.id === id) && !front.includes(id) && all.indexOf(id) === i) as string[]
   const wanted = [...front, ...rest]
-  if (front.length === PLAN.length) {
+  if (baseline) state.ordered = true
+  else if (!state.ordered && front.length === PLAN.length) {
     const ranked = cats.filter((c) => wanted.includes(c.id)).sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
     const tied = ranked.some((c, i) => i > 0 && c.position === ranked[i - 1].position)
     if (tied || JSON.stringify(ranked.map((c) => c.id)) !== JSON.stringify(wanted)) {
@@ -378,9 +446,10 @@ export async function fitServer(input: DiscordConfig, opts: { skip?: number; loc
         run: async () => {
           const res = await call('PATCH', `/guilds/${guild}/channels`, all.map((id, position) => ({ id, position })))
           if (!res.ok) throw new Error(explainDiscord(res, 'the server'))
+          state.ordered = true
         },
       })
-    }
+    } else state.ordered = true
   }
 
   // ---------------- run ----------------
@@ -397,5 +466,7 @@ export async function fitServer(input: DiscordConfig, opts: { skip?: number; loc
     }
     await new Promise((r) => setTimeout(r, 200))
   }
+  await saveState(state).catch(() => undefined)
+  if (baseline) done.push('wrote down what the server looks like now: the fit leaves all of it as it is')
   return { done, failed, remaining: Math.max(0, ops.length - skip - batch.length), notes, cfg }
 }
