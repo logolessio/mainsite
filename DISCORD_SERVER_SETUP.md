@@ -67,6 +67,11 @@ numbers to show artists when you ask them for campaigns.
      anything it cannot do (a role above the bot's own role cannot be renamed: drag the bot's role to the top in Server Settings, Roles, and press again) is listed in the answer;
    - permissions: Verified and the team can see the member channels, read-only ones stay read-only, the team's channels stay the team's. It does **not** hide anything from
      everyone: that is the lock below, which is yours to press.
+   After its first look at a channel or category the fit **leaves it alone**: if you move, rename or delete something by hand it stays that way (a deleted channel is not
+   made again, a moved one is not moved back, the category order is set once). New channels the plan adds later are made once. **Keep the server as it is now** writes the
+   current layout down as the one you want, without changing anything. The plan also has **#roles** (what each role means) and **#how-it-works** (the five steps from
+   sign-up to payout); press **Post it** next to each (Server tab) after the fit has made them.
+   **Make the launch-day event** puts "logoless opens" in the server's events list for the opening time on the Countdown page (press it again if you change the time).
    **Use the new logo** puts the bracket mark (thicker, with the gradient) on the server icon, the bot's picture and the logo emoji (Discord lets the bot change its picture
    only a couple of times an hour). **Post a welcome preview in the welcome channel** sends the welcome card with your own name and Discord picture, exactly as a new member's.
    **Lock the server to verified members** is the one that matters now: for every channel and category it adds "Verified can see it" and "everyone cannot", and

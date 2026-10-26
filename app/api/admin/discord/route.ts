@@ -47,7 +47,6 @@ const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('apply-logo') }),
   z.object({ action: z.literal('make-event') }),
   z.object({ action: z.literal('server-log') }),
-  z.object({ action: z.literal('restore-arrangement') }),
   z.object({ action: z.literal('preview-welcome') }),
   z.object({ action: z.literal('prelaunch-decide'), userId: z.string().min(8).max(64), approve: z.boolean() }),
   z.object({ action: z.literal('welcome-me') }),
@@ -270,42 +269,6 @@ export const POST = route(async (req: Request) => {
     steps.push({ what: 'logo emoji', ok: !e.note && !e.failed.includes('logo'), note: e.note })
     await audit(actor, 'discord.apply-logo', null, steps.map((x) => `${x.what}: ${x.ok ? 'ok' : 'no'}`).join(', '), ip)
     return json({ ok: true, steps })
-  }
-  if (a.action === 'restore-arrangement') {
-    // One-off: put back what a team member arranged by hand on Oct 24 (the welcome and payouts channels in Landing, no off-topic or voice channels), which the first
-    // version of the fit undid, then write down the server as it is so the fit never touches it again.
-    if (!cfg.guildId) throw new HttpError(409, 'Save your server ID first.')
-    const list = await discord<{ id: string; name: string; type: number; parent_id?: string | null }[]>('GET', `/guilds/${cfg.guildId}/channels`)
-    if (!list.ok || !Array.isArray(list.json)) throw new HttpError(502, explainDiscord(list, 'the server'))
-    const landing = list.json.find((c) => c.type === 4 && c.name.toLowerCase() === 'landing')
-    if (!landing) throw new HttpError(409, 'There is no Landing category.')
-    const did: string[] = []
-    for (const name of ['・welcome', '・payouts']) {
-      const c = list.json.find((x) => x.name === name)
-      if (c && c.parent_id !== landing.id) {
-        const r = await discord('PATCH', `/channels/${c.id}`, { parent_id: landing.id })
-        if (!r.ok) throw new HttpError(502, explainDiscord(r, name))
-        did.push(`moved ${name} to Landing`)
-      }
-    }
-    // the three channels the fit made again today: only if they are minutes old, made by the bot, and empty
-    const born = (id: string) => Number((BigInt(id) >> BigInt(22)) + BigInt(1420070400000))
-    for (const name of ['・off-topic', '・Lounge', '・Edit together']) {
-      const c = list.json.find((x) => x.name === name)
-      if (!c || Date.now() - born(c.id) > 6 * 3600 * 1000) continue
-      if (c.type === 0) {
-        const m = await discord<unknown[]>('GET', `/channels/${c.id}/messages?limit=1`)
-        if (!m.ok || !Array.isArray(m.json) || m.json.length > 0) continue
-      }
-      const r = await discord('DELETE', `/channels/${c.id}`)
-      if (!r.ok) throw new HttpError(502, explainDiscord(r, name))
-      did.push(`removed the new ${name}`)
-    }
-    const { fitServer } = await import('@/lib/discord/server-fit')
-    const base = await fitServer(cfg, { baseline: true })
-    await saveDiscordConfig(base.cfg)
-    await audit(actor, 'discord.restore-arrangement', null, did.join(', ') || 'nothing to put back', ip)
-    return json({ ok: true, did })
   }
   if (a.action === 'server-log') {
     // a read-only look at what was changed in the server lately (Discord's own audit log): channels and roles made, changed and removed, and by whom

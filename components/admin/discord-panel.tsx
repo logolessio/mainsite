@@ -438,6 +438,9 @@ export function DiscordPanel() {
           <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('fit-server', async () => { let done = 0; let failed: string[] = []; let notes: string[] = []; for (let n = 0; n < 12; n++) { const j = (await call({ action: 'fit-server', skip: failed.length, lock: false })) as { done?: string[]; failed?: string[]; remaining?: number; notes?: string[] }; done += j.done?.length ?? 0; failed = failed.concat(j.failed ?? []); notes = j.notes ?? notes; if (!j.remaining) break } return `${done ? `Fitted the server: ${done} changes.` : 'The server already matches the plan.'}${failed.length ? ` Could not do ${failed.length}: ${failed.join(' | ')}` : ''}${notes.length ? ` ${notes.join(' ')}` : ''}` })}>
             {busy === 'fit-server' && <Loader2 className="size-4 animate-spin" />} Fit the whole server (names, channels, roles)
           </button>
+          <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('fit-baseline', async () => { await call({ action: 'fit-server', baseline: true }); return 'Written down: the fit now leaves every channel, category and role exactly as it is, and will not make again anything you took out.' })}>
+            {busy === 'fit-baseline' && <Loader2 className="size-4 animate-spin" />} Keep the server as it is now
+          </button>
           <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('apply-logo', async () => { const j = (await call({ action: 'apply-logo' })) as { steps?: { what: string; ok: boolean; note?: string }[] }; return (j.steps ?? []).map((x) => `${x.what}: ${x.ok ? 'done' : x.note || 'not done'}`).join('. ') })}>
             {busy === 'apply-logo' && <Loader2 className="size-4 animate-spin" />} Use the new logo (server icon, bot picture, emoji)
           </button>
