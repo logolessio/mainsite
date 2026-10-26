@@ -27,8 +27,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => ({
   // Google reads AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET, Discord reads AUTH_DISCORD_ID / AUTH_DISCORD_SECRET.
   providers: [
     ...(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET ? [Google] : []),
-    // identify + email to sign in, and guilds.join so the same approval lets the bot add them to the logoless server
-    ...(process.env.AUTH_DISCORD_ID && process.env.AUTH_DISCORD_SECRET ? [Discord({ authorization: { params: { scope: 'identify email guilds.join' } } })] : []),
+    // identify + email to sign in, and guilds.join so the same approval lets the bot add them to the logoless server.
+    // `issuer`: Discord now adds iss=https://discord.com to the page it sends people back to (RFC 9207, and its metadata says so); Auth.js rejects an issuer it was not told about
+    // ("unexpected iss response parameter value"), which ended every Discord sign-in on the login page with "Sign-in did not complete".
+    ...(process.env.AUTH_DISCORD_ID && process.env.AUTH_DISCORD_SECRET ? [Discord({ issuer: 'https://discord.com', authorization: { params: { scope: 'identify email guilds.join' } } })] : []),
     // Email and password. The password is checked against a salted hash, and the address was proven by an emailed code.
     Credentials({
       id: 'password',
