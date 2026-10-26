@@ -44,7 +44,7 @@ const Tick = ({ ok, children }: { ok: boolean; children: React.ReactNode }) => (
 )
 
 type ChannelKey = keyof DiscordConfig['channels']
-const CHANNELS: { key: ChannelKey; label: string; hint: string; post?: 'getStarted' | 'rules' | 'site' | 'support' | 'status' }[] = [
+const CHANNELS: { key: ChannelKey; label: string; hint: string; post?: 'getStarted' | 'rules' | 'site' | 'support' | 'status' | 'roles' | 'guide' }[] = [
   { key: 'getStarted', label: '#get-started', hint: 'The walkthrough new members see first.', post: 'getStarted' },
   { key: 'rules', label: '#rules', hint: 'The rules, with buttons to the important pages and channels.', post: 'rules' },
   { key: 'site', label: '#site', hint: 'The site card.', post: 'site' },
@@ -58,6 +58,8 @@ const CHANNELS: { key: ChannelKey; label: string; hint: string; post?: 'getStart
   { key: 'logs', label: 'Team log', hint: 'Tickets, reports and admin actions.' },
   { key: 'payouts', label: '#payouts', hint: 'Every earning, with a picture card of the amount and the name half hidden (em***). Switch: Discord: payouts channel.' },
   { key: 'submissions', label: '#submissions', hint: 'Every submission with the video and its numbers, updated as it is reviewed and earns. Switch: Discord: submissions channel.' },
+  { key: 'roleGuide', label: '#roles', hint: 'What each role means and how you get it.', post: 'roles' },
+  { key: 'howItWorks', label: '#how-it-works', hint: 'How logoless works, step by step.', post: 'guide' },
 ]
 
 /** Everything to run the Discord bot: what is missing, the address to give Discord, where each thing is posted and which roles it hands out. */
@@ -438,6 +440,9 @@ export function DiscordPanel() {
           </button>
           <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('apply-logo', async () => { const j = (await call({ action: 'apply-logo' })) as { steps?: { what: string; ok: boolean; note?: string }[] }; return (j.steps ?? []).map((x) => `${x.what}: ${x.ok ? 'done' : x.note || 'not done'}`).join('. ') })}>
             {busy === 'apply-logo' && <Loader2 className="size-4 animate-spin" />} Use the new logo (server icon, bot picture, emoji)
+          </button>
+          <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('make-event', async () => { const j = (await call({ action: 'make-event' })) as { at?: number }; return `Made the "logoless opens" event for ${j.at ? new Date(j.at * 1000).toUTCString() : 'the opening time'}. It shows in the server's events, and changes with the Countdown time if you press this again.` })}>
+            {busy === 'make-event' && <Loader2 className="size-4 animate-spin" />} Make the launch-day event
           </button>
           <button type="button" disabled={Boolean(busy)} className={ghost} onClick={() => run('preview-welcome', async () => (await call({ action: 'preview-welcome' }), 'Posted a welcome preview (your own name and picture) in the welcome channel.'))}>
             {busy === 'preview-welcome' && <Loader2 className="size-4 animate-spin" />} Post a welcome preview in the welcome channel

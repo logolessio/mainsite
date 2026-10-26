@@ -51,6 +51,8 @@ const PLAN: Cat[] = [
     access: 'members',
     channels: [
       { name: 'rules', key: 'rules', readOnly: true, topic: 'The rules of the server.' },
+      { name: 'roles', key: 'roleGuide', readOnly: true, topic: 'What each role means and how you get it.' },
+      { name: 'how-it-works', key: 'howItWorks', readOnly: true, topic: 'How logoless works, from sign-up to payout.' },
       { name: 'site', key: 'site', readOnly: true, topic: 'logoless in a few numbers.' },
       { name: 'status', key: 'status', readOnly: true, topic: 'Is everything working? Updated by itself.' },
     ],

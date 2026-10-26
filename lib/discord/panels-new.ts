@@ -168,3 +168,44 @@ export const supportPanelNew = (): Message =>
     },
     buttons: [plink('All the questions', '/faq', 'help'), pbtn('Open a ticket', 'ticket:open', 'grey', 'ticket')],
   })
+
+/** A role as the server shows it: a mention (it wears the role's colour) when the role exists, otherwise its name in bold. */
+const role = (id: string | undefined, name: string) => (id ? `<@&${id}>` : `**${name}**`)
+
+/** #roles: what each role means and how you get it. The roles are mentioned, so they appear in their own colours (nobody is pinged: the message allows no mentions). */
+export const rolesPanel = (r?: { founding: string; verified: string; unverified: string; linked: string; clipper: string; creator: string; brand: string; developer: string; team: string; tiers: { minUsd: number; role: string }[] }): Message =>
+  panel({
+    banner: true,
+    icon: 'users',
+    title: 'Roles',
+    sub: 'What each role means, and how you get it. Most of them come by themselves.',
+    blocks: [
+      item('founder', 'Founding member', `${role(r?.founding, 'L | Founding Member')} signed up before we opened. It stays on your account for good.`),
+      item('verified', 'Verified', `${role(r?.verified, 'L | Verified')} means you finished the sign-up. It opens the whole server.`),
+      item('lock', 'Unverified', `${role(r?.unverified, 'L | Unverified')} is everyone who has joined but not signed up yet: you only see #get-started until you do.`),
+      item('link', 'Member', `${role(r?.linked, 'L | Member')} is given when your Discord is linked to your logoless account.`),
+      item('clip', 'Clipper', `${role(r?.clipper, 'L | Clipper')} is for people who make edits and clips for campaigns.`),
+      item('music', 'Artist and brand', `${role(r?.creator, 'L | Artist')} for artists and streamers with campaigns here, ${role(r?.brand, 'L | Brand')} for brands that run them.`),
+      item('trophy', 'Earner roles', `${(r?.tiers?.length ? r.tiers.map((t) => `<@&${t.role}>`) : ['**L | $100 Earner**', '**L | $1K Earner**', '**L | $10K Earner**']).join(', ')} are given by themselves as you earn.\n-# Your roles follow your account: run /sync if one looks out of date.`),
+      item('shield', 'The team', `${role(r?.team, 'L | Founders')} runs logoless. Ask them anything in #support.`),
+    ],
+    buttons: [pbtn('Refresh my roles', 'cmd:sync', 'grey', 'verified')],
+  })
+
+/** #how-it-works: the five steps from sign-up to payout. `notice` is the "not live yet" line while the site is shut. */
+export const howItWorksPanel = (notice: string | null): Message =>
+  panel({
+    banner: true,
+    icon: 'sparkles',
+    title: 'How logoless works',
+    sub: 'Artists, streamers and brands post campaigns. You make edits, post them, and get paid for the views.',
+    notice,
+    blocks: [
+      item('user', '1. Sign up', 'Sign in with Discord, add your name and username, and your PayPal if you like. You come back here verified.'),
+      item('link', '2. Link your accounts', 'Prove your TikTok, YouTube or Instagram with a code in your bio (`/verify`). Verified creators are picked first.'),
+      item('campaign', '3. Pick a campaign', 'Every campaign has a brief, a song or video to edit with, and a rate. See what is live with `/campaigns`.'),
+      item('video', '4. Post and submit', 'Post your edit on your own account, then send the link with `/submit` (or the Submit button on the campaign).'),
+      item('wallet', '5. Get paid', 'You earn for every 1,000 verified views, straight to your PayPal. `/balance` shows what is clearing and `/withdraw` sends it.'),
+    ],
+    buttons: [plink('Sign up', BETA_ONBOARDING, 'arrow'), plink('Questions', '/faq', 'help')],
+  })

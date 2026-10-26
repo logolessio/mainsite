@@ -23,6 +23,7 @@ import { BAR } from './look'
 import { go as goBtn, goTarget, icon, tidy } from './ui'
 import { addUserReply, closeTicket, openTicket } from './tickets'
 import { getDiscordConfig } from './config'
+import { getPre, preCounts } from '../prelaunch'
 import { announceCampaign, logToDiscord, postTo, refreshStatus } from './outbound'
 import { getInquiry, saveInquiry } from '../inquiries'
 import { getCaps } from '../campaign-caps'
@@ -145,6 +146,7 @@ async function profileData(userId: string): Promise<k.ProfileData | null> {
     stats: { submissions: s.clips, views: s.views, earnedCents: s.earnedCents },
     badges,
     since: new Date(p.created_at * 1000).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }),
+    member: await getPre(userId).then((s) => (s?.n ? { n: s.n, founding: s.founding !== false } : undefined)).catch(() => undefined),
   }
 }
 
@@ -786,7 +788,7 @@ export async function handleInteraction(i: Interaction, env: Env): Promise<Reply
         if (!(await isStaff(i))) return fail('Only the team can post the site card.')
         const stats = await publicStats()
         const { audience: community, pitchLine: line } = await import('./audience')
-        const res = await postMessage(i.channel_id!, siteMessage(stats, (await launchNotice()) ? line(await community()) : undefined))
+        const res = await postMessage(i.channel_id!, siteMessage(stats, (await launchNotice()) ? line(await community()) : undefined, (await launchNotice()) ? (await preCounts()).founding : 0))
         return res.ok ? ok('Posted the site card here.') : fail(explainDiscord(res, 'this channel'))
       }
       case 'admin': return await admin(i)

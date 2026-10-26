@@ -62,6 +62,8 @@ export type ProfileData = {
   stats: { submissions: number; views: number; earnedCents: number }
   badges: string[]
   since: string
+  /** Their pre-launch number, when they have one ("Founding member #3"). */
+  member?: { n: number; founding: boolean }
   /** What the picture card is drawn for. The handle, unless this says otherwise ("sample" in the admin previews). */
   imageFor?: string
 }
@@ -74,7 +76,7 @@ export const profileCard = (p: ProfileData): Message =>
         label: 'Profile',
         title: p.name,
         url: `${SITE_URL}/@${p.handle}`,
-        text: join(`@${p.handle}`, p.bio && clip(p.bio, 200), p.badges.length > 0 && small(p.badges.slice(0, 5).join('  ·  '))),
+        text: join(`@${p.handle}`, p.bio && clip(p.bio, 200), p.member && `${ic(p.member.founding ? 'founder' : 'verified')} **${p.member.founding ? 'Founding' : 'Verified'} member #${p.member.n}**`, p.badges.length > 0 && small(p.badges.slice(0, 5).join('  ·  '))),
         image: `${SITE_URL}/api/discord/card/profile/${encodeURIComponent(p.imageFor ?? p.handle)}`,
         foot: `Member since ${p.since}`,
       }),
@@ -298,8 +300,9 @@ export const rulesCard = (links: { rules: string; support: string; getStarted: s
   )
 }
 
-export const siteCard = (stats?: { campaigns: number; paidCents: number }, community?: string): Message => {
-  const numbers = stats && stats.campaigns > 0 ? [item('campaign', `${stats.campaigns} live ${stats.campaigns === 1 ? 'campaign' : 'campaigns'}`, 'Open to everyone, posted here first.'), ...(stats.paidCents > 0 ? [item('money', `$${Math.floor(stats.paidCents / 100).toLocaleString('en-US')} paid to creators`, 'For verified views, straight to PayPal.')] : [])] : community ? [small(community)] : []
+export const siteCard = (stats?: { campaigns: number; paidCents: number }, community?: string, founders = 0): Message => {
+  const crowd = founders > 0 && !(stats && stats.campaigns > 0) ? [item('founder', `${founders} founding ${founders === 1 ? 'member' : 'members'}`, 'Signed up before we opened, and in for good. Sign up on the site to be next.')] : []
+  const numbers = stats && stats.campaigns > 0 ? [item('campaign', `${stats.campaigns} live ${stats.campaigns === 1 ? 'campaign' : 'campaigns'}`, 'Open to everyone, posted here first.'), ...(stats.paidCents > 0 ? [item('money', `$${Math.floor(stats.paidCents / 100).toLocaleString('en-US')} paid to creators`, 'For verified views, straight to PayPal.')] : [])] : community ? [...crowd, small(community)] : crowd
   return panel({
     banner: true,
     icon: 'logo',

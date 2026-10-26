@@ -23,6 +23,10 @@ export type DiscordConfig = {
     payouts: string
     /** Every submission is posted here with the video and its numbers. */
     submissions: string
+    /** The explainer of what each role means (#roles). */
+    roleGuide: string
+    /** The explainer of how logoless works (#how-it-works). */
+    howItWorks: string
   }
   /** The category that private ticket channels are created under. */
   ticketCategory: string
@@ -42,7 +46,7 @@ export type DiscordConfig = {
   dm: boolean // direct-message linked members their notifications
 }
 
-export const EMPTY_CHANNELS: DiscordConfig['channels'] = { getStarted: '', rules: '', site: '', support: '', status: '', news: '', newCampaigns: '', system: '', updates: '', clips: '', logs: '', payouts: '', submissions: '' }
+export const EMPTY_CHANNELS: DiscordConfig['channels'] = { getStarted: '', rules: '', site: '', support: '', status: '', news: '', newCampaigns: '', system: '', updates: '', clips: '', logs: '', payouts: '', submissions: '', roleGuide: '', howItWorks: '' }
 
 export const EMPTY: DiscordConfig = {
   guildId: '',
@@ -89,6 +93,8 @@ export function clean(input: unknown): DiscordConfig {
       logs: snowflake(ch.logs),
       payouts: snowflake(ch.payouts),
       submissions: snowflake(ch.submissions),
+      roleGuide: snowflake(ch.roleGuide),
+      howItWorks: snowflake(ch.howItWorks),
     },
     ticketCategory: snowflake(i.ticketCategory),
     artistsCategory: snowflake(i.artistsCategory),

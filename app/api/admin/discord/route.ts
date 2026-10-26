@@ -7,7 +7,7 @@ import { discordIdFor } from '@/lib/discord/link'
 import { SAMPLE_BY_ID, sampleList } from '@/lib/discord/samples'
 import { oauthClient } from '@/lib/discord/connect'
 import { checkAccess } from '@/lib/discord/diagnose'
-import { getStartedMessage, rulesMessage, siteMessage, supportPanel } from '@/lib/discord/panels'
+import { getStartedMessage, guideMessage, rolesMessage, rulesMessage, siteMessage, supportPanel } from '@/lib/discord/panels'
 import { launchNotice } from '@/lib/discord/notice'
 import { publicStats } from '@/lib/public-stats'
 import { COMMANDS } from '@/lib/discord/commands'
@@ -31,7 +31,7 @@ const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('check') }),
   z.object({ action: z.literal('test') }),
   z.object({ action: z.literal('sample'), id: z.string().max(60), to: z.enum(['logs', 'me']).default('logs'), channel: z.string().max(30).optional() }),
-  z.object({ action: z.literal('post'), what: z.enum(['getStarted', 'rules', 'site', 'support', 'status']) }),
+  z.object({ action: z.literal('post'), what: z.enum(['getStarted', 'rules', 'site', 'support', 'status', 'roles', 'guide']) }),
   z.object({ action: z.literal('sync') }),
   z.object({ action: z.literal('artists') }),
   z.object({ action: z.literal('cards') }),
@@ -45,6 +45,7 @@ const schema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('server-map') }),
   z.object({ action: z.literal('fit-server'), skip: z.number().int().min(0).max(500).default(0), lock: z.boolean().default(false) }),
   z.object({ action: z.literal('apply-logo') }),
+  z.object({ action: z.literal('make-event') }),
   z.object({ action: z.literal('preview-welcome') }),
   z.object({ action: z.literal('prelaunch-decide'), userId: z.string().min(8).max(64), approve: z.boolean() }),
   z.object({ action: z.literal('welcome-me') }),
@@ -131,9 +132,11 @@ export const POST = route(async (req: Request) => {
     const ok = {
       getStarted: { id: cfg.channels.getStarted, label: 'get-started', msg: async () => getStartedMessage(cfg, await featureOn('discord-onboarding'), await launchNotice()) },
       rules: { id: cfg.channels.rules, label: 'rules', msg: () => rulesMessage(cfg) },
-      site: { id: cfg.channels.site, label: 'site', msg: async () => siteMessage(await publicStats(), (await launchNotice()) ? pitchLine(await audience()) : undefined) },
+      site: { id: cfg.channels.site, label: 'site', msg: async () => siteMessage(await publicStats(), (await launchNotice()) ? pitchLine(await audience()) : undefined, (await launchNotice()) ? (await preCounts()).founding : 0) },
       support: { id: cfg.channels.support, label: 'support', msg: () => supportPanel() },
       status: { id: cfg.channels.status, label: 'status', msg: () => null },
+      roles: { id: cfg.channels.roleGuide, label: 'roles', msg: () => rolesMessage(cfg) },
+      guide: { id: cfg.channels.howItWorks, label: 'how-it-works', msg: async () => guideMessage(await launchNotice()) },
     }[a.what]
     if (!ok.id) throw new HttpError(409, `Set the ${ok.label} channel first, and save.`)
     if (a.what === 'status') {
@@ -144,7 +147,7 @@ export const POST = route(async (req: Request) => {
     if (!res.ok) throw new HttpError(502, explainDiscord(res, `the ${ok.label} channel`))
     // posting again replaces: the bot's own earlier copy of this panel is taken down (never anyone else's messages, and only in the channels that hold one fixed panel)
     let replaced = 0
-    if (a.what === 'getStarted' || a.what === 'rules' || a.what === 'support' || a.what === 'site') {
+    if (a.what === 'getStarted' || a.what === 'rules' || a.what === 'support' || a.what === 'site' || a.what === 'roles' || a.what === 'guide') {
       const me = await discord<{ id: string }>('GET', '/users/@me')
       const old = await discord<{ id: string; author?: { id: string } }[]>('GET', `/channels/${ok.id}/messages?limit=25`)
       for (const m of (Array.isArray(old.json) ? old.json : []).filter((x) => x.author?.id === me.json?.id && x.id !== res.json?.id).slice(0, 8)) {
@@ -265,6 +268,45 @@ export const POST = route(async (req: Request) => {
     steps.push({ what: 'logo emoji', ok: !e.note && !e.failed.includes('logo'), note: e.note })
     await audit(actor, 'discord.apply-logo', null, steps.map((x) => `${x.what}: ${x.ok ? 'ok' : 'no'}`).join(', '), ip)
     return json({ ok: true, steps })
+  }
+  if (a.action === 'make-event') {
+    // the opening day as an event in the server: it shows in the events list with a countdown, and people can mark that they are interested
+    if (!cfg.guildId) throw new HttpError(409, 'Save your server ID first.')
+    const { launchView } = await import('@/lib/launch')
+    const { allSettings } = await import('@/lib/settings')
+    const view = launchView(await allSettings())
+    if (!view.end || view.end * 1000 <= Date.now()) throw new HttpError(409, 'There is no opening time in the future. Set it on the Countdown page first.')
+    const { SITE_URL } = await import('@/lib/discord/ui')
+    let image: string | undefined
+    try {
+      const pic = await fetch(`${SITE_URL}/discord/gradient-banner.jpg`)
+      if (pic.ok) {
+        const bytes = new Uint8Array(await pic.arrayBuffer())
+        let bin = ''
+        for (let i = 0; i < bytes.length; i += 4096) bin += String.fromCharCode(...bytes.subarray(i, i + 4096))
+        image = `data:image/jpeg;base64,${btoa(bin)}`
+      }
+    } catch {
+      /* the event is fine without a cover picture */
+    }
+    const event = {
+      name: 'logoless opens',
+      description: 'The doors open: the first campaigns go live and the whole server wakes up. Founding members are first in line. Press Interested to be reminded.',
+      scheduled_start_time: new Date(view.end * 1000).toISOString(),
+      scheduled_end_time: new Date((view.end + 3600) * 1000).toISOString(),
+      privacy_level: 2,
+      entity_type: 3,
+      entity_metadata: { location: 'logoless.io' },
+      ...(image ? { image } : {}),
+    }
+    const d0 = await db()
+    const saved = await d0.prepare("SELECT value FROM settings WHERE key = 'discord:event'").first<{ value: string }>()
+    let res = saved ? await discord<{ id: string }>('PATCH', `/guilds/${cfg.guildId}/scheduled-events/${saved.value}`, event) : null
+    if (!res || res.status === 404) res = await discord<{ id: string }>('POST', `/guilds/${cfg.guildId}/scheduled-events`, event)
+    if (!res.ok || !res.json?.id) throw new HttpError(502, explainDiscord(res, 'the server'))
+    await d0.prepare("INSERT INTO settings (key, value, updated_at) VALUES ('discord:event', ?1, strftime('%s','now')) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at").bind(res.json.id).run()
+    await audit(actor, 'discord.make-event', null, new Date(view.end * 1000).toISOString(), ip)
+    return json({ ok: true, at: view.end })
   }
   if (a.action === 'preview-welcome') {
     // the welcome card, with the owner's own name and Discord picture, goes up in the welcome channel as a new member's would

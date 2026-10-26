@@ -8,7 +8,7 @@ import { ADMIN, effective, EMBED, MANAGE_CHANNELS, MANAGE_ROLES, SEND, VIEW, ZER
 
 const CHANNEL_NAMES: Record<string, string> = {
   getStarted: '#get-started', rules: '#rules', site: '#site', support: '#support', status: '#status', news: '#news', newCampaigns: '#new-campaigns',
-  system: '#system', updates: '#updates', clips: 'Proof', logs: 'Team log', payouts: '#payouts', submissions: '#submissions',
+  system: '#system', updates: '#updates', clips: 'Proof', logs: 'Team log', payouts: '#payouts', submissions: '#submissions', roleGuide: '#roles', howItWorks: '#how-it-works',
 }
 
 /**

@@ -149,6 +149,8 @@ export const SAMPLES: Sample[] = [
 
   // ---- the fixed channels
   { id: 'rules', group: 'Channels', label: 'Rules', build: () => np.rulesPanel({ rules: '', support: '', getStarted: '', guildId: '' }) },
+  { id: 'roles', group: 'Channels', label: 'Roles', build: () => np.rolesPanel() },
+  { id: 'how-it-works', group: 'Channels', label: 'How it works', build: () => np.howItWorksPanel(notice(Math.floor(Date.now() / 1000) + 38 * 86400)) },
   { id: 'site', group: 'Channels', label: 'Site card', build: () => k.siteCard({ campaigns: 5, paidCents: 1840000 }) },
   { id: 'get-started', group: 'Channels', label: 'Get started', build: () => np.welcomePanel({ rules: '', guildId: '' }, notice(Math.floor(Date.now() / 1000) + 38 * 86400)) },
   { id: 'accounts-panel', group: 'Channels', label: 'Manage accounts panel', build: () => np.accountsPanel(notice(Math.floor(Date.now() / 1000) + 38 * 86400)) },
