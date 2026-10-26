@@ -10,6 +10,7 @@ import {
   ImageIcon,
   Lightbulb,
   ListChecks,
+  Lock,
   Mic,
   Palette,
   Pause,
@@ -18,32 +19,17 @@ import {
   Star,
   Terminal,
 } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
-import {
-  BRAND,
-  CHANNEL,
-  EXTRA_MONEY,
-  IDEAS,
-  MOTIONS,
-  NEXT_STEPS,
-  POSTING,
-  RPM_ROWS,
-  RULES,
-  SERIES,
-  STYLE_PREFIX,
-  TIMELINE,
-  TOOLS,
-  VIDEOS,
-  VOICE,
-  WORKFLOW,
-  type Scene,
-  type Video,
-} from '@/lib/yt/plan'
+import type { Plan, Scene, Video } from '@/lib/yt/plan'
 
 /*
  * yt.logoless.io: everything for the Side Effects channel on one page. Ticks (next steps, fact-checks) are kept in this browser only.
+ * The plan itself comes in from the server (app/yt/page.tsx) only once the password is in, so none of it is in this file's bundle.
  */
+
+const PlanContext = createContext<Plan | null>(null)
+const usePlan = () => useContext(PlanContext)!
 
 const ORANGE = '#E8752A'
 const card = 'rounded-2xl border border-white/10 bg-white/[0.03]'
@@ -136,6 +122,7 @@ function Section({ id, icon, label, title, intro, children }: { id: string; icon
 /* ------------------------------------------------------------------ next steps */
 
 function NextSteps() {
+  const { NEXT_STEPS } = usePlan()
   const [ticks, toggle] = useStored('yt-plan-steps')
   const done = NEXT_STEPS.filter((s) => ticks[s.id]).length
   return (
@@ -205,6 +192,7 @@ function Calculator() {
 }
 
 function Money() {
+  const { RPM_ROWS, TIMELINE, EXTRA_MONEY, POSTING } = usePlan()
   return (
     <div className="grid gap-5 lg:grid-cols-2">
       <Calculator />
@@ -267,6 +255,7 @@ function StatusPill({ on, children }: { on: boolean; children: React.ReactNode }
 }
 
 function ScriptTab({ video }: { video: Video }) {
+  const { VOICE } = usePlan()
   const audio = useRef<HTMLAudioElement>(null)
   const [t, setT] = useState(0)
   const [playing, setPlaying] = useState(false)
@@ -389,6 +378,7 @@ function FactTab({ video }: { video: Video }) {
 }
 
 function PromptsTab({ video }: { video: Video }) {
+  const { STYLE_PREFIX } = usePlan()
   const prompts = video.scenes.map((s) => `${STYLE_PREFIX} Scene: ${s.shot}.`)
   return (
     <div>
@@ -468,7 +458,8 @@ function VideoCard({ video }: { video: Video }) {
 /* ------------------------------------------------------------------ ideas */
 
 function Ideas() {
-  const cats = useMemo(() => [...new Set(IDEAS.map((i) => i.category))], [])
+  const { IDEAS, SERIES } = usePlan()
+  const cats = useMemo(() => [...new Set(IDEAS.map((i) => i.category))], [IDEAS])
   const [filter, setFilter] = useState<string>('star')
   const shown = IDEAS.filter((i) => (filter === 'all' ? true : filter === 'star' ? i.star : i.category === filter))
   const chip = (id: string, label: string) => (
@@ -520,6 +511,7 @@ function Ideas() {
 /* ------------------------------------------------------------------ brand */
 
 function Brand() {
+  const { VIDEOS, BRAND, STYLE_PREFIX, VOICE } = usePlan()
   const first = VIDEOS.find((v) => v.thumbnail)
   return (
     <div className="grid gap-5 lg:grid-cols-2">
@@ -576,6 +568,7 @@ function Brand() {
 /* ------------------------------------------------------------------ workflow + rules */
 
 function Workflow() {
+  const { WORKFLOW, TOOLS, MOTIONS } = usePlan()
   return (
     <div className="grid gap-5 lg:grid-cols-[1.3fr_1fr]">
       <ol className="min-w-0 space-y-3">
@@ -626,6 +619,7 @@ function Workflow() {
 }
 
 function Rules() {
+  const { RULES } = usePlan()
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {RULES.map((r) => (
@@ -641,7 +635,16 @@ function Rules() {
 
 /* ------------------------------------------------------------------ page */
 
-export function SideEffectsPlan() {
+export function SideEffectsPlan({ plan, lock }: { plan: Plan; lock: () => Promise<void> }) {
+  return (
+    <PlanContext.Provider value={plan}>
+      <PlanPage lock={lock} />
+    </PlanContext.Provider>
+  )
+}
+
+function PlanPage({ lock }: { lock: () => Promise<void> }) {
+  const { VIDEOS, IDEAS, CHANNEL } = usePlan()
   const voiced = VIDEOS.filter((v) => v.status.voice).length
   const stats = [
     [String(VIDEOS.length), 'scripts ready'],
@@ -721,7 +724,12 @@ export function SideEffectsPlan() {
         </Section>
 
         <footer className="border-t border-white/[0.07] py-10 text-[13px] text-white/35">
-          Side Effects. · channel plan · made with the logoless kit · names: {CHANNEL.name} (backups: {CHANNEL.backups.join(', ')})
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span>Side Effects. · channel plan · names: {CHANNEL.name} (backups: {CHANNEL.backups.join(', ')})</span>
+            <form action={async () => { await lock(); window.location.reload() }}>
+              <button type="submit" className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-3 py-1 text-[12px] font-medium text-white/60 transition hover:text-white"><Lock className="size-3.5" />Lock this page</button>
+            </form>
+          </div>
         </footer>
       </main>
     </div>

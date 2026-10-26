@@ -135,3 +135,7 @@ export const SERIES = [
   { name: 'Actually, How Bad Is ___?', items: 'vaping, weed, alcohol, energy drinks, fast food, betting' },
   { name: 'What ___ Is Doing to Your Brain', items: 'doomscrolling, overthinking, gaming, porn, comparison' },
 ]
+
+/** Everything the page shows, handed to it by the server only once the password is in (see lib/yt/gate.ts). */
+export const PLAN = { STYLE_PREFIX, VOICE, VIDEOS, IDEAS, CHANNEL, NEXT_STEPS, RPM_ROWS, TIMELINE, EXTRA_MONEY, POSTING, RULES, TOOLS, WORKFLOW, MOTIONS, BRAND, SERIES }
+export type Plan = typeof PLAN
