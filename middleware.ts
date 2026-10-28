@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { isBetaHost } from '@/lib/beta-host'
 import { isMethodHost, METHOD_HOST } from '@/lib/method-host'
 import { isYtHost, YT_HOST } from '@/lib/yt-host'
+import { isSeventeenHost, isSeventeenPath, SEVENTEEN_HOST } from '@/lib/seventeen-host'
 import { clientSlugOf } from '@/lib/client-host'
 
 const MAIN = 'https://logoless.io'
@@ -53,6 +54,22 @@ export function middleware(req: NextRequest) {
       return NextResponse.rewrite(new URL(`/yt${search}`, req.url), { request: { headers } })
     }
     return NextResponse.redirect(new URL('/', req.url), 307)
+  }
+  // 17.logoless.io is the scenepack site, a site of its own: its pages (home, /p/<slug>, /request, /resources) are app/seventeen, opened at the
+  // addresses visitors see. Every other path comes back to its home. Like method, nothing on it talks to the site's API.
+  if (isSeventeenHost(host)) {
+    if (isSeventeenPath(p)) {
+      const inner = `/seventeen${p === '/' ? '' : p}`
+      headers.set('x-path', inner)
+      return NextResponse.rewrite(new URL(`${inner}${search}`, req.url), { request: { headers } })
+    }
+    return NextResponse.redirect(new URL('/', req.url), 307)
+  }
+  // ...it lives only on its own address: /seventeen on the main site goes there
+  if (/^\/seventeen(\/|$)/.test(p)) {
+    const port = req.nextUrl.port
+    const rest = p.slice('/seventeen'.length) || '/'
+    return NextResponse.redirect(host.endsWith('localhost') ? `http://17.localhost${port ? `:${port}` : ''}${rest}${search}` : `https://${SEVENTEEN_HOST}${rest}${search}`, 307)
   }
   // ...and both pages live only on their own addresses: /yt on the main site goes there
   if (p === '/yt') {

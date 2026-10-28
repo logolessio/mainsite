@@ -28,6 +28,7 @@
   // beta.logoless.io is the pre-launch sign-up (see lib/prelaunch.ts and middleware.ts): the one page open while the main site is shut behind the launch page.
   // method.logoless.io is Motion4K Optimizer (app/method, see middleware.ts): one page that patches video edits in the browser, nothing uploaded.
   // yt.logoless.io is the Side Effects channel plan (app/yt, see middleware.ts): one page, made from faceless-channel/ by `channel.py site`.
+  // 17.logoless.io is the scenepack site (app/seventeen, see middleware.ts): a site of its own, its packs listed in lib/seventeen/packs.ts.
   // scroll.logoless.io was the movie-trailers site and is gone. It stays attached only so the old link lands on the main site (see middleware.ts).
   // owner.logoless.io is the owner and admin dashboard, also the same worker (admin.logoless.io only forwards there). Pushing a feature turns it on for logoless.io (see /dev/features).
   // Every half hour the site looks again at the views of live submissions (each one only about every two hours: see lib/views-rescan.ts).
@@ -43,6 +44,7 @@
     { "pattern": "scroll.logoless.io", "custom_domain": true },
     { "pattern": "beta.logoless.io", "custom_domain": true },
     { "pattern": "method.logoless.io", "custom_domain": true },
-    { "pattern": "yt.logoless.io", "custom_domain": true }
+    { "pattern": "yt.logoless.io", "custom_domain": true },
+    { "pattern": "17.logoless.io", "custom_domain": true }
   ]
 }

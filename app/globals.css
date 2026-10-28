@@ -2096,3 +2096,40 @@ html[data-look='anubis'] [data-keep-case] {
     linear-gradient(#000 0 0);
   mask-composite: exclude;
 }
+
+/* ------------------------------------------------------------------------------------------------------------------------------
+   17.logoless.io, the scenepack site (app/seventeen). The big title catches a slow sweep of light, and the catalogue sits on a raised panel
+   with a soft glow along its top edge.
+   ------------------------------------------------------------------------------------------------------------------------------ */
+.s17-shimmer {
+  background: linear-gradient(120deg, #cfcfcf 0%, #cfcfcf 38%, #ffffff 50%, #cfcfcf 62%, #cfcfcf 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: s17-shimmer 6s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+@keyframes s17-shimmer {
+  0% { background-position: 100% 0; }
+  60%, 100% { background-position: 0% 0; }
+}
+.s17-panel {
+  background:
+    radial-gradient(150% 60% at 50% 0%, rgb(255 255 255 / 0.09), transparent 58%),
+    linear-gradient(rgb(255 255 255 / 0.045), rgb(255 255 255 / 0.01)),
+    #000;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.16),
+    inset 0 0 60px rgb(255 255 255 / 0.03),
+    0 -30px 80px rgb(0 0 0 / 0.4);
+}
+@keyframes s17-blur { 0%, 15% { filter: blur(10px); opacity: 0; } 45%, 85% { filter: blur(0); opacity: 1; } 100% { filter: blur(10px); opacity: 0; } }
+@keyframes s17-rise { 0%, 15% { transform: translateY(70%); opacity: 0; } 40%, 85% { transform: none; opacity: 1; } 100% { transform: translateY(-40%); opacity: 0; } }
+@keyframes s17-scale { 0%, 15% { transform: scale(1.8); opacity: 0; } 35%, 85% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.9); opacity: 0; } }
+@keyframes s17-slide { 0%, 15% { transform: translateX(-60%); opacity: 0; } 40%, 85% { transform: none; opacity: 1; } 100% { transform: translateX(40%); opacity: 0; } }
+@keyframes s17-type { 0%, 10% { clip-path: inset(0 100% 0 0); } 55%, 90% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 100% 0 0); } }
+@keyframes s17-flicker { 0%, 100% { opacity: 1; text-shadow: none; } 8% { opacity: 0.2; } 10% { opacity: 1; text-shadow: -3px 0 #ff1f38, 3px 0 #4ba9dc; } 12% { text-shadow: none; } 50% { opacity: 1; } 52% { opacity: 0.4; } 54% { opacity: 1; } }
+@keyframes s17-drift { 0%, 100% { transform: translate(-20%, -10%) scale(1); opacity: 0.55; } 50% { transform: translate(20%, 10%) scale(1.25); opacity: 0.95; } }
+@media (prefers-reduced-motion: reduce) {
+  .s17-shimmer, .s17 [data-anim] { animation: none !important; }
+}
