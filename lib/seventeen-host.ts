@@ -7,4 +7,4 @@ export const SEVENTEEN_HOST = '17.logoless.io'
 export const isSeventeenHost = (host: string) => /^17\.(?:logoless\.io|localhost)$/i.test(host.toLowerCase().split(':')[0])
 
 /** The pages 17 has, as visitors see them. Every other path on its address comes back to the home page. */
-export const isSeventeenPath = (p: string) => p === '/' || p === '/request' || p === '/resources' || /^\/p\/[a-z0-9-]+$/.test(p)
+export const isSeventeenPath = (p: string) => p === '/' || p === '/request' || /^\/p\/[a-z0-9-]+$/.test(p)

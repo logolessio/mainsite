@@ -55,7 +55,7 @@ export function middleware(req: NextRequest) {
     }
     return NextResponse.redirect(new URL('/', req.url), 307)
   }
-  // 17.logoless.io is the scenepack site, a site of its own: its pages (home, /p/<slug>, /request, /resources) are app/seventeen, opened at the
+  // 17.logoless.io is the scenepack site, a site of its own: its pages (home, /p/<slug>, /request) are app/seventeen, opened at the
   // addresses visitors see. Every other path comes back to its home. Like method, nothing on it talks to the site's API.
   if (isSeventeenHost(host)) {
     if (isSeventeenPath(p)) {

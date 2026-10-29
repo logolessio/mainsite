@@ -2098,38 +2098,116 @@ html[data-look='anubis'] [data-keep-case] {
 }
 
 /* ------------------------------------------------------------------------------------------------------------------------------
-   17.logoless.io, the scenepack site (app/seventeen). The big title catches a slow sweep of light, and the catalogue sits on a raised panel
-   with a soft glow along its top edge.
+   17.logoless.io, the scenepack site (app/seventeen). Its own type (Schibsted Grotesk for the words, Black for the big titles, Plex Mono for
+   the small labels), freed from the main site's look: the main site's headings are capitals in Plex Mono with a hard shadow, these are not.
+   Behind the hero the posters drift past in columns; a pack card catches a sweep of light on hover.
    ------------------------------------------------------------------------------------------------------------------------------ */
+/* stronger than the main site's heading rules, which put a hard shadow under every h1 to h3 (it shows through the clipped, see-through titles) */
+html .s17.s17.s17 :is(h1, h2, h3, h4, h5, h6) {
+  font-family: inherit;
+  text-transform: none;
+  letter-spacing: inherit;
+  text-shadow: none;
+}
+html .s17.s17.s17 .s17-display {
+  text-transform: uppercase;
+  letter-spacing: -0.05em;
+}
+.s17 ::selection {
+  background: rgb(255 31 56 / 0.45);
+  color: #fff;
+}
+.s17-display {
+  font-family: var(--font-f-schibsted), ui-sans-serif, sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.05em;
+  line-height: 0.86;
+}
+.s17-mono {
+  font-family: var(--font-f-ibm-plex-mono), ui-monospace, monospace;
+  letter-spacing: 0.02em;
+}
 .s17-shimmer {
-  background: linear-gradient(120deg, #cfcfcf 0%, #cfcfcf 38%, #ffffff 50%, #cfcfcf 62%, #cfcfcf 100%);
+  background: linear-gradient(110deg, #d4d4d4 0%, #d4d4d4 40%, #ffffff 50%, #d4d4d4 60%, #d4d4d4 100%);
   background-size: 250% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: s17-shimmer 6s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+  animation: s17-shimmer 7s cubic-bezier(0.45, 0, 0.2, 1) infinite;
 }
 @keyframes s17-shimmer {
   0% { background-position: 100% 0; }
-  60%, 100% { background-position: 0% 0; }
+  55%, 100% { background-position: 0% 0; }
 }
-.s17-panel {
-  background:
-    radial-gradient(150% 60% at 50% 0%, rgb(255 255 255 / 0.09), transparent 58%),
-    linear-gradient(rgb(255 255 255 / 0.045), rgb(255 255 255 / 0.01)),
-    #000;
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.16),
-    inset 0 0 60px rgb(255 255 255 / 0.03),
-    0 -30px 80px rgb(0 0 0 / 0.4);
+.s17-red {
+  background: linear-gradient(100deg, #ff1f38, #ff4d6a 45%, #ff1f38);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
-@keyframes s17-blur { 0%, 15% { filter: blur(10px); opacity: 0; } 45%, 85% { filter: blur(0); opacity: 1; } 100% { filter: blur(10px); opacity: 0; } }
-@keyframes s17-rise { 0%, 15% { transform: translateY(70%); opacity: 0; } 40%, 85% { transform: none; opacity: 1; } 100% { transform: translateY(-40%); opacity: 0; } }
-@keyframes s17-scale { 0%, 15% { transform: scale(1.8); opacity: 0; } 35%, 85% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.9); opacity: 0; } }
-@keyframes s17-slide { 0%, 15% { transform: translateX(-60%); opacity: 0; } 40%, 85% { transform: none; opacity: 1; } 100% { transform: translateX(40%); opacity: 0; } }
-@keyframes s17-type { 0%, 10% { clip-path: inset(0 100% 0 0); } 55%, 90% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 100% 0 0); } }
-@keyframes s17-flicker { 0%, 100% { opacity: 1; text-shadow: none; } 8% { opacity: 0.2; } 10% { opacity: 1; text-shadow: -3px 0 #ff1f38, 3px 0 #4ba9dc; } 12% { text-shadow: none; } 50% { opacity: 1; } 52% { opacity: 0.4; } 54% { opacity: 1; } }
-@keyframes s17-drift { 0%, 100% { transform: translate(-20%, -10%) scale(1); opacity: 0.55; } 50% { transform: translate(20%, 10%) scale(1.25); opacity: 0.95; } }
+/* the big rank numbers on Top rated: just the outline */
+.s17-outline {
+  color: #000;
+  -webkit-text-stroke: 2px rgb(255 255 255 / 0.32);
+  paint-order: stroke fill;
+}
+/* film grain over the whole site, so the black reads as a print and not a screen */
+.s17-grain::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  opacity: 0.06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* the poster columns behind the hero: each list is there twice, so moving it by half loops without a seam */
+.s17-col {
+  animation: s17-col var(--s17-speed, 80s) linear infinite;
+}
+.s17-col[data-dir='down'] {
+  animation-direction: reverse;
+}
+@keyframes s17-col {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+/* the sweep of light across a card on hover */
+.s17-sheen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 35%, rgb(255 255 255 / 0.16) 48%, transparent 60%);
+  transform: translateX(-120%);
+  transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+}
+.group:hover .s17-sheen::after,
+.group:focus-visible .s17-sheen::after {
+  transform: translateX(120%);
+}
+.s17-rail {
+  scrollbar-width: none;
+}
+.s17-rail::-webkit-scrollbar {
+  display: none;
+}
+@keyframes s17-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes s17-in {
+  from { opacity: 0; transform: translateY(14px); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+.s17-in {
+  animation: s17-in 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes s17-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(46 208 176 / 0.6); }
+  60% { box-shadow: 0 0 0 6px rgb(46 208 176 / 0); }
+}
 @media (prefers-reduced-motion: reduce) {
-  .s17-shimmer, .s17 [data-anim] { animation: none !important; }
+  .s17 :is(.s17-shimmer, .s17-col, .s17-in, [data-anim]) { animation: none !important; }
 }

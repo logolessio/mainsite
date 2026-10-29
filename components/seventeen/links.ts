@@ -1,12 +1,5 @@
-import { SITE } from '@/lib/site'
-
-/** Where 17 points outside itself: the Discord (requests, and every download that has no link yet), logoless itself and the socials. */
-export const SEVENTEEN_LINKS = {
-  discord: SITE.social.discord,
-  main: SITE.url,
-  clip: `${SITE.url}/for-clippers`,
-  youtube: SITE.social.youtube,
-  instagram: SITE.social.instagram,
-  tiktok: SITE.social.tiktok,
-  terms: `${SITE.url}/legal`,
-}
+/**
+ * Where 17 points outside itself: only the Discord, where requests are taken and every download without a link of its own is posted.
+ * 17 is a site of its own, so it never links to logoless.
+ */
+export const SEVENTEEN_DISCORD = 'https://discord.gg/logoless'
