@@ -14,6 +14,7 @@ export type FeatureDef = {
 
 export const FEATURES: FeatureDef[] = [
   ...DISCORD_FEATURES,
+  { id: 'bio-site', name: 'Link in bio: the new logoless.io', category: 'Launch', path: '/', shipped: true, description: 'logoless.io becomes a link-in-bio tool for editors. The home page is a parallax tour of the product with Get started and Log in in the corner; every person gets logoless.io/<name> (from one character, with punctuation anywhere) as a full-screen page in black, white and grey with ten layouts, their own cursor (drawn here or uploaded), backgrounds with blur, effects and an enter screen, and an editor at /editor with a live preview, links, videos, analytics and one-tap looks.' },
   { id: 'reels', name: 'Reels: swipe through campaigns', category: 'Discover', path: '/reels', description: 'A full-screen, swipeable way to browse live campaigns, one at a time. The track plays as you scroll, with the rate, pool and a one-tap Clip this button. Keyboard friendly (↑ ↓, M for sound). Also adds a "Swipe through campaigns" button on the home page.' },
   { id: 'leaderboard', name: 'Clipper leaderboard', category: 'Discover', path: '/leaderboard', description: 'A public ranking of the top clippers by verified views, for people who have chosen to show their views. Gold, silver and bronze podium.' },
   { id: 'live-numbers', name: 'Live numbers on the home page', category: 'Trust', path: '/', description: 'A band under the campaigns with real totals: live campaigns, paid out so far, clips posted. It stays hidden until the numbers are worth showing.' },

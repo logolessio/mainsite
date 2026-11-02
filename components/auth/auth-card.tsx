@@ -48,9 +48,14 @@ function strength(p: string) {
   return Math.min(4, s)
 }
 
-export function AuthCard({ mode }: { mode: Mode }) {
+/**
+ * `variant="bio"` is the link-in-bio product: no "I am a creator or a brand" question, the page editor is where you land, and the name picked on the home page
+ * (`claim`) is carried through signing in so the editor can take it.
+ */
+export function AuthCard({ mode, variant, claim }: { mode: Mode; variant?: 'bio'; claim?: string }) {
   const params = useSearchParams()
   const { navigate } = useTransitions()
+  const bio = variant === 'bio'
   const [role, setRole] = useState<Role>(params.get('role') === 'brand' ? 'brand' : 'clipper')
   const [busy, setBusy] = useState(false)
   const [email, setEmail] = useState('')
@@ -83,14 +88,16 @@ export function AuthCard({ mode }: { mode: Mode }) {
   // ?next=/some-page sends the person back there afterwards (only paths on this site are accepted).
   const nextRaw = params.get('next')
   const next = nextRaw && (/^\/(?!\/)[A-Za-z0-9\-_/?=&.%]*$/.test(nextRaw) || /^https:\/\/(owner|admin|dev)\.logoless\.io(\/[A-Za-z0-9\-_/?=&.%]*)?$/.test(nextRaw)) ? nextRaw : null
-  const done = () => (next?.startsWith('https://') ? window.location.assign(next) : navigate(next ?? (role === 'brand' && mode === 'signup' ? '/brand' : '/dashboard')))
+  const bioHome = claim ? `/editor?claim=${encodeURIComponent(claim)}` : '/editor'
+  const where = bio ? (mode === 'signup' || !next ? bioHome : next) : next
+  const done = () => (where?.startsWith('https://') ? window.location.assign(where) : bio ? window.location.assign(where ?? bioHome) : navigate(where ?? (role === 'brand' && mode === 'signup' ? '/brand' : '/dashboard')))
   const fail = (e: unknown, fallback = 'Something went wrong. Please try again.') => setError(e instanceof Error ? e.message : fallback)
 
   const provider = async (p: Provider) => {
     setBusy(true)
     setError('')
     try {
-      await signInWithProvider(p, mode === 'signup' ? role : undefined, next ?? undefined)
+      await signInWithProvider(p, mode === 'signup' && !bio ? role : undefined, where ?? undefined)
     } catch (e) {
       fail(e)
       setBusy(false)
@@ -193,7 +200,7 @@ export function AuthCard({ mode }: { mode: Mode }) {
   return (
     <motion.div initial={false} animate="show" variants={{ show: { transition: { staggerChildren: 0.05, delayChildren: 0.1 } } }} className="w-full max-w-[380px]">
       <motion.h1 variants={item} className="font-display text-[2.6rem] leading-[1.05]">
-        {twoStep ? 'One more step' : verifying ? 'Check your inbox' : COPY[mode].title}
+        {twoStep ? 'One more step' : verifying ? 'Check your inbox' : bio && mode === 'signup' ? 'Create your page' : COPY[mode].title}
       </motion.h1>
       <motion.p variants={item} className="mt-3 text-[15px] leading-relaxed text-mute">
         {twoStep ? (
@@ -203,7 +210,7 @@ export function AuthCard({ mode }: { mode: Mode }) {
             We sent a 6 digit code to <span className="text-paper">{email}</span>.
           </>
         ) : (
-          COPY[mode].sub
+          bio && mode === 'signup' ? (claim ? <>You are claiming <span className="text-paper">logoless.io/{claim}</span>. Free, and it takes about a minute.</> : 'Free, and it takes about a minute.') : COPY[mode].sub
         )}
       </motion.p>
 
@@ -228,7 +235,7 @@ export function AuthCard({ mode }: { mode: Mode }) {
           </motion.form>
         ) : !verifying ? (
           <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-            {mode === 'signup' && (
+            {mode === 'signup' && !bio && (
               <motion.fieldset variants={item} className="mt-7">
                 <legend className={label}>I am a</legend>
                 <div className="grid grid-cols-2 gap-2">
@@ -316,9 +323,13 @@ export function AuthCard({ mode }: { mode: Mode }) {
                   <span>
                     I agree to the{' '}
                     <a href="/legal/terms" className="text-paper underline underline-offset-2">Terms</a>,{' '}
-                    <a href={role === 'brand' ? '/legal/brand-terms' : '/legal/clipper-terms'} className="text-paper underline underline-offset-2">
-                      {role === 'brand' ? 'Brand Terms' : 'Creator Terms'}
-                    </a>{' '}
+                    {!bio && (
+                      <>
+                        <a href={role === 'brand' ? '/legal/brand-terms' : '/legal/clipper-terms'} className="text-paper underline underline-offset-2">
+                          {role === 'brand' ? 'Brand Terms' : 'Creator Terms'}
+                        </a>{' '}
+                      </>
+                    )}
                     and{' '}
                     <a href="/legal/privacy" className="text-paper underline underline-offset-2">Privacy Policy</a>, and I am 16 or older.
                   </span>
@@ -397,7 +408,7 @@ export function AuthCard({ mode }: { mode: Mode }) {
         {mode === 'login' && (
           <>
             <p className="mb-3 text-[15px] text-mute">New to logoless?</p>
-            <a href="/onboarding" className="inline-flex h-12 w-full items-center justify-center rounded-pill border border-line-strong text-[15px] text-paper transition-colors hover:border-paper/50 hover:bg-white/[0.04]">
+            <a href={bio ? '/signup' : '/onboarding'} className="inline-flex h-12 w-full items-center justify-center rounded-pill border border-line-strong text-[15px] text-paper transition-colors hover:border-paper/50 hover:bg-white/[0.04]">
               Create an account
             </a>
           </>
@@ -405,7 +416,7 @@ export function AuthCard({ mode }: { mode: Mode }) {
         {mode === 'signup' && (
           <p className="text-[15px] text-mute">
             Already have an account?{' '}
-            <a href="/login" className="text-paper underline underline-offset-4">Log in</a>
+            <a href={claim && bio ? `/login?next=${encodeURIComponent(`/editor?claim=${claim}`)}` : '/login'} className="text-paper underline underline-offset-4">Log in</a>
           </p>
         )}
         {mode === 'forgot' && (

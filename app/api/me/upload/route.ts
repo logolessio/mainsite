@@ -3,7 +3,7 @@ import { body, HttpError, json, route } from '@/lib/http'
 import { fromBase64, MAX_IMAGE_BYTES, MAX_VIDEO_BYTES, storeImage, storeVideo } from '@/lib/upload'
 import { requireUser } from '@/lib/user'
 
-const IMAGE_KINDS = ['avatar', 'banner', 'cover', 'background'] as const
+const IMAGE_KINDS = ['avatar', 'banner', 'cover', 'background', 'cursor'] as const
 
 /**
  * Image upload for avatars, banners, profile backgrounds and campaign covers, plus short looping background videos.

@@ -102,5 +102,5 @@ export function middleware(req: NextRequest) {
   return NextResponse.next({ request: { headers } })
 }
 
-// Paths with a dot are files and are skipped, except public profiles, whose usernames may contain dots (logoless.io/@luna.ray).
-export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)', '/@:handle', '/u/:handle'] }
+// Paths with a dot are files and are skipped, except public profiles, whose usernames may contain dots (logoless.io/@luna.ray, and logoless.io/luna.ray for a link-in-bio page: any one-segment path is let through).
+export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)', '/@:handle', '/u/:handle', '/:handle'] }

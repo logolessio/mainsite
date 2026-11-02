@@ -1,13 +1,16 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { AuthCard } from '@/components/auth/auth-card'
+import { BioAuth } from '@/components/auth/bio-auth'
+import { featureOn } from '@/lib/features'
 
 export const metadata: Metadata = {
   title: 'Forgot password | logoless',
   description: 'Access your logoless account with Discord, Google or email.',
 }
 
-export default function Page() {
+export default async function Page() {
+  if (await featureOn('bio-site')) return <BioAuth mode="forgot" />
   return (
     <main className="grid min-h-dvh place-items-center px-5 pt-28 pb-16">
       <Suspense>

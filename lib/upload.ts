@@ -1,11 +1,12 @@
 import { db, nowSec, uid } from './db'
 import { HttpError } from './http'
+import { bioUploadIds } from './bio-store'
 
 export const MAX_IMAGE_BYTES = 450 * 1024
 // Banners may be taller than 16 by 9 (up to square), and the profile grows to fit them.
-export const IMAGE_LIMITS = { avatar: { w: 512, h: 512 }, banner: { w: 1600, h: 1600 }, cover: { w: 900, h: 900 }, background: { w: 1920, h: 1920 } } as const
+export const IMAGE_LIMITS = { avatar: { w: 512, h: 512 }, banner: { w: 1600, h: 1600 }, cover: { w: 900, h: 900 }, background: { w: 1920, h: 1920 }, cursor: { w: 128, h: 128 } } as const
 /** How many of each kind are kept. Banners keep more, so recent ones can be put back with one click. */
-const KEEP: Record<string, number> = { banner: 8, background: 12, cover: 12, bgvideo: 2 }
+const KEEP: Record<string, number> = { banner: 8, background: 12, cover: 12, bgvideo: 2, cursor: 6 }
 /** A looping background video is stored as it is (it cannot be re-encoded in the browser), so it is kept small. */
 export const MAX_VIDEO_BYTES = 1300 * 1024
 export type ImageKind = keyof typeof IMAGE_LIMITS
@@ -73,6 +74,13 @@ async function inUse(userId: string): Promise<string[]> {
   const row = await d.prepare('SELECT * FROM profiles WHERE user_id = ?1').bind(userId).first<{ avatar_key: string | null; banner_value: string; style_json?: string }>()
   if (!row) return []
   const ids: (string | null | undefined)[] = [row.avatar_key, row.banner_value]
+  try {
+    // the link-in-bio page (lib/bio-store.ts) keeps its own picture, video and cursor
+    const page = await d.prepare('SELECT value FROM settings WHERE key = ?1').bind(`bio:${userId}`).first<{ value: string }>()
+    if (page) ids.push(...bioUploadIds(page.value))
+  } catch {
+    /* no page yet */
+  }
   try {
     const bg = (JSON.parse(row.style_json ?? '{}') as { bg?: { image?: string; video?: string } }).bg
     ids.push(bg?.image, bg?.video)

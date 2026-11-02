@@ -7,7 +7,7 @@ import { requireUser } from '@/lib/user'
 export const GET = route(async (req: Request) => {
   const user = await requireUser()
   const kind = new URL(req.url).searchParams.get('kind') ?? ''
-  if (!['banner', 'background', 'avatar', 'bgvideo'].includes(kind)) throw new HttpError(400, 'Unknown upload type.')
+  if (!['banner', 'background', 'avatar', 'bgvideo', 'cursor'].includes(kind)) throw new HttpError(400, 'Unknown upload type.')
   const d = await db()
   // only the first bytes of each picture are read, enough for its size
   const rows = (

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { connection } from 'next/server'
 import { ProfileCard, type ProfileLinkOut } from '@/components/profile/profile-card'
 import { ProfileBackdrop } from '@/components/profile/profile-backdrop'
@@ -33,6 +33,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProfilePage({ params }: Props) {
   await connection()
   const handle = clean((await params).handle)
+  // with the link-in-bio pages a person's page is logoless.io/<name>; the older /u/<name> and /@<name> addresses lead there
+  if (await featureOn('bio-site')) redirect(`/${encodeURIComponent(handle.toLowerCase())}`)
   const p = await profileByHandle(handle).catch(() => null)
   if (!p) notFound()
 

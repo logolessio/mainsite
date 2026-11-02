@@ -26,8 +26,8 @@ export async function prepareImage(file: File, w: number, h: number): Promise<st
   throw new Error('That picture is too detailed to shrink enough. Try a simpler one.')
 }
 
-export type UploadKind = 'avatar' | 'banner' | 'cover' | 'background'
-const SIZES: Record<UploadKind, [number, number]> = { avatar: [512, 512], banner: [1600, 900], cover: [900, 900], background: [1600, 900] }
+export type UploadKind = 'avatar' | 'banner' | 'cover' | 'background' | 'cursor'
+const SIZES: Record<UploadKind, [number, number]> = { avatar: [512, 512], banner: [1600, 900], cover: [900, 900], background: [1600, 900], cursor: [64, 64] }
 
 export async function uploadImage(kind: UploadKind, file: File): Promise<string> {
   const data = await prepareImage(file, ...SIZES[kind])
@@ -92,4 +92,38 @@ export async function uploadAudio(file: File): Promise<string> {
   const j = (await res.json().catch(() => ({}))) as { id?: string; error?: string }
   if (!res.ok || !j.id) throw new Error(j.error ?? 'Upload failed.')
   return j.id
+}
+
+/**
+ * A cursor picture: any picture or SVG, drawn on a 64 by 64 canvas (its shape kept, transparency kept) and sent as a PNG. Going through a canvas also means an
+ * SVG never reaches the server as an SVG: only a plain picture does.
+ */
+export async function uploadCursor(file: File): Promise<string> {
+  if (file.size > 2 * 1024 * 1024) throw new Error('That picture is too large. Pick one under 2 MB.')
+  const url = URL.createObjectURL(file)
+  try {
+    const img = await new Promise<HTMLImageElement>((ok, no) => {
+      const i = new Image()
+      i.onload = () => ok(i)
+      i.onerror = () => no(new Error('That file is not a picture we can read.'))
+      i.src = url
+    })
+    const size = 64
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')!
+    const w = img.naturalWidth || size
+    const h = img.naturalHeight || size
+    const k = Math.min(size / w, size / h)
+    ctx.drawImage(img, (size - w * k) / 2, (size - h * k) / 2, w * k, h * k)
+    const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, 'image/png'))
+    if (!blob) throw new Error('That picture could not be prepared.')
+    const buf = new Uint8Array(await blob.arrayBuffer())
+    let bin = ''
+    for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000))
+    return send('cursor', btoa(bin))
+  } finally {
+    URL.revokeObjectURL(url)
+  }
 }

@@ -20,6 +20,7 @@ import { headers } from 'next/headers'
 import { parseChoices } from '@/lib/design-choices'
 import { effectiveFont, faceById, fontById } from '@/lib/fonts'
 import { isBetaHost } from '@/lib/beta-host'
+import { isBioSurface } from '@/lib/bio-routes'
 import { isMethodHost } from '@/lib/method-host'
 import { isYtHost } from '@/lib/yt-host'
 import { isSeventeenHost } from '@/lib/seventeen-host'
@@ -194,7 +195,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const newLaunch = fs.on['launch-links'] === true
   // beta.logoless.io (the pre-launch sign-up), the sign-in hop it uses, method.logoless.io (Motion4K Optimizer), yt.logoless.io (the Side Effects
   // channel plan) and 17.logoless.io (the scenepack site) are pages of their own: none of the site around them, and never behind the launch page
-  const bare = isBetaHost(host) || isMethodHost(host) || isYtHost(host) || isSeventeenHost(host) || /^\/join(\/|$)/.test(path)
+  // the link-in-bio product (switch `bio-site`): the home page, the editor, signing in and every person's page are pages of their own on logoless.io and the dev address
+  const bioSurface = fs.on['bio-site'] === true && !blocked && !/^(owner|admin|scroll|beta|method|yt|17)\./i.test(host) && isBioSurface(path)
+  const bare = bioSurface || isBetaHost(host) || isMethodHost(host) || isYtHost(host) || isSeventeenHost(host) || /^\/join(\/|$)/.test(path)
   const shut = !bare && launch.closed && !fs.dev && !/^(owner|admin|scroll)\./i.test(host) && !isAdmin && !launchExempt(path) && !(newLaunch && linksExempt(path))
   if (shut || bare) {
     return (

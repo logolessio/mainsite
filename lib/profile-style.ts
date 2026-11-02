@@ -1,4 +1,5 @@
 // Shared (browser + server) definitions for profile customisation. No secrets or database code here.
+import { RESERVED_SLUGS } from './invite-shared'
 import { bannerCss, LOOKS } from './looks'
 import type { ProfileExtras } from './profile-extras'
 
@@ -245,13 +246,20 @@ export const DEFAULT_SHOW = Object.fromEntries(SHOW_OPTIONS.map((o) => [o.key, o
 /** The original username rule: 1 to 20 letters, numbers or underscores. New and changed usernames use it while `username-punctuation` is off. */
 export const HANDLE_RE = /^[a-z0-9_]{1,20}$/
 /**
- * The looser rule (switch `username-punctuation`): dots and dashes too, anywhere including first and last, but never two in a row and never
- * on their own (there has to be a letter, a number or an underscore in it). Every username that passes HANDLE_RE passes this one as well.
- * Looking up an existing username always uses this rule, so a page for "luna.ray" keeps working whether the switch is on or off.
+ * The looser rule (switch `username-punctuation`, and always with the link-in-bio pages): 1 to 30 characters, with punctuation anywhere (first, last, side by side),
+ * as long as there is a letter, a number or an underscore somewhere in it. The punctuation that is allowed is the kind that is safe in an address and in a
+ * message: . _ - ~ ! $ * + =  Every username that passes HANDLE_RE passes this one as well. Looking up an existing username always uses this rule, so a page
+ * for "luna.ray" keeps working whether the switch is on or off.
  */
-export const HANDLE_RE_LOOSE = /^(?=.*[a-z0-9_])(?!.*[.-]{2})[a-z0-9_.-]{1,20}$/
+export const HANDLE_RE_LOOSE = /^(?=.*[a-z0-9_])[a-z0-9_.\-~!$*+=]{1,30}$/
+/** What a username field can hold with the looser rule. */
+export const HANDLE_PUNCT = '. _ - ~ ! $ * + ='
+/** A username that ends like a file name would be taken for the file (logoless.io/logo.png), so it is refused. */
+export const HANDLE_FILELIKE = /\.(?:png|jpe?g|gif|webp|svg|ico|txt|xml|json|js|css|map|html?|mp[34]|webmanifest|woff2?|ttf|pdf|zip)$/
 /** Names that look official. Only the owner account may use them, so nobody can pose as staff. */
 export const RESERVED_WORDS = ['logoless', 'admin', 'administrator', 'support', 'staff', 'official', 'moderator', 'mod', 'help', 'security', 'billing', 'team', 'system', 'root', 'null', 'undefined', 'api', 'www']
+/** The reserved words that count when they sit anywhere inside a name (someone posing as the site). The rest only count as the whole name, so "modular" or "team.k" are fine. */
+const RESERVED_ANYWHERE = ['logoless', 'official', 'administrator', 'moderator', 'support']
 export const HANDLE_RESERVED_MSG = 'That name is reserved. Please pick another.'
 
 /** Lower case, no spaces around it and no leading "@". */
@@ -259,8 +267,10 @@ export const normHandle = (raw: string) => raw.trim().toLowerCase().replace(/^@/
 
 /** Whether a username uses an official-looking word. With `loose`, punctuation is ignored, so "log.oless" or "ad-min" still counts. */
 export function isReservedHandle(h: string, loose = false) {
-  const plain = loose ? h.replace(/[._-]/g, '') : h
-  return RESERVED_WORDS.some((w) => plain.includes(w))
+  const plain = loose ? h.replace(/[^a-z0-9]/g, '') : h
+  if (!loose) return RESERVED_WORDS.some((w) => plain.includes(w))
+  // with the looser rule only the whole name (or a real impersonation like "logoless.support") is held back, so ordinary names that contain "mod" or "help" are free
+  return RESERVED_WORDS.includes(plain) || RESERVED_ANYWHERE.some((w) => plain.includes(w))
 }
 
 /**
@@ -272,20 +282,22 @@ export function handleProblem(raw: string, { loose = false, isAdmin = false }: {
   if (!loose) {
     if (!HANDLE_RE.test(h)) return 'Use 1 to 20 letters, numbers or underscores.'
   } else if (!HANDLE_RE_LOOSE.test(h)) {
-    if (h.length < 1 || h.length > 20) return 'Use 1 to 20 characters.'
-    if (/[^a-z0-9_.-]/.test(h)) return 'Use letters, numbers, dots, dashes and underscores only.'
-    if (!/[a-z0-9_]/.test(h)) return 'Add at least one letter, number or underscore.'
-    return 'Dots and dashes cannot be next to each other.'
+    if (h.length < 1 || h.length > 30) return 'Use 1 to 30 characters.'
+    if (/[^a-z0-9_.\-~!$*+=]/.test(h)) return 'Use letters, numbers and these: . _ - ~ ! $ * + ='
+    return 'Add at least one letter, number or underscore.'
   }
+  if (HANDLE_FILELIKE.test(h)) return 'That ends like a file name, so the address would not work. Pick another.'
   if (!isAdmin && isReservedHandle(h, loose)) return HANDLE_RESERVED_MSG
+  // a name the site itself uses (logoless.io/about, /editor...) is never a person's page
+  if (loose && RESERVED_SLUGS.has(h)) return HANDLE_RESERVED_MSG
   return null
 }
 
 /** The hint shown next to a username field. */
-export const handleHint = (loose: boolean) => (loose ? 'Letters, numbers, dots, dashes and underscores, 1 to 20.' : 'Letters, numbers and underscores, 1 to 20.')
+export const handleHint = (loose: boolean) => (loose ? 'Letters, numbers and . _ - ~ ! $ * + = anywhere, 1 to 30.' : 'Letters, numbers and underscores, 1 to 20.')
 
 /** Drops what a username field cannot hold while someone types (dots and dashes stay with `loose`). */
-export const handleChars = (v: string, loose: boolean) => v.toLowerCase().replace(loose ? /[^a-z0-9_.-]/g : /[^a-z0-9_]/g, '')
+export const handleChars = (v: string, loose: boolean) => v.toLowerCase().replace(loose ? /[^a-z0-9_.\-~!$*+=]/g : /[^a-z0-9_]/g, '').slice(0, loose ? 30 : 20)
 
 /** A first guess at a username from a name ("Luna Ray" becomes "lunaray", or "luna.ray" with `loose`). */
 export function suggestHandle(name: string, loose: boolean) {

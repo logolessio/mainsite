@@ -2,9 +2,15 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import { connection } from 'next/server'
+import { BioFree } from '@/components/bio/bio-free'
+import { BioPage } from '@/components/bio/bio-page'
+import { BioPrivate } from '@/components/bio/bio-private'
 import { InviteBlocked } from '@/components/invite/invite-blocked'
 import { InviteWelcome } from '@/components/invite/invite-welcome'
 import { InviteWizard } from '@/components/invite/invite-wizard'
+import { bioLookup } from '@/lib/bio-page'
+import { bioHandleReserved } from '@/lib/bio-reserved'
+import { handleProblem } from '@/lib/profile-style'
 import { db, nowSec } from '@/lib/db'
 import { clientSlugOf } from '@/lib/client-host'
 import { featureOn } from '@/lib/features'
@@ -14,7 +20,35 @@ import { inviteBySlug, maskEmail, parseData } from '@/lib/invites'
 import { getSession } from '@/lib/session'
 import { findOrCreateUser } from '@/lib/user'
 
-export const metadata: Metadata = { title: 'Your logoless page', robots: { index: false, follow: false } }
+const INVITE_META: Metadata = { title: 'Your logoless page', robots: { index: false, follow: false } }
+
+const decode = (s: string) => {
+  try {
+    return decodeURIComponent(s)
+  } catch {
+    return s
+  }
+}
+
+/** logoless.io/<name> is a person's link-in-bio page; with the switch off (or no such person) it is an artist's invite, as it always was. */
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  await connection()
+  if (!(await featureOn('bio-site'))) return INVITE_META
+  const handle = decode((await params).slug).toLowerCase()
+  const found = await bioLookup(handle).catch(() => null)
+  if (!found) return INVITE_META
+  const c = found.data.config
+  const title = c.meta.title || `${found.data.name} (${found.data.handle})`
+  const description = c.meta.description || found.data.bio || `${found.data.name} on logoless`
+  return {
+    title,
+    description,
+    robots: found.indexable ? { index: true, follow: true } : { index: false, follow: false },
+    openGraph: { title, description, type: 'profile', url: `https://logoless.io/${found.data.handle}` },
+    twitter: { card: 'summary', title, description },
+    alternates: { canonical: `https://logoless.io/${found.data.handle}` },
+  }
+}
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ paid?: string; cancelled?: string; preview?: string; step?: string }> }
 
@@ -26,7 +60,22 @@ export default async function Page({ params, searchParams }: Props) {
   await connection()
   const { slug: raw } = await params
   const q = await searchParams
-  const slug = raw.toLowerCase()
+  const slug = decode(raw).toLowerCase()
+  // a person's own page (the link-in-bio product)
+  if (await featureOn('bio-site')) {
+    const found = await bioLookup(slug).catch(() => null)
+    if (found && !found.suspended) {
+      const session = await getSession()
+      let isOwner = false
+      if (session?.user?.email) {
+        const me = await (await db()).prepare('SELECT id FROM users WHERE email = ?1').bind(session.user.email.toLowerCase()).first<{ id: string }>()
+        isOwner = me?.id === found.userId
+      }
+      const hidden = !isOwner && (found.visibility === 'private' || (found.visibility === 'members' && !session?.user?.email))
+      if (hidden) return <BioPrivate handle={found.data.handle} kind={found.visibility === 'private' ? 'private' : 'members'} />
+      return <BioPage data={found.data} mode={isOwner && q.preview === '1' ? 'preview' : 'live'} />
+    }
+  }
   // on its own address (kxng.logoless.io) only while client links are switched on; otherwise the visitor goes to logoless.io/kxng
   const pkg = await featureOn('client-links')
   const h = await headers()
@@ -36,7 +85,14 @@ export default async function Page({ params, searchParams }: Props) {
   }
   const STEPS = stepsFor(pkg)
   const inv = await inviteBySlug(slug).catch(() => null)
-  if (!inv) notFound()
+  if (!inv) {
+    // with the link-in-bio site on, a name nobody has yet is offered to the visitor (the page stands without the older site's shell, so the plain 404 cannot show here)
+    if (await featureOn('bio-site')) {
+      const usable = !handleProblem(slug, { loose: true }) && !bioHandleReserved(slug)
+      return <BioFree handle={slug} signedIn={Boolean((await getSession())?.user?.email)} state={usable ? 'free' : 'unavailable'} />
+    }
+    notFound()
+  }
   if (inv.status === 'revoked') return <InviteBlocked kind="off" slug={slug} />
 
   const session = await getSession()

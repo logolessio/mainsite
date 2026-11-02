@@ -1,0 +1,434 @@
+/* The link-in-bio pages: everything in black, white and grey. The page's tone (0 black to 100 white) is set on .bio-root as --bio-tone-fg / --bio-bg by the component. */
+
+.bio-root {
+  width: 100%;
+  height: 100%;
+  --bio-bg: #050505;
+  --bio-fg: #fff;
+  --bio-mute: rgb(255 255 255 / 0.56);
+  --bio-line: rgb(255 255 255 / 0.16);
+  --bio-soft: rgb(255 255 255 / 0.07);
+  --bio-r: 18px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--bio-bg);
+  color: var(--bio-fg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.bio-root[data-fixed='1'] {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+.bio-root *,
+.bio-root *::before,
+.bio-root *::after {
+  box-sizing: border-box;
+}
+.bio-scroll {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  container-type: size;
+}
+.bio-scroll::-webkit-scrollbar {
+  display: none;
+}
+.bio-root[data-mini='1'] .bio-scroll {
+  overflow: hidden;
+  pointer-events: none;
+}
+.bio-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.bio-bg {
+  z-index: 0;
+}
+.bio-grain {
+  z-index: 20;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1.4 -.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+}
+.bio-scan {
+  z-index: 21;
+  background: repeating-linear-gradient(0deg, rgb(0 0 0 / 0.5) 0, rgb(0 0 0 / 0.5) 1px, transparent 1px, transparent 3px);
+}
+.bio-vig {
+  z-index: 19;
+  background: radial-gradient(120% 90% at 50% 45%, transparent 40%, #000 120%);
+}
+
+/* ---------------------------------------------------------------- text */
+.bio-mute {
+  color: var(--bio-mute);
+}
+.bn {
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+  text-wrap: balance;
+}
+.bn-outline {
+  color: transparent;
+  -webkit-text-stroke: 1.4px var(--bio-fg);
+}
+.bn-chrome {
+  background-image: linear-gradient(180deg, #fff 0%, #d9d9d9 34%, #6e6e6e 49%, #f2f2f2 60%, #8d8d8d 100%);
+  background-size: 100% 220%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: bio-shine 5s ease-in-out infinite alternate;
+}
+.bio-root[data-light='1'] .bn-chrome {
+  background-image: linear-gradient(180deg, #000 0%, #2d2d2d 34%, #9a9a9a 49%, #151515 60%, #5c5c5c 100%);
+}
+.bn-shimmer {
+  background-image: linear-gradient(100deg, var(--bio-mute) 38%, var(--bio-fg) 50%, var(--bio-mute) 62%);
+  background-size: 260% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: bio-sweep 3.6s linear infinite;
+}
+.bn-glitch {
+  position: relative;
+  display: inline-block;
+}
+.bn-glitch::before,
+.bn-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bn-glitch::before {
+  color: var(--bio-mute);
+  transform: translateX(-0.04em);
+  clip-path: inset(10% 0 55% 0);
+  animation: bio-glitch-a 3.1s steps(1) infinite;
+}
+.bn-glitch::after {
+  color: var(--bio-mute);
+  transform: translateX(0.04em);
+  clip-path: inset(60% 0 8% 0);
+  animation: bio-glitch-b 2.7s steps(1) infinite;
+}
+.bn-flicker {
+  animation: bio-flicker 4.2s infinite;
+}
+.bn-ghost {
+  text-shadow: 0 0.05em 0 rgb(var(--bio-fg-rgb) / 0.22), 0 0.1em 0 rgb(var(--bio-fg-rgb) / 0.12), 0 0.15em 0 rgb(var(--bio-fg-rgb) / 0.06);
+}
+
+/* ---------------------------------------------------------------- link buttons */
+.bl {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  min-height: var(--bl-h, 3.6rem);
+  padding: 0 1.15rem;
+  border-radius: var(--bio-r);
+  color: var(--bio-fg);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.35s, color 0.35s, border-color 0.35s, box-shadow 0.35s, opacity 0.35s;
+  -webkit-tap-highlight-color: transparent;
+}
+.bio-root[data-size='compact'] {
+  --bl-h: 3rem;
+}
+.bio-root[data-size='large'] {
+  --bl-h: 4.4rem;
+}
+.bio-root[data-btn='glass'] .bl {
+  background: var(--bio-soft);
+  border: 1px solid var(--bio-line);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  backdrop-filter: blur(18px) saturate(1.1);
+}
+.bio-root[data-btn='glass'] .bl:hover {
+  background: rgb(var(--bio-fg-rgb) / 0.13);
+  border-color: rgb(var(--bio-fg-rgb) / 0.4);
+}
+.bio-root[data-btn='solid'] .bl {
+  background: var(--bio-fg);
+  color: var(--bio-bg);
+}
+.bio-root[data-btn='solid'] .bl:hover {
+  opacity: 0.86;
+}
+.bio-root[data-btn='outline'] .bl {
+  border: 1px solid rgb(var(--bio-fg-rgb) / 0.55);
+}
+.bio-root[data-btn='outline'] .bl:hover {
+  background: var(--bio-fg);
+  color: var(--bio-bg);
+}
+.bio-root[data-btn='ghost'] .bl:hover {
+  background: var(--bio-soft);
+}
+.bio-root[data-btn='underline'] .bl {
+  border-radius: 0 !important;
+  padding: 0;
+  border-bottom: 1px solid var(--bio-line);
+}
+.bio-root[data-btn='underline'] .bl:hover {
+  border-bottom-color: var(--bio-fg);
+  padding-left: 0.4rem;
+}
+.bio-root[data-btn='brutal'] .bl {
+  border: 2px solid var(--bio-fg);
+  background: var(--bio-bg);
+  box-shadow: 5px 5px 0 var(--bio-fg);
+}
+.bio-root[data-btn='brutal'] .bl:hover {
+  transform: translate(3px, 3px);
+  box-shadow: 2px 2px 0 var(--bio-fg);
+}
+.bl-ico {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.bl-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 1.02rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+.bl-note {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--bio-mute);
+  letter-spacing: 0;
+}
+.bio-root[data-btn='solid'] .bl-note,
+.bio-root[data-btn='outline'] .bl:hover .bl-note {
+  color: inherit;
+  opacity: 0.6;
+}
+.bl-arrow {
+  flex: none;
+  opacity: 0.45;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.35s;
+}
+.bl:hover .bl-arrow {
+  opacity: 1;
+  transform: translate(3px, -3px);
+}
+
+/* the round social icons */
+.bs {
+  display: grid;
+  place-items: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 999px;
+  color: var(--bio-fg);
+  background: var(--bio-soft);
+  border: 1px solid var(--bio-line);
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.3s, color 0.3s;
+}
+.bs:hover {
+  background: var(--bio-fg);
+  color: var(--bio-bg);
+  transform: translateY(-3px);
+}
+
+/* ---------------------------------------------------------------- avatar */
+.ba {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+  background: var(--bio-soft);
+}
+.ba[data-shape='circle'] {
+  border-radius: 999px;
+}
+.ba[data-shape='rounded'] {
+  border-radius: 28%;
+}
+.ba[data-shape='square'] {
+  border-radius: 0;
+}
+.ba[data-shape='arch'] {
+  border-radius: 999px 999px 0 0;
+}
+.ba[data-ring='1'] {
+  box-shadow: 0 0 0 1px var(--bio-line), 0 0 0 6px var(--bio-bg), 0 0 0 7px var(--bio-line);
+}
+.ba img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ba[data-gray='1'] img {
+  filter: grayscale(1) contrast(1.05);
+}
+
+/* ---------------------------------------------------------------- entrance */
+.bio-root[data-reveal='rise'] [data-in] {
+  animation: bio-rise 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms + 80ms);
+}
+.bio-root[data-reveal='blur'] [data-in] {
+  animation: bio-blur 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms + 80ms);
+}
+.bio-root[data-reveal='scale'] [data-in] {
+  animation: bio-scale 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms + 80ms);
+}
+.bio-root[data-paused='1'] [data-in] {
+  animation-play-state: paused;
+}
+@keyframes bio-rise {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
+@keyframes bio-blur {
+  from {
+    opacity: 0;
+    filter: blur(14px);
+    transform: translateY(10px);
+  }
+}
+@keyframes bio-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+@keyframes bio-float {
+  50% {
+    transform: translateY(-9px);
+  }
+}
+@keyframes bio-sweep {
+  to {
+    background-position: -260% 0;
+  }
+}
+@keyframes bio-shine {
+  to {
+    background-position: 0 100%;
+  }
+}
+@keyframes bio-flicker {
+  0%, 19%, 23%, 54%, 58%, 100% {
+    opacity: 1;
+  }
+  21%, 56% {
+    opacity: 0.55;
+  }
+}
+@keyframes bio-glitch-a {
+  0%, 80%, 100% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  82% {
+    transform: translateX(-0.06em);
+    opacity: 1;
+  }
+  90% {
+    transform: translateX(0.04em);
+    opacity: 1;
+  }
+}
+@keyframes bio-glitch-b {
+  0%, 70%, 100% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  72% {
+    transform: translateX(0.06em);
+    opacity: 1;
+  }
+  84% {
+    transform: translateX(-0.05em);
+    opacity: 1;
+  }
+}
+@keyframes bio-blink {
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes bio-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes bio-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bio-root [data-in],
+  .bio-root .bn-chrome,
+  .bio-root .bn-shimmer,
+  .bio-root .bn-flicker {
+    animation: none !important;
+  }
+}
+
+/* a tile (the bento boxes, the stack cards): a quiet panel in the page's own tone */
+.bio-tile {
+  display: block;
+  position: relative;
+  color: var(--bio-fg);
+  background: var(--bio-soft);
+  border: 1px solid var(--bio-line);
+  border-radius: calc(var(--bio-r) * 1.35);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  text-decoration: none;
+  transition: background-color 0.4s, border-color 0.4s, box-shadow 0.4s;
+}
+a.bio-tile:hover {
+  background: rgb(var(--bio-fg-rgb) / 0.12);
+  border-color: rgb(var(--bio-fg-rgb) / 0.4);
+}
+
+/* the cursor a page chose (set as --bio-cursor and --bio-cursor-link on the root) */
+.bio-root[data-cur='1'] {
+  cursor: var(--bio-cursor);
+}
+.bio-root[data-cur='1'] :is(a, button, [data-link], [role='button'], label, select, summary) {
+  cursor: var(--bio-cursor-link) !important;
+}
+.bio-root[data-layout='chapters'] .bio-scroll {
+  scroll-snap-type: y proximity;
+}
+
+.bio-root :is(button, input, textarea, select, a) {
+  font-family: inherit;
+}

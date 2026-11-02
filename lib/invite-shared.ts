@@ -12,6 +12,8 @@ export const RESERVED_SLUGS = new Set([
   'undefined', 'official', 'developers', 'developer', 'authorize', 'token', 'userinfo', 'team', 'discord', 'stripe', 'webhook', 'webhooks', 'auth', 'oauth', 'callback',
   'report', 'inquiry', 'leaderboard', 'lab', 'case-studies', 'llms', 'reels', 'recap', 'earn-demo', 'compare', 'saved', 'health', 'manifest', 'explore', 'discover', 'trending', 'rankings', 'wrapped', 'spotlight', 'notifications', 'achievements',
   'submissions', 'stats', 'clips',
+  // the link-in-bio product (logoless.io/<name> is a person's page) and the routes added since
+  'editor', 'claim', 'bio', 'calendar', 'clip-thumb', 'creators', 'kit', 'method', 'seventeen', 'signin-problem', 'sounds', 'whats-new', 'yt', '17', 'feed', 'templates', 'pricing', 'premium', 'upgrade', 'analytics', 'explore', 'logout', 'sign-in', 'sign-up', 'log-in', 'register', 'terms-of-service', 'privacy-policy', 'contact-us', 'abuse', 'report-abuse', 'dmca', 'cookies', 'about-us',
 ])
 
 export const slugFromName = (name: string) =>

@@ -14,7 +14,7 @@ export const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } })
 
 /** Plumbing that fires on every page and would drown the log, so it is left out. Everything else is recorded. */
-const QUIET = new Set(['/api/me/nav', '/api/security/config', '/api/nav-counts'])
+const QUIET = new Set(['/api/me/nav', '/api/security/config', '/api/nav-counts', '/api/bio/hit', '/api/bio/check'])
 
 async function record(args: unknown[], status: number, ms: number, detail?: string) {
   const req = args[0] instanceof Request ? args[0] : null
