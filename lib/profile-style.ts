@@ -260,7 +260,7 @@ export const HANDLE_FILELIKE = /\.(?:png|jpe?g|gif|webp|svg|ico|txt|xml|json|js|
 export const RESERVED_WORDS = ['logoless', 'admin', 'administrator', 'support', 'staff', 'official', 'moderator', 'mod', 'help', 'security', 'billing', 'team', 'system', 'root', 'null', 'undefined', 'api', 'www']
 /** The reserved words that count when they sit anywhere inside a name (someone posing as the site). The rest only count as the whole name, so "modular" or "team.k" are fine. */
 const RESERVED_ANYWHERE = ['logoless', 'official', 'administrator', 'moderator', 'support']
-export const HANDLE_RESERVED_MSG = 'That name is reserved. Please pick another.'
+export const HANDLE_RESERVED_MSG = "that one's saved for us. try another."
 
 /** Lower case, no spaces around it and no leading "@". */
 export const normHandle = (raw: string) => raw.trim().toLowerCase().replace(/^@/, '')
@@ -280,13 +280,13 @@ export function isReservedHandle(h: string, loose = false) {
 export function handleProblem(raw: string, { loose = false, isAdmin = false }: { loose?: boolean; isAdmin?: boolean } = {}): string | null {
   const h = normHandle(raw)
   if (!loose) {
-    if (!HANDLE_RE.test(h)) return 'Use 1 to 20 letters, numbers or underscores.'
+    if (!HANDLE_RE.test(h)) return 'use 1 to 20 letters, numbers or underscores.'
   } else if (!HANDLE_RE_LOOSE.test(h)) {
-    if (h.length < 1 || h.length > 30) return 'Use 1 to 30 characters.'
-    if (/[^a-z0-9_.\-~!$*+=]/.test(h)) return 'Use letters, numbers and these: . _ - ~ ! $ * + ='
-    return 'Add at least one letter, number or underscore.'
+    if (h.length < 1 || h.length > 30) return 'use 1 to 30 characters.'
+    if (/[^a-z0-9_.\-~!$*+=]/.test(h)) return 'use letters, numbers and these: . _ - ~ ! $ * + ='
+    return 'add at least one letter, number or underscore.'
   }
-  if (HANDLE_FILELIKE.test(h)) return 'That ends like a file name, so the address would not work. Pick another.'
+  if (HANDLE_FILELIKE.test(h)) return "that ends like a file name, so the link wouldn't work. try another."
   if (!isAdmin && isReservedHandle(h, loose)) return HANDLE_RESERVED_MSG
   // a name the site itself uses (logoless.io/about, /editor...) is never a person's page
   if (loose && RESERVED_SLUGS.has(h)) return HANDLE_RESERVED_MSG

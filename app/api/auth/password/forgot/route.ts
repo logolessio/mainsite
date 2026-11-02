@@ -12,7 +12,7 @@ export const POST = route(async (req: Request) => {
   assertSameOrigin(req)
   if (!(await emailEnabled())) throw new HttpError(503, 'Email is not set up yet.')
   await limit(req, { name: 'forgot', max: 8, windowSec: 600 })
-  if (!(await hasHuman(req))) throw new HttpError(403, 'Please complete the human check first.')
+  if (!(await hasHuman(req))) throw new HttpError(403, 'finish the human check first.')
   const parsed = z.object({ email: z.string().trim().toLowerCase().email().max(254) }).safeParse(await body(req, 1024))
   if (!parsed.success) throw new HttpError(400, 'Enter a valid email address.')
   const { email } = parsed.data

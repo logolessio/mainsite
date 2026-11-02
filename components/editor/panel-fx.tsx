@@ -25,7 +25,7 @@ export function CursorPanel({ api }: { api: EditorApi }) {
     try {
       up('cursor', { image: await uploadCursor(f), kind: 'upload' })
     } catch (e) {
-      toast(e instanceof Error ? e.message : 'That did not upload.')
+      toast(e instanceof Error ? e.message : "couldn't upload that. try again.")
     }
     setBusy(false)
   }
@@ -74,11 +74,11 @@ export function CursorPanel({ api }: { api: EditorApi }) {
             <Row label="The point of it is the">
               <Seg value={c.hot} options={[{ id: 'tl', name: 'Top left' }, { id: 'center', name: 'Centre' }]} onChange={(v) => up('cursor', { hot: v })} />
             </Row>
-            <p className="text-[0.74rem] text-[var(--ed-mute)]">Any picture works. It is drawn at 64 px. Use a transparent background.</p>
+            <p className="text-[0.74rem] text-[var(--ed-mute)]">any picture works. it's drawn at 64 px, so use a transparent background.</p>
           </div>
         )}
       </Group>
-      <Group title="Trail" hint="What follows the pointer. Only on screens with a mouse.">
+      <Group title="Trail" hint="what trails the pointer. only on screens with a mouse.">
         <div className="grid grid-cols-3 gap-1.5">
           {CURSOR_TRAILS.map((t) => (
             <button key={t.id} type="button" onClick={() => up('cursor', { trail: t.id })} aria-pressed={c.trail === t.id} className={cn('h-9 rounded-lg border text-[0.76rem] transition-colors', c.trail === t.id ? 'border-white bg-white text-black' : 'border-[var(--ed-line)] text-[var(--ed-mute)] hover:text-white')}>
@@ -103,13 +103,13 @@ export function EffectsPanel({ api }: { api: EditorApi }) {
     try {
       up('audio', { id: await uploadAudio(f), title: au.title || f.name.replace(/\.[^.]+$/, '').slice(0, 60) })
     } catch (e) {
-      toast(e instanceof Error ? e.message : 'That did not upload.')
+      toast(e instanceof Error ? e.message : "couldn't upload that. try again.")
     }
     setBusy(false)
   }
   return (
     <div>
-      <Group title="Music" hint="Plays when someone enters your page. Short and small: up to 1 MB (about a minute of MP3).">
+      <Group title="Music" hint="plays when someone enters. keep it short: up to 1 MB, about a minute of mp3.">
         <input ref={file} type="file" accept="audio/mpeg,audio/mp4,audio/ogg,audio/wav,.mp3,.m4a,.ogg,.wav" hidden onChange={(e) => void pick(e.target.files?.[0])} />
         <div className="flex items-center gap-3">
           <Btn onClick={() => file.current?.click()} disabled={busy}>
@@ -132,7 +132,7 @@ export function EffectsPanel({ api }: { api: EditorApi }) {
           </>
         )}
       </Group>
-      <Group title="Enter screen" hint="Something in front of your page until someone presses. It is also what lets the music start.">
+      <Group title="Enter screen" hint="a screen in front of your page until someone clicks. browsers need that click before music can play.">
         <Seg value={fx.enter} options={ENTER_SCREENS} cols={2} onChange={(v) => up('fx', { enter: v })} />
         {fx.enter !== 'none' && <Input value={fx.enterText} maxLength={40} placeholder="click to enter" onChange={(e) => up('fx', { enterText: e.target.value })} />}
       </Group>

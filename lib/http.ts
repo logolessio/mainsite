@@ -45,7 +45,7 @@ export function route<A extends unknown[]>(fn: (...args: A) => Promise<Response>
       }
       console.error('route error', e instanceof Error ? e.message : e)
       void record(args, 500, Date.now() - t0, e instanceof Error ? `${e.name}: ${e.message}` : 'unknown error')
-      return json({ error: 'Something went wrong. Please try again.' }, 500)
+      return json({ error: 'something went wrong on our side. try again.' }, 500)
     }
   }
 }

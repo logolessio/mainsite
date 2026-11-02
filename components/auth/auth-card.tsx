@@ -29,9 +29,9 @@ const item = {
 }
 
 const COPY: Record<Mode, { title: string; sub: string }> = {
-  login: { title: 'Log in', sub: 'Welcome back.' },
-  signup: { title: 'Create your account', sub: 'Free for creators. It takes about a minute.' },
-  forgot: { title: 'Reset your password', sub: "We'll email you a code so you can choose a new one." },
+  login: { title: 'log in', sub: 'good to see you again.' },
+  signup: { title: 'make your page', sub: "it's free and takes about a minute." },
+  forgot: { title: 'reset your password', sub: "we'll email you a code so you can pick a new one." },
 }
 
 /** How strong a password looks, from length and variety. Only a hint: the server enforces the real rules. */
@@ -61,11 +61,11 @@ export function AuthCard({ mode, claim }: { mode: Mode; claim?: string }) {
   useEffect(() => setCanPasskey(passkeysSupported()), [])
   const [error, setError] = useState(
     params.get('restricted')
-      ? 'This account has been restricted. Contact support if you think that is a mistake.'
+      ? "this account has been restricted. if you think that's a mistake, get in touch."
       : params.get('error') === 'AccessDenied'
-        ? 'That account’s email is not verified. Verify it with Discord or Google, then try again.'
+        ? "that account's email isn't verified. verify it with discord or google, then try again."
         : params.get('error')
-          ? `Sign-in did not complete. Please try again. (reference: ${params.get('error')!.replace(/[^A-Za-z]/g, '').slice(0, 40)})`
+          ? `that didn't go through. try again. (ref: ${params.get('error')!.replace(/[^A-Za-z]/g, '').slice(0, 40)})`
           : '',
   )
 
@@ -81,7 +81,7 @@ export function AuthCard({ mode, claim }: { mode: Mode; claim?: string }) {
   const bioHome = claim ? `/editor?claim=${encodeURIComponent(claim)}` : '/editor'
   const where = mode === 'signup' || !next ? bioHome : next
   const done = () => window.location.assign(where)
-  const fail = (e: unknown, fallback = 'Something went wrong. Please try again.') => setError(e instanceof Error ? e.message : fallback)
+  const fail = (e: unknown, fallback = 'something went wrong. try again.') => setError(e instanceof Error ? e.message : fallback)
 
   const provider = async (p: Provider) => {
     setBusy(true)
@@ -189,18 +189,18 @@ export function AuthCard({ mode, claim }: { mode: Mode; claim?: string }) {
 
   return (
     <motion.div initial={false} animate="show" variants={{ show: { transition: { staggerChildren: 0.05, delayChildren: 0.1 } } }} className="w-full max-w-[380px]">
-      <motion.h1 variants={item} className="font-display text-[2.6rem] leading-[1.05]">
-        {twoStep ? 'One more step' : verifying ? 'Check your inbox' : mode === 'signup' ? 'Create your page' : COPY[mode].title}
+      <motion.h1 variants={item} className="disp text-[2.5rem]">
+        {twoStep ? 'one more step' : verifying ? 'check your inbox' : COPY[mode].title}
       </motion.h1>
       <motion.p variants={item} className="mt-3 text-[15px] leading-relaxed text-mute">
         {twoStep ? (
-          'Open your authenticator app and enter the 6 digit code for logoless. Lost your phone? Use one of your backup codes.'
+          "open your authenticator app and type the 6 digit code for logoless. lost your phone? use a backup code."
         ) : verifying ? (
           <>
-            We sent a 6 digit code to <span className="text-paper">{email}</span>.
+            we sent a 6 digit code to <span className="text-paper">{email}</span>.
           </>
         ) : (
-          mode === 'signup' ? (claim ? <>You are claiming <span className="text-paper">logoless.io/{claim}</span>. Free, and it takes about a minute.</> : 'Free, and it takes about a minute.') : COPY[mode].sub
+          mode === 'signup' ? (claim ? <>you're claiming <span className="text-paper">logoless.io/{claim}</span>. it's free and takes a minute.</> : "it's free and takes about a minute.") : COPY[mode].sub
         )}
       </motion.p>
 
@@ -217,10 +217,10 @@ export function AuthCard({ mode, claim }: { mode: Mode; claim?: string }) {
               </p>
             )}
             <button type="submit" disabled={busy || !second.trim()} className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-pill bg-paper px-6 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
-              {busy && <Loader2 aria-hidden="true" className="size-4 animate-spin" />} Log in
+              {busy && <Loader2 aria-hidden="true" className="size-4 animate-spin" />} log in
             </button>
             <button type="button" onClick={() => (setStep('form'), setSecond(''), setError(''))} className="mt-4 text-sm text-mute transition-colors hover:text-paper">
-              Back
+              back
             </button>
           </motion.form>
         ) : !verifying ? (
@@ -230,16 +230,16 @@ export function AuthCard({ mode, claim }: { mode: Mode; claim?: string }) {
                 <div className="mt-8 grid gap-2.5">
                   <ProviderButton disabled={busy} onClick={() => provider('google')}>
                     <BrandIcon name="google" className="size-[18px]" />
-                    Continue with Google
+                    continue with google
                   </ProviderButton>
                   <ProviderButton disabled={busy} onClick={() => provider('discord')}>
                     <BrandIcon name="discord" className="size-[18px]" />
-                    Continue with Discord
+                    continue with discord
                   </ProviderButton>
                   {mode === 'login' && canPasskey && (
                     <ProviderButton disabled={busy} onClick={() => void withPasskey()}>
                       <FingerprintPattern aria-hidden="true" className="size-[18px]" />
-                      Log in with a passkey
+                      log in with a passkey
                     </ProviderButton>
                   )}
                 </div>
@@ -254,23 +254,23 @@ export function AuthCard({ mode, claim }: { mode: Mode; claim?: string }) {
             <motion.form variants={item} onSubmit={submit} className={cn('grid gap-5', mode === 'forgot' && 'mt-8')}>
               {mode === 'signup' && (
                 <label className="block">
-                  <span className={label}>Name</span>
+                  <span className={label}>name</span>
                   <input name="name" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} className={field} />
                 </label>
               )}
               <label className="block">
-                <span className={label}>Email</span>
+                <span className={label}>email</span>
                 <input required type="email" name="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className={field} />
               </label>
               {mode !== 'forgot' && (
                 <div>
                   <div className="flex items-baseline justify-between">
                     <label htmlFor="auth-password" className="mb-1.5 block text-sm text-mute">
-                      Password
+                      password
                     </label>
                     {mode === 'login' && (
                       <a href="/forgot-password" className="text-sm text-mute transition-colors hover:text-paper">
-                        Forgot it?
+                        forgot it?
                       </a>
                     )}
                   </div>
@@ -286,11 +286,11 @@ export function AuthCard({ mode, claim }: { mode: Mode; claim?: string }) {
                       onChange={(e) => setPassword(e.target.value)}
                       className={cn(field, 'pr-16')}
                     />
-                    <button type="button" aria-label={show ? 'Hide password' : 'Show password'} onClick={() => setShow((v) => !v)} className="absolute inset-y-0 right-0 px-4 text-sm text-mute transition-colors hover:text-paper">
+                    <button type="button" aria-label={show ? 'hide password' : 'show password'} onClick={() => setShow((v) => !v)} className="absolute inset-y-0 right-0 px-4 text-sm text-mute transition-colors hover:text-paper">
                       {show ? 'Hide' : 'Show'}
                     </button>
                   </span>
-                  {mode === 'signup' && <p className="mt-2 text-sm text-mute">At least 10 characters. We check it has not been in a data breach.</p>}
+                  {mode === 'signup' && <p className="mt-2 text-sm text-mute">at least 10 characters. we check it hasn't shown up in a data leak.</p>}
                   {mode === 'signup' && password && <Meter level={pw} />}
                 </div>
               )}
@@ -298,16 +298,16 @@ export function AuthCard({ mode, claim }: { mode: Mode; claim?: string }) {
                 <label className="flex items-start gap-3 text-sm leading-relaxed text-mute">
                   <input required type="checkbox" name="terms" className="mt-1 size-4 accent-[#f3f2ee]" />
                   <span>
-                    I agree to the{' '}
-                    <a href="/legal/terms" className="text-paper underline underline-offset-2">Terms</a>,{' '}
+                    i agree to the{' '}
+                    <a href="/legal/terms" className="text-paper underline underline-offset-2">terms</a>,{' '}
                     and{' '}
-                    <a href="/legal/privacy" className="text-paper underline underline-offset-2">Privacy Policy</a>, and I am 16 or older.
+                    <a href="/legal/privacy" className="text-paper underline underline-offset-2">privacy policy</a>, and i'm 16 or older.
                   </span>
                 </label>
               )}
               <button type="submit" disabled={busy} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-pill bg-paper px-6 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-50">
                 {busy && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
-                {mode === 'login' ? 'Log in' : mode === 'signup' ? 'Create account' : 'Send me a code'}
+                {mode === 'login' ? 'log in' : mode === 'signup' ? 'create account' : 'send me a code'}
               </button>
             </motion.form>
           </motion.div>
@@ -335,11 +335,11 @@ export function AuthCard({ mode, claim }: { mode: Mode; claim?: string }) {
             {mode === 'forgot' && (
               <div className="mt-6">
                 <label htmlFor="auth-new-password" className={label}>
-                  New password
+                  new password
                 </label>
                 <span className="relative block">
                   <input id="auth-new-password" required name="new-password" type={show ? 'text' : 'password'} autoComplete="new-password" minLength={10} value={password} onChange={(e) => setPassword(e.target.value)} className={cn(field, 'pr-16')} />
-                  <button type="button" aria-label={show ? 'Hide password' : 'Show password'} onClick={() => setShow((v) => !v)} className="absolute inset-y-0 right-0 px-4 text-sm text-mute transition-colors hover:text-paper">
+                  <button type="button" aria-label={show ? 'hide password' : 'show password'} onClick={() => setShow((v) => !v)} className="absolute inset-y-0 right-0 px-4 text-sm text-mute transition-colors hover:text-paper">
                     {show ? 'Hide' : 'Show'}
                   </button>
                 </span>
@@ -349,7 +349,7 @@ export function AuthCard({ mode, claim }: { mode: Mode; claim?: string }) {
             )}
             <button type="submit" disabled={busy || code.length !== 6 || (mode === 'forgot' && password.length < 10)} className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-pill bg-paper px-6 text-[15px] font-medium text-ink transition-colors hover:bg-paper/85 disabled:opacity-40">
               {busy && <Loader2 aria-hidden="true" className="size-4 animate-spin" />}
-              {mode === 'signup' ? 'Confirm and create account' : 'Set password and log in'}
+              {mode === 'signup' ? 'confirm and create account' : 'set password and log in'}
             </button>
             <div className="mt-4 flex items-center justify-center gap-5 text-sm text-mute">
               <button
@@ -360,10 +360,10 @@ export function AuthCard({ mode, claim }: { mode: Mode; claim?: string }) {
                 }}
                 className="transition-colors hover:text-paper"
               >
-                Use a different email
+                use a different email
               </button>
               <button type="button" disabled={cooldown > 0 || busy} onClick={resend} className="transition-colors hover:text-paper disabled:opacity-60 disabled:hover:text-mute">
-                {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend code'}
+                {cooldown > 0 ? `resend in ${cooldown}s` : 'resend code'}
               </button>
             </div>
           </motion.form>
@@ -377,20 +377,20 @@ export function AuthCard({ mode, claim }: { mode: Mode; claim?: string }) {
       <motion.div variants={item} className="mt-6 border-t border-line pt-7">
         {mode === 'login' && (
           <>
-            <p className="mb-3 text-[15px] text-mute">New to logoless?</p>
+            <p className="mb-3 text-[15px] text-mute">new here?</p>
             <a href="/signup" className="inline-flex h-12 w-full items-center justify-center rounded-pill border border-line-strong text-[15px] text-paper transition-colors hover:border-paper/50 hover:bg-white/[0.04]">
-              Create an account
+              make a page
             </a>
           </>
         )}
         {mode === 'signup' && (
           <p className="text-[15px] text-mute">
-            Already have an account?{' '}
+            already have a page?{' '}
             <a href={claim ? `/login?next=${encodeURIComponent(`/editor?claim=${claim}`)}` : '/login'} className="text-paper underline underline-offset-4">Log in</a>
           </p>
         )}
         {mode === 'forgot' && (
-          <a href="/login" className="text-[15px] text-paper underline underline-offset-4">Back to log in</a>
+          <a href="/login" className="text-[15px] text-paper underline underline-offset-4">back to log in</a>
         )}
       </motion.div>
     </motion.div>
@@ -398,7 +398,7 @@ export function AuthCard({ mode, claim }: { mode: Mode; claim?: string }) {
 }
 
 function Meter({ level }: { level: number }) {
-  const labels = ['Too weak', 'Weak', 'Okay', 'Good', 'Strong']
+  const labels = ['too weak', 'weak', 'okay', 'good', 'strong']
   return (
     <span className="mt-2 flex items-center gap-2" aria-live="polite">
       <span className="grid flex-1 grid-cols-4 gap-1">

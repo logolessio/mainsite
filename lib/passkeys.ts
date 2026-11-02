@@ -118,7 +118,7 @@ async function seal(ch: Challenge): Promise<string> {
 /** Reads the cookie out of a request's headers and checks it: signed by us, the right ceremony, not expired, and never seen before (so it works once). */
 async function unseal(req: Request, purpose: Challenge['p']): Promise<Challenge> {
   const raw = /(?:^|;\s*)lg_pk=([^;]+)/.exec(req.headers.get('cookie') ?? '')?.[1]
-  const bad = new HttpError(400, 'That took too long or did not match. Please try again.')
+  const bad = new HttpError(400, "that took too long or didn't match. try again.")
   if (!raw) throw bad
   const [body, mac] = raw.split('.')
   if (!body || !mac || !safeEqual(mac, await hmacHex(await secret(), `passkey|${body}`))) throw bad
@@ -164,14 +164,14 @@ export async function registrationOptions(req: Request, user: { id: string; emai
 export async function finishRegistration(req: Request, user: { id: string; email: string }, response: RegistrationResponseJSON, name: string): Promise<PasskeyView[]> {
   const rp = needRp(req)
   const ch = await unseal(req, 'reg')
-  if (ch.u !== user.id) throw new HttpError(400, 'That took too long or did not match. Please try again.')
+  if (ch.u !== user.id) throw new HttpError(400, "that took too long or didn't match. try again.")
   let v
   try {
     v = await verifyRegistrationResponse({ response, expectedChallenge: ch.c, expectedOrigin: rp.origin, expectedRPID: rp.id, requireUserVerification: true, supportedAlgorithmIDs: ALGORITHMS })
   } catch {
-    throw new HttpError(400, 'Your device could not confirm that passkey. Please try again.')
+    throw new HttpError(400, "your device couldn't confirm that passkey. try again.")
   }
-  if (!v.verified) throw new HttpError(400, 'Your device could not confirm that passkey. Please try again.')
+  if (!v.verified) throw new HttpError(400, "your device couldn't confirm that passkey. try again.")
   const c = v.registrationInfo.credential
   if (await read<string>(idKey(c.id))) throw new HttpError(409, 'That passkey is already saved.')
   const list = await passkeysOf(user.email)

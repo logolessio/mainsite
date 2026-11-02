@@ -8,16 +8,16 @@ import { LINK_PLATFORMS } from './profile-style'
 /* ------------------------------------------------------------------ the ten layouts */
 
 export const LAYOUTS = [
-  { id: 'aura', name: 'Aura', note: 'Centred and calm, the picture floats' },
-  { id: 'split', name: 'Split', note: 'Your name stays, the links scroll past' },
-  { id: 'poster', name: 'Poster', note: 'A name as big as the screen' },
-  { id: 'bento', name: 'Bento', note: 'Tiles that drift at different depths' },
-  { id: 'stack', name: 'Stack', note: 'Cards that pile up as you scroll' },
-  { id: 'orbit', name: 'Orbit', note: 'Links on rings round your picture' },
-  { id: 'index', name: 'Index', note: 'An editorial list with a hover preview' },
-  { id: 'terminal', name: 'Terminal', note: 'Plain lines, a blinking cursor' },
-  { id: 'chapters', name: 'Chapters', note: 'One link per screen' },
-  { id: 'reel', name: 'Reel', note: 'A film strip that runs as you scroll' },
+  { id: 'aura', name: 'Aura', note: 'centred and calm. your picture floats.' },
+  { id: 'split', name: 'Split', note: 'your name stays put while the links scroll past.' },
+  { id: 'poster', name: 'Poster', note: 'your name, as big as the screen.' },
+  { id: 'bento', name: 'Bento', note: 'tiles that drift at different speeds.' },
+  { id: 'stack', name: 'Stack', note: 'cards pile up as you scroll.' },
+  { id: 'orbit', name: 'Orbit', note: 'links circle your picture.' },
+  { id: 'index', name: 'Index', note: 'a plain list. hover a row and a preview shows up.' },
+  { id: 'terminal', name: 'Terminal', note: 'just lines of text and a blinking cursor.' },
+  { id: 'chapters', name: 'Chapters', note: 'one link per screen.' },
+  { id: 'reel', name: 'Reel', note: 'a film strip that runs as you scroll.' },
 ] as const
 export type LayoutId = (typeof LAYOUTS)[number]['id']
 export const LAYOUT_IDS = LAYOUTS.map((l) => l.id) as string[]
@@ -263,14 +263,14 @@ export function starterBlocks(): BioBlock[] {
 
 export type BioPreset = { id: string; name: string; note: string; swatch: [number, number]; set: Partial<{ [K in keyof BioConfig]: Partial<BioConfig[K]> }> }
 export const PRESETS: BioPreset[] = [
-  { id: 'noir', name: 'Noir', note: 'Black, a slow veil, glass buttons', swatch: [4, 28], set: { layout: undefined, theme: { tone: 4, nameStyle: 'solid', buttons: 'glass', font: 'geist' }, bg: { kind: 'effect', effect: 'aurora', dim: 30, blur: 0, noise: 12, tone: 4 }, cursor: { kind: 'default', trail: 'none' }, fx: { grain: 8, scanlines: 0, spotlight: false } } },
-  { id: 'paper', name: 'Paper', note: 'Off white, ink, a serif', swatch: [94, 10], set: { theme: { tone: 94, nameStyle: 'solid', buttons: 'brutal', font: 'newsreader', radius: 2 }, bg: { kind: 'tone', tone: 94, dim: 0, noise: 22, vignette: 0 }, cursor: { kind: 'preset', preset: 'dot', ink: 'black', trail: 'none' }, fx: { grain: 14, scanlines: 0, spotlight: false } } },
-  { id: 'static', name: 'Static', note: 'Grain, scan lines, a spotlight', swatch: [10, 70], set: { theme: { tone: 6, nameStyle: 'glitch', buttons: 'outline', font: 'mono', radius: 0 }, bg: { kind: 'effect', effect: 'matrix', dim: 55, noise: 40, tone: 6 }, cursor: { kind: 'preset', preset: 'cross', ink: 'white', trail: 'ink' }, fx: { grain: 30, scanlines: 40, spotlight: true } } },
-  { id: 'chrome', name: 'Chrome', note: 'Polished metal type on black', swatch: [2, 82], set: { theme: { tone: 2, nameStyle: 'chrome', buttons: 'glass', font: 'special', radius: 40 }, bg: { kind: 'effect', effect: 'silk', dim: 20, noise: 6, tone: 2 }, cursor: { kind: 'preset', preset: 'orb', ink: 'white', trail: 'comet' }, fx: { grain: 6, scanlines: 0, spotlight: true } } },
-  { id: 'void', name: 'Void', note: 'Stars, nothing else', swatch: [0, 50], set: { theme: { tone: 0, nameStyle: 'shimmer', buttons: 'ghost', font: 'syne', radius: 30 }, bg: { kind: 'effect', effect: 'warp', dim: 10, noise: 0, tone: 0 }, cursor: { kind: 'preset', preset: 'spark', ink: 'white', trail: 'spark' }, fx: { grain: 0, scanlines: 0, spotlight: false } } },
-  { id: 'concrete', name: 'Concrete', note: 'Mid grey, hard edges', swatch: [52, 14], set: { theme: { tone: 52, nameStyle: 'outline', buttons: 'brutal', font: 'condensed', radius: 0 }, bg: { kind: 'gradient', gradient: 'linear', tone: 60, tone2: 40, angle: 180, noise: 35, dim: 0, vignette: 30 }, cursor: { kind: 'preset', preset: 'frame', ink: 'black', trail: 'none' }, fx: { grain: 26, scanlines: 0, spotlight: false } } },
-  { id: 'cinema', name: 'Cinema', note: 'Letterbox black, film grain', swatch: [3, 60], set: { theme: { tone: 3, nameStyle: 'ghost', buttons: 'underline', font: 'gloock', radius: 0 }, bg: { kind: 'effect', effect: 'bokeh', dim: 35, noise: 24, tone: 3 }, cursor: { kind: 'preset', preset: 'playhead', ink: 'white', trail: 'none' }, fx: { grain: 28, scanlines: 8, spotlight: false } } },
-  { id: 'mist', name: 'Mist', note: 'Soft white, blurred light', swatch: [88, 60], set: { theme: { tone: 88, nameStyle: 'solid', buttons: 'glass', font: 'funnel', radius: 28 }, bg: { kind: 'gradient', gradient: 'mesh', tone: 96, tone2: 70, noise: 16, dim: 0, blur: 0, vignette: 0 }, cursor: { kind: 'preset', preset: 'ring', ink: 'black', trail: 'ring' }, fx: { grain: 10, scanlines: 0, spotlight: false } } },
+  { id: 'noir', name: 'Noir', note: 'black, a slow veil, glass buttons', swatch: [4, 28], set: { layout: undefined, theme: { tone: 4, nameStyle: 'solid', buttons: 'glass', font: 'geist' }, bg: { kind: 'effect', effect: 'aurora', dim: 30, blur: 0, noise: 12, tone: 4 }, cursor: { kind: 'default', trail: 'none' }, fx: { grain: 8, scanlines: 0, spotlight: false } } },
+  { id: 'paper', name: 'Paper', note: 'off white, ink, a serif', swatch: [94, 10], set: { theme: { tone: 94, nameStyle: 'solid', buttons: 'brutal', font: 'newsreader', radius: 2 }, bg: { kind: 'tone', tone: 94, dim: 0, noise: 22, vignette: 0 }, cursor: { kind: 'preset', preset: 'dot', ink: 'black', trail: 'none' }, fx: { grain: 14, scanlines: 0, spotlight: false } } },
+  { id: 'static', name: 'Static', note: 'grain, scan lines, a spotlight', swatch: [10, 70], set: { theme: { tone: 6, nameStyle: 'glitch', buttons: 'outline', font: 'mono', radius: 0 }, bg: { kind: 'effect', effect: 'matrix', dim: 55, noise: 40, tone: 6 }, cursor: { kind: 'preset', preset: 'cross', ink: 'white', trail: 'ink' }, fx: { grain: 30, scanlines: 40, spotlight: true } } },
+  { id: 'chrome', name: 'Chrome', note: 'polished metal type on black', swatch: [2, 82], set: { theme: { tone: 2, nameStyle: 'chrome', buttons: 'glass', font: 'special', radius: 40 }, bg: { kind: 'effect', effect: 'silk', dim: 20, noise: 6, tone: 2 }, cursor: { kind: 'preset', preset: 'orb', ink: 'white', trail: 'comet' }, fx: { grain: 6, scanlines: 0, spotlight: true } } },
+  { id: 'void', name: 'Void', note: 'stars, nothing else', swatch: [0, 50], set: { theme: { tone: 0, nameStyle: 'shimmer', buttons: 'ghost', font: 'syne', radius: 30 }, bg: { kind: 'effect', effect: 'warp', dim: 10, noise: 0, tone: 0 }, cursor: { kind: 'preset', preset: 'spark', ink: 'white', trail: 'spark' }, fx: { grain: 0, scanlines: 0, spotlight: false } } },
+  { id: 'concrete', name: 'Concrete', note: 'mid grey, hard edges', swatch: [52, 14], set: { theme: { tone: 52, nameStyle: 'outline', buttons: 'brutal', font: 'condensed', radius: 0 }, bg: { kind: 'gradient', gradient: 'linear', tone: 60, tone2: 40, angle: 180, noise: 35, dim: 0, vignette: 30 }, cursor: { kind: 'preset', preset: 'frame', ink: 'black', trail: 'none' }, fx: { grain: 26, scanlines: 0, spotlight: false } } },
+  { id: 'cinema', name: 'Cinema', note: 'letterbox black, film grain', swatch: [3, 60], set: { theme: { tone: 3, nameStyle: 'ghost', buttons: 'underline', font: 'gloock', radius: 0 }, bg: { kind: 'effect', effect: 'bokeh', dim: 35, noise: 24, tone: 3 }, cursor: { kind: 'preset', preset: 'playhead', ink: 'white', trail: 'none' }, fx: { grain: 28, scanlines: 8, spotlight: false } } },
+  { id: 'mist', name: 'Mist', note: 'soft white, blurred light', swatch: [88, 60], set: { theme: { tone: 88, nameStyle: 'solid', buttons: 'glass', font: 'funnel', radius: 28 }, bg: { kind: 'gradient', gradient: 'mesh', tone: 96, tone2: 70, noise: 16, dim: 0, blur: 0, vignette: 0 }, cursor: { kind: 'preset', preset: 'ring', ink: 'black', trail: 'ring' }, fx: { grain: 10, scanlines: 0, spotlight: false } } },
 ]
 
 /* ------------------------------------------------------------------ links: addresses, icons, embeds */

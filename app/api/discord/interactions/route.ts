@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   const defer = (work: () => Promise<Message>, ephemeral = true) => {
     const job = work()
       .then((m) => editOriginal(i.application_id, i.token, m))
-      .catch(() => editOriginal(i.application_id, i.token, { content: 'Something went wrong. Please try again.' }))
+      .catch(() => editOriginal(i.application_id, i.token, { content: 'something went wrong on our side. try again.' }))
     getCloudflareContext({ async: true })
       .then(({ ctx }) => ctx.waitUntil(job))
       .catch(() => void job)

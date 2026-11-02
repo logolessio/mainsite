@@ -24,7 +24,7 @@ export const POST = route(async (req: Request) => {
   assertSameOrigin(req)
   if (!(await emailEnabled())) throw new HttpError(503, 'Email sign-up is not set up yet.')
   await limit(req, { name: 'signup', max: 8, windowSec: 600 })
-  if (!(await hasHuman(req))) throw new HttpError(403, 'Please complete the human check first.')
+  if (!(await hasHuman(req))) throw new HttpError(403, 'finish the human check first.')
   const parsed = schema.safeParse(await body(req, 4 * 1024))
   if (!parsed.success) throw new HttpError(400, 'Enter a valid email address and a password.')
   const { email, password, name } = parsed.data

@@ -143,9 +143,9 @@ export function codeEmail(code: string, kind: 'signup' | 'reset' | 'verify' | 'p
     }
   }
   const signup = kind === 'signup' || kind === 'verify'
-  const title = kind === 'verify' ? 'Confirm it is you' : signup ? 'Confirm your email' : 'Reset your password'
-  const intro = kind === 'verify' ? 'Enter this code on the page you came from to finish setting up your logoless account.' : signup ? 'Enter this code on the page you came from to finish creating your logoless account.' : 'Enter this code, then choose a new password.'
-  const note = kind === 'verify' ? 'If you did not just sign in to logoless, ignore this email. Nothing has changed.' : signup ? 'If you did not sign up, ignore this email and nothing will be created.' : 'If you did not ask to reset your password, ignore this email. Your password has not changed.'
+  const title = kind === 'verify' ? "Confirm it's you" : signup ? 'Confirm your email' : 'Reset your password'
+  const intro = kind === 'verify' ? 'Type this code on the page you came from and your logoless account is ready.' : signup ? 'Type this code on the page you came from and your page is ready to build.' : 'Type this code, then pick a new password.'
+  const note = kind === 'verify' ? "If that wasn't you, ignore this. Nothing has changed." : signup ? "If you didn't sign up, ignore this and nothing will be created." : "If you didn't ask to reset your password, ignore this. Your password hasn't changed."
   const tag = test ? 'Test' : signup ? 'Welcome' : 'Security'
   const body = `${codeBoxes(code)}${expiry()}${details(meta)}${signup ? '' : `<div style="margin-top:26px">${button(`${SITE_URL}/forgot-password`, 'Open the reset page')}</div>`}`
   const t = test ? '[TEST] ' : ''

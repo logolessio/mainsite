@@ -41,7 +41,7 @@ export async function findOrCreateUser(email: string, name?: string | null, imag
 export async function requireUser(): Promise<UserRow & { isNew: boolean }> {
   const session = await getSession()
   const email = session?.user?.email
-  if (!email) throw new HttpError(401, 'Please sign in.')
+  if (!email) throw new HttpError(401, 'sign in first.')
   const u = await findOrCreateUser(email, session.user?.name, session.user?.image)
   if (u.status !== 'active') throw new HttpError(403, 'This account is restricted. Contact support if you think that is a mistake.')
   // The owner's role comes from ADMIN_EMAILS (via the session). Keep the row in step with it.

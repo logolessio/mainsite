@@ -58,7 +58,7 @@ const toBase64 = (b: Uint8Array) => {
  * pictures fetched from Discord. SVG is refused on purpose because it can carry scripts.
  */
 export async function storeImage(userId: string, kind: ImageKind, bytes: Uint8Array) {
-  if (bytes.length > MAX_IMAGE_BYTES) throw new HttpError(413, 'That image is too large. Please pick a smaller one.')
+  if (bytes.length > MAX_IMAGE_BYTES) throw new HttpError(413, 'that image is too big. pick a smaller one.')
   const mime = sniff(bytes)
   if (!mime) throw new HttpError(400, 'Only JPEG, PNG and WebP images are allowed.')
   const dim = dimensions(bytes, mime)

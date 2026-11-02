@@ -55,7 +55,7 @@ export function LayoutPanel({ api }: { api: EditorApi }) {
   const { cfg, set, up } = api
   return (
     <div>
-      <Group title="Looks" hint="One tap sets the type, the background, the cursor and the effects together. Your links stay as they are.">
+      <Group title="Looks" hint="one tap sets the type, background, cursor and effects. your links stay put.">
         <div className="grid grid-cols-4 gap-2">
           {PRESETS.map((p) => (
             <button key={p.id} type="button" onClick={() => set((c) => applyPreset(c, p))} title={p.note} className="group text-left">
@@ -69,7 +69,7 @@ export function LayoutPanel({ api }: { api: EditorApi }) {
           ))}
         </div>
       </Group>
-      <Group title="Layout" hint="Ten ways to lay the same page out. They all move as you scroll.">
+      <Group title="Layout" hint="ten ways to lay out the same page. they all move as you scroll.">
         <div className="grid grid-cols-2 gap-3">
           {LAYOUTS.map((l) => {
             const on = cfg.layout === l.id
@@ -116,7 +116,7 @@ export function StylePanel({ api }: { api: EditorApi }) {
   const t = cfg.theme
   return (
     <div>
-      <Group title="Page tone" hint="Black to white. The type turns itself the other way.">
+      <Group title="Page tone" hint="black to white. the text flips by itself to stay readable.">
         <Slider tone label="Page tone" value={t.tone} onChange={(v) => api.set((c) => ({ ...c, theme: { ...c.theme, tone: v }, bg: { ...c.bg, tone: v } }))} />
       </Group>
       <Group title="Typeface">
@@ -180,7 +180,7 @@ export function BackgroundPanel({ api }: { api: EditorApi }) {
       if (kind === 'image') up('bg', { image: await uploadBackground(f), kind: 'image' })
       else up('bg', { video: await uploadBgVideo(f), kind: 'video' })
     } catch (e) {
-      toast(e instanceof Error ? e.message : 'That did not upload.')
+      toast(e instanceof Error ? e.message : "couldn't upload that. try again.")
     }
     setBusy(false)
   }

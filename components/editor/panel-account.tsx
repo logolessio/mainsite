@@ -40,7 +40,7 @@ export function ProfilePanel({ api }: { api: EditorApi }) {
       const id = await uploadImage('avatar', f)
       setProfile({ newAvatar: id, hasAvatar: true, avatar: `/api/img/${id}` })
     } catch (e) {
-      toast(e instanceof Error ? e.message : 'That did not upload.')
+      toast(e instanceof Error ? e.message : "couldn't upload that. try again.")
     }
     setBusy(false)
   }
@@ -86,8 +86,8 @@ export function ProfilePanel({ api }: { api: EditorApi }) {
             {avail === 'checking' ? <Loader2 className="size-4 animate-spin text-white/40" /> : avail ? avail.ok ? <Check className="size-4 text-white" /> : <X className="size-4 text-white/60" /> : null}
           </span>
         </div>
-        {avail && avail !== 'checking' && !avail.ok && <p className="text-[0.76rem] text-white/60">{avail.message ?? 'That name is not available.'}</p>}
-        <p className="text-[0.74rem] text-[var(--ed-mute)]">You can change it twice a week. Names can be one character.</p>
+        {avail && avail !== 'checking' && !avail.ok && <p className="text-[0.76rem] text-white/60">{avail.message ?? "that one isn't available."}</p>}
+        <p className="text-[0.74rem] text-[var(--ed-mute)]">you can change it twice a week. one character is fine.</p>
       </Group>
     </div>
   )
@@ -118,7 +118,7 @@ export function InsightsPanel({ api }: { api: EditorApi }) {
         </div>
       </Group>
       <Group title="Links">
-        {top.length === 0 && <p className="text-[0.8rem] text-[var(--ed-mute)]">Nothing to count yet.</p>}
+        {top.length === 0 && <p className="text-[0.8rem] text-[var(--ed-mute)]">nothing to count yet.</p>}
         {top.map(({ b, n }) => (
           <div key={b.id} className="flex items-center justify-between gap-3 text-[0.82rem]">
             <span className="min-w-0 truncate text-white/80">{b.t === 'link' || b.t === 'video' ? b.title || b.url : b.t === 'social' ? b.platform : ''}</span>
@@ -148,7 +148,7 @@ export function SettingsPanel({ api }: { api: EditorApi }) {
           >
             {copied ? <Check className="size-4" /> : <Copy className="size-4" />} {copied ? 'Copied' : 'Copy'}
           </Btn>
-          <a href={`/${profile.handle}`} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[var(--ed-line2)] px-4 text-[0.8rem] hover:bg-white/10">
+          <a href={`/${profile.handle}`} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-1.5 border border-[var(--ed-line2)] px-4 text-[0.8rem] hover:bg-white/10">
             <ExternalLink className="size-4" /> Open
           </a>
         </div>

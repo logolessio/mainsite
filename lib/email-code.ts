@@ -23,7 +23,7 @@ export async function issueCode(email: string, purpose: Purpose, payload?: strin
   const d = await db()
   const t = nowSec()
   const prev = await d.prepare('SELECT sent_at FROM email_codes WHERE email = ?1 AND purpose = ?2').bind(email, purpose).first<{ sent_at: number }>()
-  if (prev && t - prev.sent_at < COOLDOWN) throw new HttpError(429, 'Please wait a few seconds before asking for another code.')
+  if (prev && t - prev.sent_at < COOLDOWN) throw new HttpError(429, 'wait a few seconds before asking for another code.')
   const code = newCode()
   await d
     .prepare(

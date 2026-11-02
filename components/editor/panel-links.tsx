@@ -128,7 +128,7 @@ function Item({ b, open, toggle, update, remove, clicks }: { b: BioBlock; open: 
                   <>
                     <Input placeholder="YouTube, Vimeo, TikTok or Spotify link" value={b.url} inputMode="url" autoCapitalize="off" spellCheck={false} onChange={(e) => set({ url: e.target.value })} onBlur={() => set({ url: cleanUrl(b.url) || b.url })} />
                     <Input placeholder="Caption (optional)" value={b.title} maxLength={80} onChange={(e) => set({ title: e.target.value })} />
-                    <p className="text-[0.74rem] text-[var(--ed-mute)]">{b.url ? (embedFor(cleanUrl(b.url)) ? 'This plays on the page.' : 'This one cannot play on the page, so it shows as a link.') : 'Paste a link and it plays right on your page.'}</p>
+                    <p className="text-[0.74rem] text-[var(--ed-mute)]">{b.url ? (embedFor(cleanUrl(b.url)) ? 'this plays on the page.' : "this one can't play on the page, so it shows as a link.") : 'paste a link and it plays right on your page.'}</p>
                   </>
                 )}
                 {b.t === 'heading' && <Input placeholder="Heading" value={b.text} maxLength={80} onChange={(e) => set({ text: e.target.value })} />}
@@ -180,8 +180,8 @@ export function LinksPanel({ api }: { api: EditorApi }) {
         {blocks.length === 0 ? (
           <div className="rounded-xl border border-dashed border-[var(--ed-line2)] px-5 py-10 text-center">
             <Plus className="mx-auto mb-3 size-5 text-white/40" strokeWidth={1.5} />
-            <p className="text-[0.88rem] text-white">Nothing on your page yet</p>
-            <p className="mx-auto mt-1 max-w-[16rem] text-[0.78rem] text-[var(--ed-mute)]">Add a link to your best edit, your portfolio, or where people can book you.</p>
+            <p className="text-[0.88rem] text-white">nothing here yet</p>
+            <p className="mx-auto mt-1 max-w-[16rem] text-[0.78rem] text-[var(--ed-mute)]">start with your best edit, your portfolio, or where people can book you.</p>
             <Btn variant="solid" className="mt-5" onClick={() => add('link')}>
               Add a link
             </Btn>

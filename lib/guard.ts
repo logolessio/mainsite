@@ -45,7 +45,7 @@ export async function limit(req: Request, o: Opts) {
   const blocked = async (who: string) => {
     const { logEvent } = await import('./log')
     logEvent({ kind: 'security', name: 'ratelimit', path: new URL(req.url).pathname, status: 429, detail: `${o.name} (${who}) over ${o.max} per ${o.windowSec}s`, req })
-    return new HttpError(429, 'Too many attempts. Please wait a moment and try again.')
+    return new HttpError(429, 'too many tries. wait a moment and try again.')
   }
   if ((await hit(`${o.name}:ip:${ip}`, o.windowSec)) > o.max) throw await blocked('network')
   if (o.userId && (await hit(`${o.name}:u:${o.userId}`, o.windowSec)) > o.max) throw await blocked('account')

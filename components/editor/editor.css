@@ -1,5 +1,6 @@
-/* The editor and the home page: black, white and grey, nothing else. */
+/* The editor and the home page: black, white and grey, nothing else. IBM Plex Mono for the words, Schibsted Grotesk Black for the big titles, like the Anubis page. */
 .ed {
+  font-family: var(--font-f-ibm-plex-mono), ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   --ed-bg: #000;
   --ed-panel: #0a0a0a;
   --ed-raise: #121212;
@@ -89,4 +90,85 @@ html .ed.ed.ed :is(h1, h2, h3, h4, h5, h6) {
   text-transform: none;
   text-shadow: none;
   word-spacing: normal;
+}
+
+/* the big titles */
+html .ed.ed.ed .disp {
+  font-family: var(--font-f-schibsted), 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.05em;
+  line-height: 0.84;
+}
+/* Japanese, set small and quiet, in whatever the device has */
+.ed .jp {
+  font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Noto Sans JP', 'Noto Sans CJK JP', var(--font-f-ibm-plex-mono), sans-serif;
+  font-weight: 500;
+}
+.ed .vert {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+}
+/* a small caps label, the way a page number or a panel caption is set */
+.ed .cap {
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* screentone: a field of dots that fades out, the way a manga shades a page */
+.ed .tone {
+  background-image: radial-gradient(circle at center, rgb(255 255 255 / var(--tone-a, 0.85)) 0 1.1px, transparent 1.7px);
+  background-size: var(--tone-s, 7px) var(--tone-s, 7px);
+  -webkit-mask-image: var(--tone-mask, linear-gradient(to top, #000, transparent 72%));
+  mask-image: var(--tone-mask, linear-gradient(to top, #000, transparent 72%));
+}
+/* speed lines: hair-thin rays from one point, uneven on purpose */
+.ed .speed {
+  background:
+    repeating-conic-gradient(from 3deg at 50% 50%, rgb(255 255 255 / 0.2) 0deg 0.28deg, transparent 0.28deg 5.1deg),
+    repeating-conic-gradient(from 1deg at 50% 50%, rgb(255 255 255 / 0.12) 0deg 0.5deg, transparent 0.5deg 8.7deg);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 14%, #000 55%, transparent 92%);
+  mask-image: radial-gradient(circle at 50% 50%, transparent 14%, #000 55%, transparent 92%);
+}
+/* a button drawn with a hair line, square-cornered; it fills on hover */
+.ed .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 2.6rem;
+  padding: 0 1.1rem;
+  border: 1px solid rgb(255 255 255 / 0.4);
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+  transition: background 0.35s, color 0.35s, border-color 0.35s;
+}
+.ed .btn:hover {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+.ed .btn-solid {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+.ed .btn-solid:hover {
+  background: transparent;
+  color: #fff;
+}
+
+/* the editor's cards and fields are square-cornered, like everything else on the site (a circle stays a circle) */
+.ed :is([class*='rounded-md'], [class*='rounded-lg'], [class*='rounded-xl'], [class*='rounded-2xl'], [class*='rounded-3xl']):not([class*='rounded-full']) {
+  border-radius: 2px;
+}
+
+/* the sign-in card uses the site's own tokens; here they are square and quiet */
+.ed :is([class*='rounded-pill'], [class*='rounded-tile']):not([class*='rounded-full']) {
+  border-radius: 0;
+}
+.ed label > span:first-child:not([class]) {
+  letter-spacing: 0.02em;
 }

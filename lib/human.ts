@@ -27,7 +27,7 @@ export async function verifyTurnstile(token: string, req: Request) {
   if (ip) form.set('remoteip', ip)
   const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body: form })
   const j = (await res.json().catch(() => null)) as { success?: boolean; hostname?: string } | null
-  if (!j?.success) throw new HttpError(400, 'We could not confirm you are human. Please try again.')
+  if (!j?.success) throw new HttpError(400, "couldn't confirm you're human. try again.")
   if (j.hostname && j.hostname !== new URL(req.url).hostname && j.hostname !== 'localhost') throw new HttpError(400, 'That check was for another site.')
 }
 

@@ -45,7 +45,7 @@ export async function passwordProblem(password: string, email: string): Promise<
   if (COMMON.has(lower) || /^(.)\1+$/.test(password)) return 'That password is too easy to guess. Pick something less common.'
   const local = email.split('@')[0].toLowerCase()
   if (local.length >= 4 && lower.includes(local)) return 'Your password should not contain your email address.'
-  if (await isBreached(password)) return 'That password has appeared in a data breach. Please choose a different one.'
+  if (await isBreached(password)) return 'that password has shown up in a data leak. pick a different one.'
   return null
 }
 

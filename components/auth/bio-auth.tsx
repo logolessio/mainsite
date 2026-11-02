@@ -3,7 +3,6 @@
 import '@/components/editor/editor.css'
 import { MotionConfig, useMotionValue } from 'framer-motion'
 import { Suspense } from 'react'
-import { fontClass } from '@/components/bio/bits'
 import { ShaderRunner } from '@/components/bio/gl'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 import { cn } from '@/lib/utils'
@@ -20,18 +19,19 @@ export function BioAuth({ mode, claim }: { mode: 'login' | 'signup' | 'forgot'; 
   const level = useMotionValue(0)
   return (
     <MotionConfig reducedMotion="user">
-        <div className={cn('ed relative isolate min-h-dvh overflow-x-clip', fontClass('geist'))} style={{ ['--color-signal' as string]: '#d6d6d6' }}>
+        <div className={cn('ed relative isolate min-h-dvh overflow-x-clip')} style={{ ['--color-signal' as string]: '#d6d6d6' }}>
           <div aria-hidden="true" className="fixed inset-0 -z-10">
             <ShaderRunner id="liquid" tone={1} intensity={60} speed={34} px={px} py={py} level={level} reduced={reduced} />
             <div className="absolute inset-0 bg-black/55" />
+            <div className="speed absolute top-1/2 left-1/2 aspect-square w-[130vmax] -translate-x-1/2 -translate-y-1/2 opacity-40" />
           </div>
           <header className="fixed inset-x-0 top-0 z-20 flex h-16 items-center justify-end px-5 md:px-10">
-            <a href="/" className="text-[0.84rem] text-white/60 transition-colors hover:text-white">
-              Back
+            <a href="/" className="cap text-white/60 transition-colors hover:text-white">
+              back
             </a>
           </header>
           <main className="grid min-h-dvh place-items-center px-5 pt-24 pb-16">
-            <div className="w-full max-w-[420px] rounded-[1.8rem] border border-white/15 bg-black/60 p-7 [filter:grayscale(1)] backdrop-blur-2xl sm:p-9">
+            <div className="relative w-full max-w-[420px] border border-white/25 bg-black/70 p-7 [filter:grayscale(1)] backdrop-blur-xl sm:p-9">
               <Suspense>
                 <AuthCard mode={mode} claim={claim} />
               </Suspense>

@@ -14,13 +14,13 @@ async function gate(req: Request) {
   if (CHECKS_CODE.test(pathname)) {
     // Guessing a code: a few tries per network, and each code also dies after 5 wrong tries.
     await limit(req, { name: 'login-check', max: 20, windowSec: 600 }).catch(() => {
-      throw new Response('Too many attempts. Please wait a few minutes.', { status: 429 })
+      throw new Response("too many tries. give it a few minutes.", { status: 429 })
     })
     return null
   }
   if (!STARTS_SIGN_IN.test(pathname)) return null
   await limit(req, { name: 'signin', max: 20, windowSec: 600 }).catch(() => {
-    throw new Response('Too many attempts. Please wait a few minutes.', { status: 429 })
+    throw new Response("too many tries. give it a few minutes.", { status: 429 })
   })
   if (!(await hasHuman(req))) return new Response('Human check required.', { status: 403 })
   return null

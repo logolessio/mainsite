@@ -38,7 +38,7 @@ export const GET = route(async (req: Request) => {
   api.searchParams.set('bundle', 'messaging_non_clips')
   if (q) api.searchParams.set('q', q)
   const res = await fetch(api, { cf: { cacheTtl: CACHE_SECONDS, cacheEverything: true } } as RequestInit).catch(() => null)
-  if (!res?.ok) return json({ enabled: true, results: [], error: 'GIPHY did not answer. Please try again in a moment.' })
+  if (!res?.ok) return json({ enabled: true, results: [], error: "giphy didn't answer. try again in a moment." })
   const j = (await res.json().catch(() => ({}))) as { data?: GiphyItem[]; pagination?: { total_count?: number } }
   const body = {
     enabled: true,
