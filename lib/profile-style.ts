@@ -1,5 +1,5 @@
 // Shared (browser + server) definitions for profile customisation. No secrets or database code here.
-import { RESERVED_SLUGS } from './invite-shared'
+import { RESERVED_SLUGS } from './bio-reserved'
 import { bannerCss, LOOKS } from './looks'
 import type { ProfileExtras } from './profile-extras'
 

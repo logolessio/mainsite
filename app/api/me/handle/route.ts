@@ -1,12 +1,11 @@
-import { audit } from '@/lib/chain'
+import { auditSafe } from '@/lib/chain'
 import { db, nowSec } from '@/lib/db'
-import { featureOn } from '@/lib/features'
 import { protect } from '@/lib/guard'
 import { assertCanChangeHandle, freeAlternatives, handleQuota, recordHandleChange } from '@/lib/handle-changes'
 import { body, HttpError, json, route } from '@/lib/http'
-import { reservedByAnother } from '@/lib/launch'
+import { reservedByAnother } from '@/lib/waitlist'
 import { ensureProfile, validHandle } from '@/lib/profile'
-import { RESERVED_WORDS, HANDLE_RE, HANDLE_RESERVED_MSG, handleProblem } from '@/lib/profile-style'
+import { HANDLE_RESERVED_MSG, handleProblem } from '@/lib/profile-style'
 import { requireUser } from '@/lib/user'
 
 /**
@@ -21,20 +20,14 @@ export const GET = route(async (req: Request) => {
   const raw = new URL(req.url).searchParams.get('h')
   if (raw === null) return json({ quota })
   const h = raw.trim().toLowerCase().replace(/^@/, '')
-  const loose = await featureOn('username-punctuation')
-  if (loose) {
-    // dots and dashes are allowed, and reserved words are found through punctuation; the answer says why, so the field can too
-    const problem = handleProblem(h, { loose: true, isAdmin })
-    if (problem) return json({ available: false, reason: problem === HANDLE_RESERVED_MSG ? 'reserved' : 'invalid', message: problem, quota })
-  } else {
-    if (!HANDLE_RE.test(h)) return json({ available: false, reason: 'invalid', message: handleProblem(h, { isAdmin }), quota })
-    if (!isAdmin && RESERVED_WORDS.some((w) => h.includes(w))) return json({ available: false, reason: 'reserved', message: HANDLE_RESERVED_MSG, quota })
-  }
+  // dots and dashes are allowed, and reserved words are found through punctuation; the answer says why, so the field can too
+  const problem = handleProblem(h, { loose: true, isAdmin })
+  if (problem) return json({ available: false, reason: problem === HANDLE_RESERVED_MSG ? 'reserved' : 'invalid', message: problem, quota })
   const d = await db()
   const row = await d.prepare('SELECT user_id FROM profiles WHERE handle = ?1').bind(h).first<{ user_id: string }>()
   if (row && row.user_id === user.id) return json({ available: true, same: true, quota })
   if (row) {
-    const suggestions = (await freeAlternatives(h, loose)).filter((s) => !handleProblem(s, { loose, isAdmin }))
+    const suggestions = (await freeAlternatives(h, true)).filter((s) => !handleProblem(s, { loose: true, isAdmin }))
     return json({ available: false, reason: 'taken', message: `@${h} is already taken.`, suggestions, quota })
   }
   // a username somebody reserved on the waitlist is theirs when the site opens
@@ -49,7 +42,7 @@ export const POST = route(async (req: Request) => {
   const isAdmin = user.role === 'admin'
   const { handle } = await body<{ handle?: string }>(req)
   if (typeof handle !== 'string') throw new HttpError(400, 'Choose a username.')
-  const next = validHandle(handle, isAdmin, await featureOn('username-punctuation'))
+  const next = validHandle(handle, isAdmin)
   const cur = await ensureProfile(user)
   if (next === cur.handle) return json({ handle: next, previous: cur.handle, quota: await handleQuota(user.id, isAdmin) })
   if (await reservedByAnother(next, user.email)) throw new HttpError(409, 'That username was reserved by someone on the waitlist.')
@@ -62,6 +55,6 @@ export const POST = route(async (req: Request) => {
     throw e
   }
   await recordHandleChange(user.id, cur.handle, next)
-  await audit({ id: user.id, email: user.email }, 'profile.handle', user.id, `@${cur.handle} to @${next}`)
+  await auditSafe({ id: user.id, email: user.email }, 'profile.handle', user.id, `@${cur.handle} to @${next}`)
   return json({ handle: next, previous: cur.handle, quota: await handleQuota(user.id, isAdmin) })
 })

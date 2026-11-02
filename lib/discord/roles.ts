@@ -6,82 +6,41 @@ import { discordIdFor } from './link'
 
 export type SyncResult = { ok: boolean; added: string[]; removed: string[]; note?: string }
 
-/** What kind of member someone is on logoless. Several can be true at once (an artist who also posts content, say). */
-export type Kinds = { admin: boolean; team: boolean; developer: boolean; brand: boolean; creator: boolean; clipper: boolean; earnedCents: number }
+/** What kind of member someone is on logoless. Several can be true at once. */
+export type Kinds = { admin: boolean; team: boolean; developer: boolean }
 
 export async function memberKinds(userId: string): Promise<Kinds | null> {
-  const d = await db()
-  const r = await d
-    .prepare(
-      `SELECT u.email,
-         COALESCE((SELECT SUM(net_cents) FROM earnings WHERE clipper_user_id = u.id), 0) AS earned,
-         (EXISTS (SELECT 1 FROM campaigns c WHERE c.brand_user_id = u.id) OR EXISTS (SELECT 1 FROM ledger l WHERE l.user_id = u.id AND l.account = 'brand')) AS brand,
-         EXISTS (SELECT 1 FROM submissions s WHERE s.user_id = u.id) AS submitted,
-         EXISTS (SELECT 1 FROM settings s WHERE s.key LIKE 'oauth:app:%' AND json_extract(s.value, '$.ownerId') = u.id) AS apps
-       FROM users u WHERE u.id = ?1`,
-    )
-    .bind(userId)
-    .first<{ email: string; earned: number; brand: number; submitted: number; apps: number }>()
+  const r = await (await db()).prepare('SELECT email FROM users WHERE id = ?1').bind(userId).first<{ email: string }>()
   if (!r) return null
-  let creator = false
-  try {
-    // an artist or streamer who claimed their invite link (see migrations/0010_artist_invites.sql)
-    creator = Boolean(await d.prepare("SELECT 1 AS x FROM artist_invites WHERE user_id = ?1 AND status = 'claimed' LIMIT 1").bind(userId).first())
-  } catch {
-    /* no invites table yet */
-  }
   const team = await rolesForEmail(r.email)
-  const brand = Boolean(r.brand) && !creator
-  return {
-    admin: team.includes('admin'),
-    team: team.length > 0,
-    developer: team.includes('dev') || Boolean(r.apps),
-    brand,
-    creator,
-    clipper: Boolean(r.submitted) || (!brand && !creator),
-    earnedCents: r.earned,
-  }
+  return { admin: team.includes('admin'), team: team.length > 0, developer: team.includes('dev') }
 }
 
 /** Why someone has the roles they have, in words, for /roles. */
-export const kindWords = (k: Kinds) =>
-  [k.admin && 'admin', k.team && !k.admin && 'team', k.developer && 'developer', k.creator && 'artist', k.brand && 'brand', k.clipper && 'clipper', k.earnedCents > 0 && `$${Math.floor(k.earnedCents / 100).toLocaleString('en-US')} earned`].filter(Boolean) as string[]
+export const kindWords = (k: Kinds) => [k.admin && 'admin', k.team && !k.admin && 'team', k.developer && 'developer'].filter(Boolean) as string[]
 
-/** What Discord roles someone should have, by what they do on logoless. */
+/** What Discord roles someone should have: Member for anyone who connected, Verified for the same people (the site is open), Founding for those let in before it opened, and the team's. */
 export async function wantedRoles(userId: string) {
   const cfg = await getDiscordConfig()
   const ro = cfg.roles
-  const managed = new Set<string>([ro.linked, ro.verified, ro.unverified, ro.founding, ro.clipper, ro.brand, ro.creator, ro.developer, ro.admin, ro.team, ...ro.tiers.map((t) => t.role)].filter(Boolean))
+  const managed = new Set<string>([ro.linked, ro.verified, ro.unverified, ro.founding, ro.developer, ro.admin, ro.team].filter(Boolean))
   const k = await memberKinds(userId)
   const wanted = new Set<string>()
   if (!k) return { cfg, wanted, managed, kinds: null }
   if (ro.linked) wanted.add(ro.linked)
-  // Verified opens the server: they finished the sign-up (and were not held back for a look), they are on the team, or the site is open and they have an account.
-  // Everyone else who has joined is Unverified and sees only #get-started. Founding member is for those let in while the site was still shut.
-  const st = await membership(userId, k)
-  if (ro.verified && st.verified) wanted.add(ro.verified)
-  if (ro.unverified && !st.verified) wanted.add(ro.unverified)
-  if (ro.founding && st.founding) wanted.add(ro.founding)
-  if (ro.clipper && k.clipper) wanted.add(ro.clipper)
-  if (ro.brand && k.brand) wanted.add(ro.brand)
-  if (ro.creator && k.creator) wanted.add(ro.creator)
+  if (ro.verified) wanted.add(ro.verified)
+  if (ro.founding && (await founding(userId))) wanted.add(ro.founding)
   if (ro.developer && k.developer) wanted.add(ro.developer)
   if (ro.admin && k.admin) wanted.add(ro.admin)
   if (ro.team && k.team) wanted.add(ro.team)
-  // the highest tier they have reached, and only that one
-  const reached = ro.tiers.filter((t) => k.earnedCents >= t.minUsd * 100)
-  const top = reached[reached.length - 1]
-  if (top) wanted.add(top.role)
   return { cfg, wanted, managed, kinds: k }
 }
 
-/** Whether someone is a verified member and whether they are a founding one (see wantedRoles). */
-export async function membership(userId: string, k: { admin: boolean; team: boolean }): Promise<{ verified: boolean; founding: boolean }> {
+/** Was this person let in before the site opened (the pre-launch sign-up)? */
+async function founding(userId: string): Promise<boolean> {
   const { getPre } = await import('../prelaunch')
-  const [pre, settings] = await Promise.all([getPre(userId), import('../settings').then((m) => m.allSettings())])
-  const { launchView } = await import('../launch')
-  const open = !launchView(settings).closed
-  return { verified: Boolean(pre?.n) || k.admin || k.team || open, founding: Boolean(pre?.n && pre.founding !== false) }
+  const pre = await getPre(userId)
+  return Boolean(pre?.n && pre.founding !== false)
 }
 
 /** Brings someone's roles in the server in line with their account: gives the ones they have earned, takes away ones they should not have. */
@@ -100,21 +59,3 @@ export async function syncRoles(userId: string): Promise<SyncResult> {
   for (const role of managed) if (have.has(role) && !wanted.has(role) && (await removeRole(cfg.guildId, id, role)).ok) removed.push(role)
   return { ok: true, added, removed }
 }
-
-/**
- * The roles the bot can make for the owner. The site calls clippers "creators" in its wording, so the role for artists and streamers
- * with campaigns (saved as `creator`) is named Artist, to keep the two apart. Rename any of them in Discord freely.
- * Used by the "Make the missing roles" button, by the config key they are saved under.
- */
-export const ROLE_NAMES: { key: 'linked' | 'verified' | 'unverified' | 'founding' | 'clipper' | 'brand' | 'creator' | 'developer' | 'admin' | 'team'; name: string }[] = [
-  { key: 'admin', name: 'L | Site Admin' },
-  { key: 'team', name: 'L | Team' },
-  { key: 'developer', name: 'L | Developer' },
-  { key: 'creator', name: 'L | Artist' },
-  { key: 'brand', name: 'L | Brand' },
-  { key: 'clipper', name: 'L | Clipper' },
-  { key: 'founding', name: 'L | Founding Member' },
-  { key: 'verified', name: 'L | Verified' },
-  { key: 'unverified', name: 'L | Unverified' },
-  { key: 'linked', name: 'L | Member' },
-]

@@ -1,4 +1,3 @@
-import { applyWording } from '../wording'
 import { iconIds } from './icon-cache'
 import type { IconName } from './icon-names'
 import type { Component, Embed, Message } from './api'
@@ -123,7 +122,7 @@ const clean = (s: string | undefined) => {
   if (s === undefined) return s
   // the wording is applied to the words only, never to an icon's name
   const parts = s.split(TOKEN)
-  const joined = parts.map((p, i) => (i % 2 ? (emojiOf(p) ? `<:lg_${p}:${iconIds()[p]}>` : '') : applyWording(p.replace(EMOJI, '')))).join('')
+  const joined = parts.map((p, i) => (i % 2 ? (emojiOf(p) ? `<:lg_${p}:${iconIds()[p]}>` : '') : p.replace(EMOJI, ''))).join('')
   return joined.replace(/ {2,}/g, ' ').trim()
 }
 

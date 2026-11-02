@@ -1,45 +1,10 @@
 import type { Metadata, Viewport } from 'next'
 import { Bodoni_Moda, Bricolage_Grotesque, DM_Mono, DM_Sans, Familjen_Grotesk, Figtree, Fragment_Mono, Fraunces, Funnel_Display, Funnel_Sans, Geologica, Gloock, Hanken_Grotesk, Host_Grotesk, Instrument_Sans, Martian_Mono, Mona_Sans, Newsreader, Onest, Schibsted_Grotesk, Special_Gothic, Syne, Wix_Madefor_Display, Young_Serif, Geist, Geist_Mono, IBM_Plex_Mono, Inter, Inter_Tight, Instrument_Serif, JetBrains_Mono, Manrope, Outfit, Playfair_Display, Plus_Jakarta_Sans, Sora, Space_Grotesk, Space_Mono, Cormorant_Garamond, EB_Garamond, DM_Serif_Display, Libre_Caslon_Text, Libre_Baskerville, Cinzel, Abril_Fatface, Prata, Rufina, Spectral, Lora, Old_Standard_TT, Gilda_Display, Playfair_Display_SC, Marcellus, Yeseva_One, Italiana, Bellefair, Vidaloka, Rozha_One, Cardo, Crimson_Pro, Sorts_Mill_Goudy, Libre_Bodoni, Baskervville, Forum, Cormorant_Infant, Castoro, Ovo, Gelasio, Source_Serif_4, Noto_Serif_Display, Libre_Caslon_Display, DM_Serif_Text, IM_Fell_English } from 'next/font/google'
-import { connection } from 'next/server'
-import { SecretDialogHost } from '@/components/admin/secret-dialog'
-import { SiteCheckHost } from '@/components/admin/site-check-host'
-import { TextEditor } from '@/components/admin/text-editor'
-import { DevBar } from '@/components/dev/dev-bar'
-import { DevGate } from '@/components/dev/dev-gate'
-import { AppShell } from '@/components/shell/app-shell'
-import { AutoCopy } from '@/components/shell/auto-copy'
-import { CopyProvider } from '@/components/shell/copy-provider'
-import { SkipLink } from '@/components/shell/skip-link'
-import { DesignProvider } from '@/components/shell/design-provider'
-import { FeaturesProvider } from '@/components/shell/features-provider'
-import { FloatingSearch } from '@/components/shell/floating-search'
-import { LiveProgress } from '@/components/shell/live-progress'
-import { getAnnouncement } from '@/lib/announcement'
-import { featureState, requestHost } from '@/lib/features'
-import { headers } from 'next/headers'
-import { parseChoices } from '@/lib/design-choices'
-import { effectiveFont, faceById, fontById } from '@/lib/fonts'
-import { isBetaHost } from '@/lib/beta-host'
-import { isBioSurface } from '@/lib/bio-routes'
-import { isMethodHost } from '@/lib/method-host'
-import { isYtHost } from '@/lib/yt-host'
-import { isSeventeenHost } from '@/lib/seventeen-host'
-import { launchExempt, launchView, linksExempt } from '@/lib/launch'
-import { launchHomeData } from '@/lib/launch-home'
-import { LaunchPage } from '@/components/launch/launch-page'
-import { LaunchHome } from '@/components/launch/home/launch-home'
-import { BetaLegalFrame } from '@/components/prelaunch/legal-frame'
-import { getOverrides } from '@/lib/copy'
-import { parseRoundness, roundnessVars } from '@/lib/roundness'
-import { allSettings } from '@/lib/settings'
-import { getLinks } from '@/lib/socials-db'
-import { getSession } from '@/lib/session'
 import { SITE } from '@/lib/site'
 import './globals.css'
 
-// Every typeface the dev dashboard can switch the site to. Only the one in use is downloaded: the others are declared but not preloaded.
-// The standard look is the Anubis one: IBM Plex Mono for the words and Schibsted Grotesk Black for the big titles, so those two are preloaded and the rest wait until they are chosen
-// (Inter and Gloock, the look before it, come back only if the Anubis look is undone).
+// Every typeface a page can be set in (the page's own font choice, see lib/profile-fonts.ts). Only the ones in use are downloaded: the others are declared but not preloaded.
+// IBM Plex Mono and Schibsted Grotesk are the site's own two and are preloaded.
 const inter = Inter({ subsets: ['latin'], variable: '--font-f-inter', display: 'swap', preload: false })
 const tight = Inter_Tight({ subsets: ['latin'], weight: ['300', '400', '500', '600'], variable: '--font-f-inter-tight', display: 'swap', preload: false })
 const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-mono-face' })
@@ -116,19 +81,14 @@ const cls_dm_serif_text = DM_Serif_Text({ subsets: ['latin'], display: 'swap', p
 const cls_im_fell = IM_Fell_English({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-im-fell' })
 const FONT_CLASSES = [inter, tight, geistMono, geist, dmSans, manrope, sora, spaceGrotesk, jakarta, outfit, instrument, fraunces, playfair, jetbrains, plexMono, spaceMono, bricolage, funnelDisplay, funnelSans, hanken, instrumentSans, schibsted, specialGothic, hostGrotesk, familjen, mona, onest, figtree, geologica, wix, syne, newsreader, youngSerif, gloock, bodoni, martian, dmMono, fragment, cls_cormorant, cls_eb_garamond, cls_dm_serif, cls_libre_caslon, cls_libre_baskerville, cls_cinzel, cls_abril, cls_prata, cls_rufina, cls_spectral, cls_lora, cls_old_standard, cls_gilda, cls_playfair_sc, cls_marcellus, cls_yeseva, cls_italiana, cls_bellefair, cls_vidaloka, cls_rozha, cls_cardo, cls_crimson, cls_sorts_mill, cls_libre_bodoni, cls_baskervville, cls_forum, cls_cormorant_infant, cls_castoro, cls_ovo, cls_gelasio, cls_source_serif, cls_noto_display, cls_libre_caslon_display, cls_dm_serif_text, cls_im_fell].map((f) => f.variable).join(' ')
 
-const baseMetadata: Metadata = {
-  metadataBase: new URL(SITE.url),
-  title: { default: 'logoless | views have value', template: '%s' },
-  openGraph: { title: 'logoless | views have value', siteName: 'logoless', type: 'website', images: [{ url: '/og.png', width: 1200, height: 630, alt: 'logoless' }] },
-  twitter: { card: 'summary_large_image', images: ['/og.png'] },
-  description:
-    'Clip campaigns from artists, streamers and brands. Post the clip, get paid for every thousand views.',
-}
+const DESCRIPTION = 'A full-screen link in bio for editors: shaders, music, ten layouts and a cursor of your own. Claim logoless.io/you in a few seconds.'
 
-export async function generateMetadata(): Promise<Metadata> {
-  const fs = await featureState()
-  // the dev address and the pre-launch sign-up are not for search engines
-  return fs.dev || isBetaHost(await requestHost()) ? { ...baseMetadata, robots: { index: false, follow: false } } : baseMetadata
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE.url),
+  title: { default: 'logoless | link in bio that moves', template: '%s' },
+  description: DESCRIPTION,
+  openGraph: { title: 'logoless | link in bio that moves', description: DESCRIPTION, siteName: 'logoless', type: 'website', images: [{ url: '/og.png', width: 1200, height: 630, alt: 'logoless' }] },
+  twitter: { card: 'summary_large_image', images: ['/og.png'] },
 }
 
 export const viewport: Viewport = {
@@ -136,132 +96,19 @@ export const viewport: Viewport = {
   colorScheme: 'dark',
 }
 
-/** What search engines are told about the site itself. Page-specific data (breadcrumbs, FAQs) is added on those pages. */
-const SITE_LD = (sameAs: string[]) => ({
-  '@context': 'https://schema.org',
-  '@graph': [
-    { '@type': 'Organization', '@id': `${SITE.url}/#org`, name: SITE.name, url: SITE.url, logo: `${SITE.url}/logo.png`, email: SITE.emails.support, ...(sameAs.length ? { sameAs } : {}) },
-    { '@type': 'WebSite', '@id': `${SITE.url}/#site`, name: SITE.name, url: SITE.url, publisher: { '@id': `${SITE.url}/#org` } },
-  ],
-})
+// IBM Plex Mono for the site's own words and Schibsted Grotesk Black for its big titles (a person's page chooses its own typeface)
+const FONT_VARS = {
+  '--font-body': 'var(--font-f-ibm-plex-mono)',
+  '--font-display-face': 'var(--font-f-schibsted)',
+  '--font-ui': 'var(--font-f-ibm-plex-mono)',
+  '--font-figures': 'var(--font-f-schibsted)',
+  '--font-mono-pick': 'var(--font-f-ibm-plex-mono)',
+} as React.CSSProperties
 
-/** The reading preferences (calm mode, larger text, contrast, underlined links) are applied before the first paint, so a page never reflows after it has appeared. */
-const HEAD_SCRIPT = <script dangerouslySetInnerHTML={{ __html: "try{var c=document.documentElement.classList,l=localStorage;l.getItem('logoless:calm')==='1'&&c.add('calm');l.getItem('logoless:text')==='large'&&c.add('text-large');l.getItem('logoless:contrast')==='high'&&c.add('contrast');l.getItem('logoless:links')==='underline'&&c.add('underline-links');var d=document.documentElement;d.dataset.themes&&l.getItem('logoless:theme')==='light'&&(d.dataset.theme='light')}catch(e){}" }} />
-
-export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  // Site text can be edited by the owner, so every page is built per request with the current wording.
-  await connection()
-  const [overrides, session, fs, design, links] = await Promise.all([getOverrides(), getSession(), featureState(), allSettings(), getLinks()])
-  const font = fontById(effectiveFont(design.design_font, design.design_font_mono))
-  // one typeface for each job (Design, Fonts by use) on top of the preset: a job left empty follows the preset
-  const headline = faceById(design.design_font_headline)
-  const bodyFace = faceById(design.design_font_body)
-  const uiFace = faceById(design.design_font_ui)
-  const figuresFace = faceById(design.design_font_figures)
-  const monoFace = faceById(design.design_font_mono_face)
-  const fontVars = {
-    '--font-body': `var(${bodyFace?.var ?? font.body})`,
-    '--font-display-face': `var(${headline?.var ?? font.display})`,
-    ...(uiFace ? { '--font-ui': `var(${uiFace.var})` } : {}),
-    ...(figuresFace ? { '--font-figures': `var(${figuresFace.var})` } : {}),
-    ...(monoFace ? { '--font-mono-pick': `var(${monoFace.var})` } : {}),
-  }
-  // The Anubis look (live; undo it on the dev site to go back): IBM Plex Mono for all the words, buttons and menus, and Schibsted Grotesk Black for
-  // the big titles and figures, whatever was chosen in Design
-  const look = fs.on['anubis-look'] === true
-  if (look) {
-    fontVars['--font-body'] = 'var(--font-f-ibm-plex-mono)'
-    fontVars['--font-display-face'] = 'var(--font-f-schibsted)'
-    ;(fontVars as Record<string, string>)['--font-ui'] = 'var(--font-f-ibm-plex-mono)'
-    ;(fontVars as Record<string, string>)['--font-figures'] = 'var(--font-f-schibsted)'
-    ;(fontVars as Record<string, string>)['--font-mono-pick'] = 'var(--font-f-ibm-plex-mono)'
-  }
-  const kind = look ? 'sans' : (headline?.kind ?? (font.id === 'inter' ? undefined : font.kind))
-  const isAdmin = session?.user?.role === 'admin'
-  const isDev = session?.user?.roles?.includes('dev') === true
-  // The dev site is for the team (admins and developers): everyone else gets a sign-in screen and nothing from behind it.
-  const blocked = fs.dev && !isAdmin && !isDev
-  const announcement = fs.on.announcement && !blocked ? await getAnnouncement() : null
-  const reqHeaders = await headers()
-  // The launch page: while the owners have it switched on (and the countdown has not ended and opened the site by itself), everyone but an owner
-  // sees only the countdown and the sign-up, on the public address. The owner dashboard, the dev address, scroll (a site of its own) and owners themselves are never shut out.
-  const launch = launchView(design)
-  // light mode is the owner's choice (Design settings), off unless switched on there; with it off nobody gets the button and anyone who had picked light is back on dark
-  const lightOn = design.design_light_mode === '1'
-  const featuresOn = { ...fs.on, 'light-theme': lightOn }
-  const host = await requestHost()
-  const path = reqHeaders.get('x-path') ?? '/'
-  // with the new page (launch-links) /links stays open too, and the closed site shows the new page
-  const newLaunch = fs.on['launch-links'] === true
-  // beta.logoless.io (the pre-launch sign-up), the sign-in hop it uses, method.logoless.io (Motion4K Optimizer), yt.logoless.io (the Side Effects
-  // channel plan) and 17.logoless.io (the scenepack site) are pages of their own: none of the site around them, and never behind the launch page
-  // the link-in-bio product (switch `bio-site`): the home page, the editor, signing in and every person's page are pages of their own on logoless.io and the dev address
-  const bioSurface = fs.on['bio-site'] === true && !blocked && !/^(owner|admin|scroll|beta|method|yt|17)\./i.test(host) && isBioSurface(path)
-  const bare = bioSurface || isBetaHost(host) || isMethodHost(host) || isYtHost(host) || isSeventeenHost(host) || /^\/join(\/|$)/.test(path)
-  const shut = !bare && launch.closed && !fs.dev && !/^(owner|admin|scroll)\./i.test(host) && !isAdmin && !launchExempt(path) && !(newLaunch && linksExempt(path))
-  if (shut || bare) {
-    return (
-      <html
-        lang="en"
-        suppressHydrationWarning
-        data-scroll-behavior="smooth"
-        data-look={look ? 'anubis' : undefined}
-        data-surfaces={fs.on['solid-surfaces'] ? 'solid' : undefined}
-        data-themes={lightOn ? '1' : undefined}
-        data-font={look ? 'schibsted' : font.id === 'inter' ? undefined : font.id}
-        data-kind={kind}
-        data-ui={look || uiFace ? '1' : undefined}
-        data-figures={look || figuresFace ? '1' : undefined}
-        style={{ ...fontVars, ...(look ? {} : roundnessVars(parseRoundness(design.design_roundness))) } as React.CSSProperties}
-        className={`${FONT_CLASSES} bg-ink`}
-      >
-        <head>
-{HEAD_SCRIPT}
-        </head>
-        <body className="antialiased">
-          <FeaturesProvider dev={fs.dev} on={featuresOn}>
-            {bare ? (isBetaHost(host) && /^\/legal(\/|$)/.test(path) ? <BetaLegalFrame>{children}</BetaLegalFrame> : children) : newLaunch ? <LaunchHome {...await launchHomeData('soon')} locked /> : <LaunchPage end={launch.end} headline={launch.headline} text={launch.text} signedInAs={session?.user?.email ?? null} />}
-          </FeaturesProvider>
-        </body>
-      </html>
-    )
-  }
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      data-scroll-behavior="smooth"
-      data-look={look ? 'anubis' : undefined}
-      data-surfaces={fs.on['solid-surfaces'] ? 'solid' : undefined}
-      data-themes={lightOn ? '1' : undefined}
-      data-font={look ? 'schibsted' : font.id === 'inter' ? undefined : font.id}
-      data-kind={kind}
-      data-ui={look || uiFace ? '1' : undefined}
-      data-figures={look || figuresFace ? '1' : undefined}
-      style={{ ...fontVars, ...(look ? {} : roundnessVars(parseRoundness(design.design_roundness))) } as React.CSSProperties}
-      className={`${FONT_CLASSES} bg-ink`}
-    >
-      <head>
-        {HEAD_SCRIPT}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_LD(links.filter((l) => l.platform !== 'website' && l.url.startsWith('https://')).map((l) => l.url))) }} />
-      </head>
-      <body className="antialiased">
-        <SkipLink />
-        <FeaturesProvider dev={fs.dev} on={featuresOn}>
-          <DesignProvider value={{ coverBorder: design.design_cover_border === '1', coverBar: design.design_cover_bar === '1', scrollEffects: design.design_scroll_effects === '1', liquidLoader: design.design_liquid_loader === '1', ...parseChoices(design) }}>
-          <CopyProvider overrides={overrides} isAdmin={isAdmin}>
-            <AppShell announcement={announcement} dots={design.bg_dots === '1'} links={links} signedIn={Boolean(session?.user?.email)}>{blocked ? <DevGate email={session?.user?.email ?? null} /> : children}</AppShell>
-            <AutoCopy />
-            <LiveProgress />
-            <FloatingSearch raised={fs.dev && (isAdmin || isDev)} />
-            {isAdmin && <TextEditor />}
-            {isAdmin && <SecretDialogHost />}
-            {(isAdmin || isDev) && <SiteCheckHost />}
-            {fs.dev && (isAdmin || isDev) && <DevBar />}
-          </CopyProvider>
-          </DesignProvider>
-        </FeaturesProvider>
-      </body>
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth" data-look="anubis" data-surfaces="solid" data-font="schibsted" data-kind="sans" data-ui="1" data-figures="1" style={FONT_VARS} className={`${FONT_CLASSES} bg-ink`}>
+      <body className="antialiased">{children}</body>
     </html>
   )
 }

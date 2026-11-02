@@ -1,32 +1,18 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
-import { PillLink } from '@/components/motion/cta'
 
 export const metadata: Metadata = { title: 'Page not found | logoless', robots: { index: false } }
 
 export default function NotFound() {
   return (
-    <main className="grid min-h-dvh place-items-center px-5 text-center">
+    <main className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-[#050505] px-6 text-center text-white">
       <div className="max-w-md">
-        <p className="text-sm text-paper/50">Error 404</p>
-        <h1 className="mt-4 font-display text-5xl md:text-6xl">We can&apos;t find that page</h1>
-        <p className="mt-5 text-lg leading-relaxed text-paper/60">It may have moved, or the link may have a typo. Here are some places to go instead.</p>
-        <div className="mt-9 flex justify-center">
-          <PillLink href="/">See campaigns</PillLink>
+        <p className="text-[0.8rem] tracking-[0.16em] text-white/40 uppercase">Error 404</p>
+        <p className="mt-5 text-[clamp(2rem,7vw,3.4rem)] leading-[1.05] font-medium tracking-[-0.04em]">We can&apos;t find that page</p>
+        <div className="mt-8 flex justify-center">
+          <a href="/" className="inline-flex h-11 items-center rounded-full bg-white px-6 text-sm font-medium text-black transition-opacity hover:opacity-85">
+            Go home
+          </a>
         </div>
-        <p className="mt-8 text-[15px] text-paper/50">
-          <Link href="/for-creators" className="underline underline-offset-4 hover:text-paper">
-            For creators
-          </Link>
-          {' · '}
-          <Link href="/for-brands" className="underline underline-offset-4 hover:text-paper">
-            For brands
-          </Link>
-          {' · '}
-          <Link href="/contact" className="underline underline-offset-4 hover:text-paper">
-            Contact us
-          </Link>
-        </p>
       </div>
     </main>
   )

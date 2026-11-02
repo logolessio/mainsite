@@ -1,5 +1,4 @@
 import { SITE } from './site'
-import { applyWording } from './wording'
 
 export type LegalSection = { h: string; p: string[] }
 export type LegalDoc = { slug: string; title: string; summary: string; sections: LegalSection[] }
@@ -50,53 +49,6 @@ const RAW: LegalDoc[] = [
     ],
   },
   {
-    slug: 'clipper-terms',
-    title: 'Clipper Terms',
-    summary: 'Additional terms for people who submit clips and earn payouts.',
-    sections: [
-      { h: 'Scope', p: [`These terms apply to Clippers and supplement the Terms of Service.`] },
-      { h: 'Independent contractors', p: ['You act as an independent contractor, not an employee, agent or partner of logoless or any Brand. You are responsible for your own taxes, equipment and compliance with laws that apply to you.'] },
-      { h: 'Earning', p: ['Each campaign lists a rate per 1,000 verified views and a total budget. You earn only for views on approved clips that occur while the campaign is active and budget remains, and that pass verification. A campaign closes when its budget is used up: we tell you when it is nearly gone and when it has ended, and submissions sent after it closes are not paid. We stop checking a submission\'s views when its campaign ends.'] },
-      { h: 'Your accounts and content', p: ['You may only submit content from accounts you own and control. You must follow each platform\'s rules and each campaign brief. You must disclose partnerships and sponsored content as the law and the platforms require.', 'You can verify a TikTok, YouTube or Instagram account by putting a short code we give you in its bio; we then read the account\'s public page to see the code, or a person on our team looks at it. A verified account is one person\'s at a time, and we may remove a verification if we have reason to think it is wrong. Clips from a verified account can be approved automatically; clips from any other account are looked at by a person.'] },
-      { h: 'Prohibited conduct', p: ['No purchased, botted, incentivised or otherwise artificial views, likes or engagement; no re-use of other people\'s submissions; no content that breaks the brief, platform rules or law; no multiple accounts to circumvent limits.'] },
-      { h: 'Verification, rejection and clawback', p: ['We may reject clips, exclude views and reverse earnings, including after payment, where we find a breach or artificial activity. We may deduct reversed amounts from future payouts or require repayment.', 'If a submission is declined before anything has been paid for it, you can ask for a person to look at it again, once, from the Submissions page in your dashboard.'] },
-      { h: 'Payouts', p: [`Earnings can be withdrawn as soon as they are confirmed. Payouts are sent to the PayPal email you choose once your available balance reaches the minimum (currently $${SITE.minPayoutUsd}). Make sure the email is one you can sign in to: we cannot recover a payout sent to a wrong address. Details are in the Payments & Payouts policy.`] },
-      { h: 'Licence to Brands', p: ['You grant the Brand running a campaign a non-exclusive licence to repost, display and promote your approved clip, with credit to your handle where reasonably possible, for the purposes of the campaign. You keep ownership of your content.'] },
-      { h: 'Ending your use', p: ['You may stop at any time. Verified, unreversed earnings remain payable subject to the minimum and these terms.'] },
-    ],
-  },
-  {
-    slug: 'brand-terms',
-    title: 'Brand Terms',
-    summary: 'Additional terms for brands, artists and streamers who run campaigns.',
-    sections: [
-      { h: 'Scope', p: ['These terms apply to Brands (including agencies acting for clients) and supplement the Terms of Service.'] },
-      { h: 'Authority and rights', p: ['You confirm you own or control the rights to all material you supply in a campaign, including music, footage and brand assets, and may license them to Clippers for the purposes of the campaign. Agencies confirm they are authorised by each client.'] },
-      { h: 'Campaigns and briefs', p: ['You are responsible for the accuracy and legality of your brief. Briefs must not require Clippers to break the law, platform rules or third-party rights, or to make false claims. You must clearly state what is on and off limits.'] },
-      { h: 'Funding and spend', p: [`You keep one balance, which you add to with PayPal. Every campaign draws from it as Clippers earn: the amount a Clipper is paid for verified views, plus a ${SITE.platformFeePct}% platform fee charged on top of that amount (a Brand's first ${SITE.freeFeeCampaigns} campaigns carry no platform fee). Each campaign has a budget cap, which is the most it can pay Clippers in total; you can raise it, lower it (not below what has been paid) or move budget between campaigns at any time. If your balance cannot cover a payment, the campaign pauses until you add funds. You pay only for views that are verified under our checks, and money you have not spent stays in your balance and can be refunded on request. The smallest amount you can add at once is $${SITE.minTopUpUsd}.`] },
-      { h: 'Review and approvals', p: ['Our team reads every new campaign before it goes live and may decline, pause or end a campaign that breaks these terms. Submissions are checked by us. You can turn down a submission from your dashboard before it has been paid for. Once a submission\'s views have been verified and paid you cannot take that back, except where fraud or a breach of the brief is found.'] },
-      { h: 'Unspent budget', p: ['When a campaign ends or you close it, remaining budget returns to your balance and may be refunded in line with the Refund Policy.'] },
-      { h: 'No guarantees', p: ['We do not guarantee any number of clips, views or particular results from a campaign. Views on third-party platforms are subject to those platforms\' policies and algorithms.'] },
-      { h: 'Advertising compliance', p: ['You are responsible for ensuring campaigns comply with advertising, sponsorship-disclosure and consumer-protection laws, and for instructing Clippers to include required disclosures.'] },
-      { h: 'Indemnity', p: [`You will defend and indemnify ${C} against third-party claims arising from materials you provide or your campaign briefs.`] },
-    ],
-  },
-  {
-    slug: 'campaign-rules',
-    title: 'General Campaign Rules',
-    summary: 'The rules that apply to every campaign on logoless.',
-    sections: [
-      { h: 'Follow the brief', p: ['Each campaign has its own brief. If it conflicts with these general rules, the stricter rule applies.'] },
-      { h: 'Original, owned accounts', p: ['Post from accounts you own. Do not submit content you did not create or have the right to use, and do not repost another clipper\'s work.'] },
-      { h: 'Only genuine views', p: ['Views must come from real people. Do not use bots, view-for-pay services, engagement pods or any artificial method. Do not offer rewards to people for watching.'] },
-      { h: 'Keep clips live', p: ['A clip must stay public and unedited while the campaign runs and until we have confirmed its views. Deleting or privating a clip can stop earnings.'] },
-      { h: 'Use required tags and disclosures', p: ['Use any hashtags, tags or captions the brief requires and any partnership disclosure label the platform or law requires.'] },
-      { h: 'No harmful content', p: ['No hate, harassment, sexual content involving minors, graphic violence, dangerous acts, scams, misinformation or anything that breaks the law or platform rules.'] },
-      { h: 'Review and appeals', p: ['Submissions are checked automatically and by our team. If a submission is declined before anything has been paid for it, you can ask for a person to look at it again, once, from the Submissions page in your dashboard. Our decision after that review is final, subject to your legal rights.'] },
-      { h: 'Enforcement', p: ['Breaking these rules can lead to rejected clips, reversed earnings, removal from campaigns, account suspension and, where required, reports to platforms or authorities.'] },
-    ],
-  },
-  {
     slug: 'acceptable-use',
     title: 'Acceptable Use Policy',
     summary: 'What you may not do on or with the Service.',
@@ -104,22 +56,6 @@ const RAW: LegalDoc[] = [
       { h: 'General', p: ['Use the Service lawfully and in good faith. You must not:'] },
       { h: 'Prohibited activities', p: ['Manipulate views, engagement or payouts, including with bots, scripts, view farms, VPN or proxy rotation, or purchased traffic.', 'Create multiple or false accounts, impersonate others or misrepresent your affiliation.', 'Upload or link to content that is illegal, infringing, defamatory, hateful, sexually explicit involving minors, or that promotes self-harm or violence.', 'Scrape, reverse engineer, probe or disrupt the Service, or bypass access or rate limits.', 'Use the Service to launder money, evade sanctions, or finance illegal activity.', 'Send spam or unsolicited promotions to other users.'] },
       { h: 'Reporting', p: [`Report violations to ${SITE.emails.abuse}. We may investigate and take action, including removing content and closing accounts.`] },
-    ],
-  },
-  {
-    slug: 'payments',
-    title: 'Payments & Payouts',
-    summary: 'How funding, fees, payouts, taxes and reversals work.',
-    sections: [
-      { h: 'PayPal', p: ['All payments on logoless are processed by PayPal. By adding funds or receiving payouts you agree to PayPal\'s own terms and user agreement.'] },
-      { h: 'Funding campaigns', p: [`Brands add funds with PayPal. You can add between $${SITE.minTopUpUsd} and $${SITE.maxTopUpUsd.toLocaleString()} at a time. Funds sit in your ${S} balance, and your campaigns draw from it as Clippers earn, up to each campaign's budget cap.`] },
-      { h: 'Fees', p: [`Clippers keep everything they earn: the platform fee is never taken from a Clipper's earnings. Brands pay a ${SITE.platformFeePct}% platform fee on top of what Clippers are paid, so a $1,000 budget costs $${(1000 + (1000 * SITE.platformFeePct) / 100).toLocaleString()}. A Brand's first ${SITE.freeFeeCampaigns} campaigns carry no platform fee at all: they are counted in the order the campaigns were made, and a campaign we turn down is not counted. We pay the fees PayPal charges for taking your deposit and for sending a payout, so every dollar a Brand adds is credited in full and every dollar a Clipper withdraws is sent in full. If a payment involves a different currency, PayPal may apply its own currency conversion, which PayPal shows at the point of payment.`] },
-      { h: 'Earnings and balance', p: SITE.holdDays === 0 ? ['Verified views are converted into earnings at the campaign rate. Earnings are available to withdraw as soon as they are confirmed.'] : [`Verified views are converted into earnings at the campaign rate. Earnings are held for ${SITE.holdDays} days after they are confirmed, then become available. Only available earnings can be withdrawn.`] },
-      { h: 'Withdrawals', p: [`Clippers can withdraw once their available balance reaches $${SITE.minPayoutUsd}, to the PayPal email they choose. Large or unusual withdrawals are checked by a person first. Timing depends on that check, on PayPal and on your country.`] },
-      { h: 'Reversals and holds', p: ['We may delay, hold or reverse payments where we suspect fraud or artificial views, breach of terms, chargebacks, or where required by law or by PayPal.'] },
-      { h: 'Taxes', p: ['You are responsible for any taxes on your earnings. We and PayPal may collect tax information and report payments as required by law. Brands are responsible for any taxes due on their purchases.'] },
-      { h: 'Currencies', p: ['Campaign amounts are denominated in US dollars. If your payout account uses another currency, conversion is handled by PayPal and fees and exchange rates apply.'] },
-      { h: 'Disputes', p: [`If you think a payment is wrong, contact ${SITE.emails.support} within ${SITE.disputeDays} days.`] },
     ],
   },
   {
@@ -155,33 +91,6 @@ const RAW: LegalDoc[] = [
     ],
   },
   {
-    slug: 'refunds',
-    title: 'Refund Policy',
-    summary: 'When funds can be refunded to Brands.',
-    sections: [
-      { h: 'Unspent campaign budget', p: ['Budget not yet paid to Clippers can be returned to your balance at any time by closing the campaign, and refunded to your original payment method on request.'] },
-      { h: 'Funds already paid out', p: ['Amounts paid to Clippers for verified views are not refundable, except where we find fraud, in which case we will credit your balance.'] },
-      { h: 'Platform fee', p: ['The platform fee is charged on payouts and is refunded to the extent the related payout is reversed.'] },
-      { h: 'Duplicate or erroneous charges', p: [`Contact ${SITE.emails.support} within ${SITE.disputeDays} days and we will investigate and correct genuine errors.`] },
-      { h: 'Timing', p: [`Refunds are checked by a person and issued through PayPal. They usually appear ${SITE.refundNote}.`] },
-    ],
-  },
-  {
-    slug: 'external-links',
-    title: 'External Links & Profiles',
-    summary: `How links on ${S} profiles work, and what to know before you follow one.`,
-    sections: [
-      { h: 'What this covers', p: [`${S} members can add social links, a Discord invite and a website to their public profile. This page explains how those links are handled and what ${S} is and is not responsible for.`] },
-      { h: 'Links are added by members, not by us', p: [`Every link on a profile was added by the member who owns that profile. They are not official ${S} links, and ${S} does not own, run, check or endorse the sites, servers or accounts they lead to. A link appearing on ${S} is not a recommendation.`] },
-      { h: 'The leaving-site page', p: ['Website links open a short notice page first. It shows the full address you are about to visit, and you continue only after you press "I understand". Social links and Discord invites are limited to each platform\'s own domain, but they are still created by members, so the same care applies.'] },
-      { h: 'Staying safe', p: ['Check the address on the notice page before you continue. Never enter your password, a recovery code or payment details on a site you reached through a profile link unless you are certain it is the real service. We will never ask you to log in to logoless through a link on someone\'s profile.', 'Be careful with Discord invites and downloads, and never share a login or a verification code with someone you met through a link.'] },
-      { h: 'What members may not link to', p: ['Members may not link to phishing or scam pages, malware, sites that impersonate logoless or another business, illegal content, adult content, or anything that breaks our Acceptable Use Policy. Profile links must use https.'] },
-      { h: 'Reporting and removal', p: [`If you see a link that breaks these rules, report it to ${SITE.emails.abuse}. We may remove a link, hide a profile, or restrict an account without notice when we believe a link is harmful.`] },
-      { h: 'Our responsibility', p: [`To the fullest extent permitted by law, ${C} is not responsible for the content, availability, security or practices of any site reached through a member\'s profile, or for loss or damage that results from visiting one. Your use of a third-party site is at your own risk and under that site\'s own terms.`] },
-      { h: 'Contact', p: [`Questions about this page: ${SITE.emails.legal}.`] },
-    ],
-  },
-  {
     slug: 'accessibility',
     title: 'Accessibility',
     summary: `How ${S} works for people who use a keyboard, a screen reader or other assistive tools, and how to tell us when it does not.`,
@@ -197,6 +106,6 @@ const RAW: LegalDoc[] = [
 ]
 
 /** The legal text in the site's current wording (creator, submission). The saved wording below is left as it is. */
-export const LEGAL: LegalDoc[] = RAW.map((d) => ({ ...d, title: applyWording(d.title), summary: applyWording(d.summary), sections: d.sections.map((x) => ({ h: applyWording(x.h), p: x.p.map(applyWording) })) }))
+export const LEGAL: LegalDoc[] = RAW
 
 export const getLegal = (slug: string) => LEGAL.find((d) => d.slug === slug)

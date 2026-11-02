@@ -5,12 +5,9 @@ import { FingerprintPattern, Loader2 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
-import { useFeature } from '@/components/shell/features-provider'
-import { useTransitions } from '@/components/shell/transition-provider'
 import { OtpInput } from './email-ui'
 import {
   type Provider,
-  type Role,
   confirmSignup,
   requestPasswordReset,
   resendSignupCode,
@@ -48,15 +45,9 @@ function strength(p: string) {
   return Math.min(4, s)
 }
 
-/**
- * `variant="bio"` is the link-in-bio product: no "I am a creator or a brand" question, the page editor is where you land, and the name picked on the home page
- * (`claim`) is carried through signing in so the editor can take it.
- */
-export function AuthCard({ mode, variant, claim }: { mode: Mode; variant?: 'bio'; claim?: string }) {
+/** Signing in, creating an account and resetting a password. The page editor is where you land, and the name picked on the home page (`claim`) is carried through so the editor can take it. */
+export function AuthCard({ mode, claim }: { mode: Mode; claim?: string }) {
   const params = useSearchParams()
-  const { navigate } = useTransitions()
-  const bio = variant === 'bio'
-  const [role, setRole] = useState<Role>(params.get('role') === 'brand' ? 'brand' : 'clipper')
   const [busy, setBusy] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -66,7 +57,6 @@ export function AuthCard({ mode, variant, claim }: { mode: Mode; variant?: 'bio'
   const [second, setSecond] = useState('')
   const [code, setCode] = useState('')
   const [cooldown, setCooldown] = useState(0)
-  const passkeysOn = useFeature('passkeys')
   const [canPasskey, setCanPasskey] = useState(false)
   useEffect(() => setCanPasskey(passkeysSupported()), [])
   const [error, setError] = useState(
@@ -87,17 +77,17 @@ export function AuthCard({ mode, variant, claim }: { mode: Mode; variant?: 'bio'
 
   // ?next=/some-page sends the person back there afterwards (only paths on this site are accepted).
   const nextRaw = params.get('next')
-  const next = nextRaw && (/^\/(?!\/)[A-Za-z0-9\-_/?=&.%]*$/.test(nextRaw) || /^https:\/\/(owner|admin|dev)\.logoless\.io(\/[A-Za-z0-9\-_/?=&.%]*)?$/.test(nextRaw)) ? nextRaw : null
+  const next = nextRaw && /^\/(?!\/)[A-Za-z0-9\-_/?=&.%]*$/.test(nextRaw) ? nextRaw : null
   const bioHome = claim ? `/editor?claim=${encodeURIComponent(claim)}` : '/editor'
-  const where = bio ? (mode === 'signup' || !next ? bioHome : next) : next
-  const done = () => (where?.startsWith('https://') ? window.location.assign(where) : bio ? window.location.assign(where ?? bioHome) : navigate(where ?? (role === 'brand' && mode === 'signup' ? '/brand' : '/dashboard')))
+  const where = mode === 'signup' || !next ? bioHome : next
+  const done = () => window.location.assign(where)
   const fail = (e: unknown, fallback = 'Something went wrong. Please try again.') => setError(e instanceof Error ? e.message : fallback)
 
   const provider = async (p: Provider) => {
     setBusy(true)
     setError('')
     try {
-      await signInWithProvider(p, mode === 'signup' && !bio ? role : undefined, where ?? undefined)
+      await signInWithProvider(p, undefined, where)
     } catch (e) {
       fail(e)
       setBusy(false)
@@ -200,7 +190,7 @@ export function AuthCard({ mode, variant, claim }: { mode: Mode; variant?: 'bio'
   return (
     <motion.div initial={false} animate="show" variants={{ show: { transition: { staggerChildren: 0.05, delayChildren: 0.1 } } }} className="w-full max-w-[380px]">
       <motion.h1 variants={item} className="font-display text-[2.6rem] leading-[1.05]">
-        {twoStep ? 'One more step' : verifying ? 'Check your inbox' : bio && mode === 'signup' ? 'Create your page' : COPY[mode].title}
+        {twoStep ? 'One more step' : verifying ? 'Check your inbox' : mode === 'signup' ? 'Create your page' : COPY[mode].title}
       </motion.h1>
       <motion.p variants={item} className="mt-3 text-[15px] leading-relaxed text-mute">
         {twoStep ? (
@@ -210,7 +200,7 @@ export function AuthCard({ mode, variant, claim }: { mode: Mode; variant?: 'bio'
             We sent a 6 digit code to <span className="text-paper">{email}</span>.
           </>
         ) : (
-          bio && mode === 'signup' ? (claim ? <>You are claiming <span className="text-paper">logoless.io/{claim}</span>. Free, and it takes about a minute.</> : 'Free, and it takes about a minute.') : COPY[mode].sub
+          mode === 'signup' ? (claim ? <>You are claiming <span className="text-paper">logoless.io/{claim}</span>. Free, and it takes about a minute.</> : 'Free, and it takes about a minute.') : COPY[mode].sub
         )}
       </motion.p>
 
@@ -235,19 +225,6 @@ export function AuthCard({ mode, variant, claim }: { mode: Mode; variant?: 'bio'
           </motion.form>
         ) : !verifying ? (
           <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-            {mode === 'signup' && !bio && (
-              <motion.fieldset variants={item} className="mt-7">
-                <legend className={label}>I am a</legend>
-                <div className="grid grid-cols-2 gap-2">
-                  {(['clipper', 'brand'] as Role[]).map((r) => (
-                    <button key={r} type="button" aria-pressed={role === r} onClick={() => setRole(r)} className={cn('h-12 rounded-tile border text-sm transition-colors', role === r ? 'border-paper bg-paper text-ink' : 'border-line-strong text-mute hover:text-paper')}>
-                      {r === 'clipper' ? 'Creator' : 'Brand'}
-                    </button>
-                  ))}
-                </div>
-              </motion.fieldset>
-            )}
-
             {mode !== 'forgot' && (
               <>
                 <div className="mt-8 grid gap-2.5">
@@ -259,7 +236,7 @@ export function AuthCard({ mode, variant, claim }: { mode: Mode; variant?: 'bio'
                     <BrandIcon name="discord" className="size-[18px]" />
                     Continue with Discord
                   </ProviderButton>
-                  {mode === 'login' && passkeysOn && canPasskey && (
+                  {mode === 'login' && canPasskey && (
                     <ProviderButton disabled={busy} onClick={() => void withPasskey()}>
                       <FingerprintPattern aria-hidden="true" className="size-[18px]" />
                       Log in with a passkey
@@ -323,13 +300,6 @@ export function AuthCard({ mode, variant, claim }: { mode: Mode; variant?: 'bio'
                   <span>
                     I agree to the{' '}
                     <a href="/legal/terms" className="text-paper underline underline-offset-2">Terms</a>,{' '}
-                    {!bio && (
-                      <>
-                        <a href={role === 'brand' ? '/legal/brand-terms' : '/legal/clipper-terms'} className="text-paper underline underline-offset-2">
-                          {role === 'brand' ? 'Brand Terms' : 'Creator Terms'}
-                        </a>{' '}
-                      </>
-                    )}
                     and{' '}
                     <a href="/legal/privacy" className="text-paper underline underline-offset-2">Privacy Policy</a>, and I am 16 or older.
                   </span>
@@ -408,7 +378,7 @@ export function AuthCard({ mode, variant, claim }: { mode: Mode; variant?: 'bio'
         {mode === 'login' && (
           <>
             <p className="mb-3 text-[15px] text-mute">New to logoless?</p>
-            <a href={bio ? '/signup' : '/onboarding'} className="inline-flex h-12 w-full items-center justify-center rounded-pill border border-line-strong text-[15px] text-paper transition-colors hover:border-paper/50 hover:bg-white/[0.04]">
+            <a href="/signup" className="inline-flex h-12 w-full items-center justify-center rounded-pill border border-line-strong text-[15px] text-paper transition-colors hover:border-paper/50 hover:bg-white/[0.04]">
               Create an account
             </a>
           </>
@@ -416,7 +386,7 @@ export function AuthCard({ mode, variant, claim }: { mode: Mode; variant?: 'bio'
         {mode === 'signup' && (
           <p className="text-[15px] text-mute">
             Already have an account?{' '}
-            <a href={claim && bio ? `/login?next=${encodeURIComponent(`/editor?claim=${claim}`)}` : '/login'} className="text-paper underline underline-offset-4">Log in</a>
+            <a href={claim ? `/login?next=${encodeURIComponent(`/editor?claim=${claim}`)}` : '/login'} className="text-paper underline underline-offset-4">Log in</a>
           </p>
         )}
         {mode === 'forgot' && (

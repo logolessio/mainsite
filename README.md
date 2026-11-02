@@ -1,16 +1,20 @@
-# logoless: UI build
+# logoless
 
-Next.js 16 + Tailwind 4 + Framer Motion. UI only: every backend touchpoint is marked `TODO(backend)`.
+The link in bio for editors. Every person gets `logoless.io/<name>` (one character and up, punctuation anywhere): a full-screen page in black, white and grey with ten layouts, shader backgrounds, music, custom cursors and an enter screen, built in an editor at `/editor`.
+
+Next.js 16 + Tailwind 4 + Framer Motion on Cloudflare Workers (OpenNext) with D1. Sign in with Google, Discord or email.
 
     pnpm install && pnpm dev
 
-## Where to wire the backend
-- `lib/auth.ts`: Discord / Google / email sign-in, sign-up, password reset stubs
-- `app/{dashboard,brand,admin}/layout.tsx`: add session + role guards
-- `components/app/payouts-panel.tsx`: pick a PayPal email and withdraw
-- `components/app/add-funds.tsx`: PayPal checkout to add funds
-- `components/app/campaign-wizard.tsx`: create campaign
-- `components/app/review-queue.tsx`, `admin-tables.tsx`: admin data + actions (row types define the shape)
-- `lib/campaigns.ts`: placeholder campaigns, replace with DB
-- `lib/site.ts`: domain, company, emails, fee %, minimums (all shown in copy and legal text)
-- `lib/legal.ts`: starter legal text. Have counsel review before launch.
+## Where things are
+- `app/page.tsx`, `components/home/`: the parallax home page
+- `app/[slug]/page.tsx`, `components/bio/`: a person's page (layouts, shaders, music, cursors)
+- `app/editor`, `components/editor/`: the editor
+- `lib/bio.ts` (the page format), `lib/bio-store.ts` (pages and counters, kept in the `settings` table: no migration)
+- `auth.ts`, `components/auth/`: sign-in and sign-up
+- `lib/discord/`, `app/api/discord/`: the Discord bot (links accounts, gives roles) and its sign-in flow; `DISCORD_SERVER_SETUP.md`
+- `middleware.ts`: every other `*.logoless.io` address forwards to `logoless.io`
+- `lib/legal.ts`: the legal text. Have counsel review and rewrite it for this product.
+
+## Deploying
+Pushes to `main` are built and deployed by Cloudflare Workers Builds. `pnpm run cf:build` runs the same build locally. `wrangler.jsonc` lists the addresses attached to the worker: `logoless.io` must stay in it.

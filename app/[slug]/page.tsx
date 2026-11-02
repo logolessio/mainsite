@@ -1,26 +1,15 @@
 import type { Metadata } from 'next'
-import { headers } from 'next/headers'
-import { notFound, redirect } from 'next/navigation'
 import { connection } from 'next/server'
 import { BioFree } from '@/components/bio/bio-free'
 import { BioPage } from '@/components/bio/bio-page'
 import { BioPrivate } from '@/components/bio/bio-private'
-import { InviteBlocked } from '@/components/invite/invite-blocked'
-import { InviteWelcome } from '@/components/invite/invite-welcome'
-import { InviteWizard } from '@/components/invite/invite-wizard'
 import { bioLookup } from '@/lib/bio-page'
 import { bioHandleReserved } from '@/lib/bio-reserved'
+import { db } from '@/lib/db'
 import { handleProblem } from '@/lib/profile-style'
-import { db, nowSec } from '@/lib/db'
-import { clientSlugOf } from '@/lib/client-host'
-import { featureOn } from '@/lib/features'
-import { campaignIsFeeFree, feeFreeLeft } from '@/lib/fee-free'
-import { stepsFor } from '@/lib/invite-shared'
-import { inviteBySlug, maskEmail, parseData } from '@/lib/invites'
 import { getSession } from '@/lib/session'
-import { findOrCreateUser } from '@/lib/user'
 
-const INVITE_META: Metadata = { title: 'Your logoless page', robots: { index: false, follow: false } }
+const FREE_META: Metadata = { title: 'logoless', robots: { index: false, follow: false } }
 
 const decode = (s: string) => {
   try {
@@ -30,13 +19,12 @@ const decode = (s: string) => {
   }
 }
 
-/** logoless.io/<name> is a person's link-in-bio page; with the switch off (or no such person) it is an artist's invite, as it always was. */
+/** logoless.io/<name> is a person's link-in-bio page. */
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   await connection()
-  if (!(await featureOn('bio-site'))) return INVITE_META
   const handle = decode((await params).slug).toLowerCase()
   const found = await bioLookup(handle).catch(() => null)
-  if (!found) return INVITE_META
+  if (!found) return FREE_META
   const c = found.data.config
   const title = c.meta.title || `${found.data.name} (${found.data.handle})`
   const description = c.meta.description || found.data.bio || `${found.data.name} on logoless`
@@ -50,96 +38,26 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 
-type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ paid?: string; cancelled?: string; preview?: string; step?: string }> }
+type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ preview?: string }> }
 
-/**
- * logoless.io/<name>: a private page an admin made for an artist. Signed-out visitors see a welcome, the right account
- * claims the link, and the owner is walked through setting up their page and first campaign.
- */
 export default async function Page({ params, searchParams }: Props) {
   await connection()
   const { slug: raw } = await params
   const q = await searchParams
   const slug = decode(raw).toLowerCase()
-  // a person's own page (the link-in-bio product)
-  if (await featureOn('bio-site')) {
-    const found = await bioLookup(slug).catch(() => null)
-    if (found && !found.suspended) {
-      const session = await getSession()
-      let isOwner = false
-      if (session?.user?.email) {
-        const me = await (await db()).prepare('SELECT id FROM users WHERE email = ?1').bind(session.user.email.toLowerCase()).first<{ id: string }>()
-        isOwner = me?.id === found.userId
-      }
-      const hidden = !isOwner && (found.visibility === 'private' || (found.visibility === 'members' && !session?.user?.email))
-      if (hidden) return <BioPrivate handle={found.data.handle} kind={found.visibility === 'private' ? 'private' : 'members'} />
-      return <BioPage data={found.data} mode={isOwner && q.preview === '1' ? 'preview' : 'live'} />
-    }
-  }
-  // on its own address (kxng.logoless.io) only while client links are switched on; otherwise the visitor goes to logoless.io/kxng
-  const pkg = await featureOn('client-links')
-  const h = await headers()
-  if (h.get('x-client-host') && !pkg) {
-    const client = clientSlugOf(h.get('host') ?? '')
-    redirect(`${client?.main ?? ''}/${slug}`)
-  }
-  const STEPS = stepsFor(pkg)
-  const inv = await inviteBySlug(slug).catch(() => null)
-  if (!inv) {
-    // with the link-in-bio site on, a name nobody has yet is offered to the visitor (the page stands without the older site's shell, so the plain 404 cannot show here)
-    if (await featureOn('bio-site')) {
-      const usable = !handleProblem(slug, { loose: true }) && !bioHandleReserved(slug)
-      return <BioFree handle={slug} signedIn={Boolean((await getSession())?.user?.email)} state={usable ? 'free' : 'unavailable'} />
-    }
-    notFound()
-  }
-  if (inv.status === 'revoked') return <InviteBlocked kind="off" slug={slug} />
-
+  const found = await bioLookup(slug).catch(() => null)
   const session = await getSession()
-  const email = session?.user?.email?.toLowerCase()
-  const isAdmin = session?.user?.role === 'admin'
-  const lockedTo = inv.email_lock && inv.contact_email ? maskEmail(inv.contact_email) : null
-  const d = await db()
-
-  if (!email) {
-    await d.prepare('UPDATE artist_invites SET opens = opens + 1, opened_at = COALESCE(opened_at, ?2) WHERE id = ?1').bind(inv.id, nowSec()).run().catch(() => null)
-    return <InviteWelcome name={inv.artist_name} slug={slug} state="signedOut" lockedTo={lockedTo} />
-  }
-
-  const user = await findOrCreateUser(email, session?.user?.name, session?.user?.image)
-  if (user.status !== 'active') return <InviteBlocked kind="off" slug={slug} />
-
-  // an admin's dry run of the whole set-up, as the client would see it: nothing is saved
-  if (isAdmin && q.preview === '1') {
-    const at = Math.max(0, STEPS.findIndex((x) => x.id === q.step))
-    const sample = at > 0 ? { stageName: inv.artist_name, genres: ['Pop', 'R&B'], pitch: 'Late-night pop with big choruses, made in my bedroom in London.', links: { spotify: 'https://open.spotify.com/artist/0TnOYISbd1XYRBk9myaseg', instagram: 'novavale' }, projectTitle: 'Midnight Drive', projectKind: 'Single', spotify: ['https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC'], summary: 'A song about driving home at 3am with the windows down. We want it on every night-time edit and city timelapse.', clipThis: 'The chorus or hook\nNight drives and city lights', agreed: true } : {}
-    return <InviteWizard slug={slug} artistName={inv.artist_name} email={email} initialStep={at} initialData={sample} campaign={null} flash={null} pkg={pkg} preview />
-  }
-
-  if (!inv.user_id) {
-    if (!isAdmin) {
-      if (inv.email_lock && inv.contact_email && inv.contact_email.toLowerCase() !== email) return <InviteBlocked kind="email" slug={slug} hint={maskEmail(inv.contact_email)} />
-      await d.prepare('UPDATE artist_invites SET opens = opens + 1, opened_at = COALESCE(opened_at, ?2) WHERE id = ?1').bind(inv.id, nowSec()).run().catch(() => null)
+  if (found && !found.suspended) {
+    let isOwner = false
+    if (session?.user?.email) {
+      const me = await (await db()).prepare('SELECT id FROM users WHERE email = ?1').bind(session.user.email.toLowerCase()).first<{ id: string }>()
+      isOwner = me?.id === found.userId
     }
-    return <InviteWelcome name={inv.artist_name} slug={slug} state="unclaimed" email={email} lockedTo={lockedTo} admin={isAdmin} />
+    const hidden = !isOwner && (found.visibility === 'private' || (found.visibility === 'members' && !session?.user?.email))
+    if (hidden) return <BioPrivate handle={found.data.handle} kind={found.visibility === 'private' ? 'private' : 'members'} />
+    return <BioPage data={found.data} mode={isOwner && q.preview === '1' ? 'preview' : 'live'} />
   }
-
-  if (inv.user_id !== user.id) return <InviteBlocked kind="taken" slug={slug} />
-
-  const camp = inv.campaign_id ? await d.prepare('SELECT id, title, status, budget_cents FROM campaigns WHERE id = ?1').bind(inv.campaign_id).first<{ id: string; title: string; status: string; budget_cents: number }>() : null
-  // one of the brand's first campaigns carries no fee: this one if it is already made, the next one if it is not
-  const feeFree = camp ? await campaignIsFeeFree(camp.id) : (await feeFreeLeft(user.id)) > 0
-  return (
-    <InviteWizard
-      slug={slug}
-      artistName={inv.artist_name}
-      email={email}
-      initialStep={Math.min(inv.step, STEPS.length - 1)}
-      initialData={parseData(inv.data_json)}
-      campaign={camp ? { id: camp.id, title: camp.title, status: camp.status, budgetCents: camp.budget_cents } : null}
-      flash={q.paid ? 'paid' : q.cancelled ? 'cancelled' : null}
-      pkg={pkg}
-      feeFree={feeFree}
-    />
-  )
+  // nobody has this name: it is offered to the visitor (or, for a name the site keeps or that is not a name, said so)
+  const usable = !handleProblem(slug, { loose: true }) && !bioHandleReserved(slug)
+  return <BioFree handle={slug} signedIn={Boolean(session?.user?.email)} state={usable ? 'free' : 'unavailable'} />
 }

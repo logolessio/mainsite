@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { LegalDocView } from '@/components/legal/legal-doc'
+import { LegalDocView } from '@/components/legal/legal-view'
 import { LEGAL, getLegal } from '@/lib/legal'
 
 type Props = { params: Promise<{ slug: string }> }

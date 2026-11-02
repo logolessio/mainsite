@@ -18,7 +18,7 @@ export async function signInWithProvider(provider: Provider, role?: Role, callba
     .catch(() => ({}))) as Record<string, unknown>
   if (!providers[provider]) throw new Error(`${LABEL[provider]} sign-in is not set up yet.`)
   await ensureHuman() // Cloudflare Turnstile; skipped until its keys are added
-  await signIn(provider, { callbackUrl: callbackUrl ?? (role === 'brand' ? '/brand' : '/dashboard') }, hint && provider === 'google' ? { login_hint: hint } : undefined)
+  await signIn(provider, { callbackUrl: callbackUrl ?? '/editor' }, hint && provider === 'google' ? { login_hint: hint } : undefined)
   return ''
 }
 

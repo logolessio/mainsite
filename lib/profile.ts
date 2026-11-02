@@ -1,60 +1,19 @@
 import { db, nowSec } from './db'
 import { assertCanChangeHandle, recordHandleChange } from './handle-changes'
 import { HttpError } from './http'
-import { hmacHex, safeEqual } from './crypto'
-import { setting } from './db'
-import { avatarSrc, isLookKey, lookFor } from './looks'
-import {
-  BANNER_PRESET_IDS,
-  CARD_EFFECT_IDS,
-  CLIPPING_PLATFORMS,
-  MAX_LINKS,
-  NAME_EFFECT_IDS,
-  WARN_PLATFORMS,
-  type CardEffect,
-  type NameEffect,
-  DEFAULT_SHOW,
-  FONT_IDS,
-  HANDLE_RE,
-  HANDLE_RE_LOOSE,
-  handleProblem,
-  LINK_PLATFORMS,
-  RESERVED_WORDS,
-  SHOW_OPTIONS,
-  type FontId,
-  type ProfileLink,
-  type ProfileStats,
-  type ProfileView,
-  type ShowMap,
-} from './profile-style'
+import { isLookKey, lookFor } from './looks'
+import { parseExtras } from './profile-extras'
+import { DEFAULT_SHOW, handleProblem, HANDLE_RE_LOOSE, RESERVED_WORDS, type ProfileLink } from './profile-style'
 import type { UserRow } from './user'
-import { normalizeExtras, parseExtras } from './profile-extras'
-import { featureOn } from './features'
-import { reservedByAnother, reservedHandleFor } from './launch'
+import { reservedByAnother, reservedHandleFor } from './waitlist'
 
 type ProfileRow = {
   user_id: string
   handle: string
   display_name: string
   bio: string
-  country: string | null
   avatar_key: string | null
-  banner_kind: 'preset' | 'image' | 'color'
-  banner_value: string
-  dot_color: string
-  accent: string
-  accent2: string
-  name_effect: string
-  pronouns: string
-  card_effect: string
-  effect_intensity: number
-  effect_speed: number
-  font: string
   links_json: string
-  website: string | null
-  show_json: string
-  badges_json: string
-  niches_json: string
   style_json?: string
   created_at: number
   updated_at: number
@@ -69,45 +28,13 @@ const parse = <T>(s: string | null | undefined, fallback: T): T => {
 }
 
 const clean = (s: string) => s.replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim()
-const COLOR = /^#[0-9a-f]{6}$/i
-
-export function toView(row: ProfileRow, isStaff: boolean, online = false): ProfileView {
-  const show = { ...DEFAULT_SHOW, ...parse<Partial<ShowMap>>(row.show_json, {}) }
-  const links = parse<ProfileLink[]>(row.links_json, [])
-  return {
-    handle: row.handle,
-    displayName: row.display_name,
-    bio: row.bio,
-    avatar: avatarSrc(row.avatar_key, row.display_name, row.handle),
-    bannerKind: row.banner_kind,
-    banner: row.banner_kind === 'image' ? `/api/img/${row.banner_value}` : row.banner_value,
-    dotColor: row.dot_color,
-    accent: row.accent,
-    accent2: row.accent2,
-    font: (FONT_IDS.includes(row.font) ? row.font : 'geist') as FontId,
-    nameEffect: (NAME_EFFECT_IDS.includes(row.name_effect) ? row.name_effect : 'solid') as NameEffect,
-    cardEffect: (CARD_EFFECT_IDS.includes(row.card_effect) ? row.card_effect : 'none') as CardEffect,
-    effectIntensity: Number.isFinite(row.effect_intensity) ? row.effect_intensity : 50,
-    effectSpeed: Number.isFinite(row.effect_speed) ? row.effect_speed : 50,
-    pronouns: row.pronouns,
-    online: online && show.status,
-    links,
-    website: links.find((l) => l.platform === 'website')?.url ?? row.website,
-    badges: parse<string[]>(row.badges_json, []),
-    show,
-    joinedAt: row.created_at,
-    country: row.country,
-    isStaff,
-    extras: parseExtras(row.style_json),
-  }
-}
 
 function slug(email: string) {
   const base = email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 16)
   return base.length >= 3 ? base : `${base}user`.slice(0, 16)
 }
 
-/** The person's profile, created on first use with a handle taken from their email. */
+/** The person's profile (the name and words that sit on their page), created on first use with a handle taken from their email. */
 export async function ensureProfile(user: UserRow): Promise<ProfileRow> {
   const d = await db()
   const found = await d.prepare('SELECT * FROM profiles WHERE user_id = ?1').bind(user.id).first<ProfileRow>()
@@ -138,122 +65,46 @@ export async function ensureProfile(user: UserRow): Promise<ProfileRow> {
   return row
 }
 
+/** The profile behind logoless.io/<handle>, or null when nobody has that name (or the account is banned). */
 export async function profileByHandle(handle: string) {
-  // the looser rule accepts every older username too, so pages for "luna.ray" and "luna_ray" both work whatever the switch says
   if (!HANDLE_RE_LOOSE.test(handle.toLowerCase())) return null
-  const d = await db()
-  const row = await d
-    .prepare(
-      `SELECT p.*, u.role AS role, u.status AS status, u.last_seen_at AS last_seen FROM profiles p JOIN users u ON u.id = p.user_id WHERE p.handle = ?1`,
-    )
+  const row = await (await db())
+    .prepare('SELECT p.*, u.status AS status FROM profiles p JOIN users u ON u.id = p.user_id WHERE p.handle = ?1')
     .bind(handle.toLowerCase())
-    .first<ProfileRow & { role: string; status: string; last_seen: number | null }>()
+    .first<ProfileRow & { status: string }>()
   if (!row || row.status === 'banned') return null
-  const online = Boolean(row.last_seen && row.last_seen > nowSec() - 300)
-  return { row, view: toView(row, row.role === 'admin', online), userId: row.user_id, suspended: row.status === 'suspended' }
+  return {
+    row,
+    view: { handle: row.handle, displayName: row.display_name, bio: row.bio, links: parse<ProfileLink[]>(row.links_json, []), extras: parseExtras(row.style_json) },
+    userId: row.user_id,
+    suspended: row.status === 'suspended',
+  }
 }
 
-export async function profileStats(userId: string): Promise<ProfileStats> {
-  const d = await db()
-  const r = await d
-    .prepare(
-      `SELECT
-         (SELECT COUNT(*) FROM submissions WHERE user_id = ?1) AS clips,
-         (SELECT COALESCE(SUM(views_verified), 0) FROM submissions WHERE user_id = ?1) AS views,
-         (SELECT COALESCE(SUM(amount_cents), 0) FROM ledger WHERE user_id = ?1 AND account = 'clipper' AND kind = 'earning') AS earnedCents,
-         (SELECT COUNT(DISTINCT campaign_id) FROM submissions WHERE user_id = ?1) AS campaigns`,
-    )
-    .bind(userId)
-    .first<ProfileStats>()
-  return r ?? { clips: 0, views: 0, earnedCents: 0, campaigns: 0 }
-}
-
-// ---------- validation for saves ----------
-
-/** `loose` is the `username-punctuation` switch: dots and dashes are allowed too, and reserved words are found through punctuation. */
-export function validHandle(raw: string, isAdmin: boolean, loose = false) {
+/** A username as it is saved: lower case, with the punctuation the site allows, and not a reserved word (admins may take those). */
+export function validHandle(raw: string, isAdmin: boolean) {
   const h = raw.trim().toLowerCase().replace(/^@/, '')
-  if (loose) {
-    const problem = handleProblem(h, { loose: true, isAdmin })
-    if (problem) throw new HttpError(400, problem)
-    return h
-  }
-  if (!HANDLE_RE.test(h)) throw new HttpError(400, 'Usernames are 1 to 20 letters, numbers or underscores.')
-  if (!isAdmin && RESERVED_WORDS.some((w) => h.includes(w))) throw new HttpError(400, 'That name is reserved. Please pick another.')
+  const problem = handleProblem(h, { loose: true, isAdmin })
+  if (problem) throw new HttpError(400, problem)
   return h
-}
-
-const hostMatches = (host: string, allowed: readonly string[]) => allowed.some((a) => host === a || host.endsWith(`.${a}`))
-
-/** Only https links, no logins in the address, and each platform must point at its own domain ("website" may be any site). */
-export function cleanLinks(input: unknown): ProfileLink[] {
-  if (!Array.isArray(input)) return []
-  const out: ProfileLink[] = []
-  const seen = new Set<string>()
-  for (const item of input.slice(0, MAX_LINKS)) {
-    const platform = (item as { platform?: string })?.platform
-    const url = String((item as { url?: string })?.url ?? '').trim()
-    const meta = LINK_PLATFORMS.find((p) => p.id === platform)
-    if (!meta || !url || !CLIPPING_PLATFORMS.includes(meta.id)) continue
-    const u = safeUrl(url)
-    if (!u) throw new HttpError(400, `Use a full https:// address for ${meta.label}.`)
-    if (meta.hosts.length && !hostMatches(u.hostname, meta.hosts)) throw new HttpError(400, `That does not look like a ${meta.label} link.`)
-    if (seen.has(meta.id)) continue
-    seen.add(meta.id)
-    out.push({ platform: meta.id, url: u.toString().slice(0, 200) })
-  }
-  return out
-}
-
-export function safeUrl(raw: string): URL | null {
-  if (raw.length > 200) return null
-  try {
-    const u = new URL(raw)
-    if (u.protocol !== 'https:') return null
-    if (u.username || u.password) return null
-    const host = u.hostname.toLowerCase()
-    if (!host.includes('.') || host === 'localhost' || /^[\d.]+$/.test(host) || host.startsWith('[')) return null
-    return u
-  } catch {
-    return null
-  }
 }
 
 export type ProfileInput = {
   handle?: string
   displayName?: string
   bio?: string
-  avatar?: string | null // upload id, or null to go back to your sign-in picture
-  bannerKind?: 'preset' | 'image' | 'color'
-  banner?: string
-  dotColor?: string
-  accent?: string
-  accent2?: string
-  font?: string
-  nameEffect?: string
-  cardEffect?: string
-  effectIntensity?: number
-  effectSpeed?: number
-  pronouns?: string
-  links?: unknown
-  website?: string | null
-  show?: Partial<ShowMap>
-  badges?: string[]
-  country?: string | null
-  niches?: string[]
-  /** The profile studio choices. Partial: only the parts sent are changed. */
-  extras?: unknown
+  avatar?: string | null // upload id, or null to go back to the stand-in picture
 }
 
-/** Applies a profile edit. Returns which customisations actually changed, for achievements. */
-export async function saveProfile(user: UserRow, input: ProfileInput, opts: { /** A first username (onboarding, an invite) is not a change: it is not held to the weekly limit or logged. */ firstHandle?: boolean } = {}) {
+/** Applies an edit to the name, words, picture and username that sit on a page. Returns which parts actually changed. */
+export async function saveProfile(user: UserRow, input: ProfileInput, opts: { /** A first username (the name picked before signing up) is not a change: it is not held to the weekly limit or logged. */ firstHandle?: boolean } = {}) {
   const d = await db()
   const cur = await ensureProfile(user)
   const next = { ...cur }
   const changed: string[] = []
 
   if (input.handle !== undefined && input.handle.trim().toLowerCase().replace(/^@/, '') !== cur.handle) {
-    next.handle = validHandle(input.handle, user.role === 'admin', await featureOn('username-punctuation'))
+    next.handle = validHandle(input.handle, user.role === 'admin')
     if (await reservedByAnother(next.handle, user.email)) throw new HttpError(409, 'That username was reserved by someone on the waitlist.')
     if (!opts.firstHandle) await assertCanChangeHandle(user.id, user.role === 'admin')
     changed.push('handle')
@@ -277,177 +128,18 @@ export async function saveProfile(user: UserRow, input: ProfileInput, opts: { /*
       next.avatar_key = input.avatar
     }
   }
-  if (input.bannerKind !== undefined && input.banner !== undefined) {
-    if (input.bannerKind === 'preset') {
-      if (!BANNER_PRESET_IDS.includes(input.banner)) throw new HttpError(400, 'Unknown banner.')
-    } else if (input.bannerKind === 'color') {
-      if (!COLOR.test(input.banner)) throw new HttpError(400, 'Pick a valid banner colour.')
-      input.banner = input.banner.toLowerCase()
-    } else {
-      const own = await d
-        .prepare("SELECT id FROM uploads WHERE id = ?1 AND user_id = ?2 AND kind = 'banner'")
-        .bind(input.banner, user.id)
-        .first()
-      if (!own) throw new HttpError(400, 'Upload the banner image first.')
-    }
-    if (input.banner !== cur.banner_value || input.bannerKind !== cur.banner_kind) changed.push('banner')
-    next.banner_kind = input.bannerKind
-    next.banner_value = input.banner
-  }
-  if (input.dotColor !== undefined) {
-    if (!COLOR.test(input.dotColor)) throw new HttpError(400, 'Pick a valid dot colour.')
-    if (input.dotColor.toLowerCase() !== cur.dot_color.toLowerCase()) changed.push('dots')
-    next.dot_color = input.dotColor.toLowerCase()
-  }
-  if (input.accent !== undefined) {
-    if (!COLOR.test(input.accent)) throw new HttpError(400, 'Pick a valid accent colour.')
-    if (input.accent.toLowerCase() !== cur.accent.toLowerCase()) changed.push('accent')
-    next.accent = input.accent.toLowerCase()
-  }
-  if (input.accent2 !== undefined) {
-    if (!COLOR.test(input.accent2)) throw new HttpError(400, 'Pick a valid colour.')
-    next.accent2 = input.accent2.toLowerCase()
-  }
-  if (input.nameEffect !== undefined) {
-    if (!NAME_EFFECT_IDS.includes(input.nameEffect)) throw new HttpError(400, 'Unknown name style.')
-    if (input.nameEffect !== cur.name_effect) changed.push('font')
-    next.name_effect = input.nameEffect
-  }
-  if (input.cardEffect !== undefined) {
-    if (!CARD_EFFECT_IDS.includes(input.cardEffect)) throw new HttpError(400, 'Unknown effect.')
-    next.card_effect = input.cardEffect
-  }
-  if (input.effectIntensity !== undefined) next.effect_intensity = Math.min(100, Math.max(0, Math.round(Number(input.effectIntensity) || 0)))
-  if (input.effectSpeed !== undefined) next.effect_speed = Math.min(100, Math.max(0, Math.round(Number(input.effectSpeed) || 0)))
-  if (input.pronouns !== undefined) next.pronouns = clean(input.pronouns).slice(0, 30)
-  if (input.font !== undefined) {
-    if (!FONT_IDS.includes(input.font)) throw new HttpError(400, 'Unknown font.')
-    if (input.font !== cur.font) changed.push('font')
-    next.font = input.font
-  }
-  if (input.links !== undefined) {
-    const links = cleanLinks(input.links)
-    if (JSON.stringify(links) !== cur.links_json) changed.push('links')
-    next.links_json = JSON.stringify(links)
-  }
-  if (input.website !== undefined && input.links === undefined) {
-    const w = (input.website ?? '').trim()
-    if (!w) next.website = null
-    else {
-      const u = safeUrl(w)
-      if (!u) throw new HttpError(400, 'Use a full https:// address for your website.')
-      next.website = u.toString()
-    }
-    if (next.website !== cur.website) changed.push('website')
-  }
-  if (input.show !== undefined) {
-    const show = { ...DEFAULT_SHOW, ...parse<Partial<ShowMap>>(cur.show_json, {}) }
-    for (const o of SHOW_OPTIONS) if (typeof input.show[o.key] === 'boolean') show[o.key] = input.show[o.key] as boolean
-    next.show_json = JSON.stringify(show)
-  }
-  if (input.country !== undefined) {
-    const c = (input.country ?? '').toUpperCase()
-    next.country = /^[A-Z]{2}$/.test(c) ? c : null
-  }
-  if (input.niches !== undefined) {
-    const list = (Array.isArray(input.niches) ? input.niches : []).map((n) => clean(String(n)).slice(0, 24)).filter(Boolean)
-    next.niches_json = JSON.stringify([...new Set(list)].slice(0, 10))
-  }
-  if (input.badges !== undefined) {
-    if (!Array.isArray(input.badges) || input.badges.length > 5) throw new HttpError(400, 'You can equip up to 5 badges.')
-    const ids = [...new Set(input.badges.map(String))]
-    if (ids.length) {
-      const have = (
-        await d
-          .prepare(`SELECT badge_id FROM badges_unlocked WHERE user_id = ?1 AND badge_id IN (${ids.map((_, i) => `?${i + 2}`).join(',')})`)
-          .bind(user.id, ...ids)
-          .all<{ badge_id: string }>()
-      ).results.map((r) => r.badge_id)
-      if (have.length !== ids.length) throw new HttpError(400, 'You can only equip badges you have unlocked.')
-    }
-    next.badges_json = JSON.stringify(ids)
-    changed.push('badges')
-  }
-
-  let extrasJson: string | null = null
-  if (input.extras !== undefined) {
-    const was = parseExtras(cur.style_json)
-    const ex = normalizeExtras(input.extras, was)
-    // uploads must be the person's own, of the right kind
-    const own = async (id: string, kinds: string[]) =>
-      Boolean(await d.prepare(`SELECT id FROM uploads WHERE id = ?1 AND user_id = ?2 AND kind IN (${kinds.map((_, i) => `?${i + 3}`).join(',')})`).bind(id, user.id, ...kinds).first())
-    if (ex.bg.image && ex.bg.image !== was.bg.image && !(await own(ex.bg.image, ['background', 'banner']))) throw new HttpError(400, 'Upload the background picture first.')
-    if (/^[0-9a-f-]{36}$/.test(ex.bg.video) && ex.bg.video !== was.bg.video && !(await own(ex.bg.video, ['bgvideo']))) throw new HttpError(400, 'Upload the background video first.')
-    extrasJson = JSON.stringify(ex)
-    if (extrasJson !== JSON.stringify(was)) changed.push('extras')
-    next.style_json = extrasJson
-  }
 
   try {
     await d
-      .prepare(
-        `UPDATE profiles SET handle=?2, display_name=?3, bio=?4, country=?5, banner_kind=?6, banner_value=?7, dot_color=?8,
-           accent=?9, font=?10, links_json=?11, website=?12, show_json=?13, badges_json=?14, updated_at=?15, avatar_key=?16, accent2=?17, name_effect=?18, card_effect=?19, pronouns=?20, effect_intensity=?21, effect_speed=?22, niches_json=?23 WHERE user_id=?1`,
-      )
-      .bind(
-        user.id,
-        next.handle,
-        next.display_name,
-        next.bio,
-        next.country,
-        next.banner_kind,
-        next.banner_value,
-        next.dot_color,
-        next.accent,
-        next.font,
-        next.links_json,
-        next.website,
-        next.show_json,
-        next.badges_json,
-        nowSec(),
-        next.avatar_key,
-        next.accent2,
-        next.name_effect,
-        next.card_effect,
-        next.pronouns,
-        next.effect_intensity,
-        next.effect_speed,
-        next.niches_json,
-      )
+      .prepare('UPDATE profiles SET handle=?2, display_name=?3, bio=?4, avatar_key=?5, updated_at=?6 WHERE user_id=?1')
+      .bind(user.id, next.handle, next.display_name, next.bio, next.avatar_key, nowSec())
       .run()
   } catch (e) {
     if (/UNIQUE/i.test(e instanceof Error ? e.message : '')) throw new HttpError(409, 'That username is taken.')
     throw e
   }
   if (changed.includes('handle') && !opts.firstHandle) await recordHandleChange(user.id, cur.handle, next.handle)
-  // The name people see is the account's name everywhere (the greeting on the dashboard, emails, the team's lists), so the two never differ.
+  // The name people see is the account's name everywhere (emails, the team's lists), so the two never differ.
   if (next.display_name !== cur.display_name) await d.prepare('UPDATE users SET name = ?2 WHERE id = ?1').bind(user.id, next.display_name).run().catch(() => null)
-  // A statement of its own, so the rest of a save still works on a database that has not had 0014 applied yet.
-  if (extrasJson !== null) {
-    try {
-      await d.prepare('UPDATE profiles SET style_json = ?2 WHERE user_id = ?1').bind(user.id, extrasJson).run()
-    } catch (e) {
-      if (/no such column/i.test(e instanceof Error ? e.message : '')) throw new HttpError(503, 'These profile options are not ready yet. Please try again later.')
-      throw e
-    }
-  }
-  if (changed.includes('links')) {
-    // an account that was removed or changed is no longer verified
-    const { prune } = await import('./bio-verify')
-    await prune(user.id, parse<{ platform: string; url: string }[]>(next.links_json, [])).catch(() => {})
-  }
   return { profile: next, changed }
-}
-
-/** Signed link for the "you are leaving logoless" page, so it cannot be used to launder arbitrary addresses. */
-export async function externalHref(url: string) {
-  const secret = (await setting('AUTH_SECRET')) ?? 'logoless'
-  const sig = (await hmacHex(secret, `out|${url}`)).slice(0, 32)
-  return `/out?u=${encodeURIComponent(url)}&s=${sig}`
-}
-
-export async function verifyExternal(url: string, sig: string) {
-  const secret = (await setting('AUTH_SECRET')) ?? 'logoless'
-  const expect = (await hmacHex(secret, `out|${url}`)).slice(0, 32)
-  return safeEqual(expect, sig) && !!safeUrl(url)
 }

@@ -8,7 +8,6 @@ import { requestMeta } from '@/lib/log'
 import { hasHuman } from '@/lib/human'
 import { assertSameOrigin, body, HttpError, json, route } from '@/lib/http'
 import { hashPassword, passwordProblem } from '@/lib/password'
-import { getSetting } from '@/lib/settings'
 
 const schema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
@@ -26,7 +25,6 @@ export const POST = route(async (req: Request) => {
   if (!(await emailEnabled())) throw new HttpError(503, 'Email sign-up is not set up yet.')
   await limit(req, { name: 'signup', max: 8, windowSec: 600 })
   if (!(await hasHuman(req))) throw new HttpError(403, 'Please complete the human check first.')
-  if ((await getSetting('signups_paused')) === '1') throw new HttpError(503, 'New accounts are paused for a moment. Please try again soon.')
   const parsed = schema.safeParse(await body(req, 4 * 1024))
   if (!parsed.success) throw new HttpError(400, 'Enter a valid email address and a password.')
   const { email, password, name } = parsed.data

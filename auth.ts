@@ -110,7 +110,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => ({
       },
     }),
   ],
-  // a failed sign-in lands on /signin-problem, which sends people back to where they started (the pre-launch sign-up, or the login page)
+  // a failed sign-in lands on /signin-problem, which sends people back to the login page
   pages: { signIn: '/login', error: '/signin-problem' },
   // Why a sign-in failed, in the activity log (Admin, Logs, kind "error"): the person only sees "Sign-in did not complete", so the reason would otherwise be lost
   logger: {
@@ -167,26 +167,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => ({
       if (account?.provider === 'google') {
         const p = profile as { email_verified?: boolean; email?: string } | undefined
         if (p?.email_verified !== true) return false
-        // "Add Google" on the pre-launch sign-up: a signed note from the person's Discord session says which account this Google address should lead to
-        const { LINK_COOKIE, readIntent, claimAlias } = await import('./lib/google-link')
-        const cookie = req?.headers.get('cookie') ?? null
-        if (cookie?.includes(`${LINK_COOKIE}=`)) {
-          const intent = await readIntent(cookie)
-          if (intent && p.email) {
-            const r = await claimAlias(intent, p.email)
-            if (r !== 'ok' && r !== 'same') return `https://beta.logoless.io/onboarding?google=${r}`
-          }
-        }
         return true
       }
       return true
     },
-    // After signing in, people may be sent back to the dev, admin, beta (the pre-launch sign-up) or scroll address, but nowhere else.
+    // After signing in, people are sent back to a page on this site, but nowhere else.
     redirect({ url, baseUrl }) {
       if (url.startsWith('/')) return `${baseUrl}${url}`
       try {
         const u = new URL(url)
-        if (u.origin === baseUrl || /^https:\/\/(owner|admin|dev|scroll|beta)\.logoless\.io$/.test(u.origin)) return url
+        if (u.origin === baseUrl) return url
       } catch {
         /* not a URL */
       }
@@ -194,7 +184,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth((req) => ({
     },
     // TODO(backend): look the user up in your database here and put their real role (clipper, brand, admin) in the token.
     async jwt({ token, account }) {
-      // a Google address that was added to a Discord account on the pre-launch sign-up signs in to that account
+      // a Google address that was added to a Discord account on the pre-launch sign-up signs in to that account (see lib/google-link.ts)
       if (account?.provider === 'google' && token.email) {
         const { aliasTarget } = await import('./lib/google-link')
         const to = await aliasTarget(token.email)

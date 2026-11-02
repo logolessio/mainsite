@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { json, route } from '@/lib/http'
 import { handleProblem, HANDLE_RESERVED_MSG } from '@/lib/profile-style'
 import { bioHandleReserved } from '@/lib/bio-reserved'
-import { reservedByAnother } from '@/lib/launch'
+import { reservedByAnother } from '@/lib/waitlist'
 
 /** Is this name free? Open to everyone (it is what the home page asks as you type), so it is rate limited and tells nothing about who has a name. */
 export const GET = route(async (req: Request) => {

@@ -4,8 +4,6 @@ import { db, nowSec, uid } from './db'
 import { HttpError } from './http'
 import { ownerEmails } from './roles'
 import { getSession } from './session'
-import { overIpLimit, recordSignupIp } from './ip-limit'
-import { getSetting } from './settings'
 
 export type UserRow = {
   id: string
@@ -20,15 +18,12 @@ export type UserRow = {
   created_at: number
 }
 
-/** `fromDiscord`: the account is being made by the bot, so the request's address is Discord's, not the person's: the limit per address is skipped and no address is kept. */
-export async function findOrCreateUser(email: string, name?: string | null, image?: string | null, opts: { fromDiscord?: boolean } = {}): Promise<UserRow & { isNew: boolean }> {
+
+export async function findOrCreateUser(email: string, name?: string | null, image?: string | null, _opts: { fromDiscord?: boolean } = {}): Promise<UserRow & { isNew: boolean }> {
   const d = await db()
   const e = email.trim().toLowerCase()
   const existing = await d.prepare('SELECT * FROM users WHERE email = ?1').bind(e).first<UserRow>()
   if (existing) return { ...existing, isNew: false }
-  if ((await getSetting('signups_paused')) === '1') throw new HttpError(403, 'New accounts are paused for a moment. Please try again soon.')
-  // up to three accounts from one network address (the owner's own addresses are never held back)
-  if (!opts.fromDiscord && !(await isOwnerEmail(e)) && (await overIpLimit())) throw new HttpError(403, 'Too many accounts have been made from this network. If that is a mistake, contact support and we will sort it out.')
   const id = uid()
   await d
     .prepare('INSERT OR IGNORE INTO users (id, email, name, image, created_at) VALUES (?1, ?2, ?3, ?4, ?5)')
@@ -36,7 +31,6 @@ export async function findOrCreateUser(email: string, name?: string | null, imag
     .run()
   const row = await d.prepare('SELECT * FROM users WHERE email = ?1').bind(e).first<UserRow>()
   if (!row) throw new HttpError(500, 'Could not load your account.')
-  if (row.id === id && !opts.fromDiscord) await recordSignupIp(row.id)
   return { ...row, isNew: true }
 }
 

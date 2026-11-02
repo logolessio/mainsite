@@ -1,5 +1,4 @@
 import { db, nowSec, setting } from '../db'
-import { notify } from '../notify'
 import { addRole, botReady } from './api'
 import { getDiscordConfig } from './config'
 import { linkDiscord } from './link'
@@ -22,7 +21,7 @@ export async function oauthClient() {
 }
 
 /** A path on this site, or the settings page. Never an address on another site. */
-export const safeBack = (v: string | null | undefined) => (v && /^\/(?!\/)[\w\-./?=&%#]*$/.test(v) ? v : '/dashboard/settings')
+export const safeBack = (v: string | null | undefined) => (v && /^\/(?!\/)[\w\-./?=&%#]*$/.test(v) ? v : '/editor')
 
 export async function startConnect(userId: string, back: string) {
   const state = rand()
@@ -61,10 +60,6 @@ export async function finishConnect(a: { userId: string; code: string; state: st
   const botToken = await setting('DISCORD_BOT_TOKEN')
   if (cfg.guildId && botToken && token.scope.includes('guilds.join')) joined = await joinGuild({ botToken, guildId: cfg.guildId, discordId: me.id, accessToken: token.access, roles: [cfg.roles.unverified, cfg.roles.linked].filter(Boolean) })
   if (joined) await syncRoles(a.userId) // someone already in the server did not get the roles above
-  // account and Discord both done: the next steps in #get-started and the rundown by direct message, once (see welcome.ts)
-  const { welcomeOnce } = await import('./welcome')
-  await welcomeOnce(a.userId)
-  await notify(a.userId, { kind: 'account', title: 'Discord connected', body: `Linked to ${me.name}.${joined ? ' You are in the server now.' : ''} You will get your notifications there too.`, href: '/dashboard/settings', dedupe: `discord-linked:${me.id}:${nowSec()}` })
   return { ok: true, back, joined }
 }
 
