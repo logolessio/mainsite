@@ -6,7 +6,6 @@ import { BarChart3, Check, ExternalLink, ImageIcon, LayoutGrid, Link2, Loader2, 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BioPage } from '@/components/bio/bio-page'
 import { fontClass } from '@/components/bio/bits'
-import { Logo } from '@/components/logo'
 import { type BioConfig, DEFAULT_BIO } from '@/lib/bio'
 import type { BioStats } from '@/lib/bio-store'
 import { cn } from '@/lib/utils'
@@ -161,9 +160,6 @@ export function Editor({ claim }: { claim: string | null }) {
   return (
     <main className={cn('ed fixed inset-0 flex flex-col', fontClass('geist'))}>
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-[var(--ed-line)] px-4">
-        <a href="/" aria-label="logoless" className="shrink-0">
-          <Logo className="h-[1.15rem] [filter:brightness(0)_invert(1)]" />
-        </a>
         <span className="mx-auto hidden min-w-0 items-center gap-2 rounded-full border border-[var(--ed-line)] px-4 py-1.5 text-[0.8rem] text-white/70 sm:flex">
           <span className="truncate">logoless.io/{profile.handle}</span>
         </span>

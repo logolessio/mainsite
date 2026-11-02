@@ -1,5 +1,3 @@
-import { Logo } from '@/components/logo'
-
 /**
  * What logoless.io/<name> shows when nobody has that name: a short page in black and white that offers it. `taken` is for a name the site keeps for itself or
  * that is not a name at all, so the page just says so.
@@ -8,9 +6,6 @@ export function BioFree({ handle, signedIn, state }: { handle: string; signedIn:
   const href = signedIn ? `/editor?claim=${encodeURIComponent(handle)}` : `/signup?claim=${encodeURIComponent(handle)}`
   return (
     <main className="fixed inset-0 z-40 grid place-items-center overflow-y-auto bg-[#050505] px-6 text-center text-white [font-family:var(--font-geist-sans,system-ui,sans-serif)]">
-      <a href="/" aria-label="logoless" className="absolute top-6 left-6 md:top-8 md:left-10">
-        <Logo className="h-[1.3rem] [filter:brightness(0)_invert(1)]" />
-      </a>
       <div className="max-w-md">
         <p className="text-[0.8rem] tracking-[0.16em] text-white/40 uppercase">{state === 'free' ? 'Available' : 'Not available'}</p>
         <p className="mt-5 text-[clamp(2rem,7vw,3.4rem)] leading-[1.05] font-medium tracking-[-0.04em] break-all">

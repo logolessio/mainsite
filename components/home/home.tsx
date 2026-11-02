@@ -8,7 +8,6 @@ import { BioPage } from '@/components/bio/bio-page'
 import { fontClass } from '@/components/bio/bits'
 import type { BioPageData } from '@/components/bio/context'
 import { ShaderRunner, type ShaderId } from '@/components/bio/gl'
-import { Logo } from '@/components/logo'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 import { BIO_SHADERS, LAYOUTS } from '@/lib/bio'
 import { CURSORS, cursorCss, cursorSvg } from '@/lib/bio-cursors'
@@ -121,10 +120,7 @@ function Nav() {
   const [solid, setSolid] = useState(false)
   useMotionValueEvent(scrollY, 'change', (v) => setSolid(v > 40))
   return (
-    <header className={cn('fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between px-5 transition-all duration-500 md:px-10', solid ? 'border-b border-white/10 bg-black/60 backdrop-blur-xl' : 'border-b border-transparent')}>
-      <a href="/" aria-label="logoless" className="block">
-        <Logo className="h-[1.3rem] [filter:brightness(0)_invert(1)]" />
-      </a>
+    <header className={cn('fixed inset-x-0 top-0 z-50 grid h-16 grid-cols-[1fr_auto_1fr] items-center px-5 transition-all duration-500 md:px-10', solid ? 'border-b border-white/10 bg-black/60 backdrop-blur-xl' : 'border-b border-transparent')}>
       <nav className="hidden items-center gap-8 text-[0.86rem] text-white/60 md:flex" aria-label="Sections">
         {[['Layouts', '#layouts'], ['Backgrounds', '#backgrounds'], ['Cursors', '#cursors'], ['Everything else', '#more']].map(([n, h]) => (
           <a key={h} href={h} className="transition-colors hover:text-white">
@@ -132,7 +128,7 @@ function Nav() {
           </a>
         ))}
       </nav>
-      <div className="flex items-center gap-2">
+      <div className="col-start-3 flex items-center justify-self-end gap-2">
         <a href="/login" className="inline-flex h-10 items-center rounded-full px-4 text-[0.86rem] text-white/75 transition-colors hover:text-white">
           Log in
         </a>
@@ -494,9 +490,6 @@ function Outro() {
       </motion.div>
       <footer className="border-t border-white/10 bg-black px-5 py-10 md:px-10">
         <div className="mx-auto flex w-full max-w-[90rem] flex-wrap items-center justify-between gap-6 text-[0.82rem] text-white/45">
-          <a href="/" aria-label="logoless">
-            <Logo className="h-[1.1rem] [filter:brightness(0)_invert(1)] opacity-70" />
-          </a>
           <ul className="flex flex-wrap gap-x-6 gap-y-2">
             {[['Terms', '/legal/terms'], ['Privacy', '/legal/privacy'], ['Log in', '/login'], ['Get started', '/signup']].map(([n, h]) => (
               <li key={h}>

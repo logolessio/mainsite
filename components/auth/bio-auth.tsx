@@ -5,7 +5,6 @@ import { MotionConfig, useMotionValue } from 'framer-motion'
 import { Suspense } from 'react'
 import { fontClass } from '@/components/bio/bits'
 import { ShaderRunner } from '@/components/bio/gl'
-import { Logo } from '@/components/logo'
 import { TransitionProvider } from '@/components/shell/transition-provider'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 import { cn } from '@/lib/utils'
@@ -28,10 +27,7 @@ export function BioAuth({ mode, claim }: { mode: 'login' | 'signup' | 'forgot'; 
             <ShaderRunner id="liquid" tone={1} intensity={60} speed={34} px={px} py={py} level={level} reduced={reduced} />
             <div className="absolute inset-0 bg-black/55" />
           </div>
-          <header className="fixed inset-x-0 top-0 z-20 flex h-16 items-center justify-between px-5 md:px-10">
-            <a href="/" aria-label="logoless">
-              <Logo className="h-[1.3rem] [filter:brightness(0)_invert(1)]" />
-            </a>
+          <header className="fixed inset-x-0 top-0 z-20 flex h-16 items-center justify-end px-5 md:px-10">
             <a href="/" className="text-[0.84rem] text-white/60 transition-colors hover:text-white">
               Back
             </a>
