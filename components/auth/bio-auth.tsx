@@ -23,7 +23,6 @@ export function BioAuth({ mode, claim }: { mode: 'login' | 'signup' | 'forgot'; 
           <div aria-hidden="true" className="fixed inset-0 -z-10">
             <ShaderRunner id="liquid" tone={1} intensity={60} speed={34} px={px} py={py} level={level} reduced={reduced} />
             <div className="absolute inset-0 bg-black/55" />
-            <div className="speed absolute top-1/2 left-1/2 aspect-square w-[130vmax] -translate-x-1/2 -translate-y-1/2 opacity-40" />
           </div>
           <header className="fixed inset-x-0 top-0 z-20 flex h-16 items-center justify-end px-5 md:px-10">
             <a href="/" className="cap text-white/60 transition-colors hover:text-white">

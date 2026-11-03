@@ -6,7 +6,6 @@ export const metadata: Metadata = { title: 'Page not found | logoless', robots: 
 export default function NotFound() {
   return (
     <main className="ed fixed inset-0 z-40 grid place-items-center overflow-y-auto px-6 text-center">
-      <div aria-hidden="true" className="speed pointer-events-none absolute top-1/2 left-1/2 aspect-square w-[130vmax] -translate-x-1/2 -translate-y-1/2 opacity-50" />
       <div className="relative max-w-md">
         <p className="cap text-white/45">404</p>
         <p className="disp mt-5 text-[clamp(2.6rem,10vw,6rem)]">nothing here.</p>

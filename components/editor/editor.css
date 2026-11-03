@@ -100,15 +100,6 @@ html .ed.ed.ed .disp {
   letter-spacing: -0.05em;
   line-height: 0.84;
 }
-/* Japanese, set small and quiet, in whatever the device has */
-.ed .jp {
-  font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Noto Sans JP', 'Noto Sans CJK JP', var(--font-f-ibm-plex-mono), sans-serif;
-  font-weight: 500;
-}
-.ed .vert {
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-}
 /* a small caps label, the way a page number or a panel caption is set */
 .ed .cap {
   font-size: 0.68rem;
@@ -116,21 +107,6 @@ html .ed.ed.ed .disp {
   text-transform: uppercase;
 }
 
-/* screentone: a field of dots that fades out, the way a manga shades a page */
-.ed .tone {
-  background-image: radial-gradient(circle at center, rgb(255 255 255 / var(--tone-a, 0.85)) 0 1.1px, transparent 1.7px);
-  background-size: var(--tone-s, 7px) var(--tone-s, 7px);
-  -webkit-mask-image: var(--tone-mask, linear-gradient(to top, #000, transparent 72%));
-  mask-image: var(--tone-mask, linear-gradient(to top, #000, transparent 72%));
-}
-/* speed lines: hair-thin rays from one point, uneven on purpose */
-.ed .speed {
-  background:
-    repeating-conic-gradient(from 3deg at 50% 50%, rgb(255 255 255 / 0.2) 0deg 0.28deg, transparent 0.28deg 5.1deg),
-    repeating-conic-gradient(from 1deg at 50% 50%, rgb(255 255 255 / 0.12) 0deg 0.5deg, transparent 0.5deg 8.7deg);
-  -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 14%, #000 55%, transparent 92%);
-  mask-image: radial-gradient(circle at 50% 50%, transparent 14%, #000 55%, transparent 92%);
-}
 /* a button drawn with a hair line, square-cornered; it fills on hover */
 .ed .btn {
   display: inline-flex;
@@ -171,4 +147,10 @@ html .ed.ed.ed .disp {
 }
 .ed label > span:first-child:not([class]) {
   letter-spacing: 0.02em;
+}
+
+/* a stippled strip: fine white speckle on black, the way the reference frames its panels */
+.ed .stipple {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='1.05' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 9 -4.7'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 180px 180px;
 }
