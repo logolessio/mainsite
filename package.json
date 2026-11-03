@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "preview": "next build && next start",
-    "cf:build": "opennextjs-cloudflare build && node scripts/patch-open-next.mjs",
+    "cf:build": "(opennextjs-cloudflare build || opennextjs-cloudflare build) && node scripts/patch-open-next.mjs",
     "cf:preview": "pnpm run cf:build && opennextjs-cloudflare preview",
     "cf:deploy": "pnpm run cf:build && opennextjs-cloudflare deploy"
   },
