@@ -62,8 +62,8 @@ export function OverviewPanel({ api, data, go, onTour }: { api: EditorApi; data:
     <div className="ed-scroll h-full overflow-y-auto">
       <div className="mx-auto w-full max-w-[1180px] px-5 py-8 md:px-10 md:py-12">
         <header className="border-b border-[var(--ed-line)] pb-8">
-          <h1 className="disp text-[clamp(2.2rem,4.6vw,3.8rem)]">welcome back, {first}</h1>
-          <p className="mt-4 max-w-md text-[0.8rem] leading-[1.7] text-[var(--ed-mute)]">how your page is doing, and what is left to set up.</p>
+          <h1 className="text-[1.6rem] tracking-[-0.01em]">welcome back, {first}</h1>
+          <p className="mt-4 max-w-md text-[0.8rem] leading-[1.7] text-[var(--ed-mute)]">here is how your page is doing.</p>
           <button type="button" onClick={onTour} className="cap mt-5 inline-flex h-9 items-center gap-2 border border-[var(--ed-line2)] px-4 text-white/70 transition-colors hover:bg-white hover:text-black">
             <Sparkles className="size-3.5" /> take the tour again
           </button>
@@ -125,7 +125,7 @@ export function OverviewPanel({ api, data, go, onTour }: { api: EditorApi; data:
               {figures.map((f) => (
                 <div key={f.label} className="border-t border-[var(--ed-line2)] pt-4">
                   <p className="text-[0.76rem] text-[var(--ed-mute)]">{f.label}</p>
-                  <p className="disp mt-5 text-[clamp(2.4rem,4vw,3.6rem)] tabular-nums">{f.value}</p>
+                  <p className="mt-4 text-[clamp(2rem,3vw,2.6rem)] tracking-[-0.03em] tabular-nums">{f.value}</p>
                   <p className="mt-4 text-[0.74rem] text-[var(--ed-dim)]">{f.note}</p>
                 </div>
               ))}

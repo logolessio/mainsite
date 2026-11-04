@@ -4,7 +4,7 @@ import '@/components/editor/editor.css'
 import { AnimatePresence, type MotionValue, motion, useMotionValue, useMotionValueEvent, useScroll, useSpring, useTransform } from 'framer-motion'
 import { ArrowRight, Check, Loader2, X } from 'lucide-react'
 import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react'
-import { ARROW, CREAM, HARD, HEART, INK, JACKAL, MeshField, Mountains, Pixels, Say, SpeckFilter, Win, useMap } from '@/components/art/game'
+import { CREAM, HARD, HEART, INK, JACKAL, MeshField, Mountains, Pixels, Say, SpeckFilter, Win, useMap } from '@/components/art/game'
 import { BioPage } from '@/components/bio/bio-page'
 import type { BioPageData } from '@/components/bio/context'
 import { ShaderRunner, type ShaderId } from '@/components/bio/gl'
@@ -257,21 +257,10 @@ function Block({ title, children, className }: { title: string; children: ReactN
 
 /* ------------------------------------------------------------------ the title screen: what it is, shown with real pages */
 
-/** A small square label, like a tag on a game map. */
-function Tag({ children, solid = false, className, style }: { children: ReactNode; solid?: boolean; className?: string; style?: CSSProperties }) {
-  return (
-    <span style={{ background: solid ? CREAM : INK, color: solid ? INK : CREAM, ...style }} className={cn('pix inline-flex items-center gap-2 border px-2.5 py-1.5 text-[0.62rem] tracking-[0.1em] whitespace-nowrap uppercase', solid ? 'border-[#f4ead6]' : 'border-white/85', className)}>
-      {children}
-    </span>
-  )
-}
-
 /** Follows the pointer by up to `amt` pixels each way (still for people who asked for less motion). */
 function useDrift(p: MotionValue<number>, amt: number, reduced: boolean) {
   return useTransform(p, [-1, 1], reduced ? [0, 0] : [-amt, amt])
 }
-
-const SOURCES = ['instagram', 'tiktok', 'youtube', 'discord', 'x']
 
 function Hero() {
   const ref = useRef<HTMLElement>(null)
@@ -284,73 +273,48 @@ function Hero() {
   const backY = useMap(p, [0, 1], ['0vh', '-34vh'], reduced, '0vh')
   const midY = useMap(p, [0, 1], ['0vh', '-22vh'], reduced, '0vh')
   const frontY = useMap(p, [0, 1], ['0vh', '-10vh'], reduced, '0vh')
-  const tagY = useMap(p, [0, 1], ['0vh', '-46vh'], reduced, '0vh')
   const bx = useDrift(px, 30, reduced)
   const by = useDrift(py, 18, reduced)
   const mx = useDrift(px, 18, reduced)
   const my = useDrift(py, 11, reduced)
   const fx = useDrift(px, 8, reduced)
   const fy = useDrift(py, 5, reduced)
-  const tx = useDrift(px, -38, reduced)
-  const ty = useDrift(py, -22, reduced)
   return (
     <section ref={ref} id="top" className="relative overflow-hidden">
-      <i aria-hidden="true" data-say="this is logoless. one page for everything you make." className="absolute top-0 left-0 block h-px w-px" />
+      <i aria-hidden="true" data-say="this is logoless. your bio gets one link, so make it a page." className="absolute top-0 left-0 block h-px w-px" />
       <Mountains p={p} className="h-[40vh]" />
       <div className="relative z-10 mx-auto grid w-full max-w-[96rem] grid-cols-[minmax(0,1fr)] items-center gap-2 px-5 pt-[7rem] pb-[22vh] md:min-h-[100svh] md:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] md:gap-6 md:px-[5vw] md:pt-24 md:pb-[16vh]">
         <motion.div style={{ y: textY, opacity: textO }} className="relative z-20 min-w-0">
-          <Tag>a link in bio, for editors</Tag>
-          <h1 className="disp mt-5 text-[9.8vw] md:text-[clamp(2.4rem,5.1vw,6rem)]" style={{ color: CREAM, ...HARD }}>
-            one link
+          <h1 className="disp text-[9.8vw] md:text-[clamp(2.4rem,5.1vw,6rem)]" style={{ color: CREAM, ...HARD }}>
+            your bio gets
             <br />
-            for everything
+            one link.
             <br />
-            you make.
+            make it a page.
           </h1>
-          <p className="mt-6 max-w-[30rem] text-[0.84rem] leading-[1.75] text-white/85">logoless is a link in bio you design. claim logoless.io/yourname, put your edits, socials and music on one page, then put that one link in your bio.</p>
+          <p className="mt-6 max-w-[30rem] text-[0.84rem] leading-[1.75] text-white/85">logoless makes the page. put your edits, socials and music on it, pick how it looks, and paste logoless.io/yourname into your bio. it&apos;s free.</p>
           <div className="mt-7 max-w-[30rem]">
             <ClaimBar />
           </div>
-          <p className="mt-1 flex max-w-[30rem] flex-wrap items-center gap-x-2 gap-y-1.5 text-[0.66rem] text-white/75">
-            <span>works in your</span>
-            {SOURCES.map((s) => (
-              <span key={s} className="border border-white/45 px-1.5 py-0.5 tracking-[0.08em] uppercase">
-                {s}
-              </span>
-            ))}
-            <span>bio</span>
-          </p>
+          <p className="mt-1 max-w-[30rem] text-[0.7rem] leading-[1.7] text-white/70">works anywhere you can paste a link: instagram, tiktok, youtube, discord, x.</p>
         </motion.div>
 
         {/* real pages, at three depths */}
         <div aria-hidden="true" className="relative mx-auto h-[27rem] w-full max-w-[34rem] sm:h-[34rem] md:h-[44rem]">
           <div className="absolute top-0 left-1/2 h-[700px] w-[600px] origin-top -translate-x-1/2 scale-[0.6] sm:scale-[0.78] md:scale-100">
-            <motion.div style={{ y: backY }} className="absolute top-[150px] left-0">
-              <motion.div style={{ x: bx, y: by, rotate: -5 }}>
-                <Phone id="index" width={200} />
+            <motion.div style={{ y: backY }} className="absolute top-[200px] left-0">
+              <motion.div style={{ x: bx, y: by }}>
+                <Phone id="index" width={190} />
               </motion.div>
             </motion.div>
-            <motion.div style={{ y: midY }} className="absolute top-[90px] left-[400px]">
-              <motion.div style={{ x: mx, y: my, rotate: 5 }}>
-                <Phone id="bento" width={200} />
+            <motion.div style={{ y: midY }} className="absolute top-[70px] left-[390px]">
+              <motion.div style={{ x: mx, y: my }}>
+                <Phone id="bento" width={215} />
               </motion.div>
             </motion.div>
-            <motion.div style={{ y: frontY }} className="absolute top-[20px] left-[170px]">
+            <motion.div style={{ y: frontY }} className="absolute top-[20px] left-[160px]">
               <motion.div style={{ x: fx, y: fy }}>
                 <Phone id="aura" width={260} />
-              </motion.div>
-            </motion.div>
-            <motion.div style={{ y: tagY }} className="absolute inset-0 z-10">
-              <motion.div style={{ x: tx, y: ty }} className="relative h-full w-full">
-                <Tag solid className="absolute top-[56px] left-[6px]">
-                  logoless.io/luna
-                </Tag>
-                <Tag className="absolute top-[330px] left-[430px]">10 layouts</Tag>
-                <Tag className="absolute top-[520px] left-[20px]">live backgrounds</Tag>
-                <Tag className="absolute top-[610px] left-[400px]">
-                  <Pixels rows={ARROW} fill="#fff" className="size-3.5" />
-                  your own cursor
-                </Tag>
               </motion.div>
             </motion.div>
           </div>
@@ -363,14 +327,14 @@ function Hero() {
 /* ------------------------------------------------------------------ the story: it is all over the place, your bio fits one link, so make that link a page */
 
 const PILE = [
-  { t: 'best-edit.mp4', c: '#5fd1b6', x: 10, y: 44, d: 1.1, r: -5 },
-  { t: 'youtube', c: '#ec5a4f', x: 80, y: 40, d: 0.7, r: 4 },
-  { t: 'tiktok', c: '#2b4fa3', x: 88, y: 63, d: 1.3, r: -3 },
-  { t: 'discord', c: '#f19b78', x: 13, y: 68, d: 0.8, r: 3 },
-  { t: 'spotify', c: '#5fd1b6', x: 30, y: 78, d: 1.2, r: -4 },
-  { t: 'instagram', c: '#ec5a4f', x: 70, y: 77, d: 0.9, r: 5 },
-  { t: 'portfolio', c: '#2b4fa3', x: 24, y: 55, d: 0.6, r: 2 },
-  { t: 'email me', c: '#f19b78', x: 92, y: 50, d: 1.0, r: -2 },
+  { t: 'showreel_v3_FINAL.mp4', x: 14, y: 44, d: 1.1, r: -3 },
+  { t: 'youtube.com/@lunaray', x: 78, y: 40, d: 0.7, r: 2 },
+  { t: 'tiktok.com/@lunaray', x: 85, y: 63, d: 1.3, r: -2 },
+  { t: 'discord.gg/lunaray', x: 15, y: 68, d: 0.8, r: 1 },
+  { t: 'my spotify playlist', x: 33, y: 78, d: 1.2, r: -2 },
+  { t: 'instagram.com/lunaray', x: 68, y: 77, d: 0.9, r: 3 },
+  { t: 'old portfolio (2023)', x: 27, y: 55, d: 0.6, r: 1 },
+  { t: 'luna@lunaray.co', x: 90, y: 50, d: 1.0, r: -1 },
 ] as const
 /** Where the one link sits on the stage, in vw and vh. */
 const SLOT = { x: 50, y: 62 }
@@ -395,10 +359,7 @@ function Chip({ p, chip, i }: { p: MotionValue<number>; chip: (typeof PILE)[numb
   return (
     <div className={cn('absolute z-20 -translate-x-1/2 -translate-y-1/2', i > 5 && 'hidden sm:block')} style={{ left: `${chip.x}%`, top: `${chip.y}%` }}>
       <motion.div style={{ x, y, scale, opacity, rotate: chip.r }}>
-        <Tag>
-          <span aria-hidden="true" className="size-2 shrink-0" style={{ background: chip.c }} />
-          {chip.t}
-        </Tag>
+        <span className="block border border-[#0c1544]/40 bg-[#f4ead6] px-3 py-1.5 text-[0.72rem] whitespace-nowrap text-[#0c1544] shadow-[2px_2px_0_#0c1544]">{chip.t}</span>
       </motion.div>
     </div>
   )
@@ -482,12 +443,18 @@ function PageWin({ p, still = false }: { p: MotionValue<number> | null; still?: 
       <motion.div style={{ opacity: co }} className="pointer-events-none absolute inset-0 hidden md:block">
         {left.map(([t, pos]) => (
           <motion.div key={t} style={{ x: cx }} className={cn('absolute right-full mr-9', pos)}>
-            <Tag solid>{t} →</Tag>
+            <span className="flex items-center gap-2 text-[0.8rem] whitespace-nowrap text-white [text-shadow:0_1px_0_#0c1544]">
+              {t}
+              <span aria-hidden="true" className="h-px w-8 bg-white/80" />
+            </span>
           </motion.div>
         ))}
         {right.map(([t, pos]) => (
           <motion.div key={t} style={{ x: ncx }} className={cn('absolute left-full ml-9', pos)}>
-            <Tag solid>← {t}</Tag>
+            <span className="flex items-center gap-2 text-[0.8rem] whitespace-nowrap text-white [text-shadow:0_1px_0_#0c1544]">
+              <span aria-hidden="true" className="h-px w-8 bg-white/80" />
+              {t}
+            </span>
           </motion.div>
         ))}
       </motion.div>
@@ -530,9 +497,8 @@ function StoryStatic() {
     <section id="story" className="relative mx-auto grid w-full max-w-[72rem] gap-12 px-5 py-[14vh] md:grid-cols-[1fr_auto] md:px-12">
       <i aria-hidden="true" data-say="you make things in a lot of places. your bio fits one link. so make that link a page." className="absolute top-0 left-0 block h-px w-px" />
       <ol className="grid content-start gap-8">
-        {CAPTIONS.map((t, i) => (
+        {CAPTIONS.map((t) => (
           <li key={t} className="flex gap-5">
-            <span className="pix pt-2 text-[0.7rem] text-white/60">{String(i + 1).padStart(2, '0')}</span>
             <h2 className="disp text-[clamp(1.9rem,4vw,3.6rem)] leading-[0.95]" style={{ color: CREAM, ...HARD }}>
               {t}
             </h2>
@@ -551,77 +517,31 @@ function Story() {
   return reduced ? <StoryStatic /> : <StoryPinned />
 }
 
-/* ------------------------------------------------------------------ how it works: three steps, climbing at different speeds */
+/* ------------------------------------------------------------------ how it works */
 
-const STEPS = [
-  { n: '01', t: 'claim your name', win: 'step-01.txt' },
-  { n: '02', t: 'build your page', win: 'step-02.txt' },
-  { n: '03', t: 'put it in your bio', win: 'step-03.txt' },
+const HOW = [
+  { t: 'pick your name', d: 'sign in with google, discord or email and take the name you want. one letter is fine. if someone already has it, they have it.' },
+  { t: 'put your stuff on it', d: 'links, your socials, videos that play on the page, a song. then choose a layout, a background and a cursor. it changes in front of you as you go.' },
+  { t: 'paste the link in your bio', d: 'logoless.io/yourname goes wherever your bio lets you put a link: instagram, tiktok, youtube, discord. every click lands on your page.' },
 ] as const
 
 function Steps() {
-  const ref = useRef<HTMLElement>(null)
-  const { reduced } = useMotionPrefs()
-  const { scrollYProgress: p } = useScroll({ target: ref, offset: ['start end', 'end start'] })
-  const y1 = useMap(p, [0, 1], ['4vh', '-4vh'], reduced, '0vh')
-  const y2 = useMap(p, [0, 1], ['10vh', '-10vh'], reduced, '0vh')
-  const y3 = useMap(p, [0, 1], ['16vh', '-16vh'], reduced, '0vh')
-  const ys = [y1, y2, y3]
   return (
     <Scene id="how" className="px-5 py-[14vh] md:px-12" innerClass="mx-auto w-full max-w-[72rem]">
-      <section ref={ref}>
-        <i aria-hidden="true" data-say="three steps. about a minute." className="absolute top-0 left-0 block h-px w-px" />
-        <h2 className="disp text-[clamp(2.4rem,6.4vw,6rem)]" style={{ color: CREAM, ...HARD }}>
-          three steps.
-          <br />
-          about a minute.
+      <i aria-hidden="true" data-say="how it works." className="absolute top-0 left-0 block h-px w-px" />
+      <div className="grid gap-10 md:grid-cols-[1fr_1.35fr] md:gap-16">
+        <h2 className="disp text-[clamp(2.4rem,5.6vw,5.2rem)]" style={{ color: CREAM, ...HARD }}>
+          how it works
         </h2>
-        <p className="mt-5 max-w-[26rem] text-[0.8rem] leading-[1.75] text-white/80">no website to build and nothing to host. you sign in, make a page, and put one link where your bio lets you.</p>
-        <div className="mt-14 grid gap-12 md:mt-20 md:grid-cols-3 md:items-start md:gap-6">
-          {STEPS.map((s, i) => (
-            <motion.div key={s.n} style={{ y: ys[i] }} className={cn(i === 1 && 'md:mt-16', i === 2 && 'md:mt-32')}>
-              <p className="disp mb-4 text-[clamp(3rem,6vw,5.4rem)] text-white/90" style={HARD}>
-                {s.n}
-              </p>
-              <Win title={s.win}>
-                {i === 0 && (
-                  <div className="p-4">
-                    <div className="flex h-10 items-center border border-[#0c1544] bg-white/60 px-3 text-[0.78rem]">
-                      <span className="opacity-50">logoless.io/</span>
-                      <span>lunaray</span>
-                      <span className="ml-auto grid size-5 place-items-center" style={{ background: '#5fd1b6' }}>
-                        <Check className="size-3" />
-                      </span>
-                    </div>
-                    <p className="mt-3 text-[0.74rem] leading-[1.6] opacity-75">free. one letter is fine, dots and dashes too. sign in with google, discord or email.</p>
-                  </div>
-                )}
-                {i === 1 && (
-                  <div className="grid gap-2 p-4">
-                    {[['link', 'showreel 2026'], ['link', 'book me'], ['socials', 'instagram, tiktok, youtube'], ['video', 'plays on the page'], ['music', 'starts when they enter']].map(([k, v]) => (
-                      <div key={k + v} className="flex items-center gap-3 border border-[#0c1544]/40 px-3 py-2 text-[0.72rem]">
-                        <span className="pix w-14 shrink-0 text-[0.58rem] tracking-wider uppercase opacity-55">{k}</span>
-                        <span className="min-w-0 truncate">{v}</span>
-                      </div>
-                    ))}
-                    <p className="pix mt-1 text-[0.6rem] tracking-wider uppercase opacity-60">then pick a layout, a background and a cursor</p>
-                  </div>
-                )}
-                {i === 2 && (
-                  <div className="p-4">
-                    <div className="border border-[#0c1544]/40 p-3 text-[0.74rem]">
-                      <p className="pix text-[0.58rem] tracking-wider uppercase opacity-55">your bio</p>
-                      <p className="mt-1">edits. london. a new video every week.</p>
-                      <p className="mt-2 text-[#2b4fa3] underline decoration-dotted underline-offset-4">logoless.io/lunaray</p>
-                    </div>
-                    <p className="mt-3 text-[0.74rem] leading-[1.6] opacity-75">paste it where your bio lets you: instagram, tiktok, youtube, discord, x. every click lands on your page.</p>
-                  </div>
-                )}
-              </Win>
-            </motion.div>
+        <ol className="border-t border-white/40">
+          {HOW.map((h) => (
+            <li key={h.t} className="grid gap-2 border-b border-white/25 py-6 md:grid-cols-[12.5rem_1fr] md:gap-8">
+              <h3 className="text-[0.95rem] text-white">{h.t}</h3>
+              <p className="text-[0.8rem] leading-[1.75] text-white/75">{h.d}</p>
+            </li>
           ))}
-        </div>
-      </section>
+        </ol>
+      </div>
     </Scene>
   )
 }
@@ -634,8 +554,6 @@ function Impact() {
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
   const p = useSpring(scrollYProgress, { stiffness: 140, damping: 30, mass: 0.35 })
   const flash = useMap(p, [0.08, 0.13, 0.26, 0.36], [0, 1, 1, 0], reduced, 0)
-  const echoY = useMap(p, [0.3, 1], ['30vh', '-34vh'], reduced, '0vh')
-  const echo2Y = useMap(p, [0.3, 1], ['12vh', '-16vh'], reduced, '0vh')
   const x1 = useMap(p, [0.34, 0.5], ['-70vw', '0vw'], reduced, '0vw')
   const x2 = useMap(p, [0.4, 0.56], ['70vw', '0vw'], reduced, '0vw')
   const x3 = useMap(p, [0.46, 0.62], ['-70vw', '0vw'], reduced, '0vw')
@@ -650,12 +568,6 @@ function Impact() {
       <i aria-hidden="true" data-say="yours can be a whole screen." className="absolute top-[64%] left-0 block h-px w-px" />
       <div className="sticky top-0 h-[100svh] overflow-hidden">
         <Mountains p={p} className="opacity-90" />
-        <motion.span aria-hidden="true" style={{ y: echoY }} className="disp absolute top-[34%] -left-[2%] text-[clamp(9rem,30vw,28rem)] text-transparent [-webkit-text-stroke:1.4px_rgb(244_234_214/0.28)]">
-          place
-        </motion.span>
-        <motion.span aria-hidden="true" style={{ y: echo2Y }} className="disp absolute top-[8%] right-[-2%] text-[clamp(5rem,16vw,15rem)] text-transparent [-webkit-text-stroke:1.4px_rgb(244_234_214/0.22)]">
-          moves
-        </motion.span>
         <div className="relative mx-auto flex h-full w-full max-w-[96rem] flex-col justify-center px-5 pb-24 md:px-14">
           <h2 className="disp text-[clamp(3rem,11.4vw,11rem)]" style={{ color: CREAM, ...HARD }}>
             <motion.span style={{ x: x1, opacity: o1 }} className="block">
@@ -709,7 +621,6 @@ function Layouts() {
               {LAYOUTS.map((l, n) => (
                 <li key={l.id} className="border-b border-white/15 first:border-t">
                   <div className={cn('flex items-baseline gap-4 py-2.5 transition-colors duration-500', n === i ? 'text-white' : 'text-white/35')}>
-                    <span className="text-[0.66rem] tabular-nums">{String(n + 1).padStart(2, '0')}</span>
                     <span className="text-[0.95rem] tracking-[0.03em] uppercase">{l.name}</span>
                   </div>
                   <AnimatePresence initial={false}>
@@ -723,7 +634,7 @@ function Layouts() {
               ))}
             </ol>
             <p className="text-center text-[0.84rem] text-white/70 md:hidden">
-              <span className="tabular-nums text-white/45">{String(i + 1).padStart(2, '0')}</span> {LAYOUTS[i].name.toLowerCase()}: {LAYOUTS[i].note}
+              {LAYOUTS[i].name.toLowerCase()}: {LAYOUTS[i].note}
             </p>
             <motion.div style={{ rotate: tilt, y: lift }} className="relative mx-auto">
               <div className="relative h-[21.5rem] w-[194px] overflow-hidden border border-white/35 bg-black shadow-[0_50px_140px_rgb(0_0_0/0.9)] sm:h-[30rem] sm:w-[270px] md:h-[32rem] md:w-[286px]">
@@ -787,7 +698,6 @@ function Backgrounds() {
               <ul className="hidden w-52 text-[0.74rem] sm:block" aria-label="backgrounds">
                 {BIO_SHADERS.map((b, n) => (
                   <li key={b.id} className={cn('flex items-baseline gap-4 border-t py-1.5 transition-colors duration-500', n === i ? 'border-white text-white' : 'border-white/25 text-white/45')}>
-                    <span className="text-[0.62rem] tabular-nums">{String(n + 1).padStart(2, '0')}</span>
                     {b.name.toLowerCase()}
                   </li>
                 ))}
@@ -808,8 +718,8 @@ function Practices() {
   return (
     <Scene className="px-4 py-[14vh] md:px-12" innerClass="mx-auto w-full max-w-[64rem]">
       <div className="relative border border-white/40 bg-[#0c1544] px-6 py-14 md:px-16 md:py-20">
-        <i aria-hidden="true" data-say="simple on purpose." className="absolute top-0 left-0 block h-px w-px" />
-        <h2 className="disp text-[clamp(2.4rem,7vw,6.4rem)]">simple on purpose</h2>
+        <i aria-hidden="true" data-say="a page, not a website builder." className="absolute top-0 left-0 block h-px w-px" />
+        <h2 className="disp text-[clamp(2.4rem,7vw,6.4rem)]">a page, not a website builder</h2>
         <span className="mt-6 block h-px w-14 bg-white/70" />
         <p className="mt-8 max-w-[28rem] text-[0.84rem] leading-[1.8] text-white/75">made for editors who got tired of sending people to a list of white buttons. a name, a page, a few good choices. then it gets out of the way.</p>
         <div className="mt-14 grid gap-12 md:grid-cols-2 md:gap-16">
@@ -910,12 +820,12 @@ function Exchange({ q, tag, a, index }: { q: string; tag: string; a: string; ind
   return (
     <div ref={ref} className="grid gap-6 md:gap-8">
       <motion.div style={{ x: qx, opacity: qo }} className="max-w-[30rem]">
-        <Say who={`question ${String(index + 1).padStart(2, '0')}`}>
+        <Say who="you">
           <span className="text-[0.88rem] tracking-[0.04em] uppercase">{q}</span>
         </Say>
       </motion.div>
       <motion.div style={{ x: ax, opacity: ao, rotate: ar }} className="max-w-[34rem] justify-self-end">
-        <Say who="answer" solid>
+        <Say who="us" solid>
           <span className="block text-[0.7rem] tracking-[0.16em] uppercase">↓ {tag}</span>
           <span className="mt-2 block text-[0.8rem] leading-[1.75] text-black/80">{a}</span>
         </Say>
@@ -928,9 +838,8 @@ function Dialogue() {
   return (
     <section id="faq" className="relative mx-auto w-full max-w-[56rem] px-5 py-[16vh] md:px-12">
       <i aria-hidden="true" data-say="questions? answered short." className="absolute top-0 left-0 block h-px w-px" />
-      <h2 className="disp text-[clamp(2.6rem,7vw,6.4rem)]" style={{ color: CREAM, ...HARD }}>common questions</h2>
-      <p className="mt-5 text-[0.74rem] text-white italic">asked a lot, answered short</p>
-      <div className="mt-[10vh] grid gap-[14vh]">
+      <h2 className="disp text-[clamp(2.6rem,7vw,6.4rem)]" style={{ color: CREAM, ...HARD }}>questions</h2>
+            <div className="mt-[10vh] grid gap-[14vh]">
         {TALK.map((t, i) => (
           <Exchange key={t.q} index={i} {...t} />
         ))}

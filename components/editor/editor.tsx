@@ -215,7 +215,7 @@ export function Editor({ claim }: { claim: string | null }) {
         ) : (
           <div className="ed-scroll h-full overflow-y-auto">
             <div className="mx-auto w-full max-w-2xl px-4 py-8 md:py-12">
-              <h1 className="disp mb-8 text-[clamp(2rem,4vw,3.2rem)]">{tab}</h1>
+              <h1 className="mb-8 text-[1.6rem] tracking-[-0.01em]">{tab}</h1>
               <div className="border border-[var(--ed-line)]">{panel}</div>
             </div>
           </div>
