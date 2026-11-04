@@ -1,9 +1,10 @@
 'use client'
 
 import '@/components/editor/editor.css'
-import { AnimatePresence, type MotionValue, motion, useMotionTemplate, useMotionValue, useMotionValueEvent, useScroll, useSpring, useTransform } from 'framer-motion'
-import { ArrowRight, Check, Loader2, UserRound, X } from 'lucide-react'
+import { AnimatePresence, type MotionValue, motion, useMotionValue, useMotionValueEvent, useScroll, useSpring, useTransform } from 'framer-motion'
+import { ArrowRight, Check, Loader2, X } from 'lucide-react'
 import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react'
+import { ARROW, CREAM, HARD, HEART, INK, JACKAL, MeshField, Mountains, Pixels, Say, SpeckFilter, Win, useMap } from '@/components/art/game'
 import { BioPage } from '@/components/bio/bio-page'
 import type { BioPageData } from '@/components/bio/context'
 import { ShaderRunner, type ShaderId } from '@/components/bio/gl'
@@ -16,11 +17,6 @@ import { type SampleId, SAMPLES } from './samples'
 const EASE = [0.2, 0.8, 0.2, 1] as const
 /** A value that never moves (the music level of a page that has none). */
 const useQuiet = () => useMotionValue(0)
-
-/** A scroll-driven value. People who asked for less motion get `rest` instead, and nothing moves. */
-function useMap<T extends number | string>(p: MotionValue<number>, input: number[], output: T[], reduced: boolean, rest: T): MotionValue<T extends number ? number : string> {
-  return useTransform(p, input, reduced ? input.map(() => rest) : output) as unknown as MotionValue<T extends number ? number : string>
-}
 
 /** The pointer over a box, -1 to 1 from its middle, smoothed. */
 function usePointer(ref: React.RefObject<HTMLElement | null>) {
@@ -120,38 +116,10 @@ export function ClaimBar({ big = false, light = false }: { big?: boolean; light?
 
 /* ------------------------------------------------------------------ the look: soft colour fields with speckle, a pixel game HUD, retro windows */
 
-const INK = '#0c1544' // the deep blue the boxes are filled with
-const CREAM = '#f4ead6'
-
-/** Small pictures drawn one square at a time. `X` is filled, `o` is the eye, anything else is empty. */
-function Pixels({ rows, fill = 'currentColor', eye = INK, className }: { rows: string[]; fill?: string; eye?: string; className?: string }) {
-  return (
-    <svg viewBox={`0 0 ${rows[0].length} ${rows.length}`} shapeRendering="crispEdges" aria-hidden="true" className={className}>
-      {rows.flatMap((r, y) => [...r].map((c, x) => (c === 'X' || c === 'o' ? <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill={c === 'o' ? eye : fill} /> : null)))}
-    </svg>
-  )
-}
-const JACKAL = ['..XX....XX..', '..XXX..XXX..', '..XXX..XXX..', '..XXXXXXXX..', '.XXXXXXXXXX.', '.XXoXXXXoXX.', '.XXXXXXXXXX.', '..XXXXXXXX..', '...XXXXXX...', '...XXXXXX...', '....XXXX....', '.....XX.....']
-const HEART = ['.XX.XX.', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...']
-const PLAY = ['XX.....', 'XXXX...', 'XXXXXX.', 'XXXXXXX', 'XXXXXX.', 'XXXX...', 'XX.....']
-const ARROW = ['X.........', 'XX........', 'XXX.......', 'XXXX......', 'XXXXX.....', 'XXXXXX....', 'XXXXXXX...', 'XXXXX.....', 'XX.XXX....', 'X..XXX....', '....XXX...', '....XXX...']
-
-/** Soft blobs of teal, blue, salmon and red that drift as the page scrolls, with fine speckle over them. */
+/** The colour fields, drifting as the page scrolls. */
 function FixedMesh() {
   const { scrollYProgress } = useScroll()
-  const { reduced } = useMotionPrefs()
-  const pos = (a: string[], b: string[]) => [useMap(scrollYProgress, [0, 0.25, 0.5, 0.75, 1], a, reduced, a[0]), useMap(scrollYProgress, [0, 0.25, 0.5, 0.75, 1], b, reduced, b[0])] as const
-  const [ax, ay] = pos(['14%', '70%', '88%', '30%', '60%'], ['18%', '22%', '70%', '80%', '30%'])
-  const [bx, by] = pos(['86%', '20%', '14%', '82%', '30%'], ['26%', '70%', '24%', '30%', '78%'])
-  const [cx, cy] = pos(['16%', '84%', '62%', '14%', '84%'], ['82%', '70%', '86%', '22%', '66%'])
-  const [dx, dy] = pos(['78%', '40%', '30%', '66%', '14%'], ['84%', '30%', '24%', '76%', '24%'])
-  const bg = useMotionTemplate`radial-gradient(55% 52% at ${ax} ${ay}, #5fd1b6, transparent 72%), radial-gradient(52% 56% at ${bx} ${by}, #2b4fa3, transparent 74%), radial-gradient(52% 52% at ${cx} ${cy}, #f19b78, transparent 72%), radial-gradient(56% 56% at ${dx} ${dy}, #ec5a4f, transparent 74%), #22377f`
-  return (
-    <>
-      <motion.div aria-hidden="true" style={{ background: bg }} className="fixed inset-0 z-0" />
-      <div aria-hidden="true" className="speckle pointer-events-none fixed inset-0 z-0 opacity-25" />
-    </>
-  )
+  return <MeshField at={scrollYProgress} />
 }
 
 /** The game screen laid over the page: a health bar for how far you are, hearts, rails down the sides, a dialogue line at the bottom and two buttons. */
@@ -202,8 +170,8 @@ function Hud() {
   return (
     <>
       <header className="fixed top-4 left-4 z-50 flex border border-white/80 text-[0.7rem] tracking-[0.08em] uppercase md:top-5 md:left-5" style={{ background: `${INK}d9` }}>
-        {[['layouts', '#layouts'], ['backgrounds', '#backgrounds'], ['cursors', '#cursors']].map(([n, h], i, a) => (
-          <a key={h} href={h} className={cn('pix px-3.5 py-2.5 text-white transition-colors hover:bg-white hover:text-[#0c1544]', i < a.length - 1 && 'border-r border-white/80', i === 2 && 'hidden sm:block')}>
+        {[['how it works', '#story'], ['layouts', '#layouts'], ['backgrounds', '#backgrounds'], ['cursors', '#cursors']].map(([n, h], i, a) => (
+          <a key={h} href={h} className={cn('pix px-3.5 py-2.5 text-white transition-colors hover:bg-white hover:text-[#0c1544]', i < a.length - 1 && 'border-r border-white/80', i >= 2 && 'hidden sm:block', i === 3 && 'hidden md:block')}>
             {n}
           </a>
         ))}
@@ -217,14 +185,17 @@ function Hud() {
           level {String(scenes.at).padStart(2, '0')}/{String(scenes.of).padStart(2, '0')}
         </p>
       </div>
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-3 md:top-5 md:right-5">
-        <div aria-hidden="true" className="pointer-events-none hidden gap-1 sm:flex">
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2 md:top-5 md:right-5">
+        <div aria-hidden="true" className="pointer-events-none mr-1 hidden gap-1 xl:flex">
           {Array.from({ length: 5 }, (_, i) => (
             <Pixels key={i} rows={HEART} fill={i < hearts ? '#fff' : `${INK}`} className={cn('size-[1.1rem]', i < hearts ? 'text-white' : 'opacity-70')} />
           ))}
         </div>
-        <a href="/login" aria-label="log in" className="grid size-10 place-items-center border border-white/80 text-white transition-colors hover:bg-white hover:text-[#0c1544]" style={{ background: `${INK}b3` }}>
-          <UserRound className="size-[1.1rem]" strokeWidth={1.6} />
+        <a href="/login" className="pix hidden h-10 items-center border border-white/80 px-4 text-[0.7rem] tracking-[0.08em] text-white uppercase transition-colors hover:bg-white hover:text-[#0c1544] sm:inline-flex" style={{ background: `${INK}b3` }}>
+          log in
+        </a>
+        <a href="/signup" className="pix inline-flex h-10 items-center border border-[#f4ead6] bg-[#f4ead6] px-4 text-[0.7rem] tracking-[0.08em] text-[#0c1544] uppercase transition-colors hover:bg-white">
+          get started
         </a>
       </div>
       <div aria-hidden="true" className="pointer-events-none fixed inset-y-[18vh] left-[2.6vw] z-30 hidden w-px bg-white/60 md:block">
@@ -256,80 +227,6 @@ function Hud() {
   )
 }
 
-/** A small window: a deep blue title bar with three square lights, a cream body and a hard square shadow. */
-function Win({ title, children, className, bodyClass }: { title: string; children: ReactNode; className?: string; bodyClass?: string }) {
-  return (
-    <div className={cn('border border-[#0c1544] bg-[#f3f1ec] text-[#0c1544] shadow-[7px_7px_0_#0c1544]', className)}>
-      <div className="flex h-7 items-center gap-1.5 px-2.5" style={{ background: INK }}>
-        {['#ec5a4f', '#f1b84f', '#5fd1b6'].map((c) => (
-          <span key={c} className="size-[7px]" style={{ background: c }} />
-        ))}
-        <span className="pix ml-2 truncate text-[0.62rem] tracking-[0.1em] uppercase" style={{ color: CREAM }}>
-          {title}
-        </span>
-      </div>
-      <div className={bodyClass}>{children}</div>
-    </div>
-  )
-}
-
-/** The player bar at the foot of a window: a red line with a blue square on it, and four pixel controls. */
-function PlayerBar({ at }: { at: MotionValue<number> }) {
-  const w = useTransform(at, (v) => `${Math.max(0, Math.min(1, v)) * 100}%`)
-  return (
-    <div className="px-3 pt-3 pb-2.5">
-      <div className="relative h-[3px] bg-[#0c1544]/20">
-        <motion.span style={{ width: w }} className="absolute inset-y-0 left-0 block bg-[#ec5a4f]" />
-        <motion.span style={{ left: w }} className="absolute top-1/2 block size-2.5 -translate-x-1/2 -translate-y-1/2 bg-[#2b4fa3]" />
-      </div>
-      <div className="pix mt-2.5 flex items-center gap-3 text-[0.62rem] text-[#2b4fa3]">
-        <span>▶</span>
-        <span>»</span>
-        <span>‖</span>
-        <span>■</span>
-      </div>
-    </div>
-  )
-}
-
-/** Three ranges of mountains drawn in flat shapes with speckle, each sliding at its own speed. */
-function Mountains({ p, className }: { p: MotionValue<number>; className?: string }) {
-  const { reduced } = useMotionPrefs()
-  const far = useMap(p, [0, 1], ['4vh', '-8vh'], reduced, '0vh')
-  const mid = useMap(p, [0, 1], ['10vh', '-16vh'], reduced, '0vh')
-  const near = useMap(p, [0, 1], ['18vh', '-26vh'], reduced, '0vh')
-  const box = 'absolute inset-x-0 bottom-0 h-full w-full'
-  return (
-    <div aria-hidden="true" className={cn('pointer-events-none absolute inset-x-0 bottom-0 h-[48vh] overflow-hidden', className)}>
-      <motion.svg style={{ y: far }} viewBox="0 0 1200 400" preserveAspectRatio="none" className={box}>
-        <polygon filter="url(#speck)" fill="#2a4aa0" points="0,400 0,250 90,200 180,240 300,150 380,210 470,120 560,200 680,170 780,230 900,160 1010,220 1100,190 1200,230 1200,400" />
-      </motion.svg>
-      <motion.svg style={{ y: mid }} viewBox="0 0 1200 400" preserveAspectRatio="none" className={box}>
-        <polygon filter="url(#speck)" fill="#f19b78" points="250,400 520,60 590,210 560,400" />
-        <polygon filter="url(#speck)" fill="#14226b" points="520,60 700,120 960,400 560,400 590,210" />
-        <polygon fill="#f4ead6" fillOpacity=".85" points="520,60 540,90 528,96 514,84" />
-      </motion.svg>
-      <motion.svg style={{ y: near }} viewBox="0 0 1200 400" preserveAspectRatio="none" className={box}>
-        <polygon filter="url(#speck)" fill="#2fae96" points="0,400 0,330 140,290 260,330 420,300 560,340 700,310 860,350 1000,310 1200,350 1200,400" />
-      </motion.svg>
-    </div>
-  )
-}
-
-/** A line of dialogue in a square box with the speaker on a small tab. `solid` is the light one. */
-function Say({ who, children, solid = false, className, style }: { who?: string; children: ReactNode; solid?: boolean; className?: string; style?: CSSProperties }) {
-  return (
-    <div style={{ background: solid ? CREAM : INK, color: solid ? INK : CREAM, ...style }} className={cn('relative border px-5 pt-7 pb-4 text-[0.82rem] leading-[1.65]', solid ? 'border-[#f4ead6]' : 'border-white/85', className)}>
-      {who && (
-        <span className="pix absolute top-0 left-0 border-r border-b px-2.5 py-1 text-[0.58rem] tracking-[0.18em] uppercase" style={{ borderColor: solid ? `${INK}66` : 'rgb(255 255 255 / 0.85)', opacity: 0.8 }}>
-          {who}
-        </span>
-      )}
-      {children}
-    </div>
-  )
-}
-
 /** One scene of the page. It rises in out of the dark as it arrives and sinks back a little as the next one comes, so the page moves from scene to scene instead of just scrolling. */
 function Scene({ id, children, className, innerClass }: { id?: string; children: ReactNode; className?: string; innerClass?: string }) {
   const ref = useRef<HTMLElement>(null)
@@ -358,171 +255,374 @@ function Block({ title, children, className }: { title: string; children: ReactN
   )
 }
 
-/* ------------------------------------------------------------------ level 0: the title screen */
+/* ------------------------------------------------------------------ the title screen: what it is, shown with real pages */
 
-const HARD = { textShadow: '0.04em 0.04em 0 #0c1544' } as const
+/** A small square label, like a tag on a game map. */
+function Tag({ children, solid = false, className, style }: { children: ReactNode; solid?: boolean; className?: string; style?: CSSProperties }) {
+  return (
+    <span style={{ background: solid ? CREAM : INK, color: solid ? INK : CREAM, ...style }} className={cn('pix inline-flex items-center gap-2 border px-2.5 py-1.5 text-[0.62rem] tracking-[0.1em] whitespace-nowrap uppercase', solid ? 'border-[#f4ead6]' : 'border-white/85', className)}>
+      {children}
+    </span>
+  )
+}
+
+/** Follows the pointer by up to `amt` pixels each way (still for people who asked for less motion). */
+function useDrift(p: MotionValue<number>, amt: number, reduced: boolean) {
+  return useTransform(p, [-1, 1], reduced ? [0, 0] : [-amt, amt])
+}
+
+const SOURCES = ['instagram', 'tiktok', 'youtube', 'discord', 'x']
 
 function Hero() {
   const ref = useRef<HTMLElement>(null)
   const { reduced } = useMotionPrefs()
+  const { px, py } = usePointer(ref)
   // read straight from the scroll (a spring here starts from the wrong end and the page would jump when it loads)
-  const { scrollYProgress: p } = useScroll({ target: ref, offset: ['start start', 'end end'] })
-  const winY = useMap(p, [0, 0.55], ['0vh', '-16vh'], reduced, '0vh')
-  const winS = useMap(p, [0, 0.55], [1, 1.1], reduced, 1)
-  const winO = useMap(p, [0.34, 0.66], [1, 0], reduced, 1)
-  const titleY = useMap(p, [0, 0.55], ['0vh', '-14vh'], reduced, '0vh')
-  const titleO = useMap(p, [0.22, 0.58], [1, 0], reduced, 1)
-  const claimO = useMap(p, [0, 0.3], [1, 0], reduced, 1)
-  const play = useMap(p, [0, 0.9], [0.04, 0.96], reduced, 0.4)
+  const { scrollYProgress: p } = useScroll({ target: ref, offset: ['start start', 'end start'] })
+  const textY = useMap(p, [0, 1], ['0vh', '-14vh'], reduced, '0vh')
+  const textO = useMap(p, [0.1, 0.65], [1, 0], reduced, 1)
+  const backY = useMap(p, [0, 1], ['0vh', '-34vh'], reduced, '0vh')
+  const midY = useMap(p, [0, 1], ['0vh', '-22vh'], reduced, '0vh')
+  const frontY = useMap(p, [0, 1], ['0vh', '-10vh'], reduced, '0vh')
+  const tagY = useMap(p, [0, 1], ['0vh', '-46vh'], reduced, '0vh')
+  const bx = useDrift(px, 30, reduced)
+  const by = useDrift(py, 18, reduced)
+  const mx = useDrift(px, 18, reduced)
+  const my = useDrift(py, 11, reduced)
+  const fx = useDrift(px, 8, reduced)
+  const fy = useDrift(py, 5, reduced)
+  const tx = useDrift(px, -38, reduced)
+  const ty = useDrift(py, -22, reduced)
   return (
-    <section ref={ref} id="top" className="relative h-[240svh]">
-      <i aria-hidden="true" data-say="press start. pick a name below." className="absolute top-0 left-0 block h-px w-px" />
-      <div className="sticky top-0 h-[100svh] overflow-hidden">
-        <Mountains p={p} />
-        <motion.div style={{ opacity: titleO, y: titleY }} className="absolute inset-x-0 top-[9vh] px-4 text-center md:top-[7vh]">
-          <p className="pix text-[0.7rem] tracking-[0.14em] uppercase" style={{ color: CREAM }}>
-            <span className="mr-2 tracking-normal normal-case italic">from →</span>
-            <span className="border border-white/85 px-2 py-1" style={{ background: INK }}>
-              logoless
-            </span>
-          </p>
-          <h1 className="disp mt-4 text-[clamp(3.2rem,12.6vw,12rem)]" style={{ color: CREAM, ...HARD }}>
-            link in bio
+    <section ref={ref} id="top" className="relative overflow-hidden">
+      <i aria-hidden="true" data-say="this is logoless. one page for everything you make." className="absolute top-0 left-0 block h-px w-px" />
+      <Mountains p={p} className="h-[40vh]" />
+      <div className="relative z-10 mx-auto grid w-full max-w-[96rem] grid-cols-[minmax(0,1fr)] items-center gap-2 px-5 pt-[7rem] pb-[22vh] md:min-h-[100svh] md:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)] md:gap-6 md:px-[5vw] md:pt-24 md:pb-[16vh]">
+        <motion.div style={{ y: textY, opacity: textO }} className="relative z-20 min-w-0">
+          <Tag>a link in bio, for editors</Tag>
+          <h1 className="disp mt-5 text-[9.8vw] md:text-[clamp(2.4rem,5.1vw,6rem)]" style={{ color: CREAM, ...HARD }}>
+            one link
+            <br />
+            for everything
+            <br />
+            you make.
           </h1>
-          <p className="mt-3 text-[0.78rem] text-white italic">a link in bio for people who make things move</p>
+          <p className="mt-6 max-w-[30rem] text-[0.84rem] leading-[1.75] text-white/85">logoless is a link in bio you design. claim logoless.io/yourname, put your edits, socials and music on one page, then put that one link in your bio.</p>
+          <div className="mt-7 max-w-[30rem]">
+            <ClaimBar />
+          </div>
+          <p className="mt-1 flex max-w-[30rem] flex-wrap items-center gap-x-2 gap-y-1.5 text-[0.66rem] text-white/75">
+            <span>works in your</span>
+            {SOURCES.map((s) => (
+              <span key={s} className="border border-white/45 px-1.5 py-0.5 tracking-[0.08em] uppercase">
+                {s}
+              </span>
+            ))}
+            <span>bio</span>
+          </p>
         </motion.div>
-        <motion.div style={{ y: winY, scale: winS, opacity: winO }} className="absolute top-[33vh] left-1/2 w-[min(86vw,23rem)] -translate-x-1/2 md:top-[34vh]">
-          <Win title="your-page.exe">
-            <div className="relative h-[9.5rem] overflow-hidden md:h-[11rem]" style={{ background: INK }}>
-              <div className="absolute top-0 left-1/2 -translate-x-1/2">
-                <Phone id="aura" width={250} className="!border-0 !shadow-none" />
-              </div>
-            </div>
-            <PlayerBar at={play} />
-          </Win>
-        </motion.div>
-        <motion.div style={{ opacity: claimO }} className="absolute inset-x-0 bottom-[21vh] mx-auto w-full max-w-[28rem] px-5">
-          <ClaimBar />
-        </motion.div>
+
+        {/* real pages, at three depths */}
+        <div aria-hidden="true" className="relative mx-auto h-[27rem] w-full max-w-[34rem] sm:h-[34rem] md:h-[44rem]">
+          <div className="absolute top-0 left-1/2 h-[700px] w-[600px] origin-top -translate-x-1/2 scale-[0.6] sm:scale-[0.78] md:scale-100">
+            <motion.div style={{ y: backY }} className="absolute top-[150px] left-0">
+              <motion.div style={{ x: bx, y: by, rotate: -5 }}>
+                <Phone id="index" width={200} />
+              </motion.div>
+            </motion.div>
+            <motion.div style={{ y: midY }} className="absolute top-[90px] left-[400px]">
+              <motion.div style={{ x: mx, y: my, rotate: 5 }}>
+                <Phone id="bento" width={200} />
+              </motion.div>
+            </motion.div>
+            <motion.div style={{ y: frontY }} className="absolute top-[20px] left-[170px]">
+              <motion.div style={{ x: fx, y: fy }}>
+                <Phone id="aura" width={260} />
+              </motion.div>
+            </motion.div>
+            <motion.div style={{ y: tagY }} className="absolute inset-0 z-10">
+              <motion.div style={{ x: tx, y: ty }} className="relative h-full w-full">
+                <Tag solid className="absolute top-[56px] left-[6px]">
+                  logoless.io/luna
+                </Tag>
+                <Tag className="absolute top-[330px] left-[430px]">10 layouts</Tag>
+                <Tag className="absolute top-[520px] left-[20px]">live backgrounds</Tag>
+                <Tag className="absolute top-[610px] left-[400px]">
+                  <Pixels rows={ARROW} fill="#fff" className="size-3.5" />
+                  your own cursor
+                </Tag>
+              </motion.div>
+            </motion.div>
+          </div>
+        </div>
       </div>
     </section>
   )
 }
 
-/* ------------------------------------------------------------------ levels 1 to 4: the story, as windows opening on a desktop */
+/* ------------------------------------------------------------------ the story: it is all over the place, your bio fits one link, so make that link a page */
 
-/** A window that opens (a little scale, a rise, a fade) over a stretch of a scene's progress. */
-function usePop(p: MotionValue<number>, a: number, b: number) {
+const PILE = [
+  { t: 'best-edit.mp4', c: '#5fd1b6', x: 10, y: 44, d: 1.1, r: -5 },
+  { t: 'youtube', c: '#ec5a4f', x: 80, y: 40, d: 0.7, r: 4 },
+  { t: 'tiktok', c: '#2b4fa3', x: 88, y: 63, d: 1.3, r: -3 },
+  { t: 'discord', c: '#f19b78', x: 13, y: 68, d: 0.8, r: 3 },
+  { t: 'spotify', c: '#5fd1b6', x: 30, y: 78, d: 1.2, r: -4 },
+  { t: 'instagram', c: '#ec5a4f', x: 70, y: 77, d: 0.9, r: 5 },
+  { t: 'portfolio', c: '#2b4fa3', x: 24, y: 55, d: 0.6, r: 2 },
+  { t: 'email me', c: '#f19b78', x: 92, y: 50, d: 1.0, r: -2 },
+] as const
+/** Where the one link sits on the stage, in vw and vh. */
+const SLOT = { x: 50, y: 62 }
+
+const CAPTIONS = ['you make things. all over the place.', 'your bio only fits one link.', 'so make that one link a page.', 'everything you make, behind one link.']
+const BEATS = [0, 0.25, 0.5, 0.75, 1]
+const SAYS: [string, string][] = [
+  ['0%', 'you make things in a lot of places.'],
+  ['31%', 'but your bio only fits one link.'],
+  ['51%', 'so make that one link a page.'],
+  ['71%', 'now everything you make is behind one link.'],
+]
+
+/** One of the things you make, floating about, until the one link pulls it in. */
+function Chip({ p, chip, i }: { p: MotionValue<number>; chip: (typeof PILE)[number]; i: number }) {
   const { reduced } = useMotionPrefs()
-  return {
-    opacity: useMap(p, [a, b], [0, 1], reduced, 1),
-    scale: useMap(p, [a, b], [0.9, 1], reduced, 1),
-    y: useMap(p, [a, b], ['6vh', '0vh'], reduced, '0vh'),
-  }
+  const s = i * 0.012
+  const x = useMap(p, [0, 0.5 + s, 0.66 + s], ['0vw', '0vw', `${SLOT.x - chip.x}vw`], reduced, '0vw')
+  const y = useMap(p, [0, 0.5 + s, 0.66 + s], [`${4 * chip.d}vh`, `${-8 * chip.d}vh`, `${SLOT.y - chip.y}vh`], reduced, '0vh')
+  const scale = useMap(p, [0.5 + s, 0.66 + s], [1, 0.2], reduced, 1)
+  const opacity = useMap(p, [0, 0.08, 0.62 + s, 0.68 + s], [0, 1, 1, 0], reduced, 1)
+  return (
+    <div className={cn('absolute z-20 -translate-x-1/2 -translate-y-1/2', i > 5 && 'hidden sm:block')} style={{ left: `${chip.x}%`, top: `${chip.y}%` }}>
+      <motion.div style={{ x, y, scale, opacity, rotate: chip.r }}>
+        <Tag>
+          <span aria-hidden="true" className="size-2 shrink-0" style={{ background: chip.c }} />
+          {chip.t}
+        </Tag>
+      </motion.div>
+    </div>
+  )
 }
 
-function Levels() {
-  const ref = useRef<HTMLElement>(null)
+/** A line of the story, in big letters; one at a time. */
+function Caption({ p, i, children }: { p: MotionValue<number>; i: number; children: string }) {
   const { reduced } = useMotionPrefs()
+  const a = BEATS[i]
+  const b = BEATS[i + 1]
+  const first = i === 0
+  const last = i === CAPTIONS.length - 1
+  const inp = first ? [0, b - 0.04, b] : last ? [a, a + 0.04, 1] : [a, a + 0.04, b - 0.04, b]
+  const o = first ? [1, 1, 0] : last ? [0, 1, 1] : [0, 1, 1, 0]
+  const yy = first ? ['0vh', '0vh', '-4vh'] : last ? ['4vh', '0vh', '0vh'] : ['4vh', '0vh', '0vh', '-4vh']
+  const opacity = useMap(p, inp, o, reduced, 1)
+  const y = useMap(p, inp, yy, reduced, '0vh')
+  return (
+    <motion.h2 style={{ opacity, y, color: CREAM, ...HARD }} className="disp absolute inset-x-0 top-0 text-[clamp(1.9rem,4.8vw,4.8rem)] leading-[0.92]">
+      {children}
+    </motion.h2>
+  )
+}
+
+/** What your profile looks like on the apps: room for one link, and nothing more. */
+function ProfileWin({ p }: { p: MotionValue<number> }) {
+  const { reduced } = useMotionPrefs()
+  const o = useMap(p, [0.2, 0.3, 0.7, 0.78], [0, 1, 1, 0], reduced, 1)
+  const sc = useMap(p, [0.2, 0.3], [0.9, 1], reduced, 1)
+  const y = useMap(p, [0.2, 0.3], ['6vh', '0vh'], reduced, '0vh')
+  const bg = useMap(p, [0.6, 0.7], ['rgba(95,209,182,0)', 'rgba(95,209,182,1)'], reduced, 'rgba(95,209,182,1)')
+  const wipe = useMap(p, [0.62, 0.72], [100, 0], reduced, 0)
+  const clip = useTransform(wipe, (v) => `inset(0 ${v}% 0 0)`)
+  return (
+    <motion.div style={{ opacity: o, scale: sc, y }} className="absolute top-[52%] left-1/2 z-10 w-[min(84vw,22rem)] -translate-x-1/2 -translate-y-1/2">
+      <Win title="your profile">
+        <div className="p-4">
+          <div className="flex items-center gap-3">
+            <span aria-hidden="true" className="size-12 shrink-0" style={{ background: 'linear-gradient(135deg,#2b4fa3,#5fd1b6 60%,#f19b78)' }} />
+            <div className="min-w-0">
+              <p className="pix text-[0.8rem] tracking-[0.08em] uppercase">lunaray</p>
+              <p className="text-[0.7rem] italic opacity-60">editor. london.</p>
+            </div>
+          </div>
+          <p className="mt-3 text-[0.78rem] leading-[1.6]">making things move. a new edit every week.</p>
+          <div className="mt-4 border-t border-[#0c1544]/20 pt-3">
+            <p className="pix text-[0.58rem] tracking-[0.14em] uppercase opacity-55">link · 1 of 1 allowed</p>
+            <motion.div style={{ background: bg }} className="relative mt-1.5 h-9 border border-dashed border-[#0c1544]/60">
+              <motion.span style={{ clipPath: clip }} className="pix absolute inset-0 flex items-center px-3 text-[0.72rem]">
+                logoless.io/lunaray
+              </motion.span>
+            </motion.div>
+          </div>
+        </div>
+      </Win>
+    </motion.div>
+  )
+}
+
+/** The page behind that one link, in a window with its address on top and what is on it pointed out. */
+function PageWin({ p, still = false }: { p: MotionValue<number> | null; still?: boolean }) {
+  const { reduced } = useMotionPrefs()
+  const fallback = useMotionValue(1)
+  const q = p ?? fallback
+  const o = useMap(q, [0.72, 0.8], [0, 1], reduced || still, 1)
+  const y = useMap(q, [0.72, 0.8], ['8vh', '0vh'], reduced || still, '0vh')
+  const co = useMap(q, [0.84, 0.92], [0, 1], reduced || still, 1)
+  const cx = useMap(q, [0.84, 0.92], [18, 0], reduced || still, 0)
+  const ncx = useTransform(cx, (v) => -v)
+  const left: [string, string][] = [['your links', 'top-[46%]'], ['your socials', 'top-[63%]']]
+  const right: [string, string][] = [['a layout you pick', 'top-[34%]'], ['a background that moves', 'top-[70%]']]
+  return (
+    <motion.div style={{ opacity: o, y }} className="relative">
+      <div className="origin-top scale-[0.74] md:scale-100">
+        <Win title="logoless.io/luna" className="w-[242px]">
+          <div style={{ background: INK }}>
+            <Phone id="aura" width={240} className="!border-0 !shadow-none" />
+          </div>
+        </Win>
+      </div>
+      <motion.div style={{ opacity: co }} className="pointer-events-none absolute inset-0 hidden md:block">
+        {left.map(([t, pos]) => (
+          <motion.div key={t} style={{ x: cx }} className={cn('absolute right-full mr-9', pos)}>
+            <Tag solid>{t} →</Tag>
+          </motion.div>
+        ))}
+        {right.map(([t, pos]) => (
+          <motion.div key={t} style={{ x: ncx }} className={cn('absolute left-full ml-9', pos)}>
+            <Tag solid>← {t}</Tag>
+          </motion.div>
+        ))}
+      </motion.div>
+    </motion.div>
+  )
+}
+
+function StoryPinned() {
+  const ref = useRef<HTMLElement>(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
   const p = useSpring(scrollYProgress, { stiffness: 140, damping: 30, mass: 0.35 })
-  const out = useMap(p, [0.9, 1], [1, 0], reduced, 1)
-  const play = useMap(p, [0.04, 0.3], [0.04, 0.72], reduced, 0.72)
-  const curX = useMap(p, [0.72, 0.88], ['0%', '135%'], reduced, '135%')
-  const curY = useMap(p, [0.72, 0.88], ['0%', '55%'], reduced, '55%')
-  const strike = useMap(p, [0.52, 0.64], [0, 1], reduced, 1)
-  const b1 = useMap(p, [0.46, 0.52], [0, 1], reduced, 1)
-  const b2 = useMap(p, [0.48, 0.54], [0, 1], reduced, 1)
-  const b3 = useMap(p, [0.5, 0.56], [0, 1], reduced, 1)
-  const drift1 = useMap(p, [0, 1], ['3vh', '-4vh'], reduced, '0vh')
-  const drift2 = useMap(p, [0, 1], ['6vh', '-9vh'], reduced, '0vh')
-  const drift3 = useMap(p, [0, 1], ['9vh', '-14vh'], reduced, '0vh')
-  const w1 = usePop(p, 0.02, 0.12)
-  const w2 = usePop(p, 0.22, 0.32)
-  const w3 = usePop(p, 0.42, 0.52)
-  const w4 = usePop(p, 0.64, 0.74)
-  const say = [
-    ['2%', 'you just posted the best edit of your month.'],
-    ['22%', 'someone in the comments asks where they can see more.'],
-    ['42%', 'so you point them at your bio. a list of links.'],
-    ['64%', 'what do you put in your bio?'],
-  ]
   return (
-    <section ref={ref} id="story" className="relative h-[540svh]">
-      {say.map(([t, s]) => (
+    <section ref={ref} id="story" className="relative h-[520svh]">
+      {SAYS.map(([t, s]) => (
         <i key={t} aria-hidden="true" data-say={s} style={{ top: t }} className="absolute left-0 block h-px w-px" />
       ))}
       <div className="sticky top-0 h-[100svh] overflow-hidden">
-        <motion.div style={{ opacity: out }} className="absolute inset-0">
-          {/* 1: the edit */}
-          <motion.div style={{ ...w1 }} className="absolute top-[13vh] left-[4vw] w-[88vw] md:top-[14vh] md:left-[8vw] md:w-[26rem]">
-            <motion.div style={{ y: drift1 }}>
-              <Win title="best-edit-of-the-month.mp4">
-                <div className="relative grid h-40 place-items-center overflow-hidden md:h-48" style={{ background: 'linear-gradient(135deg,#2b4fa3,#5fd1b6 60%,#f19b78)' }}>
-                  <div aria-hidden="true" className="speckle absolute inset-0 opacity-50" />
-                  <Pixels rows={PLAY} fill={CREAM} className="relative size-14" />
-                  <span className="pix absolute bottom-2 left-2 px-1.5 py-0.5 text-[0.56rem] tracking-[0.1em] uppercase" style={{ background: INK, color: CREAM }}>
-                    00:42
-                  </span>
-                </div>
-                <PlayerBar at={play} />
-              </Win>
-            </motion.div>
-          </motion.div>
-          {/* 2: the question */}
-          <motion.div style={{ ...w2 }} className="absolute top-[36vh] right-[4vw] w-[78vw] md:top-[20vh] md:right-[9vw] md:w-[22rem]">
-            <motion.div style={{ y: drift2 }}>
-              <Win title="comments (1)">
-                <div className="p-4">
-                  <div className="flex items-baseline justify-between">
-                    <span className="pix text-[0.7rem] tracking-[0.08em] uppercase">@someone</span>
-                    <span className="text-[0.64rem] opacity-55 italic">2 min ago</span>
-                  </div>
-                  <p className="mt-3 text-[0.86rem] leading-[1.6]">wait. where can i see more??</p>
-                  <div className="mt-4 flex items-center gap-2 text-[#ec5a4f]">
-                    <Pixels rows={HEART} fill="#ec5a4f" className="size-4" />
-                    <span className="pix text-[0.66rem] text-[#0c1544]">3</span>
-                  </div>
-                </div>
-              </Win>
-            </motion.div>
-          </motion.div>
-          {/* 3: the list */}
-          <motion.div style={{ ...w3 }} className="absolute top-[55vh] left-[4vw] w-[78vw] md:top-[50vh] md:left-[16vw] md:w-[23rem]">
-            <motion.div style={{ y: drift3 }}>
-              <Win title="link-in-bio.txt">
-                <div className="relative grid gap-3 p-5">
-                  {[b1, b2, b3].map((b, i) => (
-                    <motion.span key={i} style={{ scaleX: b }} className="block h-4 origin-left bg-[#0c1544]/85" />
-                  ))}
-                  <motion.span aria-hidden="true" style={{ scaleX: strike }} className="absolute top-1/2 right-2 left-2 block h-[3px] origin-left -rotate-2 bg-[#ec5a4f]" />
-                </div>
-                <p className="pix border-t border-[#0c1544]/20 px-5 py-2.5 text-[0.62rem] tracking-[0.1em] uppercase opacity-70">a row of white buttons</p>
-              </Win>
-            </motion.div>
-          </motion.div>
-          {/* 4: the choice */}
-          <motion.div style={{ ...w4 }} className="absolute top-[71vh] right-[4vw] w-[84vw] md:top-[56vh] md:right-[8vw] md:w-[22rem]">
-            <Win title="decision.exe">
-              <div className="p-5">
-                <p className="text-[0.9rem] leading-[1.5] italic">what do you put in your bio?</p>
-                <div className="relative mt-4 grid gap-2">
-                  <span className="pix border border-[#0c1544]/50 px-3 py-2 text-[0.7rem] tracking-[0.08em] uppercase opacity-60">
-                    <b className="mr-2">A)</b>a list of links
-                  </span>
-                  <span className="pix border border-[#0c1544] px-3 py-2 text-[0.7rem] tracking-[0.08em] uppercase" style={{ background: '#5fd1b6' }}>
-                    <b className="mr-2">B)</b>a page that&apos;s yours
-                  </span>
-                  <motion.span aria-hidden="true" style={{ x: curX, y: curY }} className="pointer-events-none absolute top-[10%] left-[18%]">
-                    <Pixels rows={ARROW} fill="#fff" className="size-7 drop-shadow-[1.5px_1.5px_0_#0c1544]" />
-                  </motion.span>
-                </div>
-              </div>
-            </Win>
-          </motion.div>
-        </motion.div>
+        <div className="absolute inset-x-[5vw] top-[16vh] h-[30vh] md:top-[11vh] md:right-[38vw]">
+          {CAPTIONS.map((t, i) => (
+            <Caption key={t} p={p} i={i}>
+              {t}
+            </Caption>
+          ))}
+        </div>
+        <ProfileWin p={p} />
+        <div className="absolute top-[32vh] left-1/2 -translate-x-1/2 md:top-[11vh] md:left-[66%]">
+          <PageWin p={p} />
+        </div>
+        {PILE.map((c, i) => (
+          <Chip key={c.t} p={p} chip={c} i={i} />
+        ))}
       </div>
     </section>
+  )
+}
+
+/** The same story for people who asked for less motion: four lines and the page, standing still. */
+function StoryStatic() {
+  return (
+    <section id="story" className="relative mx-auto grid w-full max-w-[72rem] gap-12 px-5 py-[14vh] md:grid-cols-[1fr_auto] md:px-12">
+      <i aria-hidden="true" data-say="you make things in a lot of places. your bio fits one link. so make that link a page." className="absolute top-0 left-0 block h-px w-px" />
+      <ol className="grid content-start gap-8">
+        {CAPTIONS.map((t, i) => (
+          <li key={t} className="flex gap-5">
+            <span className="pix pt-2 text-[0.7rem] text-white/60">{String(i + 1).padStart(2, '0')}</span>
+            <h2 className="disp text-[clamp(1.9rem,4vw,3.6rem)] leading-[0.95]" style={{ color: CREAM, ...HARD }}>
+              {t}
+            </h2>
+          </li>
+        ))}
+      </ol>
+      <div className="mx-auto">
+        <PageWin p={null} still />
+      </div>
+    </section>
+  )
+}
+
+function Story() {
+  const { reduced } = useMotionPrefs()
+  return reduced ? <StoryStatic /> : <StoryPinned />
+}
+
+/* ------------------------------------------------------------------ how it works: three steps, climbing at different speeds */
+
+const STEPS = [
+  { n: '01', t: 'claim your name', win: 'step-01.txt' },
+  { n: '02', t: 'build your page', win: 'step-02.txt' },
+  { n: '03', t: 'put it in your bio', win: 'step-03.txt' },
+] as const
+
+function Steps() {
+  const ref = useRef<HTMLElement>(null)
+  const { reduced } = useMotionPrefs()
+  const { scrollYProgress: p } = useScroll({ target: ref, offset: ['start end', 'end start'] })
+  const y1 = useMap(p, [0, 1], ['4vh', '-4vh'], reduced, '0vh')
+  const y2 = useMap(p, [0, 1], ['10vh', '-10vh'], reduced, '0vh')
+  const y3 = useMap(p, [0, 1], ['16vh', '-16vh'], reduced, '0vh')
+  const ys = [y1, y2, y3]
+  return (
+    <Scene id="how" className="px-5 py-[14vh] md:px-12" innerClass="mx-auto w-full max-w-[72rem]">
+      <section ref={ref}>
+        <i aria-hidden="true" data-say="three steps. about a minute." className="absolute top-0 left-0 block h-px w-px" />
+        <h2 className="disp text-[clamp(2.4rem,6.4vw,6rem)]" style={{ color: CREAM, ...HARD }}>
+          three steps.
+          <br />
+          about a minute.
+        </h2>
+        <p className="mt-5 max-w-[26rem] text-[0.8rem] leading-[1.75] text-white/80">no website to build and nothing to host. you sign in, make a page, and put one link where your bio lets you.</p>
+        <div className="mt-14 grid gap-12 md:mt-20 md:grid-cols-3 md:items-start md:gap-6">
+          {STEPS.map((s, i) => (
+            <motion.div key={s.n} style={{ y: ys[i] }} className={cn(i === 1 && 'md:mt-16', i === 2 && 'md:mt-32')}>
+              <p className="disp mb-4 text-[clamp(3rem,6vw,5.4rem)] text-white/90" style={HARD}>
+                {s.n}
+              </p>
+              <Win title={s.win}>
+                {i === 0 && (
+                  <div className="p-4">
+                    <div className="flex h-10 items-center border border-[#0c1544] bg-white/60 px-3 text-[0.78rem]">
+                      <span className="opacity-50">logoless.io/</span>
+                      <span>lunaray</span>
+                      <span className="ml-auto grid size-5 place-items-center" style={{ background: '#5fd1b6' }}>
+                        <Check className="size-3" />
+                      </span>
+                    </div>
+                    <p className="mt-3 text-[0.74rem] leading-[1.6] opacity-75">free. one letter is fine, dots and dashes too. sign in with google, discord or email.</p>
+                  </div>
+                )}
+                {i === 1 && (
+                  <div className="grid gap-2 p-4">
+                    {[['link', 'showreel 2026'], ['link', 'book me'], ['socials', 'instagram, tiktok, youtube'], ['video', 'plays on the page'], ['music', 'starts when they enter']].map(([k, v]) => (
+                      <div key={k + v} className="flex items-center gap-3 border border-[#0c1544]/40 px-3 py-2 text-[0.72rem]">
+                        <span className="pix w-14 shrink-0 text-[0.58rem] tracking-wider uppercase opacity-55">{k}</span>
+                        <span className="min-w-0 truncate">{v}</span>
+                      </div>
+                    ))}
+                    <p className="pix mt-1 text-[0.6rem] tracking-wider uppercase opacity-60">then pick a layout, a background and a cursor</p>
+                  </div>
+                )}
+                {i === 2 && (
+                  <div className="p-4">
+                    <div className="border border-[#0c1544]/40 p-3 text-[0.74rem]">
+                      <p className="pix text-[0.58rem] tracking-wider uppercase opacity-55">your bio</p>
+                      <p className="mt-1">edits. london. a new video every week.</p>
+                      <p className="mt-2 text-[#2b4fa3] underline decoration-dotted underline-offset-4">logoless.io/lunaray</p>
+                    </div>
+                    <p className="mt-3 text-[0.74rem] leading-[1.6] opacity-75">paste it where your bio lets you: instagram, tiktok, youtube, discord, x. every click lands on your page.</p>
+                  </div>
+                )}
+              </Win>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+    </Scene>
   )
 }
 
@@ -546,8 +646,8 @@ function Impact() {
   const narrY = useMap(p, [0.64, 0.72], ['4vh', '0vh'], reduced, '0vh')
   return (
     <section ref={ref} className="relative h-[420svh]">
-      <i aria-hidden="true" data-say="good choice. it doesn't have to be a list." className="absolute top-[8%] left-0 block h-px w-px" />
-      <i aria-hidden="true" data-say="make it a place. a few things it can do:" className="absolute top-[64%] left-0 block h-px w-px" />
+      <i aria-hidden="true" data-say="most link in bios are a list of buttons." className="absolute top-[8%] left-0 block h-px w-px" />
+      <i aria-hidden="true" data-say="yours can be a whole screen." className="absolute top-[64%] left-0 block h-px w-px" />
       <div className="sticky top-0 h-[100svh] overflow-hidden">
         <Mountains p={p} className="opacity-90" />
         <motion.span aria-hidden="true" style={{ y: echoY }} className="disp absolute top-[34%] -left-[2%] text-[clamp(9rem,30vw,28rem)] text-transparent [-webkit-text-stroke:1.4px_rgb(244_234_214/0.28)]">
@@ -595,7 +695,7 @@ function Layouts() {
   const rail = useMap(p, [0, 1], ['0%', '100%'], reduced, '100%')
   return (
     <section ref={ref} id="layouts" className="relative h-[820svh]">
-      <i aria-hidden="true" data-say="ten ways to lay a page out. keep scrolling to try them." className="absolute top-0 left-0 block h-px w-px" />
+      <i aria-hidden="true" data-say="ten ways to lay your page out. keep scrolling to try them." className="absolute top-0 left-0 block h-px w-px" />
       <div className="sticky top-0 h-[100svh] overflow-hidden border-y border-white/40 bg-[#0c1544]">
         <div aria-hidden="true" className="stipple absolute inset-y-0 left-0 w-[4.4vw] min-w-6 border-r border-white/35" />
         <div aria-hidden="true" className="stipple absolute inset-y-0 right-0 w-[4.4vw] min-w-6 border-l border-white/35" />
@@ -664,7 +764,7 @@ function Backgrounds() {
   const scale = useMap(p, [0.1, 1], [1.12, 1], reduced, 1)
   return (
     <section ref={ref} id="backgrounds" className="relative h-[640svh]">
-      <i aria-hidden="true" data-say="seven backgrounds, drawn live by your graphics card." className="absolute top-0 left-0 block h-px w-px" />
+      <i aria-hidden="true" data-say="seven live backgrounds behind your page." className="absolute top-0 left-0 block h-px w-px" />
       <div className="sticky top-0 h-[100svh] overflow-hidden">
         <motion.div className="absolute inset-0" style={{ clipPath: clip, WebkitClipPath: clip }}>
           <motion.div className="absolute inset-0" style={{ scale }}>
@@ -708,7 +808,7 @@ function Practices() {
   return (
     <Scene className="px-4 py-[14vh] md:px-12" innerClass="mx-auto w-full max-w-[64rem]">
       <div className="relative border border-white/40 bg-[#0c1544] px-6 py-14 md:px-16 md:py-20">
-        <i aria-hidden="true" data-say="keep it simple. that is the whole idea." className="absolute top-0 left-0 block h-px w-px" />
+        <i aria-hidden="true" data-say="simple on purpose." className="absolute top-0 left-0 block h-px w-px" />
         <h2 className="disp text-[clamp(2.4rem,7vw,6.4rem)]">simple on purpose</h2>
         <span className="mt-6 block h-px w-14 bg-white/70" />
         <p className="mt-8 max-w-[28rem] text-[0.84rem] leading-[1.8] text-white/75">made for editors who got tired of sending people to a list of white buttons. a name, a page, a few good choices. then it gets out of the way.</p>
@@ -789,6 +889,7 @@ function Cursors() {
 /* ------------------------------------------------------------------ common questions, as a conversation */
 
 const TALK = [
+  { q: 'what is a link in bio?', tag: 'one link, many things', a: 'instagram, tiktok and youtube only let you put one link on your profile. logoless gives you a page to put there, with all your links, socials and edits on it.' },
   { q: 'is it really free?', tag: 'yes', a: 'claiming a name and building a page costs nothing, and nothing in the editor is locked behind anything.' },
   { q: 'can i have a one letter name?', tag: "if it's free", a: 'names start at one character. dots, dashes and a few symbols work anywhere in them. if someone already has it, they have it.' },
   { q: 'does the music start by itself?', tag: 'after a click', a: 'browsers keep sound off until someone clicks. turn on the enter screen and that click is what lets your song start.' },
@@ -826,7 +927,7 @@ function Exchange({ q, tag, a, index }: { q: string; tag: string; a: string; ind
 function Dialogue() {
   return (
     <section id="faq" className="relative mx-auto w-full max-w-[56rem] px-5 py-[16vh] md:px-12">
-      <i aria-hidden="true" data-say="questions? asked a lot, answered short." className="absolute top-0 left-0 block h-px w-px" />
+      <i aria-hidden="true" data-say="questions? answered short." className="absolute top-0 left-0 block h-px w-px" />
       <h2 className="disp text-[clamp(2.6rem,7vw,6.4rem)]" style={{ color: CREAM, ...HARD }}>common questions</h2>
       <p className="mt-5 text-[0.74rem] text-white italic">asked a lot, answered short</p>
       <div className="mt-[10vh] grid gap-[14vh]">
@@ -860,7 +961,7 @@ function Outro() {
   const rise = useMap(p, [0.3, 1], ['6vh', '0vh'], reduced, '0vh')
   return (
     <section ref={ref} id="claim" className="relative">
-      <i aria-hidden="true" data-say="last choice. pick your name." className="absolute top-0 left-0 block h-px w-px" />
+      <i aria-hidden="true" data-say="last step. pick your name." className="absolute top-0 left-0 block h-px w-px" />
       <motion.div style={{ clipPath: clip, WebkitClipPath: clip }} className="bg-[#ededed] text-black">
         <motion.div style={{ y: rise }} className="mx-auto w-full max-w-[72rem] px-6 pt-[18vh] pb-[12vh] md:px-12">
           <h2 className="disp text-[clamp(3.6rem,14vw,13rem)] !text-black">claim it.</h2>
@@ -908,21 +1009,13 @@ function Outro() {
 export function Home() {
   return (
     <div className="ed relative min-h-dvh overflow-x-clip !bg-transparent">
-      <svg width="0" height="0" className="absolute" aria-hidden="true">
-        <defs>
-          <filter id="speck" x="0" y="0" width="100%" height="100%">
-            <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="4" result="n" />
-            <feColorMatrix in="n" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 9 -6" result="dots" />
-            <feComposite in="dots" in2="SourceAlpha" operator="in" result="d" />
-            <feBlend in="SourceGraphic" in2="d" mode="screen" />
-          </filter>
-        </defs>
-      </svg>
+      <SpeckFilter />
       <FixedMesh />
       <Hud />
       <main className="relative z-10">
         <Hero />
-        <Levels />
+        <Story />
+        <Steps />
         <Impact />
         <Layouts />
         <Backgrounds />
