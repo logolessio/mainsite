@@ -245,7 +245,7 @@
   place-items: center;
   width: 2.8rem;
   height: 2.8rem;
-  border-radius: 999px;
+  border-radius: var(--bio-r);
   color: var(--bio-fg);
   background: var(--bio-soft);
   border: 1px solid var(--bio-line);
@@ -431,4 +431,53 @@ a.bio-tile:hover {
 
 .bio-root :is(button, input, textarea, select, a) {
   font-family: inherit;
+}
+
+/* ---------------------------------------------------------------- the Anubis face: Plex Mono for words, Schibsted Black for titles (both come with the site's layout) */
+.bio-f-anubis {
+  font-family: var(--font-f-ibm-plex-mono), ui-monospace, 'SF Mono', Menlo, monospace;
+}
+.bio-root[data-font='anubis'] :is(.bn, .bt) {
+  font-family: var(--font-f-schibsted), 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.05em;
+  line-height: 0.86;
+}
+.bt {
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.92;
+}
+.bio-root[data-font='anubis'] .bl-title {
+  font-size: 0.84rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.bio-root[data-font='anubis'] .bl-note {
+  font-style: italic;
+}
+
+/* ---------------------------------------------------------------- hairline furniture for the layouts */
+.bio-stipple {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='1.05' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 9 -5.2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 180px 180px;
+  opacity: 0.5;
+}
+.bio-root[data-light='1'] .bio-stipple {
+  filter: invert(1);
+}
+.bio-speed {
+  background:
+    repeating-conic-gradient(from 3deg at 50% 50%, rgb(var(--bio-fg-rgb) / 0.4) 0deg 0.26deg, transparent 0.26deg 4.9deg),
+    repeating-conic-gradient(from 1deg at 50% 50%, rgb(var(--bio-fg-rgb) / 0.22) 0deg 0.5deg, transparent 0.5deg 8.3deg);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 12%, #000 52%, transparent 92%);
+  mask-image: radial-gradient(circle at 50% 50%, transparent 12%, #000 52%, transparent 92%);
+}
+.bio-halftone {
+  background-image: radial-gradient(circle at center, rgb(var(--bio-fg-rgb) / 0.8) 0 1.1px, transparent 1.7px);
+  background-size: 7px 7px;
+  -webkit-mask-image: var(--hm, linear-gradient(to top, #000, transparent 72%));
+  mask-image: var(--hm, linear-gradient(to top, #000, transparent 72%));
 }

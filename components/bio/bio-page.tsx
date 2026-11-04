@@ -132,6 +132,7 @@ export function BioPage({ data, mode = 'live', className, style }: { data: BioPa
         data-paused={gate ? 1 : undefined}
         data-cur={Object.keys(cv).length ? 1 : undefined}
         data-layout={cfg.layout}
+        data-font={cfg.theme.font}
         onPointerMove={mode === 'mini' ? undefined : onMove}
       >
         <BioBackground />

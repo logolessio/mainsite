@@ -78,13 +78,13 @@ export function Badges({ className, center = true }: { className?: string; cente
   return (
     <ul data-in style={{ '--i': 2 } as CSSProperties} className={cn('flex flex-wrap gap-1.5', center ? 'justify-center' : 'justify-start', className)}>
       {list.map((b) => (
-        <li key={b.id} title={b.hint} className="inline-flex h-6 items-center gap-1 rounded-full border border-[var(--bio-line)] bg-[var(--bio-soft)] px-2.5 text-[0.7rem] font-medium tracking-[0.02em] text-[var(--bio-fg)]">
+        <li key={b.id} title={b.hint} className="inline-flex h-6 items-center gap-1 rounded-[var(--bio-r)] border border-[var(--bio-line)] bg-[var(--bio-soft)] px-2.5 text-[0.7rem] font-medium tracking-[0.02em] text-[var(--bio-fg)]">
           {icon(b.id)}
           {b.label}
         </li>
       ))}
       {where && (
-        <li className="inline-flex h-6 items-center gap-1 rounded-full border border-[var(--bio-line)] px-2.5 text-[0.7rem] text-[var(--bio-mute)]">
+        <li className="inline-flex h-6 items-center gap-1 rounded-[var(--bio-r)] border border-[var(--bio-line)] px-2.5 text-[0.7rem] text-[var(--bio-mute)]">
           <MapPin className="size-3" strokeWidth={1.8} />
           {where}
         </li>

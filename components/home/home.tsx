@@ -1,7 +1,7 @@
 'use client'
 
 import '@/components/editor/editor.css'
-import { AnimatePresence, type MotionValue, motion, useMotionValue, useMotionValueEvent, useScroll, useSpring, useTransform } from 'framer-motion'
+import { AnimatePresence, type MotionValue, motion, useMotionTemplate, useMotionValue, useMotionValueEvent, useScroll, useSpring, useTransform } from 'framer-motion'
 import { ArrowRight, Check, Loader2, UserRound, X } from 'lucide-react'
 import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react'
 import { BioPage } from '@/components/bio/bio-page'
@@ -43,27 +43,17 @@ function usePointer(ref: React.RefObject<HTMLElement | null>) {
   return { px, py }
 }
 
-/** The scenes the little contents list at the side points to. */
-const TOC = [
-  { id: 'top', name: 'overview' },
-  { id: 'layouts', name: 'layouts' },
-  { id: 'backgrounds', name: 'backgrounds' },
-  { id: 'cursors', name: 'cursors' },
-  { id: 'faq', name: 'questions' },
-  { id: 'claim', name: 'claim' },
-] as const
-
 /* ------------------------------------------------------------------ a page in a phone */
 
 function Phone({ id, width = 260, className, style }: { id: SampleId; width?: number; className?: string; style?: CSSProperties }) {
   const data: BioPageData = SAMPLES[id]
   const k = width / 390
   return (
-    <div aria-hidden="true" className={cn('relative shrink-0 overflow-hidden rounded-[2.2rem] border border-white/25 bg-black shadow-[0_50px_140px_rgb(0_0_0/0.85)]', className)} style={{ width, height: 844 * k, ...style }}>
+    <div aria-hidden="true" className={cn('relative shrink-0 overflow-hidden border border-white/30 bg-black shadow-[0_50px_140px_rgb(0_0_0/0.85)]', className)} style={{ width, height: 844 * k, ...style }}>
       <div className="absolute top-0 left-0 origin-top-left" style={{ width: 390, height: 844, transform: `scale(${k})` }}>
         <BioPage mode="mini" data={data} />
       </div>
-      <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-[inset_0_0_0_1px_rgb(255_255_255/0.1)]" />
+      <span aria-hidden="true" className="pointer-events-none absolute inset-0 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.1)]" />
     </div>
   )
 }
@@ -104,7 +94,7 @@ export function ClaimBar({ big = false, light = false }: { big?: boolean; light?
       }}
       className="w-full"
     >
-      <div className={cn('flex w-full items-center border pl-4 transition-colors', light ? 'border-black/50 bg-transparent focus-within:border-black' : 'border-white/45 bg-black/60 backdrop-blur-sm focus-within:border-white', big ? 'h-[4rem] pl-5' : 'h-[3rem]')}>
+      <div className={cn('flex w-full items-center border pl-4 transition-colors', light ? 'border-black/50 bg-transparent focus-within:border-black' : 'border-white/85 bg-[#0c1544] focus-within:border-white', big ? 'h-[4rem] pl-5' : 'h-[3rem]')}>
         <span className={cn('select-none', mute, big ? 'text-[1.05rem]' : 'text-[0.86rem]')}>logoless.io/</span>
         <input
           value={v}
@@ -128,20 +118,62 @@ export function ClaimBar({ big = false, light = false }: { big?: boolean; light?
   )
 }
 
-/* ------------------------------------------------------------------ the page's furniture: a boxed menu, a small contents list */
+/* ------------------------------------------------------------------ the look: soft colour fields with speckle, a pixel game HUD, retro windows */
 
-function Chrome() {
-  const [at, setAt] = useState(0)
+const INK = '#0c1544' // the deep blue the boxes are filled with
+const CREAM = '#f4ead6'
+
+/** Small pictures drawn one square at a time. `X` is filled, `o` is the eye, anything else is empty. */
+function Pixels({ rows, fill = 'currentColor', eye = INK, className }: { rows: string[]; fill?: string; eye?: string; className?: string }) {
+  return (
+    <svg viewBox={`0 0 ${rows[0].length} ${rows.length}`} shapeRendering="crispEdges" aria-hidden="true" className={className}>
+      {rows.flatMap((r, y) => [...r].map((c, x) => (c === 'X' || c === 'o' ? <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill={c === 'o' ? eye : fill} /> : null)))}
+    </svg>
+  )
+}
+const JACKAL = ['..XX....XX..', '..XXX..XXX..', '..XXX..XXX..', '..XXXXXXXX..', '.XXXXXXXXXX.', '.XXoXXXXoXX.', '.XXXXXXXXXX.', '..XXXXXXXX..', '...XXXXXX...', '...XXXXXX...', '....XXXX....', '.....XX.....']
+const HEART = ['.XX.XX.', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...']
+const PLAY = ['XX.....', 'XXXX...', 'XXXXXX.', 'XXXXXXX', 'XXXXXX.', 'XXXX...', 'XX.....']
+const ARROW = ['X.........', 'XX........', 'XXX.......', 'XXXX......', 'XXXXX.....', 'XXXXXX....', 'XXXXXXX...', 'XXXXX.....', 'XX.XXX....', 'X..XXX....', '....XXX...', '....XXX...']
+
+/** Soft blobs of teal, blue, salmon and red that drift as the page scrolls, with fine speckle over them. */
+function FixedMesh() {
+  const { scrollYProgress } = useScroll()
+  const { reduced } = useMotionPrefs()
+  const pos = (a: string[], b: string[]) => [useMap(scrollYProgress, [0, 0.25, 0.5, 0.75, 1], a, reduced, a[0]), useMap(scrollYProgress, [0, 0.25, 0.5, 0.75, 1], b, reduced, b[0])] as const
+  const [ax, ay] = pos(['14%', '70%', '88%', '30%', '60%'], ['18%', '22%', '70%', '80%', '30%'])
+  const [bx, by] = pos(['86%', '20%', '14%', '82%', '30%'], ['26%', '70%', '24%', '30%', '78%'])
+  const [cx, cy] = pos(['16%', '84%', '62%', '14%', '84%'], ['82%', '70%', '86%', '22%', '66%'])
+  const [dx, dy] = pos(['78%', '40%', '30%', '66%', '14%'], ['84%', '30%', '24%', '76%', '24%'])
+  const bg = useMotionTemplate`radial-gradient(55% 52% at ${ax} ${ay}, #5fd1b6, transparent 72%), radial-gradient(52% 56% at ${bx} ${by}, #2b4fa3, transparent 74%), radial-gradient(52% 52% at ${cx} ${cy}, #f19b78, transparent 72%), radial-gradient(56% 56% at ${dx} ${dy}, #ec5a4f, transparent 74%), #22377f`
+  return (
+    <>
+      <motion.div aria-hidden="true" style={{ background: bg }} className="fixed inset-0 z-0" />
+      <div aria-hidden="true" className="speckle pointer-events-none fixed inset-0 z-0 opacity-25" />
+    </>
+  )
+}
+
+/** The game screen laid over the page: a health bar for how far you are, hearts, rails down the sides, a dialogue line at the bottom and two buttons. */
+function Hud() {
+  const { reduced } = useMotionPrefs()
+  const { scrollYProgress } = useScroll()
+  const [pct, setPct] = useState(0)
+  useMotionValueEvent(scrollYProgress, 'change', (v) => setPct(Math.max(0, Math.min(1, v))))
+  const [line, setLine] = useState('')
+  const [shown, setShown] = useState('')
+  const [scenes, setScenes] = useState({ at: 0, of: 0 })
   useEffect(() => {
     let raf = 0
     const read = () => {
       raf = 0
-      let n = 0
-      TOC.forEach((s, i) => {
-        const el = document.getElementById(s.id)
-        if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.5) n = i
+      const els = [...document.querySelectorAll<HTMLElement>('[data-say]')]
+      let k = 0
+      els.forEach((el, i) => {
+        if (el.getBoundingClientRect().top <= window.innerHeight * 0.55) k = i
       })
-      setAt(n)
+      setLine(els[k]?.dataset.say ?? '')
+      setScenes({ at: k + 1, of: els.length })
     }
     const on = () => {
       if (!raf) raf = requestAnimationFrame(read)
@@ -155,97 +187,145 @@ function Chrome() {
       if (raf) cancelAnimationFrame(raf)
     }
   }, [])
+  useEffect(() => {
+    if (reduced) return setShown(line)
+    setShown('')
+    let i = 0
+    const id = window.setInterval(() => {
+      i++
+      setShown(line.slice(0, i))
+      if (i >= line.length) window.clearInterval(id)
+    }, 22)
+    return () => window.clearInterval(id)
+  }, [line, reduced])
+  const hearts = Math.max(1, Math.ceil(pct * 5))
   return (
     <>
-      <header className="fixed top-4 left-4 z-50 flex border border-white/35 bg-black/60 text-[0.76rem] tracking-[0.06em] uppercase backdrop-blur-sm mix-blend-normal md:top-5 md:left-5">
-        <span className="hidden border-r border-white/35 px-3.5 py-2.5 tabular-nums text-white/55 sm:block">{String(at + 1).padStart(2, '0')}</span>
+      <header className="fixed top-4 left-4 z-50 flex border border-white/80 text-[0.7rem] tracking-[0.08em] uppercase md:top-5 md:left-5" style={{ background: `${INK}d9` }}>
         {[['layouts', '#layouts'], ['backgrounds', '#backgrounds'], ['cursors', '#cursors']].map(([n, h], i, a) => (
-          <a key={h} href={h} className={cn('px-3.5 py-2.5 text-white transition-colors hover:bg-white hover:text-black', i < a.length - 1 && 'border-r border-white/35', i === 2 && 'hidden sm:block')}>
+          <a key={h} href={h} className={cn('pix px-3.5 py-2.5 text-white transition-colors hover:bg-white hover:text-[#0c1544]', i < a.length - 1 && 'border-r border-white/80', i === 2 && 'hidden sm:block')}>
             {n}
           </a>
         ))}
       </header>
-      <a href="/login" aria-label="log in" className="fixed top-4 right-4 z-50 grid size-10 place-items-center rounded-full border border-white/70 bg-black/40 text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-black md:top-5 md:right-5">
-        <UserRound className="size-[1.1rem]" strokeWidth={1.6} />
-      </a>
-      <nav aria-label="on this page" className="fixed top-[36vh] right-5 z-40 hidden w-28 xl:block">
-        <ul className="border-l border-white/20 text-[0.74rem] tracking-[0.04em]">
-          {TOC.map((s, i) => (
-            <li key={s.id} className={cn('relative -ml-px border-l py-1 pl-3 transition-colors', i === at ? 'border-white text-white' : 'border-transparent text-white/45 hover:text-white')}>
-              <a href={`#${s.id}`}>{s.name}</a>
-            </li>
+      <div aria-hidden="true" className="pix pointer-events-none fixed top-[4.2rem] left-4 z-40 md:top-[4.7rem] md:left-5">
+        <div className="h-2.5 w-24 border border-white/85 md:w-32" style={{ background: `${INK}b3` }}>
+          <div className="h-full bg-white" style={{ width: `${pct * 100}%` }} />
+        </div>
+        <p className="mt-1.5 flex items-center gap-2 text-[0.6rem] tracking-[0.1em] text-white/90 uppercase">
+          <span className="grid size-3 place-items-center border border-white/85 text-[0.5rem] leading-none">+</span>
+          level {String(scenes.at).padStart(2, '0')}/{String(scenes.of).padStart(2, '0')}
+        </p>
+      </div>
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-3 md:top-5 md:right-5">
+        <div aria-hidden="true" className="pointer-events-none hidden gap-1 sm:flex">
+          {Array.from({ length: 5 }, (_, i) => (
+            <Pixels key={i} rows={HEART} fill={i < hearts ? '#fff' : `${INK}`} className={cn('size-[1.1rem]', i < hearts ? 'text-white' : 'opacity-70')} />
           ))}
-        </ul>
-        <a href="#claim" className="btn mt-5 h-9 px-5 text-[0.7rem]">
-          claim
+        </div>
+        <a href="/login" aria-label="log in" className="grid size-10 place-items-center border border-white/80 text-white transition-colors hover:bg-white hover:text-[#0c1544]" style={{ background: `${INK}b3` }}>
+          <UserRound className="size-[1.1rem]" strokeWidth={1.6} />
         </a>
-      </nav>
+      </div>
+      <div aria-hidden="true" className="pointer-events-none fixed inset-y-[18vh] left-[2.6vw] z-30 hidden w-px bg-white/60 md:block">
+        <span className="absolute -top-2 -left-[3px] size-[7px] rotate-45 border-t border-l border-white/80" />
+        <span className="absolute -bottom-2 -left-[3px] size-[7px] rotate-45 border-r border-b border-white/80" />
+      </div>
+      <div aria-hidden="true" className="pointer-events-none fixed inset-y-[18vh] right-[2.6vw] z-30 hidden w-px bg-white/60 md:block">
+        <span className="absolute -top-2 -left-[3px] size-[7px] rotate-45 border-t border-l border-white/80" />
+        <span className="absolute -bottom-2 -left-[3px] size-[7px] rotate-45 border-r border-b border-white/80" />
+      </div>
+      <div className="pointer-events-none fixed inset-x-3 bottom-3 z-40 flex items-end gap-2 md:inset-x-[6vw] md:bottom-5">
+        <div className="hidden size-[4.6rem] shrink-0 flex-col items-center justify-center gap-1 border border-white/85 sm:flex" style={{ background: INK }}>
+          <Pixels rows={JACKAL} fill={CREAM} className="size-9" />
+          <span className="pix text-[0.5rem] tracking-[0.14em] text-white/70 uppercase">the guide</span>
+        </div>
+        <p className="pix min-h-[3.4rem] flex-1 border border-white/85 px-4 py-3 text-[0.74rem] leading-[1.5] tracking-[0.06em] uppercase md:text-[0.86rem]" style={{ background: INK, color: CREAM }} aria-live="polite">
+          {shown}
+          <span aria-hidden="true" className="ml-0.5 inline-block w-[0.5em]" style={{ animation: 'hud-blink 1s steps(1) infinite' }}>▌</span>
+        </p>
+        <div className="pointer-events-auto flex shrink-0 gap-1.5">
+          {[['A', '#claim', '#5fd1b6', 'claim a name'], ['B', '#layouts', '#ec5a4f', 'see the layouts']].map(([l, h, c, t]) => (
+            <a key={l} href={h} aria-label={t} title={t} className="pix grid size-11 place-items-center border border-white/85 text-[1rem] font-bold text-[#0c1544] transition-transform hover:-translate-y-0.5 md:size-12" style={{ background: c }}>
+              {l}
+            </a>
+          ))}
+        </div>
+      </div>
     </>
   )
 }
 
-/* ------------------------------------------------------------------ small pieces borrowed from the reference */
-
-/** Three hairline arches round a window: the frame the title sits in front of. */
-function ArchFrames({ opacity }: { opacity?: MotionValue<number> }) {
+/** A small window: a deep blue title bar with three square lights, a cream body and a hard square shadow. */
+function Win({ title, children, className, bodyClass }: { title: string; children: ReactNode; className?: string; bodyClass?: string }) {
   return (
-    <motion.div aria-hidden="true" style={{ opacity }} className="pointer-events-none absolute inset-0">
-      {[0, 1, 2].map((i) => (
-        <span key={i} className="absolute rounded-t-[999px] border border-white/55" style={{ inset: `${-9 - i * 8}px`, borderColor: `rgb(255 255 255 / ${0.6 - i * 0.14})` }} />
-      ))}
-    </motion.div>
+    <div className={cn('border border-[#0c1544] bg-[#f3f1ec] text-[#0c1544] shadow-[7px_7px_0_#0c1544]', className)}>
+      <div className="flex h-7 items-center gap-1.5 px-2.5" style={{ background: INK }}>
+        {['#ec5a4f', '#f1b84f', '#5fd1b6'].map((c) => (
+          <span key={c} className="size-[7px]" style={{ background: c }} />
+        ))}
+        <span className="pix ml-2 truncate text-[0.62rem] tracking-[0.1em] uppercase" style={{ color: CREAM }}>
+          {title}
+        </span>
+      </div>
+      <div className={bodyClass}>{children}</div>
+    </div>
   )
 }
 
-/** A round badge: solid and light, or only a line. */
-function Badge({ solid = false, href, children, className, style }: { solid?: boolean; href: string; children: ReactNode; className?: string; style?: CSSProperties }) {
+/** The player bar at the foot of a window: a red line with a blue square on it, and four pixel controls. */
+function PlayerBar({ at }: { at: MotionValue<number> }) {
+  const w = useTransform(at, (v) => `${Math.max(0, Math.min(1, v)) * 100}%`)
   return (
-    <motion.a href={href} style={style} whileHover={{ scale: 1.05 }} transition={{ type: 'spring', stiffness: 300, damping: 18 }} className={cn('grid size-[6.6rem] place-items-center rounded-full text-center text-[0.8rem] leading-[1.45] tracking-[0.1em] uppercase md:size-[8rem] md:text-[0.9rem]', solid ? 'bg-[#ededed] text-black' : 'border border-white text-white', className)}>
-      <span>{children}</span>
-    </motion.a>
+    <div className="px-3 pt-3 pb-2.5">
+      <div className="relative h-[3px] bg-[#0c1544]/20">
+        <motion.span style={{ width: w }} className="absolute inset-y-0 left-0 block bg-[#ec5a4f]" />
+        <motion.span style={{ left: w }} className="absolute top-1/2 block size-2.5 -translate-x-1/2 -translate-y-1/2 bg-[#2b4fa3]" />
+      </div>
+      <div className="pix mt-2.5 flex items-center gap-3 text-[0.62rem] text-[#2b4fa3]">
+        <span>▶</span>
+        <span>»</span>
+        <span>‖</span>
+        <span>■</span>
+      </div>
+    </div>
   )
 }
 
-/** A hairline that walks down the page, turns rounded corners and ends in an open arrow. It draws itself as you scroll. */
-function HairPath({ p, pts, r = 30, className }: { p: MotionValue<number>; pts: [number, number][]; r?: number; className?: string }) {
-  const box = useRef<HTMLDivElement>(null)
-  const [w, setW] = useState(1200)
-  useEffect(() => {
-    const el = box.current
-    if (!el) return
-    const ro = new ResizeObserver(() => setW(el.clientWidth || 1200))
-    ro.observe(el)
-    setW(el.clientWidth || 1200)
-    return () => ro.disconnect()
-  }, [])
-  const abs = pts.map(([x, y]) => [x * w, y] as [number, number])
-  let d = `M ${abs[0][0]} ${abs[0][1]}`
-  for (let i = 1; i < abs.length; i++) {
-    const [x, y] = abs[i]
-    const [px, py] = abs[i - 1]
-    if (i === abs.length - 1) {
-      d += ` L ${x} ${y}`
-      break
-    }
-    const [nx, ny] = abs[i + 1]
-    const a = Math.hypot(x - px, y - py)
-    const b = Math.hypot(nx - x, ny - y)
-    const k = Math.min(r, a / 2, b / 2)
-    const sx = x - ((x - px) / a) * k
-    const sy = y - ((y - py) / a) * k
-    const ex = x + ((nx - x) / b) * k
-    const ey = y + ((ny - y) / b) * k
-    d += ` L ${sx} ${sy} Q ${x} ${y} ${ex} ${ey}`
-  }
-  const [lx, ly] = abs[abs.length - 1]
-  const tip = useTransform(p, [0.9, 1], [0, 1])
-  const height = Math.max(...abs.map((a) => a[1])) + 24
+/** Three ranges of mountains drawn in flat shapes with speckle, each sliding at its own speed. */
+function Mountains({ p, className }: { p: MotionValue<number>; className?: string }) {
+  const { reduced } = useMotionPrefs()
+  const far = useMap(p, [0, 1], ['4vh', '-8vh'], reduced, '0vh')
+  const mid = useMap(p, [0, 1], ['10vh', '-16vh'], reduced, '0vh')
+  const near = useMap(p, [0, 1], ['18vh', '-26vh'], reduced, '0vh')
+  const box = 'absolute inset-x-0 bottom-0 h-full w-full'
   return (
-    <div ref={box} aria-hidden="true" className={cn('pointer-events-none absolute inset-x-0 top-0 hidden md:block', className)} style={{ height }}>
-      <svg width={w} height={height} className="overflow-visible">
-        <motion.path d={d} fill="none" stroke="#fff" strokeWidth={1} style={{ pathLength: p }} />
-        <motion.path d={`M ${lx - 9} ${ly - 11} L ${lx} ${ly} L ${lx + 9} ${ly - 11}`} fill="none" stroke="#fff" strokeWidth={1} style={{ opacity: tip }} />
-      </svg>
+    <div aria-hidden="true" className={cn('pointer-events-none absolute inset-x-0 bottom-0 h-[48vh] overflow-hidden', className)}>
+      <motion.svg style={{ y: far }} viewBox="0 0 1200 400" preserveAspectRatio="none" className={box}>
+        <polygon filter="url(#speck)" fill="#2a4aa0" points="0,400 0,250 90,200 180,240 300,150 380,210 470,120 560,200 680,170 780,230 900,160 1010,220 1100,190 1200,230 1200,400" />
+      </motion.svg>
+      <motion.svg style={{ y: mid }} viewBox="0 0 1200 400" preserveAspectRatio="none" className={box}>
+        <polygon filter="url(#speck)" fill="#f19b78" points="250,400 520,60 590,210 560,400" />
+        <polygon filter="url(#speck)" fill="#14226b" points="520,60 700,120 960,400 560,400 590,210" />
+        <polygon fill="#f4ead6" fillOpacity=".85" points="520,60 540,90 528,96 514,84" />
+      </motion.svg>
+      <motion.svg style={{ y: near }} viewBox="0 0 1200 400" preserveAspectRatio="none" className={box}>
+        <polygon filter="url(#speck)" fill="#2fae96" points="0,400 0,330 140,290 260,330 420,300 560,340 700,310 860,350 1000,310 1200,350 1200,400" />
+      </motion.svg>
+    </div>
+  )
+}
+
+/** A line of dialogue in a square box with the speaker on a small tab. `solid` is the light one. */
+function Say({ who, children, solid = false, className, style }: { who?: string; children: ReactNode; solid?: boolean; className?: string; style?: CSSProperties }) {
+  return (
+    <div style={{ background: solid ? CREAM : INK, color: solid ? INK : CREAM, ...style }} className={cn('relative border px-5 pt-7 pb-4 text-[0.82rem] leading-[1.65]', solid ? 'border-[#f4ead6]' : 'border-white/85', className)}>
+      {who && (
+        <span className="pix absolute top-0 left-0 border-r border-b px-2.5 py-1 text-[0.58rem] tracking-[0.18em] uppercase" style={{ borderColor: solid ? `${INK}66` : 'rgb(255 255 255 / 0.85)', opacity: 0.8 }}>
+          {who}
+        </span>
+      )}
+      {children}
     </div>
   )
 }
@@ -278,176 +358,225 @@ function Block({ title, children, className }: { title: string; children: ReactN
   )
 }
 
-/* ------------------------------------------------------------------ the first scene */
+/* ------------------------------------------------------------------ level 0: the title screen */
+
+const HARD = { textShadow: '0.04em 0.04em 0 #0c1544' } as const
 
 function Hero() {
   const ref = useRef<HTMLElement>(null)
-  const { px, py } = usePointer(ref)
   const { reduced } = useMotionPrefs()
-  const level = useQuiet()
-  // read straight from the scroll (a spring here starts from the wrong end and the page would zoom out when it loads)
+  // read straight from the scroll (a spring here starts from the wrong end and the page would jump when it loads)
   const { scrollYProgress: p } = useScroll({ target: ref, offset: ['start start', 'end end'] })
-
-  const zoom = useMap(p, [0, 0.1, 0.66], [1, 1, 9], reduced, 1)
-  const frames = useMap(p, [0, 0.1, 0.3], [1, 1, 0], reduced, 1)
-  const phoneY = useMap(p, [0, 0.3], ['0vh', '-16vh'], reduced, '0vh')
-  const phoneO = useMap(p, [0, 0.12, 0.3], [1, 1, 0], reduced, 1)
-  const titleS = useMap(p, [0, 0.34], [1, 1.22], reduced, 1)
-  const titleO = useMap(p, [0, 0.08, 0.3], [1, 1, 0], reduced, 1)
-  const sideO = useMap(p, [0, 0.14], [1, 0], reduced, 1)
-  const leftX = useMap(p, [0, 0.2], ['0vw', '-14vw'], reduced, '0vw')
-  const rightX = useMap(p, [0, 0.2], ['0vw', '14vw'], reduced, '0vw')
-  const lineH = useMap(p, [0, 0.14], [1, 0], reduced, 1)
-  const fadeBlack = useMap(p, [0.58, 0.92], [0, 1], reduced, 0)
-  const lean = useTransform(px, (v) => v * 10)
-
+  const winY = useMap(p, [0, 0.55], ['0vh', '-16vh'], reduced, '0vh')
+  const winS = useMap(p, [0, 0.55], [1, 1.1], reduced, 1)
+  const winO = useMap(p, [0.34, 0.66], [1, 0], reduced, 1)
+  const titleY = useMap(p, [0, 0.55], ['0vh', '-14vh'], reduced, '0vh')
+  const titleO = useMap(p, [0.22, 0.58], [1, 0], reduced, 1)
+  const claimO = useMap(p, [0, 0.3], [1, 0], reduced, 1)
+  const play = useMap(p, [0, 0.9], [0.04, 0.96], reduced, 0.4)
   return (
-    <section ref={ref} id="top" className="relative h-[270svh]">
+    <section ref={ref} id="top" className="relative h-[240svh]">
+      <i aria-hidden="true" data-say="press start. pick a name below." className="absolute top-0 left-0 block h-px w-px" />
       <div className="sticky top-0 h-[100svh] overflow-hidden">
-        <motion.p style={{ opacity: titleO }} className="absolute top-[9vh] left-0 w-full text-center text-[0.74rem] text-white/60 italic md:top-[8vh]">
-          a link in bio, but make it move
-        </motion.p>
-
-        {/* the window in its arches; it is what the page zooms into */}
-        <div className="absolute top-[19vh] left-1/2 h-[52vh] w-[min(62vw,24rem)] -translate-x-1/2 md:top-[17vh] md:h-[56vh] md:w-[min(34vw,27rem)]">
-          <motion.div style={{ scale: zoom }} className="absolute inset-0 origin-center will-change-transform">
-            <ArchFrames opacity={frames} />
-            <div className="absolute inset-0 overflow-hidden rounded-t-[999px] bg-black">
-              <ShaderRunner id="mercury" tone={1} intensity={80} speed={46} px={px} py={py} level={level} reduced={reduced} />
-              <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_70%,transparent,rgb(0_0_0/0.55))]" />
-            </div>
-          </motion.div>
-          <motion.div style={{ y: phoneY, opacity: phoneO }} className="pointer-events-none absolute bottom-[-6%] left-1/2 -translate-x-1/2">
-            <motion.div style={{ x: lean }}>
-              <Phone id="aura" width={190} className="md:hidden" />
-              <Phone id="aura" width={236} className="hidden md:block" />
-            </motion.div>
-          </motion.div>
-        </div>
-
-        {/* the title sits in front of the arches */}
-        <motion.h1 style={{ scale: titleS, opacity: titleO }} className="disp pointer-events-none absolute top-[13vh] left-0 w-full text-center text-[clamp(3.4rem,13.4vw,13.5rem)] text-[#ededed] md:top-[10vh]">
-          link in bio
-        </motion.h1>
-
-        <motion.div style={{ opacity: sideO, x: leftX }} className="absolute top-[52vh] left-[5vw] hidden flex-col items-center md:flex xl:left-[9vw]">
-          <Badge solid href="#claim">
-            claim
-            <br />a name
-          </Badge>
-          <a href="#layouts" className="btn mt-8 h-10 px-6">
-            learn more
-          </a>
-          <motion.span style={{ scaleY: lineH }} className="mt-4 block h-[18vh] w-px origin-top bg-white" />
-        </motion.div>
-        <motion.div style={{ opacity: sideO, x: rightX }} className="absolute top-[36vh] right-[5vw] hidden md:block xl:right-[11vw]">
-          <Badge href="#layouts">
-            see it
-            <br />
-            move
-          </Badge>
-        </motion.div>
-
-        <motion.div style={{ opacity: sideO }} className="absolute bottom-[4vh] left-1/2 w-full max-w-[28rem] -translate-x-1/2 px-5">
-          <p className="mb-3 text-center text-[0.72rem] text-white/55">
-            <span className="border-b border-dotted border-white/50 italic">:a few pages:</span>
+        <Mountains p={p} />
+        <motion.div style={{ opacity: titleO, y: titleY }} className="absolute inset-x-0 top-[9vh] px-4 text-center md:top-[7vh]">
+          <p className="pix text-[0.7rem] tracking-[0.14em] uppercase" style={{ color: CREAM }}>
+            <span className="mr-2 tracking-normal normal-case italic">from →</span>
+            <span className="border border-white/85 px-2 py-1" style={{ background: INK }}>
+              logoless
+            </span>
           </p>
+          <h1 className="disp mt-4 text-[clamp(3.2rem,12.6vw,12rem)]" style={{ color: CREAM, ...HARD }}>
+            link in bio
+          </h1>
+          <p className="mt-3 text-[0.78rem] text-white italic">a link in bio for people who make things move</p>
+        </motion.div>
+        <motion.div style={{ y: winY, scale: winS, opacity: winO }} className="absolute top-[33vh] left-1/2 w-[min(86vw,23rem)] -translate-x-1/2 md:top-[34vh]">
+          <Win title="your-page.exe">
+            <div className="relative h-[9.5rem] overflow-hidden md:h-[11rem]" style={{ background: INK }}>
+              <div className="absolute top-0 left-1/2 -translate-x-1/2">
+                <Phone id="aura" width={250} className="!border-0 !shadow-none" />
+              </div>
+            </div>
+            <PlayerBar at={play} />
+          </Win>
+        </motion.div>
+        <motion.div style={{ opacity: claimO }} className="absolute inset-x-0 bottom-[21vh] mx-auto w-full max-w-[28rem] px-5">
           <ClaimBar />
         </motion.div>
-
-        <motion.div aria-hidden="true" style={{ opacity: fadeBlack }} className="pointer-events-none absolute inset-0 bg-black" />
       </div>
     </section>
   )
 }
 
-/* ------------------------------------------------------------------ not a list */
+/* ------------------------------------------------------------------ levels 1 to 4: the story, as windows opening on a desktop */
 
-function Intro() {
+/** A window that opens (a little scale, a rise, a fade) over a stretch of a scene's progress. */
+function usePop(p: MotionValue<number>, a: number, b: number) {
+  const { reduced } = useMotionPrefs()
+  return {
+    opacity: useMap(p, [a, b], [0, 1], reduced, 1),
+    scale: useMap(p, [a, b], [0.9, 1], reduced, 1),
+    y: useMap(p, [a, b], ['6vh', '0vh'], reduced, '0vh'),
+  }
+}
+
+function Levels() {
   const ref = useRef<HTMLElement>(null)
   const { reduced } = useMotionPrefs()
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 80%', 'end 40%'] })
-  const p = useSpring(scrollYProgress, { stiffness: 120, damping: 30, mass: 0.4 })
-  const { scrollYProgress: s2 } = useScroll({ target: ref, offset: ['start end', 'end start'] })
-  const yA = useMap(s2, [0, 1], ['6vh', '-8vh'], reduced, '0vh')
-  const yB = useMap(s2, [0, 1], ['12vh', '-14vh'], reduced, '0vh')
-  const yF = useMap(s2, [0, 1], ['10vh', '-10vh'], reduced, '0vh')
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
+  const p = useSpring(scrollYProgress, { stiffness: 140, damping: 30, mass: 0.35 })
+  const out = useMap(p, [0.9, 1], [1, 0], reduced, 1)
+  const play = useMap(p, [0.04, 0.3], [0.04, 0.72], reduced, 0.72)
+  const curX = useMap(p, [0.72, 0.88], ['0%', '135%'], reduced, '135%')
+  const curY = useMap(p, [0.72, 0.88], ['0%', '55%'], reduced, '55%')
+  const strike = useMap(p, [0.52, 0.64], [0, 1], reduced, 1)
+  const b1 = useMap(p, [0.46, 0.52], [0, 1], reduced, 1)
+  const b2 = useMap(p, [0.48, 0.54], [0, 1], reduced, 1)
+  const b3 = useMap(p, [0.5, 0.56], [0, 1], reduced, 1)
+  const drift1 = useMap(p, [0, 1], ['3vh', '-4vh'], reduced, '0vh')
+  const drift2 = useMap(p, [0, 1], ['6vh', '-9vh'], reduced, '0vh')
+  const drift3 = useMap(p, [0, 1], ['9vh', '-14vh'], reduced, '0vh')
+  const w1 = usePop(p, 0.02, 0.12)
+  const w2 = usePop(p, 0.22, 0.32)
+  const w3 = usePop(p, 0.42, 0.52)
+  const w4 = usePop(p, 0.64, 0.74)
+  const say = [
+    ['2%', 'you just posted the best edit of your month.'],
+    ['22%', 'someone in the comments asks where they can see more.'],
+    ['42%', 'so you point them at your bio. a list of links.'],
+    ['64%', 'what do you put in your bio?'],
+  ]
   return (
-    <section ref={ref} className="relative mx-auto w-full max-w-[96rem] px-6 pt-[18vh] pb-[16vh] md:px-12">
-      <HairPath p={p} pts={[[0.13, 0], [0.13, 250], [0.42, 250], [0.42, 640]]} />
-      <motion.div style={{ y: yA }} className="relative md:ml-[50%]">
-        <Block title="a link in bio is not a list" className="md:max-w-[22rem]">
-          it&apos;s the first thing people open after your edit. so it shouldn&apos;t feel like a drawer full of white buttons. put a shader behind it, a song under it, your own cursor on it, and your best work out front.
-        </Block>
-      </motion.div>
-      <motion.div style={{ y: yB }} className="relative mt-[22vh] md:ml-[8%] md:mt-[30vh]">
-        <Block title={'it\'s a place,\nnot a menu'} className="whitespace-pre-line">
-          full screen, and every scroll moves something. ten layouts, seven live backgrounds, thirteen cursors, music the page actually listens to. pick what fits and ignore the rest.
-        </Block>
-      </motion.div>
-      <motion.figure style={{ y: yF }} className="relative mt-[16vh] md:ml-[8%] md:mr-[6%]">
-        <div className="relative flex h-[22rem] items-end justify-center overflow-hidden border border-white/20 bg-[#0c0c0c] md:h-[30rem]">
-          <div aria-hidden="true" className="stipple absolute inset-0 opacity-50" />
-          <div className="relative flex items-end gap-5 md:gap-8">
-            <Phone id="poster" width={170} className="hidden -rotate-3 translate-y-[18%] md:block" />
-            <Phone id="aura" width={230} className="translate-y-[14%]" />
-            <Phone id="index" width={170} className="hidden rotate-3 translate-y-[18%] md:block" />
-          </div>
-        </div>
-        <figcaption className="mt-4 text-center text-[0.74rem] text-white/50 italic">a few pages, made here</figcaption>
-      </motion.figure>
+    <section ref={ref} id="story" className="relative h-[540svh]">
+      {say.map(([t, s]) => (
+        <i key={t} aria-hidden="true" data-say={s} style={{ top: t }} className="absolute left-0 block h-px w-px" />
+      ))}
+      <div className="sticky top-0 h-[100svh] overflow-hidden">
+        <motion.div style={{ opacity: out }} className="absolute inset-0">
+          {/* 1: the edit */}
+          <motion.div style={{ ...w1 }} className="absolute top-[13vh] left-[4vw] w-[88vw] md:top-[14vh] md:left-[8vw] md:w-[26rem]">
+            <motion.div style={{ y: drift1 }}>
+              <Win title="best-edit-of-the-month.mp4">
+                <div className="relative grid h-40 place-items-center overflow-hidden md:h-48" style={{ background: 'linear-gradient(135deg,#2b4fa3,#5fd1b6 60%,#f19b78)' }}>
+                  <div aria-hidden="true" className="speckle absolute inset-0 opacity-50" />
+                  <Pixels rows={PLAY} fill={CREAM} className="relative size-14" />
+                  <span className="pix absolute bottom-2 left-2 px-1.5 py-0.5 text-[0.56rem] tracking-[0.1em] uppercase" style={{ background: INK, color: CREAM }}>
+                    00:42
+                  </span>
+                </div>
+                <PlayerBar at={play} />
+              </Win>
+            </motion.div>
+          </motion.div>
+          {/* 2: the question */}
+          <motion.div style={{ ...w2 }} className="absolute top-[36vh] right-[4vw] w-[78vw] md:top-[20vh] md:right-[9vw] md:w-[22rem]">
+            <motion.div style={{ y: drift2 }}>
+              <Win title="comments (1)">
+                <div className="p-4">
+                  <div className="flex items-baseline justify-between">
+                    <span className="pix text-[0.7rem] tracking-[0.08em] uppercase">@someone</span>
+                    <span className="text-[0.64rem] opacity-55 italic">2 min ago</span>
+                  </div>
+                  <p className="mt-3 text-[0.86rem] leading-[1.6]">wait. where can i see more??</p>
+                  <div className="mt-4 flex items-center gap-2 text-[#ec5a4f]">
+                    <Pixels rows={HEART} fill="#ec5a4f" className="size-4" />
+                    <span className="pix text-[0.66rem] text-[#0c1544]">3</span>
+                  </div>
+                </div>
+              </Win>
+            </motion.div>
+          </motion.div>
+          {/* 3: the list */}
+          <motion.div style={{ ...w3 }} className="absolute top-[55vh] left-[4vw] w-[78vw] md:top-[50vh] md:left-[16vw] md:w-[23rem]">
+            <motion.div style={{ y: drift3 }}>
+              <Win title="link-in-bio.txt">
+                <div className="relative grid gap-3 p-5">
+                  {[b1, b2, b3].map((b, i) => (
+                    <motion.span key={i} style={{ scaleX: b }} className="block h-4 origin-left bg-[#0c1544]/85" />
+                  ))}
+                  <motion.span aria-hidden="true" style={{ scaleX: strike }} className="absolute top-1/2 right-2 left-2 block h-[3px] origin-left -rotate-2 bg-[#ec5a4f]" />
+                </div>
+                <p className="pix border-t border-[#0c1544]/20 px-5 py-2.5 text-[0.62rem] tracking-[0.1em] uppercase opacity-70">a row of white buttons</p>
+              </Win>
+            </motion.div>
+          </motion.div>
+          {/* 4: the choice */}
+          <motion.div style={{ ...w4 }} className="absolute top-[71vh] right-[4vw] w-[84vw] md:top-[56vh] md:right-[8vw] md:w-[22rem]">
+            <Win title="decision.exe">
+              <div className="p-5">
+                <p className="text-[0.9rem] leading-[1.5] italic">what do you put in your bio?</p>
+                <div className="relative mt-4 grid gap-2">
+                  <span className="pix border border-[#0c1544]/50 px-3 py-2 text-[0.7rem] tracking-[0.08em] uppercase opacity-60">
+                    <b className="mr-2">A)</b>a list of links
+                  </span>
+                  <span className="pix border border-[#0c1544] px-3 py-2 text-[0.7rem] tracking-[0.08em] uppercase" style={{ background: '#5fd1b6' }}>
+                    <b className="mr-2">B)</b>a page that&apos;s yours
+                  </span>
+                  <motion.span aria-hidden="true" style={{ x: curX, y: curY }} className="pointer-events-none absolute top-[10%] left-[18%]">
+                    <Pixels rows={ARROW} fill="#fff" className="size-7 drop-shadow-[1.5px_1.5px_0_#0c1544]" />
+                  </motion.span>
+                </div>
+              </div>
+            </Win>
+          </motion.div>
+        </motion.div>
+      </div>
     </section>
   )
 }
 
-/* ------------------------------------------------------------------ a serious question */
+/* ------------------------------------------------------------------ the answer: the screen flashes, then it comes in over the mountains */
 
-function Question() {
-  const ref = useRef<HTMLDivElement>(null)
+function Impact() {
+  const ref = useRef<HTMLElement>(null)
   const { reduced } = useMotionPrefs()
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 75%', 'end 55%'] })
-  const p = useSpring(scrollYProgress, { stiffness: 120, damping: 30, mass: 0.4 })
-  const aO = useMap(p, [0.1, 0.35], [0, 1], reduced, 1)
-  const bO = useMap(p, [0.5, 0.78], [0, 1], reduced, 1)
-  const barA = useMap(p, [0.1, 0.45], [0, 1], reduced, 1)
-  const barB = useMap(p, [0.5, 0.9], [0, 1], reduced, 1)
-  const endO = useMap(p, [0.85, 1], [0, 1], reduced, 1)
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
+  const p = useSpring(scrollYProgress, { stiffness: 140, damping: 30, mass: 0.35 })
+  const flash = useMap(p, [0.08, 0.13, 0.26, 0.36], [0, 1, 1, 0], reduced, 0)
+  const echoY = useMap(p, [0.3, 1], ['30vh', '-34vh'], reduced, '0vh')
+  const echo2Y = useMap(p, [0.3, 1], ['12vh', '-16vh'], reduced, '0vh')
+  const x1 = useMap(p, [0.34, 0.5], ['-70vw', '0vw'], reduced, '0vw')
+  const x2 = useMap(p, [0.4, 0.56], ['70vw', '0vw'], reduced, '0vw')
+  const x3 = useMap(p, [0.46, 0.62], ['-70vw', '0vw'], reduced, '0vw')
+  const o1 = useMap(p, [0.34, 0.44], [0, 1], reduced, 1)
+  const o2 = useMap(p, [0.4, 0.5], [0, 1], reduced, 1)
+  const o3 = useMap(p, [0.46, 0.56], [0, 1], reduced, 1)
+  const narrO = useMap(p, [0.64, 0.72, 0.94, 1], [0, 1, 1, 0], reduced, 1)
+  const narrY = useMap(p, [0.64, 0.72], ['4vh', '0vh'], reduced, '0vh')
   return (
-    <Scene className="px-6 py-[16vh] md:px-12" innerClass="mx-auto w-full max-w-[72rem]">
-      <div ref={ref}>
-        <h2 className="disp text-center text-[clamp(2.6rem,9vw,8rem)]">serious question</h2>
-        <div className="mt-[10vh] grid gap-12 md:grid-cols-[0.9fr_1.1fr] md:gap-16">
-          <div className="self-center">
-            <span className="inline-block border border-white/25 bg-white/[0.07] px-2 py-0.5 text-[0.8rem] text-white/80 italic">*ping*</span>
-            <p className="mt-6 max-w-[21rem] text-[0.84rem] leading-[1.75] text-white/85">you just posted the best edit of your month. someone in the comments asks where they can see more.</p>
-            <p className="mt-5 max-w-[21rem] text-[0.84rem] leading-[1.75] text-white/85 italic">what do you put in your bio?</p>
-          </div>
-          <div className="grid gap-14">
-            <motion.div style={{ opacity: aO }}>
-              <h3 className="text-[1.15rem] tracking-[0.01em] italic">
-                <span className="text-white/45">A)</span> a list of links
-              </h3>
-              <div className="relative mt-5 pl-5">
-                <motion.span style={{ scaleY: barA }} className="absolute top-0 bottom-0 left-0 w-px origin-top bg-white/70" />
-                <p className="max-w-[24rem] text-[0.8rem] leading-[1.75] text-white/65">the same row of white buttons everyone has. you hope they scroll past the third one.</p>
-              </div>
-            </motion.div>
-            <motion.div style={{ opacity: bO }}>
-              <h3 className="text-[1.15rem] tracking-[0.01em] italic">
-                <span>B)</span> a page that&apos;s yours
-              </h3>
-              <div className="relative mt-5 pl-5">
-                <motion.span style={{ scaleY: barB }} className="absolute top-0 bottom-0 left-0 w-px origin-top bg-white" />
-                <p className="max-w-[24rem] text-[0.8rem] leading-[1.75] text-white/85">a shader behind it, your song, your cursor, the edit playing right there. they stay a while.</p>
-              </div>
-            </motion.div>
-          </div>
+    <section ref={ref} className="relative h-[420svh]">
+      <i aria-hidden="true" data-say="good choice. it doesn't have to be a list." className="absolute top-[8%] left-0 block h-px w-px" />
+      <i aria-hidden="true" data-say="make it a place. a few things it can do:" className="absolute top-[64%] left-0 block h-px w-px" />
+      <div className="sticky top-0 h-[100svh] overflow-hidden">
+        <Mountains p={p} className="opacity-90" />
+        <motion.span aria-hidden="true" style={{ y: echoY }} className="disp absolute top-[34%] -left-[2%] text-[clamp(9rem,30vw,28rem)] text-transparent [-webkit-text-stroke:1.4px_rgb(244_234_214/0.28)]">
+          place
+        </motion.span>
+        <motion.span aria-hidden="true" style={{ y: echo2Y }} className="disp absolute top-[8%] right-[-2%] text-[clamp(5rem,16vw,15rem)] text-transparent [-webkit-text-stroke:1.4px_rgb(244_234_214/0.22)]">
+          moves
+        </motion.span>
+        <div className="relative mx-auto flex h-full w-full max-w-[96rem] flex-col justify-center px-5 pb-24 md:px-14">
+          <h2 className="disp text-[clamp(3rem,11.4vw,11rem)]" style={{ color: CREAM, ...HARD }}>
+            <motion.span style={{ x: x1, opacity: o1 }} className="block">
+              it doesn&apos;t
+            </motion.span>
+            <motion.span style={{ x: x2, opacity: o2 }} className="block md:ml-[8vw]">
+              have to be
+            </motion.span>
+            <motion.span style={{ x: x3, opacity: o3 }} className="block md:ml-[3vw]">
+              a list.
+            </motion.span>
+          </h2>
+          <motion.div style={{ opacity: narrO, y: narrY }} className="mt-8 max-w-[30rem] md:mt-10 md:ml-[44vw]">
+            <p className="pix border border-white/85 px-4 py-3 text-[0.74rem] leading-[1.7] tracking-[0.06em] uppercase" style={{ background: INK, color: CREAM }}>
+              full screen. a shader behind it. your song under it. a cursor that&apos;s yours, and every scroll moves something.
+            </p>
+          </motion.div>
         </div>
-        <motion.p style={{ opacity: endO }} className="mt-[10vh] text-center text-[0.74rem] tracking-[0.12em] text-white/55 uppercase">
-          ↓ good choice. keep scrolling ↓
-        </motion.p>
+        <motion.div aria-hidden="true" style={{ opacity: flash, backgroundColor: CREAM }} className="pointer-events-none absolute inset-0" />
       </div>
-    </Scene>
+    </section>
   )
 }
 
@@ -466,12 +595,13 @@ function Layouts() {
   const rail = useMap(p, [0, 1], ['0%', '100%'], reduced, '100%')
   return (
     <section ref={ref} id="layouts" className="relative h-[820svh]">
-      <div className="sticky top-0 h-[100svh] overflow-hidden border-y border-[#8a8a8a]/50">
+      <i aria-hidden="true" data-say="ten ways to lay a page out. keep scrolling to try them." className="absolute top-0 left-0 block h-px w-px" />
+      <div className="sticky top-0 h-[100svh] overflow-hidden border-y border-white/40 bg-[#0c1544]">
         <div aria-hidden="true" className="stipple absolute inset-y-0 left-0 w-[4.4vw] min-w-6 border-r border-white/35" />
         <div aria-hidden="true" className="stipple absolute inset-y-0 right-0 w-[4.4vw] min-w-6 border-l border-white/35" />
         <div aria-hidden="true" className="absolute inset-y-0 left-[calc(4.4vw+7px)] hidden w-px bg-white/25 md:block" />
         <div aria-hidden="true" className="absolute inset-y-0 right-[calc(4.4vw+7px)] hidden w-px bg-white/25 md:block" />
-        <div className="relative mx-auto flex h-full w-full max-w-[84rem] flex-col justify-center px-[8vw] pt-12 md:px-[9vw]">
+        <div className="relative mx-auto flex h-full w-full max-w-[84rem] flex-col justify-center px-[8vw] pt-24 pb-28 md:px-[9vw]">
           <h2 className="disp text-[clamp(2rem,5.4vw,5rem)]">ten ways to lay it out</h2>
           <p className="mt-4 max-w-[26rem] text-[0.8rem] leading-[1.7] text-white/65">same links, ten ways to show them. some float, some pin, some run sideways. all of them move when you scroll.</p>
           <div className="mt-8 grid items-center gap-8 md:mt-10 md:grid-cols-[1fr_auto] md:gap-14">
@@ -496,7 +626,7 @@ function Layouts() {
               <span className="tabular-nums text-white/45">{String(i + 1).padStart(2, '0')}</span> {LAYOUTS[i].name.toLowerCase()}: {LAYOUTS[i].note}
             </p>
             <motion.div style={{ rotate: tilt, y: lift }} className="relative mx-auto">
-              <div className="relative h-[21.5rem] w-[194px] overflow-hidden rounded-[2rem] border border-white/35 bg-black shadow-[0_50px_140px_rgb(0_0_0/0.9)] sm:h-[30rem] sm:w-[270px] md:h-[32rem] md:w-[286px]">
+              <div className="relative h-[21.5rem] w-[194px] overflow-hidden border border-white/35 bg-black shadow-[0_50px_140px_rgb(0_0_0/0.9)] sm:h-[30rem] sm:w-[270px] md:h-[32rem] md:w-[286px]">
                 <AnimatePresence mode="popLayout" initial={false}>
                   <motion.div key={id} initial={{ opacity: 0, scale: 1.05 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.5, ease: EASE }} className="absolute inset-0">
                     <div className="absolute top-0 left-0 origin-top-left scale-[0.5] sm:scale-[0.69] md:scale-[0.733]" style={{ width: 390, height: 700 }}>
@@ -516,7 +646,7 @@ function Layouts() {
   )
 }
 
-/* ------------------------------------------------------------------ shaders: a circle opens onto the next scene */
+/* ------------------------------------------------------------------ shaders: a square opens onto the next scene */
 
 function Backgrounds() {
   const ref = useRef<HTMLElement>(null)
@@ -529,19 +659,21 @@ function Backgrounds() {
   useMotionValueEvent(p, 'change', (v) => setI(Math.max(0, Math.min(BIO_SHADERS.length - 1, Math.floor(((v - 0.14) / 0.86) * BIO_SHADERS.length * 0.999)))))
   const s = BIO_SHADERS[i]
   // the opening: a circle grows from the middle while the scene is still arriving, then the scene stays put
-  const iris = useMap(p, [0, 0.13], [0, 150], reduced, 150)
-  const clip = useTransform(iris, (v) => `circle(${v}% at 50% 50%)`)
+  const iris = useMap(p, [0, 0.13], [0, 100], reduced, 100)
+  const clip = useTransform(iris, (v) => `inset(${(100 - v) / 2}%)`)
   const scale = useMap(p, [0.1, 1], [1.12, 1], reduced, 1)
   return (
     <section ref={ref} id="backgrounds" className="relative h-[640svh]">
+      <i aria-hidden="true" data-say="seven backgrounds, drawn live by your graphics card." className="absolute top-0 left-0 block h-px w-px" />
       <div className="sticky top-0 h-[100svh] overflow-hidden">
         <motion.div className="absolute inset-0" style={{ clipPath: clip, WebkitClipPath: clip }}>
           <motion.div className="absolute inset-0" style={{ scale }}>
-            <ShaderRunner key={s.id} id={s.id as ShaderId} tone={1} intensity={86} speed={55} px={px} py={py} level={level} reduced={reduced} />
+            <ShaderRunner key={s.id} id={s.id as ShaderId} tone={2} intensity={86} speed={55} px={px} py={py} level={level} reduced={reduced} />
           </motion.div>
-          <div aria-hidden="true" className="absolute inset-0 bg-black/35" />
+          <div aria-hidden="true" className="absolute inset-0" style={{ mixBlendMode: 'color', background: 'radial-gradient(60% 60% at 12% 18%, #5fd1b6, transparent 72%), radial-gradient(60% 60% at 88% 26%, #2b4fa3, transparent 74%), radial-gradient(60% 60% at 22% 88%, #f19b78, transparent 72%), radial-gradient(60% 60% at 86% 88%, #ec5a4f, transparent 74%), #2b4fa3' }} />
+          <div aria-hidden="true" className="absolute inset-0 bg-[#0c1544]/25" />
           <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(80%_60%_at_50%_50%,transparent,rgb(0_0_0/0.8))]" />
-          <div className="relative mx-auto flex h-full w-full max-w-[96rem] flex-col justify-between px-6 pt-28 pb-16 md:px-16">
+          <div className="relative mx-auto flex h-full w-full max-w-[96rem] flex-col justify-between px-6 pt-28 pb-28 md:px-16">
             <div>
               <h2 className="disp max-w-[46rem] text-[clamp(2.4rem,6.6vw,6.4rem)]">seven live backgrounds</h2>
               <p className="mt-5 max-w-[24rem] text-[0.8rem] leading-[1.75] text-white/75">drawn live by the graphics card. they follow your pointer, move with your music, and blur as far as you want.</p>
@@ -575,7 +707,8 @@ function Practices() {
   const no = ['a website builder with a thousand knobs', 'a feed, a follower count or an algorithm', 'a shop (not yet)', 'slow']
   return (
     <Scene className="px-4 py-[14vh] md:px-12" innerClass="mx-auto w-full max-w-[64rem]">
-      <div className="bg-[#0d0d0d] px-6 py-14 md:px-16 md:py-20">
+      <div className="relative border border-white/40 bg-[#0c1544] px-6 py-14 md:px-16 md:py-20">
+        <i aria-hidden="true" data-say="keep it simple. that is the whole idea." className="absolute top-0 left-0 block h-px w-px" />
         <h2 className="disp text-[clamp(2.4rem,7vw,6.4rem)]">simple on purpose</h2>
         <span className="mt-6 block h-px w-14 bg-white/70" />
         <p className="mt-8 max-w-[28rem] text-[0.84rem] leading-[1.8] text-white/75">made for editors who got tired of sending people to a list of white buttons. a name, a page, a few good choices. then it gets out of the way.</p>
@@ -615,7 +748,8 @@ function Cursors() {
   const [ink, setInk] = useState<'white' | 'black'>('white')
   const css = cursorCss(pick, ink, 40)
   return (
-    <Scene id="cursors" className="px-6 py-[14vh] md:px-12" innerClass="mx-auto grid w-full max-w-[84rem] gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+    <Scene id="cursors" className="bg-[#0c1544] px-6 py-[14vh] md:px-12" innerClass="mx-auto grid w-full max-w-[84rem] gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+      <i aria-hidden="true" data-say="pick a cursor. this whole area is wearing it." className="absolute top-0 left-0 block h-px w-px" />
       <div style={{ cursor: css.arrow }} className="contents">
         <div>
           <h2 className="disp text-[clamp(2.4rem,6vw,5.6rem)]">your cursor</h2>
@@ -652,47 +786,59 @@ function Cursors() {
   )
 }
 
-/* ------------------------------------------------------------------ common questions */
+/* ------------------------------------------------------------------ common questions, as a conversation */
 
-const FAQ = [
+const TALK = [
   { q: 'is it really free?', tag: 'yes', a: 'claiming a name and building a page costs nothing, and nothing in the editor is locked behind anything.' },
-  { q: 'can i have a one letter name?', tag: 'if it\'s free', a: 'names start at one character. dots, dashes and a few symbols work anywhere in them. if someone already has it, they have it.' },
+  { q: 'can i have a one letter name?', tag: "if it's free", a: 'names start at one character. dots, dashes and a few symbols work anywhere in them. if someone already has it, they have it.' },
   { q: 'does the music start by itself?', tag: 'after a click', a: 'browsers keep sound off until someone clicks. turn on the enter screen and that click is what lets your song start.' },
   { q: 'can people watch my edits on the page?', tag: 'yes', a: 'paste a youtube, vimeo, tiktok or spotify link and it plays right there. anything else opens as a normal link.' },
   { q: 'will it slow my page down?', tag: 'not much', a: 'the backgrounds run on the graphics card and draw smaller on phones. anyone who asked their device for less motion gets a still page.' },
 ] as const
 
-function Faq() {
-  const [open, setOpen] = useState(0)
+function Exchange({ q, tag, a, index }: { q: string; tag: string; a: string; index: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const { reduced } = useMotionPrefs()
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 92%', 'start 48%'] })
+  const p = useSpring(scrollYProgress, { stiffness: 140, damping: 30, mass: 0.35 })
+  const qx = useMap(p, [0, 0.5], ['-16vw', '0vw'], reduced, '0vw')
+  const qo = useMap(p, [0, 0.4], [0, 1], reduced, 1)
+  const ax = useMap(p, [0.35, 1], ['16vw', '0vw'], reduced, '0vw')
+  const ao = useMap(p, [0.35, 0.85], [0, 1], reduced, 1)
+  const ar = useMap(p, [0.35, 1], [2.2, 0], reduced, 0)
   return (
-    <Scene id="faq" className="px-6 py-[14vh] md:px-12" innerClass="mx-auto w-full max-w-[56rem]">
-      <h2 className="disp text-[clamp(2.4rem,6vw,5.6rem)]">common questions</h2>
-      <ul className="mt-14 border-t border-white/20">
-        {FAQ.map((f, n) => (
-          <li key={f.q} className="border-b border-white/20">
-            <button type="button" onClick={() => setOpen(open === n ? -1 : n)} aria-expanded={open === n} className="flex w-full items-baseline justify-between gap-6 py-5 text-left">
-              <span className={cn('text-[0.92rem] tracking-[0.03em] uppercase transition-colors', open === n ? 'text-white' : 'text-white/60')}>{f.q}</span>
-              <span aria-hidden="true" className="text-[0.9rem] text-white/50">{open === n ? '−' : '+'}</span>
-            </button>
-            <AnimatePresence initial={false}>
-              {open === n && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.45, ease: EASE }} className="overflow-hidden">
-                  <div className="pb-7 pl-0 md:pl-8">
-                    <p className="text-[0.88rem] text-white/50">↓</p>
-                    <p className="mt-1 text-[1rem] tracking-[0.03em] uppercase">{f.tag}</p>
-                    <p className="mt-4 max-w-[34rem] text-[0.8rem] leading-[1.8] text-white/70">{f.a}</p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </li>
-        ))}
-      </ul>
-    </Scene>
+    <div ref={ref} className="grid gap-6 md:gap-8">
+      <motion.div style={{ x: qx, opacity: qo }} className="max-w-[30rem]">
+        <Say who={`question ${String(index + 1).padStart(2, '0')}`}>
+          <span className="text-[0.88rem] tracking-[0.04em] uppercase">{q}</span>
+        </Say>
+      </motion.div>
+      <motion.div style={{ x: ax, opacity: ao, rotate: ar }} className="max-w-[34rem] justify-self-end">
+        <Say who="answer" solid>
+          <span className="block text-[0.7rem] tracking-[0.16em] uppercase">↓ {tag}</span>
+          <span className="mt-2 block text-[0.8rem] leading-[1.75] text-black/80">{a}</span>
+        </Say>
+      </motion.div>
+    </div>
   )
 }
 
-/* ------------------------------------------------------------------ the end: a light disc rises and the page turns over */
+function Dialogue() {
+  return (
+    <section id="faq" className="relative mx-auto w-full max-w-[56rem] px-5 py-[16vh] md:px-12">
+      <i aria-hidden="true" data-say="questions? asked a lot, answered short." className="absolute top-0 left-0 block h-px w-px" />
+      <h2 className="disp text-[clamp(2.6rem,7vw,6.4rem)]" style={{ color: CREAM, ...HARD }}>common questions</h2>
+      <p className="mt-5 text-[0.74rem] text-white italic">asked a lot, answered short</p>
+      <div className="mt-[10vh] grid gap-[14vh]">
+        {TALK.map((t, i) => (
+          <Exchange key={t.q} index={i} {...t} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+/* ------------------------------------------------------------------ the end: a light block rises and the page turns over */
 
 const SPECS: [string, string][] = [
   ['price', 'nothing'],
@@ -709,11 +855,12 @@ function Outro() {
   const { reduced } = useMotionPrefs()
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'start 15%'] })
   const p = useSpring(scrollYProgress, { stiffness: 120, damping: 30, mass: 0.4 })
-  const r = useMap(p, [0, 1], [0, 170], reduced, 170)
-  const clip = useTransform(r, (v) => `circle(${v}% at 50% 0%)`)
+  const r = useMap(p, [0, 1], [0, 100], reduced, 100)
+  const clip = useTransform(r, (v) => `inset(${(100 - v) / 2}% ${(100 - v) / 2}% 0% ${(100 - v) / 2}%)`)
   const rise = useMap(p, [0.3, 1], ['6vh', '0vh'], reduced, '0vh')
   return (
     <section ref={ref} id="claim" className="relative">
+      <i aria-hidden="true" data-say="last choice. pick your name." className="absolute top-0 left-0 block h-px w-px" />
       <motion.div style={{ clipPath: clip, WebkitClipPath: clip }} className="bg-[#ededed] text-black">
         <motion.div style={{ y: rise }} className="mx-auto w-full max-w-[72rem] px-6 pt-[18vh] pb-[12vh] md:px-12">
           <h2 className="disp text-[clamp(3.6rem,14vw,13rem)] !text-black">claim it.</h2>
@@ -731,7 +878,7 @@ function Outro() {
           </dl>
         </motion.div>
       </motion.div>
-      <footer className="border-t border-white/15 px-6 py-14 md:px-12">
+      <footer className="border-t border-white/30 bg-[#0c1544] px-6 pt-14 pb-32 md:px-12">
         <div className="mx-auto grid w-full max-w-[72rem] gap-10 text-[0.78rem] md:grid-cols-4">
           {[
             ['page', [['layouts', '#layouts'], ['backgrounds', '#backgrounds'], ['cursors', '#cursors']]],
@@ -760,17 +907,28 @@ function Outro() {
 
 export function Home() {
   return (
-    <div className="ed relative min-h-dvh overflow-x-clip">
-      <Chrome />
-      <main>
+    <div className="ed relative min-h-dvh overflow-x-clip !bg-transparent">
+      <svg width="0" height="0" className="absolute" aria-hidden="true">
+        <defs>
+          <filter id="speck" x="0" y="0" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="4" result="n" />
+            <feColorMatrix in="n" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 9 -6" result="dots" />
+            <feComposite in="dots" in2="SourceAlpha" operator="in" result="d" />
+            <feBlend in="SourceGraphic" in2="d" mode="screen" />
+          </filter>
+        </defs>
+      </svg>
+      <FixedMesh />
+      <Hud />
+      <main className="relative z-10">
         <Hero />
-        <Intro />
-        <Question />
+        <Levels />
+        <Impact />
         <Layouts />
         <Backgrounds />
         <Practices />
         <Cursors />
-        <Faq />
+        <Dialogue />
         <Outro />
       </main>
     </div>

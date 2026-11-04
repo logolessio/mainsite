@@ -20,21 +20,22 @@ function page(handle: string, name: string, bio: string, layout: string, look: s
   let cfg = normalizeBio({ ...DEFAULT_BIO, layout, blocks: BLOCKS })
   const p = PRESETS.find((x) => x.id === look)
   if (p) cfg = applyPreset(cfg, p)
+  cfg = normalizeBio({ ...cfg, theme: { ...cfg.theme, radius: 0 }, avatar: { ...cfg.avatar, shape: 'square' } }, cfg)
   cfg = normalizeBio({ ...cfg, ...extra, fx: { ...cfg.fx, reveal: 'none', enter: 'none', grain: 0, scanlines: 0, spotlight: false }, cursor: { ...cfg.cursor, trail: 'none' } }, cfg)
   return { handle, name, bio, avatar: null, config: cfg, views: null, badges: [{ id: 'uid', label: String(3 + handle.length), hint: '' }] }
 }
 
 /** Pages made up for the home page, one for each way of laying a page out. */
 export const SAMPLES = {
-  aura: page('luna', 'Luna Ray', 'Editor and motion designer. Music videos, tour visuals, fast cuts.', 'aura', 'noir'),
-  split: page('mx', 'Max Vale', 'Colour, rhythm and a lot of coffee.', 'split', 'noir'),
-  poster: page('k', 'k', 'Cuts for artists you have heard of.', 'poster', 'chrome'),
+  aura: page('luna', 'Luna Ray', 'Editor and motion designer. Music videos, tour visuals, fast cuts.', 'aura', 'anubis'),
+  split: page('mx', 'Max Vale', 'Colour, rhythm and a lot of coffee.', 'split', 'anubis'),
+  poster: page('k', 'k', 'Cuts for artists you have heard of.', 'poster', 'anubis'),
   bento: page('ghostcut', 'Ghost Cut', 'A one person studio.', 'bento', 'concrete'),
-  stack: page('nova', 'Nova', 'Edits that stay in your head.', 'stack', 'mist'),
-  orbit: page('io', 'Io', 'Visuals for live shows.', 'orbit', 'void'),
+  stack: page('nova', 'Nova', 'Edits that stay in your head.', 'stack', 'anubis'),
+  orbit: page('io', 'Io', 'Visuals for live shows.', 'orbit', 'anubis'),
   index: page('paper', 'Paper Street', 'Editorial cuts and title design.', 'index', 'paper'),
-  terminal: page('root', 'root', 'I edit in the terminal. Do not ask.', 'terminal', 'static'),
-  chapters: page('ep', 'Ep. 1', 'Long form, one story at a time.', 'chapters', 'cinema'),
-  reel: page('reel', 'Reel', 'A film strip of everything I made.', 'reel', 'cinema'),
+  terminal: page('root', 'root', 'I edit in the terminal. Do not ask.', 'terminal', 'anubis'),
+  chapters: page('ep', 'Ep. 1', 'Long form, one story at a time.', 'chapters', 'anubis'),
+  reel: page('reel', 'Reel', 'A film strip of everything I made.', 'reel', 'anubis'),
 } satisfies Record<string, BioPageData>
 export type SampleId = keyof typeof SAMPLES

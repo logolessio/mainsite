@@ -52,7 +52,9 @@ const newsreader = Newsreader({ subsets: ['latin'], display: 'swap', preload: fa
 const martian = Martian_Mono({ subsets: ['latin'], display: 'swap', preload: false })
 const script = Pacifico({ subsets: ['latin'], display: 'swap', preload: false, weight: '400' })
 
+/** Anubis: IBM Plex Mono for the words (the heavy Schibsted titles are set by components/bio/bio.css). Both faces come with the site's layout. */
 export const PROFILE_FONT_CLASS: Record<FontId, string> = {
+  anubis: 'bio-f-anubis',
   geist: geist.className,
   mono: mono.className,
   serif: serif.className,

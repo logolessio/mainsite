@@ -136,13 +136,8 @@ html .ed.ed.ed .disp {
   color: #fff;
 }
 
-/* the editor's cards and fields are square-cornered, like everything else on the site (a circle stays a circle) */
-.ed :is([class*='rounded-md'], [class*='rounded-lg'], [class*='rounded-xl'], [class*='rounded-2xl'], [class*='rounded-3xl']):not([class*='rounded-full']) {
-  border-radius: 2px;
-}
-
-/* the sign-in card uses the site's own tokens; here they are square and quiet */
-.ed :is([class*='rounded-pill'], [class*='rounded-tile']):not([class*='rounded-full']) {
+/* nothing on the site is rounded (a person's own page keeps the roundness they chose) */
+.ed [class*='rounded']:not(.bio-root, .bio-root *) {
   border-radius: 0;
 }
 .ed label > span:first-child:not([class]) {
@@ -153,4 +148,23 @@ html .ed.ed.ed .disp {
 .ed .stipple {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='1.05' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 9 -4.7'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   background-size: 180px 180px;
+}
+
+
+/* the pixel face, for the game screen's small print */
+.pix {
+  font-family: var(--font-f-pixel), ui-monospace, 'SF Mono', Menlo, monospace;
+  font-weight: 500;
+}
+@keyframes hud-blink {
+  50% {
+    opacity: 0;
+  }
+}
+/* speckle: fine dark and light dots over a flat colour, like a printed illustration */
+.speckle {
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='a' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .05 0 0 0 0 .09 0 0 0 0 .3 0 0 0 9 -5.6'/></filter><rect width='100%25' height='100%25' filter='url(%23a)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='b' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='19' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 .96 0 0 0 0 .86 0 0 0 9 -5.7'/></filter><rect width='100%25' height='100%25' filter='url(%23b)'/></svg>");
+  background-size: 240px 240px, 200px 200px;
 }

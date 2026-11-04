@@ -4,6 +4,7 @@ import { bannerCss, LOOKS } from './looks'
 import type { ProfileExtras } from './profile-extras'
 
 export const FONT_OPTIONS = [
+  { id: 'anubis', label: 'Anubis', note: 'Mono words, heavy titles' },
   { id: 'geist', label: 'Sans', note: 'Clean' },
   { id: 'bricolage', label: 'Bricolage', note: 'Editorial grotesque' },
   { id: 'funnel', label: 'Funnel', note: 'Sleek display' },

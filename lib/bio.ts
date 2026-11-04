@@ -164,6 +164,8 @@ export const MAX_TEXT = 600
 
 export type BioConfig = {
   v: 1
+  /** which set of starting looks this page was made under: 2 is the flat, square one (a page saved before it still has the first set until it is read once) */
+  look?: 2
   layout: LayoutId
   theme: {
     /** the page's tone, 0 black to 100 white; the text turns itself the other way */
@@ -241,15 +243,16 @@ export function newId() {
 
 export const DEFAULT_BIO: BioConfig = {
   v: 1,
+  look: 2,
   layout: 'aura',
-  theme: { tone: 4, font: 'geist', nameStyle: 'solid', buttons: 'glass', radius: 18, align: 'center', size: 'comfortable' },
-  avatar: { shape: 'circle', ring: true, float: true, gray: true, size: 100 },
-  bg: { kind: 'effect', tone: 4, tone2: 22, angle: 160, gradient: 'radial', image: '', gif: '', video: '', effect: 'aurora', shader: 'liquid', blur: 0, dim: 30, noise: 12, intensity: 50, speed: 40, parallax: 40, vignette: 45, mono: true },
+  theme: { tone: 4, font: 'anubis', nameStyle: 'solid', buttons: 'outline', radius: 0, align: 'center', size: 'comfortable' },
+  avatar: { shape: 'square', ring: false, float: false, gray: true, size: 100 },
+  bg: { kind: 'tone', tone: 4, tone2: 22, angle: 160, gradient: 'radial', image: '', gif: '', video: '', effect: 'aurora', shader: 'liquid', blur: 0, dim: 0, noise: 0, intensity: 50, speed: 40, parallax: 40, vignette: 0, mono: true },
   overlay: { effect: 'none', intensity: 40, speed: 50 },
-  card: { style: 'glass', blur: 28, opacity: 40, glare: true },
+  card: { style: 'none', blur: 28, opacity: 40, glare: false },
   audio: { id: '', title: '', volume: 60, loop: true, reactive: true },
   cursor: { kind: 'default', preset: 'arrow', ink: 'white', size: 32, image: '', hot: 'tl', trail: 'none' },
-  fx: { enter: 'none', enterText: 'click to enter', reveal: 'rise', tilt: true, magnetic: true, spotlight: false, grain: 8, scanlines: 0, parallax: 60, typewriter: false },
+  fx: { enter: 'none', enterText: 'click to enter', reveal: 'rise', tilt: false, magnetic: false, spotlight: false, grain: 0, scanlines: 0, parallax: 60, typewriter: false },
   meta: { title: '', description: '', location: '', index: true, views: false, badge: true, badges: true },
   blocks: [],
 }
@@ -263,14 +266,15 @@ export function starterBlocks(): BioBlock[] {
 
 export type BioPreset = { id: string; name: string; note: string; swatch: [number, number]; set: Partial<{ [K in keyof BioConfig]: Partial<BioConfig[K]> }> }
 export const PRESETS: BioPreset[] = [
+  { id: 'anubis', name: 'Anubis', note: 'flat black, mono words, square hairlines', swatch: [4, 90], set: { theme: { tone: 4, nameStyle: 'solid', buttons: 'outline', font: 'anubis', radius: 0 }, bg: { kind: 'tone', tone: 4, dim: 0, blur: 0, noise: 0, vignette: 0 }, cursor: { kind: 'default', trail: 'none' }, fx: { grain: 0, scanlines: 0, spotlight: false, tilt: false, magnetic: false } } },
   { id: 'noir', name: 'Noir', note: 'black, a slow veil, glass buttons', swatch: [4, 28], set: { layout: undefined, theme: { tone: 4, nameStyle: 'solid', buttons: 'glass', font: 'geist' }, bg: { kind: 'effect', effect: 'aurora', dim: 30, blur: 0, noise: 12, tone: 4 }, cursor: { kind: 'default', trail: 'none' }, fx: { grain: 8, scanlines: 0, spotlight: false } } },
-  { id: 'paper', name: 'Paper', note: 'off white, ink, a serif', swatch: [94, 10], set: { theme: { tone: 94, nameStyle: 'solid', buttons: 'brutal', font: 'newsreader', radius: 2 }, bg: { kind: 'tone', tone: 94, dim: 0, noise: 22, vignette: 0 }, cursor: { kind: 'preset', preset: 'dot', ink: 'black', trail: 'none' }, fx: { grain: 14, scanlines: 0, spotlight: false } } },
+  { id: 'paper', name: 'Paper', note: 'off white, ink, a serif', swatch: [94, 10], set: { theme: { tone: 94, nameStyle: 'solid', buttons: 'brutal', font: 'newsreader', radius: 0 }, bg: { kind: 'tone', tone: 94, dim: 0, noise: 22, vignette: 0 }, cursor: { kind: 'preset', preset: 'dot', ink: 'black', trail: 'none' }, fx: { grain: 14, scanlines: 0, spotlight: false } } },
   { id: 'static', name: 'Static', note: 'grain, scan lines, a spotlight', swatch: [10, 70], set: { theme: { tone: 6, nameStyle: 'glitch', buttons: 'outline', font: 'mono', radius: 0 }, bg: { kind: 'effect', effect: 'matrix', dim: 55, noise: 40, tone: 6 }, cursor: { kind: 'preset', preset: 'cross', ink: 'white', trail: 'ink' }, fx: { grain: 30, scanlines: 40, spotlight: true } } },
-  { id: 'chrome', name: 'Chrome', note: 'polished metal type on black', swatch: [2, 82], set: { theme: { tone: 2, nameStyle: 'chrome', buttons: 'glass', font: 'special', radius: 40 }, bg: { kind: 'effect', effect: 'silk', dim: 20, noise: 6, tone: 2 }, cursor: { kind: 'preset', preset: 'orb', ink: 'white', trail: 'comet' }, fx: { grain: 6, scanlines: 0, spotlight: true } } },
-  { id: 'void', name: 'Void', note: 'stars, nothing else', swatch: [0, 50], set: { theme: { tone: 0, nameStyle: 'shimmer', buttons: 'ghost', font: 'syne', radius: 30 }, bg: { kind: 'effect', effect: 'warp', dim: 10, noise: 0, tone: 0 }, cursor: { kind: 'preset', preset: 'spark', ink: 'white', trail: 'spark' }, fx: { grain: 0, scanlines: 0, spotlight: false } } },
+  { id: 'chrome', name: 'Chrome', note: 'polished metal type on black', swatch: [2, 82], set: { theme: { tone: 2, nameStyle: 'chrome', buttons: 'glass', font: 'special', radius: 0 }, bg: { kind: 'effect', effect: 'silk', dim: 20, noise: 6, tone: 2 }, cursor: { kind: 'preset', preset: 'orb', ink: 'white', trail: 'comet' }, fx: { grain: 6, scanlines: 0, spotlight: true } } },
+  { id: 'void', name: 'Void', note: 'stars, nothing else', swatch: [0, 50], set: { theme: { tone: 0, nameStyle: 'shimmer', buttons: 'ghost', font: 'syne', radius: 0 }, bg: { kind: 'effect', effect: 'warp', dim: 10, noise: 0, tone: 0 }, cursor: { kind: 'preset', preset: 'spark', ink: 'white', trail: 'spark' }, fx: { grain: 0, scanlines: 0, spotlight: false } } },
   { id: 'concrete', name: 'Concrete', note: 'mid grey, hard edges', swatch: [52, 14], set: { theme: { tone: 52, nameStyle: 'outline', buttons: 'brutal', font: 'condensed', radius: 0 }, bg: { kind: 'gradient', gradient: 'linear', tone: 60, tone2: 40, angle: 180, noise: 35, dim: 0, vignette: 30 }, cursor: { kind: 'preset', preset: 'frame', ink: 'black', trail: 'none' }, fx: { grain: 26, scanlines: 0, spotlight: false } } },
   { id: 'cinema', name: 'Cinema', note: 'letterbox black, film grain', swatch: [3, 60], set: { theme: { tone: 3, nameStyle: 'ghost', buttons: 'underline', font: 'gloock', radius: 0 }, bg: { kind: 'effect', effect: 'bokeh', dim: 35, noise: 24, tone: 3 }, cursor: { kind: 'preset', preset: 'playhead', ink: 'white', trail: 'none' }, fx: { grain: 28, scanlines: 8, spotlight: false } } },
-  { id: 'mist', name: 'Mist', note: 'soft white, blurred light', swatch: [88, 60], set: { theme: { tone: 88, nameStyle: 'solid', buttons: 'glass', font: 'funnel', radius: 28 }, bg: { kind: 'gradient', gradient: 'mesh', tone: 96, tone2: 70, noise: 16, dim: 0, blur: 0, vignette: 0 }, cursor: { kind: 'preset', preset: 'ring', ink: 'black', trail: 'ring' }, fx: { grain: 10, scanlines: 0, spotlight: false } } },
+  { id: 'mist', name: 'Mist', note: 'soft white, blurred light', swatch: [88, 60], set: { theme: { tone: 88, nameStyle: 'solid', buttons: 'glass', font: 'funnel', radius: 0 }, bg: { kind: 'gradient', gradient: 'mesh', tone: 96, tone2: 70, noise: 16, dim: 0, blur: 0, vignette: 0 }, cursor: { kind: 'preset', preset: 'ring', ink: 'black', trail: 'ring' }, fx: { grain: 10, scanlines: 0, spotlight: false } } },
 ]
 
 /* ------------------------------------------------------------------ links: addresses, icons, embeds */
@@ -354,7 +358,7 @@ const text = (v: unknown, max: number) => (typeof v === 'string' ? v.replace(/[\
 const uploadId = (v: unknown) => (typeof v === 'string' && COLOR_LIKE.test(v) ? v : '')
 const giphyId = (v: unknown) => (typeof v === 'string' && /^[A-Za-z0-9]{4,40}$/.test(v) ? v : '')
 const blockId = (v: unknown) => (typeof v === 'string' && /^[a-z0-9]{4,16}$/.test(v) ? v : newId())
-export const FONT_IDS_BIO = ['geist', 'mono', 'serif', 'condensed', 'grotesk', 'bricolage', 'funnel', 'special', 'syne', 'unbounded', 'young', 'gloock', 'newsreader', 'martian', 'modern', 'tempo', 'bit8', 'script', 'hand'] as const
+export const FONT_IDS_BIO = ['anubis', 'geist', 'mono', 'serif', 'condensed', 'grotesk', 'bricolage', 'funnel', 'special', 'syne', 'unbounded', 'young', 'gloock', 'newsreader', 'martian', 'modern', 'tempo', 'bit8', 'script', 'hand'] as const
 
 export function cleanBlock(raw: unknown): BioBlock | null {
   const r = obj(raw)
@@ -419,13 +423,14 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
   } else blocks.push(...d.blocks)
   return {
     v: 1,
+    look: 2,
     layout: pick(r.layout ?? d.layout, LAYOUT_IDS, 'aura'),
     theme: {
       tone: int(t.tone ?? d.theme.tone, 4, 0, 100),
-      font: pick(t.font ?? d.theme.font, FONT_IDS_BIO, 'geist'),
+      font: pick(t.font ?? d.theme.font, FONT_IDS_BIO, 'anubis'),
       nameStyle: pick(t.nameStyle ?? d.theme.nameStyle, NAME_STYLES.map((x) => x.id), 'solid'),
-      buttons: pick(t.buttons ?? d.theme.buttons, BUTTON_STYLES.map((x) => x.id), 'glass'),
-      radius: int(t.radius ?? d.theme.radius, 18, 0, 40),
+      buttons: pick(t.buttons ?? d.theme.buttons, BUTTON_STYLES.map((x) => x.id), 'outline'),
+      radius: int(t.radius ?? d.theme.radius, 0, 0, 40),
       align: pick(t.align ?? d.theme.align, ['left', 'center'], 'center'),
       size: pick(t.size ?? d.theme.size, ['compact', 'comfortable', 'large'], 'comfortable'),
     },
@@ -508,9 +513,30 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
   }
 }
 
+/** What the first set of starting looks chose, so a page that still has exactly those picks can be moved to the new set without touching anything the person changed. */
+const FIRST_LOOK: Record<string, Record<string, unknown>> = {
+  theme: { font: 'geist', buttons: 'glass', radius: 18 },
+  avatar: { shape: 'circle', ring: true, float: true },
+  bg: { kind: 'effect', effect: 'aurora', dim: 30, noise: 12, vignette: 45 },
+  card: { style: 'glass', glare: true },
+  fx: { tilt: true, magnetic: true, grain: 8 },
+}
+function upgradeLook(raw: unknown): unknown {
+  const r = obj(raw)
+  if (r.look === 2) return raw
+  const out: Record<string, unknown> = { ...r }
+  const fresh = DEFAULT_BIO as unknown as Record<string, Record<string, unknown>>
+  for (const [group, picks] of Object.entries(FIRST_LOOK)) {
+    const g = { ...obj(r[group]) }
+    for (const [k, was] of Object.entries(picks)) if (g[k] === was) g[k] = fresh[group][k]
+    out[group] = g
+  }
+  return out
+}
+
 export function parseBio(json: string | null | undefined): BioConfig {
   try {
-    return json ? normalizeBio(JSON.parse(json)) : DEFAULT_BIO
+    return json ? normalizeBio(upgradeLook(JSON.parse(json))) : DEFAULT_BIO
   } catch {
     return DEFAULT_BIO
   }
