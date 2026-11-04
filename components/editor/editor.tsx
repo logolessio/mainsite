@@ -2,7 +2,7 @@
 
 import './editor.css'
 import { AnimatePresence, motion } from 'framer-motion'
-import { BarChart3, Check, ExternalLink, ImageIcon, LayoutGrid, Link2, Loader2, Monitor, MousePointer2, Palette, Settings2, Smartphone, Sparkles, User } from 'lucide-react'
+import { Loader2, Monitor, Smartphone } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BioPage } from '@/components/bio/bio-page'
 import { type BioConfig, DEFAULT_BIO } from '@/lib/bio'
@@ -12,20 +12,15 @@ import { LinksPanel } from './panel-links'
 import { BackgroundPanel, LayoutPanel, StylePanel } from './panel-design'
 import { CursorPanel, EffectsPanel } from './panel-fx'
 import { InsightsPanel, ProfilePanel, SettingsPanel } from './panel-account'
+import { type DashId, DashShell, NAV, type NavCount } from './dashboard'
+import { OverviewPanel } from './overview'
+import { Onboarding } from './onboarding'
 import type { EditorApi, ProfileDraft } from './types'
 
-const TABS = [
-  { id: 'links', name: 'Links', icon: Link2 },
-  { id: 'profile', name: 'Profile', icon: User },
-  { id: 'layout', name: 'Layout', icon: LayoutGrid },
-  { id: 'style', name: 'Style', icon: Palette },
-  { id: 'background', name: 'Background', icon: ImageIcon },
-  { id: 'cursor', name: 'Cursor', icon: MousePointer2 },
-  { id: 'effects', name: 'Effects', icon: Sparkles },
-  { id: 'insights', name: 'Insights', icon: BarChart3 },
-  { id: 'settings', name: 'Settings', icon: Settings2 },
-] as const
-type Tab = (typeof TABS)[number]['id']
+type Tab = DashId
+const TAB_IDS = NAV.map((n) => n.id) as readonly Tab[]
+/** The pages that edit the page and show it beside them (the others are full width). */
+const EDITS: readonly Tab[] = ['links', 'profile', 'layout', 'style', 'background', 'cursor', 'effects']
 
 type Loaded = { config: BioConfig; saved: boolean; profile: Omit<ProfileDraft, 'newAvatar'>; stats: BioStats }
 
@@ -37,10 +32,12 @@ export function Editor({ claim }: { claim: string | null }) {
   const [profile, setProfileState] = useState<ProfileDraft>({ handle: '', name: '', bio: '', avatar: null, hasAvatar: false })
   const [stats, setStats] = useState<BioStats>(EMPTY_STATS)
   const [base, setBase] = useState('')
-  const [tab, setTab] = useState<Tab>('links')
+  const [tab, setTabState] = useState<Tab>('overview')
   const [device, setDevice] = useState<'desktop' | 'phone'>('desktop')
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
   const [saving, setSaving] = useState(false)
+  const [tour, setTour] = useState(false)
+  const [fresh, setFresh] = useState(false)
   const [note, setNote] = useState('')
   const noteTimer = useRef(0)
   const first = useRef(true)
@@ -50,6 +47,21 @@ export function Editor({ claim }: { claim: string | null }) {
     setNote(m)
     window.clearTimeout(noteTimer.current)
     noteTimer.current = window.setTimeout(() => setNote(''), 3600)
+  }, [])
+
+  // the page you are on lives in the address (#links), so a reload or a shared link comes back to it
+  const setTab = useCallback((t: Tab) => {
+    setTabState(t)
+    setMobileView('edit')
+    try {
+      window.history.replaceState(null, '', `#${t}`)
+    } catch {
+      /* nothing to do */
+    }
+  }, [])
+  useEffect(() => {
+    const h = window.location.hash.slice(1) as Tab
+    if (TAB_IDS.includes(h)) setTabState(h)
   }, [])
 
   // load (and claim the name picked on the sign-up, once)
@@ -66,6 +78,12 @@ export function Editor({ claim }: { claim: string | null }) {
         setProfileState({ ...j.profile })
         setStats(j.stats)
         setBase(snapshot(j.config, j.profile))
+        setFresh(!j.saved)
+        try {
+          if (!j.saved && !window.localStorage.getItem(`ll:tour:${j.profile.handle}`)) setTour(true)
+        } catch {
+          if (!j.saved) setTour(true)
+        }
         setState('ready')
         if (claim) window.history.replaceState(null, '', '/editor')
       } catch {
@@ -90,8 +108,8 @@ export function Editor({ claim }: { claim: string | null }) {
   const setProfile = useCallback((p: Partial<ProfileDraft>) => setProfileState((x) => ({ ...x, ...p })), [])
   const api: EditorApi = useMemo(() => ({ cfg, set, up, profile, setProfile, stats, toast }), [cfg, set, up, profile, setProfile, stats, toast])
 
-  const save = async () => {
-    if (saving || !dirty) return
+  const save = async (force = false): Promise<boolean> => {
+    if (saving || (!dirty && !force)) return false
     setSaving(true)
     try {
       const body = { config: cfg, profile: { displayName: profile.name, bio: profile.bio, handle: profile.handle, ...(profile.newAvatar !== undefined ? { avatar: profile.newAvatar } : {}) } }
@@ -102,11 +120,23 @@ export function Editor({ claim }: { claim: string | null }) {
       const p = { ...j.profile } as ProfileDraft
       setProfileState(p)
       setBase(snapshot(j.config, p))
+      setFresh(false)
       toast('saved')
+      setSaving(false)
+      return true
     } catch (e) {
       toast(e instanceof Error ? e.message : "couldn't save that. try again.")
     }
     setSaving(false)
+    return false
+  }
+  const endTour = () => {
+    setTour(false)
+    try {
+      window.localStorage.setItem(`ll:tour:${profile.handle}`, '1')
+    } catch {
+      /* a private window: it asks again next time */
+    }
   }
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
@@ -156,57 +186,53 @@ export function Editor({ claim }: { claim: string | null }) {
     </AnimatePresence>
   )
 
+  // the little numbers beside the menu: what is on the page, how many have looked, what still needs doing
+  const linkCount = cfg.blocks.filter((b) => b.t === 'link' || b.t === 'social' || b.t === 'video').length
+  const counts: Partial<Record<Tab, NavCount>> = {
+    overview: !profile.name || !profile.bio || linkCount === 0 ? { dot: true } : undefined,
+    links: linkCount ? { n: linkCount } : { dot: true },
+    profile: !profile.name || !profile.bio ? { dot: true } : undefined,
+    insights: stats.views ? { n: stats.views } : undefined,
+  }
+  const edits = EDITS.includes(tab)
+  const user = { name: profile.name, handle: profile.handle, avatar: data.avatar }
+
   return (
-    <main className={cn('ed fixed inset-0 flex flex-col')}>
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-[var(--ed-line)] px-4">
-        <span className="mx-auto hidden min-w-0 items-center gap-2 border border-[var(--ed-line)] px-4 py-1.5 text-[0.78rem] text-white/70 sm:flex">
-          <span className="truncate">logoless.io/{profile.handle}</span>
-        </span>
-        <div className="ml-auto flex items-center gap-2 sm:ml-0">
-          <a href={`/${profile.handle}`} target="_blank" rel="noreferrer" className="cap hidden h-9 items-center gap-1.5 px-3 text-white/60 transition-colors hover:text-white md:inline-flex">
-            <ExternalLink className="size-3.5" /> view
-          </a>
-          <button type="button" onClick={() => void save()} disabled={!dirty || saving} className={cn('cap inline-flex h-9 min-w-[5.5rem] items-center justify-center gap-2 px-5 transition-all', dirty ? 'bg-white text-black hover:opacity-85' : 'border border-[var(--ed-line2)] text-white/50')}>
-            {saving ? <Loader2 className="size-4 animate-spin" /> : dirty ? 'save' : <><Check className="size-3.5" /> saved</>}
-          </button>
-        </div>
-      </header>
-
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        {/* rail + panel */}
-        <div className={cn('min-h-0 flex-1 flex-col border-[var(--ed-line)] lg:flex lg:w-[26rem] lg:flex-none lg:border-r', mobileView === 'edit' ? 'flex' : 'hidden')}>
-          <nav aria-label="editor sections" className="ed-scroll flex shrink-0 gap-1 overflow-x-auto border-b border-[var(--ed-line)] px-3 py-2.5">
-            {TABS.map((t) => (
-              <button key={t.id} type="button" onClick={() => setTab(t.id)} aria-pressed={tab === t.id} className={cn('cap inline-flex h-9 shrink-0 items-center gap-2 px-3.5 tracking-[0.12em] transition-colors', tab === t.id ? 'bg-white text-black' : 'text-white/55 hover:bg-white/10 hover:text-white')}>
-                <t.icon className="size-[0.95rem]" strokeWidth={1.7} />
-                {t.name.toLowerCase()}
-              </button>
-            ))}
-          </nav>
-          <div className="ed-scroll min-h-0 flex-1 overflow-y-auto">{panel}</div>
-        </div>
-
-        {/* preview */}
-        <Preview data={data} device={device} setDevice={setDevice} className={cn('min-h-0 flex-1 lg:flex', mobileView === 'preview' ? 'flex' : 'hidden')} />
+    <>
+      <div inert={tour || undefined}>
+      <DashShell tab={tab} onGo={setTab} counts={counts} user={user} save={{ dirty, saving, onSave: () => void save() }} canPreview={edits} view={mobileView} onView={setMobileView}>
+        {tab === 'overview' ? (
+          <motion.div key="overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.25 }} className="h-full">
+            <OverviewPanel api={api} data={data} go={setTab} onTour={() => setTour(true)} />
+          </motion.div>
+        ) : edits ? (
+          <div className="flex h-full min-h-0 flex-col lg:flex-row">
+            <div className={cn('min-h-0 flex-1 flex-col border-[var(--ed-line)] lg:flex lg:w-[26rem] lg:flex-none lg:border-r', mobileView === 'edit' ? 'flex' : 'hidden')}>
+              <div className="ed-scroll min-h-0 flex-1 overflow-y-auto">{panel}</div>
+            </div>
+            <Preview data={data} device={device} setDevice={setDevice} className={cn('min-h-0 flex-1 lg:flex', mobileView === 'preview' ? 'flex' : 'hidden')} />
+          </div>
+        ) : (
+          <div className="ed-scroll h-full overflow-y-auto">
+            <div className="mx-auto w-full max-w-2xl px-4 py-8 md:py-12">
+              <h1 className="disp mb-8 text-[clamp(2rem,4vw,3.2rem)]">{tab}</h1>
+              <div className="border border-[var(--ed-line)]">{panel}</div>
+            </div>
+          </div>
+        )}
+      </DashShell>
       </div>
 
-      {/* phones: edit or look */}
-      <div className="flex shrink-0 border-t border-[var(--ed-line)] lg:hidden">
-        {(['edit', 'preview'] as const).map((v) => (
-          <button key={v} type="button" onClick={() => setMobileView(v)} className={cn('cap h-12 flex-1 transition-colors', mobileView === v ? 'text-white' : 'text-white/40')}>
-            {v === 'edit' ? 'edit' : 'preview'}
-          </button>
-        ))}
-      </div>
+      {tour && <Onboarding api={api} data={data} fresh={fresh} onFinish={() => save(true)} onDone={() => (endTour(), setTab('overview'))} onSkip={endTour} />}
 
       <AnimatePresence>
         {note && (
-          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} role="status" className="pointer-events-none fixed bottom-20 left-1/2 z-50 -translate-x-1/2 border border-[var(--ed-line2)] bg-black/90 px-5 py-2.5 text-[0.78rem] backdrop-blur-xl lg:bottom-6">
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} role="status" className="ed pointer-events-none fixed bottom-20 left-1/2 z-[100] -translate-x-1/2 border border-[var(--ed-line2)] bg-black/90 px-5 py-2.5 text-[0.78rem] backdrop-blur-xl md:bottom-6">
             {note}
           </motion.div>
         )}
       </AnimatePresence>
-    </main>
+    </>
   )
 }
 

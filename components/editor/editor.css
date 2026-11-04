@@ -137,7 +137,8 @@ html .ed.ed.ed .disp {
 }
 
 /* nothing on the site is rounded (a person's own page keeps the roundness they chose) */
-.ed [class*='rounded']:not(.bio-root, .bio-root *) {
+.ed [class*='rounded']:not(.bio-root, .bio-root *),
+.ed :is(button, input, textarea, select):not(.bio-root *) {
   border-radius: 0;
 }
 .ed label > span:first-child:not([class]) {
