@@ -193,7 +193,7 @@ function IndexRow({ block, n, dim, onEnter }: { block: LinkBlock; n: number; dim
 export function Terminal() {
   const { items, data, socials, mode, track } = useBio()
   const { links, rest } = split(items)
-  const mono = PROFILE_FONT_CLASS.mono
+  const mono = PROFILE_FONT_CLASS.anubis
   const line = 'flex flex-wrap items-baseline gap-x-3'
   return (
     <main className={cn('mx-auto min-h-full w-full max-w-[48rem] px-4 pt-[10cqh] pb-6', mono)}>

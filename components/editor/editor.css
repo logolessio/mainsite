@@ -151,9 +151,9 @@ html .ed.ed.ed .disp {
 }
 
 
-/* the pixel face, for the game screen's small print */
+/* the small print on the game screen: the site's own mono face, in capitals */
 .pix {
-  font-family: var(--font-f-pixel), ui-monospace, 'SF Mono', Menlo, monospace;
+  font-family: var(--font-f-ibm-plex-mono), ui-monospace, 'SF Mono', Menlo, monospace;
   font-weight: 500;
 }
 @keyframes hud-blink {
