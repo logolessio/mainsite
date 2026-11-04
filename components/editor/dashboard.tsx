@@ -36,7 +36,7 @@ function Badge({ c, lit }: { c?: NavCount; lit?: boolean }) {
       {c.n > 99 ? '99+' : c.n}
     </span>
   ) : (
-    <span aria-label="something to do" className="ml-auto size-2 bg-[#5fd1b6]" />
+    <span aria-label="something to do" className="ml-auto size-2 bg-white" />
   )
 }
 
@@ -294,7 +294,7 @@ export function DashShell({ tab, onGo, counts, user, save, canPreview, view, onV
               {tab === id && <span aria-hidden="true" className="absolute inset-x-5 top-0 h-[2px] bg-white" />}
               <span className="relative">
                 <it.icon aria-hidden="true" className="size-[1.1rem]" strokeWidth={1.6} />
-                {(c?.n || c?.dot) && <span aria-hidden="true" className="absolute -top-0.5 -right-1.5 size-1.5 bg-[#5fd1b6]" />}
+                {(c?.n || c?.dot) && <span aria-hidden="true" className="absolute -top-0.5 -right-1.5 size-1.5 bg-white" />}
               </span>
               {it.label}
             </button>

@@ -3,7 +3,6 @@
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { ArrowLeft, ArrowRight, Check, Copy, ExternalLink, Loader2, Plus, Upload, X } from 'lucide-react'
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
-import { CREAM, HARD, INK, JACKAL, MeshField, Mountains, Pixels, SpeckFilter, Win } from '@/components/art/game'
 import { BioPage } from '@/components/bio/bio-page'
 import type { BioPageData } from '@/components/bio/context'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
@@ -14,11 +13,11 @@ import { cn } from '@/lib/utils'
 import type { EditorApi } from './types'
 
 /**
- * The first-run tour. A full screen in the look of the home page (colour fields, a pixel guide, square windows) with the real page in a phone that
- * changes as each choice is made: who you are, what to link, the layout, the look. The last screen saves it and hands over the link.
+ * The first-run tour. Black and white and centred, with the real page in a phone that changes as each choice is made: who you are, what to link, the
+ * layout, the look. The last screen saves it and hands over the link.
  */
 const STEPS = [
-  { id: 'start', name: 'press start', line: "hi. i'll walk you through it. about a minute, and every bit of it can change later." },
+  { id: 'start', name: 'welcome', line: "hi. this takes about a minute, and every bit of it can change later." },
   { id: 'you', name: 'who you are', line: 'a name and one line is plenty. a picture helps people trust the link.' },
   { id: 'links', name: 'what to open', line: 'add what people should open. a few is enough, you can add more any time.' },
   { id: 'layout', name: 'the layout', line: 'ten layouts. tap one and watch the phone.' },
@@ -27,10 +26,12 @@ const STEPS = [
 ] as const
 
 const SOCIALS = ['instagram', 'tiktok', 'youtube', 'x', 'discord'] as const
-const COLORS = ['#5fd1b6', '#2b4fa3', '#f19b78', '#ec5a4f', CREAM]
+const SHADES = ['#ffffff', '#c8c8c8', '#8a8a8a', '#4a4a4a']
 const pad = (n: number) => String(n).padStart(2, '0')
 
-const field = 'w-full rounded-none border border-[#0c1544]/40 bg-white/60 px-3 text-[0.86rem] text-[#0c1544] outline-none transition-colors placeholder:text-[#0c1544]/35 focus:border-[#0c1544] focus:bg-white'
+const field = 'w-full rounded-none border border-white/25 bg-black px-3 text-[0.86rem] text-white outline-none transition-colors placeholder:text-white/30 focus:border-white'
+const ghost = 'cap inline-flex h-10 items-center justify-center gap-2 border border-white/30 px-5 text-white transition-colors hover:bg-white hover:text-black disabled:opacity-40'
+const solid = 'cap inline-flex h-10 items-center justify-center gap-2 bg-white px-5 text-black transition-opacity hover:opacity-85 disabled:opacity-40'
 
 function titleFor(url: string) {
   try {
@@ -123,6 +124,7 @@ export function Onboarding({ api, data, fresh, onFinish, onDone, onSkip }: { api
     if (step === 1 && !profile.name.trim()) setProfile({ name: profile.handle })
     go(step + 1)
   }
+
   // the last screen saves the page and tells you when it is safe
   useEffect(() => {
     if (id !== 'done' || saving === 'saving' || saving === 'ok') return
@@ -138,7 +140,7 @@ export function Onboarding({ api, data, fresh, onFinish, onDone, onSkip }: { api
   // Enter goes on (when not typing a paragraph)
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
-      if (e.key !== 'Enter' || e.shiftKey || (e.target instanceof HTMLTextAreaElement)) return
+      if (e.key !== 'Enter' || e.shiftKey || e.target instanceof HTMLTextAreaElement) return
       if (id === 'done') return
       e.preventDefault()
       next()
@@ -160,30 +162,25 @@ export function Onboarding({ api, data, fresh, onFinish, onDone, onSkip }: { api
   }
   const shown = profile.newAvatar ? `/api/img/${profile.newAvatar}` : profile.hasAvatar ? profile.avatar : null
 
-  // the whole scene moves with the step: colour fields, mountains, and the phone leans with the pointer
-  const at = useSpring(useMotionValue(0), { stiffness: 60, damping: 18, mass: 0.8 })
-  useEffect(() => at.set(step / (STEPS.length - 1)), [step, at])
+  // the phone leans a little with the pointer
   const mx = useMotionValue(0)
   const my = useMotionValue(0)
   const px = useSpring(mx, { stiffness: 70, damping: 20, mass: 0.7 })
   const py = useSpring(my, { stiffness: 70, damping: 20, mass: 0.7 })
-  const phoneX = useTransform(px, [-1, 1], reduced ? [0, 0] : [-16, 16])
-  const phoneY = useTransform(py, [-1, 1], reduced ? [0, 0] : [-10, 10])
-  const phoneR = useTransform(px, [-1, 1], reduced ? [0, 0] : [-2.2, 2.2])
-  const tagX = useTransform(px, [-1, 1], reduced ? [0, 0] : [26, -26])
-  const tagY = useTransform(py, [-1, 1], reduced ? [0, 0] : [16, -16])
+  const phoneX = useTransform(px, [-1, 1], reduced ? [0, 0] : [-14, 14])
+  const phoneY = useTransform(py, [-1, 1], reduced ? [0, 0] : [-9, 9])
   const guide = useTyped(STEPS[step].line, reduced)
 
   const tag = id === 'links' ? `${built.filter((b) => b.t === 'link').length} links` : id === 'layout' ? cfg.layout : id === 'look' ? 'your look' : id === 'you' ? profile.name || 'you' : id === 'done' ? 'live' : url
-  const win: ReactNode = (
-    <Win title={`${pad(step + 1)} / ${pad(STEPS.length)} · ${STEPS[step].name}`} className="w-full" bodyClass="max-h-[calc(100svh-23rem)] overflow-y-auto lg:max-h-[calc(100svh-20rem)]">
+  const body: ReactNode = (
+    <>
       {id === 'start' && (
-        <div className="p-6 md:p-8">
-          <h2 className="disp text-[clamp(2.2rem,5vw,3.6rem)] !text-[#0c1544]">your page starts here</h2>
-          <p className="mt-5 max-w-[26rem] text-[0.84rem] leading-[1.75]">three quick things: who you are, what to link, how it looks. then it is live, and the link is yours to put in your bio.</p>
-          <div className="mt-6 flex items-center gap-3 border border-[#0c1544] bg-white/60 px-3.5 py-3 text-[0.86rem]">
-            <span className="min-w-0 flex-1 truncate">{url}</span>
-            <span className="cap inline-flex items-center gap-1.5 text-[#0c1544]/60">
+        <div className="p-6 text-center md:p-8">
+          <h2 className="disp text-[clamp(2.2rem,4.4vw,3.2rem)]">your page starts here</h2>
+          <p className="mx-auto mt-5 max-w-[26rem] text-[0.84rem] leading-[1.75] text-white/60">three quick things: who you are, what to link, how it looks. then it is live, and the link is yours to put in your bio.</p>
+          <div className="mx-auto mt-6 flex max-w-[26rem] items-center gap-3 border border-white/30 px-3.5 py-3 text-[0.86rem]">
+            <span className="min-w-0 flex-1 truncate text-left">{url}</span>
+            <span className="inline-flex items-center gap-1.5 text-[0.72rem] text-white/50">
               <Check className="size-3.5" /> yours
             </span>
           </div>
@@ -193,7 +190,7 @@ export function Onboarding({ api, data, fresh, onFinish, onDone, onSkip }: { api
         <div className="space-y-5 p-6 md:p-8">
           <input ref={file} type="file" accept="image/*" hidden onChange={(e) => void upload(e.target.files?.[0])} />
           <div className="flex items-center gap-4">
-            <span className="grid size-16 shrink-0 place-items-center overflow-hidden border border-[#0c1544] bg-white/60 text-xl">
+            <span className="grid size-16 shrink-0 place-items-center overflow-hidden border border-white/30 text-xl">
               {shown ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={shown} alt="" className="size-full object-cover" />
@@ -202,22 +199,22 @@ export function Onboarding({ api, data, fresh, onFinish, onDone, onSkip }: { api
               )}
             </span>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => file.current?.click()} disabled={busy} className="cap inline-flex h-9 items-center gap-2 border border-[#0c1544] px-4 transition-colors hover:bg-[#0c1544] hover:text-[#f4ead6]">
+              <button type="button" onClick={() => file.current?.click()} disabled={busy} className={cn(ghost, 'h-9 px-4')}>
                 {busy ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />} picture
               </button>
               {shown && (
-                <button type="button" onClick={() => setProfile({ newAvatar: null, hasAvatar: false, avatar: null })} className="cap h-9 px-3 text-[#0c1544]/55 hover:text-[#0c1544]">
+                <button type="button" onClick={() => setProfile({ newAvatar: null, hasAvatar: false, avatar: null })} className="cap h-9 px-3 text-white/50 hover:text-white">
                   remove
                 </button>
               )}
             </div>
           </div>
           <label className="block">
-            <span className="cap text-[#0c1544]/60">your name</span>
+            <span className="text-[0.72rem] text-white/50">your name</span>
             <input value={profile.name} maxLength={40} onChange={(e) => setProfile({ name: e.target.value })} placeholder="what should it say?" autoFocus className={cn(field, 'mt-1.5 h-11')} />
           </label>
           <label className="block">
-            <span className="cap flex justify-between text-[#0c1544]/60">
+            <span className="flex justify-between text-[0.72rem] text-white/50">
               <span>one line about you</span>
               <span className="tabular-nums">{profile.bio.length}/400</span>
             </span>
@@ -229,33 +226,33 @@ export function Onboarding({ api, data, fresh, onFinish, onDone, onSkip }: { api
         <div className="space-y-5 p-6 md:p-8">
           <div className="grid gap-3">
             {rows.map((r, i) => (
-              <div key={r.id} className="grid gap-2 border border-[#0c1544]/30 bg-white/40 p-3 sm:grid-cols-[0.8fr_1.2fr_auto]">
+              <div key={r.id} className="grid gap-2 border border-white/15 p-3 sm:grid-cols-[0.8fr_1.2fr_auto]">
                 <input value={r.title} maxLength={80} placeholder="name, like my showreel" aria-label={`link ${i + 1} name`} onChange={(e) => setRows((x) => x.map((y) => (y.id === r.id ? { ...y, title: e.target.value } : y)))} className={cn(field, 'h-10')} />
                 <input value={r.url} placeholder="link, like youtube.com/..." inputMode="url" autoCapitalize="off" spellCheck={false} aria-label={`link ${i + 1} address`} onChange={(e) => setRows((x) => x.map((y) => (y.id === r.id ? { ...y, url: e.target.value } : y)))} onBlur={() => setRows((x) => x.map((y) => (y.id === r.id ? { ...y, url: cleanUrl(y.url) || y.url } : y)))} className={cn(field, 'h-10')} />
-                <button type="button" aria-label={`remove link ${i + 1}`} onClick={() => setRows((x) => (x.length > 1 ? x.filter((y) => y.id !== r.id) : [{ ...r, title: '', url: '' }]))} className="grid size-10 place-items-center text-[#0c1544]/50 transition-colors hover:bg-[#0c1544] hover:text-[#f4ead6]">
+                <button type="button" aria-label={`remove link ${i + 1}`} onClick={() => setRows((x) => (x.length > 1 ? x.filter((y) => y.id !== r.id) : [{ ...r, title: '', url: '' }]))} className="grid size-10 place-items-center text-white/45 transition-colors hover:bg-white hover:text-black">
                   <X className="size-4" />
                 </button>
               </div>
             ))}
             {rows.length < 6 && (
-              <button type="button" onClick={() => setRows((x) => [...x, { id: newId(), title: '', url: '' }])} className="cap inline-flex h-10 items-center justify-center gap-2 border border-dashed border-[#0c1544]/50 transition-colors hover:border-[#0c1544] hover:bg-white/60">
+              <button type="button" onClick={() => setRows((x) => [...x, { id: newId(), title: '', url: '' }])} className="inline-flex h-10 items-center justify-center gap-2 border border-dashed border-white/30 text-[0.76rem] text-white/60 transition-colors hover:border-white hover:text-white">
                 <Plus className="size-4" /> another link
               </button>
             )}
           </div>
           <div>
-            <p className="cap text-[#0c1544]/60">your socials</p>
+            <p className="text-[0.72rem] text-white/50">your socials</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {SOCIALS.map((s) => (
-                <button key={s} type="button" aria-pressed={openSoc === s} onClick={() => setOpenSoc((o) => (o === s ? null : s))} className={cn('cap inline-flex h-9 items-center gap-2 border px-3.5 transition-colors', soc[s]?.trim() ? 'border-[#0c1544] bg-[#5fd1b6]' : openSoc === s ? 'border-[#0c1544] bg-white' : 'border-[#0c1544]/40 hover:border-[#0c1544]')}>
+                <button key={s} type="button" aria-pressed={openSoc === s} onClick={() => setOpenSoc((o) => (o === s ? null : s))} className={cn('inline-flex h-9 items-center gap-2 border px-3.5 text-[0.76rem] transition-colors', soc[s]?.trim() ? 'border-white bg-white text-black' : openSoc === s ? 'border-white' : 'border-white/30 text-white/70 hover:border-white')}>
                   {soc[s]?.trim() && <Check className="size-3.5" />} {s}
                 </button>
               ))}
             </div>
             {openSoc && (
-              <div className="mt-3 flex items-center gap-2 border border-[#0c1544]/40 bg-white/60 pl-3">
-                <span className="text-[0.76rem] text-[#0c1544]/50">{USERNAME_LINKS[openSoc]?.label ?? 'link'}</span>
-                <input autoFocus value={soc[openSoc] ?? ''} placeholder={USERNAME_LINKS[openSoc] ? 'yourname' : 'paste the link'} spellCheck={false} autoCapitalize="off" aria-label={`${openSoc} ${USERNAME_LINKS[openSoc] ? 'username' : 'link'}`} onChange={(e) => setSoc((o) => ({ ...o, [openSoc]: e.target.value }))} className="h-10 min-w-0 flex-1 bg-transparent text-[0.86rem] outline-none placeholder:text-[#0c1544]/35" />
+              <div className="mt-3 flex items-center gap-2 border border-white/30 pl-3">
+                <span className="text-[0.76rem] text-white/45">{USERNAME_LINKS[openSoc]?.label ?? 'link'}</span>
+                <input autoFocus value={soc[openSoc] ?? ''} placeholder={USERNAME_LINKS[openSoc] ? 'yourname' : 'paste the link'} spellCheck={false} autoCapitalize="off" aria-label={`${openSoc} ${USERNAME_LINKS[openSoc] ? 'username' : 'link'}`} onChange={(e) => setSoc((o) => ({ ...o, [openSoc]: e.target.value }))} className="h-10 min-w-0 flex-1 bg-transparent text-[0.86rem] outline-none placeholder:text-white/30" />
               </div>
             )}
           </div>
@@ -264,14 +261,13 @@ export function Onboarding({ api, data, fresh, onFinish, onDone, onSkip }: { api
       {id === 'layout' && (
         <div className="p-6 md:p-8">
           <div className="grid grid-cols-2 gap-2">
-            {LAYOUTS.map((l, n) => (
-              <button key={l.id} type="button" aria-pressed={cfg.layout === l.id} onClick={() => set((c) => ({ ...c, layout: l.id }))} className={cn('flex h-11 items-center gap-3 border px-3.5 text-left text-[0.8rem] transition-colors', cfg.layout === l.id ? 'border-[#0c1544] bg-[#0c1544] text-[#f4ead6]' : 'border-[#0c1544]/35 hover:border-[#0c1544] hover:bg-white/60')}>
-                <span className="text-[0.62rem] opacity-55 tabular-nums">{pad(n + 1)}</span>
-                <span className="uppercase tracking-[0.04em]">{l.name}</span>
+            {LAYOUTS.map((l) => (
+              <button key={l.id} type="button" aria-pressed={cfg.layout === l.id} onClick={() => set((c) => ({ ...c, layout: l.id }))} className={cn('flex h-11 items-center border px-3.5 text-left text-[0.8rem] transition-colors', cfg.layout === l.id ? 'border-white bg-white text-black' : 'border-white/25 text-white/75 hover:border-white hover:text-white')}>
+                {l.name.toLowerCase()}
               </button>
             ))}
           </div>
-          <p className="mt-5 min-h-[2.6rem] text-[0.8rem] leading-[1.7]">{LAYOUTS.find((l) => l.id === cfg.layout)?.note}</p>
+          <p className="mt-5 min-h-[2.6rem] text-[0.8rem] leading-[1.7] text-white/55">{LAYOUTS.find((l) => l.id === cfg.layout)?.note}</p>
         </div>
       )}
       {id === 'look' && (
@@ -280,13 +276,13 @@ export function Onboarding({ api, data, fresh, onFinish, onDone, onSkip }: { api
             {PRESETS.map((p) => {
               const on = look === p.id
               return (
-                <button key={p.id} type="button" aria-pressed={on} onClick={() => (setLook(p.id), set((c) => applyPreset(c, p)))} className={cn('flex items-center gap-3 border p-2.5 text-left transition-colors', on ? 'border-[#0c1544] bg-white' : 'border-[#0c1544]/35 hover:border-[#0c1544] hover:bg-white/60')}>
-                  <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center border border-[#0c1544]/40" style={{ background: `hsl(0 0% ${p.swatch[0]}%)` }}>
+                <button key={p.id} type="button" aria-pressed={on} onClick={() => (setLook(p.id), set((c) => applyPreset(c, p)))} className={cn('flex items-center gap-3 border p-2.5 text-left transition-colors', on ? 'border-white' : 'border-white/20 hover:border-white/60')}>
+                  <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center border border-white/30" style={{ background: `hsl(0 0% ${p.swatch[0]}%)` }}>
                     <span className="size-3" style={{ background: `hsl(0 0% ${p.swatch[1]}%)` }} />
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-[0.8rem] uppercase tracking-[0.04em]">{p.name}</span>
-                    <span className="block truncate text-[0.68rem] text-[#0c1544]/55">{p.note}</span>
+                    <span className="block text-[0.8rem]">{p.name.toLowerCase()}</span>
+                    <span className="block truncate text-[0.68rem] text-white/45">{p.note}</span>
                   </span>
                 </button>
               )
@@ -295,30 +291,27 @@ export function Onboarding({ api, data, fresh, onFinish, onDone, onSkip }: { api
         </div>
       )}
       {id === 'done' && (
-        <div className="p-6 md:p-8">
-          <h2 className="disp text-[clamp(2.2rem,5vw,3.6rem)] !text-[#0c1544]">{saving === 'error' ? 'it did not save' : saving === 'ok' ? 'you are live' : 'saving it'}</h2>
-          <div className="mt-6 flex items-center gap-3 border border-[#0c1544] bg-white/60 px-3.5 py-3 text-[0.9rem]">
-            <span className="min-w-0 flex-1 truncate">{url}</span>
+        <div className="p-6 text-center md:p-8">
+          <h2 className="disp text-[clamp(2.2rem,4.4vw,3.2rem)]">{saving === 'error' ? 'it did not save' : saving === 'ok' ? 'you are live' : 'saving it'}</h2>
+          <div className="mx-auto mt-6 flex max-w-[26rem] items-center gap-3 border border-white/30 px-3.5 py-3 text-[0.9rem]">
+            <span className="min-w-0 flex-1 truncate text-left">{url}</span>
             {saving === 'saving' && <Loader2 className="size-4 animate-spin" />}
             {saving === 'ok' && <Check className="size-4" />}
           </div>
           {saving === 'error' ? (
-            <div className="mt-5 flex flex-wrap gap-2">
-              <button type="button" onClick={() => (setSaving('idle'), go(STEPS.length - 2), window.setTimeout(() => go(STEPS.length - 1), 50))} className="cap inline-flex h-10 items-center border border-[#0c1544] bg-[#0c1544] px-5 text-[#f4ead6]">
+            <div className="mt-5 flex justify-center">
+              <button type="button" onClick={() => (setSaving('idle'), go(STEPS.length - 2), window.setTimeout(() => go(STEPS.length - 1), 50))} className={solid}>
                 try again
               </button>
             </div>
           ) : (
             <>
-              <ul className="mt-6 space-y-2.5 text-[0.8rem] leading-[1.7]">
-                {['paste the link into your instagram, tiktok, youtube or discord bio', 'every click lands on this page', 'change anything, any time, from your dashboard'].map((t, i) => (
-                  <li key={t} className="flex gap-3">
-                    <span className="text-[#0c1544]/45 tabular-nums">{pad(i + 1)}</span>
-                    {t}
-                  </li>
+              <ul className="mx-auto mt-6 max-w-[24rem] space-y-2.5 text-[0.8rem] leading-[1.7] text-white/60">
+                {['paste the link into your instagram, tiktok, youtube or discord bio', 'every click lands on this page', 'change anything, any time, from your dashboard'].map((t) => (
+                  <li key={t}>{t}</li>
                 ))}
               </ul>
-              <div className="mt-7 flex flex-wrap gap-2">
+              <div className="mt-7 flex flex-wrap justify-center gap-2">
                 <button
                   type="button"
                   disabled={saving !== 'ok'}
@@ -327,11 +320,11 @@ export function Onboarding({ api, data, fresh, onFinish, onDone, onSkip }: { api
                     setCopied(true)
                     window.setTimeout(() => setCopied(false), 1400)
                   }}
-                  className="cap inline-flex h-10 items-center gap-2 bg-[#0c1544] px-5 text-[#f4ead6] transition-opacity hover:opacity-85 disabled:opacity-40"
+                  className={solid}
                 >
                   {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />} {copied ? 'copied' : 'copy my link'}
                 </button>
-                <a href={`/${profile.handle}`} target="_blank" rel="noreferrer" className="cap inline-flex h-10 items-center gap-2 border border-[#0c1544] px-5 transition-colors hover:bg-[#0c1544] hover:text-[#f4ead6]">
+                <a href={`/${profile.handle}`} target="_blank" rel="noreferrer" className={ghost}>
                   <ExternalLink className="size-3.5" /> open it
                 </a>
               </div>
@@ -339,94 +332,90 @@ export function Onboarding({ api, data, fresh, onFinish, onDone, onSkip }: { api
           )}
         </div>
       )}
-    </Win>
+    </>
   )
 
   const last = step === STEPS.length - 1
   return (
-    <div role="dialog" aria-modal="true" aria-label="set up your page" className="ed tour fixed inset-0 z-[90] overflow-hidden bg-[#22377f]" onPointerMove={(e) => (e.pointerType === 'mouse' && (mx.set((e.clientX / window.innerWidth - 0.5) * 2), my.set((e.clientY / window.innerHeight - 0.5) * 2)), undefined)}>
-      <SpeckFilter />
-      <MeshField at={at} />
-      <Mountains p={at} className="h-[38vh]" />
-
-      {/* the top: progress like a health bar, and a way out */}
-      <div className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-4 p-4 md:p-6">
-        <div className="pix" aria-hidden="true">
-          <p className="mb-2 inline-block border border-white/85 px-2 py-1 text-[0.66rem] tracking-[0.14em] uppercase" style={{ background: INK, color: CREAM }}>
-            logoless
-          </p>
-          <div className="h-2.5 w-28 border border-white/85 md:w-40" style={{ background: `${INK}b3` }}>
-            <motion.div className="h-full bg-white" initial={false} animate={{ width: `${((step + 1) / STEPS.length) * 100}%` }} transition={{ duration: reduced ? 0 : 0.5, ease: [0.2, 0.8, 0.2, 1] }} />
-          </div>
-          <p className="mt-1.5 text-[0.6rem] tracking-[0.1em] text-white/90 uppercase">
-            level {pad(step + 1)}/{pad(STEPS.length)}
-          </p>
+    <div role="dialog" aria-modal="true" aria-label="set up your page" className="ed tour fixed inset-0 z-[90] overflow-hidden bg-black" onPointerMove={(e) => (e.pointerType === 'mouse' && (mx.set((e.clientX / window.innerWidth - 0.5) * 2), my.set((e.clientY / window.innerHeight - 0.5) * 2)), undefined)}>
+      {/* the top: where you are, and a way out */}
+      <div className="absolute inset-x-0 top-0 z-20 grid h-14 grid-cols-[1fr_auto_1fr] items-center border-b border-white/10 px-4 md:px-6">
+        <span className="disp text-[1.2rem]">logoless</span>
+        <div className="flex gap-1.5" aria-label={`step ${step + 1} of ${STEPS.length}`} role="img">
+          {STEPS.map((s, n) => (
+            <span key={s.id} className={cn('block h-px w-6 transition-colors duration-500 md:w-9', n <= step ? 'bg-white' : 'bg-white/20')} />
+          ))}
         </div>
-        {!last && (
-          <button type="button" onClick={onSkip} className="pix inline-flex h-10 items-center gap-2 border border-white/85 px-4 text-[0.7rem] tracking-[0.1em] text-white uppercase transition-colors hover:bg-white hover:text-[#0c1544]" style={{ background: `${INK}b3` }}>
+        {!last ? (
+          <button type="button" onClick={onSkip} className="cap inline-flex h-9 items-center gap-2 justify-self-end px-1 text-white/50 transition-colors hover:text-white">
             skip for now <X className="size-3.5" />
           </button>
+        ) : (
+          <span />
         )}
       </div>
 
       {/* the stage */}
-      <div className="relative z-10 mx-auto flex h-full w-full max-w-[72rem] flex-col items-center justify-center gap-6 px-4 pt-20 pb-[7.5rem] lg:flex-row lg:justify-center lg:gap-16 lg:px-10">
+      <div className="relative z-10 mx-auto flex h-full w-full max-w-[64rem] flex-col items-center justify-center gap-6 px-4 pt-20 pb-24 lg:flex-row lg:gap-16 lg:px-10">
         <div className="relative order-2 w-full max-w-[32rem] lg:order-1">
           <AnimatePresence mode="wait" custom={dir}>
             <motion.div
               key={id}
               custom={dir}
-              initial={reduced ? false : { opacity: 0, x: dir * 60, scale: 0.97 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={reduced ? { opacity: 0 } : { opacity: 0, x: dir * -60, scale: 0.97 }}
-              transition={{ duration: reduced ? 0 : 0.38, ease: [0.2, 0.8, 0.2, 1] }}
+              initial={reduced ? false : { opacity: 0, x: dir * 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={reduced ? { opacity: 0 } : { opacity: 0, x: dir * -40 }}
+              transition={{ duration: reduced ? 0 : 0.35, ease: [0.2, 0.8, 0.2, 1] }}
+              className="border border-white/25 bg-black"
             >
-              {win}
+              <div className="flex items-center justify-between border-b border-white/15 px-5 py-3 text-[0.72rem] text-white/45">
+                <span>{STEPS[step].name}</span>
+                <span className="tabular-nums">
+                  {pad(step + 1)} / {pad(STEPS.length)}
+                </span>
+              </div>
+              <div className="max-h-[calc(100svh-24rem)] overflow-y-auto lg:max-h-[calc(100svh-17rem)]">{body}</div>
             </motion.div>
           </AnimatePresence>
         </div>
 
-        <motion.div style={{ x: phoneX, y: phoneY, rotate: phoneR }} className="relative order-1 shrink-0 lg:order-2">
-          <div aria-hidden="true" className="relative h-[8.5rem] w-[8.5rem] overflow-hidden border border-white/80 bg-black shadow-[7px_7px_0_#0c1544] sm:h-[11rem] sm:w-[10rem] lg:h-[32rem] lg:w-[15.5rem]">
+        <motion.div style={{ x: phoneX, y: phoneY }} className="relative order-1 shrink-0 lg:order-2">
+          <div aria-hidden="true" className="relative h-[8.5rem] w-[8.5rem] overflow-hidden border border-white/25 bg-black sm:h-[11rem] sm:w-[10rem] lg:h-[32rem] lg:w-[15.5rem]">
             <div className="absolute top-0 left-0 origin-top-left scale-[0.349] sm:scale-[0.41] lg:scale-[0.636]" style={{ width: 390, height: 844 }}>
               <BioPage mode="mini" data={live} />
             </div>
           </div>
-          <motion.div style={{ x: tagX, y: tagY }} className="pointer-events-none absolute -top-3 -left-3 hidden lg:block">
+          <div className="pointer-events-none absolute -top-3 -left-3 hidden lg:block">
             <AnimatePresence mode="wait">
-              <motion.span key={tag} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="pix inline-block border border-white/85 px-2.5 py-1.5 text-[0.62rem] tracking-[0.1em] whitespace-nowrap uppercase" style={{ background: INK, color: CREAM }}>
+              <motion.span key={tag} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} className="inline-block border border-white/30 bg-black px-2.5 py-1.5 text-[0.68rem] whitespace-nowrap text-white/70">
                 {tag}
               </motion.span>
             </AnimatePresence>
-          </motion.div>
+          </div>
           {id === 'done' && saving === 'ok' && !reduced && <Burst />}
         </motion.div>
       </div>
 
-      {/* the guide and the buttons, along the bottom */}
-      <div className="absolute inset-x-3 bottom-3 z-30 flex items-end gap-2 md:inset-x-[6vw] md:bottom-6">
-        <div className="hidden size-[4.6rem] shrink-0 flex-col items-center justify-center gap-1 border border-white/85 sm:flex" style={{ background: INK }}>
-          <Pixels rows={JACKAL} fill={CREAM} className="size-9" />
-          <span className="pix text-[0.5rem] tracking-[0.14em] text-white/70 uppercase">the guide</span>
-        </div>
-        <p className="pix min-h-[3.4rem] flex-1 border border-white/85 px-4 py-3 text-[0.72rem] leading-[1.5] tracking-[0.06em] uppercase md:text-[0.82rem]" style={{ background: INK, color: CREAM }} aria-live="polite">
+      {/* the guide's line and the buttons, along the bottom */}
+      <div className="absolute inset-x-0 bottom-0 z-30 flex min-h-16 items-center justify-between gap-4 border-t border-white/10 bg-black px-4 py-2 md:px-6">
+        <p className="min-w-0 flex-1 text-[0.76rem] leading-snug text-white/55 md:text-[0.8rem]" aria-live="polite">
           {guide}
           <span aria-hidden="true" className="ml-0.5 inline-block w-[0.5em]" style={{ animation: 'hud-blink 1s steps(1) infinite' }}>
-            ▌
+            |
           </span>
         </p>
-        <div className="flex shrink-0 gap-1.5">
+        <div className="flex shrink-0 gap-2">
           {step > 0 && !last && (
-            <button type="button" onClick={() => go(step - 1)} aria-label="back" className="pix grid size-11 place-items-center border border-white/85 text-white transition-transform hover:-translate-y-0.5 md:size-12" style={{ background: INK }}>
+            <button type="button" onClick={() => go(step - 1)} aria-label="back" className="grid size-10 place-items-center border border-white/30 text-white transition-colors hover:bg-white hover:text-black">
               <ArrowLeft className="size-4" />
             </button>
           )}
           {last ? (
-            <button type="button" onClick={onDone} disabled={saving !== 'ok'} className="pix inline-flex h-11 items-center gap-2 border border-white/85 px-5 text-[0.74rem] tracking-[0.1em] text-[#0c1544] uppercase transition-transform hover:-translate-y-0.5 disabled:opacity-50 md:h-12" style={{ background: '#5fd1b6' }}>
+            <button type="button" onClick={onDone} disabled={saving !== 'ok'} className={solid}>
               {saving === 'saving' ? <Loader2 className="size-4 animate-spin" /> : null} my dashboard <ArrowRight className="size-4" />
             </button>
           ) : (
-            <button type="button" onClick={next} className="pix inline-flex h-11 items-center gap-2 border border-white/85 px-5 text-[0.74rem] tracking-[0.1em] text-[#0c1544] uppercase transition-transform hover:-translate-y-0.5 md:h-12" style={{ background: '#5fd1b6' }}>
+            <button type="button" onClick={next} className={solid}>
               {step === 0 ? 'start' : step === STEPS.length - 2 ? 'make it live' : 'next'} <ArrowRight className="size-4" />
             </button>
           )}
@@ -443,14 +432,14 @@ function Burst() {
       Array.from({ length: 30 }, (_, i) => {
         const a = (i / 30) * Math.PI * 2 + Math.random() * 0.4
         const r = 120 + Math.random() * 190
-        return { x: Math.cos(a) * r, y: Math.sin(a) * r, s: 6 + Math.round(Math.random() * 10), c: COLORS[i % COLORS.length], d: Math.random() * 0.15, rot: Math.random() * 180 }
+        return { x: Math.cos(a) * r, y: Math.sin(a) * r, s: 5 + Math.round(Math.random() * 9), c: SHADES[i % SHADES.length], d: Math.random() * 0.15, rot: Math.random() * 180 }
       }),
     [],
   )
   return (
     <div aria-hidden="true" className="pointer-events-none absolute top-1/2 left-1/2 z-20">
       {bits.map((b, i) => (
-        <motion.span key={i} initial={{ x: 0, y: 0, opacity: 1, scale: 0.4, rotate: 0 }} animate={{ x: b.x, y: b.y, opacity: 0, scale: 1, rotate: b.rot }} transition={{ duration: 1.3, delay: b.d, ease: [0.1, 0.7, 0.2, 1] }} className="absolute block" style={{ width: b.s, height: b.s, background: b.c, border: `1px solid ${INK}` }} />
+        <motion.span key={i} initial={{ x: 0, y: 0, opacity: 1, scale: 0.4, rotate: 0 }} animate={{ x: b.x, y: b.y, opacity: 0, scale: 1, rotate: b.rot }} transition={{ duration: 1.3, delay: b.d, ease: [0.1, 0.7, 0.2, 1] }} className="absolute block" style={{ width: b.s, height: b.s, background: b.c }} />
       ))}
     </div>
   )

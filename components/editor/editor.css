@@ -92,13 +92,13 @@ html .ed.ed.ed :is(h1, h2, h3, h4, h5, h6) {
   word-spacing: normal;
 }
 
-/* the big titles */
+/* the big titles: Geist Light, tight and in plain lower case, the way the main header on veelscp.com is set */
 html .ed.ed.ed .disp {
-  font-family: var(--font-f-schibsted), 'Helvetica Neue', Arial, sans-serif;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: -0.05em;
-  line-height: 0.84;
+  font-family: var(--font-f-geist), 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 300;
+  text-transform: none;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
 }
 /* a small caps label, the way a page number or a panel caption is set */
 .ed .cap {
@@ -152,11 +152,6 @@ html .ed.ed.ed .disp {
 }
 
 
-/* the small print on the game screen: the site's own mono face, in capitals */
-.pix {
-  font-family: var(--font-f-ibm-plex-mono), ui-monospace, 'SF Mono', Menlo, monospace;
-  font-weight: 500;
-}
 @keyframes hud-blink {
   50% {
     opacity: 0;
