@@ -7,7 +7,7 @@ export type EditorApi = {
   cfg: BioConfig
   set: (f: (c: BioConfig) => BioConfig) => void
   /** shortcut: merge a patch into one section of the page */
-  up: <K extends 'theme' | 'avatar' | 'bg' | 'overlay' | 'card' | 'audio' | 'cursor' | 'fx' | 'meta'>(k: K, patch: Partial<BioConfig[K]>) => void
+  up: <K extends 'colors' | 'theme' | 'avatar' | 'bg' | 'overlay' | 'card' | 'audio' | 'cursor' | 'fx' | 'meta'>(k: K, patch: Partial<BioConfig[K]>) => void
   profile: ProfileDraft
   setProfile: (p: Partial<ProfileDraft>) => void
   stats: BioStats

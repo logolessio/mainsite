@@ -1,15 +1,15 @@
 'use client'
 
-import { Check, ImagePlus, Trash2, Video } from 'lucide-react'
+import { Check, ImagePlus, Sparkles, Trash2, Video } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { BioPage } from '@/components/bio/bio-page'
 import { fontClass } from '@/components/bio/bits'
 import { GifPicker } from '@/components/profile/gif-picker'
-import { AVATAR_SHAPES, BG_KINDS, BIO_EFFECTS, BIO_SHADERS, BUTTON_STYLES, CARD_STYLES, GRADIENT_STYLES, LAYOUTS, NAME_STYLES, OVERLAYS, PRESETS, applyPreset, grey } from '@/lib/bio'
+import { AVATAR_SHAPES, BG_KINDS, BIO_EFFECTS, BIO_SHADERS, BUTTON_STYLES, CARD_STYLES, GRADIENT_STYLES, LAYOUTS, NAME_STYLES, OVERLAYS, PRESETS, applyPreset, grey, hslHex } from '@/lib/bio'
 import { uploadBackground, uploadBgVideo } from '@/lib/image-client'
 import { cn } from '@/lib/utils'
 import type { EditorApi } from './types'
-import { Btn, Group, Row, Seg, Slider, Switch } from './ui'
+import { Btn, ColorField, Group, Row, Seg, Slider, Switch } from './ui'
 
 const FONTS = [
   ['geist', 'Geist'],
@@ -42,7 +42,7 @@ function Thumb({ api, layout }: { api: EditorApi; layout: string }) {
     bio: profile.bio,
     avatar: profile.newAvatar ? `/api/img/${profile.newAvatar}` : profile.hasAvatar ? profile.avatar : null,
     views: null,
-    config: { ...cfg, layout: layout as typeof cfg.layout, bg: { ...cfg.bg, kind: cfg.bg.kind === 'shader' || cfg.bg.kind === 'effect' ? ('tone' as const) : cfg.bg.kind }, fx: { ...cfg.fx, enter: 'none' as const, grain: 0, scanlines: 0, reveal: 'none' as const, spotlight: false }, cursor: { ...cfg.cursor, trail: 'none' as const }, audio: { ...cfg.audio, id: '' } },
+    config: { ...cfg, layout: layout as typeof cfg.layout, bg: { ...cfg.bg, kind: cfg.bg.kind === 'shader' || cfg.bg.kind === 'effect' || cfg.bg.kind === 'glow' ? ('tone' as const) : cfg.bg.kind }, fx: { ...cfg.fx, enter: 'none' as const, grain: 0, scanlines: 0, reveal: 'none' as const, spotlight: false }, cursor: { ...cfg.cursor, trail: 'none' as const }, audio: { ...cfg.audio, id: '' } },
   }
   return (
     <div className="pointer-events-none absolute top-0 left-0 origin-top-left" style={{ width: 390, height: 520, transform: 'scale(0.36)' }}>
@@ -116,9 +116,50 @@ export function StylePanel({ api }: { api: EditorApi }) {
   const t = cfg.theme
   return (
     <div>
-      <Group title="Page tone" hint="black to white. the text flips by itself to stay readable.">
-        <Slider tone label="Page tone" value={t.tone} onChange={(v) => api.set((c) => ({ ...c, theme: { ...c.theme, tone: v }, bg: { ...c.bg, tone: v } }))} />
+      <Group title="Your colours" hint="Switch these on to colour the whole page. The background, the buttons, your name and the moving backgrounds all pick them up.">
+        <Switch checked={cfg.colors.on} onChange={(v) => up('colors', { on: v })} label="Use my own colours" />
+        {cfg.colors.on && (
+          <>
+            <div className="grid grid-cols-6 gap-2" role="group" aria-label="Colour palettes">
+              {PRESETS.filter((p) => p.hues).map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  title={p.name}
+                  aria-label={`${p.name} palette`}
+                  onClick={() => up('colors', { ...p.set.colors, on: true })}
+                  className="group relative aspect-square overflow-hidden rounded-xl border border-[var(--ed-line2)] transition-[transform,border-color] duration-200 hover:-translate-y-px hover:border-white/50"
+                  style={{ background: `linear-gradient(135deg, ${p.hues![0]} 0%, ${p.hues![1]} 100%)` }}
+                >
+                  <span className="absolute bottom-1.5 left-1.5 size-2.5 rounded-full" style={{ background: p.hues![2] }} />
+                  <span className="absolute right-1.5 bottom-1.5 size-2.5 rounded-full" style={{ background: p.hues![3] }} />
+                </button>
+              ))}
+            </div>
+            <div className="grid gap-3">
+              <ColorField label="Background" value={cfg.colors.bg} onChange={(v) => up('colors', { bg: v })} />
+              <ColorField label="Second background" value={cfg.colors.bg2} onChange={(v) => up('colors', { bg2: v })} />
+              <ColorField label="Text" value={cfg.colors.text} onChange={(v) => up('colors', { text: v })} />
+              <ColorField label="Accent" value={cfg.colors.accent} onChange={(v) => up('colors', { accent: v })} />
+              <ColorField label="Second accent" value={cfg.colors.accent2} onChange={(v) => up('colors', { accent2: v })} />
+            </div>
+            <Btn
+              onClick={() => {
+                const h = Math.floor(Math.random() * 360)
+                const gap = 40 + Math.floor(Math.random() * 120)
+                up('colors', { bg: hslHex(h, 0.45, 0.05), bg2: hslHex(h, 0.5, 0.16), text: hslHex(h, 0.25, 0.96), accent: hslHex(h, 0.85, 0.62), accent2: hslHex((h + gap) % 360, 0.85, 0.6) })
+              }}
+            >
+              <Sparkles className="size-3.5" /> Surprise me
+            </Btn>
+          </>
+        )}
       </Group>
+      {!cfg.colors.on && (
+        <Group title="Page tone" hint="Black to white. The text flips by itself to stay readable.">
+          <Slider tone label="Page tone" value={t.tone} onChange={(v) => api.set((c) => ({ ...c, theme: { ...c.theme, tone: v }, bg: { ...c.bg, tone: v } }))} />
+        </Group>
+      )}
       <Group title="Typeface">
         <div className="grid grid-cols-2 gap-2">
           {FONTS.map(([id, name]) => (
@@ -188,7 +229,8 @@ export function BackgroundPanel({ api }: { api: EditorApi }) {
     <div>
       <Group title="Background">
         <Seg value={bg.kind} options={BG_KINDS} cols={3} onChange={(v) => up('bg', { kind: v })} />
-        {bg.kind === 'tone' && (
+        {bg.kind === 'tone' && cfg.colors.on && <ColorField label="Background colour" value={cfg.colors.bg} onChange={(v) => up('colors', { bg: v })} />}
+        {bg.kind === 'tone' && !cfg.colors.on && (
           <Row label="Tone" value={bg.tone}>
             <Slider tone label="Background tone" value={bg.tone} onChange={(v) => api.set((c) => ({ ...c, theme: { ...c.theme, tone: v }, bg: { ...c.bg, tone: v } }))} />
           </Row>
@@ -196,18 +238,43 @@ export function BackgroundPanel({ api }: { api: EditorApi }) {
         {bg.kind === 'gradient' && (
           <>
             <Seg value={bg.gradient} options={GRADIENT_STYLES} onChange={(v) => up('bg', { gradient: v })} />
-            <Row label="From" value={bg.tone}>
+            {cfg.colors.on && (
+              <div className="grid gap-3">
+                <ColorField label="From" value={cfg.colors.bg} onChange={(v) => up('colors', { bg: v })} />
+                <ColorField label="To" value={cfg.colors.bg2} onChange={(v) => up('colors', { bg2: v })} />
+              </div>
+            )}
+            {!cfg.colors.on && <Row label="From" value={bg.tone}>
               <Slider tone label="Gradient from" value={bg.tone} onChange={(v) => api.set((c) => ({ ...c, theme: { ...c.theme, tone: v }, bg: { ...c.bg, tone: v } }))} />
             </Row>
-            <Row label="To" value={bg.tone2}>
+            }
+            {!cfg.colors.on && <Row label="To" value={bg.tone2}>
               <Slider tone label="Gradient to" value={bg.tone2} onChange={(v) => up('bg', { tone2: v })} />
-            </Row>
+            </Row>}
             {bg.gradient !== 'radial' && bg.gradient !== 'mesh' && (
               <Row label="Angle" value={`${bg.angle}°`}>
                 <Slider label="Gradient angle" max={360} value={bg.angle} onChange={(v) => up('bg', { angle: v })} />
               </Row>
             )}
           </>
+        )}
+        {bg.kind === 'glow' && (
+          <div className="grid gap-3">
+            {cfg.colors.on ? (
+              <>
+                <ColorField label="Outer colour" value={cfg.colors.accent} onChange={(v) => up('colors', { accent: v })} />
+                <ColorField label="Inner colour" value={cfg.colors.accent2} onChange={(v) => up('colors', { accent2: v })} />
+                <p className="text-[0.74rem] leading-snug text-[var(--ed-mute)]">The glow rises from the bottom and runs from one colour to the other, the short way round the colour wheel. Blue to orange passes violet, pink and red.</p>
+              </>
+            ) : (
+              <>
+                <p className="text-[0.76rem] leading-snug text-[var(--ed-mute)]">The glow is grey until the page has colours of its own.</p>
+                <Btn variant="solid" onClick={() => up('colors', { on: true })}>
+                  Use my own colours
+                </Btn>
+              </>
+            )}
+          </div>
         )}
         {bg.kind === 'shader' && (
           <div className="grid grid-cols-3 gap-1.5">

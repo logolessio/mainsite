@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowRight, Check, Copy, ExternalLink, ImageIcon, LayoutGrid, Link2, MousePointer2, Sparkles } from 'lucide-react'
+import { ArrowRight, Check, Copy, ExternalLink, ImageIcon, LayoutGrid, Link2, MousePointer2, Sparkles, WandSparkles } from 'lucide-react'
 import { useState } from 'react'
 import { BioPage } from '@/components/bio/bio-page'
 import type { BioPageData } from '@/components/bio/context'
@@ -54,6 +54,7 @@ export function OverviewPanel({ api, data, go, onTour }: { api: EditorApi; data:
   ]
   const actions: [string, DashId, typeof Link2][] = [
     ['Add a link', 'links', Link2],
+    ['Pick a template', 'templates', WandSparkles],
     ['Change the layout', 'layout', LayoutGrid],
     ['Pick a background', 'background', ImageIcon],
     ['Choose a cursor', 'cursor', MousePointer2],

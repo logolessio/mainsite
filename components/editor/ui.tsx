@@ -1,6 +1,6 @@
 'use client'
 
-import { type CSSProperties, type ReactNode, useId } from 'react'
+import { type CSSProperties, type ReactNode, useEffect, useId, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 /** A titled group of controls. */
@@ -82,5 +82,36 @@ export function Btn({ children, variant = 'ghost', className, ...p }: React.Butt
     >
       {children}
     </button>
+  )
+}
+
+/** A colour: a swatch that opens the picker, and the code, which can be typed or pasted. */
+export function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const [text, setText] = useState(value)
+  useEffect(() => setText(value), [value])
+  const commit = (v: string) => {
+    const t = v.startsWith('#') ? v : `#${v}`
+    if (/^#[0-9a-f]{6}$/i.test(t)) onChange(t.toLowerCase())
+  }
+  return (
+    <div className="flex items-center gap-3">
+      <label className="relative size-10 shrink-0 cursor-pointer overflow-hidden rounded-xl border border-[var(--ed-line2)] transition-transform duration-200 hover:-translate-y-px" style={{ background: value }}>
+        <input type="color" value={value} onChange={(e) => onChange(e.target.value.toLowerCase())} aria-label={`${label}, colour picker`} className="absolute inset-0 size-full cursor-pointer opacity-0" />
+      </label>
+      <div className="min-w-0 flex-1">
+        <p className="text-[0.76rem] text-[var(--ed-mute)]">{label}</p>
+        <input
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value)
+            commit(e.target.value)
+          }}
+          spellCheck={false}
+          maxLength={7}
+          aria-label={`${label}, code`}
+          className="mt-0.5 h-8 w-full rounded-lg border border-transparent bg-transparent px-1 text-[0.84rem] uppercase outline-none transition-colors hover:border-[var(--ed-line)] focus:border-white/40"
+        />
+      </div>
+    </div>
   )
 }

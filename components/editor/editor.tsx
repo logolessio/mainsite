@@ -10,6 +10,7 @@ import type { BioStats } from '@/lib/bio-store'
 import { cn } from '@/lib/utils'
 import { LinksPanel } from './panel-links'
 import { BackgroundPanel, LayoutPanel, StylePanel } from './panel-design'
+import { TemplatesPanel } from './panel-templates'
 import { CursorPanel, EffectsPanel } from './panel-fx'
 import { InsightsPanel, ProfilePanel, SettingsPanel } from './panel-account'
 import { type DashId, DashShell, NAV, type NavCount } from './dashboard'
@@ -20,7 +21,7 @@ import type { EditorApi, ProfileDraft } from './types'
 type Tab = DashId
 const TAB_IDS = NAV.map((n) => n.id) as readonly Tab[]
 /** The pages that edit the page and show it beside them (the others are full width). */
-const EDITS: readonly Tab[] = ['links', 'profile', 'layout', 'style', 'background', 'cursor', 'effects']
+const EDITS: readonly Tab[] = ['links', 'profile', 'templates', 'layout', 'style', 'background', 'cursor', 'effects']
 
 type Loaded = { config: BioConfig; saved: boolean; profile: Omit<ProfileDraft, 'newAvatar'>; stats: BioStats }
 
@@ -175,6 +176,7 @@ export function Editor({ claim }: { claim: string | null }) {
       <motion.div key={tab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}>
         {tab === 'links' && <LinksPanel api={api} />}
         {tab === 'profile' && <ProfilePanel api={api} />}
+        {tab === 'templates' && <TemplatesPanel api={api} />}
         {tab === 'layout' && <LayoutPanel api={api} />}
         {tab === 'style' && <StylePanel api={api} />}
         {tab === 'background' && <BackgroundPanel api={api} />}

@@ -111,7 +111,7 @@ export const hostOf = (u: string) => {
 /** The title bar of a window: three small square lights and a label, in the page's own ink. */
 export function WinBar({ children, className }: { children?: ReactNode; className?: string }) {
   return (
-    <div className={cn('flex h-6 items-center gap-1.5 bg-[var(--bio-fg)] px-2.5 text-[var(--bio-bg)]', className)}>
+    <div className={cn('flex h-6 items-center gap-1.5 bg-[var(--bio-accent)] px-2.5 text-[var(--bio-on-accent)]', className)}>
       {[0, 1, 2].map((i) => (
         <span key={i} aria-hidden="true" className="size-[6px] bg-[var(--bio-bg)] opacity-70" />
       ))}
@@ -121,8 +121,8 @@ export function WinBar({ children, className }: { children?: ReactNode; classNam
 }
 
 /** A window: a title bar, a body and a hard square shadow. */
-export const winClass = 'border border-[rgb(var(--bio-fg-rgb)/0.8)] bg-[var(--bio-bg)] shadow-[5px_5px_0_rgb(var(--bio-fg-rgb)/0.85)]'
-export const winHover = 'transition-[translate,box-shadow] duration-300 hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[2px_2px_0_rgb(var(--bio-fg-rgb)/0.85)]'
+export const winClass = 'border border-[rgb(var(--bio-accent-rgb)/0.8)] bg-[var(--bio-bg)] shadow-[5px_5px_0_rgb(var(--bio-accent-rgb)/0.85)]'
+export const winHover = 'transition-[translate,box-shadow] duration-300 hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[2px_2px_0_rgb(var(--bio-accent-rgb)/0.85)]'
 
 /** A link as a window: numbered, with the site in the title bar. It slides in from a side when it comes into view. */
 export function PanelRow({ block, index, className }: { block: LinkBlock; index: number; className?: string }) {
@@ -164,5 +164,5 @@ export function Rows({ items, className }: { items: BioBlock[]; className?: stri
 /** A hairline that draws itself down a stretch of the page as you scroll through it. */
 export function DrawLine({ p, className }: { p: MotionValue<number>; className?: string }) {
   const s = useStep(p, [0, 1], [0, 1], 1)
-  return <motion.span aria-hidden="true" style={{ scaleY: s }} className={cn('block w-px origin-top bg-[var(--bio-fg)]', className)} />
+  return <motion.span aria-hidden="true" style={{ scaleY: s }} className={cn('block w-px origin-top bg-[var(--bio-accent)]', className)} />
 }

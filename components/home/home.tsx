@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useMotionValue, useSpring } from 'framer-motio
 import { ArrowRight, AtSign, BarChart3, Check, Layers, Loader2, MousePointer2, Music2, Plus, Share2, SlidersHorizontal, Sparkles, X } from 'lucide-react'
 import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react'
 import { BioPage } from '@/components/bio/bio-page'
+import { Glow, LOVABLE_GLOW } from '@/components/bio/glow'
 import type { BioPageData } from '@/components/bio/context'
 import { ShaderRunner, type ShaderId } from '@/components/bio/gl'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
@@ -159,70 +160,12 @@ function Nav() {
   )
 }
 
-/**
- * lovable.dev's glow: four soft hearts, outermost first (blue, pink, red, orange), centred low in a box about twice the width of the page, so only their tops
- * show. The sizes and colours are theirs; the layers are two svgs so each can swell on its own (see .glow in editor.css), with film grain over the top.
- * `enter` plays the rise from below on load.
- */
-const HEARTS = [
-  { c: '#417fff', cy: 835, sx: 1.014, r: 329, dx: 229, dy: 227, s: 626, ty: 43.8, sy: 0.852, blur: 30, layer: 'halo' },
-  { c: '#ff85e5', cy: 791, sx: 1.02, r: 245, dx: 195, dy: 166, s: 541, ty: 7.1, sy: 0.962, blur: 25, layer: 'halo' },
-  { c: '#fe1766', cy: 821, sx: 1.038, r: 229, dx: 151, dy: 148, s: 439, ty: 43.9, sy: 0.73, blur: 22, layer: 'core' },
-  { c: '#ff6e1d', cy: 800, sx: 1.085, r: 182, dx: 107, dy: 102, s: 364, ty: 24.9, sy: 0.746, blur: 18, layer: 'core' },
-] as const
-
-/** One of the two layers as a small picture, made once: the blur is baked in, so the page never re-draws it while the glow moves. */
-const GLOW_PX = 520
-function heartsUri(layer: 'halo' | 'core') {
-  const hs = HEARTS.filter((h) => h.layer === layer)
-  const defs = hs.map((h) => `<filter id="b${h.c.slice(1)}" filterUnits="userSpaceOnUse" x="-1000" y="-1000" width="2000" height="2000"><feGaussianBlur stdDeviation="${h.blur}"/></filter>`).join('')
-  const shapes = hs
-    .map((h) => {
-      const s = h.s * 0.9
-      return `<g transform="translate(600 ${h.cy}) scale(${h.sx} 1)" fill="${h.c}" filter="url(#b${h.c.slice(1)})"><circle cx="${-h.dx}" cy="${-h.dy}" r="${h.r * 0.9}"/><circle cx="${h.dx}" cy="${-h.dy}" r="${h.r * 0.9}"/><rect x="${-s / 2}" y="${-s / 2}" width="${s}" height="${s}" transform="translate(0 ${h.ty}) scale(1 ${h.sy}) rotate(45)"/></g>`
-    })
-    .join('')
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1210" width="${GLOW_PX}" height="${Math.round((GLOW_PX * 1210) / 1200)}"><defs>${defs}</defs>${shapes}</svg>`
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
-}
-const HALO_URI = heartsUri('halo')
-const CORE_URI = heartsUri('core')
-
-function GlowLayer({ name }: { name: 'halo' | 'core' }) {
-  const ref = useRef<HTMLCanvasElement>(null)
-  useEffect(() => {
-    const cv = ref.current
-    if (!cv) return
-    const img = new Image()
-    img.onload = () => cv.getContext('2d')?.drawImage(img, 0, 0, cv.width, cv.height)
-    img.src = name === 'halo' ? HALO_URI : CORE_URI
-  }, [name])
-  return <canvas ref={ref} width={GLOW_PX} height={Math.round((GLOW_PX * 1210) / 1200)} aria-hidden="true" className={cn('glow-layer', name === 'halo' ? 'glow-halo' : 'glow-core')} />
-}
-
-function Glow({ className, enter = false, fade = true, w, top }: { className?: string; enter?: boolean; fade?: boolean; w: string; top: string }) {
-  return (
-    <div aria-hidden="true" className={cn('glow', enter && 'glow-enter', className)}>
-      <div className="glow-rise">
-        <div className="glow-drift">
-          <div className="glow-art" style={vars({ '--w': w, '--top': top })}>
-            <GlowLayer name="halo" />
-            <GlowLayer name="core" />
-          </div>
-        </div>
-      </div>
-      <span className="mesh-grain" />
-      {fade && <span className="absolute inset-x-0 bottom-0 h-[16%] bg-gradient-to-t from-[#080808] to-transparent" />}
-    </div>
-  )
-}
-
 /* ------------------------------------------------------------------ the title: what it is, and real pages straight away */
 
 function Hero() {
   return (
     <section id="top" className="relative overflow-hidden px-5 pt-36 text-center md:pt-44">
-      <Glow enter w="clamp(1500px, 190vw, 3200px)" top="250px" />
+      <Glow colors={LOVABLE_GLOW} enter grain fade w="clamp(1500px, 190vw, 3200px)" top="250px" />
       <div className="relative z-10 mx-auto flex max-w-[56rem] flex-col items-center">
         <h1 className="disp rise text-[11.5vw] md:text-[clamp(3rem,6vw,5.4rem)]" style={vars({ '--d': '0.05s' })}>
           One link for <br className="md:hidden" />
@@ -525,7 +468,7 @@ function Cta() {
   return (
     <section id="claim" className="scroll-mt-24 px-5 py-20">
       <Reveal className="relative mx-auto max-w-[64rem] overflow-hidden rounded-[36px] border border-white/10 bg-[#0b0b0b] px-6 py-16 text-center shadow-[var(--ed-lift)] md:py-24">
-        <Glow fade={false} w="clamp(820px, 92vw, 1400px)" top="90px" />
+        <Glow colors={LOVABLE_GLOW} grain w="clamp(820px, 92vw, 1400px)" top="90px" />
         <div className="relative z-10">
         <h2 className="disp text-[clamp(2.4rem,5vw,4.4rem)]">Claim your page.</h2>
         <p className={cn(SUB, '!text-white/85')}>It takes about a minute, and it&apos;s free. The short names go first.</p>

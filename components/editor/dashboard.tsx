@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowUpRight, BarChart3, Check, Copy, CornerDownLeft, Ellipsis, ExternalLink, Eye, ImageIcon, LayoutDashboard, LayoutGrid, Link2, Loader2, type LucideIcon, LogOut, MousePointer2, Palette, Pencil, Search, Settings2, Sparkles, User, X } from 'lucide-react'
+import { ArrowUpRight, BarChart3, Check, Copy, CornerDownLeft, Ellipsis, ExternalLink, Eye, ImageIcon, LayoutDashboard, LayoutGrid, Link2, Loader2, type LucideIcon, LogOut, MousePointer2, Palette, Pencil, Search, Settings2, Sparkles, User, WandSparkles, X } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
@@ -14,6 +14,7 @@ export const NAV = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard, key: 'o', words: 'home start welcome checklist' },
   { id: 'links', label: 'Links', icon: Link2, key: 'l', section: 'Your page', words: 'add link buttons socials video music' },
   { id: 'profile', label: 'Profile', icon: User, key: 'p', words: 'name bio picture avatar username address' },
+  { id: 'templates', label: 'Templates', icon: WandSparkles, key: 'm', words: 'look theme preset colours colors gradient glow' },
   { id: 'layout', label: 'Layout', icon: LayoutGrid, key: 'a', words: 'arrange poster bento stack orbit index terminal' },
   { id: 'style', label: 'Style', icon: Palette, key: 's', words: 'font colour color theme buttons roundness' },
   { id: 'background', label: 'Background', icon: ImageIcon, key: 'b', words: 'shader video image blur picture' },

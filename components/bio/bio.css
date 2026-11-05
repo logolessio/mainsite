@@ -45,6 +45,9 @@
   overflow: hidden;
   pointer-events: none;
 }
+.bio-bg {
+  container-type: size;
+}
 .bio-layer {
   position: absolute;
   inset: 0;
@@ -130,6 +133,43 @@
 .bn-flicker {
   animation: bio-flicker 4.2s infinite;
 }
+.bn-gradient {
+  background-image: linear-gradient(100deg, var(--bio-accent), var(--bio-accent2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.bio-root:not([data-custom]) .bn-gradient {
+  background-image: linear-gradient(100deg, var(--bio-fg), var(--bio-mute));
+}
+.bn-glow {
+  text-shadow: 0 0 0.2em rgb(var(--bio-accent-rgb) / 0.85), 0 0 0.65em rgb(var(--bio-accent-rgb) / 0.55), 0 0 1.4em rgb(var(--bio-accent-rgb) / 0.35);
+}
+.bn-neon {
+  color: var(--bio-fg);
+  text-shadow: 0 0 0.05em var(--bio-fg), 0 0 0.2em var(--bio-accent), 0 0 0.55em var(--bio-accent), 0 0 1.1em var(--bio-accent2);
+  animation: bio-neon 3.4s infinite;
+}
+@keyframes bio-neon {
+  0%,
+  18%,
+  22%,
+  62%,
+  66%,
+  100% {
+    opacity: 1;
+  }
+  20%,
+  64% {
+    opacity: 0.78;
+  }
+}
+@keyframes bio-breathe {
+  50% {
+    transform: scale(1.08);
+  }
+}
 .bn-ghost {
   text-shadow: 0 0.05em 0 rgb(var(--bio-fg-rgb) / 0.22), 0 0.1em 0 rgb(var(--bio-fg-rgb) / 0.12), 0 0.15em 0 rgb(var(--bio-fg-rgb) / 0.06);
 }
@@ -164,22 +204,22 @@
   backdrop-filter: blur(18px) saturate(1.1);
 }
 .bio-root[data-btn='glass'] .bl:hover {
-  background: rgb(var(--bio-fg-rgb) / 0.13);
-  border-color: rgb(var(--bio-fg-rgb) / 0.4);
+  background: rgb(var(--bio-accent-rgb) / 0.16);
+  border-color: rgb(var(--bio-accent-rgb) / 0.5);
 }
 .bio-root[data-btn='solid'] .bl {
-  background: var(--bio-fg);
-  color: var(--bio-bg);
+  background: var(--bio-accent);
+  color: var(--bio-on-accent);
 }
 .bio-root[data-btn='solid'] .bl:hover {
   opacity: 0.86;
 }
 .bio-root[data-btn='outline'] .bl {
-  border: 1px solid rgb(var(--bio-fg-rgb) / 0.55);
+  border: 1px solid rgb(var(--bio-accent-rgb) / 0.6);
 }
 .bio-root[data-btn='outline'] .bl:hover {
-  background: var(--bio-fg);
-  color: var(--bio-bg);
+  background: var(--bio-accent);
+  color: var(--bio-on-accent);
 }
 .bio-root[data-btn='ghost'] .bl:hover {
   background: var(--bio-soft);
@@ -190,17 +230,17 @@
   border-bottom: 1px solid var(--bio-line);
 }
 .bio-root[data-btn='underline'] .bl:hover {
-  border-bottom-color: var(--bio-fg);
+  border-bottom-color: var(--bio-accent);
   padding-left: 0.4rem;
 }
 .bio-root[data-btn='brutal'] .bl {
-  border: 2px solid var(--bio-fg);
+  border: 2px solid var(--bio-accent);
   background: var(--bio-bg);
-  box-shadow: 5px 5px 0 var(--bio-fg);
+  box-shadow: 5px 5px 0 var(--bio-accent);
 }
 .bio-root[data-btn='brutal'] .bl:hover {
   transform: translate(3px, 3px);
-  box-shadow: 2px 2px 0 var(--bio-fg);
+  box-shadow: 2px 2px 0 var(--bio-accent);
 }
 .bl-ico {
   display: grid;
@@ -252,8 +292,8 @@
   transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.3s, color 0.3s;
 }
 .bs:hover {
-  background: var(--bio-fg);
-  color: var(--bio-bg);
+  background: var(--bio-accent);
+  color: var(--bio-on-accent);
   transform: translateY(-3px);
 }
 
@@ -480,4 +520,125 @@ a.bio-tile:hover {
   background-size: 7px 7px;
   -webkit-mask-image: var(--hm, linear-gradient(to top, #000, transparent 72%));
   mask-image: var(--hm, linear-gradient(to top, #000, transparent 72%));
+}
+
+/* ---------------------------------------------------------------- the glow (a background, and the home page's) */
+/* the glow that rises from the bottom, built the way lovable.dev builds theirs: four soft hearts (blue, pink, red, orange), stacked, centred low and so big that only
+   their tops show. It rises in from below on load (.glow-enter), the layers swell into place, and then it breathes and drifts slowly. */
+.glow {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.glow-rise,
+.glow-drift {
+  position: absolute;
+  inset: 0;
+}
+.glow-drift {
+  animation: glow-drift 20s ease-in-out infinite;
+}
+.glow-enter .glow-rise {
+  animation: glow-rise 1.6s cubic-bezier(0.215, 0.61, 0.355, 1) both;
+}
+/* the artwork is a square-ish box: --w wide, with the tops of the blue lobes --top from the top of the section */
+.glow-art {
+  position: absolute;
+  left: 50%;
+  width: var(--w);
+  margin-left: calc(var(--w) / -2);
+  aspect-ratio: 1200 / 1210;
+  top: calc(var(--top) - var(--w) * 0.2325);
+}
+.glow-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform-origin: 50% 66%;
+  will-change: transform, opacity;
+}
+.glow-halo {
+  animation: glow-breathe-a 11s ease-in-out 1.6s infinite;
+}
+.glow-core {
+  animation: glow-breathe-b 8s ease-in-out 1.6s infinite;
+}
+.glow-enter .glow-halo {
+  animation:
+    glow-halo-in 1.3s cubic-bezier(0.165, 0.84, 0.44, 1) 0.3s backwards,
+    glow-breathe-a 11s ease-in-out 1.6s infinite;
+}
+.glow-enter .glow-core {
+  animation:
+    glow-core-in 1s cubic-bezier(0.165, 0.84, 0.44, 1) 0.1s backwards,
+    glow-breathe-b 8s ease-in-out 1.6s infinite;
+}
+@keyframes glow-rise {
+  from {
+    opacity: 0;
+    transform: translateY(50vh);
+  }
+}
+@keyframes glow-halo-in {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+}
+@keyframes glow-core-in {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+}
+@keyframes glow-drift {
+  25% {
+    transform: translate(2.4%, -1.6%) scale(1.09);
+  }
+  50% {
+    transform: translate(-1.2%, 2%) scale(1.12);
+  }
+  75% {
+    transform: translate(-2.8%, -0.8%) scale(1.06);
+  }
+}
+@keyframes glow-breathe-a {
+  50% {
+    transform: scale(1.045);
+    opacity: 0.88;
+  }
+}
+@keyframes glow-breathe-b {
+  50% {
+    transform: scale(1.07);
+    opacity: 0.94;
+  }
+}
+/* grain: fine, sparse light and dark specks over the mesh, so the soft grey looks printed instead of smooth */
+.mesh-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.17;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='w' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 3.2 -1.95'/></filter><rect width='100%25' height='100%25' filter='url(%23w)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='170' height='170'><filter id='k' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' seed='11' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3.6 -2.1'/></filter><rect width='100%25' height='100%25' filter='url(%23k)'/></svg>");
+  background-size: 200px 200px, 170px 170px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .glow-drift,
+  .glow-halo,
+  .glow-core,
+  .glow-enter .glow-rise,
+  .glow-enter .glow-halo,
+  .glow-enter .glow-core {
+    animation: none;
+  }
+}
+
+.glow-still,
+.glow-still * {
+  animation: none !important;
 }

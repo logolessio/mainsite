@@ -4,7 +4,7 @@ import './bio.css'
 import { useMotionValue, useScroll, useSpring } from 'framer-motion'
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
-import { type BioBlock, isLight } from '@/lib/bio'
+import { type BioBlock, hexLum, hexRgb, pageLight } from '@/lib/bio'
 import { BioBackground, BioFilm } from './background'
 import { fontClass } from './bits'
 import { MusicPlayer } from './audio'
@@ -108,14 +108,25 @@ export function BioPage({ data, mode = 'live', className, style, still = false }
   }, [blocks])
   const socials = useMemo(() => blocks.filter((b): b is Extract<BioBlock, { t: 'social' }> => b.t === 'social' && !b.hidden), [blocks])
 
-  const light = isLight(cfg.theme.tone)
+  const custom = cfg.colors.on
+  const light = pageLight(cfg)
   const fgTone = light ? 4 : 97
-  const fgRgb = light ? '10 10 10' : '247 247 247'
+  const fgRgb = custom ? hexRgb(cfg.colors.text).join(' ') : light ? '10 10 10' : '247 247 247'
+  const accent = custom ? cfg.colors.accent : gray(fgTone)
+  const accent2 = custom ? cfg.colors.accent2 : gray(fgTone)
+  const accentRgb = custom ? hexRgb(cfg.colors.accent).join(' ') : fgRgb
+  const accent2Rgb = custom ? hexRgb(cfg.colors.accent2).join(' ') : fgRgb
   const cv = cursorVars(cfg)
   const vars = {
-    '--bio-bg': gray(cfg.theme.tone),
-    '--bio-fg': gray(fgTone),
+    '--bio-bg': custom ? cfg.colors.bg : gray(cfg.theme.tone),
+    '--bio-fg': custom ? cfg.colors.text : gray(fgTone),
     '--bio-fg-rgb': fgRgb,
+    '--bio-accent': accent,
+    '--bio-accent-rgb': accentRgb,
+    '--bio-accent2': accent2,
+    '--bio-accent2-rgb': accent2Rgb,
+    /** the ink on top of an accent: black on a light accent, white on a dark one */
+    '--bio-on-accent': custom ? (hexLum(cfg.colors.accent) > 0.5 ? '#0a0a0a' : '#ffffff') : gray(light ? 97 : 4),
     '--bio-mute': `rgb(${fgRgb} / 0.58)`,
     '--bio-line': `rgb(${fgRgb} / ${light ? 0.2 : 0.16})`,
     '--bio-soft': `rgb(${fgRgb} / ${light ? 0.06 : 0.07})`,
@@ -136,6 +147,7 @@ export function BioPage({ data, mode = 'live', className, style, still = false }
         data-fixed={mode === 'live' ? 1 : undefined}
         data-mini={mode === 'mini' ? 1 : undefined}
         data-light={light ? 1 : undefined}
+        data-custom={custom ? 1 : undefined}
         data-btn={cfg.theme.buttons}
         data-size={cfg.theme.size}
         data-reveal={reduced ? 'none' : cfg.fx.reveal}
