@@ -197,81 +197,103 @@ html .ed.ed.ed .disp {
   }
 }
 
-/* a soft grey gradient mesh with film grain that slowly breathes: blurred blobs that swell and drift at their own speeds, behind the hero and the closing panel */
-.ed .mesh {
-  -webkit-mask-image: linear-gradient(to bottom, #000 90%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 90%, transparent 100%);
-}
-.ed .mesh-blob {
+/* the glow that rises from the bottom, built the way lovable.dev builds theirs: four soft hearts (blue, pink, red, orange), stacked, centred low and so big that only
+   their tops show. It rises in from below on load (.glow-enter), the layers swell into place, and then it breathes and drifts slowly. */
+.ed .glow {
   position: absolute;
-  aspect-ratio: 1;
-  border-radius: 9999px;
-  filter: blur(56px);
-  will-change: transform, opacity;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 84%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 84%, transparent 100%);
 }
-.ed .mesh-a {
-  top: -8%;
-  left: 22%;
-  width: 56%;
-  background: radial-gradient(circle, rgb(255 255 255 / 0.3), transparent 64%);
-  animation: mesh-a 13s ease-in-out infinite;
+.ed .glow.glow-flat {
+  -webkit-mask-image: none;
+  mask-image: none;
 }
-.ed .mesh-b {
-  top: 34%;
-  right: -12%;
-  width: 54%;
-  background: radial-gradient(circle, rgb(215 215 215 / 0.55), transparent 64%);
-  animation: mesh-b 17s ease-in-out -4s infinite;
+.ed .glow-rise,
+.ed .glow-drift {
+  position: absolute;
+  inset: 0;
 }
-.ed .mesh-c {
-  top: 44%;
-  left: -14%;
-  width: 54%;
-  background: radial-gradient(circle, rgb(170 170 170 / 0.55), transparent 64%);
-  animation: mesh-c 15s ease-in-out -8s infinite;
+.ed .glow-drift {
+  animation: glow-drift 20s ease-in-out infinite;
 }
-.ed .mesh-d {
-  bottom: -34%;
-  left: 0;
+.ed .glow-enter .glow-rise {
+  animation: glow-rise 1.6s cubic-bezier(0.215, 0.61, 0.355, 1) both;
+}
+/* the artwork is a square-ish box: --w wide, with the tops of the blue lobes --top from the top of the section */
+.ed .glow-art {
+  position: absolute;
+  left: 50%;
+  width: var(--w);
+  margin-left: calc(var(--w) / -2);
+  aspect-ratio: 1200 / 1210;
+  top: calc(var(--top) - var(--w) * 0.2325);
+}
+.ed .glow-layer {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  background: radial-gradient(circle, rgb(245 245 245 / 0.8), transparent 64%);
-  animation: mesh-d 19s ease-in-out -2s infinite;
+  height: 100%;
+  overflow: visible;
+  transform-origin: 50% 66%;
 }
-.ed .mesh-e {
-  top: 50%;
-  left: 34%;
-  width: 32%;
-  background: radial-gradient(circle, rgb(255 255 255 / 0.5), transparent 64%);
-  animation: mesh-e 10s ease-in-out -6s infinite;
+.ed .glow-halo {
+  animation: glow-breathe-a 11s ease-in-out 1.6s infinite;
 }
-@keyframes mesh-a {
-  50% {
-    transform: translate3d(4%, 8%, 0) scale(1.18);
-    opacity: 0.5;
+.ed .glow-core {
+  animation: glow-breathe-b 8s ease-in-out 1.6s infinite;
+}
+.ed .glow-enter .glow-halo {
+  animation:
+    glow-halo-in 1.3s cubic-bezier(0.165, 0.84, 0.44, 1) 0.3s backwards,
+    glow-breathe-a 11s ease-in-out 1.6s infinite;
+}
+.ed .glow-enter .glow-core {
+  animation:
+    glow-core-in 1s cubic-bezier(0.165, 0.84, 0.44, 1) 0.1s backwards,
+    glow-breathe-b 8s ease-in-out 1.6s infinite;
+}
+@keyframes glow-rise {
+  from {
+    opacity: 0;
+    transform: translateY(50vh);
   }
 }
-@keyframes mesh-b {
-  50% {
-    transform: translate3d(-9%, 5%, 0) scale(1.25);
-    opacity: 0.55;
+@keyframes glow-halo-in {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
   }
 }
-@keyframes mesh-c {
-  50% {
-    transform: translate3d(10%, -5%, 0) scale(1.2);
-    opacity: 0.55;
+@keyframes glow-core-in {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
   }
 }
-@keyframes mesh-d {
+@keyframes glow-drift {
+  25% {
+    transform: translate(2.4%, -1.6%) scale(1.09);
+  }
   50% {
-    transform: translate3d(-4%, -8%, 0) scale(1.14);
-    opacity: 0.62;
+    transform: translate(-1.2%, 2%) scale(1.12);
+  }
+  75% {
+    transform: translate(-2.8%, -0.8%) scale(1.06);
   }
 }
-@keyframes mesh-e {
+@keyframes glow-breathe-a {
   50% {
-    transform: translate3d(14%, 8%, 0) scale(1.5);
-    opacity: 0.4;
+    transform: scale(1.045);
+    opacity: 0.88;
+  }
+}
+@keyframes glow-breathe-b {
+  50% {
+    transform: scale(1.07);
+    opacity: 0.94;
   }
 }
 /* grain: fine, sparse light and dark specks over the mesh, so the soft grey looks printed instead of smooth */
@@ -285,7 +307,12 @@ html .ed.ed.ed .disp {
   background-size: 200px 200px, 170px 170px;
 }
 @media (prefers-reduced-motion: reduce) {
-  .ed .mesh-blob {
+  .ed .glow-drift,
+  .ed .glow-halo,
+  .ed .glow-core,
+  .ed .glow-enter .glow-rise,
+  .ed .glow-enter .glow-halo,
+  .ed .glow-enter .glow-core {
     animation: none;
   }
 }

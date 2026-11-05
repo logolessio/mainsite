@@ -3,7 +3,7 @@
 import '@/components/editor/editor.css'
 import { AnimatePresence, motion, useMotionValue, useSpring } from 'framer-motion'
 import { ArrowRight, AtSign, BarChart3, Check, Layers, Loader2, MousePointer2, Music2, Plus, Share2, SlidersHorizontal, Sparkles, X } from 'lucide-react'
-import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react'
+import { type CSSProperties, type ReactNode, useEffect, useId, useRef, useState } from 'react'
 import { BioPage } from '@/components/bio/bio-page'
 import type { BioPageData } from '@/components/bio/context'
 import { ShaderRunner, type ShaderId } from '@/components/bio/gl'
@@ -104,8 +104,8 @@ export function ClaimBar({ big = false }: { big?: boolean }) {
       }}
       className="w-full"
     >
-      <div className={cn('flex w-full items-center rounded-full border border-white/14 bg-white/[0.04] p-1.5 pl-6 shadow-[var(--ed-lift)] transition-colors focus-within:border-white/35', big ? 'h-[4.25rem]' : 'h-[3.5rem]')}>
-        <span className="select-none text-[0.9rem] text-white/45">logoless.io/</span>
+      <div className={cn('flex w-full items-center rounded-full border border-white/20 bg-black/30 p-1.5 pl-6 shadow-[var(--ed-lift)] backdrop-blur-md transition-colors focus-within:border-white/45', big ? 'h-[4.25rem]' : 'h-[3.5rem]')}>
+        <span className="select-none text-[0.9rem] text-white/60">logoless.io/</span>
         <input
           value={v}
           onChange={(e) => setV(e.target.value.toLowerCase().replace(/[^a-z0-9._\-~!$*+=]/g, '').slice(0, 30))}
@@ -123,7 +123,7 @@ export function ClaimBar({ big = false }: { big?: boolean }) {
           Claim <ArrowRight className="size-3.5" />
         </button>
       </div>
-      <p className="mt-3 h-5 text-center text-[0.76rem] text-white/45" aria-live="polite">
+      <p className="mt-3 h-5 text-center text-[0.76rem] text-white/70" aria-live="polite">
         {note}
       </p>
     </form>
@@ -159,15 +159,48 @@ function Nav() {
   )
 }
 
-/** The breathing grey gradient mesh with grain (see .mesh in editor.css). Sits behind its parent's content and fades out towards the bottom. */
-function Mesh({ className }: { className?: string }) {
+/**
+ * lovable.dev's glow: four soft hearts, outermost first (blue, pink, red, orange), centred low in a box about twice the width of the page, so only their tops
+ * show. The sizes and colours are theirs; the layers are two svgs so each can swell on its own (see .glow in editor.css), with film grain over the top.
+ * `enter` plays the rise from below on load.
+ */
+const HEARTS = [
+  { c: '#417fff', cy: 835, sx: 1.014, r: 329, dx: 229, dy: 227, s: 626, ty: 43.8, sy: 0.852, blur: 30, layer: 'halo' },
+  { c: '#ff85e5', cy: 791, sx: 1.02, r: 245, dx: 195, dy: 166, s: 541, ty: 7.1, sy: 0.962, blur: 25, layer: 'halo' },
+  { c: '#fe1766', cy: 821, sx: 1.038, r: 229, dx: 151, dy: 148, s: 439, ty: 43.9, sy: 0.73, blur: 22, layer: 'core' },
+  { c: '#ff6e1d', cy: 800, sx: 1.085, r: 182, dx: 107, dy: 102, s: 364, ty: 24.9, sy: 0.746, blur: 18, layer: 'core' },
+] as const
+
+function Glow({ className, enter = false, w, top }: { className?: string; enter?: boolean; w: string; top: string }) {
+  const id = useId().replace(/:/g, '')
+  const layer = (name: 'halo' | 'core') => (
+    <svg aria-hidden="true" viewBox="0 0 1200 1210" className={cn('glow-layer', name === 'halo' ? 'glow-halo' : 'glow-core')}>
+      <defs>
+        {HEARTS.filter((h) => h.layer === name).map((h) => (
+          <filter key={h.c} id={`${id}${h.c.slice(1)}`} filterUnits="userSpaceOnUse" x="-1000" y="-1000" width="2000" height="2000">
+            <feGaussianBlur stdDeviation={h.blur} />
+          </filter>
+        ))}
+      </defs>
+      {HEARTS.filter((h) => h.layer === name).map((h) => (
+        <g key={h.c} transform={`translate(600 ${h.cy}) scale(${h.sx} 1)`} fill={h.c} filter={`url(#${id}${h.c.slice(1)})`}>
+          <circle cx={-h.dx} cy={-h.dy} r={h.r * 0.9} />
+          <circle cx={h.dx} cy={-h.dy} r={h.r * 0.9} />
+          <rect x={(-h.s * 0.9) / 2} y={(-h.s * 0.9) / 2} width={h.s * 0.9} height={h.s * 0.9} transform={`translate(0 ${h.ty}) scale(1 ${h.sy}) rotate(45)`} />
+        </g>
+      ))}
+    </svg>
+  )
   return (
-    <div aria-hidden="true" className={cn('mesh pointer-events-none absolute overflow-hidden', className)}>
-      <span className="mesh-blob mesh-a" />
-      <span className="mesh-blob mesh-b" />
-      <span className="mesh-blob mesh-c" />
-      <span className="mesh-blob mesh-d" />
-      <span className="mesh-blob mesh-e" />
+    <div aria-hidden="true" className={cn('glow', enter && 'glow-enter', className)}>
+      <div className="glow-rise">
+        <div className="glow-drift">
+          <div className="glow-art" style={vars({ '--w': w, '--top': top })}>
+            {layer('halo')}
+            {layer('core')}
+          </div>
+        </div>
+      </div>
       <span className="mesh-grain" />
     </div>
   )
@@ -178,13 +211,13 @@ function Mesh({ className }: { className?: string }) {
 function Hero() {
   return (
     <section id="top" className="relative overflow-hidden px-5 pt-36 text-center md:pt-44">
-      <Mesh className="inset-0" />
+      <Glow enter w="clamp(1500px, 190vw, 3200px)" top="250px" />
       <div className="relative z-10 mx-auto flex max-w-[56rem] flex-col items-center">
         <h1 className="disp rise text-[11.5vw] md:text-[clamp(3rem,6vw,5.4rem)]" style={vars({ '--d': '0.05s' })}>
           One link for <br className="md:hidden" />
           everything you make.
         </h1>
-        <p className="rise mt-6 max-w-[34rem] text-[0.9rem] leading-[1.8] text-white/60" style={vars({ '--d': '0.15s' })}>
+        <p className="rise mt-6 max-w-[34rem] text-[0.9rem] leading-[1.8] text-white/80" style={vars({ '--d': '0.15s' })}>
           logoless is a link in bio for editors. Put your links, socials, edits and music on one clean page, then share a single link.
         </p>
         <div className="rise mt-9 w-full max-w-[30rem]" style={vars({ '--d': '0.25s' })}>
@@ -481,10 +514,10 @@ function Cta() {
   return (
     <section id="claim" className="scroll-mt-24 px-5 py-20">
       <Reveal className="relative mx-auto max-w-[64rem] overflow-hidden rounded-[36px] border border-white/10 bg-[#0b0b0b] px-6 py-16 text-center shadow-[var(--ed-lift)] md:py-24">
-        <Mesh className="inset-0 opacity-80 [mask-image:none]" />
+        <Glow className="glow-flat" w="clamp(820px, 92vw, 1400px)" top="90px" />
         <div className="relative z-10">
         <h2 className="disp text-[clamp(2.4rem,5vw,4.4rem)]">Claim your page.</h2>
-        <p className={SUB}>It takes about a minute, and it&apos;s free. The short names go first.</p>
+        <p className={cn(SUB, '!text-white/85')}>It takes about a minute, and it&apos;s free. The short names go first.</p>
         <div className="mx-auto mt-9 w-full max-w-[32rem]">
           <ClaimBar big />
         </div>
