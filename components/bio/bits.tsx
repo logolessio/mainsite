@@ -1,10 +1,10 @@
 'use client'
 
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
-import { ArrowUpRight, Link2, Mail } from 'lucide-react'
+import { ArrowUpRight, Globe, Link2, Mail } from 'lucide-react'
 import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
-import { type BioBlock, embedFor, platformOf } from '@/lib/bio'
+import { type BioBlock, embedFor, linkLabel, platformOf } from '@/lib/bio'
 import { PROFILE_FONT_CLASS } from '@/lib/profile-fonts'
 import type { FontId } from '@/lib/profile-style'
 import { cn } from '@/lib/utils'
@@ -12,11 +12,12 @@ import { Typewriter, ViewCount } from './card'
 import { useBio } from './context'
 
 /** The brand marks we have a picture for (public/brands). */
-const BRANDS = new Set(['android', 'apple', 'applemusic', 'artstation', 'audiomack', 'bandcamp', 'beatport', 'behance', 'bluesky', 'buymeacoffee', 'deezer', 'discord', 'dribbble', 'epicgames', 'facebook', 'github', 'google', 'instagram', 'kick', 'kofi', 'linktree', 'medium', 'patreon', 'paypal', 'pinterest', 'playstation', 'reddit', 'roblox', 'snapchat', 'soundcloud', 'spotify', 'steam', 'substack', 'telegram', 'threads', 'tidal', 'tiktok', 'tumblr', 'twitch', 'vimeo', 'whatsapp', 'x', 'youtube', 'youtubemusic', 'youtubeshorts'])
+const BRANDS = new Set(['android', 'apple', 'applemusic', 'artstation', 'audiomack', 'bandcamp', 'beatport', 'behance', 'bluesky', 'buymeacoffee', 'deezer', 'discord', 'dribbble', 'epicgames', 'facebook', 'github', 'google', 'instagram', 'kick', 'kofi', 'linktree', 'medium', 'patreon', 'paypal', 'pinterest', 'playstation', 'reddit', 'roblox', 'snapchat', 'soundcloud', 'spotify', 'steam', 'substack', 'telegram', 'threads', 'tidal', 'tiktok', 'tumblr', 'twitch', 'vimeo', 'whatsapp', 'x', 'youtube', 'youtubemusic', 'youtubeshorts', 'calendly', 'cashapp', 'etsy', 'figma', 'flickr', 'genius', 'gumroad', 'lastfm', 'linkedin', 'mastodon', 'notion', 'shopify', 'signal', 'venmo', 'vsco'])
 
 export function BlockIcon({ block, className }: { block: Extract<BioBlock, { t: 'link' | 'social' }>; className?: string }) {
   const id = block.t === 'social' ? block.platform : block.icon !== 'auto' ? block.icon : platformOf(block.url)
   if (id === 'mail') return <Mail aria-hidden="true" className={cn('size-[1.1rem]', className)} strokeWidth={1.6} />
+  if (id === 'website') return <Globe aria-hidden="true" className={cn('size-[1.1rem]', className)} strokeWidth={1.6} />
   if (id && BRANDS.has(id)) return <BrandIcon name={id} className={cn('size-[1.1rem]', className)} />
   return <Link2 aria-hidden="true" className={cn('size-[1.1rem]', className)} strokeWidth={1.6} />
 }
@@ -163,6 +164,8 @@ export function LinkItem({ block, index = 0, className }: { block: Extract<BioBl
       <a
         data-in
         data-link
+        data-anim={block.anim && block.anim !== 'none' ? block.anim : undefined}
+        data-feat={block.featured ? 1 : undefined}
         style={{ '--i': 4 + Math.min(index, 12) } as CSSProperties}
         className={cn('bl', className)}
         href={mode === 'live' || mode === 'preview' ? block.url : undefined}
@@ -179,7 +182,7 @@ export function LinkItem({ block, index = 0, className }: { block: Extract<BioBl
           <BlockIcon block={block} className="size-[1.25rem]" />
         </span>
         <span className="bl-title">
-          {block.title}
+          {linkLabel(block)}
           {block.note && <span className="bl-note">{block.note}</span>}
         </span>
         <ArrowUpRight aria-hidden="true" className="bl-arrow size-[1.05rem]" strokeWidth={1.6} />

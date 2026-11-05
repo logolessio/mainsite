@@ -8,6 +8,7 @@ import { GifPicker } from '@/components/profile/gif-picker'
 import { AVATAR_SHAPES, BG_KINDS, BIO_EFFECTS, BIO_SHADERS, BUTTON_STYLES, CARD_STYLES, GRADIENT_STYLES, LAYOUTS, NAME_STYLES, OVERLAYS, PRESETS, applyPreset, grey, hslHex } from '@/lib/bio'
 import { uploadBackground, uploadBgVideo } from '@/lib/image-client'
 import { cn } from '@/lib/utils'
+import { ArrangePanel } from './panel-arrange'
 import type { EditorApi } from './types'
 import { Btn, ColorField, Group, Row, Seg, Slider, Switch } from './ui'
 
@@ -51,10 +52,47 @@ function Thumb({ api, layout }: { api: EditorApi; layout: string }) {
   )
 }
 
+/** The picture across the top of the card in the Card layout. */
+function BannerPicker({ api }: { api: EditorApi }) {
+  const { cfg, up, toast } = api
+  const ref = useRef<HTMLInputElement>(null)
+  const [busy, setBusy] = useState(false)
+  const has = Boolean(cfg.card.banner)
+  const pick = async (f: File | undefined) => {
+    if (!f) return
+    setBusy(true)
+    try {
+      up('card', { banner: await uploadBackground(f) })
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "couldn't upload that. try again.")
+    }
+    setBusy(false)
+  }
+  return (
+    <div className="flex items-center gap-3">
+      <span className="relative block h-12 w-24 shrink-0 overflow-hidden rounded-xl border border-[var(--ed-line2)] bg-white/[0.05]" style={has ? { background: `center / cover no-repeat url(/api/img/${cfg.card.banner})` } : undefined}>
+        {!has && <span className="absolute inset-0 bg-gradient-to-br from-white/25 to-white/5" />}
+      </span>
+      <div className="flex min-w-0 flex-1 flex-wrap gap-2">
+        <Btn onClick={() => ref.current?.click()} disabled={busy}>
+          <ImagePlus className="size-3.5" /> {has ? 'Change banner' : 'Banner picture'}
+        </Btn>
+        {has && (
+          <Btn variant="quiet" onClick={() => up('card', { banner: '' })}>
+            <Trash2 className="size-3.5" /> Remove
+          </Btn>
+        )}
+      </div>
+      <input ref={ref} type="file" accept="image/*" hidden onChange={(e) => (void pick(e.target.files?.[0]), (e.target.value = ''))} />
+    </div>
+  )
+}
+
 export function LayoutPanel({ api }: { api: EditorApi }) {
   const { cfg, set, up } = api
   return (
     <div>
+      {cfg.layout === 'canvas' && <ArrangePanel api={api} />}
       <Group title="Looks" hint="one tap sets the type, background, cursor and effects. your links stay put.">
         <div className="grid grid-cols-4 gap-2">
           {PRESETS.map((p) => (
@@ -69,7 +107,7 @@ export function LayoutPanel({ api }: { api: EditorApi }) {
           ))}
         </div>
       </Group>
-      <Group title="Layout" hint="ten ways to lay out the same page. they all move as you scroll.">
+      <Group title="Layout" hint="twelve ways to lay out the same page. they all move as you scroll.">
         <div className="grid grid-cols-2 gap-3">
           {LAYOUTS.map((l) => {
             const on = cfg.layout === l.id
@@ -90,7 +128,8 @@ export function LayoutPanel({ api }: { api: EditorApi }) {
           })}
         </div>
       </Group>
-      <Group title="Panel" hint="The frosted panel that holds your profile (in Aura).">
+      <Group title="Card" hint="The floating card in the Card layout, and the frosted panel in Aura.">
+        {cfg.layout === 'card' && <BannerPicker api={api} />}
         <Seg value={cfg.card.style} options={CARD_STYLES} onChange={(v) => up('card', { style: v })} />
         {cfg.card.style === 'glass' && (
           <>

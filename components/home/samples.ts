@@ -28,6 +28,8 @@ function page(handle: string, name: string, bio: string, layout: string, look: s
 
 /** Pages made up for the home page, one for each way of laying a page out. */
 export const SAMPLES = {
+  card: page('luna', 'Luna Ray', 'Editor and motion designer. Music videos, tour visuals, fast cuts.', 'card', 'aurora'),
+  canvas: page('rae', 'Rae', 'Put everything where you want it.', 'canvas', 'sunset'),
   aura: page('luna', 'Luna Ray', 'Editor and motion designer. Music videos, tour visuals, fast cuts.', 'aura', 'aurora'),
   split: page('mx', 'Max Vale', 'Colour, rhythm and a lot of coffee.', 'split', 'ocean'),
   poster: page('k', 'k', 'Cuts for artists you have heard of.', 'poster', 'lava'),

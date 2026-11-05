@@ -186,7 +186,7 @@ function Hero() {
             <Phone id="index" width={190} still />
           </div>
           <div className="float absolute top-0 left-[195px]" style={vars({ '--t': '7s' })}>
-            <Phone id="aura" width={250} />
+            <Phone id="card" width={250} />
           </div>
           <div className="float absolute top-[110px] left-[450px]" style={vars({ '--t': '9s', '--d': '1.2s' })}>
             <Phone id="bento" width={190} still />

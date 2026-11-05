@@ -7,6 +7,7 @@ import type { BioPageData } from '@/components/bio/context'
 import { DEFAULT_BIO } from '@/lib/bio'
 import { cn } from '@/lib/utils'
 import type { DashId } from './dashboard'
+import { ShareCard } from './share-card'
 import type { EditorApi } from './types'
 
 const pct = (a: number, b: number) => (b > 0 ? `${Math.round((a / b) * 100)}%` : '0%')
@@ -77,20 +78,23 @@ export function OverviewPanel({ api, data, go, onTour }: { api: EditorApi; data:
         <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_17.5rem]">
           <div className="min-w-0 space-y-6">
             {/* where your page lives */}
-            <section aria-label="Your page" className={cn(card, 'rise p-6 md:p-7')} style={{ '--d': '0.05s' } as React.CSSProperties}>
-              <p className="text-[0.78rem] text-[var(--ed-mute)]">Your page</p>
-              <p className="mt-2 truncate text-[clamp(1.1rem,2.4vw,1.6rem)] tracking-[-0.01em]">{url}</p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                <button type="button" onClick={copy} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#ececec] px-5 text-[0.8rem] font-medium text-[#0a0a0a] transition-[background,transform] duration-200 hover:-translate-y-px hover:bg-white">
-                  {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />} {copied ? 'Copied' : 'Copy link'}
-                </button>
-                <a href={`/${profile.handle}`} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--ed-line2)] px-5 text-[0.8rem] transition-[background,border-color,transform] duration-200 hover:-translate-y-px hover:border-white/30 hover:bg-white/[0.06]">
-                  <ExternalLink className="size-3.5" /> Open it
-                </a>
-                <button type="button" onClick={() => go('profile')} className="inline-flex h-10 items-center rounded-full px-4 text-[0.8rem] text-white/55 transition-colors hover:bg-white/[0.06] hover:text-white">
-                  Change address
-                </button>
+            <section aria-label="Your page" className={cn(card, 'rise flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:justify-between md:p-7')} style={{ '--d': '0.05s' } as React.CSSProperties}>
+              <div className="min-w-0">
+                <p className="text-[0.78rem] text-[var(--ed-mute)]">Your page</p>
+                <p className="mt-2 truncate text-[clamp(1.1rem,2.4vw,1.6rem)] tracking-[-0.01em]">{url}</p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <button type="button" onClick={copy} className="inline-flex h-10 items-center gap-2 rounded-full bg-[#ececec] px-5 text-[0.8rem] font-medium text-[#0a0a0a] transition-[background,transform] duration-200 hover:-translate-y-px hover:bg-white">
+                    {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />} {copied ? 'Copied' : 'Copy link'}
+                  </button>
+                  <a href={`/${profile.handle}`} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--ed-line2)] px-5 text-[0.8rem] transition-[background,border-color,transform] duration-200 hover:-translate-y-px hover:border-white/30 hover:bg-white/[0.06]">
+                    <ExternalLink className="size-3.5" /> Open it
+                  </a>
+                  <button type="button" onClick={() => go('profile')} className="inline-flex h-10 items-center rounded-full px-4 text-[0.8rem] text-white/55 transition-colors hover:bg-white/[0.06] hover:text-white">
+                    Change address
+                  </button>
+                </div>
               </div>
+              {profile.handle && <ShareCard handle={profile.handle} />}
             </section>
 
             {/* the numbers */}

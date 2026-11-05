@@ -5,7 +5,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Loader2, Monitor, Smartphone } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BioPage } from '@/components/bio/bio-page'
-import { type BioConfig, DEFAULT_BIO } from '@/lib/bio'
+import type { Arrange } from '@/components/bio/context'
+import { type BioConfig, DEFAULT_BIO, type FreeBox } from '@/lib/bio'
 import type { BioStats } from '@/lib/bio-store'
 import { cn } from '@/lib/utils'
 import { LinksPanel } from './panel-links'
@@ -13,7 +14,7 @@ import { BackgroundPanel, LayoutPanel, StylePanel } from './panel-design'
 import { TemplatesPanel } from './panel-templates'
 import { CursorPanel, EffectsPanel } from './panel-fx'
 import { InsightsPanel, ProfilePanel, SettingsPanel } from './panel-account'
-import { type DashId, DashShell, NAV, type NavCount } from './dashboard'
+import { CustomizeBar, type DashId, DashShell, NAV, type NavCount, isCustomize } from './dashboard'
 import { OverviewPanel } from './overview'
 import { Onboarding } from './onboarding'
 import type { EditorApi, ProfileDraft } from './types'
@@ -36,6 +37,8 @@ export function Editor({ claim }: { claim: string | null }) {
   const [tab, setTabState] = useState<Tab>('overview')
   const [device, setDevice] = useState<'desktop' | 'phone'>('desktop')
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
+  const [sel, setSel] = useState<string | null>(null)
+  const [snap, setSnap] = useState(true)
   const [saving, setSaving] = useState(false)
   const [tour, setTour] = useState(false)
   const [fresh, setFresh] = useState(false)
@@ -107,7 +110,18 @@ export function Editor({ claim }: { claim: string | null }) {
   const set: EditorApi['set'] = useCallback((f) => setCfg((c) => f(c)), [])
   const up: EditorApi['up'] = useCallback((k, patch) => setCfg((c) => ({ ...c, [k]: { ...c[k], ...patch } })), [])
   const setProfile = useCallback((p: Partial<ProfileDraft>) => setProfileState((x) => ({ ...x, ...p })), [])
-  const api: EditorApi = useMemo(() => ({ cfg, set, up, profile, setProfile, stats, toast }), [cfg, set, up, profile, setProfile, stats, toast])
+  const api: EditorApi = useMemo(() => ({ cfg, set, up, profile, setProfile, stats, toast, sel, setSel, snap, setSnap }), [cfg, set, up, profile, setProfile, stats, toast, sel, snap])
+  const arrange = useMemo(
+    () => ({ selected: sel, select: setSel, snap, patch: (k: string, box: FreeBox) => setCfg((c) => ({ ...c, free: { ...(c.free ?? {}), [k]: box } })) }),
+    [sel, snap],
+  )
+  // choosing the canvas layout switches the preview to the phone, the size it is meant to be arranged at
+  const lastLayout = useRef(cfg.layout)
+  useEffect(() => {
+    if (cfg.layout === 'canvas' && lastLayout.current !== 'canvas') setDevice('phone')
+    if (cfg.layout !== 'canvas') setSel(null)
+    lastLayout.current = cfg.layout
+  }, [cfg.layout])
 
   const save = async (force = false): Promise<boolean> => {
     if (saving || (!dirty && !force)) return false
@@ -210,14 +224,15 @@ export function Editor({ claim }: { claim: string | null }) {
         ) : edits ? (
           <div className="flex h-full min-h-0 flex-col lg:flex-row">
             <div className={cn('min-h-0 flex-1 flex-col border-[var(--ed-line)] lg:flex lg:w-[26rem] lg:flex-none lg:border-r', mobileView === 'edit' ? 'flex' : 'hidden')}>
+              {isCustomize(tab) && <CustomizeBar tab={tab} onGo={setTab} counts={counts} />}
               <div className="ed-scroll min-h-0 flex-1 overflow-y-auto">{panel}</div>
             </div>
-            <Preview data={data} device={device} setDevice={setDevice} className={cn('min-h-0 flex-1 lg:flex', mobileView === 'preview' ? 'flex' : 'hidden')} />
+            <Preview data={data} device={device} setDevice={setDevice} arrange={tab === 'layout' || tab === 'links' ? arrange : undefined} className={cn('min-h-0 flex-1 lg:flex', mobileView === 'preview' ? 'flex' : 'hidden')} />
           </div>
         ) : (
           <div className="ed-scroll h-full overflow-y-auto">
             <div className="mx-auto w-full max-w-2xl px-4 py-8 md:py-12">
-              <h1 className="mb-8 text-[1.6rem] tracking-[-0.01em]">{tab}</h1>
+              <h1 className="mb-8 text-[1.6rem] tracking-[-0.01em]">{NAV.find((n) => n.id === tab)?.label ?? tab}</h1>
               <div className="border border-[var(--ed-line)]">{panel}</div>
             </div>
           </div>
@@ -238,7 +253,7 @@ export function Editor({ claim }: { claim: string | null }) {
   )
 }
 
-function Preview({ data, device, setDevice, className }: { data: Parameters<typeof BioPage>[0]['data']; device: 'desktop' | 'phone'; setDevice: (d: 'desktop' | 'phone') => void; className?: string }) {
+function Preview({ data, device, setDevice, arrange, className }: { data: Parameters<typeof BioPage>[0]['data']; device: 'desktop' | 'phone'; setDevice: (d: 'desktop' | 'phone') => void; arrange?: Arrange; className?: string }) {
   const box = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ w: 800, h: 600 })
   useEffect(() => {
@@ -257,7 +272,7 @@ function Preview({ data, device, setDevice, className }: { data: Parameters<type
       <div ref={box} className="flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden">
         <div style={{ width: full.w * k, height: full.h * k }} className={cn('relative shrink-0 overflow-hidden border border-[var(--ed-line2)] bg-black shadow-[0_40px_120px_rgb(0_0_0/0.7)]', device === 'phone' ? 'rounded-[2.4rem]' : 'rounded-2xl')}>
           <div style={{ width: full.w, height: full.h, transform: `scale(${k})`, transformOrigin: 'top left' }} className="absolute top-0 left-0">
-            <BioPage mode="preview" data={data} />
+            <BioPage mode="preview" data={data} arrange={arrange} />
           </div>
         </div>
       </div>

@@ -18,13 +18,27 @@ export const NAV = [
   { id: 'layout', label: 'Layout', icon: LayoutGrid, key: 'a', words: 'arrange poster bento stack orbit index terminal' },
   { id: 'style', label: 'Style', icon: Palette, key: 's', words: 'font colour color theme buttons roundness' },
   { id: 'background', label: 'Background', icon: ImageIcon, key: 'b', words: 'shader video image blur picture' },
-  { id: 'cursor', label: 'Cursor', icon: MousePointer2, key: 'c', words: 'pointer trail arrow' },
+  { id: 'cursor', label: 'Cursor', icon: MousePointer2, key: 'u', words: 'pointer trail arrow' },
   { id: 'effects', label: 'Effects', icon: Sparkles, key: 'e', words: 'tilt grain enter screen reveal spotlight' },
-  { id: 'insights', label: 'Insights', icon: BarChart3, key: 'i', section: 'Results', words: 'stats views clicks analytics numbers' },
+  { id: 'insights', label: 'Analytics', icon: BarChart3, key: 'i', section: 'Results', words: 'insights stats views clicks analytics numbers' },
   { id: 'settings', label: 'Settings', icon: Settings2, key: 't', section: 'Account', words: 'share search title description log out account' },
 ] as const satisfies readonly { id: string; label: string; icon: LucideIcon; key: string; section?: string; words: string }[]
 
 export type DashId = (typeof NAV)[number]['id']
+
+/** Everything that changes how the page looks lives under one menu item, with a row of sections along the top of it. */
+export const CUSTOMIZE = ['profile', 'layout', 'style', 'background', 'cursor', 'effects'] as const satisfies readonly DashId[]
+export const isCustomize = (t: DashId) => (CUSTOMIZE as readonly string[]).includes(t)
+
+/** The menu: five places. (Settings sits by your account, and every other page is still one jump away with ⌘K.) */
+export const SIDE = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard, key: 'o', to: 'overview', match: ['overview'] },
+  { id: 'links', label: 'Links', icon: Link2, key: 'l', to: 'links', match: ['links'] },
+  { id: 'customize', label: 'Customize', icon: Palette, key: 'c', to: 'profile', match: CUSTOMIZE },
+  { id: 'templates', label: 'Templates', icon: WandSparkles, key: 'm', to: 'templates', match: ['templates'] },
+  { id: 'insights', label: 'Analytics', icon: BarChart3, key: 'i', to: 'insights', match: ['insights'] },
+] as const satisfies readonly { id: string; label: string; icon: LucideIcon; key: string; to: DashId; match: readonly DashId[] }[]
+type Side = (typeof SIDE)[number]
 /** What is waiting beside a menu item: a number, or a dot when there is simply something to do. */
 export type NavCount = { n?: number; dot?: boolean }
 export type DashUser = { name: string; handle: string; avatar: string | null }
@@ -41,10 +55,10 @@ function Badge({ c, lit }: { c?: NavCount; lit?: boolean }) {
   )
 }
 
-function SideLink({ it, active, c, onGo }: { it: (typeof NAV)[number]; active: boolean; c?: NavCount; onGo: (id: DashId) => void }) {
+function SideLink({ it, active, c, onClick }: { it: Side; active: boolean; c?: NavCount; onClick: () => void }) {
   return (
-    <button type="button" onClick={() => onGo(it.id)} aria-current={active ? 'page' : undefined} className={cn('group relative flex h-10 w-full items-center gap-3 rounded-full px-4 text-left text-[0.82rem] transition-colors duration-200', active ? 'bg-white/[0.09] text-white' : 'text-white/55 hover:bg-white/[0.05] hover:text-white')}>
-      <it.icon aria-hidden="true" className="size-[1.05rem] shrink-0" strokeWidth={1.6} />
+    <button type="button" onClick={onClick} aria-current={active ? 'page' : undefined} className={cn('group relative flex h-11 w-full items-center gap-3 rounded-full px-4 text-left text-[0.84rem] transition-colors duration-200', active ? 'bg-white/[0.09] text-white' : 'text-white/60 hover:bg-white/[0.05] hover:text-white')}>
+      <it.icon aria-hidden="true" className="size-[1.1rem] shrink-0" strokeWidth={1.6} />
       <span>{it.label}</span>
       <Badge c={c} lit={active} />
       {!c?.n && !c?.dot && (
@@ -53,6 +67,26 @@ function SideLink({ it, active, c, onGo }: { it: (typeof NAV)[number]; active: b
         </kbd>
       )}
     </button>
+  )
+}
+
+/** The sections of Customize, along the top of the editing column. */
+export function CustomizeBar({ tab, onGo, counts }: { tab: DashId; onGo: (id: DashId) => void; counts: Partial<Record<DashId, NavCount>> }) {
+  const items = CUSTOMIZE.map((id) => NAV.find((n) => n.id === id)!)
+  return (
+    <div role="tablist" aria-label="Customize" className="grid shrink-0 grid-cols-3 gap-1.5 border-b border-[var(--ed-line)] px-4 py-3">
+      {items.map((it) => {
+        const on = tab === it.id
+        const c = counts[it.id]
+        return (
+          <button key={it.id} type="button" role="tab" aria-selected={on} onClick={() => onGo(it.id)} className={cn('relative inline-flex h-10 min-w-0 items-center justify-center gap-2 rounded-full border px-3 text-[0.78rem] transition-[background,color,border-color] duration-200', on ? 'border-transparent bg-[#ececec] text-[#0a0a0a]' : 'border-[var(--ed-line)] text-white/65 hover:border-white/25 hover:bg-white/[0.05] hover:text-white')}>
+            <it.icon aria-hidden="true" className="size-[0.95rem]" strokeWidth={1.7} />
+            {it.label}
+            {(c?.n || c?.dot) && <span aria-hidden="true" className={cn('size-1.5 rounded-full', on ? 'bg-black' : 'bg-white')} />}
+          </button>
+        )
+      })}
+    </div>
   )
 }
 
@@ -140,6 +174,12 @@ export function DashShell({ tab, onGo, counts, user, save, canPreview, view, onV
   const [jump, setJump] = useState(false)
   const [more, setMore] = useState(false)
   const current = NAV.find((n) => n.id === tab) ?? NAV[0]
+  const last = useRef<DashId>('profile') // the section of Customize you were last in
+  useEffect(() => {
+    if (isCustomize(tab)) last.current = tab
+  }, [tab])
+  const goSide = (it: Side) => onGo(it.id === 'customize' ? last.current : it.to)
+  const sideCount = (it: Side): NavCount | undefined => (it.id === 'customize' ? counts.profile : counts[it.to])
   const url = `logoless.io/${user.handle}`
   const [copied, setCopied] = useState(false)
   const copy = () => {
@@ -148,6 +188,7 @@ export function DashShell({ tab, onGo, counts, user, save, canPreview, view, onV
     window.setTimeout(() => setCopied(false), 1400)
   }
 
+  const lastRef = last
   // ⌘K or / opens the jump box; "g" then a letter goes to a page
   useEffect(() => {
     let armed = 0
@@ -168,6 +209,8 @@ export function DashShell({ tab, onGo, counts, user, save, canPreview, view, onV
       }
       if (armed && performance.now() - armed < 1200) {
         armed = 0
+        const side = SIDE.find((n) => n.key === e.key)
+        if (side) return onGo(side.id === 'customize' ? lastRef.current : side.to)
         const it = NAV.find((n) => n.key === e.key)
         if (it) onGo(it.id)
       }
@@ -190,8 +233,6 @@ export function DashShell({ tab, onGo, counts, user, save, canPreview, view, onV
     [onGo, user.handle, url, save.dirty, save.onSave],
   )
 
-  const bottom: DashId[] = ['overview', 'links', 'layout', 'insights']
-  let lastSection = ''
   return (
     <main className="ed fixed inset-0 flex flex-col md:pl-[256px]">
       {/* ---------- sidebar (larger screens) ---------- */}
@@ -206,20 +247,18 @@ export function DashShell({ tab, onGo, counts, user, save, canPreview, view, onV
           {copied ? <Check aria-hidden="true" className="size-3.5 shrink-0" /> : <Copy aria-hidden="true" className="size-3.5 shrink-0 text-white/40 group-hover:text-white" />}
         </button>
         <nav aria-label="Pages" className="ed-scroll min-h-0 flex-1 overflow-y-auto px-3 pt-3 pb-4">
-          <ul className="grid gap-0.5">
-            {NAV.map((it) => {
-              const heading = 'section' in it && it.section !== lastSection ? it.section : null
-              if ('section' in it) lastSection = it.section
-              return (
-                <li key={it.id}>
-                  {heading && <p className="px-4 pt-5 pb-1.5 text-[0.72rem] text-white/35">{heading}</p>}
-                  <SideLink it={it} active={tab === it.id} c={counts[it.id]} onGo={onGo} />
-                </li>
-              )
-            })}
+          <ul className="grid gap-1">
+            {SIDE.map((it) => (
+              <li key={it.id}>
+                <SideLink it={it} active={(it.match as readonly string[]).includes(tab)} c={sideCount(it)} onClick={() => goSide(it)} />
+              </li>
+            ))}
           </ul>
         </nav>
         <div className="shrink-0 border-t border-[var(--ed-line)] p-3">
+          <button type="button" onClick={() => onGo('settings')} aria-current={tab === 'settings' ? 'page' : undefined} className={cn('flex h-10 w-full items-center gap-3 rounded-full px-4 text-left text-[0.8rem] transition-colors hover:bg-white/[0.05] hover:text-white', tab === 'settings' ? 'bg-white/[0.09] text-white' : 'text-white/55')}>
+            <Settings2 aria-hidden="true" className="size-4" strokeWidth={1.6} /> Settings
+          </button>
           <a href={`/${user.handle}`} target="_blank" rel="noreferrer" className="flex h-10 items-center gap-3 rounded-full px-4 text-[0.8rem] text-white/55 transition-colors hover:bg-white/[0.05] hover:text-white">
             <ExternalLink aria-hidden="true" className="size-4" strokeWidth={1.6} /> View my page
           </a>
@@ -249,6 +288,12 @@ export function DashShell({ tab, onGo, counts, user, save, canPreview, view, onV
         <p className="hidden items-center gap-2 text-[0.8rem] text-white/45 md:flex">
           <span>Dashboard</span>
           <span aria-hidden="true">/</span>
+          {isCustomize(tab) ? (
+            <>
+              <span>Customize</span>
+              <span aria-hidden="true">/</span>
+            </>
+          ) : null}
           <span className="text-white">{current.label}</span>
         </p>
         <button type="button" onClick={() => setJump(true)} aria-label="Jump to a page or do something" className="group mx-auto hidden h-10 w-full max-w-[28rem] min-w-0 items-center gap-3 rounded-full border border-[var(--ed-line2)] bg-white/[0.03] px-4 text-left text-[0.8rem] text-white/45 transition-[border-color,color] duration-200 hover:border-white/30 hover:text-white/80 md:flex">
@@ -286,12 +331,12 @@ export function DashShell({ tab, onGo, counts, user, save, canPreview, view, onV
 
       {/* ---------- tab bar (phones) ---------- */}
       <nav aria-label="Pages" className="fixed inset-x-0 bottom-0 z-40 flex h-14 border-t border-[var(--ed-line)] bg-[#080808] md:hidden">
-        {bottom.map((id) => {
-          const it = NAV.find((n) => n.id === id)!
-          const c = counts[id]
+        {SIDE.map((it) => {
+          const on = (it.match as readonly string[]).includes(tab)
+          const c = sideCount(it)
           return (
-            <button key={id} type="button" onClick={() => onGo(id)} aria-current={tab === id ? 'page' : undefined} className={cn('relative flex flex-1 flex-col items-center justify-center gap-1 rounded-none text-[0.64rem] transition-colors', tab === id ? 'text-white' : 'text-white/45')}>
-              {tab === id && <span aria-hidden="true" className="absolute inset-x-6 top-0 h-[2px] rounded-full bg-white" />}
+            <button key={it.id} type="button" onClick={() => goSide(it)} aria-current={on ? 'page' : undefined} className={cn('relative flex flex-1 flex-col items-center justify-center gap-1 rounded-none text-[0.6rem] transition-colors', on ? 'text-white' : 'text-white/45')}>
+              {on && <span aria-hidden="true" className="absolute inset-x-4 top-0 h-[2px] rounded-full bg-white" />}
               <span className="relative">
                 <it.icon aria-hidden="true" className="size-[1.1rem]" strokeWidth={1.6} />
                 {(c?.n || c?.dot) && <span aria-hidden="true" className="absolute -top-0.5 -right-1.5 size-1.5 rounded-full bg-white" />}
@@ -300,7 +345,7 @@ export function DashShell({ tab, onGo, counts, user, save, canPreview, view, onV
             </button>
           )
         })}
-        <button type="button" onClick={() => setMore((v) => !v)} aria-expanded={more} aria-label="More" className={cn('flex flex-1 flex-col items-center justify-center gap-1 rounded-none text-[0.64rem] transition-colors', more ? 'text-white' : 'text-white/45')}>
+        <button type="button" onClick={() => setMore((v) => !v)} aria-expanded={more} aria-label="More" className={cn('flex flex-1 flex-col items-center justify-center gap-1 rounded-none text-[0.6rem] transition-colors', more ? 'text-white' : 'text-white/45')}>
           <Ellipsis aria-hidden="true" className="size-[1.1rem]" strokeWidth={1.6} />
           More
         </button>
@@ -319,12 +364,12 @@ export function DashShell({ tab, onGo, counts, user, save, canPreview, view, onV
               </button>
             </div>
             <ul className="ed-scroll flex-1 overflow-y-auto px-4 py-2">
-              {NAV.map((it) => (
+              {[...SIDE.map((it) => ({ id: it.id, label: it.label, icon: it.icon, on: (it.match as readonly string[]).includes(tab), c: sideCount(it), go: () => goSide(it) })), { id: 'settings', label: 'Settings', icon: Settings2, on: tab === 'settings', c: undefined, go: () => onGo('settings') }].map((it) => (
                 <li key={it.id} className="border-b border-[var(--ed-line)]">
-                  <button type="button" onClick={() => (setMore(false), onGo(it.id))} className={cn('flex h-14 w-full items-center gap-4 rounded-none text-left text-[1rem]', tab === it.id ? 'text-white' : 'text-white/60')}>
+                  <button type="button" onClick={() => (setMore(false), it.go())} className={cn('flex h-14 w-full items-center gap-4 rounded-none text-left text-[1rem]', it.on ? 'text-white' : 'text-white/60')}>
                     <it.icon aria-hidden="true" className="size-5" strokeWidth={1.6} />
                     <span>{it.label}</span>
-                    <Badge c={counts[it.id]} />
+                    <Badge c={it.c} />
                   </button>
                 </li>
               ))}

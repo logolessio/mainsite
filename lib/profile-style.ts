@@ -132,48 +132,83 @@ export const LINK_PLATFORMS = [
   P('medium', 'Medium', ['medium.com'], 'https://medium.com/@you', 'Other'),
   P('substack', 'Substack', ['substack.com'], 'https://you.substack.com', 'Other'),
   P('linktree', 'Linktree', ['linktr.ee'], 'https://linktr.ee/you', 'Other'),
+  P('linkedin', 'LinkedIn', ['linkedin.com'], 'https://linkedin.com/in/you', 'Social'),
+  P('mastodon', 'Mastodon', ['mastodon.social'], 'https://mastodon.social/@you', 'Social'),
+  P('signal', 'Signal', ['signal.me'], 'https://signal.me/#eu/…', 'Social'),
+  P('vsco', 'VSCO', ['vsco.co'], 'https://vsco.co/you', 'Social'),
+  P('lastfm', 'Last.fm', ['last.fm'], 'https://last.fm/user/you', 'Music'),
+  P('genius', 'Genius', ['genius.com'], 'https://genius.com/artists/you', 'Music'),
+  P('venmo', 'Venmo', ['venmo.com'], 'https://venmo.com/u/you', 'Support'),
+  P('cashapp', 'Cash App', ['cash.app'], 'https://cash.app/$you', 'Support'),
+  P('gumroad', 'Gumroad', ['gumroad.com'], 'https://you.gumroad.com', 'Support'),
+  P('figma', 'Figma', ['figma.com'], 'https://figma.com/@you', 'Other'),
+  P('notion', 'Notion', ['notion.site', 'notion.so'], 'https://you.notion.site', 'Other'),
+  P('etsy', 'Etsy', ['etsy.com'], 'https://etsy.com/shop/you', 'Other'),
+  P('shopify', 'Shopify', ['myshopify.com', 'shopify.com'], 'https://you.myshopify.com', 'Other'),
+  P('calendly', 'Calendly', ['calendly.com'], 'https://calendly.com/you', 'Other'),
+  P('flickr', 'Flickr', ['flickr.com'], 'https://flickr.com/people/you', 'Other'),
   P('website', 'Website', [], 'https://your-site.com', 'Other'),
 ] as const
 export type LinkPlatform = (typeof LINK_PLATFORMS)[number]['id']
 
-/** Platforms where a username is enough. `{u}` is replaced with it. Others need the full link (a song, a numeric ID…). */
+/**
+ * Platforms where a username is enough: `{u}` is replaced with it. (`label` is the address before it, shown in front of the box.) The others need the
+ * full link (a song, an artist number, an invite…).
+ */
+const U = (tpl: string) => ({ tpl, label: tpl.split('{u}')[0].replace(/^https?:\/\//, '') })
 export const USERNAME_LINKS: Record<string, { tpl: string; label: string }> = {
-  tiktok: { tpl: 'https://tiktok.com/@{u}', label: 'tiktok.com/@' },
-  youtube: { tpl: 'https://youtube.com/@{u}', label: 'youtube.com/@' },
-  instagram: { tpl: 'https://instagram.com/{u}', label: 'instagram.com/' },
-  x: { tpl: 'https://x.com/{u}', label: 'x.com/' },
-  twitch: { tpl: 'https://twitch.tv/{u}', label: 'twitch.tv/' },
-  snapchat: { tpl: 'https://snapchat.com/add/{u}', label: 'snapchat.com/add/' },
-  reddit: { tpl: 'https://reddit.com/user/{u}', label: 'reddit.com/user/' },
-  facebook: { tpl: 'https://facebook.com/{u}', label: 'facebook.com/' },
-  threads: { tpl: 'https://threads.net/@{u}', label: 'threads.net/@' },
-  bluesky: { tpl: 'https://bsky.app/profile/{u}', label: 'bsky.app/profile/' },
-  telegram: { tpl: 'https://t.me/{u}', label: 't.me/' },
-  whatsapp: { tpl: 'https://wa.me/{u}', label: 'wa.me/' },
-  pinterest: { tpl: 'https://pinterest.com/{u}', label: 'pinterest.com/' },
-  kick: { tpl: 'https://kick.com/{u}', label: 'kick.com/' },
-  discord: { tpl: 'https://discord.gg/{u}', label: 'discord.gg/' },
-  soundcloud: { tpl: 'https://soundcloud.com/{u}', label: 'soundcloud.com/' },
-  audiomack: { tpl: 'https://audiomack.com/{u}', label: 'audiomack.com/' },
-  bandcamp: { tpl: 'https://{u}.bandcamp.com', label: '.bandcamp.com' },
-  steam: { tpl: 'https://steamcommunity.com/id/{u}', label: 'steamcommunity.com/id/' },
-  patreon: { tpl: 'https://patreon.com/{u}', label: 'patreon.com/' },
-  kofi: { tpl: 'https://ko-fi.com/{u}', label: 'ko-fi.com/' },
-  buymeacoffee: { tpl: 'https://buymeacoffee.com/{u}', label: 'buymeacoffee.com/' },
-  paypal: { tpl: 'https://paypal.me/{u}', label: 'paypal.me/' },
-  github: { tpl: 'https://github.com/{u}', label: 'github.com/' },
-  behance: { tpl: 'https://behance.net/{u}', label: 'behance.net/' },
-  dribbble: { tpl: 'https://dribbble.com/{u}', label: 'dribbble.com/' },
-  artstation: { tpl: 'https://artstation.com/{u}', label: 'artstation.com/' },
-  vimeo: { tpl: 'https://vimeo.com/{u}', label: 'vimeo.com/' },
-  tumblr: { tpl: 'https://{u}.tumblr.com', label: '.tumblr.com' },
-  medium: { tpl: 'https://medium.com/@{u}', label: 'medium.com/@' },
-  substack: { tpl: 'https://{u}.substack.com', label: '.substack.com' },
-  linktree: { tpl: 'https://linktr.ee/{u}', label: 'linktr.ee/' },
-  spotify: { tpl: 'https://open.spotify.com/user/{u}', label: 'open.spotify.com/user/' },
-  applemusic: { tpl: 'https://music.apple.com/profile/{u}', label: 'music.apple.com/profile/' },
-  epicgames: { tpl: 'https://store.epicgames.com/u/{u}', label: 'epicgames.com/u/' },
-  playstation: { tpl: 'https://psnprofiles.com/{u}', label: 'psnprofiles.com/' },
+  tiktok: U('https://tiktok.com/@{u}'),
+  youtube: U('https://youtube.com/@{u}'),
+  instagram: U('https://instagram.com/{u}'),
+  x: U('https://x.com/{u}'),
+  discord: U('https://discord.gg/{u}'),
+  twitch: U('https://twitch.tv/{u}'),
+  snapchat: U('https://snapchat.com/add/{u}'),
+  reddit: U('https://reddit.com/user/{u}'),
+  facebook: U('https://facebook.com/{u}'),
+  threads: U('https://threads.net/@{u}'),
+  bluesky: U('https://bsky.app/profile/{u}'),
+  telegram: U('https://t.me/{u}'),
+  whatsapp: U('https://wa.me/{u}'),
+  pinterest: U('https://pinterest.com/{u}'),
+  kick: U('https://kick.com/{u}'),
+  linkedin: U('https://linkedin.com/in/{u}'),
+  vsco: U('https://vsco.co/{u}'),
+  soundcloud: U('https://soundcloud.com/{u}'),
+  bandcamp: U('https://{u}.bandcamp.com'),
+  audiomack: U('https://audiomack.com/{u}'),
+  lastfm: U('https://last.fm/user/{u}'),
+  genius: U('https://genius.com/artists/{u}'),
+  steam: U('https://steamcommunity.com/id/{u}'),
+  playstation: U('https://psnprofiles.com/{u}'),
+  patreon: U('https://patreon.com/{u}'),
+  kofi: U('https://ko-fi.com/{u}'),
+  buymeacoffee: U('https://buymeacoffee.com/{u}'),
+  paypal: U('https://paypal.me/{u}'),
+  venmo: U('https://venmo.com/u/{u}'),
+  cashapp: U('https://cash.app/${u}'),
+  gumroad: U('https://{u}.gumroad.com'),
+  github: U('https://github.com/{u}'),
+  behance: U('https://behance.net/{u}'),
+  dribbble: U('https://dribbble.com/{u}'),
+  artstation: U('https://artstation.com/{u}'),
+  vimeo: U('https://vimeo.com/{u}'),
+  tumblr: U('https://{u}.tumblr.com'),
+  medium: U('https://medium.com/@{u}'),
+  substack: U('https://{u}.substack.com'),
+  linktree: U('https://linktr.ee/{u}'),
+  figma: U('https://figma.com/@{u}'),
+  etsy: U('https://etsy.com/shop/{u}'),
+  calendly: U('https://calendly.com/{u}'),
+  flickr: U('https://flickr.com/people/{u}'),
+}
+
+/** What goes before and after the username in a platform's address, to show round the box ("instagram.com/" … ""). */
+export function handleParts(platform: string): { pre: string; post: string } | null {
+  const spec = USERNAME_LINKS[platform]
+  if (!spec) return null
+  const [pre, post = ''] = spec.tpl.replace(/^https?:\/\//, '').split('{u}')
+  return { pre, post }
 }
 
 /**
@@ -200,7 +235,7 @@ export function buildLink(platform: string, raw: string): { url: string } | { er
     if (m.hosts.length && !m.hosts.some((h) => u.hostname === h || u.hostname.endsWith(`.${h}`))) return { error: `That does not look like a ${m.label} link.` }
     return { url: u.toString() }
   }
-  const name = input.replace(/^@+/, '')
+  const name = input.replace(/^[@$]+/, '')
   const ok = platform === 'whatsapp' ? /^\d{6,16}$/.test(name.replace(/^\+/, '')) : /^[A-Za-z0-9._-]{1,60}$/.test(name)
   if (!ok) return { error: platform === 'whatsapp' ? 'Type your number with the country code, digits only.' : 'Usernames use letters, numbers, dots, dashes and underscores only.' }
   return { url: spec.tpl.replace('{u}', platform === 'whatsapp' ? name.replace(/^\+/, '') : name) }

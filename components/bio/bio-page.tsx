@@ -4,16 +4,18 @@ import './bio.css'
 import { useMotionValue, useScroll, useSpring } from 'framer-motion'
 import { type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
-import { type BioBlock, hexLum, hexRgb, pageLight } from '@/lib/bio'
+import { type BioBlock, hexLum, hexRgb, isLive, pageLight } from '@/lib/bio'
 import { BioBackground, BioFilm } from './background'
 import { fontClass } from './bits'
 import { MusicPlayer } from './audio'
-import { BioProvider, type BioMode, type BioPageData } from './context'
+import { type Arrange, BioProvider, type BioMode, type BioPageData } from './context'
 import { cursorVars, CursorTrailLayer, EnterGate, Spotlight } from './fx'
 import { Aura, Bento, Poster, Split, Stack } from './layouts-a'
+import { Canvas } from './canvas'
+import { Card } from './layouts-c'
 import { Chapters, Index, Orbit, Reel, Terminal } from './layouts-b'
 
-const LAYOUT_VIEWS = { aura: Aura, split: Split, poster: Poster, bento: Bento, stack: Stack, orbit: Orbit, index: Index, terminal: Terminal, chapters: Chapters, reel: Reel } as const
+const LAYOUT_VIEWS = { card: Card, aura: Aura, split: Split, poster: Poster, bento: Bento, stack: Stack, orbit: Orbit, index: Index, terminal: Terminal, chapters: Chapters, reel: Reel, canvas: Canvas } as const
 
 const gray = (tone: number, a = 1) => {
   const v = Math.round((Math.max(0, Math.min(100, tone)) / 100) * 255)
@@ -25,7 +27,7 @@ const gray = (tone: number, a = 1) => {
  * screen page, as the editor's preview and as a small moving picture on the home page). Everything that moves against the scroll reads one smoothed scroll
  * position, so the whole page eases together.
  */
-export function BioPage({ data, mode = 'live', className, style, still = false }: { data: BioPageData; mode?: BioMode; className?: string; style?: CSSProperties; still?: boolean }) {
+export function BioPage({ data, mode = 'live', className, style, still = false, arrange }: { data: BioPageData; mode?: BioMode; className?: string; style?: CSSProperties; still?: boolean; arrange?: Arrange }) {
   const cfg = data.config
   const { reduced, canHover } = useMotionPrefs()
   const root = useRef<HTMLDivElement>(null)
@@ -101,11 +103,21 @@ export function BioPage({ data, mode = 'live', className, style, still = false }
   )
 
   const blocks = cfg.blocks
+  // Links can be set to appear and disappear on a date, so the page checks the clock now and then.
+  const scheduled = blocks.some((b) => b.t === 'link' && (b.from || b.until))
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    if (!scheduled) return
+    setNow(Date.now())
+    const t = setInterval(() => setNow(Date.now()), 30_000)
+    return () => clearInterval(t)
+  }, [scheduled])
   const items = useMemo(() => {
-    const visible = blocks.filter((b: BioBlock) => b.t !== 'social' && !('hidden' in b && b.hidden))
+    // in the editor preview every link stays, so it can still be edited; on the live page the schedule applies
+    const visible = blocks.filter((b: BioBlock) => b.t !== 'social' && !('hidden' in b && b.hidden) && (mode === 'live' ? isLive(b, now) : true))
     const pinned = visible.filter((b) => b.t === 'link' && b.pin)
     return [...pinned, ...visible.filter((b) => !(b.t === 'link' && b.pin))]
-  }, [blocks])
+  }, [blocks, mode, now])
   const socials = useMemo(() => blocks.filter((b): b is Extract<BioBlock, { t: 'social' }> => b.t === 'social' && !b.hidden), [blocks])
 
   const custom = cfg.colors.on
@@ -134,12 +146,12 @@ export function BioPage({ data, mode = 'live', className, style, still = false }
     ...cv,
     ...style,
   } as CSSProperties
-  const Layout = LAYOUT_VIEWS[cfg.layout as keyof typeof LAYOUT_VIEWS] ?? Aura
+  const Layout = LAYOUT_VIEWS[cfg.layout as keyof typeof LAYOUT_VIEWS] ?? Card
   const gate = !entered && mode !== 'mini' && cfg.fx.enter !== 'none'
   const trail = canHover && mode !== 'mini' && cfg.cursor.trail !== 'none'
 
   return (
-    <BioProvider value={{ data, cfg, mode, sy, px, py, level, reduced, scroller, entered, track, items, socials }}>
+    <BioProvider value={{ data, cfg, mode, sy, px, py, level, reduced, scroller, entered, track, items, socials, arrange: mode === 'preview' ? arrange : undefined }}>
       <div
         ref={root}
         className={`bio-root ${fontClass(cfg.theme.font)} ${className ?? ''}`}

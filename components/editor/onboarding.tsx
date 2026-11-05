@@ -8,7 +8,8 @@ import type { BioPageData } from '@/components/bio/context'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 import { type BioBlock, LAYOUTS, PRESETS, applyPreset, cleanUrl, newId, starterBlocks } from '@/lib/bio'
 import { uploadImage } from '@/lib/image-client'
-import { USERNAME_LINKS } from '@/lib/profile-style'
+import { BrandIcon } from '@/components/brand-icon'
+import { LINK_PLATFORMS, buildLink, handleParts } from '@/lib/profile-style'
 import { cn } from '@/lib/utils'
 import type { EditorApi } from './types'
 
@@ -25,7 +26,7 @@ const STEPS = [
   { id: 'done', name: 'You are live', line: 'That is it. Your page is live. Now put the link in your bio.' },
 ] as const
 
-const SOCIALS = ['instagram', 'tiktok', 'youtube', 'x', 'discord'] as const
+const SOCIALS = ['instagram', 'tiktok', 'youtube', 'x', 'discord', 'twitch', 'soundcloud', 'github'] as const
 const SHADES = ['#ffffff', '#c8c8c8', '#8a8a8a', '#4a4a4a']
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -93,11 +94,9 @@ export function Onboarding({ api, data, fresh, onFinish, onDone, onSkip }: { api
       return u ? [{ id: r.id, t: 'link', title: r.title.trim() || titleFor(u) || 'Link', url: u, icon: 'auto', note: '', hidden: false, pin: false }] : []
     })
     const socials: BioBlock[] = Object.entries(soc).flatMap(([platform, v]): BioBlock[] => {
-      const t = v.trim().replace(/^@/, '')
-      if (!t) return []
-      const tpl = USERNAME_LINKS[platform]?.tpl
-      const u = cleanUrl(/[./]/.test(t) || !tpl ? t : tpl.replace('{u}', t))
-      return u ? [{ id: `s${platform}`.slice(0, 16), t: 'social', platform, url: u, hidden: false }] : []
+      // just the username is enough: it is made into the account's full link (a pasted link works too)
+      const r = buildLink(platform, v)
+      return 'url' in r ? [{ id: `s${platform}`.slice(0, 16), t: 'social', platform, url: r.url, hidden: false }] : []
     })
     return [...links, ...socials]
   }, [rows, soc])
@@ -244,17 +243,38 @@ export function Onboarding({ api, data, fresh, onFinish, onDone, onSkip }: { api
             <p className="text-[0.72rem] text-white/50">Your socials</p>
             <div className="mt-2 flex flex-wrap gap-2">
               {SOCIALS.map((s) => (
-                <button key={s} type="button" aria-pressed={openSoc === s} onClick={() => setOpenSoc((o) => (o === s ? null : s))} className={cn('inline-flex h-9 items-center gap-2 rounded-full border px-4 text-[0.78rem] transition-colors duration-200', soc[s]?.trim() ? 'border-transparent bg-[#ececec] text-[#0a0a0a]' : openSoc === s ? 'border-white/60' : 'border-white/20 text-white/70 hover:border-white/40')}>
-                  {soc[s]?.trim() && <Check className="size-3.5" />} {s === 'x' ? 'X' : s.charAt(0).toUpperCase() + s.slice(1)}
+                <button key={s} type="button" aria-pressed={openSoc === s} onClick={() => setOpenSoc((o) => (o === s ? null : s))} className={cn('inline-flex h-9 items-center gap-2 rounded-full border px-4 text-[0.78rem] transition-colors duration-200', soc[s]?.trim() && 'url' in buildLink(s, soc[s]) ? 'border-transparent bg-[#ececec] text-[#0a0a0a]' : openSoc === s ? 'border-white/60' : 'border-white/20 text-white/70 hover:border-white/40')}>
+                  {soc[s]?.trim() && 'url' in buildLink(s, soc[s]) ? <Check className="size-3.5" /> : <BrandIcon name={s} className="size-4" />} {LINK_PLATFORMS.find((p) => p.id === s)?.label ?? s}
                 </button>
               ))}
             </div>
-            {openSoc && (
-              <div className="mt-3 flex items-center gap-2 rounded-full border border-white/20 pl-4">
-                <span className="text-[0.76rem] text-white/45">{USERNAME_LINKS[openSoc]?.label ?? 'link'}</span>
-                <input autoFocus value={soc[openSoc] ?? ''} placeholder={USERNAME_LINKS[openSoc] ? 'yourname' : 'paste the link'} spellCheck={false} autoCapitalize="off" aria-label={`${openSoc} ${USERNAME_LINKS[openSoc] ? 'username' : 'link'}`} onChange={(e) => setSoc((o) => ({ ...o, [openSoc]: e.target.value }))} className="h-10 min-w-0 flex-1 bg-transparent text-[0.86rem] outline-none placeholder:text-white/30" />
-              </div>
-            )}
+            {openSoc && (() => {
+              const parts = handleParts(openSoc)
+              const typed = (soc[openSoc] ?? '').trim()
+              const r = typed ? buildLink(openSoc, typed) : null
+              return (
+                <div className="mt-3">
+                  <div className="flex items-center gap-1 rounded-full border border-white/20 px-4 focus-within:border-white/50">
+                    <BrandIcon name={openSoc} className="mr-1.5 size-4 shrink-0 text-white/70" />
+                    {parts?.pre && <span className="shrink-0 text-[0.76rem] text-white/45">{parts.pre}</span>}
+                    <input
+                      autoFocus
+                      value={soc[openSoc] ?? ''}
+                      placeholder={parts ? 'yourname' : 'paste the link'}
+                      spellCheck={false}
+                      autoCapitalize="off"
+                      aria-label={`${openSoc} ${parts ? 'username' : 'link'}`}
+                      onChange={(e) => setSoc((o) => ({ ...o, [openSoc]: e.target.value }))}
+                      className="h-10 min-w-0 flex-1 bg-transparent text-[0.86rem] outline-none placeholder:text-white/30"
+                    />
+                    {parts?.post && <span className="shrink-0 text-[0.76rem] text-white/45">{parts.post}</span>}
+                  </div>
+                  <p aria-live="polite" className="mt-2 min-h-[1rem] px-4 text-[0.72rem] text-white/45">
+                    {r && 'url' in r ? r.url.replace(/^https?:\/\//, '').replace(/\/$/, '') : r ? r.error : parts ? 'Just your username. We make the link.' : ''}
+                  </p>
+                </div>
+              )
+            })()}
           </div>
         </div>
       )}

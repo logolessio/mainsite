@@ -3,7 +3,7 @@
 import { ArrowRight } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useRef } from 'react'
-import { type BioBlock } from '@/lib/bio'
+import { type BioBlock, linkLabel } from '@/lib/bio'
 import { cn } from '@/lib/utils'
 import { Avatar, Bio, BlockIcon, BlockView, Footer, fontClass, Name, Socials } from './bits'
 import { Badges } from './card'
@@ -133,7 +133,7 @@ function PosterRow({ block, index }: { block: LinkBlock; index: number }) {
         <span className="absolute inset-0 origin-bottom scale-y-0 bg-[var(--bio-fg)] transition-transform duration-500 ease-[cubic-bezier(.2,.8,.2,1)] group-hover:scale-y-100" />
         <span className="relative flex items-baseline gap-4 md:gap-6">
           <span className="text-[0.62rem] tabular-nums text-[var(--bio-mute)] transition-colors duration-500 group-hover:text-[var(--bio-bg)]">{pad(index + 1)}</span>
-          <span className="bt text-[clamp(1.8rem,6cqw,4.6rem)] transition-colors duration-500 group-hover:text-[var(--bio-bg)]">{block.title}</span>
+          <span className="bt text-[clamp(1.8rem,6cqw,4.6rem)] transition-colors duration-500 group-hover:text-[var(--bio-bg)]">{linkLabel(block)}</span>
         </span>
         <span className="relative flex items-center gap-3 text-[0.8rem] text-[var(--bio-mute)] italic transition-colors duration-500 group-hover:text-[var(--bio-bg)]">
           <span className="hidden sm:inline">{block.note || hostOf(block.url)}</span>
@@ -235,7 +235,7 @@ function StackCard({ block, index, total }: { block: LinkBlock; index: number; t
               <ArrowRight className="size-7 opacity-60" strokeWidth={1.3} />
             </span>
             <span>
-              <span className="bt block text-[clamp(2rem,7cqw,3.8rem)]">{block.title}</span>
+              <span className="bt block text-[clamp(2rem,7cqw,3.8rem)]">{linkLabel(block)}</span>
               {block.note && <span className="mt-3 block text-[0.9rem] italic opacity-65">{block.note}</span>}
             </span>
           </span>

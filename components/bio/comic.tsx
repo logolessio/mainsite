@@ -3,7 +3,7 @@
 import { ArrowRight } from 'lucide-react'
 import { type MotionValue, motion, useScroll, useTransform } from 'framer-motion'
 import { type CSSProperties, type MouseEvent, type ReactNode, type RefObject, useRef } from 'react'
-import { type BioBlock } from '@/lib/bio'
+import { type BioBlock, linkLabel } from '@/lib/bio'
 import { cn } from '@/lib/utils'
 import { BlockView as BlockViewSlot } from './bits'
 import { useBio } from './context'
@@ -28,10 +28,12 @@ export function useStep<T extends number | string>(p: MotionValue<number>, input
 }
 
 /** What a link needs on its element: where it goes, and counting the press (the editor's copy and the small pictures do not leave). */
-export function useLink(block: { id: string; url: string }) {
+export function useLink(block: { id: string; url: string; anim?: string; featured?: boolean }) {
   const { track, mode } = useBio()
   const external = !block.url.startsWith('mailto:')
   return {
+    'data-anim': block.anim && block.anim !== 'none' ? block.anim : undefined,
+    'data-feat': block.featured ? 1 : undefined,
     href: mode === 'live' || mode === 'preview' ? block.url : undefined,
     target: external ? '_blank' : undefined,
     rel: external ? 'noopener noreferrer nofollow' : undefined,
@@ -138,7 +140,7 @@ export function PanelRow({ block, index, className }: { block: LinkBlock; index:
       </WinBar>
       <span className="flex items-center gap-4 px-4 py-4">
         <span className="min-w-0 flex-1">
-          <span className="bt block text-[clamp(1.2rem,5.2vw,2rem)] [overflow-wrap:anywhere]">{block.title}</span>
+          <span className="bt block text-[clamp(1.2rem,5.2vw,2rem)] [overflow-wrap:anywhere]">{linkLabel(block)}</span>
           {block.note && <span className="mt-1.5 block text-[0.74rem] italic opacity-60">{block.note}</span>}
         </span>
         <ArrowRight aria-hidden="true" className="size-4 shrink-0 transition-transform duration-300 group-hover:translate-x-1" strokeWidth={1.5} />

@@ -12,4 +12,9 @@ export type EditorApi = {
   setProfile: (p: Partial<ProfileDraft>) => void
   stats: BioStats
   toast: (m: string) => void
+  /** the canvas layout: which piece is selected, and whether dragging lines things up */
+  sel: string | null
+  setSel: (k: string | null) => void
+  snap: boolean
+  setSnap: (v: boolean) => void
 }

@@ -5,9 +5,10 @@
 // tint the name, the buttons, the glow and the moving backgrounds. Their own pictures and videos may bring colour too (`bg.mono` turns them to grey).
 import { LINK_PLATFORMS } from './profile-style'
 
-/* ------------------------------------------------------------------ the ten layouts */
+/* ------------------------------------------------------------------ the twelve layouts */
 
 export const LAYOUTS = [
+  { id: 'card', name: 'Card', note: 'one floating card over your background, like a profile.' },
   { id: 'aura', name: 'Aura', note: 'centred and calm. your picture floats.' },
   { id: 'split', name: 'Split', note: 'your name stays put while the links scroll past.' },
   { id: 'poster', name: 'Poster', note: 'your name, as big as the screen.' },
@@ -18,6 +19,7 @@ export const LAYOUTS = [
   { id: 'terminal', name: 'Terminal', note: 'just lines of text and a blinking cursor.' },
   { id: 'chapters', name: 'Chapters', note: 'one link per screen.' },
   { id: 'reel', name: 'Reel', note: 'a film strip that runs as you scroll.' },
+  { id: 'canvas', name: 'Canvas', note: 'a blank page. drag, resize and turn anything wherever you like.' },
 ] as const
 export type LayoutId = (typeof LAYOUTS)[number]['id']
 export const LAYOUT_IDS = LAYOUTS.map((l) => l.id) as string[]
@@ -153,12 +155,32 @@ export type Reveal = (typeof REVEALS)[number]['id']
 /* ------------------------------------------------------------------ blocks (what is on the page) */
 
 export type BioBlock =
-  | { id: string; t: 'link'; title: string; url: string; icon: string; note: string; hidden: boolean; pin: boolean }
+  | { id: string; t: 'link'; title: string; url: string; icon: string; note: string; hidden: boolean; pin: boolean; emoji?: string; featured?: boolean; anim?: LinkAnim; /** show from and until (UTC, as an ISO string) */ from?: string; until?: string }
   | { id: string; t: 'social'; platform: string; url: string; hidden: boolean }
   | { id: string; t: 'heading'; text: string }
   | { id: string; t: 'text'; text: string }
   | { id: string; t: 'video'; url: string; title: string; hidden: boolean }
   | { id: string; t: 'divider' }
+
+/** How a link asks for attention. */
+export const LINK_ANIMS = [
+  { id: 'none', name: 'None' },
+  { id: 'pulse', name: 'Pulse' },
+  { id: 'shake', name: 'Shake' },
+  { id: 'glow', name: 'Glow' },
+] as const
+export type LinkAnim = (typeof LINK_ANIMS)[number]['id']
+
+/** What a link is called on the page: its title, with its emoji in front if it has one. */
+export const linkLabel = (b: { title: string; emoji?: string }) => (b.emoji ? `${b.emoji} ${b.title}` : b.title)
+
+/** Is a link inside its schedule right now? (Anything that is not a link, or has no dates, always is.) */
+export function isLive(b: BioBlock, now = Date.now()) {
+  if (b.t !== 'link') return true
+  if (b.from && Date.parse(b.from) > now) return false
+  if (b.until && Date.parse(b.until) <= now) return false
+  return true
+}
 
 export type BioBlockKind = BioBlock['t']
 export const MAX_BLOCKS = 80
@@ -166,11 +188,19 @@ export const MAX_TITLE = 80
 export const MAX_NOTE = 140
 export const MAX_TEXT = 600
 
+/** One thing on the canvas layout. x, y and w are in a page 390 wide (the page scales to the screen); r is degrees; z is the stacking order; a is text alignment; f is a text size multiplier. */
+export type FreeBox = { x: number; y: number; w: number; r?: number; z?: number; a?: 'l' | 'c' | 'r'; f?: number }
+export const FREE_W = 390
+/** The pieces of a page that are not blocks. Every block is a piece too, under its own id. */
+export const FREE_FIXED = ['avatar', 'name', 'bio'] as const
+
 export type BioConfig = {
   v: 1
   /** which set of starting looks this page was made under: 2 is the flat, square one (a page saved before it still has the first set until it is read once) */
   look?: 2
   layout: LayoutId
+  /** the canvas layout: where each thing sits (see `resolveFree`); anything not listed here is where the starting arrangement puts it */
+  free?: Record<string, FreeBox>
   /** the page's own colours; while `on` is false the page is black, white and grey and these are ignored */
   colors: { on: boolean; bg: string; bg2: string; text: string; accent: string; accent2: string }
   theme: {
@@ -209,7 +239,7 @@ export type BioConfig = {
   }
   overlay: { effect: BioOverlay; intensity: number; speed: number }
   /** the panel the profile sits in (the centred layouts) */
-  card: { style: CardStyle; blur: number; opacity: number; glare: boolean }
+  card: { style: CardStyle; blur: number; opacity: number; glare: boolean; /** a picture across the top of the card in the card layout (an upload id; empty is a soft gradient) */ banner: string }
   /** music that plays on the page once it is entered */
   audio: { id: string; title: string; volume: number; loop: boolean; reactive: boolean }
   cursor: {
@@ -250,13 +280,13 @@ export function newId() {
 export const DEFAULT_BIO: BioConfig = {
   v: 1,
   look: 2,
-  layout: 'aura',
+  layout: 'card',
   colors: { on: false, bg: '#08080c', bg2: '#16183a', text: '#f4f4f6', accent: '#417fff', accent2: '#ff6e1d' },
   theme: { tone: 4, font: 'anubis', nameStyle: 'solid', buttons: 'outline', radius: 0, align: 'center', size: 'comfortable' },
   avatar: { shape: 'square', ring: false, float: false, gray: true, size: 100 },
   bg: { kind: 'tone', tone: 4, tone2: 22, angle: 160, gradient: 'radial', image: '', gif: '', video: '', effect: 'aurora', shader: 'liquid', blur: 0, dim: 0, noise: 0, intensity: 50, speed: 40, parallax: 40, vignette: 0, mono: true },
   overlay: { effect: 'none', intensity: 40, speed: 50 },
-  card: { style: 'none', blur: 28, opacity: 40, glare: false },
+  card: { style: 'none', blur: 28, opacity: 40, glare: false, banner: '' },
   audio: { id: '', title: '', volume: 60, loop: true, reactive: true },
   cursor: { kind: 'default', preset: 'arrow', ink: 'white', size: 32, image: '', hot: 'tl', trail: 'none' },
   fx: { enter: 'none', enterText: 'click to enter', reveal: 'rise', tilt: false, magnetic: false, spotlight: false, grain: 0, scanlines: 0, parallax: 60, typewriter: false },
@@ -431,7 +461,12 @@ export function cleanBlock(raw: unknown): BioBlock | null {
       const url = cleanUrl(r.url)
       if (!url) return null
       const title = text(r.title, MAX_TITLE) || (() => { try { return new URL(url).hostname.replace(/^www\./, '') } catch { return 'Link' } })()
-      return { id, t: 'link', title, url, icon: typeof r.icon === 'string' && /^[a-z0-9]{2,20}$/.test(r.icon) ? r.icon : 'auto', note: text(r.note, MAX_NOTE), hidden: bool(r.hidden, false), pin: bool(r.pin, false) }
+      const emoji = text(r.emoji, 8)
+      const anim = pick(r.anim, LINK_ANIMS.map((x) => x.id), 'none')
+      const when = (v: unknown) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/.test(v) ? v : '')
+      const from = when(r.from)
+      const until = when(r.until)
+      return { id, t: 'link', title, url, icon: typeof r.icon === 'string' && /^[a-z0-9]{2,20}$/.test(r.icon) ? r.icon : 'auto', note: text(r.note, MAX_NOTE), hidden: bool(r.hidden, false), pin: bool(r.pin, false), ...(emoji ? { emoji } : {}), ...(r.featured === true ? { featured: true } : {}), ...(anim !== 'none' ? { anim } : {}), ...(from ? { from } : {}), ...(until ? { until } : {}) }
     }
     case 'social': {
       const url = cleanUrl(r.url)
@@ -485,10 +520,12 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
       blocks.push(blk)
     }
   } else blocks.push(...d.blocks)
+  const free = cleanFree(r.free === undefined ? d.free : r.free, seen)
   return {
     v: 1,
     look: 2,
     layout: pick(r.layout ?? d.layout, LAYOUT_IDS, 'aura'),
+    ...(free ? { free } : {}),
     colors: {
       on: bool(co.on ?? d.colors.on, false),
       bg: hexOf(co.bg, d.colors.bg),
@@ -543,6 +580,7 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
       blur: int(cd.blur ?? d.card.blur, 28, 0, 60),
       opacity: int(cd.opacity ?? d.card.opacity, 40, 0, 100),
       glare: bool(cd.glare ?? d.card.glare, true),
+      banner: cd.banner === undefined ? d.card.banner : uploadId(cd.banner),
     },
     audio: {
       id: au.id === undefined ? d.audio.id : uploadId(au.id),
@@ -583,6 +621,82 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
     },
     blocks,
   }
+}
+
+/** The canvas arrangement, cleaned: only things that exist, numbers in range, no extras. */
+function cleanFree(raw: unknown, ids: Set<string>): Record<string, FreeBox> | undefined {
+  const out: Record<string, FreeBox> = {}
+  for (const [k, v] of Object.entries(obj(raw)).slice(0, MAX_BLOCKS + 6)) {
+    if (!(FREE_FIXED as readonly string[]).includes(k) && !ids.has(k)) continue
+    const b = obj(v)
+    if (typeof b.x !== 'number' || typeof b.y !== 'number' || typeof b.w !== 'number') continue
+    const r1 = (n: number) => Math.round(n * 10) / 10
+    const box: FreeBox = { x: r1(num(b.x, 0, -300, 700)), y: r1(num(b.y, 0, -200, 6000)), w: r1(num(b.w, 100, 14, 700)) }
+    const r = r1(num(b.r, 0, -180, 180))
+    if (r) box.r = r
+    const z = int(b.z, 0, 0, 99)
+    if (z) box.z = z
+    if (b.a === 'l' || b.a === 'r' || b.a === 'c') box.a = b.a
+    const f = r1(num(b.f, 1, 0.4, 4))
+    if (f !== 1) box.f = f
+    out[k] = box
+  }
+  return Object.keys(out).length ? out : undefined
+}
+
+/** How big the name's letters are in a box of this width (so the width is the size). */
+export const nameSize = (text: string, w: number, f = 1) => Math.max(12, Math.min(140, (w / (Math.max(text.length, 3) * 0.56)) * f))
+
+/**
+ * Where everything sits on the canvas layout: what the person placed, and for everything else a tidy starting arrangement (picture, name, bio,
+ * socials, then the blocks one under the other). The heights are guesses, used only to space the starting arrangement.
+ */
+export function resolveFree(cfg: BioConfig, info: { name: string; bio: string; badges?: number }): Record<string, FreeBox> {
+  const set = cfg.free ?? {}
+  const def: Record<string, FreeBox> = {}
+  const mid = (w: number) => Math.round((FREE_W - w) / 2)
+  const a = cfg.theme.align === 'left' ? 'l' : 'c'
+  let y = 44
+  const av = Math.round(116 * (cfg.avatar.size / 100))
+  def.avatar = { x: mid(av), y, w: av }
+  y += Math.round(av * (cfg.avatar.shape === 'arch' ? 1.25 : 1)) + 26
+  const nw = Math.max(110, Math.min(330, Math.round(Math.max(info.name.length, 3) * 0.56 * 52)))
+  def.name = { x: mid(nw), y, w: nw, a }
+  y += Math.round(nameSize(info.name, nw) * 1.15) + (info.badges ? 36 : 12)
+  if (info.bio) {
+    const lines = info.bio.split('\n').reduce((n, l) => n + Math.max(1, Math.ceil((l.length * 7.6) / 306)), 0)
+    def.bio = { x: mid(306), y, w: 306, a }
+    y += lines * 24 + 18
+  }
+  const visible = cfg.blocks.filter((b) => !('hidden' in b && b.hidden))
+  const socials = visible.filter((b) => b.t === 'social')
+  if (socials.length) {
+    const per = 44
+    const gap = 10
+    const row = Math.max(1, Math.floor((FREE_W - 48 + gap) / (per + gap)))
+    socials.forEach((b, i) => {
+      const inRow = Math.min(row, socials.length - Math.floor(i / row) * row)
+      const total = inRow * per + (inRow - 1) * gap
+      def[b.id] = { x: Math.round((FREE_W - total) / 2) + (i % row) * (per + gap), y: y + Math.floor(i / row) * (per + gap), w: per }
+    })
+    y += Math.ceil(socials.length / row) * (per + gap) + 14
+  }
+  const rest = visible.filter((b) => b.t !== 'social')
+  const ordered = [...rest.filter((b) => b.t === 'link' && b.pin), ...rest.filter((b) => !(b.t === 'link' && b.pin))]
+  const w = 326
+  for (const b of ordered) {
+    let h = 62
+    if (b.t === 'link') h = b.note ? 70 : 60
+    else if (b.t === 'video') h = Math.min(w / (embedFor(b.url)?.ratio ?? 1.78), 360) + (b.title ? 30 : 6)
+    else if (b.t === 'heading') h = 40
+    else if (b.t === 'text') h = Math.max(1, Math.ceil((b.text.length * 7) / w)) * 23 + 8
+    else if (b.t === 'divider') h = 16
+    def[b.id] = { x: mid(w), y, w, ...(b.t === 'heading' || b.t === 'text' ? { a } : {}) }
+    y += h + 14
+  }
+  const out: Record<string, FreeBox> = {}
+  for (const k of Object.keys(def)) out[k] = set[k] ? { ...def[k], ...set[k] } : def[k]
+  return out
 }
 
 /** What the first set of starting looks chose, so a page that still has exactly those picks can be moved to the new set without touching anything the person changed. */

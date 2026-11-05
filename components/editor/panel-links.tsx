@@ -3,12 +3,13 @@
 import { AnimatePresence, Reorder, motion, useDragControls } from 'framer-motion'
 import { Eye, EyeOff, GripVertical, Link2, Minus, Pin, Play, Plus, Trash2, Type, AlignLeft, Share2, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
-import { type BioBlock, MAX_BLOCKS, cleanUrl, embedFor, newId, platformOf } from '@/lib/bio'
+import { type BioBlock, LINK_ANIMS, MAX_BLOCKS, cleanUrl, embedFor, newId, platformOf } from '@/lib/bio'
 import { LINK_PLATFORMS, USERNAME_LINKS } from '@/lib/profile-style'
 import { cn } from '@/lib/utils'
 import { BlockIcon } from '@/components/bio/bits'
+import { IconPicker, SocialFields } from './account-fields'
 import type { EditorApi } from './types'
-import { Area, Btn, Input } from './ui'
+import { Area, Btn, Input, Row, Seg, Switch } from './ui'
 
 const KINDS = [
   { t: 'link', name: 'Link', icon: Link2 },
@@ -40,7 +41,7 @@ const blank = (t: BioBlock['t']): BioBlock => {
 const summary = (b: BioBlock) => {
   switch (b.t) {
     case 'link':
-      return b.title || b.url.replace(/^https?:\/\/(www\.)?/, '') || 'New link'
+      return (b.emoji ? b.emoji + ' ' : '') + (b.title || b.url.replace(/^https?:\/\/(www\.)?/, '') || 'New link')
     case 'social':
       return LINK_PLATFORMS.find((p) => p.id === b.platform)?.label ?? b.platform
     case 'video':
@@ -93,37 +94,28 @@ function Item({ b, open, toggle, update, remove, clicks }: { b: BioBlock; open: 
               <div className="space-y-3 border-t border-[var(--ed-line)] p-3">
                 {b.t === 'link' && (
                   <>
-                    <Input placeholder="Title" value={b.title} maxLength={80} onChange={(e) => set({ title: e.target.value })} />
+                    <div className="flex gap-2">
+                      <Input aria-label="Emoji" placeholder="🙂" value={b.emoji ?? ''} maxLength={8} onChange={(e) => set({ emoji: e.target.value })} className="w-14 shrink-0 px-0 text-center" />
+                      <Input placeholder="Title" value={b.title} maxLength={80} onChange={(e) => set({ title: e.target.value })} />
+                    </div>
                     <Input placeholder="Link, like example.com/page" value={b.url} inputMode="url" autoCapitalize="off" spellCheck={false} onChange={(e) => set({ url: e.target.value })} onBlur={() => set({ url: cleanUrl(b.url) || b.url, ...(b.title ? {} : { title: titleFor(b.url) }) })} />
                     <Input placeholder="A line under it (optional)" value={b.note} maxLength={140} onChange={(e) => set({ note: e.target.value })} />
+                    <IconPicker block={b} onChange={(id) => set({ icon: id })} />
+                    <Switch checked={!!b.featured} onChange={(v) => set({ featured: v })} label="Feature this link" hint="Draws an outline round it so it stands out." />
+                    <Row label="Ask for attention">
+                      <Seg value={b.anim ?? 'none'} options={LINK_ANIMS} onChange={(v) => set({ anim: v })} />
+                    </Row>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Row label="Show from">
+                        <Input type="datetime-local" aria-label="Show from" value={toLocal(b.from)} onChange={(e) => set({ from: fromLocal(e.target.value) })} className="px-2.5 text-[0.8rem] [color-scheme:dark]" />
+                      </Row>
+                      <Row label="Hide after">
+                        <Input type="datetime-local" aria-label="Hide after" value={toLocal(b.until)} onChange={(e) => set({ until: fromLocal(e.target.value) })} className="px-2.5 text-[0.8rem] [color-scheme:dark]" />
+                      </Row>
+                    </div>
                   </>
                 )}
-                {b.t === 'social' && (
-                  <>
-                    <select value={b.platform} onChange={(e) => set({ platform: e.target.value })} className="h-10 w-full rounded-xl border border-[var(--ed-line)] bg-black px-3 text-[0.85rem] text-white outline-none focus:border-white/50">
-                      {[...LINK_PLATFORMS.map((p) => ({ id: p.id as string, label: p.label })), { id: 'mail', label: 'Email' }].map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.label}
-                        </option>
-                      ))}
-                    </select>
-                    <Input
-                      placeholder={USERNAME_LINKS[b.platform] ? `Username or link (${USERNAME_LINKS[b.platform].label}…)` : 'Link'}
-                      value={b.url}
-                      autoCapitalize="off"
-                      spellCheck={false}
-                      onChange={(e) => set({ url: e.target.value })}
-                      onBlur={() => {
-                        const v = b.url.trim()
-                        const tpl = USERNAME_LINKS[b.platform]
-                        if (v && tpl && !/[./:]/.test(v)) return set({ url: tpl.tpl.replace('{u}', v.replace(/^@/, '')) })
-                        if (b.platform === 'mail' && v && !v.startsWith('mailto:') && v.includes('@')) return set({ url: `mailto:${v}` })
-                        const c = cleanUrl(v)
-                        if (c) set({ url: c, platform: platformOf(c) ?? b.platform })
-                      }}
-                    />
-                  </>
-                )}
+                {b.t === 'social' && <SocialFields b={b} set={set} />}
                 {b.t === 'video' && (
                   <>
                     <Input placeholder="YouTube, Vimeo, TikTok or Spotify link" value={b.url} inputMode="url" autoCapitalize="off" spellCheck={false} onChange={(e) => set({ url: e.target.value })} onBlur={() => set({ url: cleanUrl(b.url) || b.url })} />
@@ -141,6 +133,20 @@ function Item({ b, open, toggle, update, remove, clicks }: { b: BioBlock; open: 
       </div>
     </Reorder.Item>
   )
+}
+
+/** The schedule is stored as UTC; the date fields show and take the visitor's own clock. */
+function toLocal(iso?: string) {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const z = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`
+}
+function fromLocal(v: string) {
+  if (!v) return ''
+  const d = new Date(v)
+  return Number.isNaN(d.getTime()) ? '' : d.toISOString()
 }
 
 function titleFor(url: string) {

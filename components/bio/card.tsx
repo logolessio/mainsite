@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { useBio } from './context'
 
 /** The panel the profile sits in: frosted glass that leans towards the pointer, with a soft light that slides over it. */
-export function GlassCard({ children, className }: { children: ReactNode; className?: string }) {
+export function GlassCard({ children, className, always = false, radius }: { children: ReactNode; className?: string; /** show the frosted panel even when the page's panel is set to none */ always?: boolean; radius?: string }) {
   const { cfg, reduced, mode, level } = useBio()
   const ref = useRef<HTMLDivElement>(null)
   const rx = useMotionValue(0)
@@ -40,9 +40,18 @@ export function GlassCard({ children, className }: { children: ReactNode; classN
     gx.set(50)
     gy.set(30)
   }
-  const c = cfg.card
-  const plate: CSSProperties =
-    c.style === 'none'
+  const unset = always && cfg.card.style === 'none'
+  const c = unset ? { ...cfg.card, style: 'glass' as const } : cfg.card
+  const plate: CSSProperties = unset
+    ? {
+        // no panel chosen: a dark (or light) card in the page's own tone, see-through enough for the background to glow round it
+        background: 'color-mix(in srgb, var(--bio-bg) 76%, transparent)',
+        border: '1px solid var(--bio-line)',
+        backdropFilter: `blur(${Math.max(12, c.blur)}px) saturate(1.4)`,
+        WebkitBackdropFilter: `blur(${Math.max(12, c.blur)}px) saturate(1.4)`,
+        boxShadow: '0 40px 100px rgb(0 0 0 / 0.5), inset 0 1px 0 rgb(var(--bio-fg-rgb) / 0.1)',
+      }
+    : c.style === 'none'
       ? {}
       : c.style === 'outline'
         ? { border: '1px solid var(--bio-line)' }
@@ -56,7 +65,7 @@ export function GlassCard({ children, className }: { children: ReactNode; classN
               boxShadow: '0 40px 120px rgb(0 0 0 / 0.4), inset 0 1px 0 rgb(var(--bio-fg-rgb) / 0.12)',
             }
   return (
-    <motion.div ref={ref} onPointerMove={move} onPointerLeave={leave} className={cn('relative', className)} style={{ ...plate, rotateX: srx, rotateY: sry, scale: pulse, transformPerspective: 1100, borderRadius: 'calc(var(--bio-r) * 1.7)' }}>
+    <motion.div ref={ref} onPointerMove={move} onPointerLeave={leave} className={cn('relative', className)} style={{ ...plate, rotateX: srx, rotateY: sry, scale: pulse, transformPerspective: 1100, borderRadius: radius ?? 'calc(var(--bio-r) * 1.7)' }}>
       {c.glare && c.style !== 'none' && !reduced && mode !== 'mini' && (
         <>
           <motion.span aria-hidden="true" className="pointer-events-none absolute inset-0 z-0" style={{ background: glare, borderRadius: 'inherit' }} />

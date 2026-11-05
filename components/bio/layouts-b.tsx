@@ -3,7 +3,7 @@
 import { ArrowRight } from 'lucide-react'
 import { motion, useAnimationFrame, useMotionValue, useScroll, useSpring, useTransform } from 'framer-motion'
 import { type CSSProperties, useEffect, useRef, useState } from 'react'
-import { type BioBlock } from '@/lib/bio'
+import { type BioBlock, linkLabel } from '@/lib/bio'
 import { PROFILE_FONT_CLASS } from '@/lib/profile-fonts'
 import { cn } from '@/lib/utils'
 import { Avatar, Bio, BlockIcon, BlockView, Footer, Name, Socials } from './bits'
@@ -179,7 +179,7 @@ function IndexRow({ block, n, dim, onEnter }: { block: LinkBlock; n: number; dim
       className="group grid grid-cols-[2.2rem_1fr_auto] items-baseline gap-x-4 border-b border-[rgb(var(--bio-fg-rgb)/0.6)] py-5 md:grid-cols-[3.4rem_1fr_auto] md:py-6"
     >
       <span className="text-[0.66rem] tabular-nums text-[var(--bio-mute)]">{pad(n)}</span>
-      <span className="bt text-[clamp(1.5rem,4.6cqw,3rem)] transition-transform duration-500 group-hover:translate-x-2">{block.title}</span>
+      <span className="bt text-[clamp(1.5rem,4.6cqw,3rem)] transition-transform duration-500 group-hover:translate-x-2">{linkLabel(block)}</span>
       <span className="flex items-center gap-3">
         <span className="hidden text-[0.78rem] text-[var(--bio-mute)] italic sm:inline">{block.note || hostOf(block.url)}</span>
         <ArrowRight className="size-5 opacity-50 transition-transform duration-500 group-hover:translate-x-1 group-hover:opacity-100" strokeWidth={1.4} />
@@ -258,7 +258,7 @@ function TermLink({ block, i }: { block: LinkBlock; i: number }) {
     <li>
       <a {...lp} data-link className="group flex items-baseline gap-3 py-1">
         <span className="bio-mute">[{i}]</span>
-        <span className="underline decoration-transparent underline-offset-4 transition-colors group-hover:decoration-[var(--bio-fg)]">{block.title}</span>
+        <span className="underline decoration-transparent underline-offset-4 transition-colors group-hover:decoration-[var(--bio-fg)]">{linkLabel(block)}</span>
         <span className="bio-mute hidden truncate text-[0.8rem] sm:inline">{hostOf(block.url)}</span>
         <span className="ml-auto opacity-0 transition-opacity group-hover:opacity-100">→</span>
       </a>
@@ -290,7 +290,7 @@ function Chapter({ block, index, total }: { block: LinkBlock; index: number; tot
         </span>
         <motion.a {...lp} data-link style={{ x: `${enter}cqw` }} className="group block max-w-[14ch] [overflow-wrap:anywhere]">
           <span className="bt block text-[clamp(3rem,12cqw,9.5rem)]">
-            {block.title}
+            {linkLabel(block)}
             <ArrowRight className="ml-2 inline size-[0.45em] -translate-y-[0.1em] opacity-50 transition-transform duration-500 group-hover:translate-x-2 group-hover:opacity-100" strokeWidth={1.3} />
           </span>
         </motion.a>
@@ -359,7 +359,7 @@ function Frame({ block, index }: { block: LinkBlock; index: number }) {
           <ArrowRight className="size-5 opacity-50 transition-transform duration-500 group-hover:translate-x-1" strokeWidth={1.4} />
         </span>
         <span>
-          <span className="bt block text-[clamp(1.9rem,6cqw,2.8rem)]">{block.title}</span>
+          <span className="bt block text-[clamp(1.9rem,6cqw,2.8rem)]">{linkLabel(block)}</span>
           {block.note && <span className="mt-2 block text-[0.8rem] italic opacity-65">{block.note}</span>}
         </span>
       </span>

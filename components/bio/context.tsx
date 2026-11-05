@@ -2,7 +2,7 @@
 
 import { type MotionValue, motion, useMotionValue, useTransform } from 'framer-motion'
 import { createContext, type CSSProperties, type ReactNode, type RefObject, useContext } from 'react'
-import type { BioBlock, BioConfig } from '@/lib/bio'
+import type { BioBlock, BioConfig, FreeBox } from '@/lib/bio'
 
 export type BioPageData = {
   handle: string
@@ -14,6 +14,16 @@ export type BioPageData = {
   views: number | null
   /** small marks next to the name (the account number, OG, founding member) */
   badges?: { id: string; label: string; hint: string }[]
+}
+
+/** The editor's hold on the canvas layout: what is selected, and how to move it. Only given to the editor's own preview. */
+export type Arrange = {
+  selected: string | null
+  select: (key: string | null) => void
+  /** save where something now sits (the whole box) */
+  patch: (key: string, box: FreeBox) => void
+  /** line things up with each other and the middle of the page while dragging */
+  snap: boolean
 }
 
 /** `live` is the real page, `preview` is the editor's copy of it (nothing is counted), `mini` is a small moving picture of a page (the home page). */
@@ -39,6 +49,8 @@ export type BioCtx = {
   /** the visible blocks, pinned links first */
   items: BioBlock[]
   socials: Extract<BioBlock, { t: 'social' }>[]
+  /** the canvas layout's editing hold (editor preview only) */
+  arrange?: Arrange
 }
 
 const Ctx = createContext<BioCtx | null>(null)
