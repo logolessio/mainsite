@@ -3,7 +3,7 @@
 import '@/components/editor/editor.css'
 import { AnimatePresence, motion, useMotionValue, useSpring } from 'framer-motion'
 import { ArrowRight, AtSign, BarChart3, Check, Layers, Loader2, MousePointer2, Music2, Plus, Share2, SlidersHorizontal, Sparkles, X } from 'lucide-react'
-import { type CSSProperties, type ReactNode, useEffect, useId, useRef, useState } from 'react'
+import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react'
 import { BioPage } from '@/components/bio/bio-page'
 import type { BioPageData } from '@/components/bio/context'
 import { ShaderRunner, type ShaderId } from '@/components/bio/gl'
@@ -57,13 +57,13 @@ const SUB = 'mx-auto mt-5 max-w-[34rem] text-[0.88rem] leading-[1.8] text-white/
 
 /* ------------------------------------------------------------------ a page in a phone */
 
-function Phone({ id, width = 260, className }: { id: SampleId; width?: number; className?: string }) {
+function Phone({ id, width = 260, className, still = false }: { id: SampleId; width?: number; className?: string; still?: boolean }) {
   const data: BioPageData = SAMPLES[id]
   const k = width / 390
   return (
     <div aria-hidden="true" className={cn('relative shrink-0 overflow-hidden rounded-[2rem] border border-white/12 bg-black shadow-[0_30px_80px_-20px_rgb(0_0_0/0.9)]', className)} style={{ width, height: 844 * k }}>
       <div className="absolute top-0 left-0 origin-top-left" style={{ width: 390, height: 844, transform: `scale(${k})` }}>
-        <BioPage mode="mini" data={data} />
+        <BioPage mode="mini" data={data} still={still} />
       </div>
     </div>
   )
@@ -104,7 +104,7 @@ export function ClaimBar({ big = false }: { big?: boolean }) {
       }}
       className="w-full"
     >
-      <div className={cn('flex w-full items-center rounded-full border border-white/20 bg-black/30 p-1.5 pl-6 shadow-[var(--ed-lift)] backdrop-blur-md transition-colors focus-within:border-white/45', big ? 'h-[4.25rem]' : 'h-[3.5rem]')}>
+      <div className={cn('flex w-full items-center rounded-full border border-white/20 bg-black/40 p-1.5 pl-6 shadow-[var(--ed-lift)] transition-colors focus-within:border-white/45', big ? 'h-[4.25rem]' : 'h-[3.5rem]')}>
         <span className="select-none text-[0.9rem] text-white/60">logoless.io/</span>
         <input
           value={v}
@@ -135,7 +135,7 @@ export function ClaimBar({ big = false }: { big?: boolean }) {
 function Nav() {
   return (
     <header className="drop fixed inset-x-0 top-4 z-50 px-4">
-      <div className="mx-auto flex h-14 w-full max-w-[64rem] items-center justify-between rounded-full border border-white/10 bg-black/55 pr-2 pl-6 shadow-[var(--ed-lift)] backdrop-blur-xl">
+      <div className="mx-auto flex h-14 w-full max-w-[64rem] items-center justify-between rounded-full border border-white/10 bg-black/75 pr-2 pl-6 shadow-[var(--ed-lift)]">
         <a href="#top" className="disp text-[1.3rem]" aria-label="logoless, back to the top">
           logoless
         </a>
@@ -171,37 +171,48 @@ const HEARTS = [
   { c: '#ff6e1d', cy: 800, sx: 1.085, r: 182, dx: 107, dy: 102, s: 364, ty: 24.9, sy: 0.746, blur: 18, layer: 'core' },
 ] as const
 
-function Glow({ className, enter = false, w, top }: { className?: string; enter?: boolean; w: string; top: string }) {
-  const id = useId().replace(/:/g, '')
-  const layer = (name: 'halo' | 'core') => (
-    <svg aria-hidden="true" viewBox="0 0 1200 1210" className={cn('glow-layer', name === 'halo' ? 'glow-halo' : 'glow-core')}>
-      <defs>
-        {HEARTS.filter((h) => h.layer === name).map((h) => (
-          <filter key={h.c} id={`${id}${h.c.slice(1)}`} filterUnits="userSpaceOnUse" x="-1000" y="-1000" width="2000" height="2000">
-            <feGaussianBlur stdDeviation={h.blur} />
-          </filter>
-        ))}
-      </defs>
-      {HEARTS.filter((h) => h.layer === name).map((h) => (
-        <g key={h.c} transform={`translate(600 ${h.cy}) scale(${h.sx} 1)`} fill={h.c} filter={`url(#${id}${h.c.slice(1)})`}>
-          <circle cx={-h.dx} cy={-h.dy} r={h.r * 0.9} />
-          <circle cx={h.dx} cy={-h.dy} r={h.r * 0.9} />
-          <rect x={(-h.s * 0.9) / 2} y={(-h.s * 0.9) / 2} width={h.s * 0.9} height={h.s * 0.9} transform={`translate(0 ${h.ty}) scale(1 ${h.sy}) rotate(45)`} />
-        </g>
-      ))}
-    </svg>
-  )
+/** One of the two layers as a small picture, made once: the blur is baked in, so the page never re-draws it while the glow moves. */
+const GLOW_PX = 520
+function heartsUri(layer: 'halo' | 'core') {
+  const hs = HEARTS.filter((h) => h.layer === layer)
+  const defs = hs.map((h) => `<filter id="b${h.c.slice(1)}" filterUnits="userSpaceOnUse" x="-1000" y="-1000" width="2000" height="2000"><feGaussianBlur stdDeviation="${h.blur}"/></filter>`).join('')
+  const shapes = hs
+    .map((h) => {
+      const s = h.s * 0.9
+      return `<g transform="translate(600 ${h.cy}) scale(${h.sx} 1)" fill="${h.c}" filter="url(#b${h.c.slice(1)})"><circle cx="${-h.dx}" cy="${-h.dy}" r="${h.r * 0.9}"/><circle cx="${h.dx}" cy="${-h.dy}" r="${h.r * 0.9}"/><rect x="${-s / 2}" y="${-s / 2}" width="${s}" height="${s}" transform="translate(0 ${h.ty}) scale(1 ${h.sy}) rotate(45)"/></g>`
+    })
+    .join('')
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1210" width="${GLOW_PX}" height="${Math.round((GLOW_PX * 1210) / 1200)}"><defs>${defs}</defs>${shapes}</svg>`
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}
+const HALO_URI = heartsUri('halo')
+const CORE_URI = heartsUri('core')
+
+function GlowLayer({ name }: { name: 'halo' | 'core' }) {
+  const ref = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    const cv = ref.current
+    if (!cv) return
+    const img = new Image()
+    img.onload = () => cv.getContext('2d')?.drawImage(img, 0, 0, cv.width, cv.height)
+    img.src = name === 'halo' ? HALO_URI : CORE_URI
+  }, [name])
+  return <canvas ref={ref} width={GLOW_PX} height={Math.round((GLOW_PX * 1210) / 1200)} aria-hidden="true" className={cn('glow-layer', name === 'halo' ? 'glow-halo' : 'glow-core')} />
+}
+
+function Glow({ className, enter = false, fade = true, w, top }: { className?: string; enter?: boolean; fade?: boolean; w: string; top: string }) {
   return (
     <div aria-hidden="true" className={cn('glow', enter && 'glow-enter', className)}>
       <div className="glow-rise">
         <div className="glow-drift">
           <div className="glow-art" style={vars({ '--w': w, '--top': top })}>
-            {layer('halo')}
-            {layer('core')}
+            <GlowLayer name="halo" />
+            <GlowLayer name="core" />
           </div>
         </div>
       </div>
       <span className="mesh-grain" />
+      {fade && <span className="absolute inset-x-0 bottom-0 h-[16%] bg-gradient-to-t from-[#080808] to-transparent" />}
     </div>
   )
 }
@@ -229,13 +240,13 @@ function Hero() {
       <div aria-hidden="true" className="rise relative mx-auto mt-12 h-[19rem] w-full max-w-[44rem] md:mt-14 md:h-[32rem]" style={vars({ '--d': '0.4s' })}>
         <div className="absolute top-0 left-1/2 h-[640px] w-[640px] -translate-x-1/2 origin-top scale-[0.52] sm:scale-[0.7] md:scale-100">
           <div className="float absolute top-[110px] left-0" style={vars({ '--t': '8s', '--d': '0.6s' })}>
-            <Phone id="index" width={190} />
+            <Phone id="index" width={190} still />
           </div>
           <div className="float absolute top-0 left-[195px]" style={vars({ '--t': '7s' })}>
             <Phone id="aura" width={250} />
           </div>
           <div className="float absolute top-[110px] left-[450px]" style={vars({ '--t': '9s', '--d': '1.2s' })}>
-            <Phone id="bento" width={190} />
+            <Phone id="bento" width={190} still />
           </div>
         </div>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#080808]/90 to-transparent" />
@@ -514,7 +525,7 @@ function Cta() {
   return (
     <section id="claim" className="scroll-mt-24 px-5 py-20">
       <Reveal className="relative mx-auto max-w-[64rem] overflow-hidden rounded-[36px] border border-white/10 bg-[#0b0b0b] px-6 py-16 text-center shadow-[var(--ed-lift)] md:py-24">
-        <Glow className="glow-flat" w="clamp(820px, 92vw, 1400px)" top="90px" />
+        <Glow fade={false} w="clamp(820px, 92vw, 1400px)" top="90px" />
         <div className="relative z-10">
         <h2 className="disp text-[clamp(2.4rem,5vw,4.4rem)]">Claim your page.</h2>
         <p className={cn(SUB, '!text-white/85')}>It takes about a minute, and it&apos;s free. The short names go first.</p>

@@ -25,7 +25,7 @@ const gray = (tone: number, a = 1) => {
  * screen page, as the editor's preview and as a small moving picture on the home page). Everything that moves against the scroll reads one smoothed scroll
  * position, so the whole page eases together.
  */
-export function BioPage({ data, mode = 'live', className, style }: { data: BioPageData; mode?: BioMode; className?: string; style?: CSSProperties }) {
+export function BioPage({ data, mode = 'live', className, style, still = false }: { data: BioPageData; mode?: BioMode; className?: string; style?: CSSProperties; still?: boolean }) {
   const cfg = data.config
   const { reduced, canHover } = useMotionPrefs()
   const root = useRef<HTMLDivElement>(null)
@@ -52,21 +52,31 @@ export function BioPage({ data, mode = 'live', className, style }: { data: BioPa
     [mx, my],
   )
 
-  // the small moving picture drifts down the page and back by itself
+  // the small moving picture drifts down the page and back by itself, but only while it is on screen (and not at all if it was asked to stand still)
   useEffect(() => {
-    if (mode !== 'mini' || reduced) return
+    if (mode !== 'mini' || reduced || still) return
     const el = scroller.current
     if (!el) return
     let raf = 0
+    let on = false
     const t0 = performance.now() + Math.random() * 4000
     const tick = (now: number) => {
+      raf = 0
+      if (!on) return
       const max = el.scrollHeight - el.clientHeight
       if (max > 0) el.scrollTop = ((Math.sin((now - t0) / 3200 - 1.2) + 1) / 2) * max
       raf = requestAnimationFrame(tick)
     }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [mode, reduced])
+    const io = new IntersectionObserver(([e]) => {
+      on = e.isIntersecting
+      if (on && !raf) raf = requestAnimationFrame(tick)
+    })
+    io.observe(el)
+    return () => {
+      io.disconnect()
+      cancelAnimationFrame(raf)
+    }
+  }, [mode, reduced, still])
 
   // one count per visit, and one per link press (only on the real page)
   const sent = useRef(false)

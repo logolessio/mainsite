@@ -204,12 +204,6 @@ html .ed.ed.ed .disp {
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  -webkit-mask-image: linear-gradient(to bottom, #000 84%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 84%, transparent 100%);
-}
-.ed .glow.glow-flat {
-  -webkit-mask-image: none;
-  mask-image: none;
 }
 .ed .glow-rise,
 .ed .glow-drift {
@@ -238,6 +232,7 @@ html .ed.ed.ed .disp {
   height: 100%;
   overflow: visible;
   transform-origin: 50% 66%;
+  will-change: transform, opacity;
 }
 .ed .glow-halo {
   animation: glow-breathe-a 11s ease-in-out 1.6s infinite;
@@ -300,10 +295,10 @@ html .ed.ed.ed .disp {
 .ed .mesh-grain {
   position: absolute;
   inset: 0;
-  opacity: 0.32;
+  opacity: 0.17;
   background-image:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='w' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 3.2 -1.75'/></filter><rect width='100%25' height='100%25' filter='url(%23w)'/></svg>"),
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='170' height='170'><filter id='k' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' seed='11' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3.6 -1.9'/></filter><rect width='100%25' height='100%25' filter='url(%23k)'/></svg>");
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='w' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 3.2 -1.95'/></filter><rect width='100%25' height='100%25' filter='url(%23w)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='170' height='170'><filter id='k' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' seed='11' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3.6 -2.1'/></filter><rect width='100%25' height='100%25' filter='url(%23k)'/></svg>");
   background-size: 200px 200px, 170px 170px;
 }
 @media (prefers-reduced-motion: reduce) {
