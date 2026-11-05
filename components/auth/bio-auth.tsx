@@ -25,12 +25,12 @@ export function BioAuth({ mode, claim }: { mode: 'login' | 'signup' | 'forgot'; 
             <div className="absolute inset-0 bg-black/55" />
           </div>
           <header className="fixed inset-x-0 top-0 z-20 flex h-16 items-center justify-end px-5 md:px-10">
-            <a href="/" className="cap text-white/60 transition-colors hover:text-white">
-              back
+            <a href="/" className="inline-flex h-10 items-center rounded-full px-5 text-[0.8rem] text-white/60 transition-colors hover:bg-white/[0.07] hover:text-white">
+              Back
             </a>
           </header>
           <main className="grid min-h-dvh place-items-center px-5 pt-24 pb-16">
-            <div className="relative w-full max-w-[420px] border border-white/25 bg-black/70 p-7 [filter:grayscale(1)] backdrop-blur-xl sm:p-9">
+            <div className="relative w-full max-w-[420px] rounded-[28px] border border-white/12 bg-black/70 p-7 shadow-[var(--ed-lift)] [filter:grayscale(1)] backdrop-blur-xl sm:p-9">
               <Suspense>
                 <AuthCard mode={mode} claim={claim} />
               </Suspense>

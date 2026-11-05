@@ -6,13 +6,13 @@ export const metadata: Metadata = { title: 'Page not found | logoless', robots: 
 export default function NotFound() {
   return (
     <main className="ed fixed inset-0 z-40 grid place-items-center overflow-y-auto px-6 text-center">
-      <div className="relative max-w-md">
-        <p className="cap text-white/45">404</p>
-        <p className="disp mt-5 text-[clamp(2.6rem,10vw,6rem)]">nothing here.</p>
-        <p className="mt-5 text-[0.84rem] text-white/60">the link might be old, or mistyped.</p>
+      <div className="rise max-w-md">
+        <p className="disp text-[clamp(4rem,14vw,8rem)]">404</p>
+        <h1 className="mt-4 text-[1.05rem] font-medium">That page doesn&apos;t exist</h1>
+        <p className="mt-3 text-[0.86rem] leading-[1.7] text-white/55">The link might be old or mistyped.</p>
         <div className="mt-8 flex justify-center">
           <a href="/" className="btn btn-solid">
-            go home
+            Go home
           </a>
         </div>
       </div>

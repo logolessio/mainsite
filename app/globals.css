@@ -1412,20 +1412,20 @@ html.calm .top-veil {
 html[data-look='anubis'] {
   --ink: #000000;
   --paper: #ededed;
-  --signal: #ff1f38;
+  --signal: #e6e6e6;
   --surface: #0a0a0a;
   --raised: #141414;
   --line: color-mix(in srgb, var(--color-white) 9%, transparent);
   --line-strong: color-mix(in srgb, var(--color-white) 17%, transparent);
   --mute: color-mix(in srgb, var(--color-white) 72%, transparent); /* a little brighter than the Anubis page's, because the background behind it is coloured and moving */
-  --ring: rgb(255 31 56 / 0.65);
-  --round: 0.5; /* panels 8px, cards 10px, tiles 6px */
-  --pill: 6px; /* buttons, fields and chips */
-  --red: #ff1f38;
-  --blue: #4ba9dc;
-  --teal: #2ed0b0;
-  --amber: #ffc857;
-  --ease-premium: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ring: rgb(255 255 255 / 0.35);
+  --round: 1; /* the full corner scale: panels, cards and tiles are properly round */
+  --pill: 9999px; /* buttons and chips are pills */
+  --red: #d6d6d6;
+  --blue: #bdbdbd;
+  --teal: #a6a6a6;
+  --amber: #8f8f8f; /* the old accents, as greys: the site is strictly black, white and grey */
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
   scrollbar-width: thin;
   scrollbar-color: #2a2a2a transparent;
 }
@@ -1470,7 +1470,7 @@ html[data-look='anubis'] :is(.text-xs, [class*='text-[10px]'], [class*='text-[10
   letter-spacing: 0.01em; /* the tiniest print gets a little air back */
 }
 html[data-look='anubis'] ::selection {
-  background: rgb(255 31 56 / 0.4);
+  background: rgb(255 255 255 / 0.28);
   color: var(--color-white);
 }
 

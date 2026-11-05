@@ -1,15 +1,17 @@
 /* The editor and the home page: black, white and grey, nothing else. IBM Plex Mono for the words, Schibsted Grotesk Black for the big titles, like the Anubis page. */
 .ed {
   font-family: var(--font-f-ibm-plex-mono), ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  --ed-bg: #000;
-  --ed-panel: #0a0a0a;
-  --ed-raise: #121212;
-  --ed-line: rgb(255 255 255 / 0.1);
-  --ed-line2: rgb(255 255 255 / 0.18);
-  --ed-mute: rgb(255 255 255 / 0.5);
-  --ed-dim: rgb(255 255 255 / 0.32);
+  --ed-bg: #080808;
+  --ed-panel: #0d0d0d;
+  --ed-raise: #131313;
+  --ed-line: rgb(255 255 255 / 0.08);
+  --ed-line2: rgb(255 255 255 / 0.14);
+  --ed-mute: rgb(255 255 255 / 0.55);
+  --ed-dim: rgb(255 255 255 / 0.35);
+  /* the soft shadow and the faint bright top edge every raised thing gets */
+  --ed-lift: 0 8px 30px -10px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.06);
   background: var(--ed-bg);
-  color: #fff;
+  color: #f2f2f2;
   -webkit-font-smoothing: antialiased;
 }
 .ed ::selection {
@@ -100,67 +102,103 @@ html .ed.ed.ed .disp {
   letter-spacing: -0.03em;
   line-height: 1.04;
 }
-/* a small caps label, the way a page number or a panel caption is set */
+/* a small label, the way a panel caption is set */
 .ed .cap {
-  font-size: 0.68rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+  font-size: 0.74rem;
+  letter-spacing: 0;
+  font-weight: 500;
 }
 
-/* a button drawn with a hair line, square-cornered; it fills on hover */
+/* buttons are pills, and lift a little when you reach for them; the main one is pale and the rest are outlined */
 .ed .btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
-  height: 2.6rem;
-  padding: 0 1.1rem;
-  border: 1px solid rgb(255 255 255 / 0.4);
-  font-size: 0.74rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #fff;
-  transition: background 0.35s, color 0.35s, border-color 0.35s;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.75rem;
+  padding: 0 1.25rem;
+  border: 1px solid var(--ed-line2);
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  color: #f2f2f2;
+  background: rgb(255 255 255 / 0.04);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s, border-color 0.2s, box-shadow 0.3s, opacity 0.2s;
 }
 .ed .btn:hover {
-  background: #fff;
-  color: #000;
-  border-color: #fff;
+  transform: translateY(-1px);
+  background: rgb(255 255 255 / 0.08);
+  border-color: rgb(255 255 255 / 0.24);
 }
 .ed .btn-solid {
-  background: #fff;
-  color: #000;
-  border-color: #fff;
+  background: #ececec;
+  color: #0a0a0a;
+  border-color: transparent;
+  box-shadow: var(--ed-lift);
 }
 .ed .btn-solid:hover {
-  background: transparent;
-  color: #fff;
+  background: #fff;
+  color: #0a0a0a;
+  border-color: transparent;
 }
 
-/* nothing on the site is rounded (a person's own page keeps the roundness they chose) */
-.ed [class*='rounded']:not(.bio-root, .bio-root *),
-.ed :is(button, input, textarea, select):not(.bio-root *) {
-  border-radius: 0;
-}
-.ed label > span:first-child:not([class]) {
-  letter-spacing: 0.02em;
+/* corners: pills for anything you press, 14px for fields, and 28px for panels (set on the element). Underneath, so a class always wins. */
+@layer base {
+  .ed :is(input, textarea, select, button):not(.bio-root *) {
+    border-radius: 0.875rem;
+  }
 }
 
-/* a stippled strip: fine white speckle on black, the way the reference frames its panels */
-.ed .stipple {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='1.05' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 9 -4.7'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-  background-size: 180px 180px;
+/* the motion the whole site shares: things rise a little as they arrive, hover lifts, and preview pages float */
+@keyframes ed-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
 }
-
+@keyframes ed-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+  }
+}
+@keyframes ed-float {
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.ed .rise {
+  animation: ed-rise 0.5s ease both;
+  animation-delay: var(--d, 0s);
+}
+.ed .drop {
+  animation: ed-drop 0.45s ease both;
+}
+.ed .float {
+  animation: ed-float var(--t, 7s) ease-in-out infinite;
+  animation-delay: var(--d, 0s);
+}
+.ed .lift {
+  transition: transform 0.2s ease, border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+.ed .lift:hover {
+  transform: translateY(-3px);
+  border-color: rgb(255 255 255 / 0.18);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.25);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ed .rise,
+  .ed .drop,
+  .ed .float {
+    animation: none;
+  }
+  .ed .lift:hover,
+  .ed .btn:hover {
+    transform: none;
+  }
+}
 
 @keyframes hud-blink {
   50% {
     opacity: 0;
   }
-}
-/* speckle: fine dark and light dots over a flat colour, like a printed illustration */
-.speckle {
-  background-image:
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='a' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .05 0 0 0 0 .09 0 0 0 0 .3 0 0 0 9 -5.6'/></filter><rect width='100%25' height='100%25' filter='url(%23a)'/></svg>"),
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='b' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='19' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 .96 0 0 0 0 .86 0 0 0 9 -5.7'/></filter><rect width='100%25' height='100%25' filter='url(%23b)'/></svg>");
-  background-size: 240px 240px, 200px 200px;
 }
