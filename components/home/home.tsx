@@ -159,12 +159,27 @@ function Nav() {
   )
 }
 
+/** The breathing grey gradient mesh with grain (see .mesh in editor.css). Sits behind its parent's content and fades out towards the bottom. */
+function Mesh({ className }: { className?: string }) {
+  return (
+    <div aria-hidden="true" className={cn('mesh pointer-events-none absolute overflow-hidden', className)}>
+      <span className="mesh-blob mesh-a" />
+      <span className="mesh-blob mesh-b" />
+      <span className="mesh-blob mesh-c" />
+      <span className="mesh-blob mesh-d" />
+      <span className="mesh-blob mesh-e" />
+      <span className="mesh-grain" />
+    </div>
+  )
+}
+
 /* ------------------------------------------------------------------ the title: what it is, and real pages straight away */
 
 function Hero() {
   return (
     <section id="top" className="relative overflow-hidden px-5 pt-36 text-center md:pt-44">
-      <div className="mx-auto flex max-w-[56rem] flex-col items-center">
+      <Mesh className="inset-0" />
+      <div className="relative z-10 mx-auto flex max-w-[56rem] flex-col items-center">
         <h1 className="disp rise text-[11.5vw] md:text-[clamp(3rem,6vw,5.4rem)]" style={vars({ '--d': '0.05s' })}>
           One link for <br className="md:hidden" />
           everything you make.
@@ -190,7 +205,7 @@ function Hero() {
             <Phone id="bento" width={190} />
           </div>
         </div>
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-[#080808] to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#080808]/90 to-transparent" />
       </div>
     </section>
   )
@@ -465,11 +480,14 @@ function Faq() {
 function Cta() {
   return (
     <section id="claim" className="scroll-mt-24 px-5 py-20">
-      <Reveal className="mx-auto max-w-[64rem] rounded-[36px] border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.01] px-6 py-16 text-center shadow-[var(--ed-lift)] md:py-24">
+      <Reveal className="relative mx-auto max-w-[64rem] overflow-hidden rounded-[36px] border border-white/10 bg-[#0b0b0b] px-6 py-16 text-center shadow-[var(--ed-lift)] md:py-24">
+        <Mesh className="inset-0 opacity-80 [mask-image:none]" />
+        <div className="relative z-10">
         <h2 className="disp text-[clamp(2.4rem,5vw,4.4rem)]">Claim your page.</h2>
         <p className={SUB}>It takes about a minute, and it&apos;s free. The short names go first.</p>
         <div className="mx-auto mt-9 w-full max-w-[32rem]">
           <ClaimBar big />
+        </div>
         </div>
       </Reveal>
     </section>
