@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, Globe, Link2, Mail } from 'lucide-react'
+import { Check, FileDown, Globe, Link2, Mail } from 'lucide-react'
 import { useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
 import { BlockIcon } from '@/components/bio/bits'
@@ -19,6 +19,7 @@ const tile = 'grid size-11 place-items-center rounded-xl border transition-[back
 function Mark({ id, className }: { id: string; className?: string }) {
   if (id === 'mail') return <Mail aria-hidden="true" className={cn('size-5', className)} strokeWidth={1.6} />
   if (id === 'website') return <Globe aria-hidden="true" className={cn('size-5', className)} strokeWidth={1.6} />
+  if (id === 'file') return <FileDown aria-hidden="true" className={cn('size-5', className)} strokeWidth={1.6} />
   if (id === 'link') return <Link2 aria-hidden="true" className={cn('size-5', className)} strokeWidth={1.6} />
   return <BrandIcon name={id} className={cn('size-5', className)} />
 }
@@ -137,7 +138,7 @@ export function SocialFields({ b, set }: { b: Social; set: (p: Record<string, un
 export function IconPicker({ block, onChange }: { block: LinkBlock; onChange: (id: string) => void }) {
   const [open, setOpen] = useState(false)
   const auto = block.icon === 'auto'
-  const options: { id: string; label: string }[] = [{ id: 'link', label: 'Link' }, { id: 'website', label: 'Website' }, ...ACCOUNTS]
+  const options: { id: string; label: string }[] = [{ id: 'link', label: 'Link' }, { id: 'file', label: 'File' }, { id: 'website', label: 'Website' }, ...ACCOUNTS]
   return (
     <div>
       <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} className="flex h-11 w-full items-center gap-3 rounded-xl border border-[var(--ed-line)] bg-white/[0.03] px-3.5 text-left text-[0.84rem] transition-colors hover:border-white/30">

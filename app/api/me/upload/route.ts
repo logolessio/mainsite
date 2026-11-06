@@ -1,6 +1,6 @@
 import { protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
-import { fromBase64, MAX_IMAGE_BYTES, MAX_VIDEO_BYTES, storeImage, storeVideo } from '@/lib/upload'
+import { fromBase64, MAX_GIF_BYTES, MAX_VIDEO_BYTES, storeImage, storeVideo } from '@/lib/upload'
 import { requireUser } from '@/lib/user'
 
 const IMAGE_KINDS = ['avatar', 'banner', 'cover', 'background', 'cursor'] as const
@@ -17,6 +17,6 @@ export const POST = route(async (req: Request) => {
   if (typeof data !== 'string') throw new HttpError(400, 'That file could not be read.')
   if (kind === 'bgvideo') return json({ id: await storeVideo(user.id, fromBase64(data)) })
   if (!IMAGE_KINDS.includes(kind as (typeof IMAGE_KINDS)[number])) throw new HttpError(400, 'Unknown upload type.')
-  if (data.length > MAX_IMAGE_BYTES * 1.5) throw new HttpError(413, 'that image is too big. pick a smaller one.')
+  if (data.length > MAX_GIF_BYTES * 1.4) throw new HttpError(413, 'that image is too big. pick a smaller one.')
   return json({ id: await storeImage(user.id, kind as (typeof IMAGE_KINDS)[number], fromBase64(data)) })
 })

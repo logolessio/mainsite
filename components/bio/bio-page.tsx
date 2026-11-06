@@ -42,10 +42,16 @@ export function BioPage({ data, mode = 'live', className, style, still = false, 
   const my = useMotionValue(0)
   const px = useSpring(mx, { stiffness: 90, damping: 22, mass: 0.6 })
   const py = useSpring(my, { stiffness: 90, damping: 22, mass: 0.6 })
+  const box = useRef<{ r: DOMRect; at: number } | null>(null)
   const onMove = useCallback(
     (e: React.PointerEvent) => {
       if (e.pointerType !== 'mouse') return
-      const r = root.current?.getBoundingClientRect()
+      const now = performance.now()
+      if (!box.current || now - box.current.at > 500) {
+        const rr = root.current?.getBoundingClientRect()
+        if (rr) box.current = { r: rr, at: now }
+      }
+      const r = box.current?.r
       if (!r) return
       mx.set(((e.clientX - r.left) / r.width - 0.5) * 2)
       my.set(((e.clientY - r.top) / r.height - 0.5) * 2)

@@ -114,6 +114,6 @@ export function cursorCss(id: string, ink: 'white' | 'black', size: number): { a
 /** The CSS values for an uploaded picture (used on the page and on links alike). */
 export function uploadCursorCss(uploadId: string, hot: 'tl' | 'center', size: number) {
   const o = hot === 'center' ? Math.round(size / 2) : 0
-  const v = `url("/api/img/${uploadId}") ${o} ${o}, auto`
+  const v = `url("${/^https:\/\//i.test(uploadId) ? uploadId : `/api/img/${uploadId}`}") ${o} ${o}, auto`
   return { arrow: v, link: v.replace(', auto', ', pointer') }
 }

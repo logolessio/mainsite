@@ -171,7 +171,7 @@ export type BioConfig = {
     /** the social icons: a soft glow with no box, plain, or in a box */
     icons: 'glow' | 'plain' | 'boxed'
   }
-  avatar: { shape: AvatarShape; ring: boolean; float: boolean; gray: boolean; size: number }
+  avatar: { shape: AvatarShape; ring: boolean; float: boolean; gray: boolean; size: number; /** a link to a picture or GIF kept somewhere else; shown instead of the uploaded picture */ url: string }
   bg: {
     kind: BioBgKind
     tone: number
@@ -240,11 +240,11 @@ export const DEFAULT_BIO: BioConfig = {
   look: 2,
   layout: 'classic',
   colors: { on: false, bg: '#08080c', bg2: '#16183a', text: '#f4f4f6', accent: '#ffffff', accent2: '#9a9a9a' },
-  theme: { tone: 5, font: 'quicksand', nameStyle: 'glow', buttons: 'glass', radius: 22, align: 'center', size: 'comfortable', icons: 'glow' },
-  avatar: { shape: 'circle', ring: true, float: false, gray: false, size: 100 },
+  theme: { tone: 5, font: 'quicksand', nameStyle: 'solid', buttons: 'glass', radius: 18, align: 'center', size: 'comfortable', icons: 'plain' },
+  avatar: { shape: 'circle', ring: true, float: false, gray: false, size: 100, url: '' },
   bg: { kind: 'gradient', tone: 5, tone2: 17, angle: 160, gradient: 'radial', image: '', gif: '', video: '', blur: 0, dim: 0, noise: 0, parallax: 40, vignette: 35, mono: false },
   overlay: { effect: 'none', intensity: 50, speed: 50 },
-  card: { style: 'glass', blur: 22, opacity: 55, glare: true, width: 440, banner: '' },
+  card: { style: 'glass', blur: 22, opacity: 62, glare: false, width: 440, banner: '' },
   audio: { id: '', title: '', volume: 60, loop: true, reactive: true },
   cursor: { kind: 'default', preset: 'arrow', ink: 'white', size: 32, image: '', hot: 'tl', trail: 'none' },
   fx: { enter: 'none', enterText: '[ click to enter ]', reveal: 'rise', tilt: true, magnetic: false, spotlight: false, grain: 0, scanlines: 0, parallax: 60, typewriter: false, depth: 60, float: true },
@@ -276,7 +276,7 @@ const look = (
   effect,
   set: {
     colors: { on: true, bg: hues[0], bg2: hues[1], text: o.text ?? '#f5f5f7', accent: hues[2], accent2: hues[3] },
-    theme: { nameStyle: o.nameStyle ?? 'glow', buttons: o.buttons ?? 'glass', font: o.font ?? 'quicksand', radius: o.radius ?? 22 },
+    theme: { nameStyle: o.nameStyle ?? 'solid', buttons: o.buttons ?? 'glass', font: o.font ?? 'quicksand', radius: o.radius ?? 22 },
     bg: { kind: 'gradient', gradient: 'radial', dim: 0, blur: 0, noise: 0, vignette: o.vignette ?? 40 },
     card: { style: 'glass', opacity: o.opacity ?? 55, blur: o.blur ?? 22 },
     overlay: { effect, intensity: o.intensity ?? 55, speed: 50 },
@@ -294,10 +294,10 @@ export const PRESETS: BioPreset[] = [
   look('storm', 'Storm', 'purple sky, lightning', ['#07060c', '#1b1530', '#a78bfa', '#f0abfc'], 'lightning', { text: '#f3eeff' }),
   look('ocean', 'Ocean', 'bubbles rising', ['#03101a', '#073a57', '#38bdf8', '#22d3ee'], 'bubbles', { text: '#e8f7ff' }),
   look('aurora', 'Aurora', 'green and violet light', ['#030812', '#0b2433', '#34d399', '#818cf8'], 'aurora', { text: '#ecfdf5' }),
-  look('gold', 'Gold', 'black and gold, glitter', ['#0b0906', '#2a210d', '#e7b84a', '#fff0b3'], 'sparkle', { text: '#f6edd3', font: 'newsreader', nameStyle: 'shimmer' }),
+  look('gold', 'Gold', 'black and gold, glitter', ['#0b0906', '#2a210d', '#e7b84a', '#fff0b3'], 'sparkle', { text: '#f6edd3', font: 'newsreader' }),
   look('autumn', 'Autumn', 'leaves drifting down', ['#100804', '#33180a', '#f59e0b', '#ef4444'], 'leaves', { text: '#fff4e5' }),
-  look('matrix', 'Matrix', 'green code', ['#010a04', '#032211', '#22c55e', '#86efac'], 'code', { text: '#d9ffe6', font: 'martian', nameStyle: 'neon', radius: 6 }),
-  look('retro', 'Retro', 'a worn VHS tape', ['#0a0a0f', '#1a1626', '#ff4d8d', '#4dd2ff'], 'vhs', { text: '#fdf2f8', nameStyle: 'glitch', radius: 10 }),
+  look('matrix', 'Matrix', 'green code', ['#010a04', '#032211', '#22c55e', '#86efac'], 'code', { text: '#d9ffe6', font: 'martian', radius: 6 }),
+  look('retro', 'Retro', 'a worn VHS tape', ['#0a0a0f', '#1a1626', '#ff4d8d', '#4dd2ff'], 'vhs', { text: '#fdf2f8', radius: 10 }),
   look('party', 'Party', 'confetti', ['#0b0716', '#1f1245', '#f472b6', '#60a5fa'], 'confetti', { text: '#fdf4ff' }),
   look('paper', 'Paper', 'light and plain', ['#f4f1ea', '#e2ddd0', '#1a1a1a', '#6b6b6b'], 'none', { text: '#161616', buttons: 'solid', nameStyle: 'solid', opacity: 70, vignette: 0 }),
 ]
@@ -423,6 +423,48 @@ export function hueRamp(a: string, b: string, n: number): string[] {
 }
 const text = (v: unknown, max: number) => (typeof v === 'string' ? v.replace(/[\u0000-\u0008\u000b-\u001f\u007f<>]/g, '').replace(/[ \t]+/g, ' ').trim().slice(0, max) : '')
 const uploadId = (v: unknown) => (typeof v === 'string' && COLOR_LIKE.test(v) ? v : '')
+
+/* ---- your own files: an upload, or a link to a file kept somewhere else (any size, since the browser fetches it from there) */
+export type MediaKind = 'image' | 'video' | 'audio'
+const MEDIA_EXT: Record<MediaKind, readonly string[]> = {
+  image: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'],
+  video: ['mp4', 'webm', 'mov', 'm4v'],
+  audio: ['mp3', 'm4a', 'ogg', 'oga', 'opus', 'wav', 'aac', 'flac', 'weba'],
+}
+export const isMediaUrl = (v: string) => /^https:\/\//i.test(v)
+/** What a link points at, from the end of its address (null if it is not a file we play). */
+export function mediaKindOf(url: string): MediaKind | null {
+  try {
+    const ext = new URL(url).pathname.split('.').pop()?.toLowerCase() ?? ''
+    return (['image', 'video', 'audio'] as const).find((k) => MEDIA_EXT[k].includes(ext)) ?? null
+  } catch {
+    return null
+  }
+}
+/** A link to a picture, GIF, video or sound, cleaned: https only, no sign-in in it, no private address, and the file type has to be one of `kinds`. Empty if not. */
+export function cleanMediaUrl(raw: unknown, kinds: readonly MediaKind[]): string {
+  if (typeof raw !== 'string') return ''
+  const t = raw.trim()
+  if (!t || t.length > 600 || /[\u0000-\u001f\u007f\s]/.test(t)) return ''
+  const withScheme = /^https?:\/\//i.test(t) ? t : /^[^\s/]+\.[a-z]{2,}\//i.test(t) ? `https://${t}` : ''
+  if (!withScheme) return ''
+  try {
+    const u = new URL(withScheme)
+    if (u.protocol !== 'https:' || u.username || u.password) return ''
+    const h = u.hostname.toLowerCase()
+    if (!h.includes('.') || h === 'localhost' || h.endsWith('.local') || h.endsWith('.internal') || /^\d{1,3}(\.\d{1,3}){3}$/.test(h) || h.includes(':')) return ''
+    const k = mediaKindOf(u.toString())
+    return k && kinds.includes(k) ? u.toString() : ''
+  } catch {
+    return ''
+  }
+}
+/** An upload id or a link to a file. */
+const mediaRef = (v: unknown, kinds: readonly MediaKind[]) => uploadId(v) || cleanMediaUrl(v, kinds)
+/** Where a picture or video is fetched from: our own copy, or the link. */
+export const imgSrc = (ref: string) => (isMediaUrl(ref) ? ref : `/api/img/${ref}`)
+/** Where a sound is fetched from. */
+export const audioSrc = (ref: string) => (isMediaUrl(ref) ? ref : `/api/audio/${ref}`)
 const giphyId = (v: unknown) => (typeof v === 'string' && /^[A-Za-z0-9]{4,40}$/.test(v) ? v : '')
 const blockId = (v: unknown) => (typeof v === 'string' && /^[a-z0-9]{4,16}$/.test(v) ? v : newId())
 export const FONT_IDS_BIO = ['quicksand', 'jelly', 'anubis', 'geist', 'mono', 'serif', 'condensed', 'grotesk', 'bricolage', 'funnel', 'special', 'syne', 'unbounded', 'young', 'gloock', 'newsreader', 'martian', 'modern', 'tempo', 'bit8', 'script', 'hand'] as const
@@ -527,6 +569,7 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
       float: bool(a.float ?? d.avatar.float, true),
       gray: bool(a.gray ?? d.avatar.gray, true),
       size: int(a.size ?? d.avatar.size, 100, 60, 180),
+      url: a.url === undefined ? d.avatar.url : cleanMediaUrl(a.url, ['image']),
     },
     bg: {
       // the old moving backgrounds are gone: a page that had one keeps its colours as a still gradient
@@ -535,9 +578,9 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
       tone2: int(b.tone2 ?? d.bg.tone2, 22, 0, 100),
       angle: int(b.angle ?? d.bg.angle, 160, 0, 360),
       gradient: movedOn(b.kind) ? 'radial' : pick(b.gradient ?? d.bg.gradient, GRADIENT_STYLES.map((x) => x.id), 'radial'),
-      image: b.image === undefined ? d.bg.image : uploadId(b.image),
+      image: b.image === undefined ? d.bg.image : mediaRef(b.image, ['image']),
       gif: b.gif === undefined ? d.bg.gif : giphyId(b.gif),
-      video: b.video === undefined ? d.bg.video : uploadId(b.video),
+      video: b.video === undefined ? d.bg.video : mediaRef(b.video, ['video']),
       blur: int(b.blur ?? d.bg.blur, 0, 0, 40),
       dim: int(b.dim ?? d.bg.dim, 30, 0, 90),
       noise: int(b.noise ?? d.bg.noise, 12, 0, 100),
@@ -556,10 +599,10 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
       opacity: int(cd.opacity ?? d.card.opacity, 40, 0, 100),
       glare: bool(cd.glare ?? d.card.glare, true),
       width: int(cd.width ?? d.card.width, 440, 300, 640),
-      banner: cd.banner === undefined ? d.card.banner : uploadId(cd.banner),
+      banner: cd.banner === undefined ? d.card.banner : mediaRef(cd.banner, ['image', 'video']),
     },
     audio: {
-      id: au.id === undefined ? d.audio.id : uploadId(au.id),
+      id: au.id === undefined ? d.audio.id : mediaRef(au.id, ['audio']),
       title: au.title === undefined ? d.audio.title : text(au.title, 60),
       volume: int(au.volume ?? d.audio.volume, 60, 0, 100),
       loop: bool(au.loop ?? d.audio.loop, true),
@@ -570,7 +613,7 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
       preset: typeof (c.preset ?? d.cursor.preset) === 'string' && /^[a-z0-9]{2,16}$/.test(String(c.preset ?? d.cursor.preset)) ? String(c.preset ?? d.cursor.preset) : 'arrow',
       ink: pick(c.ink ?? d.cursor.ink, ['white', 'black'], 'white'),
       size: int(c.size ?? d.cursor.size, 32, 20, 64),
-      image: c.image === undefined ? d.cursor.image : uploadId(c.image),
+      image: c.image === undefined ? d.cursor.image : mediaRef(c.image, ['image']),
       hot: pick(c.hot ?? d.cursor.hot, ['tl', 'center'], 'tl'),
       trail: pick(c.trail ?? d.cursor.trail, CURSOR_TRAILS.map((x) => x.id), 'none'),
     },

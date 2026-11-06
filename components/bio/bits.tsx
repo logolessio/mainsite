@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
-import { ArrowUpRight, Globe, Link2, Mail } from 'lucide-react'
+import { ArrowUpRight, FileDown, Globe, Link2, Mail } from 'lucide-react'
 import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
 import { type BioBlock, embedFor, linkLabel, platformOf } from '@/lib/bio'
@@ -15,8 +15,9 @@ import { type EditPart, useBio } from './context'
 const BRANDS = new Set(['android', 'apple', 'applemusic', 'artstation', 'audiomack', 'bandcamp', 'beatport', 'behance', 'bluesky', 'buymeacoffee', 'deezer', 'discord', 'dribbble', 'epicgames', 'facebook', 'github', 'google', 'instagram', 'kick', 'kofi', 'linktree', 'medium', 'patreon', 'paypal', 'pinterest', 'playstation', 'reddit', 'roblox', 'snapchat', 'soundcloud', 'spotify', 'steam', 'substack', 'telegram', 'threads', 'tidal', 'tiktok', 'tumblr', 'twitch', 'vimeo', 'whatsapp', 'x', 'youtube', 'youtubemusic', 'youtubeshorts', 'calendly', 'cashapp', 'etsy', 'figma', 'flickr', 'genius', 'gumroad', 'lastfm', 'linkedin', 'mastodon', 'notion', 'shopify', 'signal', 'venmo', 'vsco'])
 
 export function BlockIcon({ block, className }: { block: Extract<BioBlock, { t: 'link' | 'social' }>; className?: string }) {
-  const id = block.t === 'social' ? block.platform : block.icon !== 'auto' ? block.icon : platformOf(block.url)
+  const id = block.t === 'social' ? block.platform : block.icon !== 'auto' ? block.icon : /^https:\/\/buzzheavier\.com\//i.test(block.url) ? 'file' : platformOf(block.url)
   if (id === 'mail') return <Mail aria-hidden="true" className={cn('size-[1.1rem]', className)} strokeWidth={1.6} />
+  if (id === 'file') return <FileDown aria-hidden="true" className={cn('size-[1.1rem]', className)} strokeWidth={1.6} />
   if (id === 'website') return <Globe aria-hidden="true" className={cn('size-[1.1rem]', className)} strokeWidth={1.6} />
   if (id && BRANDS.has(id)) return <BrandIcon name={id} className={cn('size-[1.1rem]', className)} />
   return <Link2 aria-hidden="true" className={cn('size-[1.1rem]', className)} strokeWidth={1.6} />
@@ -85,9 +86,9 @@ export function Avatar({ size, className }: { size?: number; className?: string 
           </>
         )}
         <div className="ba" data-shape={cfg.avatar.shape} data-ring={cfg.avatar.ring ? 1 : 0} data-gray={cfg.avatar.gray ? 1 : 0} style={{ width: px, height: cfg.avatar.shape === 'arch' ? Math.round(px * 1.25) : px }}>
-          {data.avatar ? (
+          {cfg.avatar.url || data.avatar ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={data.avatar} alt={data.name} width={px} height={px} draggable={false} referrerPolicy="no-referrer" />
+            <img src={cfg.avatar.url || data.avatar || ''} alt={data.name} width={px} height={px} draggable={false} referrerPolicy="no-referrer" />
           ) : (
             <span className="grid size-full place-items-center text-[2.2rem] font-medium">{data.name.slice(0, 1).toUpperCase()}</span>
           )}

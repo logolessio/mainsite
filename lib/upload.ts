@@ -3,6 +3,8 @@ import { HttpError } from './http'
 import { bioUploadIds } from './bio-store'
 
 export const MAX_IMAGE_BYTES = 450 * 1024
+/** An animated GIF is kept as it is (re-encoding would flatten it), so it has its own, larger limit. */
+export const MAX_GIF_BYTES = 1300 * 1024
 // Banners may be taller than 16 by 9 (up to square), and the profile grows to fit them.
 export const IMAGE_LIMITS = { avatar: { w: 512, h: 512 }, banner: { w: 1600, h: 1600 }, cover: { w: 900, h: 900 }, background: { w: 1920, h: 1920 }, cursor: { w: 128, h: 128 } } as const
 /** How many of each kind are kept. Banners keep more, so recent ones can be put back with one click. */
@@ -13,6 +15,7 @@ export type ImageKind = keyof typeof IMAGE_LIMITS
 
 /** Reads width/height from the file header itself, so we never trust what the browser says. */
 function dimensions(b: Uint8Array, mime: string): { w: number; h: number } | null {
+  if (mime === 'image/gif' && b.length > 10) return { w: b[6] | (b[7] << 8), h: b[8] | (b[9] << 8) }
   if (mime === 'image/png' && b.length > 24) {
     const v = new DataView(b.buffer, b.byteOffset)
     return { w: v.getUint32(16), h: v.getUint32(20) }
@@ -40,7 +43,8 @@ function dimensions(b: Uint8Array, mime: string): { w: number; h: number } | nul
   return null
 }
 
-function sniff(b: Uint8Array): 'image/png' | 'image/jpeg' | 'image/webp' | null {
+function sniff(b: Uint8Array): 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif' | null {
+  if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x38 && (b[4] === 0x37 || b[4] === 0x39) && b[5] === 0x61) return 'image/gif'
   if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return 'image/png'
   if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'image/jpeg'
   if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50) return 'image/webp'
@@ -58,9 +62,9 @@ const toBase64 = (b: Uint8Array) => {
  * pictures fetched from Discord. SVG is refused on purpose because it can carry scripts.
  */
 export async function storeImage(userId: string, kind: ImageKind, bytes: Uint8Array) {
-  if (bytes.length > MAX_IMAGE_BYTES) throw new HttpError(413, 'that image is too big. pick a smaller one.')
   const mime = sniff(bytes)
-  if (!mime) throw new HttpError(400, 'Only JPEG, PNG and WebP images are allowed.')
+  if (!mime) throw new HttpError(400, 'Only JPEG, PNG, WebP and GIF images are allowed.')
+  if (bytes.length > (mime === 'image/gif' ? MAX_GIF_BYTES : MAX_IMAGE_BYTES)) throw new HttpError(413, mime === 'image/gif' ? 'that GIF is over 1.3 MB. make it smaller, or paste a link to it.' : 'that image is too big. pick a smaller one.')
   const dim = dimensions(bytes, mime)
   const lim = IMAGE_LIMITS[kind]
   if (!dim || dim.w < 32 || dim.h < 32 || dim.w > lim.w * 1.05 || dim.h > lim.h * 1.05) throw new HttpError(400, 'That image has unsupported dimensions.')

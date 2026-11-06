@@ -6,13 +6,14 @@ import { useEffect, useRef, useState } from 'react'
 import { handleChars, handleHint } from '@/lib/profile-style'
 import { uploadImage } from '@/lib/image-client'
 import { cn } from '@/lib/utils'
+import { MediaField } from './media-field'
 import type { EditorApi } from './types'
 import { Area, Btn, Group, Input, Row, Switch } from './ui'
 
 type Avail = null | 'checking' | { ok: boolean; message?: string }
 
 export function ProfilePanel({ api }: { api: EditorApi }) {
-  const { profile, setProfile, toast } = api
+  const { profile, setProfile, toast, cfg, up } = api
   const file = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [avail, setAvail] = useState<Avail>(null)
@@ -44,10 +45,10 @@ export function ProfilePanel({ api }: { api: EditorApi }) {
     }
     setBusy(false)
   }
-  const shown = profile.newAvatar ? `/api/img/${profile.newAvatar}` : profile.hasAvatar ? profile.avatar : null
+  const shown = cfg.avatar.url || (profile.newAvatar ? `/api/img/${profile.newAvatar}` : profile.hasAvatar ? profile.avatar : null)
   return (
     <div>
-      <Group title="Picture">
+      <Group title="Picture" hint="A picture or an animated GIF. Uploads are kept small; for a bigger file, paste a link to it.">
         <input ref={file} type="file" accept="image/*" hidden onChange={(e) => void upload(e.target.files?.[0])} />
         <div className="flex items-center gap-4">
           <span className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-full border border-[var(--ed-line2)] bg-white/[0.05] text-xl">
@@ -63,12 +64,19 @@ export function ProfilePanel({ api }: { api: EditorApi }) {
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />} Upload
             </Btn>
             {shown && (
-              <Btn variant="quiet" onClick={() => setProfile({ newAvatar: null, hasAvatar: false, avatar: null })}>
+              <Btn
+                variant="quiet"
+                onClick={() => {
+                  setProfile({ newAvatar: null, hasAvatar: false, avatar: null })
+                  up('avatar', { url: '' })
+                }}
+              >
                 Remove
               </Btn>
             )}
           </div>
         </div>
+        <MediaField value={cfg.avatar.url} kinds={['image']} round onChange={(v) => up('avatar', { url: v })} toast={toast} />
       </Group>
       <Group title="You">
         <Row label="Name">

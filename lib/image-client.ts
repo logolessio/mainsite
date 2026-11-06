@@ -26,11 +26,26 @@ export async function prepareImage(file: File, w: number, h: number): Promise<st
   throw new Error('That picture is too detailed to shrink enough. Try a simpler one.')
 }
 
+/** An animated GIF is sent as it is (a canvas would keep only its first frame), so it must already be small. */
+export async function prepareGif(file: File, maxSide: number): Promise<string> {
+  if (file.size > 1300 * 1024) throw new Error('That GIF is over 1.3 MB. Make it smaller, or host it anywhere and paste a link to it.')
+  const bmp = await createImageBitmap(file).catch(() => {
+    throw new Error('That file is not a GIF we can read.')
+  })
+  const side = Math.max(bmp.width, bmp.height)
+  bmp.close()
+  if (side > maxSide) throw new Error(`That GIF is ${side} px wide or tall; the most is ${maxSide}. Shrink it, or paste a link to it.`)
+  const buf = new Uint8Array(await file.arrayBuffer())
+  let bin = ''
+  for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000))
+  return btoa(bin)
+}
+
 export type UploadKind = 'avatar' | 'banner' | 'cover' | 'background' | 'cursor'
 const SIZES: Record<UploadKind, [number, number]> = { avatar: [512, 512], banner: [1600, 900], cover: [900, 900], background: [1600, 900], cursor: [64, 64] }
 
 export async function uploadImage(kind: UploadKind, file: File): Promise<string> {
-  const data = await prepareImage(file, ...SIZES[kind])
+  const data = file.type === 'image/gif' && kind !== 'cursor' ? await prepareGif(file, SIZES[kind][0]) : await prepareImage(file, ...SIZES[kind])
   const res = await fetch('/api/me/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind, data }) })
   const j = (await res.json().catch(() => ({}))) as { id?: string; error?: string }
   if (!res.ok || !j.id) throw new Error(j.error ?? 'Upload failed.')
@@ -56,6 +71,7 @@ export async function uploadBanner(file: File): Promise<{ id: string; aspect: nu
 
 /** A full-page background picture: up to 1920 on its longest side, its shape kept. */
 export async function uploadBackground(file: File): Promise<string> {
+  if (file.type === 'image/gif') return send('background', await prepareGif(file, 1920))
   const bmp = await createImageBitmap(file).catch(() => {
     throw new Error('That file is not a picture we can read.')
   })
@@ -126,4 +142,45 @@ export async function uploadCursor(file: File): Promise<string> {
   } finally {
     URL.revokeObjectURL(url)
   }
+}
+
+/* ---- files hosted for a link (see lib/buzzheavier.ts) */
+
+export type HostStatus = { enabled: boolean; maxBytes: number; quotaBytes: number; maxFiles: number; files: number; bytes: number }
+export type HostedFile = { id: string; url: string; name: string; size: number }
+
+export async function hostStatus(): Promise<HostStatus | null> {
+  try {
+    const r = await fetch('/api/me/host', { cache: 'no-store' })
+    return r.ok ? ((await r.json()) as HostStatus) : null
+  } catch {
+    return null
+  }
+}
+
+/** Sends a file as it is (no re-encoding, no wrapping) and reports how far it has got, 0 to 1. */
+export function hostFile(file: File, onProgress?: (done: number) => void): Promise<HostedFile> {
+  return new Promise((resolve, reject) => {
+    const x = new XMLHttpRequest()
+    x.open('PUT', `/api/me/host?name=${encodeURIComponent(file.name)}`)
+    x.setRequestHeader('content-type', file.type || 'application/octet-stream')
+    x.upload.onprogress = (e) => e.lengthComputable && onProgress?.(e.loaded / e.total)
+    x.onload = () => {
+      let j: (HostedFile & { error?: string }) | null = null
+      try {
+        j = JSON.parse(x.responseText)
+      } catch {
+        /* not JSON */
+      }
+      if (x.status >= 200 && x.status < 300 && j?.url) resolve(j)
+      else reject(new Error(j?.error ?? 'The upload did not go through. Try again.'))
+    }
+    x.onerror = () => reject(new Error('The upload was interrupted. Try again.'))
+    x.send(file)
+  })
+}
+
+export async function removeHosted(id: string): Promise<void> {
+  const r = await fetch(`/api/me/host?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+  if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { error?: string }).error ?? "couldn't remove that file.")
 }

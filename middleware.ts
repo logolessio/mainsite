@@ -13,4 +13,4 @@ export function middleware(req: NextRequest) {
 }
 
 // Paths with a dot are files and are skipped, except a person's page, whose name may contain dots (logoless.io/luna.ray: any one-segment path is let through).
-export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)', '/:handle'] }
+export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico|api/me/host|.*\\..*).*)', '/:handle'] }

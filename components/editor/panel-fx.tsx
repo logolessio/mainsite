@@ -1,14 +1,13 @@
 'use client'
 
-import { Music2, Trash2, Upload } from 'lucide-react'
-import { useRef, useState } from 'react'
-import { CURSOR_TRAILS, ENTER_SCREENS, OVERLAYS, REVEALS } from '@/lib/bio'
+import { CURSOR_TRAILS, ENTER_SCREENS, OVERLAYS, REVEALS, isMediaUrl } from '@/lib/bio'
 import { CURSORS, cursorSvg } from '@/lib/bio-cursors'
 import { uploadAudio, uploadCursor } from '@/lib/image-client'
 import { cn } from '@/lib/utils'
 import { EffectTile } from './look-tile'
+import { MediaField } from './media-field'
 import type { EditorApi } from './types'
-import { Btn, Group, Input, Row, Seg, Slider, Switch } from './ui'
+import { Group, Input, Row, Seg, Slider, Switch } from './ui'
 
 const svgUrl = (id: string, ink: 'white' | 'black', which: 'arrow' | 'link') => {
   const p = CURSORS.find((c) => c.id === id)!
@@ -18,18 +17,6 @@ const svgUrl = (id: string, ink: 'white' | 'black', which: 'arrow' | 'link') => 
 export function CursorPanel({ api }: { api: EditorApi }) {
   const { cfg, up, toast } = api
   const c = cfg.cursor
-  const file = useRef<HTMLInputElement>(null)
-  const [busy, setBusy] = useState(false)
-  const upload = async (f: File | undefined) => {
-    if (!f) return
-    setBusy(true)
-    try {
-      up('cursor', { image: await uploadCursor(f), kind: 'upload' })
-    } catch (e) {
-      toast(e instanceof Error ? e.message : "couldn't upload that. try again.")
-    }
-    setBusy(false)
-  }
   return (
     <div>
       <Group title="Cursor" hint="What the pointer looks like on your page. Move over the preview to try it.">
@@ -57,25 +44,10 @@ export function CursorPanel({ api }: { api: EditorApi }) {
         )}
         {c.kind === 'upload' && (
           <div className="space-y-3">
-            <input ref={file} type="file" accept="image/png,image/webp,image/jpeg,image/svg+xml,image/gif" hidden onChange={(e) => void upload(e.target.files?.[0])} />
-            <div className="flex items-center gap-3">
-              {c.image && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={`/api/img/${c.image}`} alt="Your cursor" width={44} height={44} className="rounded-lg border border-[var(--ed-line)] bg-[#161616] p-1" />
-              )}
-              <Btn onClick={() => file.current?.click()} disabled={busy}>
-                <Upload className="size-4" /> {c.image ? 'Change it' : 'Upload a picture or SVG'}
-              </Btn>
-              {c.image && (
-                <Btn variant="quiet" onClick={() => up('cursor', { image: '', kind: 'default' })}>
-                  <Trash2 className="size-4" />
-                </Btn>
-              )}
-            </div>
+            <MediaField value={c.image} kinds={['image']} accept="image/png,image/webp,image/jpeg,image/svg+xml,image/gif" uploadLabel="Upload a picture or SVG" upload={uploadCursor} onChange={(v) => up('cursor', { image: v, kind: v ? 'upload' : 'default' })} toast={toast} hint="Any picture works. Browsers draw a cursor at up to 128 px, so use a small one with a transparent background." />
             <Row label="The point of it is the">
               <Seg value={c.hot} options={[{ id: 'tl', name: 'Top left' }, { id: 'center', name: 'Centre' }]} onChange={(v) => up('cursor', { hot: v })} />
             </Row>
-            <p className="text-[0.74rem] text-[var(--ed-mute)]">any picture works. it's drawn at 64 px, so use a transparent background.</p>
           </div>
         )}
       </Group>
@@ -96,18 +68,6 @@ export function EffectsPanel({ api }: { api: EditorApi }) {
   const { cfg, up, toast } = api
   const fx = cfg.fx
   const au = cfg.audio
-  const file = useRef<HTMLInputElement>(null)
-  const [busy, setBusy] = useState(false)
-  const pick = async (f: File | undefined) => {
-    if (!f) return
-    setBusy(true)
-    try {
-      up('audio', { id: await uploadAudio(f), title: au.title || f.name.replace(/\.[^.]+$/, '').slice(0, 60) })
-    } catch (e) {
-      toast(e instanceof Error ? e.message : "couldn't upload that. try again.")
-    }
-    setBusy(false)
-  }
   return (
     <div>
       <Group title="Effects" hint="Snow, embers, smoke and more, playing over your background. Pick one, then set how much and how fast.">
@@ -127,18 +87,21 @@ export function EffectsPanel({ api }: { api: EditorApi }) {
           </>
         )}
       </Group>
-      <Group title="Music" hint="plays when someone enters. keep it short: up to 1 MB, about a minute of mp3.">
-        <input ref={file} type="file" accept="audio/mpeg,audio/mp4,audio/ogg,audio/wav,.mp3,.m4a,.ogg,.wav" hidden onChange={(e) => void pick(e.target.files?.[0])} />
-        <div className="flex items-center gap-3">
-          <Btn onClick={() => file.current?.click()} disabled={busy}>
-            <Music2 className="size-4" /> {au.id ? 'Change the music' : 'Upload music'}
-          </Btn>
-          {au.id && (
-            <Btn variant="quiet" onClick={() => up('audio', { id: '', title: '' })}>
-              <Trash2 className="size-4" />
-            </Btn>
-          )}
-        </div>
+      <Group title="Music" hint="Plays when someone enters the page. Upload a short file, or paste a link to a whole song.">
+        <MediaField
+          value={au.id}
+          kinds={['audio']}
+          accept="audio/mpeg,audio/mp4,audio/ogg,audio/wav,.mp3,.m4a,.ogg,.wav"
+          uploadLabel="Upload music"
+          upload={async (f) => {
+            const id = await uploadAudio(f)
+            up('audio', { title: au.title || f.name.replace(/\.[^.]+$/, '').slice(0, 60) })
+            return id
+          }}
+          onChange={(v) => up('audio', { id: v, ...(v ? {} : { title: '' }) })}
+          toast={toast}
+          hint="Uploads are kept to 1 MB, about a minute of MP3. For a full song, host it anywhere and paste the link."
+        />
         {au.id && (
           <>
             <Input value={au.title} placeholder="What it is called" maxLength={60} onChange={(e) => up('audio', { title: e.target.value })} />
@@ -146,7 +109,7 @@ export function EffectsPanel({ api }: { api: EditorApi }) {
               <Slider label="Volume" value={au.volume} onChange={(v) => up('audio', { volume: v })} />
             </Row>
             <Switch checked={au.loop} onChange={(v) => up('audio', { loop: v })} label="Loop" />
-            <Switch checked={au.reactive} onChange={(v) => up('audio', { reactive: v })} label="The page reacts to it" hint="The background and your picture pulse with the sound." />
+            {!isMediaUrl(au.id) && <Switch checked={au.reactive} onChange={(v) => up('audio', { reactive: v })} label="The page reacts to it" hint="Your picture pulses with the sound." />}
           </>
         )}
       </Group>

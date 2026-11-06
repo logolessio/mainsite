@@ -2,7 +2,7 @@
 
 import '@/components/editor/editor.css'
 import { AnimatePresence, motion, useMotionValue, useSpring } from 'framer-motion'
-import { ArrowRight, AtSign, BarChart3, Check, Layers, Loader2, MousePointer2, Music2, Plus, Share2, SlidersHorizontal, Sparkles, X } from 'lucide-react'
+import { ArrowRight, Check, Loader2, Plus, X } from 'lucide-react'
 import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react'
 import { BioPage } from '@/components/bio/bio-page'
 import { Glow, LOVABLE_GLOW } from '@/components/bio/glow'
@@ -141,7 +141,7 @@ function Nav() {
           logoless
         </a>
         <nav aria-label="Page" className="hidden items-center gap-1 text-[0.8rem] text-white/60 md:flex">
-          {[['Features', '#features'], ['Try it', '#try'], ['How it works', '#how'], ['Questions', '#faq']].map(([n, h]) => (
+          {[['What you get', '#features'], ['Try it', '#try'], ['Questions', '#faq']].map(([n, h]) => (
             <a key={h} href={h} className="rounded-full px-4 py-2 transition-colors hover:bg-white/[0.07] hover:text-white">
               {n}
             </a>
@@ -198,61 +198,32 @@ function Hero() {
   )
 }
 
-/* ------------------------------------------------------------------ the facts, in one strip */
+/* ------------------------------------------------------------------ what you get, as plain rows */
 
-const STATS = [
-  ['4', 'Layouts'],
-  ['19', 'Effects'],
-  ['13', 'Cursors'],
-  ['Free', 'Nothing locked'],
+const PLAIN = [
+  ['Your page', 'logoless.io/you, from one character up. Links, socials, videos and a song on one page.'],
+  ['Your own files', 'Your picture, banner, background, GIF, video, cursor and song. Too big to upload? Paste a link to it instead.'],
+  ['The card', 'It floats over your background and turns towards the pointer, with your picture, name and icons standing off it.'],
+  ['Effects', 'Snow, rain, embers, smoke, petals, a storm and thirteen more, playing over the background.'],
+  ['Layouts', 'Classic, a profile card, side by side, or a blank canvas where you drag everything where you want it.'],
+  ['Numbers', 'Views, clicks and which link people press, for the last 30 days.'],
+  ['Price', 'Free. Nothing in the editor is locked.'],
 ] as const
 
-function Stats() {
-  return (
-    <section className="px-5 py-10">
-      <Reveal className="mx-auto grid max-w-[64rem] grid-cols-2 overflow-hidden rounded-[28px] border border-white/8 bg-[#0d0d0d] shadow-[var(--ed-lift)] md:grid-cols-4">
-        {STATS.map(([v, l], i) => (
-          <div key={l} className={cn('border-white/8 px-6 py-8 text-center transition-colors hover:bg-white/[0.03]', i % 2 === 1 && 'border-l', i > 1 && 'border-t md:border-t-0', i > 0 && 'md:border-l')}>
-            <p className="disp text-[2.4rem]">{v}</p>
-            <p className="mt-1 text-[0.78rem] text-white/50">{l}</p>
-          </div>
-        ))}
-      </Reveal>
-    </section>
-  )
-}
-
-/* ------------------------------------------------------------------ what you get */
-
-const FEATURES = [
-  { icon: Layers, t: 'A card in 3D', d: 'Your page floats on a card that turns towards the pointer, with your picture and name standing off it.' },
-  { icon: Sparkles, t: 'Effects', d: 'Snow, embers, smoke, rain, petals and thirteen more, floating over any background.' },
-  { icon: MousePointer2, t: 'Your own cursor', d: 'Choose one of ours or upload a picture or SVG. It changes over your links.' },
-  { icon: Music2, t: 'Music and video', d: 'Add a song, loop a video behind the page, or play your edits right on it.' },
-  { icon: BarChart3, t: 'Analytics', d: 'See views, clicks and which link people press, over the last 30 days.' },
-  { icon: AtSign, t: 'Your own address', d: 'Claim logoless.io/you, from one character up. Dots and dashes work too.' },
-] as const
-
-function Features() {
+function Plain() {
   return (
     <section id="features" className="scroll-mt-24 px-5 py-20">
-      <Reveal className="mx-auto max-w-[64rem] text-center">
-        <h2 className={H2}>Everything on one page</h2>
-        <p className={SUB}>No website to build and nothing to host. Add what you make and it looks finished.</p>
-      </Reveal>
-      <div className="mx-auto mt-12 grid max-w-[64rem] gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {FEATURES.map((f, i) => (
-          <Reveal key={f.t} delay={(i % 3) * 0.08}>
-            <div className="lift h-full rounded-[28px] border border-white/8 bg-[#0d0d0d] p-7 shadow-[var(--ed-lift)]">
-              <span className="grid size-11 place-items-center rounded-2xl border border-white/10 bg-white/[0.04]">
-                <f.icon className="size-[1.1rem] text-white/85" strokeWidth={1.6} />
-              </span>
-              <h3 className="mt-6 text-[1rem] font-medium">{f.t}</h3>
-              <p className="mt-2 text-[0.84rem] leading-[1.7] text-white/55">{f.d}</p>
+      <Reveal className="mx-auto max-w-[44rem]">
+        <h2 className={cn(H2, 'text-left')}>What you get</h2>
+        <dl className="mt-10 divide-y divide-white/10 border-y border-white/10 text-left">
+          {PLAIN.map(([t, d]) => (
+            <div key={t} className="grid gap-1 py-5 md:grid-cols-[10rem_1fr] md:gap-8">
+              <dt className="text-[0.9rem] text-white">{t}</dt>
+              <dd className="text-[0.86rem] leading-[1.8] text-white/55">{d}</dd>
             </div>
-          </Reveal>
-        ))}
-      </div>
+          ))}
+        </dl>
+      </Reveal>
     </section>
   )
 }
@@ -389,36 +360,6 @@ function TryIt() {
 
 /* ------------------------------------------------------------------ how it works */
 
-const HOW = [
-  { icon: AtSign, t: 'Pick your name', d: 'Sign in with Google, Discord or email and take the name you want. One letter is fine.' },
-  { icon: SlidersHorizontal, t: 'Build your page', d: 'Add links, socials, videos and a song, then choose a layout, an effect and a cursor.' },
-  { icon: Share2, t: 'Share one link', d: 'Paste logoless.io/yourname into your Instagram, TikTok, YouTube or Discord bio.' },
-] as const
-
-function How() {
-  return (
-    <section id="how" className="scroll-mt-24 px-5 py-20">
-      <Reveal className="mx-auto max-w-[64rem] text-center">
-        <h2 className={H2}>Set up in a minute</h2>
-        <p className={SUB}>Three steps, and you can change every part of it later.</p>
-      </Reveal>
-      <div className="mx-auto mt-12 grid max-w-[64rem] gap-4 md:grid-cols-3">
-        {HOW.map((h, i) => (
-          <Reveal key={h.t} delay={i * 0.1}>
-            <div className="lift h-full rounded-[28px] border border-white/8 bg-[#0d0d0d] p-7 text-left shadow-[var(--ed-lift)]">
-              <span className="grid size-11 place-items-center rounded-full border border-white/10 bg-white/[0.04]">
-                <h.icon className="size-[1.1rem] text-white/85" strokeWidth={1.6} />
-              </span>
-              <h3 className="mt-6 text-[1rem] font-medium">{h.t}</h3>
-              <p className="mt-2 text-[0.84rem] leading-[1.7] text-white/55">{h.d}</p>
-            </div>
-          </Reveal>
-        ))}
-      </div>
-    </section>
-  )
-}
-
 /* ------------------------------------------------------------------ questions */
 
 const TALK = [
@@ -479,7 +420,7 @@ function Cta() {
 
 function Footer() {
   const cols: [string, [string, string][]][] = [
-    ['Product', [['Features', '#features'], ['Try it', '#try'], ['How it works', '#how'], ['Questions', '#faq']]],
+    ['Product', [['What you get', '#features'], ['Try it', '#try'], ['Questions', '#faq']]],
     ['Account', [['Log in', '/login'], ['Sign up free', '/signup']]],
     ['Legal', [['Terms', '/legal/terms'], ['Privacy', '/legal/privacy'], ['All policies', '/legal']]],
   ]
@@ -516,10 +457,8 @@ export function Home() {
       <Nav />
       <main>
         <Hero />
-        <Stats />
-        <Features />
+        <Plain />
         <TryIt />
-        <How />
         <Faq />
         <Cta />
       </main>

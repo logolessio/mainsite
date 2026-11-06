@@ -1572,7 +1572,7 @@ export function CardEffectLayer({
     let rebuildTimer = 0
     const timers = new Set<number>()
 
-    const dprFor = () => Math.min(page ? 1.25 : 2, window.devicePixelRatio || 1)
+    const dprFor = () => Math.min(page ? 1 : 1.5, window.devicePixelRatio || 1)
     const box = () => {
       const r = host.getBoundingClientRect()
       return { w: Math.max(1, r.width), h: Math.max(1, r.height) }
@@ -1637,11 +1637,17 @@ export function CardEffectLayer({
     }
 
     const running = () => !reduced && onScreen && !document.hidden
+    // particles do not need the screen's full rate: about 36 frames a second over a whole page, 50 on a card
+    const gap = page ? 27 : 19
     const frame = (now: number) => {
       raf = 0
+      if (!running()) return
+      if (now - last < gap) {
+        raf = requestAnimationFrame(frame)
+        return
+      }
       const dt = Math.min(0.05, (now - last) / 1000)
       last = now
-      if (!running()) return
       const cur = layers[layers.length - 1]
       if (cur && Math.abs(cur.intensity - live.current.intensity) >= 3 && !rebuildTimer) {
         rebuildTimer = window.setTimeout(() => {

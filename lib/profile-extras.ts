@@ -166,7 +166,7 @@ export const giphyStill = (id: string) => `https://media.giphy.com/media/${id}/2
 export const giphyImage = (id: string) => `https://media.giphy.com/media/${id}/giphy.webp`
 export const giphyVideo = (id: string) => `https://media.giphy.com/media/${id}/giphy.mp4`
 /** A background video is either one of our uploads (a uuid) or a GIPHY clip. */
-export const bgVideoSrc = (v: string) => (UPLOAD_ID.test(v) ? `/api/img/${v}` : giphyVideo(v))
+export const bgVideoSrc = (v: string) => (/^https:\/\//i.test(v) ? v : UPLOAD_ID.test(v) ? `/api/img/${v}` : giphyVideo(v))
 
 /** Fine film grain as a CSS background layer. `amount` is 0 to 100. */
 export function noiseLayer(amount: number) {

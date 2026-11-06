@@ -3,6 +3,7 @@
 import { type MotionValue, motion, useTransform } from 'framer-motion'
 import { Pause, Play, Volume2, VolumeX } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { audioSrc, isMediaUrl } from '@/lib/bio'
 import { cn } from '@/lib/utils'
 import { useBio } from './context'
 
@@ -30,7 +31,8 @@ export function MusicPlayer({ level }: { level: MotionValue<number> }) {
     const e = el.current
     if (!e) return
     try {
-      if (a.reactive && !ctx.current && typeof AudioContext !== 'undefined') {
+      // the page can only listen to a file of ours: a file from another address is silenced if it is routed through the analyser
+      if (a.reactive && !isMediaUrl(a.id) && !ctx.current && typeof AudioContext !== 'undefined') {
         const ac = new AudioContext()
         const src = ac.createMediaElementSource(e)
         const an = ac.createAnalyser()
@@ -103,7 +105,7 @@ export function MusicPlayer({ level }: { level: MotionValue<number> }) {
   }
   return (
     <div className="absolute bottom-4 left-4 z-30 flex items-center gap-1.5 rounded-full border border-[var(--bio-line)] bg-[var(--bio-soft)] p-1.5 pr-3 backdrop-blur-xl">
-      <audio ref={el} src={`/api/audio/${a.id}`} loop={a.loop} preload="auto" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
+      <audio ref={el} src={audioSrc(a.id)} loop={a.loop} preload="auto" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} />
       <button type="button" onClick={toggle} aria-label={playing ? 'Pause the music' : 'Play the music'} className="grid size-8 place-items-center rounded-full bg-[var(--bio-fg)] text-[var(--bio-bg)] transition-transform hover:scale-105">
         {playing ? <Pause className="size-3.5" fill="currentColor" /> : <Play className="size-3.5 translate-x-px" fill="currentColor" />}
       </button>

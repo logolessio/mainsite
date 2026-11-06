@@ -1,13 +1,14 @@
 'use client'
 
 import { Check, ImagePlus, Sparkles, Trash2, Video } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { memo, useDeferredValue, useRef, useState } from 'react'
 import { BioPage } from '@/components/bio/bio-page'
 import { fontClass } from '@/components/bio/bits'
 import { GifPicker } from '@/components/profile/gif-picker'
 import { AVATAR_SHAPES, BG_KINDS, BUTTON_STYLES, CARD_STYLES, GRADIENT_STYLES, LAYOUTS, NAME_STYLES, PRESETS, applyPreset, hslHex } from '@/lib/bio'
 import { uploadBackground, uploadBgVideo } from '@/lib/image-client'
 import { cn } from '@/lib/utils'
+import { MediaField } from './media-field'
 import { ArrangePanel } from './panel-arrange'
 import type { EditorApi } from './types'
 import { Btn, ColorField, Group, Row, Seg, Slider, Switch } from './ui'
@@ -36,9 +37,8 @@ const FONTS = [
   ['hand', 'Handwritten'],
 ] as const
 
-/** A small picture of one layout, drawn by the real page. */
-function Thumb({ api, layout }: { api: EditorApi; layout: string }) {
-  const { cfg, profile } = api
+/** A small picture of one layout, drawn by the real page. It stands still, and it is only redrawn once you stop changing things. */
+const Thumb = memo(function Thumb({ cfg, profile, layout }: { cfg: EditorApi['cfg']; profile: EditorApi['profile']; layout: string }) {
   const data = {
     handle: profile.handle,
     name: profile.name || 'Your name',
@@ -49,49 +49,23 @@ function Thumb({ api, layout }: { api: EditorApi; layout: string }) {
   }
   return (
     <div className="pointer-events-none absolute top-0 left-0 origin-top-left" style={{ width: 390, height: 520, transform: 'scale(0.4)' }}>
-      <BioPage mode="mini" data={data} />
+      <BioPage mode="mini" data={data} still />
     </div>
   )
-}
+})
 
 /** The picture across the top of the card in the Card layout. */
 function BannerPicker({ api }: { api: EditorApi }) {
   const { cfg, up, toast } = api
-  const ref = useRef<HTMLInputElement>(null)
-  const [busy, setBusy] = useState(false)
-  const has = Boolean(cfg.card.banner)
-  const pick = async (f: File | undefined) => {
-    if (!f) return
-    setBusy(true)
-    try {
-      up('card', { banner: await uploadBackground(f) })
-    } catch (e) {
-      toast(e instanceof Error ? e.message : "couldn't upload that. try again.")
-    }
-    setBusy(false)
-  }
   return (
-    <div className="flex items-center gap-3">
-      <span className="relative block h-12 w-24 shrink-0 overflow-hidden rounded-xl border border-[var(--ed-line2)] bg-white/[0.05]" style={has ? { background: `center / cover no-repeat url(/api/img/${cfg.card.banner})` } : undefined}>
-        {!has && <span className="absolute inset-0 bg-gradient-to-br from-white/25 to-white/5" />}
-      </span>
-      <div className="flex min-w-0 flex-1 flex-wrap gap-2">
-        <Btn onClick={() => ref.current?.click()} disabled={busy}>
-          <ImagePlus className="size-3.5" /> {has ? 'Change banner' : 'Banner picture'}
-        </Btn>
-        {has && (
-          <Btn variant="quiet" onClick={() => up('card', { banner: '' })}>
-            <Trash2 className="size-3.5" /> Remove
-          </Btn>
-        )}
-      </div>
-      <input ref={ref} type="file" accept="image/*" hidden onChange={(e) => (void pick(e.target.files?.[0]), (e.target.value = ''))} />
-    </div>
+    <MediaField value={cfg.card.banner} kinds={['image', 'video']} accept="image/*" uploadLabel="Banner picture or GIF" upload={uploadBackground} onChange={(v) => up('card', { banner: v })} toast={toast} hint="Goes across the top of the card. Upload a picture or GIF, or paste a link to a picture, GIF or video." />
   )
 }
 
 export function LayoutPanel({ api }: { api: EditorApi }) {
   const { cfg, set, up } = api
+  const slow = useDeferredValue(cfg)
+  const slowProfile = useDeferredValue(api.profile)
   return (
     <div>
       {cfg.layout === 'canvas' && <ArrangePanel api={api} />}
@@ -102,7 +76,7 @@ export function LayoutPanel({ api }: { api: EditorApi }) {
             return (
               <button key={l.id} type="button" onClick={() => set((c) => ({ ...c, layout: l.id }))} aria-pressed={on} className="group text-left">
                 <span className={cn('relative block h-[12.5rem] overflow-hidden rounded-2xl border bg-black transition-[border-color,transform] duration-200 group-hover:-translate-y-0.5', on ? 'border-white' : 'border-[var(--ed-line)] group-hover:border-white/40')}>
-                  <Thumb api={api} layout={l.id} />
+                  <Thumb cfg={slow} profile={slowProfile} layout={l.id} />
                   {on && (
                     <span className="absolute top-2 right-2 grid size-5 place-items-center rounded-full bg-white text-black">
                       <Check className="size-3" strokeWidth={3} />
@@ -250,21 +224,7 @@ export function StylePanel({ api }: { api: EditorApi }) {
 export function BackgroundPanel({ api }: { api: EditorApi }) {
   const { cfg, up, toast } = api
   const bg = cfg.bg
-  const imgRef = useRef<HTMLInputElement>(null)
-  const vidRef = useRef<HTMLInputElement>(null)
-  const [busy, setBusy] = useState(false)
   const media = bg.kind === 'image' || bg.kind === 'gif' || bg.kind === 'video'
-  const pick = async (f: File | undefined, kind: 'image' | 'video') => {
-    if (!f) return
-    setBusy(true)
-    try {
-      if (kind === 'image') up('bg', { image: await uploadBackground(f), kind: 'image' })
-      else up('bg', { video: await uploadBgVideo(f), kind: 'video' })
-    } catch (e) {
-      toast(e instanceof Error ? e.message : "couldn't upload that. try again.")
-    }
-    setBusy(false)
-  }
   return (
     <div>
       <Group title="Background">
@@ -300,43 +260,17 @@ export function BackgroundPanel({ api }: { api: EditorApi }) {
           </>
         )}
         {bg.kind === 'image' && (
-          <div className="flex items-center gap-3">
-            <input ref={imgRef} type="file" accept="image/*" hidden onChange={(e) => void pick(e.target.files?.[0], 'image')} />
-            {bg.image && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={`/api/img/${bg.image}`} alt="" className="size-14 rounded-lg border border-[var(--ed-line)] object-cover" />
-            )}
-            <Btn onClick={() => imgRef.current?.click()} disabled={busy}>
-              <ImagePlus className="size-4" /> {bg.image ? 'Change picture' : 'Upload a picture'}
-            </Btn>
-            {bg.image && (
-              <Btn variant="quiet" onClick={() => up('bg', { image: '' })}>
-                <Trash2 className="size-4" />
-              </Btn>
-            )}
-          </div>
+          <MediaField value={bg.image} kinds={['image']} accept="image/*" uploadLabel="Upload a picture or GIF" upload={uploadBackground} onChange={(v) => up('bg', { image: v, kind: 'image' })} toast={api.toast} hint="Your own picture or an animated GIF. Uploads are kept small; for a bigger file, paste a link to it." />
         )}
         {bg.kind === 'video' && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <input ref={vidRef} type="file" accept="video/mp4,video/webm" hidden onChange={(e) => void pick(e.target.files?.[0], 'video')} />
-              <Btn onClick={() => vidRef.current?.click()} disabled={busy}>
-                <Video className="size-4" /> {bg.video ? 'Change video' : 'Upload a video'}
-              </Btn>
-              {bg.video && (
-                <Btn variant="quiet" onClick={() => up('bg', { video: '' })}>
-                  <Trash2 className="size-4" />
-                </Btn>
-              )}
-            </div>
-            <p className="text-[0.74rem] text-[var(--ed-mute)]">MP4 or WebM under 1.3 MB: a few seconds, small, looping.</p>
-          </div>
+          <MediaField value={bg.video} kinds={['video']} accept="video/mp4,video/webm" uploadLabel="Upload a video" upload={uploadBgVideo} onChange={(v) => up('bg', { video: v, kind: 'video' })} toast={api.toast} hint="Uploads are MP4 or WebM under 1.3 MB: a few seconds, looping. For a longer or bigger video, paste a link to it." />
         )}
         {bg.kind === 'gif' && (
           <div className="max-h-72 overflow-auto rounded-xl border border-[var(--ed-line)] p-2">
             <GifPicker selected={bg.gif} onPick={(g) => up('bg', { gif: g.id, kind: 'gif' })} />
           </div>
         )}
+        {bg.kind === 'gif' && <p className="text-[0.74rem] leading-snug text-[var(--ed-mute)]">Search for one here, or use your own GIF under Picture.</p>}
       </Group>
       <Group title="Finish">
         {media && <Switch checked={bg.mono} onChange={(v) => up('bg', { mono: v })} label="Turn it to grey" hint="Off keeps the colours of your picture or video." />}

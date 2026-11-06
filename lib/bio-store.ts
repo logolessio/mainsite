@@ -1,6 +1,6 @@
 import { db, nowSec } from './db'
 import { HttpError } from './http'
-import { type BioConfig, DEFAULT_BIO, normalizeBio, parseBio, starterBlocks } from './bio'
+import { type BioConfig, DEFAULT_BIO, isMediaUrl, normalizeBio, parseBio, starterBlocks } from './bio'
 
 /**
  * Where the link-in-bio pages are kept. A page is one JSON value in the settings table (`bio:<user id>`), so it needs no migration. The counters are
@@ -25,7 +25,7 @@ export async function bioOrStarter(userId: string): Promise<{ config: BioConfig;
 
 /** Is this upload this person's, and of this kind? */
 async function owns(userId: string, id: string, kinds: string[]) {
-  if (!id) return true
+  if (!id || isMediaUrl(id)) return true // a link to a file kept elsewhere is not ours to check
   if (!UPLOAD.test(id)) return false
   const row = await (await db()).prepare('SELECT kind FROM uploads WHERE id = ?1 AND user_id = ?2').bind(id, userId).first<{ kind: string }>()
   return Boolean(row && kinds.includes(row.kind))

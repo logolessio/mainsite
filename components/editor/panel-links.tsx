@@ -8,6 +8,7 @@ import { LINK_PLATFORMS, USERNAME_LINKS } from '@/lib/profile-style'
 import { cn } from '@/lib/utils'
 import { BlockIcon } from '@/components/bio/bits'
 import { IconPicker, SocialFields } from './account-fields'
+import { HostFile } from './host-file'
 import type { EditorApi } from './types'
 import { Area, Btn, Input, Row, Seg, Switch } from './ui'
 
@@ -55,7 +56,7 @@ const summary = (b: BioBlock) => {
   }
 }
 
-function Item({ b, open, toggle, update, remove, clicks }: { b: BioBlock; open: boolean; toggle: () => void; update: (p: Partial<BioBlock>) => void; remove: () => void; clicks?: number }) {
+function Item({ b, open, toggle, update, remove, clicks, toast }: { b: BioBlock; open: boolean; toggle: () => void; update: (p: Partial<BioBlock>) => void; remove: () => void; clicks?: number; toast: (m: string) => void }) {
   const drag = useDragControls()
   const hidden = 'hidden' in b && b.hidden
   const set = (p: Record<string, unknown>) => update(p as Partial<BioBlock>)
@@ -99,6 +100,12 @@ function Item({ b, open, toggle, update, remove, clicks }: { b: BioBlock; open: 
                       <Input placeholder="Title" value={b.title} maxLength={80} onChange={(e) => set({ title: e.target.value })} />
                     </div>
                     <Input placeholder="Link, like example.com/page" value={b.url} inputMode="url" autoCapitalize="off" spellCheck={false} onChange={(e) => set({ url: e.target.value })} onBlur={() => set({ url: cleanUrl(b.url) || b.url, ...(b.title ? {} : { title: titleFor(b.url) }) })} />
+                    <HostFile
+                      url={b.url}
+                      toast={toast}
+                      onUrl={(u) => set({ url: u, ...(u ? { icon: 'file' } : { icon: 'auto' }) })}
+                      onFile={(f) => set({ ...(b.title ? {} : { title: f.name.replace(/\.[^.]+$/, '') }), ...(b.note ? {} : { note: f.size >= 1048576 ? `${(f.size / 1048576).toFixed(f.size >= 10485760 ? 0 : 1)} MB` : `${Math.max(1, Math.round(f.size / 1024))} KB` }) })}
+                    />
                     <Input placeholder="A line under it (optional)" value={b.note} maxLength={140} onChange={(e) => set({ note: e.target.value })} />
                     <IconPicker block={b} onChange={(id) => set({ icon: id })} />
                     <Switch checked={!!b.featured} onChange={(v) => set({ featured: v })} label="Feature this link" hint="Draws an outline round it so it stands out." />
@@ -195,7 +202,7 @@ export function LinksPanel({ api }: { api: EditorApi }) {
         ) : (
           <Reorder.Group axis="y" values={blocks} onReorder={(next) => set((c) => ({ ...c, blocks: next }))} className="space-y-2">
             {blocks.map((b) => (
-              <Item key={b.id} b={b} open={open === b.id} toggle={() => setOpen(open === b.id ? null : b.id)} update={(p) => update(b.id, p)} remove={() => set((c) => ({ ...c, blocks: c.blocks.filter((x) => x.id !== b.id) }))} clicks={stats.links[b.id]} />
+              <Item key={b.id} b={b} open={open === b.id} toggle={() => setOpen(open === b.id ? null : b.id)} update={(p) => update(b.id, p)} remove={() => set((c) => ({ ...c, blocks: c.blocks.filter((x) => x.id !== b.id) }))} clicks={stats.links[b.id]}  toast={api.toast} />
             ))}
           </Reorder.Group>
         )}

@@ -200,8 +200,6 @@
 .bio-root[data-btn='glass'] .bl {
   background: var(--bio-soft);
   border: 1px solid var(--bio-line);
-  -webkit-backdrop-filter: blur(18px) saturate(1.1);
-  backdrop-filter: blur(18px) saturate(1.1);
 }
 .bio-root[data-btn='glass'] .bl:hover {
   background: rgb(var(--bio-accent-rgb) / 0.16);

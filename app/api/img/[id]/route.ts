@@ -10,7 +10,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   if (!/^[0-9a-f-]{36}$/.test(id)) return new Response('Not found', { status: 404 })
   const d = await db()
   const row = await d.prepare('SELECT mime, data FROM uploads WHERE id = ?1').bind(id).first<{ mime: string; data: string }>()
-  if (!row) return new Response('Not found', { status: 404 })
+  if (!row || row.data.startsWith('bh:')) return new Response('Not found', { status: 404 })
   const bin = Uint8Array.from(atob(row.data), (c) => c.charCodeAt(0))
   const headers: Record<string, string> = {
     'content-type': row.mime,

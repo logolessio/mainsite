@@ -1,7 +1,7 @@
 'use client'
 
 import { Check, CloudRain, Cloud, Flame, Film, Flower2, Leaf, PartyPopper, Rocket, Snowflake, Sparkles, Star, Sun, Terminal, Tv, Waves, Wind, Zap, Bug, Circle, Ban } from 'lucide-react'
-import type { CSSProperties } from 'react'
+import { type CSSProperties, memo } from 'react'
 import { type BioOverlay, type BioPreset } from '@/lib/bio'
 import { cn } from '@/lib/utils'
 
@@ -71,7 +71,7 @@ const rgb = (hex: string, a: number) => {
 }
 
 /** A look as a picture of the page it makes: its own background, a card with a picture, a name, icons and a link, and a hint of its effect. */
-export function LookTile({ p, on, onClick, name = 'you' }: { p: BioPreset; on?: boolean; onClick: () => void; name?: string }) {
+export const LookTile = memo(function LookTile({ p, on, onClick, name = 'you' }: { p: BioPreset; on?: boolean; onClick: () => void; name?: string }) {
   const [bg, bg2, a, b] = p.hues
   const c = p.set.colors as { text?: string } | undefined
   const text = c?.text ?? '#f5f5f7'
@@ -112,7 +112,7 @@ export function LookTile({ p, on, onClick, name = 'you' }: { p: BioPreset; on?: 
       <span className="block truncate text-[0.68rem] text-[var(--ed-dim)]">{p.note}</span>
     </button>
   )
-}
+}, (a, b) => a.p === b.p && a.on === b.on && a.name === b.name)
 
 /** An effect as a tile: its mark, its name, and a still hint of it on black. */
 export function EffectTile({ id, name, on, onClick }: { id: BioOverlay; name: string; on: boolean; onClick: () => void }) {

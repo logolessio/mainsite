@@ -4,7 +4,7 @@ import { motion, useTransform } from 'framer-motion'
 import { type CSSProperties, useEffect, useRef } from 'react'
 import { CardEffectLayer } from '@/components/profile/card-effect'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
-import { grey, hexRgb, pageLight } from '@/lib/bio'
+import { grey, hexRgb, imgSrc, pageLight } from '@/lib/bio'
 import { bgVideoSrc, giphyImage, tintHex } from '@/lib/profile-extras'
 import { useBio } from './context'
 
@@ -66,7 +66,7 @@ export function BioBackground() {
         {bg.kind === 'gradient' && <div className="absolute inset-0" style={{ background: gradientCss(bg.gradient, A, B, bg.angle, custom ? accents : undefined) }} />}
         {bg.kind === 'image' && bg.image && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={`/api/img/${bg.image}`} alt="" className="absolute inset-0 size-full object-cover" />
+          <img src={imgSrc(bg.image)} alt="" referrerPolicy="no-referrer" className="absolute inset-0 size-full object-cover" />
         )}
         {bg.kind === 'gif' && bg.gif && (
           // eslint-disable-next-line @next/next/no-img-element

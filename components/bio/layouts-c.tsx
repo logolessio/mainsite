@@ -1,6 +1,7 @@
 'use client'
 
 import type { CSSProperties } from 'react'
+import { imgSrc, mediaKindOf } from '@/lib/bio'
 import { cn } from '@/lib/utils'
 import { Avatar, Bio, BlockList, Name, Part, Socials, useBackgroundClick } from './bits'
 import { Badges } from './card'
@@ -71,11 +72,12 @@ export function Classic() {
 
 /** Card: the profile card from the old logoless: a banner, the picture over its lower edge, then an "about me" panel that holds the bio, the accounts and the links. */
 export function Card() {
-  const { data, cfg, items, socials } = useBio()
+  const { data, cfg, items, socials, mode } = useBio()
   const custom = cfg.colors.on
   const banner = cfg.card.banner
-  const bannerStyle: CSSProperties = banner
-    ? { background: `center / cover no-repeat url(/api/img/${banner})` }
+  const bannerVideo = banner && mediaKindOf(banner) === 'video'
+  const bannerStyle: CSSProperties = banner && !bannerVideo
+    ? { background: `center / cover no-repeat url(${imgSrc(banner)})` }
     : custom
       ? { background: 'linear-gradient(135deg, var(--bio-accent), var(--bio-accent2))' }
       : { background: 'linear-gradient(135deg, rgb(var(--bio-fg-rgb) / 0.28), rgb(var(--bio-fg-rgb) / 0.07))' }
@@ -85,6 +87,7 @@ export function Card() {
       <Stage className="overflow-visible">
         <Part id="card" className="overflow-hidden" >
           <div className="relative h-[8.25rem] overflow-hidden" style={{ ...bannerStyle, borderRadius: 'calc(var(--bio-r) + 8px) calc(var(--bio-r) + 8px) 0 0' }}>
+            {bannerVideo && mode !== 'mini' && <video src={imgSrc(banner)} muted loop playsInline autoPlay preload="metadata" className="absolute inset-0 size-full object-cover" />}
             <span aria-hidden="true" className="card-sheen absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
             <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/25 to-transparent" />
           </div>
