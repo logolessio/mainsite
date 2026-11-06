@@ -17,4 +17,16 @@ export type EditorApi = {
   setSel: (k: string | null) => void
   snap: boolean
   setSnap: (v: boolean) => void
+  /** turn the page into free pieces you can drag and resize (true), or go back to the layout it came from (false) */
+  dragMode: (on: boolean) => void
+  /** which page of the site is being edited (its id), or empty for the home page */
+  page: string
+  setPage: (id: string) => void
+  /** add, change, move or remove an extra page; each answers with the page that should be shown after */
+  pages: {
+    add: (title: string) => string
+    patch: (id: string, p: { title?: string; slug?: string }) => void
+    move: (id: string, dir: -1 | 1) => void
+    remove: (id: string) => void
+  }
 }

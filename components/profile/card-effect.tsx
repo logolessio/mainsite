@@ -1447,34 +1447,85 @@ function vhs({ w, h, n }: Opts): Sim {
 }
 
 // ============================================================================================================
-// smoke: hundreds of very faint small puffs that are carried by a swirling flow. Where they overlap they form
-// the thin curling filaments real smoke has, rather than a few big soft clouds.
+// smoke: wisps rise from a few vents and are carried by a curl-noise flow (so they swirl and fold into each other
+// instead of drifting like blobs). Every puff is an irregular cloud built from many small lit blobs, turns slowly,
+// is stretched along the way it moves, grows as it thins, and fades in and out. A slow low bank of mist sits at
+// the bottom. More turbulence higher up, like the real thing.
 // ============================================================================================================
+const noise2 = (x: number, y: number) => {
+  const xi = Math.floor(x)
+  const yi = Math.floor(y)
+  const xf = x - xi
+  const yf = y - yi
+  const u = xf * xf * (3 - 2 * xf)
+  const v = yf * yf * (3 - 2 * yf)
+  const g = (i: number, j: number) => hash(i * 57.3 + j * 113.7)
+  return (g(xi, yi) * (1 - u) + g(xi + 1, yi) * u) * (1 - v) + (g(xi, yi + 1) * (1 - u) + g(xi + 1, yi + 1) * u) * v
+}
+/** A flow that curls: the sideways and upward push at a point, from the slope of a drifting noise field. */
+const curl = (x: number, y: number, t: number): [number, number] => {
+  const s = 0.0048
+  const e = 0.6
+  const psi = (px: number, py: number) => noise2(px * s + t * 0.05, py * s - t * 0.07) + 0.5 * noise2(px * s * 2.4 - t * 0.09, py * s * 2.4 + 17.3)
+  // slopes per unit of the noise (not per pixel), so they come out around plus or minus one whatever the scale
+  const dpdy = (psi(x, y + e) - psi(x, y - e)) / (2 * e * s)
+  const dpdx = (psi(x + e, y) - psi(x - e, y)) / (2 * e * s)
+  return [dpdy, -dpdx]
+}
 function smoke({ w, h, n, speed, a }: Opts): Sim {
   const k = power(n)
-  const base: Rgb = plain(a) ? [214, 218, 228] : mix([214, 218, 228], a, 0.4)
-  const puff = document.createElement('canvas')
-  puff.width = puff.height = 48
-  const g = puff.getContext('2d')!
-  const gr = g.createRadialGradient(24, 24, 0, 24, 24, 24)
-  gr.addColorStop(0, rgba(base, 0.55))
-  gr.addColorStop(0.45, rgba(base, 0.2))
-  gr.addColorStop(1, rgba(base, 0))
-  g.fillStyle = gr
-  g.fillRect(0, 0, 48, 48)
-  type P = { x: number; y: number; age: number; life: number; s0: number; seed: number; vy: number; ox: number }
+  const base: Rgb = plain(a) ? [206, 211, 224] : mix([206, 211, 224], a, 0.4)
+  const hi = lift(base, 0.45)
+  const lo = shade(base, 0.45)
+  // five different clouds, each made of several overlapping soft blobs and lit from the upper left
+  const sprites = Array.from({ length: 5 }, (_, si) => {
+    const S = 128
+    const cv = document.createElement('canvas')
+    cv.width = cv.height = S
+    const g = cv.getContext('2d')!
+    const blobs = 10 + si * 2
+    for (let i = 0; i < blobs; i++) {
+      const ang = rand(0, TAU)
+      const rad = rand(0, S * 0.24)
+      const cx = S / 2 + Math.cos(ang) * rad
+      const cy = S / 2 + Math.sin(ang) * rad * 0.8
+      const r = rand(S * 0.12, S * 0.27)
+      const gr = g.createRadialGradient(cx - r * 0.3, cy - r * 0.3, 0, cx, cy, r)
+      gr.addColorStop(0, rgba(hi, 0.6))
+      gr.addColorStop(0.5, rgba(base, 0.24))
+      gr.addColorStop(1, rgba(lo, 0))
+      g.fillStyle = gr
+      g.fillRect(0, 0, S, S)
+    }
+    return cv
+  })
+  type P = { x: number; y: number; vx: number; vy: number; age: number; life: number; s0: number; sprite: number; rot: number; rv: number; rise: number; lit: number }
   const ps: P[] = []
-  const vents = [w * 0.2, w * 0.5, w * 0.8]
   let acc = 0
+  const smooth = (e0: number, e1: number, x: number) => {
+    const u = clamp((x - e0) / (e1 - e0))
+    return u * u * (3 - 2 * u)
+  }
   return (ctx, dt, t) => {
-    acc += dt * 70 * k
+    // vents sway a little, so the columns do not stand like candles
+    const ventX = (i: number) => w * (0.16 + 0.34 * i) + Math.sin(t * 0.35 + i * 2.1) * w * 0.05
+    acc += dt * (66 + 24 * Math.sin(t * 0.4)) * k
     while (acc > 1) {
       acc -= 1
-      if (ps.length < 640) {
-        const ox = vents[Math.floor(Math.random() * 3)] + rand(-6, 6)
-        ps.push({ x: ox, y: h + 10, age: 0, life: rand(5, 9), s0: rand(20, 34), seed: rand(0, 1000), vy: rand(46, 84), ox })
+      if (ps.length < 520) {
+        const v = Math.floor(Math.random() * 3)
+        ps.push({ x: ventX(v) + rand(-24, 24), y: h + 24, vx: rand(-6, 6), vy: -rand(20, 40), age: 0, life: rand(6, 10.5), s0: rand(38, 66), sprite: Math.floor(Math.random() * 5), rot: rand(0, TAU), rv: rand(-0.18, 0.18), rise: rand(46, 84) * clamp(h / 700, 1, 1.9), lit: rand(0.65, 1) })
       }
     }
+    // the bank of mist at the bottom: two huge, very faint clouds, drifting the other ways
+    ctx.save()
+    for (let i = 0; i < 2; i++) {
+      const size = Math.max(w, 220) * (1.5 + i * 0.4)
+      const x = w * (0.3 + 0.4 * i) + Math.sin(t * 0.07 + i * 3) * w * 0.18
+      ctx.globalAlpha = 0.07 * Math.min(1.4, k)
+      ctx.drawImage(sprites[i], x - size / 2, h - size * 0.3, size, size * 0.62)
+    }
+    ctx.restore()
     for (let i = ps.length - 1; i >= 0; i--) {
       const p = ps[i]
       p.age += dt
@@ -1483,16 +1534,28 @@ function smoke({ w, h, n, speed, a }: Opts): Sim {
         continue
       }
       const q = p.age / p.life
-      // the flow gets stronger with height, so the column is straight at the vent and curls above it
-      const gust = (vnoise(p.seed + t * 0.28 + p.y * 0.012) - 0.5) * 2
-      const gust2 = (vnoise(p.seed * 0.7 + t * 0.6 + p.y * 0.03) - 0.5) * 2
-      const strength = 22 + (h - p.y) * 0.34
-      p.x += (gust * strength + gust2 * strength * 0.4) * speed * dt
-      p.y -= p.vy * (1 - q * 0.45) * speed * dt
+      const height = clamp(1 - p.y / h)
+      const [fx, fy] = curl(p.x, p.y, t)
+      const turb = 0.5 + height * 1.6
+      // the puff relaxes towards the flow plus a buoyancy that fades as it cools
+      const wantX = fx * 46 * turb
+      const wantY = -p.rise * (1 - q * 0.6) + fy * 30 * turb
+      const ease = Math.min(1, dt * 1.7)
+      p.vx += (wantX - p.vx) * ease
+      p.vy += (wantY - p.vy) * ease
+      p.x += p.vx * speed * dt
+      p.y += p.vy * speed * dt
+      p.rot += p.rv * dt
       const size = p.s0 * (1 + q * 3.6)
-      const fade = Math.min(1, q * 8) * Math.pow(1 - q, 1.3)
-      ctx.globalAlpha = fade * 0.32
-      ctx.drawImage(puff, p.x - size / 2, p.y - size / 2, size, size)
+      const fade = smooth(0, 0.1, q) * Math.pow(1 - q, 1.6)
+      const sp = Math.hypot(p.vx, p.vy)
+      const stretch = 1 + clamp(sp / 160) * 0.5
+      ctx.globalAlpha = fade * 0.36 * p.lit
+      ctx.save()
+      ctx.translate(p.x, p.y)
+      ctx.rotate(Math.atan2(p.vy, p.vx) + Math.PI / 2 + p.rot * 0.35)
+      ctx.drawImage(sprites[p.sprite], (-size * 0.5) / stretch, -size * 0.5 * stretch, size / stretch, size * stretch)
+      ctx.restore()
     }
     ctx.globalAlpha = 1
   }

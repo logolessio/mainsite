@@ -1,22 +1,19 @@
 import { protect } from '@/lib/guard'
 import { body, HttpError, json, route } from '@/lib/http'
-import { fromBase64, MAX_GIF_BYTES, MAX_VIDEO_BYTES, storeImage, storeVideo } from '@/lib/upload'
+import { fromBase64, MAX_IMAGE_BYTES, storeImage } from '@/lib/upload'
 import { requireUser } from '@/lib/user'
 
 const IMAGE_KINDS = ['avatar', 'banner', 'cover', 'background', 'cursor'] as const
 
 /**
- * Image upload for avatars, banners, profile backgrounds and campaign covers, plus short looping background videos.
- * The browser re-encodes pictures first (which strips hidden data), and the server then checks the real file type,
- * size and dimensions before storing it.
+ * Still pictures for avatars, banners, profile backgrounds, covers and cursors. The browser re-encodes them first (which strips hidden data), and the server
+ * then checks the real file type, size and dimensions before storing them. GIFs, videos and songs go through /api/me/media instead, in pieces.
  */
 export const POST = route(async (req: Request) => {
   const user = await requireUser()
-  await protect(req, { name: 'upload', max: 12, windowSec: 600, userId: user.id })
-  const { kind, data } = await body<{ kind?: string; data?: string }>(req, Math.ceil(MAX_VIDEO_BYTES * 1.4))
+  await protect(req, { name: 'upload', max: 24, windowSec: 600, userId: user.id })
+  const { kind, data } = await body<{ kind?: string; data?: string }>(req, Math.ceil(MAX_IMAGE_BYTES * 1.4))
   if (typeof data !== 'string') throw new HttpError(400, 'That file could not be read.')
-  if (kind === 'bgvideo') return json({ id: await storeVideo(user.id, fromBase64(data)) })
   if (!IMAGE_KINDS.includes(kind as (typeof IMAGE_KINDS)[number])) throw new HttpError(400, 'Unknown upload type.')
-  if (data.length > MAX_GIF_BYTES * 1.4) throw new HttpError(413, 'that image is too big. pick a smaller one.')
   return json({ id: await storeImage(user.id, kind as (typeof IMAGE_KINDS)[number], fromBase64(data)) })
 })

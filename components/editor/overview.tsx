@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowRight, Check, Copy, ExternalLink, ImageIcon, LayoutGrid, Link2, MousePointer2, Sparkles, WandSparkles } from 'lucide-react'
+import { ArrowRight, Check, Copy, ExternalLink, ImageIcon, LayoutGrid, Link2, Music2, Sparkles, WandSparkles } from 'lucide-react'
 import { useState } from 'react'
 import { BioPage } from '@/components/bio/bio-page'
 import type { BioPageData } from '@/components/bio/context'
@@ -30,10 +30,10 @@ export function OverviewPanel({ api, data, go, onTour }: { api: EditorApi; data:
   const real = cfg.blocks.filter((b) => b.t === 'link' || b.t === 'video')
 
   const steps: { id: string; text: string; done: boolean; go: () => void; cta: string }[] = [
-    { id: 'name', text: 'Add your name and a short bio', done: Boolean(profile.name && profile.bio), go: () => go('profile'), cta: 'Profile' },
-    { id: 'pic', text: 'Add a picture', done: Boolean(profile.hasAvatar || profile.newAvatar), go: () => go('profile'), cta: 'Profile' },
+    { id: 'name', text: 'Add your name and a short bio', done: Boolean(profile.name && profile.bio), go: () => go('you'), cta: 'You' },
+    { id: 'pic', text: 'Add a picture', done: Boolean(profile.hasAvatar || profile.newAvatar), go: () => go('you'), cta: 'You' },
     { id: 'link', text: 'Add your first link', done: real.length > 0, go: () => go('links'), cta: 'Links' },
-    { id: 'look', text: 'Pick a layout and a look', done: cfg.layout !== DEFAULT_BIO.layout || cfg.bg.kind !== DEFAULT_BIO.bg.kind, go: () => go('layout'), cta: 'Layout' },
+    { id: 'look', text: 'Pick a layout and a look', done: cfg.layout !== DEFAULT_BIO.layout || cfg.bg.kind !== DEFAULT_BIO.bg.kind, go: () => go('card'), cta: 'Layout' },
     { id: 'share', text: 'Put your link in your bio', done: stats.views > 0, go: copy, cta: 'Copy link' },
   ]
   const left = steps.filter((s) => !s.done)
@@ -55,11 +55,11 @@ export function OverviewPanel({ api, data, go, onTour }: { api: EditorApi; data:
   ]
   const actions: [string, DashId, typeof Link2][] = [
     ['Add a link', 'links', Link2],
-    ['Pick a template', 'templates', WandSparkles],
-    ['Change the layout', 'layout', LayoutGrid],
-    ['Pick a background', 'background', ImageIcon],
-    ['Choose a cursor', 'cursor', MousePointer2],
-    ['Turn on effects', 'effects', Sparkles],
+    ['Pick a look', 'card', WandSparkles],
+    ['Change the layout', 'card', LayoutGrid],
+    ['Pick a background', 'page', ImageIcon],
+    ['Upload a song', 'music', Music2],
+    ['Turn on effects', 'page', Sparkles],
   ]
 
   return (
@@ -89,7 +89,7 @@ export function OverviewPanel({ api, data, go, onTour }: { api: EditorApi; data:
                   <a href={`/${profile.handle}`} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--ed-line2)] px-5 text-[0.8rem] transition-[background,border-color,transform] duration-200 hover:-translate-y-px hover:border-white/30 hover:bg-white/[0.06]">
                     <ExternalLink className="size-3.5" /> Open it
                   </a>
-                  <button type="button" onClick={() => go('profile')} className="inline-flex h-10 items-center rounded-full px-4 text-[0.8rem] text-white/55 transition-colors hover:bg-white/[0.06] hover:text-white">
+                  <button type="button" onClick={() => go('you')} className="inline-flex h-10 items-center rounded-full px-4 text-[0.8rem] text-white/55 transition-colors hover:bg-white/[0.06] hover:text-white">
                     Change address
                   </button>
                 </div>
@@ -211,7 +211,7 @@ export function OverviewPanel({ api, data, go, onTour }: { api: EditorApi; data:
                   <BioPage mode="mini" data={data} />
                 </div>
               </div>
-              <button type="button" onClick={() => go('layout')} className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[0.78rem] text-white/55 transition-colors hover:bg-white/[0.06] hover:text-white">
+              <button type="button" onClick={() => go('card')} className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[0.78rem] text-white/55 transition-colors hover:bg-white/[0.06] hover:text-white">
                 Change it <ArrowRight className="size-3.5" />
               </button>
             </div>

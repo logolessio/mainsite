@@ -202,3 +202,24 @@ html .ed.ed.ed .disp {
     opacity: 0;
   }
 }
+
+/* the dashboard: a clean sans for everything you read and press, mono only for the small labels (where you are, section numbers) */
+.dash {
+  font-family: var(--font-f-geist), 'Inter', 'Helvetica Neue', Arial, sans-serif;
+}
+.dash .mono {
+  font-family: var(--font-f-ibm-plex-mono), ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+/* sections are numbered by counting: 01, 02 ... in whatever order they sit */
+.dash .ed-sections {
+  counter-reset: sec;
+}
+.dash .ed-sec[data-sec] {
+  counter-increment: sec;
+}
+.dash .ed-sec-num::before {
+  content: counter(sec, decimal-leading-zero);
+}
+.dash .cap {
+  font-size: 0.8rem;
+}

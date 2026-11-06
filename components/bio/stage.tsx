@@ -24,6 +24,27 @@ export function Layer({ z = 0, className, style, children }: { z?: number; class
  * are soft pieces that are drawn once and then only moved, never re-painted. The frosted blur is dropped for a plain tinted face when something behind it
  * is moving (an effect, a video, a GIF), because a blur over moving pixels is re-done every frame.
  */
+/** The face of the card: its colour, its edge and (when nothing behind it moves) its frost. Shared by the stage and by the card piece on the canvas. */
+export function useFace(): CSSProperties {
+  const { cfg, mode } = useBio()
+  const c = cfg.card
+  const moving = cfg.overlay.effect !== 'none' || cfg.bg.kind === 'video' || cfg.bg.kind === 'gif' || cfg.bg.kind === 'youtube'
+  return c.style === 'none'
+    ? {}
+    : c.style === 'outline'
+      ? { border: '1px solid var(--bio-line)' }
+      : c.style === 'solid'
+        ? { background: `color-mix(in srgb, var(--bio-bg) ${60 + c.opacity * 0.4}%, rgb(var(--bio-fg-rgb) / 1) 0%)`, border: '1px solid var(--bio-line)' }
+        : moving || mode === 'mini'
+          ? { background: `color-mix(in srgb, var(--bio-bg) ${Math.round(48 + c.opacity * 0.45)}%, transparent)`, border: '1px solid var(--bio-line)' }
+          : {
+              background: `color-mix(in srgb, var(--bio-bg) ${Math.round(18 + c.opacity * 0.7)}%, transparent)`,
+              border: '1px solid var(--bio-line)',
+              backdropFilter: `blur(${c.blur}px)`,
+              WebkitBackdropFilter: `blur(${c.blur}px)`,
+            }
+}
+
 export function Stage({ children, className, radius = 'calc(var(--bio-r) + 8px)' }: { children: ReactNode; className?: string; radius?: string }) {
   const { cfg, px, py, reduced, mode } = useBio()
   const c = cfg.card
@@ -35,29 +56,14 @@ export function Stage({ children, className, radius = 'calc(var(--bio-r) + 8px)'
   const gy = useTransform(py, (v) => v * 170)
   const sx = useTransform(px, (v) => (on ? -v * 22 : 0))
   const sy = useTransform(py, (v) => (on ? 30 - v * 12 : 30))
-  const moving = cfg.overlay.effect !== 'none' || cfg.bg.kind === 'video' || cfg.bg.kind === 'gif'
-  const face: CSSProperties =
-    c.style === 'none'
-      ? {}
-      : c.style === 'outline'
-        ? { border: '1px solid var(--bio-line)' }
-        : c.style === 'solid'
-          ? { background: `color-mix(in srgb, var(--bio-bg) ${60 + c.opacity * 0.4}%, rgb(var(--bio-fg-rgb) / 1) 0%)`, border: '1px solid var(--bio-line)' }
-          : moving || mode === 'mini'
-            ? { background: `color-mix(in srgb, var(--bio-bg) ${Math.round(48 + c.opacity * 0.45)}%, transparent)`, border: '1px solid var(--bio-line)' }
-            : {
-                background: `color-mix(in srgb, var(--bio-bg) ${Math.round(18 + c.opacity * 0.7)}%, transparent)`,
-                border: '1px solid var(--bio-line)',
-                backdropFilter: `blur(${c.blur}px)`,
-                WebkitBackdropFilter: `blur(${c.blur}px)`,
-              }
+  const face = useFace()
   const shadow = c.style === 'glass' || c.style === 'solid'
   return (
     <div className={cn('stage-wrap', cfg.fx.float && !reduced && mode !== 'mini' && 'stage-float')} style={{ perspective: 1200 }}>
       <motion.div className={cn('relative', className)} style={{ rotateX: rx, rotateY: ry, transformStyle: 'preserve-3d', width: `min(${c.width}px, calc(100cqw - 2rem))`, willChange: on ? 'transform' : undefined }}>
         {shadow && mode !== 'mini' && <motion.div aria-hidden="true" className="pointer-events-none absolute inset-[5%]" style={{ x: sx, y: sy, borderRadius: radius, background: 'rgb(0 0 0 / 0.5)', filter: 'blur(34px)' }} />}
         {c.style !== 'none' && (
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden" style={{ ...face, borderRadius: radius }}>
+          <div aria-hidden="true" data-bk="card" className="pointer-events-none absolute inset-0 overflow-hidden" style={{ ...face, borderRadius: radius }}>
             {c.glare && on && <motion.span className="absolute top-1/2 left-1/2 -mt-[260px] -ml-[260px] size-[520px]" style={{ x: gx, y: gy, background: 'radial-gradient(closest-side, rgb(var(--bio-fg-rgb) / 0.12), transparent)' }} />}
           </div>
         )}

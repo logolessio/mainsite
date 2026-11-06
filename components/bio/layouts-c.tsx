@@ -3,7 +3,7 @@
 import type { CSSProperties } from 'react'
 import { imgSrc, mediaKindOf } from '@/lib/bio'
 import { cn } from '@/lib/utils'
-import { Avatar, Bio, BlockList, Name, Part, Socials, useBackgroundClick } from './bits'
+import { Avatar, Bio, BlockList, Name, Part, Socials, fontClass, useBackgroundClick } from './bits'
 import { Badges } from './card'
 import { useBio } from './context'
 import { Layer, Stage } from './stage'
@@ -11,8 +11,9 @@ import { Layer, Stage } from './stage'
 /** Everything that holds the page in the middle of the screen. */
 function Frame({ children }: { children: React.ReactNode }) {
   const bg = useBackgroundClick()
+  const { cfg } = useBio()
   return (
-    <main onClick={bg} className="grid min-h-full w-full place-items-center px-4 pt-10 pb-16 md:pt-14">
+    <main onClick={bg} className={cn('grid min-h-full w-full place-items-center px-4 pb-16', cfg.pages?.length ? 'pt-20 md:pt-24' : 'pt-10 md:pt-14')}>
       {children}
     </main>
   )
@@ -22,7 +23,7 @@ function Frame({ children }: { children: React.ReactNode }) {
 function Title({ align = 'center' }: { align?: 'center' | 'left' }) {
   return (
     <>
-      <Part id="profile" className="mt-5">
+      <Part id="profile" k="name" className="mt-5">
         <Name className="text-[clamp(1.7rem,7cqw,2.3rem)] leading-[1.1] font-semibold [overflow-wrap:anywhere]" style={{ textAlign: align }} />
       </Part>
       <Badges center={align === 'center'} className="mt-2.5" />
@@ -38,7 +39,7 @@ export function Classic() {
       <Stage>
         <div className="flex flex-col items-center px-7 pt-10 pb-8 text-center">
           <Layer z={56}>
-            <Part id="profile">
+            <Part id="profile" k="avatar">
               <Avatar size={116} />
             </Part>
           </Layer>
@@ -46,7 +47,7 @@ export function Classic() {
             <Title />
           </Layer>
           <Layer z={22} className="mt-3 w-full">
-            <Part id="profile">
+            <Part id="profile" k="bio">
               <Bio className="mx-auto !max-w-[28rem] text-[0.95rem]" center />
             </Part>
           </Layer>
@@ -95,13 +96,13 @@ export function Card() {
         <div className="relative px-5 pb-5">
           <Layer z={52} className="-mt-[3.5rem] mb-3 inline-block">
             <div className={cn('inline-block bg-[var(--bio-bg)] p-[5px]', circle ? 'rounded-full' : 'rounded-[1.4rem]')}>
-              <Part id="profile">
+              <Part id="profile" k="avatar">
                 <Avatar size={96} />
               </Part>
             </div>
           </Layer>
           <Layer z={34} className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <Part id="profile">
+            <Part id="profile" k="name">
               <Name className="min-w-0 text-[clamp(1.6rem,7cqw,2.1rem)] leading-tight font-semibold [overflow-wrap:anywhere]" style={{ textAlign: 'left' }} />
             </Part>
             <Badges center={false} className="min-w-0" />
@@ -143,16 +144,16 @@ export function Side() {
         <div className="px-6 pt-8 pb-7">
           <div className="flex items-center gap-5">
             <Layer z={54} className="shrink-0">
-              <Part id="profile">
+              <Part id="profile" k="avatar">
                 <Avatar size={104} />
               </Part>
             </Layer>
             <Layer z={34} className="min-w-0 flex-1">
-              <Part id="profile">
+              <Part id="profile" k="name">
                 <Name className="text-[clamp(1.5rem,6.4cqw,2.1rem)] leading-[1.1] font-semibold [overflow-wrap:anywhere]" style={{ textAlign: 'left' }} />
               </Part>
               <Badges center={false} className="mt-2" />
-              <Part id="profile" className="mt-2">
+              <Part id="profile" k="bio" className="mt-2">
                 <Bio className="!max-w-none text-[0.9rem]" />
               </Part>
             </Layer>
@@ -192,11 +193,11 @@ export function List() {
   return (
     <Frame>
       <div className="flex w-[min(34rem,calc(100cqw-2rem))] flex-col items-center text-center">
-        <Part id="profile">
+        <Part id="profile" k="avatar">
           <Avatar size={104} />
         </Part>
         <Title />
-        <Part id="profile" className="mt-3 w-full">
+        <Part id="profile" k="bio" className="mt-3 w-full">
           <Bio className="mx-auto !max-w-[28rem] text-[0.95rem]" center />
         </Part>
         {socials.length > 0 && (
@@ -230,15 +231,15 @@ export function Cover() {
       </Part>
       <div className="mx-auto w-[min(36rem,calc(100cqw-2rem))]">
         <div className={cn('-mt-12 mb-3 inline-block bg-[var(--bio-bg)] p-[5px]', circle ? 'rounded-full' : 'rounded-[1.4rem]')}>
-          <Part id="profile">
+          <Part id="profile" k="avatar">
             <Avatar size={96} />
           </Part>
         </div>
-        <Part id="profile">
+        <Part id="profile" k="name">
           <Name className="text-[clamp(1.7rem,7cqw,2.3rem)] leading-[1.1] font-semibold [overflow-wrap:anywhere]" style={{ textAlign: 'left' }} />
         </Part>
         <Badges center={false} className="mt-2.5" />
-        <Part id="profile" className="mt-3">
+        <Part id="profile" k="bio" className="mt-3">
           <Bio className="!max-w-none text-[0.95rem]" />
         </Part>
         {socials.length > 0 && (
@@ -263,17 +264,17 @@ export function Minimal() {
     <Frame>
       <div className="w-[min(30rem,calc(100cqw-2rem))] text-left">
         <div className="flex items-center gap-4">
-          <Part id="profile" className="shrink-0">
+          <Part id="profile" k="avatar" className="shrink-0">
             <Avatar size={64} />
           </Part>
           <div className="min-w-0">
-            <Part id="profile">
+            <Part id="profile" k="name">
               <Name className="text-[clamp(1.3rem,5.5cqw,1.7rem)] leading-[1.15] font-semibold [overflow-wrap:anywhere]" style={{ textAlign: 'left' }} />
             </Part>
             <Badges center={false} className="mt-1.5" />
           </div>
         </div>
-        <Part id="profile" className="mt-4">
+        <Part id="profile" k="bio" className="mt-4">
           <Bio className="!max-w-none text-[0.9rem]" />
         </Part>
         {socials.length > 0 && (
@@ -287,6 +288,28 @@ export function Minimal() {
           </Part>
         )}
       </div>
+    </Frame>
+  )
+}
+
+/** Another page of the site (About, Work, Contact...): its title, then its things, on the same card as the home page. */
+export function Subpage() {
+  const { data, cfg } = useBio()
+  const page = cfg.pages?.find((p) => p.slug === data.current)
+  return (
+    <Frame>
+      <Stage>
+        <div className="px-7 pt-9 pb-8">
+          <Part id="links">
+            <div role="heading" aria-level={1} data-in className={cn('bn bio-zoom-name text-[clamp(1.8rem,7.5cqw,2.5rem)] leading-[1.08] font-semibold [overflow-wrap:anywhere]', fontClass(cfg.theme.font), cfg.theme.align === 'center' ? 'text-center' : 'text-left')} data-text={page?.title}>
+              {page?.title ?? ''}
+            </div>
+          </Part>
+          <Part id="links" className="mt-6 w-full">
+            <BlockList />
+          </Part>
+        </div>
+      </Stage>
     </Frame>
   )
 }

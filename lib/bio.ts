@@ -95,6 +95,8 @@ export const CURSOR_TRAILS = [
   { id: 'ink', name: 'Ink' },
   { id: 'glow', name: 'Glow' },
   { id: 'laser', name: 'Laser' },
+  { id: 'ribbon', name: 'Ribbon' },
+  { id: 'electric', name: 'Electric' },
   { id: 'ripple', name: 'Ripples' },
   { id: 'stars', name: 'Stars' },
   { id: 'hearts', name: 'Hearts' },
@@ -113,6 +115,7 @@ export const CLICK_EFFECTS = [
   { id: 'ripple', name: 'Ripples' },
   { id: 'shockwave', name: 'Shockwave' },
   { id: 'burst', name: 'Burst' },
+  { id: 'firework', name: 'Firework' },
   { id: 'confetti', name: 'Confetti' },
   { id: 'stars', name: 'Stars' },
   { id: 'hearts', name: 'Hearts' },
@@ -122,6 +125,26 @@ export const CLICK_EFFECTS = [
   { id: 'emoji', name: 'Emoji' },
 ] as const
 export type ClickEffect = (typeof CLICK_EFFECTS)[number]['id']
+
+/** How the page's own music player looks. */
+export const AUDIO_PLAYERS = [
+  { id: 'pill', name: 'Pill', note: 'A small pill with play, a bar and the name.' },
+  { id: 'card', name: 'Card', note: 'The cover, the song and artist, a bar to skip through.' },
+  { id: 'vinyl', name: 'Vinyl', note: 'A record that spins, with the cover as its label.' },
+  { id: 'bar', name: 'Bar', note: 'A thin bar across the page, like a music app.' },
+  { id: 'bubble', name: 'Bubble', note: 'A round button with the cover. Opens when pressed.' },
+  { id: 'hidden', name: 'Hidden', note: 'Plays with nothing on screen.' },
+] as const
+export type AudioPlayer = (typeof AUDIO_PLAYERS)[number]['id']
+export const AUDIO_PLACES = [
+  { id: 'tl', name: 'Top left' },
+  { id: 'tc', name: 'Top' },
+  { id: 'tr', name: 'Top right' },
+  { id: 'bl', name: 'Bottom left' },
+  { id: 'bc', name: 'Bottom' },
+  { id: 'br', name: 'Bottom right' },
+] as const
+export type AudioPlace = (typeof AUDIO_PLACES)[number]['id']
 
 export const ENTER_SCREENS = [
   { id: 'none', name: 'None' },
@@ -201,10 +224,18 @@ export const MAX_NOTE = 140
 export const MAX_TEXT = 600
 
 /** One thing on the canvas layout. x, y and w are in a page 390 wide (the page scales to the screen); r is degrees; z is the stacking order; a is text alignment; f is a text size multiplier. */
-export type FreeBox = { x: number; y: number; w: number; r?: number; z?: number; a?: 'l' | 'c' | 'r'; f?: number }
+export type FreeBox = { x: number; y: number; w: number; /** height, only for the card (everything else is as tall as it needs to be) */ h?: number; r?: number; z?: number; a?: 'l' | 'c' | 'r'; f?: number }
 export const FREE_W = 390
 /** The pieces of a page that are not blocks. Every block is a piece too, under its own id. */
-export const FREE_FIXED = ['avatar', 'name', 'bio'] as const
+export const FREE_FIXED = ['avatar', 'name', 'bio', 'card'] as const
+
+/** An extra page of the site (logoless.io/you/about): its own links and things, and its own arrangement on the canvas. The look, the picture and the name are shared. */
+export type SubPage = { id: string; slug: string; title: string; blocks: BioBlock[]; free?: Record<string, FreeBox> }
+export const MAX_PAGES = 8
+/** A page's address part: lowercase letters, numbers and dashes, up to 30. */
+export const pageSlug = (raw: unknown) => (typeof raw === 'string' ? raw.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30).replace(/-+$/, '') : '')
+/** Every block of the whole site: the home page's and every other page's. */
+export const allBlocks = (cfg: Pick<BioConfig, 'blocks' | 'pages'>): BioBlock[] => [...cfg.blocks, ...(cfg.pages ?? []).flatMap((p) => p.blocks)]
 
 export type BioConfig = {
   v: 1
@@ -213,6 +244,8 @@ export type BioConfig = {
   layout: LayoutId
   /** the canvas layout: where each thing sits (see `resolveFree`); anything not listed here is where the starting arrangement puts it */
   free?: Record<string, FreeBox>
+  /** the other pages of the site (the home page's own things are `blocks` and `free`) */
+  pages?: SubPage[]
   /** the page's own colours; while `on` is false the page is black, white and grey and these are ignored */
   colors: { on: boolean; bg: string; bg2: string; text: string; accent: string; accent2: string }
   theme: {
@@ -259,7 +292,25 @@ export type BioConfig = {
   /** the panel the profile sits in (the centred layouts) */
   card: { style: CardStyle; blur: number; opacity: number; glare: boolean; /** how wide the card is, in pixels */ width: number; /** a picture across the top of the card in the card layout (an upload id; empty is a soft gradient) */ banner: string }
   /** music that plays on the page once it is entered */
-  audio: { id: string; title: string; volume: number; loop: boolean; reactive: boolean }
+  audio: {
+    id: string
+    title: string
+    volume: number
+    loop: boolean
+    reactive: boolean
+    /** what the song is, filled in from a search (or typed): shown in the player */
+    artist: string
+    album: string
+    /** the cover: an upload id or a link */
+    cover: string
+    /** how the player looks, and where it sits */
+    player: AudioPlayer
+    place: AudioPlace
+    /** a bar to skip through the song, with the time */
+    progress: boolean
+    /** start by itself once the page is entered (a browser may still wait for a press) */
+    autoplay: boolean
+  }
   cursor: {
     kind: 'default' | 'preset' | 'upload'
     preset: string
@@ -317,7 +368,7 @@ export const DEFAULT_BIO: BioConfig = {
   bg: { kind: 'gradient', tone: 5, tone2: 17, angle: 160, gradient: 'radial', image: '', gif: '', video: '', youtube: '', ytStart: 0, blur: 0, dim: 0, noise: 0, parallax: 40, vignette: 35, mono: false },
   overlay: { effect: 'none', intensity: 50, speed: 50 },
   card: { style: 'glass', blur: 22, opacity: 62, glare: false, width: 440, banner: '' },
-  audio: { id: '', title: '', volume: 60, loop: true, reactive: true },
+  audio: { id: '', title: '', volume: 60, loop: true, reactive: true, artist: '', album: '', cover: '', player: 'pill', place: 'bl', progress: true, autoplay: true },
   cursor: { kind: 'default', preset: 'arrow', ink: 'white', size: 32, image: '', hot: 'tl', trail: 'none', click: 'none', emoji: '✨', color: 'auto', amount: 100 },
   fx: { enter: 'none', enterText: '[ click to enter ]', reveal: 'rise', tilt: true, magnetic: false, spotlight: false, grain: 0, scanlines: 0, parallax: 60, typewriter: false, depth: 60, float: true },
   meta: { title: '', description: '', location: '', index: true, views: false, badge: true, badges: true },
@@ -704,11 +755,13 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
     }
   } else blocks.push(...d.blocks)
   const free = cleanFree(r.free === undefined ? d.free : r.free, seen)
+  const pages = cleanPages(r.pages === undefined ? d.pages : r.pages)
   return {
     v: 1,
     look: 2,
     layout: pick(r.layout ?? d.layout, LAYOUT_IDS, 'classic'),
     ...(free ? { free } : {}),
+    ...(pages.length ? { pages } : {}),
     colors: {
       on: bool(co.on ?? d.colors.on, false),
       bg: hexOf(co.bg, d.colors.bg),
@@ -779,6 +832,13 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
       volume: int(au.volume ?? d.audio.volume, 60, 0, 100),
       loop: bool(au.loop ?? d.audio.loop, true),
       reactive: bool(au.reactive ?? d.audio.reactive, true),
+      artist: au.artist === undefined ? d.audio.artist : text(au.artist, 80),
+      album: au.album === undefined ? d.audio.album : text(au.album, 80),
+      cover: au.cover === undefined ? d.audio.cover : mediaRef(au.cover, ['image']),
+      player: pick(au.player ?? d.audio.player, AUDIO_PLAYERS.map((x) => x.id), 'pill'),
+      place: pick(au.place ?? d.audio.place, AUDIO_PLACES.map((x) => x.id), 'bl'),
+      progress: bool(au.progress ?? d.audio.progress, true),
+      autoplay: bool(au.autoplay ?? d.audio.autoplay, true),
     },
     cursor: {
       kind: pick(c.kind ?? d.cursor.kind, ['default', 'preset', 'upload'], 'default'),
@@ -820,6 +880,37 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
   }
 }
 
+/** The extra pages, cleaned: up to 8, each with an address that is its own, a title, and things that are checked like the home page's. */
+function cleanPages(raw: unknown): SubPage[] {
+  if (!Array.isArray(raw)) return []
+  const out: SubPage[] = []
+  const slugs = new Set<string>(['index'])
+  const ids = new Set<string>()
+  for (const x of raw.slice(0, MAX_PAGES)) {
+    const p = obj(x)
+    const title = text(p.title, 30)
+    let slug = pageSlug(p.slug) || pageSlug(title)
+    if (!slug) continue
+    while (slugs.has(slug)) slug = `${slug.slice(0, 26)}-${out.length + 2}`
+    slugs.add(slug)
+    let id = blockId(p.id)
+    if (ids.has(id)) id = newId()
+    ids.add(id)
+    const blocks: BioBlock[] = []
+    const seen = new Set<string>()
+    for (const b of (Array.isArray(p.blocks) ? p.blocks : []).slice(0, 60)) {
+      const blk = cleanBlock(b)
+      if (!blk) continue
+      if (seen.has(blk.id)) blk.id = newId()
+      seen.add(blk.id)
+      blocks.push(blk)
+    }
+    const free = cleanFree(p.free, seen)
+    out.push({ id, slug, title: title || slug, blocks, ...(free ? { free } : {}) })
+  }
+  return out
+}
+
 /** The canvas arrangement, cleaned: only things that exist, numbers in range, no extras. */
 function cleanFree(raw: unknown, ids: Set<string>): Record<string, FreeBox> | undefined {
   const out: Record<string, FreeBox> = {}
@@ -829,6 +920,7 @@ function cleanFree(raw: unknown, ids: Set<string>): Record<string, FreeBox> | un
     if (typeof b.x !== 'number' || typeof b.y !== 'number' || typeof b.w !== 'number') continue
     const r1 = (n: number) => Math.round(n * 10) / 10
     const box: FreeBox = { x: r1(num(b.x, 0, -300, 700)), y: r1(num(b.y, 0, -200, 6000)), w: r1(num(b.w, 100, 14, 700)) }
+    if (typeof b.h === 'number') box.h = r1(num(b.h, 200, 40, 4000))
     const r = r1(num(b.r, 0, -180, 180))
     if (r) box.r = r
     const z = int(b.z, 0, 0, 99)
@@ -848,22 +940,24 @@ export const nameSize = (text: string, w: number, f = 1) => Math.max(12, Math.mi
  * Where everything sits on the canvas layout: what the person placed, and for everything else a tidy starting arrangement (picture, name, bio,
  * socials, then the blocks one under the other). The heights are guesses, used only to space the starting arrangement.
  */
-export function resolveFree(cfg: BioConfig, info: { name: string; bio: string; badges?: number }): Record<string, FreeBox> {
+export function resolveFree(cfg: BioConfig, info: { name: string; bio: string; badges?: number; /** another page of the site: no picture, name or bio, and room at the top for the menu */ bare?: boolean }): Record<string, FreeBox> {
   const set = cfg.free ?? {}
   const def: Record<string, FreeBox> = {}
   const mid = (w: number) => Math.round((FREE_W - w) / 2)
   const a = cfg.theme.align === 'left' ? 'l' : 'c'
-  let y = 44
-  const av = Math.round(116 * (cfg.avatar.size / 100))
-  def.avatar = { x: mid(av), y, w: av }
-  y += Math.round(av * (cfg.avatar.shape === 'arch' ? 1.25 : 1)) + 26
-  const nw = Math.max(110, Math.min(330, Math.round(Math.max(info.name.length, 3) * 0.56 * 52)))
-  def.name = { x: mid(nw), y, w: nw, a }
-  y += Math.round(nameSize(info.name, nw) * 1.15) + (info.badges ? 36 : 12)
-  if (info.bio) {
-    const lines = info.bio.split('\n').reduce((n, l) => n + Math.max(1, Math.ceil((l.length * 7.6) / 306)), 0)
-    def.bio = { x: mid(306), y, w: 306, a }
-    y += lines * 24 + 18
+  let y = info.bare ? 96 : cfg.pages?.length ? 84 : 44
+  if (!info.bare) {
+    const av = Math.round(116 * (cfg.avatar.size / 100))
+    def.avatar = { x: mid(av), y, w: av }
+    y += Math.round(av * (cfg.avatar.shape === 'arch' ? 1.25 : 1)) + 26
+    const nw = Math.max(110, Math.min(330, Math.round(Math.max(info.name.length, 3) * 0.56 * 52)))
+    def.name = { x: mid(nw), y, w: nw, a }
+    y += Math.round(nameSize(info.name, nw) * 1.15) + (info.badges ? 36 : 12)
+    if (info.bio) {
+      const lines = info.bio.split('\n').reduce((n, l) => n + Math.max(1, Math.ceil((l.length * 7.6) / 306)), 0)
+      def.bio = { x: mid(306), y, w: 306, a }
+      y += lines * 24 + 18
+    }
   }
   const visible = cfg.blocks.filter((b) => !('hidden' in b && b.hidden))
   const socials = visible.filter((b) => b.t === 'social')
@@ -895,6 +989,8 @@ export function resolveFree(cfg: BioConfig, info: { name: string; bio: string; b
     def[b.id] = { x: mid(w), y, w, ...(b.t === 'heading' || b.t === 'text' || b.t === 'tags' ? { a } : {}) }
     y += h + 14
   }
+  // the card the page sits on, behind everything (when the page has one)
+  if (cfg.card.style !== 'none') def.card = { x: mid(358), y: 20, w: 358, h: Math.max(220, Math.round(y - 4)) }
   const out: Record<string, FreeBox> = {}
   for (const k of Object.keys(def)) out[k] = set[k] ? { ...def[k], ...set[k] } : def[k]
   return out

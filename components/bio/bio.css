@@ -722,7 +722,9 @@ a.bio-tile:hover {
 }
 .bs[data-icons='glow']:hover { filter: drop-shadow(0 0 14px rgb(var(--bio-accent-rgb) / 0.9)); }
 /* in the editor's preview, parts you can click */
-.bio-root[data-edit] .bio-part { cursor: pointer; border-radius: 12px; outline: 1.5px dashed transparent; outline-offset: 6px; transition: outline-color 0.2s; }
+.bio-root[data-edit] { user-select: none; -webkit-user-select: none; }
+.bio-root[data-edit] [data-bk] { cursor: grab; }
+.bio-root[data-edit] .bio-part { cursor: grab; border-radius: 12px; outline: 1.5px dashed transparent; outline-offset: 6px; transition: outline-color 0.2s; }
 .bio-root[data-edit] .bio-part:hover { outline-color: rgb(var(--bio-fg-rgb) / 0.55); }
 
 /* sizes the person set (Style > Sizes) */

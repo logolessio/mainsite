@@ -5,13 +5,14 @@ import { type BioBlock, FREE_W, type FreeBox, nameSize, resolveFree } from '@/li
 import { cn } from '@/lib/utils'
 import { Avatar, BlockIcon, BlockView, Divider, fontClass, Name, Bio } from './bits'
 import { Badges } from './card'
+import { useFace } from './stage'
 import { useBio } from './context'
 
 /** How far apart (in screen pixels) two edges may be and still snap together. */
 const SNAP = 6
 
 type Guide = { axis: 'x' | 'y'; at: number }
-type Drag = { kind: 'move' | 'e' | 'w' | 'rot'; key: string; sx: number; sy: number; box: FreeBox; unit: number; moved: boolean; cx: number; cy: number; h: number }
+type Drag = { kind: 'move' | 'e' | 'w' | 'rot' | 'se' | 's'; key: string; sx: number; sy: number; box: FreeBox; unit: number; moved: boolean; cx: number; cy: number; h: number }
 
 /** The canvas layout: a blank page, 390 wide however wide the screen is, where every piece sits exactly where its box says. In the editor each piece can be dragged, resized and turned. */
 export function Canvas() {
@@ -27,16 +28,19 @@ export function Canvas() {
   const [live, setLive] = useState<{ key: string; box: FreeBox } | null>(null)
   const [guides, setGuides] = useState<Guide[]>([])
   const drag = useRef<Drag | null>(null)
+  const face = useFace()
+  const textKind = useRef<Record<string, string>>({})
 
-  const base = useMemo(() => resolveFree(cfg, { name: data.name, bio: data.bio, badges: cfg.meta.badges ? (data.badges?.length ?? 0) + (cfg.meta.location ? 1 : 0) : cfg.meta.location ? 1 : 0 }), [cfg, data.name, data.bio, data.badges])
+  const base = useMemo(() => resolveFree(cfg, { bare: Boolean(data.current), name: data.name, bio: data.bio, badges: cfg.meta.badges ? (data.badges?.length ?? 0) + (cfg.meta.location ? 1 : 0) : cfg.meta.location ? 1 : 0 }), [cfg, data.name, data.bio, data.badges])
   const boxes = useMemo(() => (live ? { ...base, [live.key]: live.box } : base), [base, live])
 
   // the pieces, in the order they are listed (what is on top is the z value, then this order)
   const pieces = useMemo(() => {
-    const list: { key: string; block?: BioBlock; social?: (typeof socials)[number] }[] = [{ key: 'avatar' }, { key: 'name' }]
+    const list: { key: string; block?: BioBlock; social?: (typeof socials)[number] }[] = [{ key: 'card' }, { key: 'avatar' }, { key: 'name' }]
     if (data.bio) list.push({ key: 'bio' })
     for (const s of socials) list.push({ key: s.id, social: s })
     for (const b of items) list.push({ key: b.id, block: b })
+    for (const p of list) if (p.block) textKind.current[p.key] = p.block.t
     return list.filter((p) => boxes[p.key])
   }, [data.bio, socials, items, boxes])
 
@@ -129,6 +133,33 @@ export function Canvas() {
     arrange.select(key)
   }
 
+  // a drag that began in the ordinary view carries on here, under the same pointer
+  useEffect(() => {
+    const g = arrange?.pending
+    const w = world.current
+    if (!g || !w || !ready) return
+    const el = w.querySelector<HTMLElement>(`[data-fk="${CSS.escape(g.key)}"]`)
+    const box = boxes[g.key]
+    if (!el || !box) return arrange.done?.()
+    try {
+      el.setPointerCapture(g.id)
+    } catch {
+      /* the pointer was let go before the page switched */
+    }
+    if (el.hasPointerCapture(g.id)) {
+      const wr = w.getBoundingClientRect()
+      const er = el.getBoundingClientRect()
+      const unit = wr.width / FREE_W || 1
+      // the switch can move the page about, so the piece is picked up by its middle: it comes to the pointer and goes on from there
+      const under = { ...box, x: box.x + (g.x - (er.left + er.width / 2)) / unit, y: box.y + (g.y - (er.top + er.height / 2)) / unit }
+      drag.current = { kind: 'move', key: g.key, sx: g.x, sy: g.y, box: under, unit, moved: false, cx: g.x, cy: g.y, h: el.offsetHeight }
+      setLive({ key: g.key, box: round(under) })
+      arrange.select(g.key)
+    }
+    arrange.done?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [arrange?.pending, ready])
+
   const move = (e: PointerEvent) => {
     const d = drag.current
     if (!d || !arrange) return
@@ -149,6 +180,25 @@ export function Canvas() {
         d.kind === 'e'
           ? { ...d.box, w: w2, x: d.box.x + (delta / 2) * (Math.cos(r) - 1), y: d.box.y + (delta / 2) * Math.sin(r) }
           : { ...d.box, w: w2, x: d.box.x - (delta / 2) * (Math.cos(r) + 1), y: d.box.y - (delta / 2) * Math.sin(r) }
+      setLive({ key: d.key, box: round(next) })
+    } else if (d.kind === 'se' || d.kind === 's') {
+      // the corner grows the box (and the letters in it, for text); the bottom edge only makes the card taller
+      const alongX = dx * Math.cos(r) + dy * Math.sin(r)
+      const alongY = -dx * Math.sin(r) + dy * Math.cos(r)
+      const w2 = d.kind === 'se' ? Math.max(24, d.box.w + alongX) : d.box.w
+      const h0 = d.box.h ?? d.h
+      const h2 = d.key === 'card' || d.box.h ? Math.max(40, h0 + alongY) : undefined
+      const dw = w2 - d.box.w
+      const dh = h2 ? h2 - h0 : 0
+      const text = d.key === 'name' || d.key === 'bio' || /^(heading|text|tags)$/.test(String(textKind.current[d.key] ?? ''))
+      const next: FreeBox = {
+        ...d.box,
+        w: w2,
+        ...(h2 ? { h: h2 } : {}),
+        ...(text && d.kind === 'se' ? { f: Math.min(4, Math.max(0.4, Math.round((d.box.f ?? 1) * (w2 / d.box.w) * 100) / 100)) } : {}),
+        x: d.box.x + (dw / 2) * (Math.cos(r) - 1) - (dh / 2) * Math.sin(r),
+        y: d.box.y + (dw / 2) * Math.sin(r) + (dh / 2) * (Math.cos(r) - 1),
+      }
       setLive({ key: d.key, box: round(next) })
     } else {
       let deg = (Math.atan2(e.clientY - d.cy, e.clientX - d.cx) * 180) / Math.PI + 90
@@ -183,6 +233,7 @@ export function Canvas() {
   const body = (p: (typeof pieces)[number], box: FreeBox): ReactNode => {
     const f = box.f ?? 1
     const align = (box.a ?? (cfg.theme.align === 'left' ? 'l' : 'c')) as 'l' | 'c' | 'r'
+    if (p.key === 'card') return <div className="size-full" style={{ ...face, borderRadius: 'calc(var(--bio-r) + 8px)' }} />
     if (p.key === 'avatar') return <Avatar size={box.w / (cfg.avatar.size / 100)} />
     if (p.key === 'name')
       return (
@@ -251,7 +302,7 @@ export function Canvas() {
                     left: box.x,
                     top: box.y,
                     width: box.w,
-                    height: socialBox ? box.w : undefined,
+                    height: box.h ?? (socialBox ? box.w : undefined),
                     zIndex: (box.z ?? 0) * 100 + (on ? 50 : 0) + Math.min(i, 49),
                     transform: box.r ? `rotate(${box.r}deg)` : undefined,
                     transformOrigin: '50% 50%',
@@ -289,6 +340,32 @@ export function Canvas() {
                     ))}
                     <span
                       role="slider"
+                      aria-label="Resize from the corner"
+                      onPointerDown={(e) => down(e, p.key, 'se')}
+                      onPointerMove={move}
+                      onPointerUp={up}
+                      onPointerCancel={up}
+                      className="absolute grid place-items-center"
+                      style={{ right: -10 * ui, bottom: -10 * ui, width: 20 * ui, height: 20 * ui, cursor: 'nwse-resize', touchAction: 'none' }}
+                    >
+                      <span className="block rounded-[3px] bg-white" style={{ width: 10 * ui, height: 10 * ui, boxShadow: `0 0 0 ${ui}px rgb(0 0 0 / 0.6)` }} />
+                    </span>
+                    {p.key === 'card' && (
+                      <span
+                        role="slider"
+                        aria-label="Make it taller or shorter"
+                        onPointerDown={(e) => down(e, p.key, 's')}
+                        onPointerMove={move}
+                        onPointerUp={up}
+                        onPointerCancel={up}
+                        className="absolute left-1/2 grid place-items-center"
+                        style={{ bottom: -9 * ui, width: 34 * ui, height: 18 * ui, translate: '-50% 0', cursor: 'ns-resize', touchAction: 'none' }}
+                      >
+                        <span className="block bg-white" style={{ width: 22 * ui, height: 6 * ui, borderRadius: 99, boxShadow: `0 0 0 ${ui}px rgb(0 0 0 / 0.6)` }} />
+                      </span>
+                    )}
+                    <span
+                      role="slider"
                       aria-label="Turn"
                       onPointerDown={(e) => down(e, p.key, 'rot')}
                       onPointerMove={move}
@@ -313,9 +390,10 @@ export function Canvas() {
   )
 }
 
-const round = (b: FreeBox): FreeBox => ({ ...b, x: Math.round(b.x * 10) / 10, y: Math.round(b.y * 10) / 10, w: Math.round(b.w * 10) / 10 })
+const round = (b: FreeBox): FreeBox => ({ ...b, x: Math.round(b.x * 10) / 10, y: Math.round(b.y * 10) / 10, w: Math.round(b.w * 10) / 10, ...(b.h ? { h: Math.round(b.h * 10) / 10 } : {}) })
 const cleanBox = (b: FreeBox): FreeBox => {
   const out: FreeBox = { x: Math.round(b.x * 10) / 10, y: Math.round(Math.max(-100, b.y) * 10) / 10, w: Math.round(b.w * 10) / 10 }
+  if (b.h) out.h = Math.round(b.h * 10) / 10
   if (b.r) out.r = b.r
   if (b.z) out.z = b.z
   if (b.a) out.a = b.a

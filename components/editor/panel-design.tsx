@@ -59,7 +59,7 @@ const Thumb = memo(function Thumb({ cfg, profile, layout }: { cfg: EditorApi['cf
 function BannerPicker({ api }: { api: EditorApi }) {
   const { cfg, up, toast } = api
   return (
-    <MediaField value={cfg.card.banner} kinds={['image', 'video']} accept="image/*" uploadLabel="Banner picture or GIF" upload={uploadBackground} onChange={(v) => up('card', { banner: v })} toast={toast} hint="Goes across the top of the card. Upload a picture or GIF, or paste a link to a picture, GIF or video." />
+    <MediaField value={cfg.card.banner} kinds={['image', 'video']} accept="image/*" uploadLabel="Banner picture or GIF" gifs upload={uploadBackground} onChange={(v) => up('card', { banner: v })} toast={toast} hint="Goes across the top of the card. Upload a picture or GIF, or paste a link to a picture, GIF or video." />
   )
 }
 
@@ -69,7 +69,15 @@ export function LayoutPanel({ api }: { api: EditorApi }) {
   const slowProfile = useDeferredValue(api.profile)
   return (
     <div>
-      {cfg.layout === 'canvas' && <ArrangePanel api={api} />}
+      {cfg.layout === 'canvas' ? (
+        <ArrangePanel api={api} />
+      ) : (
+        <Group title="Drag and resize" hint="Pick up the picture, the name, a link, anything, and put it where you want it. Nothing moves when you start: each piece stays where it is until you drag it.">
+          <Btn variant="solid" onClick={() => api.dragMode(true)}>
+            Drag and resize the page
+          </Btn>
+        </Group>
+      )}
       <Group title="Layout" hint="four ways to lay out the same page. your links and words stay put.">
         <div className="grid grid-cols-2 gap-3">
           {LAYOUTS.map((l) => {
@@ -230,7 +238,7 @@ export function StylePanel({ api }: { api: EditorApi }) {
       <Group fold title="Social icons">
         <Seg value={t.icons} options={[{ id: 'glow', name: 'Glow' }, { id: 'plain', name: 'Plain' }, { id: 'boxed', name: 'Boxed' }]} onChange={(v) => up('theme', { icons: v })} />
       </Group>
-      <Group fold title="Picture">
+      <Group fold title="Picture shape">
         <Seg value={cfg.avatar.shape} options={AVATAR_SHAPES} onChange={(v) => up('avatar', { shape: v })} />
         <Row label="Size" value={cfg.avatar.size}>
           <Slider label="Picture size" min={60} max={180} value={cfg.avatar.size} onChange={(v) => up('avatar', { size: v })} />
@@ -284,10 +292,10 @@ export function BackgroundPanel({ api }: { api: EditorApi }) {
           </>
         )}
         {bg.kind === 'image' && (
-          <MediaField value={bg.image} kinds={['image']} accept="image/*" uploadLabel="Upload a picture or GIF" upload={uploadBackground} onChange={(v) => up('bg', { image: v, kind: 'image' })} toast={api.toast} hint="Your own picture or an animated GIF. Uploads are kept small; for a bigger file, paste a link to it." />
+          <MediaField value={bg.image} kinds={['image']} accept="image/*" uploadLabel="Upload a picture or GIF" upload={uploadBackground} onChange={(v) => up('bg', { image: v, kind: 'image' })} toast={api.toast} hint="Your own picture or an animated GIF, any size that fits your 50 MB. A link works too." />
         )}
         {bg.kind === 'video' && (
-          <MediaField value={bg.video} kinds={['video']} accept="video/mp4,video/webm" uploadLabel="Upload a video" upload={uploadBgVideo} onChange={(v) => up('bg', { video: v, kind: 'video' })} toast={api.toast} hint="Uploads are MP4 or WebM under 1.3 MB: a few seconds, looping. For a longer or bigger video, paste a link to it." />
+          <MediaField value={bg.video} kinds={['video']} accept="video/mp4,video/webm" uploadLabel="Upload a video" upload={uploadBgVideo} onChange={(v) => up('bg', { video: v, kind: 'video' })} toast={api.toast} hint="An MP4 or WebM, any size that fits your 50 MB. It loops, muted. A link works too." />
         )}
         {bg.kind === 'youtube' && (
           <div className="space-y-3">

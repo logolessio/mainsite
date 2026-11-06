@@ -1,11 +1,13 @@
 'use client'
 
-import { Loader2, Upload } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { Loader2 } from 'lucide-react'
+import { useState } from 'react'
 import { type BioBlock, IMAGE_SHAPES, STATUS_STATES, TAG_STYLES, cleanUrl, imgSrc, isMediaUrl, mediaKindOf } from '@/lib/bio'
-import { uploadAudio, uploadBackground } from '@/lib/image-client'
+import { uploadBackground } from '@/lib/image-client'
+import type { Tags } from '@/lib/audio-tags'
 import { cn } from '@/lib/utils'
 import { MediaField } from './media-field'
+import { SongDetails, UploadSong, seedFrom } from './song-details'
 import { type Song, SongSearch, lookUp } from './song-search'
 import { Btn, Input, Row, Seg, Switch } from './ui'
 
@@ -15,8 +17,9 @@ const UPLOAD = /^[0-9a-f-]{36}$/
 
 /** A song: find it by name (the cover, title and artist come with it), paste its link, or upload your own. */
 export function MusicFields({ b, set, toast }: { b: Of<'music'>; set: Set; toast: (m: string) => void }) {
-  const file = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
+  const [seed, setSeed] = useState('')
+  const [fileCover, setFileCover] = useState<Blob | null>(null)
   const [text, setText] = useState(UPLOAD.test(b.url) ? '' : b.url)
   const own = UPLOAD.test(b.url)
   const fill = (s: Song, keepUrl = false) =>
@@ -31,17 +34,11 @@ export function MusicFields({ b, set, toast }: { b: Of<'music'>; set: Set; toast
     setBusy(false)
     if (s) fill({ ...s, url }, true)
   }
-  const pick = async (f: File | undefined) => {
-    if (!f) return
-    setBusy(true)
-    try {
-      const id = await uploadAudio(f)
-      set({ url: id, preview: '', ...(b.title ? {} : { title: f.name.replace(/\.[^.]+$/, '').slice(0, 80) }) })
-      setText('')
-    } catch (e) {
-      toast(e instanceof Error ? e.message : "couldn't upload that. try again.")
-    }
-    setBusy(false)
+  const done = (id: string, t: Tags) => {
+    set({ url: id, preview: '', title: t.title, artist: t.artist, album: t.album, cover: '' })
+    setText('')
+    setSeed(seedFrom(t))
+    setFileCover(t.cover)
   }
   return (
     <div className="space-y-4">
@@ -56,18 +53,18 @@ export function MusicFields({ b, set, toast }: { b: Of<'music'>; set: Set; toast
         <Input value={text} onChange={(e) => void link(e.target.value)} placeholder="Spotify, Apple Music, SoundCloud, YouTube, Deezer, or a file" inputMode="url" autoCapitalize="off" spellCheck={false} />
         <p className="mt-1.5 text-[0.72rem] leading-snug text-[var(--ed-mute)]">The cover, title and artist are filled in from the link.</p>
       </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <input ref={file} type="file" accept="audio/mpeg,audio/mp4,audio/ogg,audio/wav,.mp3,.m4a,.ogg,.wav" hidden onChange={(e) => (void pick(e.target.files?.[0]), (e.target.value = ''))} />
-        <Btn onClick={() => file.current?.click()} disabled={busy}>
-          {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />} {own ? 'Change the song' : 'Upload your own'}
-        </Btn>
-        <p className="min-w-0 flex-1 text-[0.72rem] leading-snug text-[var(--ed-mute)]">{own ? 'Your upload plays right on the page.' : 'An MP3, M4A, OGG or WAV up to 1 MB, or paste a link to a bigger file.'}</p>
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <Input placeholder="Title" value={b.title} maxLength={80} onChange={(e) => set({ title: e.target.value })} />
-        <Input placeholder="Artist" value={b.artist ?? ''} maxLength={80} onChange={(e) => set({ artist: e.target.value })} />
-      </div>
-      <MediaField value={b.cover ?? ''} kinds={['image']} accept="image/*" uploadLabel="Cover picture" upload={uploadBackground} onChange={(v) => set({ cover: v })} toast={toast} />
+      <UploadSong own={own} onDone={done} toast={toast} label="Upload your own (mp3, wav, flac)" />
+      {own ? (
+        <SongDetails info={{ title: b.title, artist: b.artist ?? '', album: b.album ?? '', cover: b.cover ?? '' }} set={(p) => set(p)} seed={seed || seedFrom({ title: b.title, artist: b.artist ?? '' })} fileCover={fileCover} toast={toast} />
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-2">
+            <Input placeholder="Title" value={b.title} maxLength={80} onChange={(e) => set({ title: e.target.value })} />
+            <Input placeholder="Artist" value={b.artist ?? ''} maxLength={80} onChange={(e) => set({ artist: e.target.value })} />
+          </div>
+          <MediaField value={b.cover ?? ''} kinds={['image']} accept="image/*" uploadLabel="Cover picture" upload={uploadBackground} onChange={(v) => set({ cover: v })} toast={toast} />
+        </>
+      )}
       <Switch checked={Boolean(b.player)} onChange={(v) => set({ player: v })} label="Show the full player" hint="The service's own player (Spotify, SoundCloud and so on) instead of the card." />
     </div>
   )
@@ -77,7 +74,7 @@ export function MusicFields({ b, set, toast }: { b: Of<'music'>; set: Set; toast
 export function ImageFields({ b, set, toast }: { b: Of<'image'>; set: Set; toast: (m: string) => void }) {
   return (
     <div className="space-y-3">
-      <MediaField value={b.src} kinds={['image']} accept="image/*" uploadLabel="Upload a picture or GIF" upload={uploadBackground} onChange={(v) => set({ src: v })} toast={toast} hint="Uploads are kept small; for a bigger file, paste a link to it." />
+      <MediaField value={b.src} kinds={['image']} accept="image/*" uploadLabel="Upload a picture or GIF" gifs upload={uploadBackground} onChange={(v) => set({ src: v })} toast={toast} hint="Your own picture or GIF. Anything that fits your 50 MB." />
       <Input placeholder="A caption (optional)" value={b.title} maxLength={80} onChange={(e) => set({ title: e.target.value })} />
       <Input placeholder="Where it goes when pressed (optional)" value={b.url} inputMode="url" autoCapitalize="off" spellCheck={false} onChange={(e) => set({ url: e.target.value })} onBlur={() => set({ url: cleanUrl(b.url) })} />
       <Row label="Shape">

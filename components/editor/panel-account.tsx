@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, Copy, ExternalLink, Loader2, LogOut, Upload, X } from 'lucide-react'
+import { Check, Loader2, LogOut, Upload, X } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { useEffect, useRef, useState } from 'react'
 import { handleChars, handleHint } from '@/lib/profile-style'
@@ -49,7 +49,7 @@ export function ProfilePanel({ api }: { api: EditorApi }) {
   const shown = cfg.avatar.url || (profile.newAvatar ? `/api/img/${profile.newAvatar}` : profile.hasAvatar ? profile.avatar : null)
   return (
     <div>
-      <Group title="Picture" hint="A picture or an animated GIF. Uploads are kept small; for a bigger file, paste a link to it.">
+      <Group title="Picture" hint="A picture or an animated GIF, any size that fits your 50 MB.">
         <input ref={file} type="file" accept="image/*" hidden onChange={(e) => void upload(e.target.files?.[0])} />
         <div className="flex items-center gap-4">
           <span className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-full border border-[var(--ed-line2)] bg-white/[0.05] text-xl">
@@ -77,7 +77,7 @@ export function ProfilePanel({ api }: { api: EditorApi }) {
             )}
           </div>
         </div>
-        <MediaField value={cfg.avatar.url} kinds={['image']} round onChange={(v) => up('avatar', { url: v })} toast={toast} />
+        <MediaField value={cfg.avatar.url} kinds={['image']} round gifs onChange={(v) => up('avatar', { url: v })} toast={toast} />
       </Group>
       <Group title="You">
         <Row label="Name">
@@ -141,27 +141,8 @@ export function InsightsPanel({ api }: { api: EditorApi }) {
 
 export function SettingsPanel({ api }: { api: EditorApi }) {
   const { cfg, up, profile } = api
-  const url = `logoless.io/${profile.handle}`
-  const [copied, setCopied] = useState(false)
   return (
     <div>
-      <Group title="Share">
-        <div className="flex items-center gap-2">
-          <span className="min-w-0 flex-1 truncate rounded-xl border border-[var(--ed-line)] px-3.5 py-2.5 text-[0.88rem]">{url}</span>
-          <Btn
-            onClick={() => {
-              void navigator.clipboard?.writeText(`https://${url}`)
-              setCopied(true)
-              window.setTimeout(() => setCopied(false), 1400)
-            }}
-          >
-            {copied ? <Check className="size-4" /> : <Copy className="size-4" />} {copied ? 'Copied' : 'Copy'}
-          </Btn>
-          <a href={`/${profile.handle}`} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-1.5 border border-[var(--ed-line2)] px-4 text-[0.8rem] hover:bg-white/10">
-            <ExternalLink className="size-4" /> Open
-          </a>
-        </div>
-      </Group>
       <Group title="Storage" hint="Everyone gets 50 MB of their own.">
         <StorageMeter detail />
       </Group>

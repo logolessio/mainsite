@@ -17,8 +17,11 @@ export async function lookUp(url: string): Promise<Song | null> {
 }
 
 /** Type a song's name, see the matches with their covers, and press one: everything about it is filled in. */
-export function SongSearch({ onPick, placeholder = 'Search for a song or an artist' }: { onPick: (s: Song) => void; placeholder?: string }) {
-  const [q, setQ] = useState('')
+export function SongSearch({ onPick, placeholder = 'Search for a song or an artist', seed = '' }: { onPick: (s: Song) => void; placeholder?: string; /** words to start the search with (a new value starts a new search) */ seed?: string }) {
+  const [q, setQ] = useState(seed)
+  useEffect(() => {
+    if (seed) setQ(seed)
+  }, [seed])
   const [songs, setSongs] = useState<Song[] | null>(null)
   const [busy, setBusy] = useState(false)
   useEffect(() => {

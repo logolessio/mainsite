@@ -9,6 +9,7 @@ import type { EditorApi } from './types'
 import { Btn, Group, Row, Slider, Switch } from './ui'
 
 const label = (key: string, b?: BioBlock) => {
+  if (key === 'card') return 'Card'
   if (key === 'avatar') return 'Picture'
   if (key === 'name') return 'Name'
   if (key === 'bio') return 'Bio'
@@ -34,7 +35,7 @@ const textual = (key: string, b?: BioBlock) => key === 'name' || key === 'bio' |
 /** Where everything sits on the canvas layout, as numbers and buttons. The same things can be dragged on the preview. */
 export function ArrangePanel({ api }: { api: EditorApi }) {
   const { cfg, set, profile, sel, setSel, snap, setSnap } = api
-  const boxes = useMemo(() => resolveFree(cfg, { name: profile.name || 'Your name', bio: profile.bio, badges: cfg.meta.badges ? 1 : 0 }), [cfg, profile.name, profile.bio])
+  const boxes = useMemo(() => resolveFree(cfg, { bare: Boolean(api.page), name: profile.name || 'Your name', bio: profile.bio, badges: cfg.meta.badges ? 1 : 0 }), [cfg, profile.name, profile.bio, api.page])
   const blocks = new Map(cfg.blocks.map((b) => [b.id, b]))
   const keys = Object.keys(boxes)
   const cur = sel && boxes[sel] ? sel : null
@@ -87,6 +88,11 @@ export function ArrangePanel({ api }: { api: EditorApi }) {
           <Row label="Width" value={Math.round(box.w)}>
             <Slider label="Width" value={Math.round(box.w)} min={24} max={FREE_W + 60} onChange={(v) => put({ w: v })} />
           </Row>
+          {cur === 'card' && (
+            <Row label="Height" value={Math.round(box.h ?? 0)}>
+              <Slider label="Height" value={Math.round(box.h ?? 200)} min={60} max={1600} onChange={(v) => put({ h: v })} />
+            </Row>
+          )}
           <Row label="Turn" value={`${Math.round(box.r ?? 0)}°`}>
             <Slider label="Turn" value={Math.round(box.r ?? 0)} min={-180} max={180} onChange={(v) => put({ r: v })} />
           </Row>

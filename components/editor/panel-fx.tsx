@@ -1,12 +1,11 @@
 'use client'
 
-import { CLICK_EFFECTS, CURSOR_TRAILS, ENTER_SCREENS, OVERLAYS, REVEALS, isMediaUrl } from '@/lib/bio'
+import { CLICK_EFFECTS, CURSOR_TRAILS, ENTER_SCREENS, OVERLAYS, REVEALS } from '@/lib/bio'
 import { CURSORS, cursorSvg } from '@/lib/bio-cursors'
-import { uploadAudio, uploadCursor } from '@/lib/image-client'
+import { uploadCursor } from '@/lib/image-client'
 import { cn } from '@/lib/utils'
 import { EffectTile } from './look-tile'
 import { MediaField } from './media-field'
-import { SongSearch } from './song-search'
 import type { EditorApi } from './types'
 import { Group, Input, Row, Seg, Slider, Switch } from './ui'
 
@@ -89,12 +88,11 @@ export function CursorPanel({ api }: { api: EditorApi }) {
   )
 }
 
-export function EffectsPanel({ api }: { api: EditorApi }) {
-  const { cfg, up, toast } = api
-  const fx = cfg.fx
-  const au = cfg.audio
+/** The effect that plays over the background (snow, embers, smoke ...). */
+export function EffectsGroup({ api }: { api: EditorApi }) {
+  const { cfg, up } = api
   return (
-    <div>
+    <>
       <Group title="Effects" hint="Snow, embers, smoke and more, playing over your background. Pick one, then set how much and how fast.">
         <div className="grid grid-cols-4 gap-2">
           {OVERLAYS.map((o) => (
@@ -112,36 +110,16 @@ export function EffectsPanel({ api }: { api: EditorApi }) {
           </>
         )}
       </Group>
-      <Group title="Music" hint="Plays when someone enters the page. Find a real song, upload a short file, or paste a link to a whole song.">
-        <div>
-          <p className="mb-1.5 text-[0.76rem] text-[var(--ed-mute)]">Find a song (plays a 30 second clip, looping)</p>
-          <SongSearch onPick={(s) => (s.preview ? up('audio', { id: s.preview, title: [s.title, s.artist].filter(Boolean).join(' · ').slice(0, 60) }) : toast('That one has no clip to play. Pick another, or paste a link.'))} />
-        </div>
-        <MediaField
-          value={au.id}
-          kinds={['audio']}
-          accept="audio/mpeg,audio/mp4,audio/ogg,audio/wav,.mp3,.m4a,.ogg,.wav"
-          uploadLabel="Upload music"
-          upload={async (f) => {
-            const id = await uploadAudio(f)
-            up('audio', { title: au.title || f.name.replace(/\.[^.]+$/, '').slice(0, 60) })
-            return id
-          }}
-          onChange={(v) => up('audio', { id: v, ...(v ? {} : { title: '' }) })}
-          toast={toast}
-          hint="Uploads are kept to 1 MB, about a minute of MP3. For a full song, host it anywhere and paste the link."
-        />
-        {au.id && (
-          <>
-            <Input value={au.title} placeholder="What it is called" maxLength={60} onChange={(e) => up('audio', { title: e.target.value })} />
-            <Row label="Volume" value={au.volume}>
-              <Slider label="Volume" value={au.volume} onChange={(v) => up('audio', { volume: v })} />
-            </Row>
-            <Switch checked={au.loop} onChange={(v) => up('audio', { loop: v })} label="Loop" />
-            {!isMediaUrl(au.id) && <Switch checked={au.reactive} onChange={(v) => up('audio', { reactive: v })} label="The page reacts to it" hint="Your picture pulses with the sound." />}
-          </>
-        )}
-      </Group>
+    </>
+  )
+}
+
+/** The enter screen, how the page arrives, and how it moves. */
+export function ScreenGroups({ api }: { api: EditorApi }) {
+  const { cfg, up } = api
+  const fx = cfg.fx
+  return (
+    <>
       <Group fold title="Enter screen" hint="a screen in front of your page until someone clicks. browsers need that click before music can play.">
         <Seg value={fx.enter} options={ENTER_SCREENS} cols={2} onChange={(v) => up('fx', { enter: v })} />
         {fx.enter !== 'none' && <Input value={fx.enterText} maxLength={40} placeholder="click to enter" onChange={(e) => up('fx', { enterText: e.target.value })} />}
@@ -165,6 +143,6 @@ export function EffectsPanel({ api }: { api: EditorApi }) {
           <Slider label="Scan lines" value={fx.scanlines} onChange={(v) => up('fx', { scanlines: v })} />
         </Row>
       </Group>
-    </div>
+    </>
   )
 }

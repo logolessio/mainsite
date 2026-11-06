@@ -105,7 +105,7 @@ export function Socials({ className, justify = 'center' }: { className?: string;
   return (
     <ul data-in style={{ '--i': 3 } as CSSProperties} className={cn('flex flex-wrap', look === 'boxed' ? 'gap-2.5' : 'gap-1.5', justify === 'center' ? 'justify-center' : 'justify-start', className)}>
       {socials.map((s) => (
-        <li key={s.id}>
+        <li key={s.id} data-bk={s.id}>
           <a className="bs" data-icons={look} href={s.url} target="_blank" rel="noopener noreferrer nofollow" aria-label={s.platform} onClick={() => track('click', s.id)} tabIndex={mode === 'mini' ? -1 : undefined}>
             <BlockIcon block={s} className={look === 'boxed' ? 'size-[1.15rem]' : 'size-[1.55rem]'} />
           </a>
@@ -116,12 +116,13 @@ export function Socials({ className, justify = 'center' }: { className?: string;
 }
 
 /** In the editor's preview, a part of the page you can click to open its settings (it is outlined under the pointer). On the real page it is just a box. */
-export function Part({ id, className, children }: { id: EditPart; className?: string; children: ReactNode }) {
+export function Part({ id, k, className, children }: { id: EditPart; /** which piece of the page this is, so it can be measured (avatar, name, bio) */ k?: string; className?: string; children: ReactNode }) {
   const { onPart } = useBio()
-  if (!onPart) return <div className={className}>{children}</div>
+  if (!onPart) return <div data-bk={k} className={className}>{children}</div>
   return (
     <div
       data-part={id}
+      data-bk={k}
       className={cn('bio-part', className)}
       onClickCapture={(e) => {
         e.preventDefault()
@@ -472,7 +473,11 @@ export function BlockList({ className, items }: { className?: string; items?: Bi
   const grid = cfg.theme.links === 'grid'
   return (
     <div className={cn('w-full', grid ? 'grid grid-cols-2' : 'flex flex-col', className)} style={{ gap: 'calc(0.75rem * var(--bio-gap-k, 1))' }}>
-      {list.map((b, i) => (grid && b.t !== 'link' ? <div key={b.id} className="col-span-2"><BlockView block={b} index={i} /></div> : <BlockView key={b.id} block={b} index={i} />))}
+      {list.map((b, i) => (
+        <div key={b.id} data-bk={b.id} className={grid && b.t !== 'link' ? 'col-span-2' : undefined}>
+          <BlockView block={b} index={i} />
+        </div>
+      ))}
     </div>
   )
 }

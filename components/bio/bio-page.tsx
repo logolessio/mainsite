@@ -11,7 +11,8 @@ import { MusicPlayer } from './audio'
 import { type Arrange, BioProvider, type BioMode, type BioPageData, type EditPart } from './context'
 import { cursorVars, CursorFxLayer, EnterGate, Spotlight } from './fx'
 import { Canvas } from './canvas'
-import { Classic, Card, Cover, List, Minimal, Side } from './layouts-c'
+import { Classic, Card, Cover, List, Minimal, Side, Subpage } from './layouts-c'
+import { SiteNav } from './site-nav'
 import { Corner } from './corner'
 
 const LAYOUT_VIEWS = { classic: Classic, card: Card, side: Side, list: List, cover: Cover, minimal: Minimal, canvas: Canvas } as const
@@ -26,7 +27,7 @@ const gray = (tone: number, a = 1) => {
  * screen page, as the editor's preview and as a small moving picture on the home page). Everything that moves against the scroll reads one smoothed scroll
  * position, so the whole page eases together.
  */
-export function BioPage({ data, mode = 'live', className, style, still = false, arrange, onPart }: { data: BioPageData; mode?: BioMode; className?: string; style?: CSSProperties; still?: boolean; arrange?: Arrange; onPart?: (part: EditPart) => void }) {
+export function BioPage({ data, mode = 'live', className, style, still = false, arrange, onPart, onSite }: { data: BioPageData; mode?: BioMode; className?: string; style?: CSSProperties; still?: boolean; arrange?: Arrange; onPart?: (part: EditPart) => void; onSite?: (slug: string) => void }) {
   const cfg = data.config
   const { reduced, canHover } = useMotionPrefs()
   const root = useRef<HTMLDivElement>(null)
@@ -156,7 +157,8 @@ export function BioPage({ data, mode = 'live', className, style, still = false, 
     ...cv,
     ...style,
   } as CSSProperties
-  const Layout = LAYOUT_VIEWS[cfg.layout as keyof typeof LAYOUT_VIEWS] ?? Classic
+  // an extra page of the site is a title and its things (or, on the canvas, the pieces placed there)
+  const Layout = data.current ? (cfg.layout === 'canvas' ? Canvas : Subpage) : (LAYOUT_VIEWS[cfg.layout as keyof typeof LAYOUT_VIEWS] ?? Classic)
   const gate = !entered && mode !== 'mini' && cfg.fx.enter !== 'none'
   const trail = mode !== 'mini' && ((canHover && cfg.cursor.trail !== 'none') || cfg.cursor.click !== 'none')
 
@@ -188,6 +190,7 @@ export function BioPage({ data, mode = 'live', className, style, still = false, 
           <Layout />
         </div>
         <Corner />
+        <SiteNav onSite={onSite} />
         <MusicPlayer level={level} />
         {gate && <EnterGate onEnter={() => setEntered(true)} />}
       </div>

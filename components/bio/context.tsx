@@ -14,10 +14,18 @@ export type BioPageData = {
   views: number | null
   /** small marks next to the name (the account number, OG, founding member) */
   badges?: { id: string; label: string; hint: string }[]
+  /** which extra page of the site this is (its address part), or empty for the home page */
+  current?: string
 }
 
 /** The editor's hold on the canvas layout: what is selected, and how to move it. Only given to the editor's own preview. */
+/** A press on a piece of the page in the ordinary view that turned into a drag: which piece, where the pointer is, and which pointer it is. */
+export type Grab = { key: string; x: number; y: number; id: number }
+
 export type Arrange = {
+  /** a drag that began before the page was switched to free positioning: the piece under it picks it up */
+  pending?: Grab | null
+  done?: () => void
   selected: string | null
   select: (key: string | null) => void
   /** save where something now sits (the whole box) */

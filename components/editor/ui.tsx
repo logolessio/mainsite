@@ -5,8 +5,8 @@ import { type CSSProperties, type ReactNode, useEffect, useId, useState } from '
 import { cn } from '@/lib/utils'
 
 /**
- * A titled group of controls. Press the title to fold it away (a long panel is much easier to get round that way); how each one was left is remembered.
- * `fold` starts it folded.
+ * A numbered section of controls: a big title, what it does in a line, and "Close" to fold it away (a long page is much easier to get round that way; how
+ * each one was left is remembered). `fold` starts it folded. The numbers (01, 02 ...) count by themselves, and the search jumps to a section by its title.
  */
 export function Group({ title, hint, children, className, fold = false }: { title?: string; hint?: string; children: ReactNode; className?: string; fold?: boolean }) {
   const key = title ? `ll:fold:${title}` : ''
@@ -21,6 +21,13 @@ export function Group({ title, hint, children, className, fold = false }: { titl
       /* the choice is not kept */
     }
   }, [key])
+  // the search asks a section to open when it takes you to it
+  useEffect(() => {
+    if (!title) return
+    const on = (e: Event) => (e as CustomEvent<string>).detail === title && setOpen(true)
+    window.addEventListener('ll:open', on)
+    return () => window.removeEventListener('ll:open', on)
+  }, [title])
   const toggle = () => {
     setOpen((v) => {
       try {
@@ -32,19 +39,23 @@ export function Group({ title, hint, children, className, fold = false }: { titl
     })
   }
   return (
-    <section className={cn('border-b border-[var(--ed-line)] px-5', open || !title ? 'py-5' : 'py-3', className)}>
+    <section data-sec={title || undefined} className={cn('ed-sec scroll-mt-24 border-b border-[var(--ed-line)] px-6', open || !title ? 'py-8' : 'py-6', className)}>
       {title && (
-        <h3 className="cap text-white">
-          <button type="button" onClick={toggle} aria-expanded={open} className="flex w-full items-center justify-between gap-3 rounded-none py-1 text-left">
-            {title}
-            <ChevronDown className={cn('size-4 shrink-0 text-white/40 transition-transform duration-300', !open && '-rotate-90')} />
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <span aria-hidden="true" className="ed-sec-num mono block text-[0.66rem] tracking-[0.18em] text-white/45" />
+            <h3 className="mt-2 text-[1.65rem] leading-none font-semibold tracking-[-0.035em] text-white">{title}</h3>
+          </div>
+          <button type="button" onClick={toggle} aria-expanded={open} aria-label={`${open ? 'Close' : 'Open'} ${title}`} className="mt-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[0.78rem] text-white/50 transition-colors hover:bg-white/[0.06] hover:text-white">
+            {open ? 'Close' : 'Open'}
+            <ChevronDown className={cn('size-3.5 transition-transform duration-300', open && 'rotate-180')} />
           </button>
-        </h3>
+        </div>
       )}
       {(open || !title) && (
-        <div className={title ? 'mt-2' : ''}>
-          {hint && <p className="mb-3 text-[0.76rem] leading-snug text-[var(--ed-mute)]">{hint}</p>}
-          <div className="space-y-4">{children}</div>
+        <div className={title ? 'mt-3' : ''}>
+          {hint && <p className="mb-5 max-w-[34rem] text-[0.88rem] leading-snug text-white/60">{hint}</p>}
+          <div className="space-y-5">{children}</div>
         </div>
       )}
     </section>

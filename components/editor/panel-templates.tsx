@@ -19,7 +19,7 @@ export function TemplatesPanel({ api }: { api: EditorApi }) {
   return (
     <div>
       <Group title="Looks" hint="One tap sets the colours, the card, the effect and the type. Your links, layout and words stay as they are.">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-3">
           {PRESETS.map((p) => (
             <LookTile key={p.id} p={p} name={name} on={last === p.id} onClick={() => use(p)} />
           ))}

@@ -26,26 +26,70 @@ export async function prepareImage(file: File, w: number, h: number): Promise<st
   throw new Error('That picture is too detailed to shrink enough. Try a simpler one.')
 }
 
-/** An animated GIF is sent as it is (a canvas would keep only its first frame), so it must already be small. */
-export async function prepareGif(file: File, maxSide: number): Promise<string> {
-  if (file.size > 1300 * 1024) throw new Error('That GIF is over 1.3 MB. Make it smaller, or host it anywhere and paste a link to it.')
+/** Everyone has 50 MB of their own; one file can use all of it. The server says exactly how much is left. */
+const ALLOWANCE = 50 * 1024 * 1024
+const mb = (n: number) => `${(n / 1048576).toFixed(n >= 10485760 ? 0 : 1)} MB`
+
+/**
+ * A big file (a song, a video, an animated GIF) is sent as it is, a piece at a time, so there is no size limit except the 50 MB allowance. Reports how far it
+ * has got, 0 to 1. If anything goes wrong the half-sent file is thrown away.
+ */
+async function sendBig(type: 'audio' | 'video' | 'gif', file: File, kind: string | undefined, onProgress?: (done: number) => void): Promise<string> {
+  if (file.size > ALLOWANCE) throw new Error(`That file is ${mb(file.size)}. Your whole allowance is 50 MB. Host it anywhere and paste a link to it.`)
+  const post = async (step: string, payload: unknown) => {
+    const res = await fetch(`/api/me/media?step=${step}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) })
+    const j = (await res.json().catch(() => ({}))) as { id?: string; chunk?: number; error?: string }
+    if (!res.ok) throw new Error(j.error ?? 'Upload failed.')
+    return j
+  }
+  const begun = await post('begin', { type, kind, size: file.size })
+  const id = begun.id as string
+  const piece = begun.chunk as number
+  try {
+    for (let n = 0, off = 0; off < file.size; n++, off += piece) {
+      const blob = file.slice(off, off + piece)
+      let last = ''
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const res = await fetch(`/api/me/media?id=${id}&n=${n}`, { method: 'PUT', headers: { 'content-type': 'application/octet-stream' }, body: blob })
+          if (res.ok) {
+            last = ''
+            break
+          }
+          last = ((await res.json().catch(() => ({}))) as { error?: string }).error ?? 'Upload failed.'
+          if (res.status < 500) break // retrying will not help
+        } catch {
+          last = 'The upload was interrupted. Try again.'
+        }
+        await new Promise((r) => setTimeout(r, 400 * (attempt + 1)))
+      }
+      if (last) throw new Error(last)
+      onProgress?.(Math.min(1, (off + piece) / file.size))
+    }
+    return ((await post('finish', { id })).id as string) ?? id
+  } catch (e) {
+    void fetch(`/api/me/media?id=${id}`, { method: 'DELETE' }).catch(() => {})
+    throw e
+  }
+}
+
+/** An animated GIF is sent as it is (a canvas would keep only its first frame). Its shape must fit the place it is going. */
+async function uploadGif(kind: string, file: File, maxSide: number, onProgress?: (done: number) => void): Promise<string> {
   const bmp = await createImageBitmap(file).catch(() => {
     throw new Error('That file is not a GIF we can read.')
   })
   const side = Math.max(bmp.width, bmp.height)
   bmp.close()
   if (side > maxSide) throw new Error(`That GIF is ${side} px wide or tall; the most is ${maxSide}. Shrink it, or paste a link to it.`)
-  const buf = new Uint8Array(await file.arrayBuffer())
-  let bin = ''
-  for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000))
-  return btoa(bin)
+  return sendBig('gif', file, kind, onProgress)
 }
 
 export type UploadKind = 'avatar' | 'banner' | 'cover' | 'background' | 'cursor'
 const SIZES: Record<UploadKind, [number, number]> = { avatar: [512, 512], banner: [1600, 900], cover: [900, 900], background: [1600, 900], cursor: [64, 64] }
 
-export async function uploadImage(kind: UploadKind, file: File): Promise<string> {
-  const data = file.type === 'image/gif' && kind !== 'cursor' ? await prepareGif(file, SIZES[kind][0]) : await prepareImage(file, ...SIZES[kind])
+export async function uploadImage(kind: UploadKind, file: File, onProgress?: (done: number) => void): Promise<string> {
+  if (file.type === 'image/gif' && kind !== 'cursor') return uploadGif(kind, file, SIZES[kind][0], onProgress)
+  const data = await prepareImage(file, ...SIZES[kind])
   const res = await fetch('/api/me/upload', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind, data }) })
   const j = (await res.json().catch(() => ({}))) as { id?: string; error?: string }
   if (!res.ok || !j.id) throw new Error(j.error ?? 'Upload failed.')
@@ -70,8 +114,8 @@ export async function uploadBanner(file: File): Promise<{ id: string; aspect: nu
 }
 
 /** A full-page background picture: up to 1920 on its longest side, its shape kept. */
-export async function uploadBackground(file: File): Promise<string> {
-  if (file.type === 'image/gif') return send('background', await prepareGif(file, 1920))
+export async function uploadBackground(file: File, onProgress?: (done: number) => void): Promise<string> {
+  if (file.type === 'image/gif') return uploadGif('background', file, 1920, onProgress)
   const bmp = await createImageBitmap(file).catch(() => {
     throw new Error('That file is not a picture we can read.')
   })
@@ -81,14 +125,10 @@ export async function uploadBackground(file: File): Promise<string> {
   return send('background', await prepareImage(file, w, h))
 }
 
-/** A short looping video for the page background. Sent as it is, so it must already be small. */
-export async function uploadBgVideo(file: File): Promise<string> {
+/** A looping video for the page background (MP4 or WebM). Sent as it is, a piece at a time: any size that fits the allowance. */
+export async function uploadBgVideo(file: File, onProgress?: (done: number) => void): Promise<string> {
   if (!/^video\/(mp4|webm)$/.test(file.type)) throw new Error('Pick an MP4 or WebM video.')
-  if (file.size > 1300 * 1024) throw new Error('That video is too large. Keep it under 1.3 MB: a few seconds at a small size.')
-  const buf = new Uint8Array(await file.arrayBuffer())
-  let bin = ''
-  for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000))
-  return send('bgvideo', btoa(bin))
+  return sendBig('video', file, undefined, onProgress)
 }
 
 async function send(kind: string, data: string) {
@@ -98,16 +138,9 @@ async function send(kind: string, data: string) {
   return j.id
 }
 
-/** A short audio preview (MP3, M4A, OGG or WAV, up to 1 MB). The server checks the real type. */
-export async function uploadAudio(file: File): Promise<string> {
-  if (file.size > 1024 * 1024) throw new Error('That file is too large. Keep the preview under 1 MB (about 30 seconds of MP3).')
-  const buf = new Uint8Array(await file.arrayBuffer())
-  let bin = ''
-  for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000))
-  const res = await fetch('/api/me/audio', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ data: btoa(bin) }) })
-  const j = (await res.json().catch(() => ({}))) as { id?: string; error?: string }
-  if (!res.ok || !j.id) throw new Error(j.error ?? 'Upload failed.')
-  return j.id
+/** A song: MP3, M4A, OGG, WAV or FLAC, any size that fits the allowance. The server checks the real type. */
+export async function uploadAudio(file: File, onProgress?: (done: number) => void): Promise<string> {
+  return sendBig('audio', file, undefined, onProgress)
 }
 
 /**

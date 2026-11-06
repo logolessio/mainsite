@@ -1,21 +1,18 @@
 import { db, nowSec, uid } from './db'
 import { HttpError } from './http'
 import { bioUploadIds } from './bio-store'
-import { makeRoom } from './quota'
+import { makeRoom, sweepChunks } from './quota'
 
+/** A still picture is re-encoded in the browser first, and then has to be this small. (GIFs, videos and songs have no limit of their own: only the 50 MB.) */
 export const MAX_IMAGE_BYTES = 450 * 1024
-/** An animated GIF is kept as it is (re-encoding would flatten it), so it has its own, larger limit. */
-export const MAX_GIF_BYTES = 1300 * 1024
 // Banners may be taller than 16 by 9 (up to square), and the profile grows to fit them.
 export const IMAGE_LIMITS = { avatar: { w: 512, h: 512 }, banner: { w: 1600, h: 1600 }, cover: { w: 900, h: 900 }, background: { w: 1920, h: 1920 }, cursor: { w: 128, h: 128 } } as const
 /** How many of each kind are kept. Banners keep more, so recent ones can be put back with one click. */
-const KEEP: Record<string, number> = { banner: 8, background: 12, cover: 12, bgvideo: 2, cursor: 6 }
-/** A looping background video is stored as it is (it cannot be re-encoded in the browser), so it is kept small. */
-export const MAX_VIDEO_BYTES = 1300 * 1024
+const KEEP: Record<string, number> = { banner: 8, background: 12, cover: 12, bgvideo: 3, cursor: 6, audio: 12 }
 export type ImageKind = keyof typeof IMAGE_LIMITS
 
 /** Reads width/height from the file header itself, so we never trust what the browser says. */
-function dimensions(b: Uint8Array, mime: string): { w: number; h: number } | null {
+export function dimensions(b: Uint8Array, mime: string): { w: number; h: number } | null {
   if (mime === 'image/gif' && b.length > 10) return { w: b[6] | (b[7] << 8), h: b[8] | (b[9] << 8) }
   if (mime === 'image/png' && b.length > 24) {
     const v = new DataView(b.buffer, b.byteOffset)
@@ -44,7 +41,7 @@ function dimensions(b: Uint8Array, mime: string): { w: number; h: number } | nul
   return null
 }
 
-function sniff(b: Uint8Array): 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif' | null {
+export function sniff(b: Uint8Array): 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif' | null {
   if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x38 && (b[4] === 0x37 || b[4] === 0x39) && b[5] === 0x61) return 'image/gif'
   if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return 'image/png'
   if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'image/jpeg'
@@ -64,8 +61,8 @@ const toBase64 = (b: Uint8Array) => {
  */
 export async function storeImage(userId: string, kind: ImageKind, bytes: Uint8Array) {
   const mime = sniff(bytes)
-  if (!mime) throw new HttpError(400, 'Only JPEG, PNG, WebP and GIF images are allowed.')
-  if (bytes.length > (mime === 'image/gif' ? MAX_GIF_BYTES : MAX_IMAGE_BYTES)) throw new HttpError(413, mime === 'image/gif' ? 'that GIF is over 1.3 MB. make it smaller, or paste a link to it.' : 'that image is too big. pick a smaller one.')
+  if (!mime || mime === 'image/gif') throw new HttpError(400, 'Only JPEG, PNG and WebP images are allowed here.')
+  if (bytes.length > MAX_IMAGE_BYTES) throw new HttpError(413, 'that image is too big. pick a smaller one.')
   const dim = dimensions(bytes, mime)
   const lim = IMAGE_LIMITS[kind]
   if (!dim || dim.w < 32 || dim.h < 32 || dim.w > lim.w * 1.05 || dim.h > lim.h * 1.05) throw new HttpError(400, 'That image has unsupported dimensions.')
@@ -95,9 +92,12 @@ export async function inUse(userId: string): Promise<string[]> {
   return ids.filter((x): x is string => typeof x === 'string' && /^[0-9a-f-]{36}$/.test(x))
 }
 
-async function insert(userId: string, kind: string, mime: string, bytes: Uint8Array) {
+/**
+ * Gets a person's storage ready for one more file of `add` bytes of this kind: keeps only the latest few of the kind (never one the page is using),
+ * clears pieces left behind, and makes room in their 50 MB (or says it will not fit).
+ */
+export async function makeSlot(userId: string, kind: string, add: number) {
   const d = await db()
-  // Keep only the latest few per kind so nobody can fill the database, but never one the profile is using.
   const keep = await inUse(userId).catch(() => [] as string[])
   await d
     .prepare(
@@ -105,19 +105,15 @@ async function insert(userId: string, kind: string, mime: string, bytes: Uint8Ar
     )
     .bind(userId, kind, KEEP[kind] ?? 3, ...keep)
     .run()
-  await makeRoom(userId, bytes.length, keep)
-  const id = uid()
-  await d.prepare('INSERT INTO uploads (id, user_id, kind, mime, size, data, created_at) VALUES (?1,?2,?3,?4,?5,?6,?7)').bind(id, userId, kind, mime, bytes.length, toBase64(bytes), nowSec()).run()
-  return id
+  await sweepChunks(userId)
+  await makeRoom(userId, add, keep)
 }
 
-/** A short looping MP4 or WebM for a profile background. Checked by its real file header and size. */
-export async function storeVideo(userId: string, bytes: Uint8Array) {
-  if (bytes.length > MAX_VIDEO_BYTES) throw new HttpError(413, 'That video is too large. Keep it under 1.3 MB (a few seconds, small size).')
-  const isMp4 = bytes.length > 12 && String.fromCharCode(...bytes.slice(4, 8)) === 'ftyp'
-  const isWebm = bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3
-  if (!isMp4 && !isWebm) throw new HttpError(400, 'Only MP4 and WebM videos are allowed.')
-  return insert(userId, 'bgvideo', isMp4 ? 'video/mp4' : 'video/webm', bytes)
+async function insert(userId: string, kind: string, mime: string, bytes: Uint8Array) {
+  await makeSlot(userId, kind, bytes.length)
+  const id = uid()
+  await (await db()).prepare('INSERT INTO uploads (id, user_id, kind, mime, size, data, created_at) VALUES (?1,?2,?3,?4,?5,?6,?7)').bind(id, userId, kind, mime, bytes.length, toBase64(bytes), nowSec()).run()
+  return id
 }
 
 /** Width and height of a stored image from the first bytes of its base64 data (all our images are WebP, PNG or JPEG). */
@@ -130,10 +126,20 @@ export function headDimensions(base64Head: string, mime: string) {
   }
 }
 
+/** Base64 to bytes, with a plain loop (it costs far less than mapping every character through a callback). */
+export function b64ToBytes(data: string) {
+  const bin = atob(data)
+  const out = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i)
+  return out
+}
+
+export const toB64 = toBase64
+
 export function fromBase64(data: string) {
   if (!/^[A-Za-z0-9+/=]+$/.test(data)) throw new HttpError(400, 'That file could not be read.')
   try {
-    return Uint8Array.from(atob(data), (c) => c.charCodeAt(0))
+    return b64ToBytes(data)
   } catch {
     throw new HttpError(400, 'That file could not be read.')
   }

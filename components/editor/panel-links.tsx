@@ -10,6 +10,7 @@ import { BlockIcon } from '@/components/bio/bits'
 import { IconPicker, SocialFields } from './account-fields'
 import { ImageFields, MusicFields, StatusFields, TagsFields, blockThumb } from './block-fields'
 import { HostFile } from './host-file'
+import { PagesBar } from './pages-bar'
 import { lookUp } from './song-search'
 import type { EditorApi } from './types'
 import { Area, Btn, Input, Row, Seg, Switch } from './ui'
@@ -274,6 +275,11 @@ export function LinksPanel({ api }: { api: EditorApi }) {
   const update = (id: string, p: Partial<BioBlock>) => set((c) => ({ ...c, blocks: c.blocks.map((x) => (x.id === id ? ({ ...x, ...p } as BioBlock) : x)) }))
   return (
     <div>
+      {(api.cfg.pages?.length ?? 0) > 0 && (
+        <div className="border-b border-[var(--ed-line)] px-6 py-5">
+          <PagesBar api={api} compact />
+        </div>
+      )}
       <div className="border-b border-[var(--ed-line)] px-5 py-5">
         <form
           onSubmit={(e) => {
