@@ -1,5 +1,7 @@
 import { db, nowSec, uid } from './db'
 import { HttpError } from './http'
+import { makeRoom } from './quota'
+import { inUse } from './upload'
 
 /**
  * Short audio previews for campaigns (the part of the song creators should use). Stored like pictures, in the uploads table,
@@ -33,6 +35,7 @@ export async function storeAudio(userId: string, bytes: Uint8Array) {
   if (!mime) throw new HttpError(400, 'Use an MP3, M4A, OGG or WAV file.')
   const d = await db()
   await d.prepare("DELETE FROM uploads WHERE user_id = ?1 AND kind = 'audio' AND id NOT IN (SELECT id FROM uploads WHERE user_id = ?1 AND kind = 'audio' ORDER BY created_at DESC LIMIT ?2)").bind(userId, KEEP - 1).run()
+  await makeRoom(userId, bytes.length, await inUse(userId).catch(() => []))
   const id = uid()
   await d.prepare("INSERT INTO uploads (id, user_id, kind, mime, size, data, created_at) VALUES (?1, ?2, 'audio', ?3, ?4, ?5, ?6)").bind(id, userId, mime, bytes.length, toBase64(bytes), nowSec()).run()
   return id

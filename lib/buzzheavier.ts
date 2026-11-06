@@ -7,14 +7,13 @@
 // song kept there cannot be shown on a page. Those stay on our own storage (see lib/upload.ts) or are linked from wherever the person keeps them.
 import { db, nowSec, setting } from './db'
 import { HttpError } from './http'
+import { USER_QUOTA_BYTES } from './quota'
 
 const API = 'https://buzzheavier.com/api'
 const UPLOAD = 'https://w.buzzheavier.com'
 
-/** One file: up to this size (a Worker takes a request body of up to 100 MB). */
-export const MAX_HOST_BYTES = 90 * 1024 * 1024
-/** All the files one person hosts, together. */
-export const HOST_QUOTA_BYTES = 500 * 1024 * 1024
+/** One file can be as big as the whole of a person's 50 MB (lib/quota.ts), which they share with everything else they keep. */
+export const MAX_HOST_BYTES = USER_QUOTA_BYTES
 export const MAX_HOST_FILES = 20
 
 /** Programs and scripts are not hosted (this account is the site's, so it is not a place to hand out things that run). */

@@ -7,6 +7,7 @@ import { handleChars, handleHint } from '@/lib/profile-style'
 import { uploadImage } from '@/lib/image-client'
 import { cn } from '@/lib/utils'
 import { MediaField } from './media-field'
+import { StorageMeter } from './storage-meter'
 import type { EditorApi } from './types'
 import { Area, Btn, Group, Input, Row, Switch } from './ui'
 
@@ -160,6 +161,9 @@ export function SettingsPanel({ api }: { api: EditorApi }) {
             <ExternalLink className="size-4" /> Open
           </a>
         </div>
+      </Group>
+      <Group title="Storage" hint="Everyone gets 50 MB of their own.">
+        <StorageMeter detail />
       </Group>
       <Group title="On the page">
         <Switch checked={cfg.meta.badges} onChange={(v) => up('meta', { badges: v })} label="Show your account number" hint="And OG or Founding, if you earned them." />

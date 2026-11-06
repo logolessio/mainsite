@@ -1,19 +1,18 @@
 import { db, nowSec, uid } from '@/lib/db'
-import { HOST_QUOTA_BYTES, MAX_HOST_BYTES, MAX_HOST_FILES, hostToken, looksExecutable, newFileFolder, putFile, removeFolder, safeName } from '@/lib/buzzheavier'
+import { MAX_HOST_BYTES, MAX_HOST_FILES, hostToken, looksExecutable, newFileFolder, putFile, removeFolder, safeName } from '@/lib/buzzheavier'
 import { protect } from '@/lib/guard'
 import { HttpError, json, route } from '@/lib/http'
+import { USER_QUOTA_BYTES, makeRoom, megabytes, storageUsed } from '@/lib/quota'
 import { requireUser } from '@/lib/user'
+import { inUse } from '@/lib/upload'
 
-const usage = async (userId: string) => {
-  const row = await (await db()).prepare("SELECT COUNT(*) AS n, COALESCE(SUM(size), 0) AS bytes FROM uploads WHERE user_id = ?1 AND kind = 'file'").bind(userId).first<{ n: number; bytes: number }>()
-  return { files: row?.n ?? 0, bytes: row?.bytes ?? 0 }
-}
+const hostedCount = async (userId: string) => ((await (await db()).prepare("SELECT COUNT(*) AS n FROM uploads WHERE user_id = ?1 AND kind = 'file'").bind(userId).first<{ n: number }>())?.n ?? 0)
 
-/** Is file hosting switched on, and how much of it has this person used? */
+/** Is file hosting switched on, and how much of their 50 MB has this person used? */
 export const GET = route(async () => {
   const user = await requireUser()
-  const used = await usage(user.id)
-  return json({ enabled: Boolean(await hostToken()), maxBytes: MAX_HOST_BYTES, quotaBytes: HOST_QUOTA_BYTES, maxFiles: MAX_HOST_FILES, ...used })
+  const used = await storageUsed(user.id)
+  return json({ enabled: Boolean(await hostToken()), maxBytes: MAX_HOST_BYTES, quotaBytes: USER_QUOTA_BYTES, maxFiles: MAX_HOST_FILES, files: await hostedCount(user.id), bytes: used.bytes })
 })
 
 /**
@@ -29,10 +28,9 @@ export const PUT = route(async (req: Request) => {
   const name = safeName(new URL(req.url).searchParams.get('name') ?? '')
   const length = Number(req.headers.get('content-length'))
   if (!Number.isFinite(length) || length <= 0) throw new HttpError(400, 'That file is empty.')
-  if (length > MAX_HOST_BYTES) throw new HttpError(413, `That file is over ${Math.round(MAX_HOST_BYTES / 1048576)} MB. Split it into a zip in parts, or host it somewhere else and paste the link.`)
-  const used = await usage(user.id)
-  if (used.files >= MAX_HOST_FILES) throw new HttpError(409, `You are hosting ${MAX_HOST_FILES} files already. Remove one first.`)
-  if (used.bytes + length > HOST_QUOTA_BYTES) throw new HttpError(409, `That would take you over ${Math.round(HOST_QUOTA_BYTES / 1048576)} MB of hosted files. Remove one first.`)
+  if (length > MAX_HOST_BYTES) throw new HttpError(413, `That file is over ${megabytes(MAX_HOST_BYTES)}, which is all the storage you have. Host it somewhere else and paste the link.`)
+  if ((await hostedCount(user.id)) >= MAX_HOST_FILES) throw new HttpError(409, `You are hosting ${MAX_HOST_FILES} files already. Remove one first.`)
+  await makeRoom(user.id, length, await inUse(user.id).catch(() => []))
   if (!req.body) throw new HttpError(400, 'That file could not be read.')
   const mime = /^[a-z0-9][a-z0-9.+-]*\/[a-z0-9][a-z0-9.+-]*$/i.test(req.headers.get('content-type') ?? '') ? (req.headers.get('content-type') as string).slice(0, 100) : 'application/octet-stream'
 

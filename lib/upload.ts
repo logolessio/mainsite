@@ -1,6 +1,7 @@
 import { db, nowSec, uid } from './db'
 import { HttpError } from './http'
 import { bioUploadIds } from './bio-store'
+import { makeRoom } from './quota'
 
 export const MAX_IMAGE_BYTES = 450 * 1024
 /** An animated GIF is kept as it is (re-encoding would flatten it), so it has its own, larger limit. */
@@ -73,7 +74,7 @@ export async function storeImage(userId: string, kind: ImageKind, bytes: Uint8Ar
 }
 
 /** The uploads a person's profile is using right now. They are never cleared out to make room. */
-async function inUse(userId: string): Promise<string[]> {
+export async function inUse(userId: string): Promise<string[]> {
   const d = await db()
   const row = await d.prepare('SELECT * FROM profiles WHERE user_id = ?1').bind(userId).first<{ avatar_key: string | null; banner_value: string; style_json?: string }>()
   if (!row) return []
@@ -104,6 +105,7 @@ async function insert(userId: string, kind: string, mime: string, bytes: Uint8Ar
     )
     .bind(userId, kind, KEEP[kind] ?? 3, ...keep)
     .run()
+  await makeRoom(userId, bytes.length, keep)
   const id = uid()
   await d.prepare('INSERT INTO uploads (id, user_id, kind, mime, size, data, created_at) VALUES (?1,?2,?3,?4,?5,?6,?7)').bind(id, userId, kind, mime, bytes.length, toBase64(bytes), nowSec()).run()
   return id

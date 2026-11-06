@@ -3,6 +3,7 @@
 import { FileDown, Loader2, Trash2, Upload } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { type HostStatus, hostFile, hostStatus, removeHosted } from '@/lib/image-client'
+import { StorageMeter } from './storage-meter'
 import { Btn } from './ui'
 
 const HOSTED = /^https:\/\/buzzheavier\.com\/([a-z0-9]{6,32})$/i
@@ -20,6 +21,7 @@ export function HostFile({ url, onUrl, onFile, toast }: { url: string; onUrl: (u
   const input = useRef<HTMLInputElement>(null)
   const [info, setInfo] = useState<HostStatus | null>(null)
   const [done, setDone] = useState<number | null>(null)
+  const [moved, setMoved] = useState(0)
   const id = hostedId(url)
   useEffect(() => {
     status ??= hostStatus()
@@ -29,7 +31,7 @@ export function HostFile({ url, onUrl, onFile, toast }: { url: string; onUrl: (u
 
   const send = async (f: File | undefined) => {
     if (!f) return
-    if (f.size > info.maxBytes) return toast(`That file is over ${size(info.maxBytes)}. Zip it in parts, or host it somewhere else and paste the link.`)
+    if (f.size > info.maxBytes) return toast(`That file is over ${size(info.maxBytes)}, which is all the storage you have. Host it somewhere else and paste the link.`)
     setDone(0)
     try {
       const old = id
@@ -37,6 +39,7 @@ export function HostFile({ url, onUrl, onFile, toast }: { url: string; onUrl: (u
       onUrl(got.url)
       onFile({ name: got.name, size: got.size })
       status = null
+      setMoved((n) => n + 1)
       if (old) void removeHosted(old).catch(() => null)
     } catch (e) {
       toast(e instanceof Error ? e.message : "couldn't upload that. try again.")
@@ -50,6 +53,7 @@ export function HostFile({ url, onUrl, onFile, toast }: { url: string; onUrl: (u
       await removeHosted(id)
       onUrl('')
       status = null
+      setMoved((n) => n + 1)
     } catch (e) {
       toast(e instanceof Error ? e.message : "couldn't remove that. try again.")
     }
@@ -79,10 +83,11 @@ export function HostFile({ url, onUrl, onFile, toast }: { url: string; onUrl: (u
             </Btn>
           )}
           <p className="min-w-0 flex-1 text-[0.72rem] leading-snug text-[var(--ed-mute)]">
-            {id ? 'This link opens your file on a download page.' : `Or put a file here instead of a link: a pack, a LUT, a project, a zip. Up to ${size(info.maxBytes)}. No programs.`}
+            {id ? 'This link opens your file on a download page.' : 'Or put a file here instead of a link: a pack, a LUT, a project, a zip. No programs.'}
           </p>
         </div>
       )}
+      <StorageMeter refresh={moved} className="mt-3 border-t border-[var(--ed-line)] pt-3" />
     </div>
   )
 }
