@@ -201,11 +201,15 @@ function Hero() {
 /* ------------------------------------------------------------------ what you get, as plain rows */
 
 const PLAIN = [
-  ['Your page', 'logoless.io/you, from one character up. Links, socials, videos and a song on one page.'],
-  ['Your own files', 'Your picture, banner, background, GIF, video, cursor and song. Too big to upload? Paste a link to it instead.'],
+  ['Your page', 'logoless.io/you, from one character up. Links, socials, videos, songs, pictures and tags on one page.'],
+  ['Music', 'Search for a song and its cover, title and artist come with it. Or upload your own. It plays right on the page.'],
+  ['Behind it', 'A colour, a picture, a GIF, a video, or a YouTube video that plays by itself with none of YouTube on top.'],
   ['The card', 'It floats over your background and turns towards the pointer, with your picture, name and icons standing off it.'],
+  ['Layouts', 'Classic, a profile card, side by side, a link list, a cover, minimal, or a blank canvas where you drag everything where you want it.'],
+  ['Sizes', 'Make the name, bio, icons and links bigger or smaller, put the links two to a row, change the spacing.'],
   ['Effects', 'Snow, rain, embers, smoke, petals, a storm and thirteen more, playing over the background.'],
-  ['Layouts', 'Classic, a profile card, side by side, or a blank canvas where you drag everything where you want it.'],
+  ['Cursor', 'Your own cursor, trails that follow it, and effects wherever someone clicks.'],
+  ['Your own files', 'Your picture, banner, background, GIF, video, cursor and song, up to 50 MB of storage. Too big? Paste a link to it.'],
   ['Numbers', 'Views, clicks and which link people press, for the last 30 days.'],
   ['Price', 'Free. Nothing in the editor is locked.'],
 ] as const

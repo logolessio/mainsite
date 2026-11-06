@@ -1,10 +1,10 @@
 'use client'
 
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
-import { ArrowUpRight, FileDown, Globe, Link2, Mail } from 'lucide-react'
+import { ArrowUpRight, FileDown, Globe, Link2, Mail, Pause, Play } from 'lucide-react'
 import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react'
 import { BrandIcon } from '@/components/brand-icon'
-import { type BioBlock, embedFor, linkLabel, platformOf } from '@/lib/bio'
+import { type BioBlock, STATUS_STATES, embedFor, imgSrc, linkLabel, musicEmbed, platformOf } from '@/lib/bio'
 import { PROFILE_FONT_CLASS } from '@/lib/profile-fonts'
 import type { FontId } from '@/lib/profile-style'
 import { cn } from '@/lib/utils'
@@ -54,7 +54,7 @@ export function Name({ className, style }: { className?: string; style?: CSSProp
   const text = data.name
   return (
     // a div with the heading role, not an h1: the site's own heading rules (capitals, a hard shadow) must not reach a person's page
-    <div role="heading" aria-level={1} data-in style={{ '--i': 1, ...style } as CSSProperties} className={cn('bn', fontClass(cfg.theme.font), s !== 'scramble' && s !== 'solid' && `bn-${s}`, className)} data-text={text}>
+    <div role="heading" aria-level={1} data-in style={{ '--i': 1, ...style } as CSSProperties} className={cn('bn bio-zoom-name', fontClass(cfg.theme.font), s !== 'scramble' && s !== 'solid' && `bn-${s}`, className)} data-text={text}>
       {s === 'scramble' ? <Scramble text={text} /> : text}
     </div>
   )
@@ -63,7 +63,7 @@ export function Name({ className, style }: { className?: string; style?: CSSProp
 export function Bio({ className, center = false }: { className?: string; center?: boolean }) {
   const { data, cfg } = useBio()
   if (!data.bio) return null
-  const cls = cn('bio-mute max-w-[34rem] text-[1rem] leading-relaxed whitespace-pre-line', fontClass(cfg.theme.font), center && 'mx-auto', className)
+  const cls = cn('bio-zoom-bio bio-mute max-w-[34rem] text-[1rem] leading-relaxed whitespace-pre-line', fontClass(cfg.theme.font), center && 'mx-auto', className)
   if (cfg.fx.typewriter) return <Typewriter text={data.bio} className={cls} />
   return (
     <p data-in style={{ '--i': 2 } as CSSProperties} className={cls}>
@@ -261,6 +261,184 @@ export function TextBlock({ text, index = 0 }: { text: string; index?: number })
 
 export const Divider = () => <hr data-in className="my-2 border-0 border-t border-[var(--bio-line)]" />
 
+const clock = (n: number) => `${Math.floor(n / 60)}:${String(Math.floor(n % 60)).padStart(2, '0')}`
+
+/**
+ * A song as a card: the cover, the title and the artist, a play button, and how far it has got (press the bar to jump). It plays a file or a clip right on
+ * the page; for a song that lives on Spotify or the like it opens that service's player under the card instead.
+ */
+function TrackCard({ block, embed, audio, index = 0 }: { block: Extract<BioBlock, { t: 'music' }>; embed: ReturnType<typeof musicEmbed>; audio: string; index?: number }) {
+  const { mode } = useBio()
+  const el = useRef<HTMLAudioElement>(null)
+  const [playing, setPlaying] = useState(false)
+  const [at, setAt] = useState(0)
+  const [len, setLen] = useState(0)
+  const [open, setOpen] = useState(false)
+  const line = [block.artist, block.album].filter(Boolean).join(' · ')
+  const press = () => {
+    if (audio) {
+      const a = el.current
+      if (!a) return
+      if (a.paused) void a.play().catch(() => null)
+      else a.pause()
+    } else setOpen((v) => !v)
+  }
+  return (
+    <div data-in style={{ '--i': 4 + Math.min(index, 12) } as CSSProperties} className="w-full">
+      <div className="bl !cursor-default gap-3.5 py-3">
+        {audio && <audio ref={el} src={mode === 'mini' ? undefined : audio} preload="none" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onTimeUpdate={(e) => setAt(e.currentTarget.currentTime)} onLoadedMetadata={(e) => setLen(e.currentTarget.duration || 0)} />}
+        <span className="relative grid size-14 shrink-0 place-items-center overflow-hidden bg-[var(--bio-soft)]" style={{ borderRadius: 'calc(var(--bio-r) * 0.55)' }}>
+          {block.cover ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={mode === 'mini' && !block.cover.startsWith('https:') ? undefined : imgSrc(block.cover)} alt="" draggable={false} referrerPolicy="no-referrer" className="size-full object-cover" />
+          ) : (
+            <Play className="size-5 opacity-60" />
+          )}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="bl-title block truncate">{block.title || 'Listen'}</span>
+          {line && <span className="bio-mute block truncate text-[0.78rem]">{line}</span>}
+          {audio && (
+            <span
+              role="slider"
+              tabIndex={0}
+              aria-label="Position in the song"
+              aria-valuemin={0}
+              aria-valuemax={Math.round(len)}
+              aria-valuenow={Math.round(at)}
+              onClick={(e) => {
+                const a = el.current
+                if (!a || !len) return
+                const r = e.currentTarget.getBoundingClientRect()
+                a.currentTime = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * len
+              }}
+              onKeyDown={(e) => {
+                const a = el.current
+                if (!a) return
+                if (e.key === 'ArrowRight') a.currentTime += 5
+                if (e.key === 'ArrowLeft') a.currentTime -= 5
+              }}
+              className="mt-2 block h-1.5 cursor-pointer overflow-hidden rounded-full bg-[rgb(var(--bio-fg-rgb)/0.18)]"
+            >
+              <span className="block h-full rounded-full bg-[var(--bio-fg)]" style={{ width: `${len ? (at / len) * 100 : 0}%` }} />
+            </span>
+          )}
+        </span>
+        {audio && len > 0 && <span className="bio-mute shrink-0 text-[0.7rem] tabular-nums">{clock(at)}</span>}
+        <button type="button" aria-label={playing || open ? 'Pause' : 'Play'} onClick={press} className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-full bg-[var(--bio-fg)] text-[var(--bio-bg)] transition-transform duration-200 hover:scale-105">
+          {playing || open ? <Pause className="size-4" fill="currentColor" /> : <Play className="ml-0.5 size-4" fill="currentColor" />}
+        </button>
+      </div>
+      {!audio && open && embed && embed.src && mode !== 'mini' && (
+        <div className="mt-2 overflow-hidden border border-[var(--bio-line)]" style={{ borderRadius: 'var(--bio-r)', height: embed.height || undefined, aspectRatio: embed.height ? undefined : String(embed.ratio ?? 16 / 9) }}>
+          <iframe src={embed.src} title={block.title || 'Music'} allow="autoplay; encrypted-media; clipboard-write; fullscreen" referrerPolicy="strict-origin-when-cross-origin" className="size-full border-0" />
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * A song. With details (a cover, an artist) or as a file, an upload or a clip it is a card on the page's own style; a streaming link on its own, or one set to
+ * show the full player, is shown in that service's player.
+ */
+export function MusicBlock({ block, index = 0 }: { block: Extract<BioBlock, { t: 'music' }>; index?: number }) {
+  const { mode } = useBio()
+  const m = musicEmbed(block.url)
+  const details = Boolean(block.cover || block.artist || block.preview)
+  if (!m && !details) return <LinkItem block={{ id: block.id, t: 'link', title: block.title || block.url, url: block.url, icon: 'auto', note: '', hidden: false, pin: false }} index={index} />
+  const audio = block.preview || (m && (m.kind === 'file' || m.kind === 'upload') ? m.src : '')
+  if (!block.player && (audio || details)) return <TrackCard block={block} embed={m} audio={audio} index={index} />
+  if (!m || m.kind === 'file' || m.kind === 'upload') return <TrackCard block={block} embed={m} audio={audio} index={index} />
+  return (
+    <div data-in style={{ '--i': 4 + Math.min(index, 12) } as CSSProperties} className="w-full overflow-hidden">
+      <div className="relative w-full overflow-hidden border border-[var(--bio-line)] bg-[var(--bio-soft)]" style={{ borderRadius: 'var(--bio-r)', height: m.height || undefined, aspectRatio: m.height ? undefined : String(m.ratio ?? 16 / 9) }}>
+        {mode === 'mini' ? (
+          <div className="absolute inset-0 grid place-items-center text-[var(--bio-mute)]">
+            <Play className="size-6" />
+          </div>
+        ) : (
+          <iframe src={m.src} title={block.title || 'Music'} loading="lazy" allow="autoplay; encrypted-media; clipboard-write; fullscreen" referrerPolicy="strict-origin-when-cross-origin" className="absolute inset-0 size-full border-0" />
+        )}
+      </div>
+      {block.title && <p className="bio-mute mt-2 text-center text-[0.82rem]">{block.title}</p>}
+    </div>
+  )
+}
+
+/** A picture (or GIF) on the page, in the shape asked for, linking somewhere if it was given a link. */
+export function ImageBlock({ block, index = 0 }: { block: Extract<BioBlock, { t: 'image' }>; index?: number }) {
+  const { track, mode } = useBio()
+  const ratio = block.shape === 'wide' ? '16 / 9' : block.shape === 'square' ? '1 / 1' : block.shape === 'tall' ? '4 / 5' : undefined
+  const pic = (
+    <div className="overflow-hidden border border-[var(--bio-line)]" style={{ aspectRatio: ratio, borderRadius: 'var(--bio-r)' }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={mode === 'mini' && !block.src.startsWith('https:') ? undefined : imgSrc(block.src)} alt={block.title} loading="lazy" draggable={false} referrerPolicy="no-referrer" className={cn('block w-full', ratio && 'size-full object-cover')} />
+    </div>
+  )
+  return (
+    <figure data-in style={{ '--i': 4 + Math.min(index, 12) } as CSSProperties} className="w-full">
+      {block.url ? (
+        <a
+          href={mode === 'live' ? block.url : undefined}
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+          onClick={(e) => {
+            if (mode !== 'live') return e.preventDefault()
+            track('click', block.id)
+          }}
+          className="block transition-transform duration-300 hover:-translate-y-0.5"
+          tabIndex={mode === 'mini' ? -1 : undefined}
+        >
+          {pic}
+        </a>
+      ) : (
+        pic
+      )}
+      {block.title && <figcaption className="bio-mute mt-2 text-center text-[0.82rem]">{block.title}</figcaption>}
+    </figure>
+  )
+}
+
+/** A row of small labels: what you do, what you use, where you are. */
+export function TagsBlock({ block, index = 0 }: { block: Extract<BioBlock, { t: 'tags' }>; index?: number }) {
+  const { cfg } = useBio()
+  return (
+    <ul data-in style={{ '--i': 4 + Math.min(index, 12) } as CSSProperties} className={cn('flex flex-wrap gap-2', cfg.theme.align === 'center' ? 'justify-center' : 'justify-start', fontClass(cfg.theme.font))}>
+      {block.items.map((t) => (
+        <li
+          key={t}
+          className={cn(
+            'inline-flex h-7 items-center text-[0.76rem] whitespace-nowrap',
+            block.style === 'pill' && 'rounded-full border border-[var(--bio-line)] bg-[var(--bio-soft)] px-3',
+            block.style === 'outline' && 'rounded-full border border-[rgb(var(--bio-accent-rgb)/0.55)] px-3',
+            block.style === 'hash' && 'bio-mute px-0.5',
+          )}
+        >
+          {block.style === 'hash' ? `#${t}` : t}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+/** A line with a coloured dot: open for work, busy until May, away. */
+export function StatusBlock({ block, index = 0 }: { block: Extract<BioBlock, { t: 'status' }>; index?: number }) {
+  const { cfg } = useBio()
+  const dot = STATUS_STATES.find((s) => s.id === block.state)?.dot ?? '#3ddc84'
+  return (
+    <div data-in style={{ '--i': 4 + Math.min(index, 12) } as CSSProperties} className={cn('flex', cfg.theme.align === 'center' ? 'justify-center' : 'justify-start')}>
+      <span className={cn('inline-flex h-8 items-center gap-2.5 rounded-full border border-[var(--bio-line)] bg-[var(--bio-soft)] px-3.5 text-[0.8rem]', fontClass(cfg.theme.font))}>
+        <span className="relative grid size-2.5 place-items-center">
+          {block.state === 'open' && <span aria-hidden="true" className="absolute inset-0 animate-ping rounded-full opacity-60" style={{ background: dot }} />}
+          <span className="relative size-2 rounded-full" style={{ background: dot }} />
+        </span>
+        {block.text}
+      </span>
+    </div>
+  )
+}
+
 /** Any block, in the page's own style. `plain` leaves out headings and text (for layouts that only want the links). */
 export function BlockView({ block, index }: { block: BioBlock; index: number }) {
   switch (block.t) {
@@ -272,6 +450,14 @@ export function BlockView({ block, index }: { block: BioBlock; index: number }) 
       return <Heading text={block.text} index={index} />
     case 'text':
       return <TextBlock text={block.text} index={index} />
+    case 'music':
+      return <MusicBlock block={block} index={index} />
+    case 'image':
+      return <ImageBlock block={block} index={index} />
+    case 'tags':
+      return <TagsBlock block={block} index={index} />
+    case 'status':
+      return <StatusBlock block={block} index={index} />
     case 'divider':
       return <Divider />
     default:
@@ -281,13 +467,12 @@ export function BlockView({ block, index }: { block: BioBlock; index: number }) 
 
 /** The links (and the rest) one under the other, with a steady gap. */
 export function BlockList({ className, items }: { className?: string; items?: BioBlock[] }) {
-  const { items: all } = useBio()
+  const { items: all, cfg } = useBio()
   const list = items ?? all
+  const grid = cfg.theme.links === 'grid'
   return (
-    <div className={cn('flex w-full flex-col gap-3', className)}>
-      {list.map((b, i) => (
-        <BlockView key={b.id} block={b} index={i} />
-      ))}
+    <div className={cn('w-full', grid ? 'grid grid-cols-2' : 'flex flex-col', className)} style={{ gap: 'calc(0.75rem * var(--bio-gap-k, 1))' }}>
+      {list.map((b, i) => (grid && b.t !== 'link' ? <div key={b.id} className="col-span-2"><BlockView block={b} index={i} /></div> : <BlockView key={b.id} block={b} index={i} />))}
     </div>
   )
 }

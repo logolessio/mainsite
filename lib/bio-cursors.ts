@@ -83,6 +83,36 @@ export const CURSORS: CursorPreset[] = [
     link: { body: `<path d="M1.5 16C5.2 9 10.4 6 16 6s10.8 3 14.5 10C26.8 23 21.6 26 16 26S5.2 23 1.5 16z" ${E}/><circle cx="16" cy="16" r="5.8" fill="S"/><circle cx="14.3" cy="14.3" r="1.6" fill="F"/>`, hot: [16, 16] },
   },
   {
+    id: 'star',
+    name: 'Star',
+    arrow: { body: `<path d="M16 2.8l3.7 8.5 9.2.8-7 6 2.1 9L16 22.2 8 27.1l2.1-9-7-6 9.2-.8z" ${E}/>`, hot: [16, 15] },
+    link: { body: `<path d="M16 1.6l4.1 9.4 10.2.9-7.7 6.7 2.3 10L16 23.2 7.1 28.6l2.3-10L1.7 11.9l10.2-.9z" ${E}/>`, hot: [16, 15] },
+  },
+  {
+    id: 'moon',
+    name: 'Moon',
+    arrow: { body: `<path d="M21.5 4A12.5 12.5 0 1 0 28 21.5 10 10 0 0 1 21.5 4z" ${E}/>`, hot: [15, 16] },
+    link: { body: `<path d="M21 2.5A14 14 0 1 0 29.5 21 11 11 0 0 1 21 2.5z" ${E}/>`, hot: [15, 16] },
+  },
+  {
+    id: 'flame',
+    name: 'Flame',
+    arrow: { body: `<path d="M16 2.5c1 5 6.8 7.6 6.8 14a6.8 6.8 0 0 1-13.6 0c0-3 1.4-4.8 3-6.6.3 2 1.2 3.2 2.4 3.6C14.4 10.4 14.6 6.4 16 2.5z" ${E}/>`, hot: [16, 17] },
+    link: { body: `<path d="M16 1.5c1.2 5.6 8 8.6 8 15.5a8 8 0 0 1-16 0c0-3.4 1.6-5.4 3.5-7.4.4 2.2 1.4 3.6 2.8 4C14.2 10.2 14.4 6 16 1.5z" ${E}/>`, hot: [16, 17] },
+  },
+  {
+    id: 'crown',
+    name: 'Crown',
+    arrow: { body: `<path d="M4.5 24 6 10l6 6 4-9 4 9 6-6 1.5 14z" ${E}/><path d="M4.5 24.8h23v3h-23z" ${E}/>`, hot: [16, 16] },
+    link: { body: `<path d="M3.5 23.5 5 8.5l6.6 6.6L16 5l4.4 10.1L27 8.5l1.5 15z" ${E}/><path d="M3.5 24.4h25v3.4h-25z" ${E}/>`, hot: [16, 16] },
+  },
+  {
+    id: 'note',
+    name: 'Note',
+    arrow: { body: `<path d="M12.5 23.5V7l13-3v15.5" fill="none" stroke="S" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.5 23.5V7l13-3v15.5" fill="none" stroke="F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.3" cy="23.5" r="3.6" ${E}/><circle cx="22.3" cy="19.5" r="3.6" ${E}/>`, hot: [14, 6] },
+    link: { body: `<path d="M12.5 23.5V7l13-3v15.5" fill="none" stroke="S" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.5 23.5V7l13-3v15.5" fill="none" stroke="F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.3" cy="23.5" r="4.6" ${E}/><circle cx="22.3" cy="19.5" r="4.6" ${E}/>`, hot: [14, 6] },
+  },
+  {
     id: 'plus',
     name: 'Plus',
     arrow: { body: stroke('M16 6v20M6 16h20'), hot: [16, 16] },

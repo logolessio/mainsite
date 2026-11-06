@@ -176,3 +176,117 @@ export function Side() {
     </Frame>
   )
 }
+
+/** A banner: the person's picture or video, or a soft wash of the page's colours. */
+function useBanner() {
+  const { cfg, mode } = useBio()
+  const banner = cfg.card.banner
+  const video = Boolean(banner) && mediaKindOf(banner) === 'video'
+  const style: CSSProperties = banner && !video ? { background: `center / cover no-repeat url(${imgSrc(banner)})` } : cfg.colors.on ? { background: 'linear-gradient(135deg, var(--bio-accent), var(--bio-accent2))' } : { background: 'linear-gradient(135deg, rgb(var(--bio-fg-rgb) / 0.26), rgb(var(--bio-fg-rgb) / 0.06))' }
+  return { style, video: video && mode !== 'mini' ? imgSrc(banner) : null }
+}
+
+/** Link list: no card. The picture and name, then wide buttons, one under the other. */
+export function List() {
+  const { socials, items } = useBio()
+  return (
+    <Frame>
+      <div className="flex w-[min(34rem,calc(100cqw-2rem))] flex-col items-center text-center">
+        <Part id="profile">
+          <Avatar size={104} />
+        </Part>
+        <Title />
+        <Part id="profile" className="mt-3 w-full">
+          <Bio className="mx-auto !max-w-[28rem] text-[0.95rem]" center />
+        </Part>
+        {socials.length > 0 && (
+          <Part id="links" className="mt-5">
+            <Socials />
+          </Part>
+        )}
+        {items.length > 0 && (
+          <Part id="links" className="mt-6 w-full">
+            <BlockList />
+          </Part>
+        )}
+      </div>
+    </Frame>
+  )
+}
+
+/** Cover: a wide banner across the top, the picture over its lower edge, and everything below in a plain column. */
+export function Cover() {
+  const { socials, items, cfg } = useBio()
+  const bg = useBackgroundClick()
+  const { style, video } = useBanner()
+  const circle = cfg.avatar.shape === 'circle'
+  return (
+    <main onClick={bg} className="min-h-full w-full pb-16">
+      <Part id="card">
+        <div className="relative h-[clamp(9rem,28cqh,16rem)] w-full overflow-hidden" style={style}>
+          {video && <video src={video} muted loop playsInline autoPlay preload="metadata" className="absolute inset-0 size-full object-cover" />}
+          <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/30 to-transparent" />
+        </div>
+      </Part>
+      <div className="mx-auto w-[min(36rem,calc(100cqw-2rem))]">
+        <div className={cn('-mt-12 mb-3 inline-block bg-[var(--bio-bg)] p-[5px]', circle ? 'rounded-full' : 'rounded-[1.4rem]')}>
+          <Part id="profile">
+            <Avatar size={96} />
+          </Part>
+        </div>
+        <Part id="profile">
+          <Name className="text-[clamp(1.7rem,7cqw,2.3rem)] leading-[1.1] font-semibold [overflow-wrap:anywhere]" style={{ textAlign: 'left' }} />
+        </Part>
+        <Badges center={false} className="mt-2.5" />
+        <Part id="profile" className="mt-3">
+          <Bio className="!max-w-none text-[0.95rem]" />
+        </Part>
+        {socials.length > 0 && (
+          <Part id="links" className="mt-5">
+            <Socials justify="start" />
+          </Part>
+        )}
+        {items.length > 0 && (
+          <Part id="links" className="mt-6 w-full">
+            <BlockList />
+          </Part>
+        )}
+      </div>
+    </main>
+  )
+}
+
+/** Minimal: small and left-aligned, like a business card. The links are plain rows. */
+export function Minimal() {
+  const { socials, items } = useBio()
+  return (
+    <Frame>
+      <div className="w-[min(30rem,calc(100cqw-2rem))] text-left">
+        <div className="flex items-center gap-4">
+          <Part id="profile" className="shrink-0">
+            <Avatar size={64} />
+          </Part>
+          <div className="min-w-0">
+            <Part id="profile">
+              <Name className="text-[clamp(1.3rem,5.5cqw,1.7rem)] leading-[1.15] font-semibold [overflow-wrap:anywhere]" style={{ textAlign: 'left' }} />
+            </Part>
+            <Badges center={false} className="mt-1.5" />
+          </div>
+        </div>
+        <Part id="profile" className="mt-4">
+          <Bio className="!max-w-none text-[0.9rem]" />
+        </Part>
+        {socials.length > 0 && (
+          <Part id="links" className="mt-4">
+            <Socials justify="start" />
+          </Part>
+        )}
+        {items.length > 0 && (
+          <Part id="links" className="minimal-links mt-5 w-full">
+            <BlockList />
+          </Part>
+        )}
+      </div>
+    </Frame>
+  )
+}

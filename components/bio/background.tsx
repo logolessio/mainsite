@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, useTransform } from 'framer-motion'
-import { type CSSProperties, useEffect, useRef } from 'react'
+import { type CSSProperties, useEffect, useRef, useState } from 'react'
 import { CardEffectLayer } from '@/components/profile/card-effect'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
 import { grey, hexRgb, imgSrc, pageLight } from '@/lib/bio'
@@ -38,6 +38,34 @@ function LoopVideo({ src }: { src: string }) {
 }
 
 /**
+ * A YouTube video behind the page: muted, looping, with none of YouTube's controls. The player is drawn larger than the screen (and its edges cropped) so the
+ * title strip and the watermark fall outside it, and nothing on it can be pressed. Until it is playing, the video's own picture shows.
+ */
+function YouTubeBg({ id, start, still }: { id: string; start: number; still: boolean }) {
+  const [on, setOn] = useState(false)
+  const src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}&modestbranding=1&rel=0&playsinline=1&disablekb=1&fs=0&iv_load_policy=3&cc_load_policy=0&start=${start}`
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-black">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`} alt="" referrerPolicy="no-referrer" className="absolute inset-0 size-full object-cover" />
+      {!still && (
+        <iframe
+          src={src}
+          title=""
+          tabIndex={-1}
+          aria-hidden="true"
+          allow="autoplay; encrypted-media"
+          referrerPolicy="strict-origin-when-cross-origin"
+          onLoad={() => window.setTimeout(() => setOn(true), 1200)}
+          className="pointer-events-none absolute top-1/2 left-1/2 border-0 transition-opacity duration-1000"
+          style={{ width: 'max(100cqw, 177.78cqh)', height: 'max(56.25cqw, 100cqh)', transform: 'translate(-50%, -50%) scale(1.34)', opacity: on ? 1 : 0 }}
+        />
+      )}
+    </div>
+  )
+}
+
+/**
  * Everything behind the page: a colour or a still gradient, or a picture, GIF or video (dimmed and softened if asked), and the effect that plays over it
  * (snow, embers, smoke and the rest). The background itself never moves on its own; it leans a little against the pointer when the page has depth.
  */
@@ -47,7 +75,7 @@ export function BioBackground() {
   const col = cfg.colors
   const custom = col.on
   const light = pageLight(cfg)
-  const media = bg.kind === 'image' || bg.kind === 'gif' || bg.kind === 'video'
+  const media = bg.kind === 'image' || bg.kind === 'gif' || bg.kind === 'video' || bg.kind === 'youtube'
   const lean = reduced || mode === 'mini' ? 0 : (bg.parallax / 100) * (cfg.fx.depth / 100)
   const x = useTransform(px, (v) => -v * 16 * lean)
   const y = useTransform([sy, py] as never, ([s, p]: number[]) => -s * lean * 0.1 - p * 16 * lean)
@@ -73,6 +101,7 @@ export function BioBackground() {
           <img src={giphyImage(bg.gif)} alt="" referrerPolicy="no-referrer" className="absolute inset-0 size-full object-cover" />
         )}
         {bg.kind === 'video' && bg.video && mode !== 'mini' && <LoopVideo src={bgVideoSrc(bg.video)} />}
+        {bg.kind === 'youtube' && bg.youtube && <YouTubeBg id={bg.youtube} start={bg.ytStart} still={mode === 'mini' || reduced} />}
         {media && bg.dim > 0 && <div className="absolute inset-0" style={{ background: light ? '#fff' : '#000', opacity: (bg.dim / 100) * 0.85 }} />}
       </motion.div>
       {effect !== 'none' && mode !== 'mini' && (

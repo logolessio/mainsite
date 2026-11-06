@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 import { connection } from 'next/server'
 import { BioFree } from '@/components/bio/bio-free'
 import { BioPage } from '@/components/bio/bio-page'
@@ -44,7 +45,9 @@ export default async function Page({ params, searchParams }: Props) {
   await connection()
   const { slug: raw } = await params
   const q = await searchParams
-  const slug = decode(raw).toLowerCase()
+  const typed = decode(raw).toLowerCase()
+  if (typed.startsWith('@') && typed.length > 1) redirect(`/${encodeURIComponent(typed.replace(/^@+/, ''))}`)
+  const slug = typed
   const found = await bioLookup(slug).catch(() => null)
   const session = await getSession()
   if (found && !found.suspended) {

@@ -1,15 +1,52 @@
 'use client'
 
+import { ChevronDown } from 'lucide-react'
 import { type CSSProperties, type ReactNode, useEffect, useId, useState } from 'react'
 import { cn } from '@/lib/utils'
 
-/** A titled group of controls. */
-export function Group({ title, hint, children, className }: { title?: string; hint?: string; children: ReactNode; className?: string }) {
+/**
+ * A titled group of controls. Press the title to fold it away (a long panel is much easier to get round that way); how each one was left is remembered.
+ * `fold` starts it folded.
+ */
+export function Group({ title, hint, children, className, fold = false }: { title?: string; hint?: string; children: ReactNode; className?: string; fold?: boolean }) {
+  const key = title ? `ll:fold:${title}` : ''
+  const [open, setOpen] = useState(!fold)
+  useEffect(() => {
+    if (!key) return
+    try {
+      const v = window.localStorage.getItem(key)
+      if (v === '1') setOpen(true)
+      else if (v === '0') setOpen(false)
+    } catch {
+      /* the choice is not kept */
+    }
+  }, [key])
+  const toggle = () => {
+    setOpen((v) => {
+      try {
+        window.localStorage.setItem(key, v ? '0' : '1')
+      } catch {
+        /* the choice is not kept */
+      }
+      return !v
+    })
+  }
   return (
-    <section className={cn('border-b border-[var(--ed-line)] px-5 py-5', className)}>
-      {title && <h3 className="cap mb-2 text-white">{title}</h3>}
-      {hint && <p className="mb-3 text-[0.76rem] leading-snug text-[var(--ed-mute)]">{hint}</p>}
-      <div className={cn('space-y-4', !title && !hint && '')}>{children}</div>
+    <section className={cn('border-b border-[var(--ed-line)] px-5', open || !title ? 'py-5' : 'py-3', className)}>
+      {title && (
+        <h3 className="cap text-white">
+          <button type="button" onClick={toggle} aria-expanded={open} className="flex w-full items-center justify-between gap-3 rounded-none py-1 text-left">
+            {title}
+            <ChevronDown className={cn('size-4 shrink-0 text-white/40 transition-transform duration-300', !open && '-rotate-90')} />
+          </button>
+        </h3>
+      )}
+      {(open || !title) && (
+        <div className={title ? 'mt-2' : ''}>
+          {hint && <p className="mb-3 text-[0.76rem] leading-snug text-[var(--ed-mute)]">{hint}</p>}
+          <div className="space-y-4">{children}</div>
+        </div>
+      )}
     </section>
   )
 }

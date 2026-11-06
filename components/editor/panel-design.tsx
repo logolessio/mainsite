@@ -5,15 +5,16 @@ import { memo, useDeferredValue, useRef, useState } from 'react'
 import { BioPage } from '@/components/bio/bio-page'
 import { fontClass } from '@/components/bio/bits'
 import { GifPicker } from '@/components/profile/gif-picker'
-import { AVATAR_SHAPES, BG_KINDS, BUTTON_STYLES, CARD_STYLES, GRADIENT_STYLES, LAYOUTS, NAME_STYLES, PRESETS, applyPreset, hslHex } from '@/lib/bio'
+import { AVATAR_SHAPES, BG_KINDS, BUTTON_STYLES, CARD_STYLES, GRADIENT_STYLES, LAYOUTS, NAME_STYLES, PRESETS, applyPreset, hslHex, youtubeId } from '@/lib/bio'
 import { uploadBackground, uploadBgVideo } from '@/lib/image-client'
 import { cn } from '@/lib/utils'
 import { MediaField } from './media-field'
 import { ArrangePanel } from './panel-arrange'
 import type { EditorApi } from './types'
-import { Btn, ColorField, Group, Row, Seg, Slider, Switch } from './ui'
+import { Btn, ColorField, Group, Input, Row, Seg, Slider, Switch } from './ui'
 
 const FONTS = [
+  ['anubis', 'Site (Plex Mono and Geist)'],
   ['quicksand', 'Rounded'],
   ['jelly', 'Jellybean'],
   ['geist', 'Geist'],
@@ -111,7 +112,7 @@ export function LayoutPanel({ api }: { api: EditorApi }) {
         </Row>
         <Switch checked={cfg.card.glare} onChange={(v) => up('card', { glare: v })} label="Light on its face" hint="A soft shine that slides across the card as it turns." />
       </Group>
-      <Group title="3D" hint="The card turns towards the pointer, and its pieces stand off it at different depths.">
+      <Group fold title="3D" hint="The card turns towards the pointer, and its pieces stand off it at different depths.">
         <Switch checked={cfg.fx.tilt} onChange={(v) => up('fx', { tilt: v })} label="Turn towards the pointer" />
         <Row label="Depth" value={cfg.fx.depth}>
           <Slider label="3D depth" value={cfg.fx.depth} onChange={(v) => up('fx', { depth: v })} />
@@ -167,7 +168,7 @@ export function StylePanel({ api }: { api: EditorApi }) {
         )}
       </Group>
       {!cfg.colors.on && (
-        <Group title="Page tone" hint="Black to white. The text flips by itself to stay readable.">
+        <Group fold title="Page tone" hint="Black to white. The text flips by itself to stay readable.">
           <Slider tone label="Page tone" value={t.tone} onChange={(v) => api.set((c) => ({ ...c, theme: { ...c.theme, tone: v }, bg: { ...c.bg, tone: v } }))} />
         </Group>
       )}
@@ -201,14 +202,35 @@ export function StylePanel({ api }: { api: EditorApi }) {
         <Row label="Roundness" value={t.radius}>
           <Slider label="Roundness" max={40} value={t.radius} onChange={(v) => up('theme', { radius: v })} />
         </Row>
+        <Row label="Links">
+          <Seg value={t.links} options={[{ id: 'stack', name: 'One per row' }, { id: 'grid', name: 'Two per row' }]} onChange={(v) => up('theme', { links: v })} />
+        </Row>
         <Row label="Size">
           <Seg value={t.size} options={[{ id: 'compact', name: 'Compact' }, { id: 'comfortable', name: 'Regular' }, { id: 'large', name: 'Large' }]} onChange={(v) => up('theme', { size: v })} />
         </Row>
       </Group>
-      <Group title="Social icons">
+      <Group fold title="Sizes" hint="How big each part of the page is.">
+        {(
+          [
+            ['name', 'Name', 50, 200],
+            ['bio', 'Bio', 60, 180],
+            ['icons', 'Icons', 60, 200],
+            ['links', 'Links', 70, 160],
+            ['gap', 'Spacing', 40, 220],
+          ] as const
+        ).map(([k, label, lo, hi]) => (
+          <Row key={k} label={label} value={`${t.scale[k]}%`}>
+            <Slider label={`${label} size`} min={lo} max={hi} value={t.scale[k]} onChange={(v) => up('theme', { scale: { ...t.scale, [k]: v } })} />
+          </Row>
+        ))}
+        <Btn variant="quiet" onClick={() => up('theme', { scale: { name: 100, bio: 100, icons: 100, links: 100, gap: 100 } })}>
+          Put the sizes back
+        </Btn>
+      </Group>
+      <Group fold title="Social icons">
         <Seg value={t.icons} options={[{ id: 'glow', name: 'Glow' }, { id: 'plain', name: 'Plain' }, { id: 'boxed', name: 'Boxed' }]} onChange={(v) => up('theme', { icons: v })} />
       </Group>
-      <Group title="Picture">
+      <Group fold title="Picture">
         <Seg value={cfg.avatar.shape} options={AVATAR_SHAPES} onChange={(v) => up('avatar', { shape: v })} />
         <Row label="Size" value={cfg.avatar.size}>
           <Slider label="Picture size" min={60} max={180} value={cfg.avatar.size} onChange={(v) => up('avatar', { size: v })} />
@@ -224,7 +246,9 @@ export function StylePanel({ api }: { api: EditorApi }) {
 export function BackgroundPanel({ api }: { api: EditorApi }) {
   const { cfg, up, toast } = api
   const bg = cfg.bg
-  const media = bg.kind === 'image' || bg.kind === 'gif' || bg.kind === 'video'
+  const [yt, setYt] = useState(bg.youtube ? `https://youtu.be/${bg.youtube}` : '')
+  const [ytGone, setYtGone] = useState(false)
+  const media = bg.kind === 'image' || bg.kind === 'gif' || bg.kind === 'video' || bg.kind === 'youtube'
   return (
     <div>
       <Group title="Background">
@@ -265,6 +289,45 @@ export function BackgroundPanel({ api }: { api: EditorApi }) {
         {bg.kind === 'video' && (
           <MediaField value={bg.video} kinds={['video']} accept="video/mp4,video/webm" uploadLabel="Upload a video" upload={uploadBgVideo} onChange={(v) => up('bg', { video: v, kind: 'video' })} toast={api.toast} hint="Uploads are MP4 or WebM under 1.3 MB: a few seconds, looping. For a longer or bigger video, paste a link to it." />
         )}
+        {bg.kind === 'youtube' && (
+          <div className="space-y-3">
+            <Input
+              value={yt}
+              placeholder="Paste a YouTube link"
+              inputMode="url"
+              autoCapitalize="off"
+              spellCheck={false}
+              aria-label="YouTube link"
+              onChange={(e) => {
+                setYt(e.target.value)
+                const id = youtubeId(e.target.value)
+                if (id) up('bg', { youtube: id, kind: 'youtube' })
+              }}
+            />
+            {bg.youtube ? (
+              <div className="flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={`https://i.ytimg.com/vi/${bg.youtube}/mqdefault.jpg`} alt="" referrerPolicy="no-referrer" onLoad={() => setYtGone(false)} onError={() => setYtGone(true)} className="h-14 w-24 shrink-0 rounded-lg border border-[var(--ed-line2)] object-cover" />
+                <p className="min-w-0 flex-1 text-[0.74rem] leading-snug text-[var(--ed-mute)]">{ytGone ? "We can't find that video. It may be private, removed, or a live stream that has ended. Try another." : 'Playing behind your page.'}</p>
+                <Btn
+                  variant="quiet"
+                  onClick={() => {
+                    up('bg', { youtube: '' })
+                    setYt('')
+                  }}
+                >
+                  Remove
+                </Btn>
+              </div>
+            ) : (
+              yt.trim() !== '' && <p className="text-[0.74rem] text-[var(--ed-mute)]">That is not a YouTube link we can read.</p>
+            )}
+            <Row label="Start at" value={`${bg.ytStart}s`}>
+              <Slider label="Start at" max={600} value={bg.ytStart} onChange={(v) => up('bg', { ytStart: v })} />
+            </Row>
+            <p className="text-[0.74rem] leading-snug text-[var(--ed-mute)]">It plays muted, on a loop, with none of YouTube&apos;s controls or titles. Anyone who asked their device for less motion sees its still picture instead.</p>
+          </div>
+        )}
         {bg.kind === 'gif' && (
           <div className="max-h-72 overflow-auto rounded-xl border border-[var(--ed-line)] p-2">
             <GifPicker selected={bg.gif} onPick={(g) => up('bg', { gif: g.id, kind: 'gif' })} />
@@ -272,7 +335,7 @@ export function BackgroundPanel({ api }: { api: EditorApi }) {
         )}
         {bg.kind === 'gif' && <p className="text-[0.74rem] leading-snug text-[var(--ed-mute)]">Search for one here, or use your own GIF under Picture.</p>}
       </Group>
-      <Group title="Finish">
+      <Group fold title="Finish">
         {media && <Switch checked={bg.mono} onChange={(v) => up('bg', { mono: v })} label="Turn it to grey" hint="Off keeps the colours of your picture or video." />}
         <Row label="Blur" value={`${bg.blur}px`}>
           <Slider label="Background blur" max={40} value={bg.blur} onChange={(v) => up('bg', { blur: v })} />

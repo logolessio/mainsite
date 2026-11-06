@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowUpRight, BarChart3, Check, Copy, CornerDownLeft, Ellipsis, ExternalLink, Eye, ImageIcon, LayoutDashboard, LayoutGrid, Link2, Loader2, type LucideIcon, LogOut, MousePointer2, Palette, Pencil, Search, Settings2, Sparkles, User, WandSparkles, X, Undo2, Redo2 } from 'lucide-react'
+import { ArrowUpRight, BarChart3, Check, CircleDot, Copy, CornerDownLeft, Ellipsis, ExternalLink, Eye, ImageIcon, LayoutDashboard, LayoutGrid, Link2, Loader2, LogOut, MousePointer2, Music2, Palette, Pencil, Redo2, Search, Settings2, Sparkles, Tag, Type, Undo2, User, Video, WandSparkles, X, type LucideIcon } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
@@ -103,6 +103,21 @@ function Avatar({ user, className }: { user: DashUser; className?: string }) {
     </span>
   )
 }
+
+/** Things to do, not pages: they turn up in the jump box (⌘K) beside the pages. */
+const ACTIONS: { id: string; label: string; icon: LucideIcon; go: DashId; add?: string; words: string }[] = [
+  { id: 'link', label: 'Add a link', icon: Link2, go: 'links', add: 'link', words: 'new button url website' },
+  { id: 'song', label: 'Add a song', icon: Music2, go: 'links', add: 'music', words: 'music spotify soundcloud apple audio player search' },
+  { id: 'picture', label: 'Add a picture', icon: ImageIcon, go: 'links', add: 'image', words: 'image gif photo' },
+  { id: 'video', label: 'Add a video', icon: Video, go: 'links', add: 'video', words: 'youtube vimeo tiktok' },
+  { id: 'tags', label: 'Add tags', icon: Tag, go: 'links', add: 'tags', words: 'labels skills' },
+  { id: 'status', label: 'Add a status', icon: CircleDot, go: 'links', add: 'status', words: 'open for work available busy' },
+  { id: 'yt', label: 'Put a YouTube video behind the page', icon: Video, go: 'background', words: 'background video autoplay' },
+  { id: 'font', label: 'Change the font', icon: Type, go: 'style', words: 'typeface text' },
+  { id: 'effect', label: 'Pick an effect (snow, embers, smoke)', icon: Sparkles, go: 'effects', words: 'rain petals particles' },
+  { id: 'click', label: 'Add a click effect', icon: MousePointer2, go: 'cursor', words: 'cursor trail confetti ripple' },
+  { id: 'size', label: 'Resize the name, bio or icons', icon: Palette, go: 'style', words: 'bigger smaller scale spacing' },
+]
 
 type Cmd = { id: string; label: string; hint?: string; icon: LucideIcon; run: () => void; words?: string }
 
@@ -224,6 +239,23 @@ export function DashShell({ tab, onGo, counts, user, save, history, canPreview, 
   const cmds = useMemo<Cmd[]>(
     () => [
       ...NAV.map((n) => ({ id: n.id, label: n.label, hint: `g ${n.key}`, icon: n.icon, words: n.words, run: () => onGo(n.id) })),
+      ...ACTIONS.map((a) => ({
+        id: `do-${a.id}`,
+        label: a.label,
+        icon: a.icon,
+        words: a.words,
+        run: () => {
+          onGo(a.go)
+          if (a.add) {
+            try {
+              window.sessionStorage.setItem('ll:add', a.add)
+            } catch {
+              /* then it is not added for them */
+            }
+            window.setTimeout(() => window.dispatchEvent(new CustomEvent('ll:add', { detail: a.add })), 350)
+          }
+        },
+      })),
       { id: 'view', label: 'View my page', icon: ExternalLink, words: 'open live', run: () => void window.open(`/${user.handle}`, '_blank', 'noopener') },
       { id: 'copy', label: 'Copy my link', hint: url, icon: Copy, words: 'share url', run: copy },
       ...(save.dirty ? [{ id: 'save', label: 'Save changes', hint: '⌘S', icon: Check, run: save.onSave }] : []),

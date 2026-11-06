@@ -9,12 +9,12 @@ import { BioBackground, BioFilm } from './background'
 import { fontClass } from './bits'
 import { MusicPlayer } from './audio'
 import { type Arrange, BioProvider, type BioMode, type BioPageData, type EditPart } from './context'
-import { cursorVars, CursorTrailLayer, EnterGate, Spotlight } from './fx'
+import { cursorVars, CursorFxLayer, EnterGate, Spotlight } from './fx'
 import { Canvas } from './canvas'
-import { Classic, Card, Side } from './layouts-c'
+import { Classic, Card, Cover, List, Minimal, Side } from './layouts-c'
 import { Corner } from './corner'
 
-const LAYOUT_VIEWS = { classic: Classic, card: Card, side: Side, canvas: Canvas } as const
+const LAYOUT_VIEWS = { classic: Classic, card: Card, side: Side, list: List, cover: Cover, minimal: Minimal, canvas: Canvas } as const
 
 const gray = (tone: number, a = 1) => {
   const v = Math.round((Math.max(0, Math.min(100, tone)) / 100) * 255)
@@ -140,6 +140,11 @@ export function BioPage({ data, mode = 'live', className, style, still = false, 
     '--bio-fg-rgb': fgRgb,
     '--bio-accent': accent,
     '--bio-accent-rgb': accentRgb,
+    '--bio-name-k': cfg.theme.scale.name / 100,
+    '--bio-bio-k': cfg.theme.scale.bio / 100,
+    '--bio-icon-k': cfg.theme.scale.icons / 100,
+    '--bio-link-k': cfg.theme.scale.links / 100,
+    '--bio-gap-k': cfg.theme.scale.gap / 100,
     '--bio-accent2': accent2,
     '--bio-accent2-rgb': accent2Rgb,
     /** the ink on top of an accent: black on a light accent, white on a dark one */
@@ -153,7 +158,7 @@ export function BioPage({ data, mode = 'live', className, style, still = false, 
   } as CSSProperties
   const Layout = LAYOUT_VIEWS[cfg.layout as keyof typeof LAYOUT_VIEWS] ?? Classic
   const gate = !entered && mode !== 'mini' && cfg.fx.enter !== 'none'
-  const trail = canHover && mode !== 'mini' && cfg.cursor.trail !== 'none'
+  const trail = mode !== 'mini' && ((canHover && cfg.cursor.trail !== 'none') || cfg.cursor.click !== 'none')
 
   return (
     <BioProvider value={{ data, cfg, mode, sy, px, py, level, reduced, scroller, entered, track, items, socials, arrange: mode === 'preview' ? arrange : undefined, onPart: mode === 'preview' ? onPart : undefined }}>
@@ -178,7 +183,7 @@ export function BioPage({ data, mode = 'live', className, style, still = false, 
         <BioBackground />
         {cfg.fx.spotlight && canHover && mode !== 'mini' && <Spotlight />}
         <BioFilm />
-        {trail && <CursorTrailLayer rootRef={root} kind={cfg.cursor.trail} />}
+        {trail && <CursorFxLayer rootRef={root} />}
         <div ref={scroller} className="bio-scroll" style={gate ? { overflow: 'hidden' } : undefined}>
           <Layout />
         </div>

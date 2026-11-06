@@ -471,16 +471,16 @@ a.bio-tile:hover {
   font-family: inherit;
 }
 
-/* ---------------------------------------------------------------- the Anubis face: Plex Mono for words, Schibsted Black for titles (both come with the site's layout) */
+/* ---------------------------------------------------------------- the site's own face: Plex Mono for words, Geist Light for the name and titles (as on the main site) */
 .bio-f-anubis {
   font-family: var(--font-f-ibm-plex-mono), ui-monospace, 'SF Mono', Menlo, monospace;
 }
 .bio-root[data-font='anubis'] :is(.bn, .bt) {
-  font-family: var(--font-f-schibsted), 'Helvetica Neue', Arial, sans-serif;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: -0.05em;
-  line-height: 0.86;
+  font-family: var(--font-f-geist), 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 300;
+  text-transform: none;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
 }
 .bt {
   font-weight: 700;
@@ -488,13 +488,12 @@ a.bio-tile:hover {
   line-height: 0.92;
 }
 .bio-root[data-font='anubis'] .bl-title {
-  font-size: 0.84rem;
+  font-size: 0.9rem;
   font-weight: 400;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 .bio-root[data-font='anubis'] .bl-note {
-  font-style: italic;
+  font-style: normal;
 }
 
 /* ---------------------------------------------------------------- hairline furniture for the layouts */
@@ -725,3 +724,19 @@ a.bio-tile:hover {
 /* in the editor's preview, parts you can click */
 .bio-root[data-edit] .bio-part { cursor: pointer; border-radius: 12px; outline: 1.5px dashed transparent; outline-offset: 6px; transition: outline-color 0.2s; }
 .bio-root[data-edit] .bio-part:hover { outline-color: rgb(var(--bio-fg-rgb) / 0.55); }
+
+/* sizes the person set (Style > Sizes) */
+.bio-zoom-name { zoom: var(--bio-name-k, 1); }
+.bio-zoom-bio { zoom: var(--bio-bio-k, 1); }
+.bio-root .bs { zoom: var(--bio-icon-k, 1); }
+.bio-root .bl { zoom: var(--bio-link-k, 1); }
+/* the Minimal layout: links as plain rows */
+.bio-root .minimal-links .bl {
+  border: 0 !important;
+  border-bottom: 1px solid var(--bio-line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}

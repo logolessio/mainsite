@@ -11,6 +11,9 @@ export const LAYOUTS = [
   { id: 'classic', name: 'Classic', note: 'your picture, name, bio and icons in the middle of a floating card.' },
   { id: 'card', name: 'Card', note: 'a profile card with a banner and your picture over its edge.' },
   { id: 'side', name: 'Side by side', note: 'your picture on the left, your name and bio on the right.' },
+  { id: 'list', name: 'Link list', note: 'no card: your picture and name, then wide buttons, like a link list.' },
+  { id: 'cover', name: 'Cover', note: 'a wide banner across the top, your picture over its edge, everything below.' },
+  { id: 'minimal', name: 'Minimal', note: 'small and left-aligned, like a business card.' },
   { id: 'canvas', name: 'Canvas', note: 'a blank page. drag, resize and turn anything wherever you like.' },
 ] as const
 export type LayoutId = (typeof LAYOUTS)[number]['id']
@@ -59,6 +62,7 @@ export const BG_KINDS = [
   { id: 'image', name: 'Picture' },
   { id: 'gif', name: 'GIF' },
   { id: 'video', name: 'Video' },
+  { id: 'youtube', name: 'YouTube' },
 ] as const
 export type BioBgKind = (typeof BG_KINDS)[number]['id']
 
@@ -89,8 +93,35 @@ export const CURSOR_TRAILS = [
   { id: 'ring', name: 'Ring' },
   { id: 'spark', name: 'Sparks' },
   { id: 'ink', name: 'Ink' },
+  { id: 'glow', name: 'Glow' },
+  { id: 'laser', name: 'Laser' },
+  { id: 'ripple', name: 'Ripples' },
+  { id: 'stars', name: 'Stars' },
+  { id: 'hearts', name: 'Hearts' },
+  { id: 'bubbles', name: 'Bubbles' },
+  { id: 'snow', name: 'Snow' },
+  { id: 'fire', name: 'Fire' },
+  { id: 'smoke', name: 'Smoke' },
+  { id: 'pixels', name: 'Pixels' },
+  { id: 'emoji', name: 'Emoji' },
 ] as const
 export type CursorTrail = (typeof CURSOR_TRAILS)[number]['id']
+
+/** What happens where the page is pressed. */
+export const CLICK_EFFECTS = [
+  { id: 'none', name: 'None' },
+  { id: 'ripple', name: 'Ripples' },
+  { id: 'shockwave', name: 'Shockwave' },
+  { id: 'burst', name: 'Burst' },
+  { id: 'confetti', name: 'Confetti' },
+  { id: 'stars', name: 'Stars' },
+  { id: 'hearts', name: 'Hearts' },
+  { id: 'sparkle', name: 'Twinkle' },
+  { id: 'bubbles', name: 'Bubbles' },
+  { id: 'pixels', name: 'Pixels' },
+  { id: 'emoji', name: 'Emoji' },
+] as const
+export type ClickEffect = (typeof CLICK_EFFECTS)[number]['id']
 
 export const ENTER_SCREENS = [
   { id: 'none', name: 'None' },
@@ -116,7 +147,32 @@ export type BioBlock =
   | { id: string; t: 'heading'; text: string }
   | { id: string; t: 'text'; text: string }
   | { id: string; t: 'video'; url: string; title: string; hidden: boolean }
+  | { id: string; t: 'music'; /** a streaming link (Spotify, SoundCloud, Apple Music, Deezer, YouTube), a link to an audio file, or an uploaded song */ url: string; title: string; hidden: boolean; artist?: string; album?: string; /** the cover: a link to a picture, or an upload */ cover?: string; /** a short clip to play on the page (a link to an audio file) */ preview?: string; /** show the service's full player instead of the page's own card */ player?: boolean }
+  | { id: string; t: 'image'; /** an uploaded picture or a link to one (a GIF works) */ src: string; title: string; /** where pressing it goes (optional) */ url: string; shape: ImageShape; hidden: boolean }
+  | { id: string; t: 'tags'; items: string[]; style: TagStyle; hidden: boolean }
+  | { id: string; t: 'status'; text: string; state: StatusState; hidden: boolean }
   | { id: string; t: 'divider' }
+
+export const IMAGE_SHAPES = [
+  { id: 'auto', name: 'As it is' },
+  { id: 'wide', name: 'Wide' },
+  { id: 'square', name: 'Square' },
+  { id: 'tall', name: 'Tall' },
+] as const
+export type ImageShape = (typeof IMAGE_SHAPES)[number]['id']
+export const TAG_STYLES = [
+  { id: 'pill', name: 'Pills' },
+  { id: 'outline', name: 'Outlined' },
+  { id: 'hash', name: '#tags' },
+] as const
+export type TagStyle = (typeof TAG_STYLES)[number]['id']
+export const STATUS_STATES = [
+  { id: 'open', name: 'Open', dot: '#3ddc84' },
+  { id: 'busy', name: 'Busy', dot: '#ffb020' },
+  { id: 'away', name: 'Away', dot: '#8a8a8a' },
+  { id: 'info', name: 'Note', dot: '#6ea8ff' },
+] as const
+export type StatusState = (typeof STATUS_STATES)[number]['id']
 
 /** How a link asks for attention. */
 export const LINK_ANIMS = [
@@ -170,6 +226,10 @@ export type BioConfig = {
     size: 'compact' | 'comfortable' | 'large'
     /** the social icons: a soft glow with no box, plain, or in a box */
     icons: 'glow' | 'plain' | 'boxed'
+    /** the links one under the other, or two to a row */
+    links: 'stack' | 'grid'
+    /** how big each part is, in percent of its usual size */
+    scale: { name: number; bio: number; icons: number; links: number; gap: number }
   }
   avatar: { shape: AvatarShape; ring: boolean; float: boolean; gray: boolean; size: number; /** a link to a picture or GIF kept somewhere else; shown instead of the uploaded picture */ url: string }
   bg: {
@@ -181,6 +241,10 @@ export type BioConfig = {
     image: string
     gif: string
     video: string
+    /** a YouTube video that plays behind the page, on a loop, with none of YouTube's controls (the video's id) */
+    youtube: string
+    /** where in it to start, in seconds */
+    ytStart: number
     /** soften the background, in pixels */
     blur: number
     dim: number
@@ -204,6 +268,14 @@ export type BioConfig = {
     image: string
     hot: 'tl' | 'center'
     trail: CursorTrail
+    /** what happens where the page is pressed */
+    click: ClickEffect
+    /** the emoji for the emoji trail and the emoji click */
+    emoji: string
+    /** the colour of the trail and click effects: the page's ink, its own colours, or a rainbow */
+    color: 'auto' | 'accent' | 'rainbow'
+    /** how much of it, in percent */
+    amount: number
   }
   fx: {
     enter: EnterScreen
@@ -240,13 +312,13 @@ export const DEFAULT_BIO: BioConfig = {
   look: 2,
   layout: 'classic',
   colors: { on: false, bg: '#08080c', bg2: '#16183a', text: '#f4f4f6', accent: '#ffffff', accent2: '#9a9a9a' },
-  theme: { tone: 5, font: 'quicksand', nameStyle: 'solid', buttons: 'glass', radius: 18, align: 'center', size: 'comfortable', icons: 'plain' },
+  theme: { tone: 5, font: 'anubis', nameStyle: 'solid', buttons: 'glass', radius: 18, align: 'center', size: 'comfortable', icons: 'plain', links: 'stack', scale: { name: 100, bio: 100, icons: 100, links: 100, gap: 100 } },
   avatar: { shape: 'circle', ring: true, float: false, gray: false, size: 100, url: '' },
-  bg: { kind: 'gradient', tone: 5, tone2: 17, angle: 160, gradient: 'radial', image: '', gif: '', video: '', blur: 0, dim: 0, noise: 0, parallax: 40, vignette: 35, mono: false },
+  bg: { kind: 'gradient', tone: 5, tone2: 17, angle: 160, gradient: 'radial', image: '', gif: '', video: '', youtube: '', ytStart: 0, blur: 0, dim: 0, noise: 0, parallax: 40, vignette: 35, mono: false },
   overlay: { effect: 'none', intensity: 50, speed: 50 },
   card: { style: 'glass', blur: 22, opacity: 62, glare: false, width: 440, banner: '' },
   audio: { id: '', title: '', volume: 60, loop: true, reactive: true },
-  cursor: { kind: 'default', preset: 'arrow', ink: 'white', size: 32, image: '', hot: 'tl', trail: 'none' },
+  cursor: { kind: 'default', preset: 'arrow', ink: 'white', size: 32, image: '', hot: 'tl', trail: 'none', click: 'none', emoji: '✨', color: 'auto', amount: 100 },
   fx: { enter: 'none', enterText: '[ click to enter ]', reveal: 'rise', tilt: true, magnetic: false, spotlight: false, grain: 0, scanlines: 0, parallax: 60, typewriter: false, depth: 60, float: true },
   meta: { title: '', description: '', location: '', index: true, views: false, badge: true, badges: true },
   blocks: [],
@@ -276,7 +348,7 @@ const look = (
   effect,
   set: {
     colors: { on: true, bg: hues[0], bg2: hues[1], text: o.text ?? '#f5f5f7', accent: hues[2], accent2: hues[3] },
-    theme: { nameStyle: o.nameStyle ?? 'solid', buttons: o.buttons ?? 'glass', font: o.font ?? 'quicksand', radius: o.radius ?? 22 },
+    theme: { nameStyle: o.nameStyle ?? 'solid', buttons: o.buttons ?? 'glass', font: o.font ?? 'anubis', radius: o.radius ?? 22 },
     bg: { kind: 'gradient', gradient: 'radial', dim: 0, blur: 0, noise: 0, vignette: o.vignette ?? 40 },
     card: { style: 'glass', opacity: o.opacity ?? 55, blur: o.blur ?? 22 },
     overlay: { effect, intensity: o.intensity ?? 55, speed: 50 },
@@ -294,9 +366,9 @@ export const PRESETS: BioPreset[] = [
   look('storm', 'Storm', 'purple sky, lightning', ['#07060c', '#1b1530', '#a78bfa', '#f0abfc'], 'lightning', { text: '#f3eeff' }),
   look('ocean', 'Ocean', 'bubbles rising', ['#03101a', '#073a57', '#38bdf8', '#22d3ee'], 'bubbles', { text: '#e8f7ff' }),
   look('aurora', 'Aurora', 'green and violet light', ['#030812', '#0b2433', '#34d399', '#818cf8'], 'aurora', { text: '#ecfdf5' }),
-  look('gold', 'Gold', 'black and gold, glitter', ['#0b0906', '#2a210d', '#e7b84a', '#fff0b3'], 'sparkle', { text: '#f6edd3', font: 'newsreader' }),
+  look('gold', 'Gold', 'black and gold, glitter', ['#0b0906', '#2a210d', '#e7b84a', '#fff0b3'], 'sparkle', { text: '#f6edd3' }),
   look('autumn', 'Autumn', 'leaves drifting down', ['#100804', '#33180a', '#f59e0b', '#ef4444'], 'leaves', { text: '#fff4e5' }),
-  look('matrix', 'Matrix', 'green code', ['#010a04', '#032211', '#22c55e', '#86efac'], 'code', { text: '#d9ffe6', font: 'martian', radius: 6 }),
+  look('matrix', 'Matrix', 'green code', ['#010a04', '#032211', '#22c55e', '#86efac'], 'code', { text: '#d9ffe6', radius: 6 }),
   look('retro', 'Retro', 'a worn VHS tape', ['#0a0a0f', '#1a1626', '#ff4d8d', '#4dd2ff'], 'vhs', { text: '#fdf2f8', radius: 10 }),
   look('party', 'Party', 'confetti', ['#0b0716', '#1f1245', '#f472b6', '#60a5fa'], 'confetti', { text: '#fdf4ff' }),
   look('paper', 'Paper', 'light and plain', ['#f4f1ea', '#e2ddd0', '#1a1a1a', '#6b6b6b'], 'none', { text: '#161616', buttons: 'solid', nameStyle: 'solid', opacity: 70, vignette: 0 }),
@@ -366,6 +438,76 @@ export function embedFor(url: string): Embed | null {
     /* not an address */
   }
   return null
+}
+
+/** The 11-character id of a YouTube video, from a link in any of its shapes (or the id itself). Empty if it is not one. */
+export function youtubeId(raw: unknown): string {
+  if (typeof raw !== 'string') return ''
+  const t = raw.trim()
+  if (/^[A-Za-z0-9_-]{11}$/.test(t)) return t
+  try {
+    const u = new URL(/^https?:\/\//i.test(t) ? t : `https://${t}`)
+    const host = u.hostname.toLowerCase().replace(/^(www|m|music)\./, '')
+    let id: string | null | undefined = null
+    if (host === 'youtu.be') id = u.pathname.slice(1, 12)
+    else if (host === 'youtube.com' || host === 'youtube-nocookie.com') id = u.searchParams.get('v') ?? /^\/(?:shorts|embed|live|v)\/([A-Za-z0-9_-]{11})/.exec(u.pathname)?.[1]
+    return id && /^[A-Za-z0-9_-]{11}$/.test(id) ? id : ''
+  } catch {
+    return ''
+  }
+}
+
+export type MusicEmbed = { kind: 'spotify' | 'soundcloud' | 'apple' | 'deezer' | 'youtube' | 'file' | 'upload'; src: string; /** the player's height in pixels (0: it has the shape of a video, see `ratio`) */ height: number; ratio?: number }
+/** How a music address is played: in its own player, or (for a file or an uploaded song) in ours. Null if it is only a link. */
+export function musicEmbed(ref: string): MusicEmbed | null {
+  if (COLOR_LIKE.test(ref)) return { kind: 'upload', src: `/api/audio/${ref}`, height: 0 }
+  try {
+    const u = new URL(ref)
+    const host = u.hostname.toLowerCase().replace(/^(www|m)\./, '')
+    if (host === 'open.spotify.com') {
+      const m = /^\/(?:intl-[a-z]+\/)?(track|album|playlist|episode|show|artist)\/([A-Za-z0-9]{10,30})/.exec(u.pathname)
+      if (m) return { kind: 'spotify', src: `https://open.spotify.com/embed/${m[1]}/${m[2]}?theme=0`, height: m[1] === 'track' || m[1] === 'episode' ? 152 : 352 }
+    }
+    if (host === 'soundcloud.com' && /^\/[^/]+\/[^/]+/.test(u.pathname)) {
+      const set = u.pathname.includes('/sets/')
+      return { kind: 'soundcloud', src: `https://w.soundcloud.com/player/?url=${encodeURIComponent(`https://soundcloud.com${u.pathname}`)}&color=%23ffffff&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false`, height: set ? 300 : 166 }
+    }
+    if (host === 'music.apple.com' && /^\/[a-z]{2}\/(album|song|playlist)\//.test(u.pathname)) {
+      const one = u.searchParams.has('i') || u.pathname.includes('/song/')
+      return { kind: 'apple', src: `https://embed.music.apple.com${u.pathname}${u.search}`, height: one ? 175 : 450 }
+    }
+    if (host === 'deezer.com') {
+      const m = /\/(?:[a-z]{2}\/)?(track|album|playlist)\/(\d{3,15})/.exec(u.pathname)
+      if (m) return { kind: 'deezer', src: `https://widget.deezer.com/widget/dark/${m[1]}/${m[2]}`, height: m[1] === 'track' ? 150 : 300 }
+    }
+    const yt = youtubeId(ref)
+    if (yt) return { kind: 'youtube', src: `https://www.youtube-nocookie.com/embed/${yt}?rel=0&modestbranding=1`, height: 0, ratio: 16 / 9 }
+    if (mediaKindOf(ref) === 'audio') return { kind: 'file', src: ref, height: 0 }
+  } catch {
+    /* not an address */
+  }
+  return null
+}
+
+/** Whatever was pasted, made into the block it most likely is: a song, a video, an account, or a plain link. Null if it is nothing we can use. */
+export function blockFromPaste(raw: string): BioBlock | null {
+  const url = cleanUrl(raw)
+  if (!url) return null
+  const id = newId()
+  if (url.startsWith('mailto:')) return { id, t: 'social', platform: 'mail', url, hidden: false }
+  if (musicEmbed(url)?.kind && musicEmbed(url)?.kind !== 'youtube') return { id, t: 'music', url, title: '', hidden: false }
+  if (embedFor(url)) return { id, t: 'video', url, title: '', hidden: false }
+  const p = platformOf(url)
+  const group = LINK_PLATFORMS.find((x) => x.id === p)?.group
+  if (p && group === 'Social') return { id, t: 'social', platform: p, url, hidden: false }
+  if (mediaKindOf(url) === 'image') return { id, t: 'image', src: url, title: '', url: '', shape: 'auto', hidden: false }
+  let host = 'Link'
+  try {
+    host = new URL(url).hostname.replace(/^www\./, '')
+  } catch {
+    /* keep the word */
+  }
+  return { id, t: 'link', title: host, url, icon: 'auto', note: '', hidden: false, pin: false }
 }
 
 /* ------------------------------------------------------------------ bringing anything to a safe BioConfig */
@@ -501,6 +643,28 @@ export function cleanBlock(raw: unknown): BioBlock | null {
       const url = cleanUrl(r.url)
       return url ? { id, t: 'video', url, title: text(r.title, MAX_TITLE), hidden: bool(r.hidden, false) } : null
     }
+    case 'music': {
+      const url = uploadId(r.url) || cleanUrl(r.url)
+      if (!url) return null
+      const cover = mediaRef(r.cover, ['image'])
+      const preview = cleanMediaUrl(r.preview, ['audio'])
+      const artist = text(r.artist, 80)
+      const album = text(r.album, 80)
+      return { id, t: 'music', url, title: text(r.title, MAX_TITLE), hidden: bool(r.hidden, false), ...(artist ? { artist } : {}), ...(album ? { album } : {}), ...(cover ? { cover } : {}), ...(preview ? { preview } : {}), ...(r.player === true ? { player: true } : {}) }
+    }
+    case 'image': {
+      const src = mediaRef(r.src, ['image'])
+      return src ? { id, t: 'image', src, title: text(r.title, MAX_TITLE), url: cleanUrl(r.url), shape: pick(r.shape, IMAGE_SHAPES.map((x) => x.id), 'auto'), hidden: bool(r.hidden, false) } : null
+    }
+    case 'tags': {
+      const raw = Array.isArray(r.items) ? r.items : typeof r.items === 'string' ? r.items.split(',') : []
+      const items = raw.map((x) => text(x, 24).replace(/^#+/, '')).filter(Boolean).slice(0, 16)
+      return items.length ? { id, t: 'tags', items, style: pick(r.style, TAG_STYLES.map((x) => x.id), 'pill'), hidden: bool(r.hidden, false) } : null
+    }
+    case 'status': {
+      const t = text(r.text, 60)
+      return t ? { id, t: 'status', text: t, state: pick(r.state, STATUS_STATES.map((x) => x.id), 'open'), hidden: bool(r.hidden, false) } : null
+    }
     case 'divider':
       return { id, t: 'divider' }
     default:
@@ -555,13 +719,19 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
     },
     theme: {
       tone: int(t.tone ?? d.theme.tone, 4, 0, 100),
-      font: pick(t.font ?? d.theme.font, FONT_IDS_BIO, 'quicksand'),
+      font: pick(t.font ?? d.theme.font, FONT_IDS_BIO, 'anubis'),
       nameStyle: pick(t.nameStyle ?? d.theme.nameStyle, NAME_STYLES.map((x) => x.id), 'solid'),
       buttons: pick(t.buttons ?? d.theme.buttons, BUTTON_STYLES.map((x) => x.id), 'outline'),
       radius: int(t.radius ?? d.theme.radius, 0, 0, 40),
       align: pick(t.align ?? d.theme.align, ['left', 'center'], 'center'),
       size: pick(t.size ?? d.theme.size, ['compact', 'comfortable', 'large'], 'comfortable'),
       icons: pick(t.icons ?? d.theme.icons, ['glow', 'plain', 'boxed'], 'glow'),
+      links: pick(t.links ?? d.theme.links, ['stack', 'grid'], 'stack'),
+      scale: (() => {
+        const sc = obj(t.scale)
+        const ds = d.theme.scale
+        return { name: int(sc.name ?? ds.name, 100, 50, 200), bio: int(sc.bio ?? ds.bio, 100, 60, 180), icons: int(sc.icons ?? ds.icons, 100, 60, 200), links: int(sc.links ?? ds.links, 100, 70, 160), gap: int(sc.gap ?? ds.gap, 100, 40, 220) }
+      })(),
     },
     avatar: {
       shape: pick(a.shape ?? d.avatar.shape, AVATAR_SHAPES.map((x) => x.id), 'circle'),
@@ -581,6 +751,8 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
       image: b.image === undefined ? d.bg.image : mediaRef(b.image, ['image']),
       gif: b.gif === undefined ? d.bg.gif : giphyId(b.gif),
       video: b.video === undefined ? d.bg.video : mediaRef(b.video, ['video']),
+      youtube: b.youtube === undefined ? d.bg.youtube : youtubeId(b.youtube),
+      ytStart: int(b.ytStart ?? d.bg.ytStart, 0, 0, 14400),
       blur: int(b.blur ?? d.bg.blur, 0, 0, 40),
       dim: int(b.dim ?? d.bg.dim, 30, 0, 90),
       noise: int(b.noise ?? d.bg.noise, 12, 0, 100),
@@ -616,6 +788,10 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
       image: c.image === undefined ? d.cursor.image : mediaRef(c.image, ['image']),
       hot: pick(c.hot ?? d.cursor.hot, ['tl', 'center'], 'tl'),
       trail: pick(c.trail ?? d.cursor.trail, CURSOR_TRAILS.map((x) => x.id), 'none'),
+      click: pick(c.click ?? d.cursor.click, CLICK_EFFECTS.map((x) => x.id), 'none'),
+      emoji: c.emoji === undefined ? d.cursor.emoji : text(c.emoji, 8) || '✨',
+      color: pick(c.color ?? d.cursor.color, ['auto', 'accent', 'rainbow'], 'auto'),
+      amount: int(c.amount ?? d.cursor.amount, 100, 30, 220),
     },
     fx: {
       enter: pick(f.enter ?? d.fx.enter, ENTER_SCREENS.map((x) => x.id), 'none'),
@@ -710,9 +886,13 @@ export function resolveFree(cfg: BioConfig, info: { name: string; bio: string; b
     if (b.t === 'link') h = b.note ? 70 : 60
     else if (b.t === 'video') h = Math.min(w / (embedFor(b.url)?.ratio ?? 1.78), 360) + (b.title ? 30 : 6)
     else if (b.t === 'heading') h = 40
+    else if (b.t === 'music') h = musicEmbed(b.url)?.height || 86
+    else if (b.t === 'image') h = b.shape === 'tall' ? w * 1.25 : b.shape === 'square' ? w : w * 0.5625
+    else if (b.t === 'tags') h = Math.ceil((b.items.length * 78) / w) * 36 + 8
+    else if (b.t === 'status') h = 44
     else if (b.t === 'text') h = Math.max(1, Math.ceil((b.text.length * 7) / w)) * 23 + 8
     else if (b.t === 'divider') h = 16
-    def[b.id] = { x: mid(w), y, w, ...(b.t === 'heading' || b.t === 'text' ? { a } : {}) }
+    def[b.id] = { x: mid(w), y, w, ...(b.t === 'heading' || b.t === 'text' || b.t === 'tags' ? { a } : {}) }
     y += h + 14
   }
   const out: Record<string, FreeBox> = {}

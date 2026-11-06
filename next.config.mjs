@@ -21,7 +21,7 @@ const csp = [
   // our own addresses may call each other: the Cloudflare check on the dev and owner pages asks logoless.io and owner.logoless.io whether they answer
   "connect-src 'self' https://challenges.cloudflare.com https://logoless.io https://*.logoless.io",
   // our own pages may be framed by our own pages: the dashboards preview in the dev area needs it
-  "frame-src 'self' https://logoless.io https://*.logoless.io https://challenges.cloudflare.com https://www.youtube-nocookie.com https://www.youtube.com https://www.tiktok.com https://www.instagram.com https://platform.twitter.com",
+  "frame-src 'self' https://logoless.io https://*.logoless.io https://challenges.cloudflare.com https://www.youtube-nocookie.com https://www.youtube.com https://www.tiktok.com https://www.instagram.com https://platform.twitter.com https://player.vimeo.com https://open.spotify.com https://w.soundcloud.com https://embed.music.apple.com https://widget.deezer.com",
   "frame-ancestors 'self' https://logoless.io https://*.logoless.io",
   "form-action 'self' https://accounts.google.com https://discord.com",
   "base-uri 'self'",

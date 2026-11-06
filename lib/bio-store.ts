@@ -39,6 +39,11 @@ export async function saveBio(userId: string, input: unknown): Promise<BioConfig
   if (!(await owns(userId, next.bg.video, ['bgvideo']))) throw new HttpError(400, 'Upload the background video first.')
   if (!(await owns(userId, next.cursor.image, ['cursor']))) throw new HttpError(400, 'Upload the cursor first.')
   if (!(await owns(userId, next.audio.id, ['audio']))) throw new HttpError(400, 'Upload the music first.')
+  for (const b of next.blocks) {
+    if (b.t === 'music' && !(await owns(userId, b.url, ['audio']))) throw new HttpError(400, 'Upload the song first.')
+    if (b.t === 'music' && !(await owns(userId, b.cover ?? '', ['background', 'banner']))) throw new HttpError(400, 'Upload the cover first.')
+    if (b.t === 'image' && !(await owns(userId, b.src, ['background', 'banner']))) throw new HttpError(400, 'Upload the picture first.')
+  }
   const json = JSON.stringify(next)
   if (json.length > 60_000) throw new HttpError(413, 'That page is too big. Remove some links or text.')
   await (await db())
@@ -51,7 +56,8 @@ export async function saveBio(userId: string, input: unknown): Promise<BioConfig
 /** The upload ids a page uses, so clearing out old uploads never takes one away from a live page. */
 export function bioUploadIds(json: string | null | undefined): string[] {
   const cfg = parseBio(json)
-  return [cfg.bg.image, cfg.bg.video, cfg.cursor.image, cfg.audio.id].filter((x) => UPLOAD.test(x))
+  const blocks = cfg.blocks.flatMap((b) => (b.t === 'music' ? [b.url, b.cover ?? ''] : b.t === 'image' ? [b.src] : []))
+  return [cfg.bg.image, cfg.bg.video, cfg.cursor.image, cfg.audio.id, cfg.card.banner, ...blocks].filter((x) => UPLOAD.test(x))
 }
 
 /* ------------------------------------------------------------------ counting */
