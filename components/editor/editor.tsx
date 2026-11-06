@@ -386,7 +386,7 @@ export function Editor({ claim }: { claim: string | null }) {
                 <div className="h-24" />
               </div>
             </div>
-            <Preview data={data} device={device} setDevice={setDevice} arrange={cfg.layout === 'canvas' ? arrange : undefined} onPart={onPart} dragging={cfg.layout === 'canvas'} onDrag={dragMode} onSite={(slug) => setPage(slug ? (cfg.pages?.find((p) => p.slug === slug)?.id ?? '') : '')} handle={profile.handle} className={cn('min-h-0 flex-1 lg:flex', mobileView === 'preview' ? 'flex' : 'hidden')} />
+            <Preview data={data} device={device} setDevice={setDevice} arrange={cfg.layout === 'canvas' ? arrange : undefined} onPart={onPart} dragging={cfg.layout === 'canvas'} onDrag={dragMode} onSite={(slug) => setPage(slug ? (cfg.pages?.find((p) => p.slug === slug)?.id ?? '') : '')} handle={profile.handle} onPlayerMove={(x, y) => up('audio', { place: 'free', x, y })} className={cn('min-h-0 flex-1 lg:flex', mobileView === 'preview' ? 'flex' : 'hidden')} />
           </div>
         ) : (
           <div className="ed-scroll h-full overflow-y-auto">
@@ -412,7 +412,7 @@ export function Editor({ claim }: { claim: string | null }) {
   )
 }
 
-function Preview({ data, device, setDevice, arrange, onPart, dragging, onDrag, onSite, handle, className }: { data: Parameters<typeof BioPage>[0]['data']; device: 'desktop' | 'phone'; setDevice: (d: 'desktop' | 'phone') => void; arrange?: Arrange; onPart?: (p: EditPart) => void; dragging: boolean; onDrag: (on: boolean, from?: Grab) => void; onSite: (slug: string) => void; handle: string; className?: string }) {
+function Preview({ data, device, setDevice, arrange, onPart, dragging, onDrag, onSite, handle, onPlayerMove, className }: { data: Parameters<typeof BioPage>[0]['data']; device: 'desktop' | 'phone'; setDevice: (d: 'desktop' | 'phone') => void; arrange?: Arrange; onPart?: (p: EditPart) => void; dragging: boolean; onDrag: (on: boolean, from?: Grab) => void; onSite: (slug: string) => void; handle: string; onPlayerMove: (x: number, y: number) => void; className?: string }) {
   const box = useRef<HTMLDivElement>(null)
   const grab = useRef<Grab | null>(null)
   const [taught, setTaught] = useState(true)
@@ -471,7 +471,7 @@ function Preview({ data, device, setDevice, arrange, onPart, dragging, onDrag, o
       <div ref={box} className="absolute inset-0 grid place-items-center">
         <div style={{ width: vw * k, height: vh * k }} className={cn('relative shrink-0 overflow-hidden bg-black', !desktop && 'rounded-[2.2rem] border border-[var(--ed-line2)] shadow-[0_40px_120px_rgb(0_0_0/0.7)]')}>
           <div style={{ width: vw, height: vh, transform: `scale(${k})`, transformOrigin: 'top left' }} className="absolute top-0 left-0">
-            <BioPage mode="preview" data={data} arrange={arrange} onPart={onPart} onSite={onSite} />
+            <BioPage mode="preview" data={data} arrange={arrange} onPart={onPart} onSite={onSite} onPlayerMove={onPlayerMove} />
           </div>
         </div>
       </div>

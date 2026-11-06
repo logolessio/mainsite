@@ -27,7 +27,7 @@ const gray = (tone: number, a = 1) => {
  * screen page, as the editor's preview and as a small moving picture on the home page). Everything that moves against the scroll reads one smoothed scroll
  * position, so the whole page eases together.
  */
-export function BioPage({ data, mode = 'live', className, style, still = false, arrange, onPart, onSite }: { data: BioPageData; mode?: BioMode; className?: string; style?: CSSProperties; still?: boolean; arrange?: Arrange; onPart?: (part: EditPart) => void; onSite?: (slug: string) => void }) {
+export function BioPage({ data, mode = 'live', className, style, still = false, arrange, onPart, onSite, onPlayerMove }: { data: BioPageData; mode?: BioMode; className?: string; style?: CSSProperties; still?: boolean; arrange?: Arrange; onPart?: (part: EditPart) => void; onSite?: (slug: string) => void; onPlayerMove?: (x: number, y: number) => void }) {
   const cfg = data.config
   const { reduced, canHover } = useMotionPrefs()
   const root = useRef<HTMLDivElement>(null)
@@ -163,7 +163,7 @@ export function BioPage({ data, mode = 'live', className, style, still = false, 
   const trail = mode !== 'mini' && ((canHover && cfg.cursor.trail !== 'none') || cfg.cursor.click !== 'none')
 
   return (
-    <BioProvider value={{ data, cfg, mode, sy, px, py, level, reduced, scroller, entered, track, items, socials, arrange: mode === 'preview' ? arrange : undefined, onPart: mode === 'preview' ? onPart : undefined }}>
+    <BioProvider value={{ data, cfg, mode, sy, px, py, level, reduced, scroller, entered, track, items, socials, arrange: mode === 'preview' ? arrange : undefined, onPart: mode === 'preview' ? onPart : undefined, movePlayer: mode === 'preview' ? onPlayerMove : undefined }}>
       <div
         ref={root}
         className={`bio-root ${fontClass(cfg.theme.font)} ${className ?? ''}`}

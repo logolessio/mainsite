@@ -9,7 +9,7 @@ export const RESERVED_SLUGS = new Set([
   'report', 'inquiry', 'leaderboard', 'lab', 'case-studies', 'llms', 'reels', 'recap', 'earn-demo', 'compare', 'saved', 'health', 'manifest', 'explore', 'discover', 'trending', 'rankings', 'wrapped', 'spotlight', 'notifications', 'achievements',
   'submissions', 'stats', 'clips',
   // the link-in-bio product (logoless.io/<name> is a person's page) and the routes added since
-  'editor', 'claim', 'bio', 'calendar', 'clip-thumb', 'creators', 'kit', 'method', 'seventeen', 'signin-problem', 'sounds', 'whats-new', 'yt', '17', 'feed', 'templates', 'pricing', 'premium', 'upgrade', 'analytics', 'explore', 'logout', 'sign-in', 'sign-up', 'log-in', 'register', 'terms-of-service', 'privacy-policy', 'contact-us', 'abuse', 'report-abuse', 'dmca', 'cookies', 'about-us',
+  'editor', 'claim', 'bio', 'calendar', 'clip-thumb', 'creators', 'kit', 'method', 'seventeen', 'signin-problem', 'sounds', 'whats-new', 'yt', '17', 'feed', 'templates', 'pricing', 'premium', 'upgrade', 'analytics', 'explore', 'logout', 'sign-in', 'sign-up', 'log-in', 'register', 'terms-of-service', 'privacy-policy', 'contact-us', 'abuse', 'report-abuse', 'dmca', 'cookies', 'about-us', 'preferences',
 ])
 
 /** A name the site itself uses (a page, a folder of files, a route): nobody can have it as logoless.io/<name>. */

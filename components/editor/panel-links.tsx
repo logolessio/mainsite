@@ -15,6 +15,9 @@ import { lookUp } from './song-search'
 import type { EditorApi } from './types'
 import { Area, Btn, Input, Row, Seg, Switch } from './ui'
 
+/** What a dragged "add" button carries. */
+const KIND_MIME = 'application/x-logoless-kind'
+
 const KINDS = [
   { t: 'link', name: 'Link', icon: Link2 },
   { t: 'social', name: 'Social', icon: Share2 },
@@ -79,15 +82,39 @@ const summary = (b: BioBlock) => {
   }
 }
 
-function Item({ b, open, toggle, update, remove, duplicate, clicks, toast }: { b: BioBlock; open: boolean; toggle: () => void; update: (p: Partial<BioBlock>) => void; remove: () => void; duplicate: () => void; clicks?: number; toast: (m: string) => void }) {
+function Item({ b, open, toggle, update, remove, duplicate, clicks, toast, index, count, move }: { b: BioBlock; open: boolean; toggle: () => void; update: (p: Partial<BioBlock>) => void; remove: () => void; duplicate: () => void; clicks?: number; toast: (m: string) => void; index: number; count: number; move: (to: number) => void }) {
   const drag = useDragControls()
   const hidden = 'hidden' in b && b.hidden
   const set = (p: Record<string, unknown>) => update(p as Partial<BioBlock>)
   return (
-    <Reorder.Item value={b} dragListener={false} dragControls={drag} className="relative list-none" transition={{ type: 'spring', stiffness: 520, damping: 40 }}>
+    <Reorder.Item
+      as="div"
+      value={b}
+      data-block={b.id}
+      dragListener={false}
+      dragControls={drag}
+      className="relative list-none"
+      transition={{ type: 'spring', stiffness: 520, damping: 40 }}
+      whileDrag={{ scale: 1.025, zIndex: 20, boxShadow: '0 24px 60px rgb(0 0 0 / 0.75), 0 0 0 1px rgb(255 255 255 / 0.45)' }}
+    >
       <div className={cn('overflow-hidden rounded-xl border bg-[var(--ed-panel)] transition-colors', open ? 'border-white/30' : 'border-[var(--ed-line)]')}>
         <div className="flex items-center gap-1 px-1.5 py-1.5">
-          <button type="button" aria-label="Drag to reorder" onPointerDown={(e) => drag.start(e)} className="grid size-8 shrink-0 cursor-grab touch-none place-items-center rounded-lg text-white/35 hover:text-white active:cursor-grabbing">
+          <button
+            type="button"
+            data-handle
+            aria-label="Drag to reorder, or use the arrow keys"
+            title="drag to move · or focus and use ↑ ↓"
+            onPointerDown={(e) => drag.start(e)}
+            onKeyDown={(e) => {
+              const to = e.key === 'ArrowUp' ? index - 1 : e.key === 'ArrowDown' ? index + 1 : e.key === 'Home' ? 0 : e.key === 'End' ? count - 1 : null
+              if (to === null) return
+              e.preventDefault()
+              move(Math.max(0, Math.min(count - 1, to)))
+              // the keyboard stays on the handle as the row moves
+              requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(`[data-block="${b.id}"] [data-handle]`)?.focus())
+            }}
+            className="grid size-8 shrink-0 cursor-grab touch-none place-items-center rounded-lg text-white/35 hover:bg-white/[0.06] hover:text-white focus-visible:text-white active:cursor-grabbing"
+          >
             <GripVertical className="size-4" />
           </button>
           <button type="button" onClick={toggle} className="flex min-w-0 flex-1 items-center gap-2.5 py-1 text-left">
@@ -246,11 +273,20 @@ export function LinksPanel({ api }: { api: EditorApi }) {
     window.addEventListener('ll:add', on)
     return () => window.removeEventListener('ll:add', on)
   }, [])
-  const paste = (raw: string) => {
+  const paste = (raw: string, at?: number) => {
+    // several links at once (one per line, or with spaces between) are each added
+    const parts = raw.split(/[\s,]+/).filter((x) => cleanUrl(x))
+    if (parts.length > 1) {
+      const made = parts.map((x) => blockFromPaste(x)).filter((x): x is BioBlock => Boolean(x)).slice(0, MAX_BLOCKS - blocks.length)
+      if (!made.length) return api.toast(`A page holds up to ${MAX_BLOCKS} things.`)
+      set((c) => ({ ...c, blocks: at === undefined ? [...c.blocks, ...made] : [...c.blocks.slice(0, at), ...made, ...c.blocks.slice(at)] }))
+      setPasted('')
+      return api.toast(`Added ${made.length}.`)
+    }
     const b = blockFromPaste(raw)
     if (!b) return api.toast('That is not a link we can use. Try one that starts with https.')
     if (blocks.length >= MAX_BLOCKS) return api.toast(`A page holds up to ${MAX_BLOCKS} things.`)
-    set((c) => ({ ...c, blocks: [...c.blocks, b] }))
+    set((c) => ({ ...c, blocks: at === undefined ? [...c.blocks, b] : [...c.blocks.slice(0, at), b, ...c.blocks.slice(at)] }))
     setPasted('')
     setOpen(b.id)
     // a song's cover, title and artist are looked up for it
@@ -261,6 +297,67 @@ export function LinksPanel({ api }: { api: EditorApi }) {
     }
   }
   addRef.current = add
+  const insertAt = (t: BioBlock['t'], at: number) => {
+    if (blocks.length >= MAX_BLOCKS) return api.toast(`A page holds up to ${MAX_BLOCKS} things.`)
+    const b = blank(t)
+    set((c) => ({ ...c, blocks: [...c.blocks.slice(0, at), b, ...c.blocks.slice(at)] }))
+    if (t !== 'divider') setOpen(b.id)
+  }
+  const moveTo = (id: string, to: number) =>
+    set((c) => {
+      const from = c.blocks.findIndex((x) => x.id === id)
+      if (from < 0 || from === to) return c
+      const next = [...c.blocks]
+      const [it] = next.splice(from, 1)
+      next.splice(to, 0, it)
+      return { ...c, blocks: next }
+    })
+
+  // ⌘V anywhere on this tab (not in a field) adds what was copied
+  const pasteRef = useRef(paste)
+  pasteRef.current = paste
+  useEffect(() => {
+    const on = (e: ClipboardEvent) => {
+      const t = e.target as HTMLElement | null
+      if (t && (t.isContentEditable || /^(input|textarea|select)$/i.test(t.tagName))) return
+      const text = e.clipboardData?.getData('text') ?? ''
+      if (!text.split(/[\s,]+/).some((x) => cleanUrl(x))) return
+      e.preventDefault()
+      pasteRef.current(text)
+    }
+    window.addEventListener('paste', on)
+    return () => window.removeEventListener('paste', on)
+  }, [])
+
+  // drag and drop: an "add" button, or a link dragged from another tab, lands where it is let go (a white line shows where)
+  const list = useRef<HTMLDivElement>(null)
+  const [dropAt, setDropAt] = useState<number | null>(null)
+  const indexAt = (y: number) => {
+    const rows = [...(list.current?.querySelectorAll<HTMLElement>('[data-block]') ?? [])]
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i].getBoundingClientRect()
+      if (y < r.top + r.height / 2) return i
+    }
+    return rows.length
+  }
+  const accepts = (e: React.DragEvent) => e.dataTransfer.types.includes(KIND_MIME) || ((e.dataTransfer.types.includes('text/uri-list') || e.dataTransfer.types.includes('text/plain')) && !e.dataTransfer.types.includes('Files'))
+  const onDragOver = (e: React.DragEvent) => {
+    if (!accepts(e)) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'copy'
+    setDropAt(indexAt(e.clientY))
+  }
+  const onDrop = (e: React.DragEvent) => {
+    if (!accepts(e)) return
+    e.preventDefault()
+    const at = indexAt(e.clientY)
+    setDropAt(null)
+    const kind = e.dataTransfer.getData(KIND_MIME)
+    if (kind) return insertAt(kind as BioBlock['t'], at)
+    const text = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain')
+    if (text) paste(text.split(/\r?\n/).filter((l) => l && !l.startsWith('#')).join('\n'), at)
+  }
+  const line = (i: number) => (dropAt === i ? <motion.div layoutId="drop-line" className="pointer-events-none my-1 h-[3px] rounded-full bg-white shadow-[0_0_12px_rgb(255_255_255/0.6)]" /> : null)
   const copy = (b: BioBlock) => {
     if (blocks.length >= MAX_BLOCKS) return api.toast(`A page holds up to ${MAX_BLOCKS} things.`)
     const dup = { ...b, id: newId() } as BioBlock
@@ -309,19 +406,30 @@ export function LinksPanel({ api }: { api: EditorApi }) {
             />
           </div>
         </form>
-        <p className="mb-2.5 text-[0.76rem] text-[var(--ed-mute)]">Or add one yourself</p>
+        <p className="mb-2.5 text-[0.76rem] text-[var(--ed-mute)]">Or add one yourself: press it, or drag it into the list</p>
         <div className="grid grid-cols-5 gap-1.5">
           {KINDS.map((k) => (
-            <button key={k.t} type="button" onClick={() => add(k.t)} title={k.name} className="group flex h-14 flex-col items-center justify-center gap-1 rounded-xl border border-[var(--ed-line)] text-[0.66rem] text-[var(--ed-mute)] transition-[background,color,border-color,transform] duration-200 hover:-translate-y-px hover:border-white/30 hover:bg-white/[0.05] hover:text-white">
+            <button
+              key={k.t}
+              type="button"
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData(KIND_MIME, k.t)
+                e.dataTransfer.effectAllowed = 'copy'
+              }}
+              onDragEnd={() => setDropAt(null)}
+              onClick={() => add(k.t)}
+              title={k.name}
+              className="group flex h-14 cursor-grab active:cursor-grabbing flex-col items-center justify-center gap-1 rounded-xl border border-[var(--ed-line)] text-[0.66rem] text-[var(--ed-mute)] transition-[background,color,border-color,transform] duration-200 hover:-translate-y-px hover:border-white/30 hover:bg-white/[0.05] hover:text-white">
               <k.icon className="size-[1.05rem]" strokeWidth={1.5} />
               {k.name}
             </button>
           ))}
         </div>
       </div>
-      <div className="px-5 py-5">
+      <div className="px-5 py-5" onDragOver={onDragOver} onDragLeave={(e) => !e.currentTarget.contains(e.relatedTarget as Node) && setDropAt(null)} onDrop={onDrop}>
         {blocks.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-[var(--ed-line2)] px-5 py-10 text-center">
+          <div className={cn('rounded-xl border border-dashed px-5 py-10 text-center transition-colors', dropAt !== null ? 'border-white bg-white/[0.05]' : 'border-[var(--ed-line2)]')}>
             <Plus className="mx-auto mb-3 size-5 text-white/40" strokeWidth={1.5} />
             <p className="text-[0.88rem] text-white">nothing here yet</p>
             <p className="mx-auto mt-1 max-w-[16rem] text-[0.78rem] text-[var(--ed-mute)]">start with your best edit, your portfolio, or where people can book you.</p>
@@ -330,13 +438,19 @@ export function LinksPanel({ api }: { api: EditorApi }) {
             </Btn>
           </div>
         ) : (
-          <Reorder.Group axis="y" values={blocks} onReorder={(next) => set((c) => ({ ...c, blocks: next }))} className="space-y-2">
-            {blocks.map((b) => (
-              <Item key={b.id} b={b} open={open === b.id} toggle={() => setOpen(open === b.id ? null : b.id)} update={(p) => update(b.id, p)} remove={() => set((c) => ({ ...c, blocks: c.blocks.filter((x) => x.id !== b.id) }))} duplicate={() => copy(b)} clicks={stats.links[b.id]}  toast={api.toast} />
-            ))}
-          </Reorder.Group>
+          <div ref={list}>
+            <Reorder.Group as="div" axis="y" values={blocks} onReorder={(next) => set((c) => ({ ...c, blocks: next }))} className="space-y-2">
+              {blocks.map((b, i) => (
+                <div key={b.id} className="contents">
+                  {line(i)}
+                  <Item b={b} index={i} count={blocks.length} move={(to) => moveTo(b.id, to)} open={open === b.id} toggle={() => setOpen(open === b.id ? null : b.id)} update={(p) => update(b.id, p)} remove={() => set((c) => ({ ...c, blocks: c.blocks.filter((x) => x.id !== b.id) }))} duplicate={() => copy(b)} clicks={stats.links[b.id]} toast={api.toast} />
+                </div>
+              ))}
+              {line(blocks.length)}
+            </Reorder.Group>
+          </div>
         )}
-        {blocks.length > 0 && <p className="mt-4 text-[0.74rem] text-[var(--ed-dim)]">Drag the handle to reorder. Socials sit together as a row of icons.</p>}
+        {blocks.length > 0 && <p className="mt-4 text-[0.74rem] leading-relaxed text-[var(--ed-dim)]">Drag the handle to reorder, or focus it and use ↑ ↓. Drop links from another tab straight into the list, or press ⌘V anywhere here. Socials sit together as a row of icons.</p>}
       </div>
     </div>
   )

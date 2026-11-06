@@ -143,8 +143,58 @@ export const AUDIO_PLACES = [
   { id: 'bl', name: 'Bottom left' },
   { id: 'bc', name: 'Bottom' },
   { id: 'br', name: 'Bottom right' },
+  { id: 'free', name: 'Where I put it' },
 ] as const
 export type AudioPlace = (typeof AUDIO_PLACES)[number]['id']
+
+/** One tap sounds: how the song is played back. */
+export const SOUND_PRESETS = [
+  { id: 'normal', name: 'Normal', set: { speed: 100, pitch: true, reverb: 0, bass: 0, muffle: 0 } },
+  { id: 'slowed', name: 'Slowed + reverb', set: { speed: 80, pitch: false, reverb: 45, bass: 15, muffle: 0 } },
+  { id: 'sped', name: 'Sped up', set: { speed: 125, pitch: false, reverb: 0, bass: 0, muffle: 0 } },
+  { id: 'lofi', name: 'Lo-fi', set: { speed: 92, pitch: false, reverb: 25, bass: 30, muffle: 45 } },
+  { id: 'room', name: 'Next room', set: { speed: 100, pitch: true, reverb: 55, bass: 20, muffle: 80 } },
+  { id: 'bass', name: 'Bass boosted', set: { speed: 100, pitch: true, reverb: 0, bass: 80, muffle: 0 } },
+] as const
+
+/** What the music draws on the page. */
+export const VISUALISERS = [
+  { id: 'none', name: 'None' },
+  { id: 'bars', name: 'Bars' },
+  { id: 'mirror', name: 'Mirror' },
+  { id: 'blocks', name: 'LED' },
+  { id: 'dots', name: 'Dots' },
+  { id: 'wave', name: 'Wave' },
+  { id: 'line', name: 'Line' },
+  { id: 'spectrum', name: 'Spectrum' },
+  { id: 'circle', name: 'Circle' },
+  { id: 'rings', name: 'Rings' },
+  { id: 'burst', name: 'Burst' },
+] as const
+export type VisualiserKind = (typeof VISUALISERS)[number]['id']
+export const VIS_PLACES = [
+  { id: 'bottom', name: 'Bottom' },
+  { id: 'top', name: 'Top' },
+  { id: 'centre', name: 'Middle' },
+  { id: 'back', name: 'Whole page' },
+] as const
+export type VisPlace = (typeof VIS_PLACES)[number]['id']
+
+export const LYRIC_STYLES = [
+  { id: 'flow', name: 'Flow', note: 'lines scroll past, the sung one lights up as it goes' },
+  { id: 'focus', name: 'Focus', note: 'one big line at a time, words blur in' },
+  { id: 'subtitle', name: 'Subtitle', note: 'a quiet caption, like a film' },
+  { id: 'kinetic', name: 'Kinetic', note: 'each word punches in as it is sung' },
+] as const
+export type LyricStyle = (typeof LYRIC_STYLES)[number]['id']
+export const LYRIC_PLACES = [
+  { id: 'bottom', name: 'Bottom' },
+  { id: 'centre', name: 'Middle' },
+  { id: 'top', name: 'Top' },
+] as const
+export type LyricPlace = (typeof LYRIC_PLACES)[number]['id']
+export const MAX_LYRIC_LINES = 400
+export type LyricLine = { t: number; x: string }
 
 export const ENTER_SCREENS = [
   { id: 'none', name: 'None' },
@@ -310,6 +360,44 @@ export type BioConfig = {
     progress: boolean
     /** start by itself once the page is entered (a browser may still wait for a press) */
     autoplay: boolean
+    /** playback speed in percent: 80 is the "slowed" sound */
+    speed: number
+    /** keep the pitch when the speed changes (off: slower is also deeper, like a record) */
+    pitch: boolean
+    reverb: number
+    bass: number
+    /** a low-pass filter: the song as heard from another room */
+    muffle: number
+    /** seconds to fade in */
+    fade: number
+    /** where the song starts (and loops back to), in seconds */
+    start: number
+    /** let visitors switch between normal, slowed and sped up */
+    speeds: boolean
+    /** visitors can drag the player out of their way */
+    drag: boolean
+    /** where the owner dragged it (place 'free'), 0 to 100 across and down */
+    x: number
+    y: number
+  }
+  /** what the music draws on the page */
+  vis: { kind: VisualiserKind; place: VisPlace; height: number; opacity: number; bands: number; sensitivity: number; smooth: number; glow: number; thickness: number; centre: boolean }
+  /** synced lyrics, found by searching for the song (LRCLIB) and kept with the page */
+  lyrics: {
+    on: boolean
+    style: LyricStyle
+    place: LyricPlace
+    size: number
+    /** seconds, added to the song's time (when the lyrics run early or late) */
+    offset: number
+    /** shade the page behind the lyrics, 0 to 90 */
+    dim: number
+    synced: boolean
+    track: string
+    artist: string
+    duration: number
+    source: number
+    lines: LyricLine[]
   }
   cursor: {
     kind: 'default' | 'preset' | 'upload'
@@ -368,7 +456,9 @@ export const DEFAULT_BIO: BioConfig = {
   bg: { kind: 'gradient', tone: 5, tone2: 17, angle: 160, gradient: 'radial', image: '', gif: '', video: '', youtube: '', ytStart: 0, blur: 0, dim: 0, noise: 0, parallax: 40, vignette: 35, mono: false },
   overlay: { effect: 'none', intensity: 50, speed: 50 },
   card: { style: 'glass', blur: 22, opacity: 62, glare: false, width: 440, banner: '' },
-  audio: { id: '', title: '', volume: 60, loop: true, reactive: true, artist: '', album: '', cover: '', player: 'pill', place: 'bl', progress: true, autoplay: true },
+  audio: { id: '', title: '', volume: 60, loop: true, reactive: true, artist: '', album: '', cover: '', player: 'pill', place: 'bl', progress: true, autoplay: true, speed: 100, pitch: true, reverb: 0, bass: 0, muffle: 0, fade: 2, start: 0, speeds: false, drag: false, x: 4, y: 92 },
+  vis: { kind: 'none', place: 'bottom', height: 22, opacity: 55, bands: 48, sensitivity: 100, smooth: 70, glow: 0, thickness: 2, centre: false },
+  lyrics: { on: false, style: 'flow', place: 'bottom', size: 100, offset: 0, dim: 30, synced: true, track: '', artist: '', duration: 0, source: 0, lines: [] },
   cursor: { kind: 'default', preset: 'arrow', ink: 'white', size: 32, image: '', hot: 'tl', trail: 'none', click: 'none', emoji: '✨', color: 'auto', amount: 100 },
   fx: { enter: 'none', enterText: '[ click to enter ]', reveal: 'rise', tilt: true, magnetic: false, spotlight: false, grain: 0, scanlines: 0, parallax: 60, typewriter: false, depth: 60, float: true },
   meta: { title: '', description: '', location: '', index: true, views: false, badge: true, badges: true },
@@ -839,7 +929,20 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
       place: pick(au.place ?? d.audio.place, AUDIO_PLACES.map((x) => x.id), 'bl'),
       progress: bool(au.progress ?? d.audio.progress, true),
       autoplay: bool(au.autoplay ?? d.audio.autoplay, true),
+      speed: int(au.speed ?? d.audio.speed, 100, 50, 150),
+      pitch: bool(au.pitch ?? d.audio.pitch, true),
+      reverb: int(au.reverb ?? d.audio.reverb, 0, 0, 100),
+      bass: int(au.bass ?? d.audio.bass, 0, 0, 100),
+      muffle: int(au.muffle ?? d.audio.muffle, 0, 0, 100),
+      fade: num(au.fade ?? d.audio.fade, 2, 0, 10),
+      start: int(au.start ?? d.audio.start, 0, 0, 3600),
+      speeds: bool(au.speeds ?? d.audio.speeds, false),
+      drag: bool(au.drag ?? d.audio.drag, false),
+      x: num(au.x ?? d.audio.x, 4, 0, 100),
+      y: num(au.y ?? d.audio.y, 92, 0, 100),
     },
+    vis: cleanVis(r.vis, d.vis),
+    lyrics: cleanLyrics(r.lyrics, d.lyrics),
     cursor: {
       kind: pick(c.kind ?? d.cursor.kind, ['default', 'preset', 'upload'], 'default'),
       preset: typeof (c.preset ?? d.cursor.preset) === 'string' && /^[a-z0-9]{2,16}$/.test(String(c.preset ?? d.cursor.preset)) ? String(c.preset ?? d.cursor.preset) : 'arrow',
@@ -877,6 +980,51 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
       badges: bool(m.badges ?? d.meta.badges, true),
     },
     blocks,
+  }
+}
+
+function cleanVis(raw: unknown, d: BioConfig['vis']): BioConfig['vis'] {
+  const v = obj(raw)
+  return {
+    kind: pick(v.kind ?? d.kind, VISUALISERS.map((x) => x.id), 'none'),
+    place: pick(v.place ?? d.place, VIS_PLACES.map((x) => x.id), 'bottom'),
+    height: int(v.height ?? d.height, 22, 10, 100),
+    opacity: int(v.opacity ?? d.opacity, 55, 5, 100),
+    bands: int(v.bands ?? d.bands, 48, 8, 128),
+    sensitivity: int(v.sensitivity ?? d.sensitivity, 100, 30, 250),
+    smooth: int(v.smooth ?? d.smooth, 70, 0, 95),
+    glow: int(v.glow ?? d.glow, 0, 0, 30),
+    thickness: int(v.thickness ?? d.thickness, 2, 1, 10),
+    centre: bool(v.centre ?? d.centre, false),
+  }
+}
+
+function cleanLyrics(raw: unknown, d: BioConfig['lyrics']): BioConfig['lyrics'] {
+  const l = obj(raw)
+  let lines = d.lines
+  if (Array.isArray(l.lines)) {
+    lines = []
+    for (const x of l.lines.slice(0, MAX_LYRIC_LINES)) {
+      const o = obj(x)
+      const t = Number(o.t)
+      if (!Number.isFinite(t) || t < 0 || t > 3_600_000) continue
+      lines.push({ t: Math.round(t), x: text(o.x, 200) })
+    }
+    lines.sort((a, b) => a.t - b.t)
+  }
+  return {
+    on: bool(l.on ?? d.on, false) && lines.length > 0,
+    style: pick(l.style ?? d.style, LYRIC_STYLES.map((x) => x.id), 'flow'),
+    place: pick(l.place ?? d.place, LYRIC_PLACES.map((x) => x.id), 'bottom'),
+    size: int(l.size ?? d.size, 100, 60, 180),
+    offset: num(l.offset ?? d.offset, 0, -15, 15),
+    dim: int(l.dim ?? d.dim, 30, 0, 90),
+    synced: bool(l.synced ?? d.synced, true),
+    track: l.track === undefined ? d.track : text(l.track, 120),
+    artist: l.artist === undefined ? d.artist : text(l.artist, 120),
+    duration: num(l.duration ?? d.duration, 0, 0, 3600),
+    source: int(l.source ?? d.source, 0, 0, 1e12),
+    lines,
   }
 }
 

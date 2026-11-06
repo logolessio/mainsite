@@ -141,7 +141,7 @@ function Nav() {
           logoless
         </a>
         <nav aria-label="Page" className="hidden items-center gap-1 text-[0.8rem] text-white/60 md:flex">
-          {[['What you get', '#features'], ['Try it', '#try'], ['Questions', '#faq']].map(([n, h]) => (
+          {[['What you get', '#features'], ['Try it', '#try'], ['Questions', '#faq'], ['Help', '/help']].map(([n, h]) => (
             <a key={h} href={h} className="rounded-full px-4 py-2 transition-colors hover:bg-white/[0.07] hover:text-white">
               {n}
             </a>
@@ -425,8 +425,8 @@ function Cta() {
 function Footer() {
   const cols: [string, [string, string][]][] = [
     ['Product', [['What you get', '#features'], ['Try it', '#try'], ['Questions', '#faq']]],
-    ['Account', [['Log in', '/login'], ['Sign up free', '/signup']]],
-    ['Legal', [['Terms', '/legal/terms'], ['Privacy', '/legal/privacy'], ['All policies', '/legal']]],
+    ['Help', [['Guides', '/help'], ['About', '/about'], ['Contact', '/contact'], ['Report a page', '/report'], ['Preferences', '/preferences']]],
+    ['Legal', [['Terms', '/legal/terms'], ['Privacy', '/legal/privacy'], ['Community guidelines', '/legal/community-guidelines'], ['All policies', '/legal']]],
   ]
   return (
     <footer className="border-t border-white/8 px-5 pt-14 pb-12">

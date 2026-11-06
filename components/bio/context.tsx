@@ -64,6 +64,8 @@ export type BioCtx = {
   arrange?: Arrange
   /** in the editor's preview: a click on a part of the page asks for it to be opened for editing */
   onPart?: (part: EditPart) => void
+  /** in the editor's preview: the owner dragged the music player here (0 to 100 across and down) */
+  movePlayer?: (x: number, y: number) => void
 }
 
 const Ctx = createContext<BioCtx | null>(null)

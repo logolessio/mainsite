@@ -223,3 +223,23 @@ html .ed.ed.ed .disp {
 .dash .cap {
   font-size: 0.8rem;
 }
+
+/* a group the search jumped to: a short white outline that fades */
+.ed .ed-flash {
+  animation: ed-flash 1.6s ease-out;
+}
+@keyframes ed-flash {
+  0%,
+  30% {
+    box-shadow: inset 0 0 0 1px #fff;
+    background: rgb(255 255 255 / 0.05);
+  }
+}
+/* the tab strip on phones fades at its edges, so it reads as scrollable */
+.ed .ed-fade-x {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 24px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 24px), transparent);
+}
+.ed kbd {
+  font-family: inherit;
+}

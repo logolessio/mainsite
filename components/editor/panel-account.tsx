@@ -8,6 +8,7 @@ import { uploadImage } from '@/lib/image-client'
 import { cn } from '@/lib/utils'
 import { MediaField } from './media-field'
 import { StorageMeter } from './storage-meter'
+import { BackupGroup, StorageManager } from './storage-manager'
 import type { EditorApi } from './types'
 import { Area, Btn, Group, Input, Row, Switch } from './ui'
 
@@ -141,11 +142,14 @@ export function InsightsPanel({ api }: { api: EditorApi }) {
 
 export function SettingsPanel({ api }: { api: EditorApi }) {
   const { cfg, up, profile } = api
+  const [changed, setChanged] = useState(0)
   return (
     <div>
       <Group title="Storage" hint="Everyone gets 50 MB of their own.">
-        <StorageMeter detail />
+        <StorageMeter detail refresh={changed} />
       </Group>
+      <StorageManager api={api} changed={() => setChanged((n) => n + 1)} />
+      <BackupGroup api={api} />
       <Group title="On the page">
         <Switch checked={cfg.meta.badges} onChange={(v) => up('meta', { badges: v })} label="Show your account number" hint="And OG or Founding, if you earned them." />
         <Switch checked={cfg.meta.views} onChange={(v) => up('meta', { views: v })} label="Show a view counter" />

@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { AUDIO_PLACES, AUDIO_PLAYERS, isMediaUrl } from '@/lib/bio'
 import { cn } from '@/lib/utils'
 import { MediaField } from './media-field'
+import { MusicExtras } from './music-extras'
 import { SongDetails, UploadSong, seedFrom } from './song-details'
 import { SongSearch } from './song-search'
 import type { EditorApi } from './types'
@@ -122,11 +123,14 @@ export function MusicGroups({ api }: { api: EditorApi }) {
                   ))}
                 </div>
               </Row>
+              <p className="text-[0.76rem] text-[var(--ed-mute)]">{au.place === 'free' ? `Placed by hand (${Math.round(au.x)}% across, ${Math.round(au.y)}% down). Pick a spot above to snap it back.` : 'Or drag the player in the preview to put it exactly where you want.'}</p>
               <Switch checked={au.progress} onChange={(v) => up('audio', { progress: v })} label="Show a bar to skip through" hint="With the time, so people can jump to any part of the song." />
+              {au.player !== 'bar' && <Switch checked={au.drag} onChange={(v) => up('audio', { drag: v })} label="Visitors can drag it" hint="So it's never in their way. Kept for their visit only." />}
             </>
           )}
         </Group>
       )}
+      <MusicExtras api={api} />
     </>
   )
 }

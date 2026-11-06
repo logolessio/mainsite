@@ -18,7 +18,7 @@ export const NAV = [
   { id: 'card', label: 'Card', icon: IdCard, key: 'c', words: 'look template theme preset layout banner 3d tilt shape drag resize' },
   { id: 'page', label: 'Page', icon: ImageIcon, key: 'b', words: 'background video image gif youtube blur effects snow embers smoke' },
   { id: 'text', label: 'Text & color', icon: Type, key: 't', words: 'font typeface colour color theme buttons roundness size icons' },
-  { id: 'music', label: 'Music & widgets', icon: Music2, key: 'm', words: 'song audio mp3 flac wav cursor trail click enter screen player' },
+  { id: 'music', label: 'Music & widgets', icon: Music2, key: 'm', words: 'song audio mp3 flac wav cursor trail click enter screen player lyrics visualiser slowed reverb' },
   { id: 'links', label: 'Links', icon: Link2, key: 'l', words: 'add link buttons socials video music' },
   { id: 'pages', label: 'Pages', icon: Files, key: 'p', words: 'about subpage menu website extra' },
   { id: 'share', label: 'Share', icon: QrCode, key: 's', words: 'qr code link copy' },
@@ -175,6 +175,13 @@ const SETTINGS: { label: string; go: DashId; sec: string; words: string; icon: L
   { label: 'Page reveal and typing', go: 'music', sec: 'Arriving', words: 'animation typewriter intro', icon: Sparkles },
   { label: 'Spotlight and parallax', go: 'music', sec: 'Movement', words: 'magnetic mouse follow', icon: Sparkles },
   { label: 'Film, grain and scanlines', go: 'music', sec: 'Film', words: 'vhs retro noise', icon: Sparkles },
+  { label: 'Slowed + reverb, speed and pitch', go: 'music', sec: 'Sound', words: 'slow sped up nightcore bass lofi muffle fade start pitch', icon: Music2 },
+  { label: 'Visualiser', go: 'music', sec: 'Visualiser', words: 'bars wave spectrum circle equaliser equalizer audio reactive', icon: Music2 },
+  { label: 'Lyrics', go: 'music', sec: 'Lyrics', words: 'karaoke words sync song text', icon: Music2 },
+  { label: 'Your uploads (clear storage)', go: 'settings', sec: 'Your uploads', words: 'files delete clear space unused storage', icon: Settings2 },
+  { label: 'Reset views and clicks', go: 'settings', sec: 'Views and clicks', words: 'stats insights clear', icon: Settings2 },
+  { label: 'Clear this device', go: 'settings', sec: 'This device', words: 'cache local storage browser', icon: Settings2 },
+  { label: 'Backup, load, start over', go: 'settings', sec: 'Backup', words: 'export import json reset download', icon: Settings2 },
 ]
 
 type Cmd = { id: string; label: string; hint?: string; icon: LucideIcon; run: () => void; words?: string }

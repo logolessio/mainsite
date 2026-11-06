@@ -1,7 +1,7 @@
 // Central config. Placeholders (domain, emails, company details, fees) are marked TODO and should be finalised before launch.
 export const SITE = {
   name: 'logoless',
-  tagline: 'Views have value',
+  tagline: 'A link in bio that moves',
   url: 'https://logoless.io',
   company: 'Logoless Inc.', // TODO: registered legal entity
   address: '[Registered business address]', // TODO
@@ -30,46 +30,40 @@ export const SITE = {
   holdDays: 0, // 0: earnings can be withdrawn as soon as they are confirmed. (A number of days here would hold new earnings that long again.)
   disputeDays: 60, // how long after a payment someone can tell us it is wrong
   refundNote: 'usually within 5 to 10 business days of us approving it, depending on PayPal and your bank',
-  legalUpdated: 'October 16, 2026',
+  legalUpdated: 'November 6, 2026',
 }
 
+/** The site's own pages, in the header (SiteHeader) and the footer (SiteFooter). */
 export const NAV_LINKS = [
-  { label: 'Campaigns', href: '/' },
-  { label: 'For creators', href: '/for-creators' },
-  { label: 'For brands', href: '/for-brands' },
-  { label: 'Pricing', href: '/pricing' },
+  { label: 'Help', href: '/help' },
   { label: 'About', href: '/about' },
-  { label: "Q&A", href: '/faq' },
+  { label: 'Legal', href: '/legal' },
 ]
 
-export const LEGAL_LINKS = [
-  { label: 'Terms of Service', href: '/legal/terms' },
-  { label: 'Privacy Policy', href: '/legal/privacy' },
-  { label: 'Creator Terms', href: '/legal/clipper-terms' },
-  { label: 'Brand Terms', href: '/legal/brand-terms' },
-  { label: 'Campaign Rules', href: '/legal/campaign-rules' },
-  { label: 'Acceptable Use', href: '/legal/acceptable-use' },
-  { label: 'Payments & Payouts', href: '/legal/payments' },
-  { label: 'Cookie Policy', href: '/legal/cookies' },
-  { label: 'Do Not Sell or Share', href: '/legal/do-not-sell' },
-  { label: 'External Links', href: '/legal/external-links' },
-  { label: 'Copyright / DMCA', href: '/legal/dmca' },
-  { label: 'Refund Policy', href: '/legal/refunds' },
-  { label: 'Accessibility', href: '/legal/accessibility' },
-]
-
-export const FOOTER = {
+export const FOOTER: Record<string, { label: string; href: string }[]> = {
   Product: [
-    { label: 'Campaigns', href: '/' },
-    { label: 'For creators', href: '/for-creators' },
-    { label: 'For brands', href: '/for-brands' },
-    { label: 'Pricing', href: '/pricing' },
+    { label: 'Home', href: '/' },
+    { label: 'Get started', href: '/signup' },
+    { label: 'Log in', href: '/login' },
+    { label: 'Editor', href: '/editor' },
+  ],
+  Help: [
+    { label: 'Help & guides', href: '/help' },
+    { label: 'Contact', href: '/contact' },
+    { label: 'Report a page', href: '/report' },
+    { label: 'Preferences', href: '/preferences' },
+  ],
+  Legal: [
+    { label: 'Terms', href: '/legal/terms' },
+    { label: 'Privacy', href: '/legal/privacy' },
+    { label: 'Cookies', href: '/legal/cookies' },
+    { label: 'Community guidelines', href: '/legal/community-guidelines' },
+    { label: 'Copyright', href: '/legal/dmca' },
+    { label: 'All policies', href: '/legal' },
   ],
   Company: [
     { label: 'About', href: '/about' },
-    { label: 'Case studies', href: '/case-studies' },
-    { label: "Q&A", href: '/faq' },
-    { label: 'Contact', href: '/contact' },
-    { label: 'Report', href: '/report' },
+    { label: 'Security', href: '/legal/security' },
+    { label: 'Accessibility', href: '/legal/accessibility' },
   ],
 }

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Bodoni_Moda, Bricolage_Grotesque, DM_Mono, DM_Sans, Familjen_Grotesk, Figtree, Fragment_Mono, Fraunces, Funnel_Display, Funnel_Sans, Geologica, Gloock, Hanken_Grotesk, Host_Grotesk, Instrument_Sans, Martian_Mono, Mona_Sans, Newsreader, Onest, Schibsted_Grotesk, Special_Gothic, Syne, Wix_Madefor_Display, Young_Serif, Geist, Geist_Mono, IBM_Plex_Mono, Inter, Inter_Tight, Instrument_Serif, JetBrains_Mono, Manrope, Outfit, Playfair_Display, Plus_Jakarta_Sans, Sora, Space_Grotesk, Space_Mono, Cormorant_Garamond, EB_Garamond, DM_Serif_Display, Libre_Caslon_Text, Libre_Baskerville, Cinzel, Abril_Fatface, Prata, Rufina, Spectral, Lora, Old_Standard_TT, Gilda_Display, Playfair_Display_SC, Marcellus, Yeseva_One, Italiana, Bellefair, Vidaloka, Rozha_One, Cardo, Crimson_Pro, Sorts_Mill_Goudy, Libre_Bodoni, Baskervville, Forum, Cormorant_Infant, Castoro, Ovo, Gelasio, Source_Serif_4, Noto_Serif_Display, Libre_Caslon_Display, DM_Serif_Text, IM_Fell_English } from 'next/font/google'
 import { SITE } from '@/lib/site'
+import { PREFS_BOOT } from '@/lib/visitor-prefs'
 import './globals.css'
 
 // Every typeface a page can be set in (the page's own font choice, see lib/profile-fonts.ts). Only the ones in use are downloaded: the others are declared but not preloaded.
@@ -108,6 +109,10 @@ const FONT_VARS = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth" data-look="anubis" data-surfaces="solid" data-font="schibsted" data-kind="sans" data-ui="1" data-figures="1" style={FONT_VARS} className={`${FONT_CLASSES} bg-ink`}>
+      <head>
+        {/* the visitor's reading settings (less motion, larger text, contrast), applied before the first paint */}
+        <script dangerouslySetInnerHTML={{ __html: PREFS_BOOT }} />
+      </head>
       <body className="antialiased">{children}</body>
     </html>
   )
