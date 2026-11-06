@@ -3,22 +3,14 @@
 //
 // A page starts black, white and grey. A person can switch on their own colours (`colors.on`): a background, a second background, text, and two accents that
 // tint the name, the buttons, the glow and the moving backgrounds. Their own pictures and videos may bring colour too (`bg.mono` turns them to grey).
-import { LINK_PLATFORMS } from './profile-style'
+import { CARD_EFFECTS, LINK_PLATFORMS } from './profile-style'
 
-/* ------------------------------------------------------------------ the twelve layouts */
+/* ------------------------------------------------------------------ the layouts */
 
 export const LAYOUTS = [
-  { id: 'card', name: 'Card', note: 'one floating card over your background, like a profile.' },
-  { id: 'aura', name: 'Aura', note: 'centred and calm. your picture floats.' },
-  { id: 'split', name: 'Split', note: 'your name stays put while the links scroll past.' },
-  { id: 'poster', name: 'Poster', note: 'your name, as big as the screen.' },
-  { id: 'bento', name: 'Bento', note: 'tiles that drift at different speeds.' },
-  { id: 'stack', name: 'Stack', note: 'cards pile up as you scroll.' },
-  { id: 'orbit', name: 'Orbit', note: 'links circle your picture.' },
-  { id: 'index', name: 'Index', note: 'a plain list. hover a row and a preview shows up.' },
-  { id: 'terminal', name: 'Terminal', note: 'just lines of text and a blinking cursor.' },
-  { id: 'chapters', name: 'Chapters', note: 'one link per screen.' },
-  { id: 'reel', name: 'Reel', note: 'a film strip that runs as you scroll.' },
+  { id: 'classic', name: 'Classic', note: 'your picture, name, bio and icons in the middle of a floating card.' },
+  { id: 'card', name: 'Card', note: 'a profile card with a banner and your picture over its edge.' },
+  { id: 'side', name: 'Side by side', note: 'your picture on the left, your name and bio on the right.' },
   { id: 'canvas', name: 'Canvas', note: 'a blank page. drag, resize and turn anything wherever you like.' },
 ] as const
 export type LayoutId = (typeof LAYOUTS)[number]['id']
@@ -60,30 +52,15 @@ export const AVATAR_SHAPES = [
 ] as const
 export type AvatarShape = (typeof AVATAR_SHAPES)[number]['id']
 
-/** Behind everything. `tone` is a flat tone (or the page's colour), `gradient` a blend of two, `glow` a soft rainbow rising from the bottom that breathes. */
+/** Behind everything: a flat colour, a still gradient, or a picture, GIF or video. (Nothing moves by itself; the moving things are the effects.) */
 export const BG_KINDS = [
-  { id: 'tone', name: 'Tone' },
+  { id: 'tone', name: 'Colour' },
   { id: 'gradient', name: 'Gradient' },
-  { id: 'glow', name: 'Glow' },
-  { id: 'shader', name: 'Shader' },
-  { id: 'effect', name: 'Motion' },
   { id: 'image', name: 'Picture' },
   { id: 'gif', name: 'GIF' },
   { id: 'video', name: 'Video' },
 ] as const
 export type BioBgKind = (typeof BG_KINDS)[number]['id']
-
-/** The backgrounds drawn by the graphics card (components/bio/shaders.ts). */
-export const BIO_SHADERS = [
-  { id: 'liquid', name: 'Liquid' },
-  { id: 'mercury', name: 'Mercury' },
-  { id: 'smoke', name: 'Smoke' },
-  { id: 'ripple', name: 'Ripple' },
-  { id: 'contour', name: 'Contour' },
-  { id: 'dither', name: 'Dither' },
-  { id: 'static', name: 'Static' },
-] as const
-export type BioShader = (typeof BIO_SHADERS)[number]['id']
 
 export const CARD_STYLES = [
   { id: 'glass', name: 'Glass' },
@@ -101,30 +78,9 @@ export const GRADIENT_STYLES = [
 ] as const
 export type GradientStyle = (typeof GRADIENT_STYLES)[number]['id']
 
-/** The moving backgrounds. The painters live in components/profile/backdrop-effects.ts and are drawn here in greys only. */
-export const BIO_EFFECTS = [
-  { id: 'dots', name: 'Wave dots' },
-  { id: 'aurora', name: 'Veil' },
-  { id: 'warp', name: 'Starfield' },
-  { id: 'synth', name: 'Grid' },
-  { id: 'mesh', name: 'Mesh' },
-  { id: 'constellation', name: 'Constellation' },
-  { id: 'silk', name: 'Silk' },
-  { id: 'bokeh', name: 'Bokeh' },
-  { id: 'matrix', name: 'Rain code' },
-] as const
-export type BioEffect = (typeof BIO_EFFECTS)[number]['id']
-
-export const OVERLAYS = [
-  { id: 'none', name: 'None' },
-  { id: 'snow', name: 'Snow' },
-  { id: 'rain', name: 'Rain' },
-  { id: 'fireflies', name: 'Dust' },
-  { id: 'sparkle', name: 'Glitter' },
-  { id: 'bubbles', name: 'Bubbles' },
-  { id: 'embers', name: 'Ash' },
-] as const
-export type BioOverlay = (typeof OVERLAYS)[number]['id']
+/** The effects that play over the background: snow, rain, embers, smoke and the rest (the painters live in components/profile/card-effect.tsx). */
+export const OVERLAYS = [{ id: 'none', name: 'None' }, ...CARD_EFFECTS.filter((e) => e.id !== 'none').map((e) => ({ id: e.id, name: e.label }))] as readonly { id: (typeof CARD_EFFECTS)[number]['id']; name: string }[]
+export type BioOverlay = (typeof CARD_EFFECTS)[number]['id']
 
 export const CURSOR_TRAILS = [
   { id: 'none', name: 'None' },
@@ -212,6 +168,8 @@ export type BioConfig = {
     radius: number
     align: 'left' | 'center'
     size: 'compact' | 'comfortable' | 'large'
+    /** the social icons: a soft glow with no box, plain, or in a box */
+    icons: 'glow' | 'plain' | 'boxed'
   }
   avatar: { shape: AvatarShape; ring: boolean; float: boolean; gray: boolean; size: number }
   bg: {
@@ -223,14 +181,10 @@ export type BioConfig = {
     image: string
     gif: string
     video: string
-    effect: BioEffect
-    shader: BioShader
     /** soften the background, in pixels */
     blur: number
     dim: number
     noise: number
-    intensity: number
-    speed: number
     /** how far the background drifts against the scroll, 0 to 100 */
     parallax: number
     vignette: number
@@ -239,7 +193,7 @@ export type BioConfig = {
   }
   overlay: { effect: BioOverlay; intensity: number; speed: number }
   /** the panel the profile sits in (the centred layouts) */
-  card: { style: CardStyle; blur: number; opacity: number; glare: boolean; /** a picture across the top of the card in the card layout (an upload id; empty is a soft gradient) */ banner: string }
+  card: { style: CardStyle; blur: number; opacity: number; glare: boolean; /** how wide the card is, in pixels */ width: number; /** a picture across the top of the card in the card layout (an upload id; empty is a soft gradient) */ banner: string }
   /** music that plays on the page once it is entered */
   audio: { id: string; title: string; volume: number; loop: boolean; reactive: boolean }
   cursor: {
@@ -263,6 +217,10 @@ export type BioConfig = {
     parallax: number
     /** the bio types itself out */
     typewriter: boolean
+    /** how far the card leans towards the pointer and how far its pieces stand off it, 0 to 100 */
+    depth: number
+    /** the card drifts up and down a little */
+    float: boolean
   }
   meta: { title: string; description: string; location: string; index: boolean; views: boolean; badge: boolean; badges: boolean }
   blocks: BioBlock[]
@@ -280,16 +238,16 @@ export function newId() {
 export const DEFAULT_BIO: BioConfig = {
   v: 1,
   look: 2,
-  layout: 'card',
-  colors: { on: false, bg: '#08080c', bg2: '#16183a', text: '#f4f4f6', accent: '#417fff', accent2: '#ff6e1d' },
-  theme: { tone: 4, font: 'anubis', nameStyle: 'solid', buttons: 'outline', radius: 0, align: 'center', size: 'comfortable' },
-  avatar: { shape: 'square', ring: false, float: false, gray: true, size: 100 },
-  bg: { kind: 'tone', tone: 4, tone2: 22, angle: 160, gradient: 'radial', image: '', gif: '', video: '', effect: 'aurora', shader: 'liquid', blur: 0, dim: 0, noise: 0, intensity: 50, speed: 40, parallax: 40, vignette: 0, mono: true },
-  overlay: { effect: 'none', intensity: 40, speed: 50 },
-  card: { style: 'none', blur: 28, opacity: 40, glare: false, banner: '' },
+  layout: 'classic',
+  colors: { on: false, bg: '#08080c', bg2: '#16183a', text: '#f4f4f6', accent: '#ffffff', accent2: '#9a9a9a' },
+  theme: { tone: 5, font: 'quicksand', nameStyle: 'glow', buttons: 'glass', radius: 22, align: 'center', size: 'comfortable', icons: 'glow' },
+  avatar: { shape: 'circle', ring: true, float: false, gray: false, size: 100 },
+  bg: { kind: 'gradient', tone: 5, tone2: 17, angle: 160, gradient: 'radial', image: '', gif: '', video: '', blur: 0, dim: 0, noise: 0, parallax: 40, vignette: 35, mono: false },
+  overlay: { effect: 'none', intensity: 50, speed: 50 },
+  card: { style: 'glass', blur: 22, opacity: 55, glare: true, width: 440, banner: '' },
   audio: { id: '', title: '', volume: 60, loop: true, reactive: true },
   cursor: { kind: 'default', preset: 'arrow', ink: 'white', size: 32, image: '', hot: 'tl', trail: 'none' },
-  fx: { enter: 'none', enterText: 'click to enter', reveal: 'rise', tilt: false, magnetic: false, spotlight: false, grain: 0, scanlines: 0, parallax: 60, typewriter: false },
+  fx: { enter: 'none', enterText: '[ click to enter ]', reveal: 'rise', tilt: true, magnetic: false, spotlight: false, grain: 0, scanlines: 0, parallax: 60, typewriter: false, depth: 60, float: true },
   meta: { title: '', description: '', location: '', index: true, views: false, badge: true, badges: true },
   blocks: [],
 }
@@ -301,31 +259,47 @@ export function starterBlocks(): BioBlock[] {
 
 /* ------------------------------------------------------------------ looks: one tap sets a whole page */
 
-export type BioPreset = { id: string; name: string; note: string; swatch: [number, number]; /** shown on the card instead of the greys: background, second background, accent, second accent */ hues?: [string, string, string, string]; set: Partial<{ [K in keyof BioConfig]: Partial<BioConfig[K]> }> }
+export type BioPreset = { id: string; name: string; note: string; /** background, second background, accent, second accent: what a tile shows */ hues: [string, string, string, string]; /** the effect that plays over it */ effect: BioOverlay; set: Partial<{ [K in keyof BioConfig]: Partial<BioConfig[K]> }> }
+
+const look = (
+  id: string,
+  name: string,
+  note: string,
+  hues: [string, string, string, string],
+  effect: BioOverlay,
+  o: { text?: string; font?: string; nameStyle?: NameStyle; buttons?: ButtonStyle; radius?: number; opacity?: number; blur?: number; intensity?: number; vignette?: number } = {},
+): BioPreset => ({
+  id,
+  name,
+  note,
+  hues,
+  effect,
+  set: {
+    colors: { on: true, bg: hues[0], bg2: hues[1], text: o.text ?? '#f5f5f7', accent: hues[2], accent2: hues[3] },
+    theme: { nameStyle: o.nameStyle ?? 'glow', buttons: o.buttons ?? 'glass', font: o.font ?? 'quicksand', radius: o.radius ?? 22 },
+    bg: { kind: 'gradient', gradient: 'radial', dim: 0, blur: 0, noise: 0, vignette: o.vignette ?? 40 },
+    card: { style: 'glass', opacity: o.opacity ?? 55, blur: o.blur ?? 22 },
+    overlay: { effect, intensity: o.intensity ?? 55, speed: 50 },
+  },
+})
+
 export const PRESETS: BioPreset[] = [
-  { id: 'anubis', name: 'Anubis', note: 'flat black, mono words, square hairlines', swatch: [4, 90], set: { theme: { tone: 4, nameStyle: 'solid', buttons: 'outline', font: 'anubis', radius: 0 }, bg: { kind: 'tone', tone: 4, dim: 0, blur: 0, noise: 0, vignette: 0 }, cursor: { kind: 'default', trail: 'none' }, fx: { grain: 0, scanlines: 0, spotlight: false, tilt: false, magnetic: false } } },
-  { id: 'noir', name: 'Noir', note: 'black, a slow veil, glass buttons', swatch: [4, 28], set: { layout: undefined, theme: { tone: 4, nameStyle: 'solid', buttons: 'glass', font: 'anubis' }, bg: { kind: 'effect', effect: 'aurora', dim: 30, blur: 0, noise: 12, tone: 4 }, cursor: { kind: 'default', trail: 'none' }, fx: { grain: 8, scanlines: 0, spotlight: false } } },
-  { id: 'paper', name: 'Paper', note: 'off white, ink, a serif', swatch: [94, 10], set: { theme: { tone: 94, nameStyle: 'solid', buttons: 'brutal', font: 'anubis', radius: 0 }, bg: { kind: 'tone', tone: 94, dim: 0, noise: 22, vignette: 0 }, cursor: { kind: 'preset', preset: 'dot', ink: 'black', trail: 'none' }, fx: { grain: 14, scanlines: 0, spotlight: false } } },
-  { id: 'static', name: 'Static', note: 'grain, scan lines, a spotlight', swatch: [10, 70], set: { theme: { tone: 6, nameStyle: 'glitch', buttons: 'outline', font: 'anubis', radius: 0 }, bg: { kind: 'effect', effect: 'matrix', dim: 55, noise: 40, tone: 6 }, cursor: { kind: 'preset', preset: 'cross', ink: 'white', trail: 'ink' }, fx: { grain: 30, scanlines: 40, spotlight: true } } },
-  { id: 'chrome', name: 'Chrome', note: 'polished metal type on black', swatch: [2, 82], set: { theme: { tone: 2, nameStyle: 'chrome', buttons: 'glass', font: 'anubis', radius: 0 }, bg: { kind: 'effect', effect: 'silk', dim: 20, noise: 6, tone: 2 }, cursor: { kind: 'preset', preset: 'orb', ink: 'white', trail: 'comet' }, fx: { grain: 6, scanlines: 0, spotlight: true } } },
-  { id: 'void', name: 'Void', note: 'stars, nothing else', swatch: [0, 50], set: { theme: { tone: 0, nameStyle: 'shimmer', buttons: 'ghost', font: 'anubis', radius: 0 }, bg: { kind: 'effect', effect: 'warp', dim: 10, noise: 0, tone: 0 }, cursor: { kind: 'preset', preset: 'spark', ink: 'white', trail: 'spark' }, fx: { grain: 0, scanlines: 0, spotlight: false } } },
-  { id: 'concrete', name: 'Concrete', note: 'mid grey, hard edges', swatch: [52, 14], set: { theme: { tone: 52, nameStyle: 'outline', buttons: 'brutal', font: 'anubis', radius: 0 }, bg: { kind: 'gradient', gradient: 'linear', tone: 60, tone2: 40, angle: 180, noise: 35, dim: 0, vignette: 30 }, cursor: { kind: 'preset', preset: 'frame', ink: 'black', trail: 'none' }, fx: { grain: 26, scanlines: 0, spotlight: false } } },
-  { id: 'cinema', name: 'Cinema', note: 'letterbox black, film grain', swatch: [3, 60], set: { theme: { tone: 3, nameStyle: 'ghost', buttons: 'underline', font: 'anubis', radius: 0 }, bg: { kind: 'effect', effect: 'bokeh', dim: 35, noise: 24, tone: 3 }, cursor: { kind: 'preset', preset: 'playhead', ink: 'white', trail: 'none' }, fx: { grain: 28, scanlines: 8, spotlight: false } } },
-  { id: 'mist', name: 'Mist', note: 'soft white, blurred light', swatch: [88, 60], set: { theme: { tone: 88, nameStyle: 'solid', buttons: 'glass', font: 'anubis', radius: 0 }, bg: { kind: 'gradient', gradient: 'mesh', tone: 96, tone2: 70, noise: 16, dim: 0, blur: 0, vignette: 0 }, cursor: { kind: 'preset', preset: 'ring', ink: 'black', trail: 'ring' }, fx: { grain: 10, scanlines: 0, spotlight: false } } },
-  /* the coloured ones: each switches the page's own colours on */
-  { id: 'aurora', name: 'Aurora glow', note: 'a blue to orange glow rising from the bottom', swatch: [4, 90], hues: ['#07070c', '#0e1230', '#417fff', '#ff6e1d'], set: { colors: { on: true, bg: '#07070c', bg2: '#0e1230', text: '#f5f6fa', accent: '#417fff', accent2: '#ff6e1d' }, theme: { nameStyle: 'gradient', buttons: 'glass', font: 'geist', radius: 18 }, bg: { kind: 'glow', speed: 40, noise: 0, dim: 0, vignette: 0 }, card: { style: 'none' }, fx: { grain: 14 }, overlay: { effect: 'none' } } },
-  { id: 'lava', name: 'Lava', note: 'red and amber glow on black', swatch: [4, 80], hues: ['#0a0000', '#7f1d1d', '#ef4444', '#f59e0b'], set: { colors: { on: true, bg: '#0a0000', bg2: '#7f1d1d', text: '#fff1f2', accent: '#ef4444', accent2: '#f59e0b' }, theme: { nameStyle: 'gradient', buttons: 'glass', font: 'syne', radius: 14 }, bg: { kind: 'glow', speed: 50, noise: 0, dim: 0, vignette: 0 }, card: { style: 'none' }, fx: { grain: 12 }, overlay: { effect: 'embers' } } },
-  { id: 'sunset', name: 'Sunset', note: 'plum into coral, soft mesh', swatch: [10, 80], hues: ['#1a0a24', '#ff5e62', '#ffb347', '#ff5e62'], set: { colors: { on: true, bg: '#1a0a24', bg2: '#ff5e62', text: '#fff4ec', accent: '#ffb347', accent2: '#ff5e62' }, theme: { nameStyle: 'gradient', buttons: 'solid', font: 'bricolage', radius: 18 }, bg: { kind: 'gradient', gradient: 'mesh', angle: 160, speed: 40, dim: 0, vignette: 0 }, card: { style: 'none' }, fx: { grain: 8 }, overlay: { effect: 'none' } } },
-  { id: 'ocean', name: 'Ocean', note: 'deep blue liquid', swatch: [6, 80], hues: ['#04121f', '#0b3b5c', '#38bdf8', '#6366f1'], set: { colors: { on: true, bg: '#04121f', bg2: '#0b3b5c', text: '#e8f7ff', accent: '#38bdf8', accent2: '#6366f1' }, theme: { nameStyle: 'glow', buttons: 'glass', font: 'geist', radius: 18 }, bg: { kind: 'shader', shader: 'liquid', intensity: 55, speed: 35, dim: 20, vignette: 30 }, card: { style: 'none' }, fx: { grain: 6 }, overlay: { effect: 'bubbles' } } },
-  { id: 'neon', name: 'Neon city', note: 'magenta and cyan on a grid', swatch: [3, 80], hues: ['#07030f', '#1a0733', '#ff2bd6', '#00e5ff'], set: { colors: { on: true, bg: '#07030f', bg2: '#1a0733', text: '#fdf4ff', accent: '#ff2bd6', accent2: '#00e5ff' }, theme: { nameStyle: 'neon', buttons: 'outline', font: 'syne', radius: 10 }, bg: { kind: 'effect', effect: 'synth', intensity: 60, speed: 45, dim: 10, vignette: 40 }, card: { style: 'none' }, fx: { scanlines: 20, grain: 6 }, overlay: { effect: 'none' } } },
-  { id: 'forest', name: 'Forest', note: 'green veils and drifting dust', swatch: [4, 80], hues: ['#06100b', '#0f3d28', '#4ade80', '#a3e635'], set: { colors: { on: true, bg: '#06100b', bg2: '#0f3d28', text: '#eafff1', accent: '#4ade80', accent2: '#a3e635' }, theme: { nameStyle: 'gradient', buttons: 'glass', font: 'newsreader', radius: 18 }, bg: { kind: 'effect', effect: 'aurora', intensity: 55, speed: 30, dim: 15, vignette: 35 }, card: { style: 'none' }, fx: { grain: 8 }, overlay: { effect: 'fireflies' } } },
-  { id: 'candy', name: 'Candy', note: 'pink and violet on soft white', swatch: [94, 20], hues: ['#fff1f7', '#ffd6ea', '#ff4fa3', '#8b5cf6'], set: { colors: { on: true, bg: '#fff1f7', bg2: '#ffd6ea', text: '#3b0a2a', accent: '#ff4fa3', accent2: '#8b5cf6' }, theme: { nameStyle: 'gradient', buttons: 'solid', font: 'unbounded', radius: 24 }, bg: { kind: 'gradient', gradient: 'linear', angle: 150, speed: 40, dim: 0, vignette: 0 }, card: { style: 'none' }, fx: { grain: 0 }, overlay: { effect: 'sparkle' } } },
-  { id: 'midnight', name: 'Midnight', note: 'indigo stars', swatch: [4, 80], hues: ['#05070f', '#141b4d', '#818cf8', '#c084fc'], set: { colors: { on: true, bg: '#05070f', bg2: '#141b4d', text: '#e9ecff', accent: '#818cf8', accent2: '#c084fc' }, theme: { nameStyle: 'glow', buttons: 'outline', font: 'geist', radius: 14 }, bg: { kind: 'effect', effect: 'warp', intensity: 50, speed: 30, dim: 10, vignette: 40 }, card: { style: 'none' }, fx: { grain: 6 }, overlay: { effect: 'none' } } },
-  { id: 'gold', name: 'Gold', note: 'black and gold, a serif', swatch: [4, 85], hues: ['#0b0a07', '#2a210b', '#e7b84a', '#fff0b3'], set: { colors: { on: true, bg: '#0b0a07', bg2: '#2a210b', text: '#f6edd3', accent: '#e7b84a', accent2: '#fff0b3' }, theme: { nameStyle: 'shimmer', buttons: 'outline', font: 'gloock', radius: 4 }, bg: { kind: 'gradient', gradient: 'radial', speed: 40, dim: 0, vignette: 30 }, card: { style: 'none' }, fx: { grain: 10 }, overlay: { effect: 'sparkle' } } },
-  { id: 'rose', name: 'Rose', note: 'pink bokeh and glitter', swatch: [4, 80], hues: ['#14080c', '#4a1226', '#fb7185', '#f9a8d4'], set: { colors: { on: true, bg: '#14080c', bg2: '#4a1226', text: '#ffeef3', accent: '#fb7185', accent2: '#f9a8d4' }, theme: { nameStyle: 'glow', buttons: 'glass', font: 'young', radius: 20 }, bg: { kind: 'effect', effect: 'bokeh', intensity: 55, speed: 30, dim: 15, vignette: 35 }, card: { style: 'none' }, fx: { grain: 6 }, overlay: { effect: 'sparkle' } } },
-  { id: 'mint', name: 'Mint', note: 'fresh green on white', swatch: [95, 20], hues: ['#ecfdf5', '#a7f3d0', '#10b981', '#06b6d4'], set: { colors: { on: true, bg: '#ecfdf5', bg2: '#a7f3d0', text: '#052e1c', accent: '#10b981', accent2: '#06b6d4' }, theme: { nameStyle: 'gradient', buttons: 'solid', font: 'funnel', radius: 20 }, bg: { kind: 'gradient', gradient: 'mesh', angle: 160, speed: 40, dim: 0, vignette: 0 }, card: { style: 'none' }, fx: { grain: 0 }, overlay: { effect: 'none' } } },
-  { id: 'vapor', name: 'Vapor', note: 'purple and pink, scan lines', swatch: [6, 80], hues: ['#0b0220', '#3a0ca3', '#f72585', '#4cc9f0'], set: { colors: { on: true, bg: '#0b0220', bg2: '#3a0ca3', text: '#f3e8ff', accent: '#f72585', accent2: '#4cc9f0' }, theme: { nameStyle: 'gradient', buttons: 'glass', font: 'unbounded', radius: 12 }, bg: { kind: 'gradient', gradient: 'conic', angle: 200, speed: 40, dim: 0, vignette: 30 }, card: { style: 'none' }, fx: { scanlines: 14, grain: 8 }, overlay: { effect: 'none' } } },
-  { id: 'ice', name: 'Ice', note: 'a pale glow on white', swatch: [96, 20], hues: ['#f4faff', '#cfe8ff', '#2563eb', '#06b6d4'], set: { colors: { on: true, bg: '#f4faff', bg2: '#cfe8ff', text: '#0b2540', accent: '#2563eb', accent2: '#06b6d4' }, theme: { nameStyle: 'gradient', buttons: 'glass', font: 'geist', radius: 18 }, bg: { kind: 'glow', speed: 40, noise: 0, dim: 0, vignette: 0 }, card: { style: 'none' }, fx: { grain: 6 }, overlay: { effect: 'none' } } },
+  look('noir', 'Noir', 'black and white, nothing else', ['#050505', '#181818', '#ffffff', '#9a9a9a'], 'none'),
+  look('embers', 'Embers', 'glowing sparks rising off a dark fire', ['#0a0504', '#2a0e08', '#ff6a2b', '#ffb347'], 'embers', { text: '#fff1e8' }),
+  look('smoke', 'Smoke', 'slow grey smoke', ['#070708', '#1d1d22', '#d4d4d8', '#71717a'], 'smoke'),
+  look('snow', 'Snowfall', 'soft snow on deep blue', ['#060b16', '#13233f', '#9bd0ff', '#e6f1ff'], 'snow', { text: '#eef6ff' }),
+  look('rain', 'Rain', 'a grey night in the rain', ['#05080c', '#12202b', '#7dd3fc', '#38bdf8'], 'rain', { text: '#e8f3fa' }),
+  look('sakura', 'Sakura', 'petals falling', ['#140910', '#3a1428', '#ff8fb8', '#ffd1e3'], 'petals', { text: '#fff0f6' }),
+  look('forest', 'Forest', 'fireflies in the dark', ['#050d08', '#10301e', '#4ade80', '#bef264'], 'fireflies', { text: '#eafff1' }),
+  look('storm', 'Storm', 'purple sky, lightning', ['#07060c', '#1b1530', '#a78bfa', '#f0abfc'], 'lightning', { text: '#f3eeff' }),
+  look('ocean', 'Ocean', 'bubbles rising', ['#03101a', '#073a57', '#38bdf8', '#22d3ee'], 'bubbles', { text: '#e8f7ff' }),
+  look('aurora', 'Aurora', 'green and violet light', ['#030812', '#0b2433', '#34d399', '#818cf8'], 'aurora', { text: '#ecfdf5' }),
+  look('gold', 'Gold', 'black and gold, glitter', ['#0b0906', '#2a210d', '#e7b84a', '#fff0b3'], 'sparkle', { text: '#f6edd3', font: 'newsreader', nameStyle: 'shimmer' }),
+  look('autumn', 'Autumn', 'leaves drifting down', ['#100804', '#33180a', '#f59e0b', '#ef4444'], 'leaves', { text: '#fff4e5' }),
+  look('matrix', 'Matrix', 'green code', ['#010a04', '#032211', '#22c55e', '#86efac'], 'code', { text: '#d9ffe6', font: 'martian', nameStyle: 'neon', radius: 6 }),
+  look('retro', 'Retro', 'a worn VHS tape', ['#0a0a0f', '#1a1626', '#ff4d8d', '#4dd2ff'], 'vhs', { text: '#fdf2f8', nameStyle: 'glitch', radius: 10 }),
+  look('party', 'Party', 'confetti', ['#0b0716', '#1f1245', '#f472b6', '#60a5fa'], 'confetti', { text: '#fdf4ff' }),
+  look('paper', 'Paper', 'light and plain', ['#f4f1ea', '#e2ddd0', '#1a1a1a', '#6b6b6b'], 'none', { text: '#161616', buttons: 'solid', nameStyle: 'solid', opacity: 70, vignette: 0 }),
 ]
 
 /* ------------------------------------------------------------------ links: addresses, icons, embeds */
@@ -451,7 +425,7 @@ const text = (v: unknown, max: number) => (typeof v === 'string' ? v.replace(/[\
 const uploadId = (v: unknown) => (typeof v === 'string' && COLOR_LIKE.test(v) ? v : '')
 const giphyId = (v: unknown) => (typeof v === 'string' && /^[A-Za-z0-9]{4,40}$/.test(v) ? v : '')
 const blockId = (v: unknown) => (typeof v === 'string' && /^[a-z0-9]{4,16}$/.test(v) ? v : newId())
-export const FONT_IDS_BIO = ['anubis', 'geist', 'mono', 'serif', 'condensed', 'grotesk', 'bricolage', 'funnel', 'special', 'syne', 'unbounded', 'young', 'gloock', 'newsreader', 'martian', 'modern', 'tempo', 'bit8', 'script', 'hand'] as const
+export const FONT_IDS_BIO = ['quicksand', 'jelly', 'anubis', 'geist', 'mono', 'serif', 'condensed', 'grotesk', 'bricolage', 'funnel', 'special', 'syne', 'unbounded', 'young', 'gloock', 'newsreader', 'martian', 'modern', 'tempo', 'bit8', 'script', 'hand'] as const
 
 export function cleanBlock(raw: unknown): BioBlock | null {
   const r = obj(raw)
@@ -496,6 +470,9 @@ export function cleanBlock(raw: unknown): BioBlock | null {
  * Brings anything (a saved row, a request body) to a complete BioConfig. Unknown keys are dropped, numbers are clamped, ids are checked by shape and
  * addresses are cleaned. Whether an upload belongs to the person is checked separately, when it is saved.
  */
+/** Was this one of the backgrounds that moved by themselves (glow, shaders, motion)? Those are gone. */
+const movedOn = (kind: unknown) => kind === 'glow' || kind === 'shader' || kind === 'effect'
+
 export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioConfig {
   const r = obj(raw)
   const co = obj(r.colors)
@@ -524,7 +501,7 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
   return {
     v: 1,
     look: 2,
-    layout: pick(r.layout ?? d.layout, LAYOUT_IDS, 'aura'),
+    layout: pick(r.layout ?? d.layout, LAYOUT_IDS, 'classic'),
     ...(free ? { free } : {}),
     colors: {
       on: bool(co.on ?? d.colors.on, false),
@@ -536,12 +513,13 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
     },
     theme: {
       tone: int(t.tone ?? d.theme.tone, 4, 0, 100),
-      font: pick(t.font ?? d.theme.font, FONT_IDS_BIO, 'anubis'),
+      font: pick(t.font ?? d.theme.font, FONT_IDS_BIO, 'quicksand'),
       nameStyle: pick(t.nameStyle ?? d.theme.nameStyle, NAME_STYLES.map((x) => x.id), 'solid'),
       buttons: pick(t.buttons ?? d.theme.buttons, BUTTON_STYLES.map((x) => x.id), 'outline'),
       radius: int(t.radius ?? d.theme.radius, 0, 0, 40),
       align: pick(t.align ?? d.theme.align, ['left', 'center'], 'center'),
       size: pick(t.size ?? d.theme.size, ['compact', 'comfortable', 'large'], 'comfortable'),
+      icons: pick(t.icons ?? d.theme.icons, ['glow', 'plain', 'boxed'], 'glow'),
     },
     avatar: {
       shape: pick(a.shape ?? d.avatar.shape, AVATAR_SHAPES.map((x) => x.id), 'circle'),
@@ -551,24 +529,21 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
       size: int(a.size ?? d.avatar.size, 100, 60, 180),
     },
     bg: {
-      kind: pick(b.kind ?? d.bg.kind, BG_KINDS.map((x) => x.id), 'effect'),
+      // the old moving backgrounds are gone: a page that had one keeps its colours as a still gradient
+      kind: movedOn(b.kind) ? 'gradient' : pick(b.kind ?? d.bg.kind, BG_KINDS.map((x) => x.id), 'gradient'),
       tone: int(b.tone ?? d.bg.tone, 4, 0, 100),
       tone2: int(b.tone2 ?? d.bg.tone2, 22, 0, 100),
       angle: int(b.angle ?? d.bg.angle, 160, 0, 360),
-      gradient: pick(b.gradient ?? d.bg.gradient, GRADIENT_STYLES.map((x) => x.id), 'radial'),
+      gradient: movedOn(b.kind) ? 'radial' : pick(b.gradient ?? d.bg.gradient, GRADIENT_STYLES.map((x) => x.id), 'radial'),
       image: b.image === undefined ? d.bg.image : uploadId(b.image),
       gif: b.gif === undefined ? d.bg.gif : giphyId(b.gif),
       video: b.video === undefined ? d.bg.video : uploadId(b.video),
-      effect: pick(b.effect ?? d.bg.effect, BIO_EFFECTS.map((x) => x.id), 'aurora'),
-      shader: pick(b.shader ?? d.bg.shader, BIO_SHADERS.map((x) => x.id), 'liquid'),
       blur: int(b.blur ?? d.bg.blur, 0, 0, 40),
       dim: int(b.dim ?? d.bg.dim, 30, 0, 90),
       noise: int(b.noise ?? d.bg.noise, 12, 0, 100),
-      intensity: int(b.intensity ?? d.bg.intensity, 50, 0, 100),
-      speed: int(b.speed ?? d.bg.speed, 40, 0, 100),
       parallax: int(b.parallax ?? d.bg.parallax, 40, 0, 100),
       vignette: int(b.vignette ?? d.bg.vignette, 45, 0, 100),
-      mono: bool(b.mono ?? d.bg.mono, true),
+      mono: bool(b.mono ?? d.bg.mono, false),
     },
     overlay: {
       effect: pick(o.effect ?? d.overlay.effect, OVERLAYS.map((x) => x.id), 'none'),
@@ -580,6 +555,7 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
       blur: int(cd.blur ?? d.card.blur, 28, 0, 60),
       opacity: int(cd.opacity ?? d.card.opacity, 40, 0, 100),
       glare: bool(cd.glare ?? d.card.glare, true),
+      width: int(cd.width ?? d.card.width, 440, 300, 640),
       banner: cd.banner === undefined ? d.card.banner : uploadId(cd.banner),
     },
     audio: {
@@ -609,6 +585,8 @@ export function normalizeBio(raw: unknown, base: BioConfig = DEFAULT_BIO): BioCo
       scanlines: int(f.scanlines ?? d.fx.scanlines, 0, 0, 100),
       parallax: int(f.parallax ?? d.fx.parallax, 60, 0, 100),
       typewriter: bool(f.typewriter ?? d.fx.typewriter, false),
+      depth: int(f.depth ?? d.fx.depth, 60, 0, 100),
+      float: bool(f.float ?? d.fx.float, true),
     },
     meta: {
       title: m.title === undefined ? d.meta.title : text(m.title, 70),
@@ -731,7 +709,7 @@ export function parseBio(json: string | null | undefined): BioConfig {
 /** Applies a look on top of a page (the layout and the links are never touched). */
 export function applyPreset(cfg: BioConfig, preset: BioPreset): BioConfig {
   const s = preset.set as Record<string, Record<string, unknown> | undefined>
-  return normalizeBio({ ...cfg, colors: { ...cfg.colors, on: false, ...s.colors }, theme: { ...cfg.theme, ...s.theme }, bg: { ...cfg.bg, ...s.bg }, cursor: { ...cfg.cursor, ...s.cursor }, fx: { ...cfg.fx, ...s.fx }, overlay: { ...cfg.overlay, ...s.overlay } }, cfg)
+  return normalizeBio({ ...cfg, colors: { ...cfg.colors, on: false, ...s.colors }, theme: { ...cfg.theme, ...s.theme }, bg: { ...cfg.bg, ...s.bg }, card: { ...cfg.card, ...s.card }, cursor: { ...cfg.cursor, ...s.cursor }, fx: { ...cfg.fx, ...s.fx }, overlay: { ...cfg.overlay, ...s.overlay } }, cfg)
 }
 
 /** Greys: a tone from 0 (black) to 100 (white). */

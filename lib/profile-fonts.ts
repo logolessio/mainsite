@@ -15,6 +15,7 @@ import {
   MedievalSharp,
   Newsreader,
   Orbitron,
+  Quicksand,
   Pacifico,
   Press_Start_2P,
   Space_Grotesk,
@@ -50,6 +51,7 @@ const young = Young_Serif({ subsets: ['latin'], display: 'swap', preload: false,
 const gloock = Gloock({ subsets: ['latin'], display: 'swap', preload: false, weight: '400' })
 const newsreader = Newsreader({ subsets: ['latin'], display: 'swap', preload: false })
 const martian = Martian_Mono({ subsets: ['latin'], display: 'swap', preload: false })
+const quicksand = Quicksand({ subsets: ['latin'], display: 'swap', preload: false })
 const script = Pacifico({ subsets: ['latin'], display: 'swap', preload: false, weight: '400' })
 
 /** Anubis: IBM Plex Mono for the words (the heavy Schibsted titles are set by components/bio/bio.css). Both faces come with the site's layout. */
@@ -79,6 +81,7 @@ export const PROFILE_FONT_CLASS: Record<FontId, string> = {
   gloock: gloock.className,
   newsreader: newsreader.className,
   martian: martian.className,
+  quicksand: quicksand.className,
 }
 
 /** Some of these fonts have very wide or very small letters, so the name is scaled to look even. */

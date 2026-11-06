@@ -3,7 +3,7 @@
 import { type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { type BioBlock, FREE_W, type FreeBox, nameSize, resolveFree } from '@/lib/bio'
 import { cn } from '@/lib/utils'
-import { Avatar, BlockIcon, BlockView, Divider, Footer, fontClass, Name, Bio } from './bits'
+import { Avatar, BlockIcon, BlockView, Divider, fontClass, Name, Bio } from './bits'
 import { Badges } from './card'
 import { useBio } from './context'
 
@@ -196,8 +196,8 @@ export function Canvas() {
       const s = p.social
       return (
         <div style={{ width: 44.8, height: 44.8, transform: `scale(${box.w / 44.8})`, transformOrigin: '0 0' }}>
-          <a className="bs" href={mode === 'live' ? s.url : undefined} target="_blank" rel="noopener noreferrer nofollow" aria-label={s.platform} onClick={(e) => (mode === 'live' ? undefined : e.preventDefault())} tabIndex={mode === 'mini' ? -1 : undefined}>
-            <BlockIcon block={s} className="size-[1.15rem]" />
+          <a className="bs" data-icons={cfg.theme.icons} href={mode === 'live' ? s.url : undefined} target="_blank" rel="noopener noreferrer nofollow" aria-label={s.platform} onClick={(e) => (mode === 'live' ? undefined : e.preventDefault())} tabIndex={mode === 'mini' ? -1 : undefined}>
+            <BlockIcon block={s} className={cfg.theme.icons === 'boxed' ? 'size-[1.15rem]' : 'size-[1.55rem]'} />
           </a>
         </div>
       )
@@ -309,7 +309,6 @@ export function Canvas() {
           ))}
         </div>
       </div>
-      <Footer />
     </main>
   )
 }

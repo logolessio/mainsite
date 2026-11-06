@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Loader2, Monitor, Smartphone } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BioPage } from '@/components/bio/bio-page'
-import type { Arrange } from '@/components/bio/context'
+import type { Arrange, EditPart } from '@/components/bio/context'
 import { type BioConfig, DEFAULT_BIO, type FreeBox } from '@/lib/bio'
 import type { BioStats } from '@/lib/bio-store'
 import { cn } from '@/lib/utils'
@@ -79,6 +79,8 @@ export function Editor({ claim }: { claim: string | null }) {
         const j = (await r.json()) as Loaded
         if (!live) return
         setCfg(j.config)
+        past.current = []
+        future.current = []
         setProfileState({ ...j.profile })
         setStats(j.stats)
         setBase(snapshot(j.config, j.profile))
@@ -107,13 +109,55 @@ export function Editor({ claim }: { claim: string | null }) {
     return () => window.removeEventListener('beforeunload', f)
   }, [dirty])
 
-  const set: EditorApi['set'] = useCallback((f) => setCfg((c) => f(c)), [])
-  const up: EditorApi['up'] = useCallback((k, patch) => setCfg((c) => ({ ...c, [k]: { ...c[k], ...patch } })), [])
+  // every change goes through `commit`, which keeps what the page was so ⌘Z can bring it back (quick changes, like dragging a slider, count as one)
+  const cfgRef = useRef(cfg)
+  cfgRef.current = cfg
+  const past = useRef<BioConfig[]>([])
+  const future = useRef<BioConfig[]>([])
+  const lastAt = useRef(0)
+  const [, bump] = useState(0)
+  const commit = useCallback((f: (c: BioConfig) => BioConfig) => {
+    const c = cfgRef.current
+    const n = f(c)
+    if (n === c) return
+    const now = Date.now()
+    if (past.current.length === 0 || now - lastAt.current > 700) {
+      past.current.push(c)
+      if (past.current.length > 100) past.current.shift()
+    }
+    lastAt.current = now
+    future.current = []
+    cfgRef.current = n
+    setCfg(n)
+    bump((v) => v + 1)
+  }, [])
+  const undo = useCallback(() => {
+    const p = past.current.pop()
+    if (!p) return
+    future.current.push(cfgRef.current)
+    cfgRef.current = p
+    lastAt.current = 0
+    setCfg(p)
+    bump((v) => v + 1)
+  }, [])
+  const redo = useCallback(() => {
+    const n = future.current.pop()
+    if (!n) return
+    past.current.push(cfgRef.current)
+    cfgRef.current = n
+    lastAt.current = 0
+    setCfg(n)
+    bump((v) => v + 1)
+  }, [])
+  const set: EditorApi['set'] = commit
+  // a click on a part of the preview opens what changes it
+  const onPart = useCallback((p: EditPart) => setTab(p === 'profile' ? 'profile' : p === 'links' ? 'links' : p === 'card' ? 'layout' : 'background'), [setTab])
+  const up: EditorApi['up'] = useCallback((k, patch) => commit((c) => ({ ...c, [k]: { ...c[k], ...patch } })), [commit])
   const setProfile = useCallback((p: Partial<ProfileDraft>) => setProfileState((x) => ({ ...x, ...p })), [])
   const api: EditorApi = useMemo(() => ({ cfg, set, up, profile, setProfile, stats, toast, sel, setSel, snap, setSnap }), [cfg, set, up, profile, setProfile, stats, toast, sel, snap])
   const arrange = useMemo(
-    () => ({ selected: sel, select: setSel, snap, patch: (k: string, box: FreeBox) => setCfg((c) => ({ ...c, free: { ...(c.free ?? {}), [k]: box } })) }),
-    [sel, snap],
+    () => ({ selected: sel, select: setSel, snap, patch: (k: string, box: FreeBox) => commit((c) => ({ ...c, free: { ...(c.free ?? {}), [k]: box } })) }),
+    [sel, snap, commit],
   )
   // choosing the canvas layout switches the preview to the phone, the size it is meant to be arranged at
   const lastLayout = useRef(cfg.layout)
@@ -158,6 +202,20 @@ export function Editor({ claim }: { claim: string | null }) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
         e.preventDefault()
         void save()
+      }
+      // ⌘Z and ⇧⌘Z undo and redo the page (inside a text box they stay the box's own)
+      const t = e.target
+      const typing = t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && !typing && !document.querySelector('[aria-modal="true"]')) {
+        const k = e.key.toLowerCase()
+        if (k === 'z') {
+          e.preventDefault()
+          if (e.shiftKey) redo()
+          else undo()
+        } else if (k === 'y') {
+          e.preventDefault()
+          redo()
+        }
       }
     }
     window.addEventListener('keydown', key)
@@ -216,7 +274,7 @@ export function Editor({ claim }: { claim: string | null }) {
   return (
     <>
       <div inert={tour || undefined}>
-      <DashShell tab={tab} onGo={setTab} counts={counts} user={user} save={{ dirty, saving, onSave: () => void save() }} canPreview={edits} view={mobileView} onView={setMobileView}>
+      <DashShell tab={tab} onGo={setTab} counts={counts} user={user} save={{ dirty, saving, onSave: () => void save() }} history={{ canUndo: past.current.length > 0, canRedo: future.current.length > 0, undo, redo }} canPreview={edits} view={mobileView} onView={setMobileView}>
         {tab === 'overview' ? (
           <motion.div key="overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.25 }} className="h-full">
             <OverviewPanel api={api} data={data} go={setTab} onTour={() => setTour(true)} />
@@ -227,7 +285,7 @@ export function Editor({ claim }: { claim: string | null }) {
               {isCustomize(tab) && <CustomizeBar tab={tab} onGo={setTab} counts={counts} />}
               <div className="ed-scroll min-h-0 flex-1 overflow-y-auto">{panel}</div>
             </div>
-            <Preview data={data} device={device} setDevice={setDevice} arrange={tab === 'layout' || tab === 'links' ? arrange : undefined} className={cn('min-h-0 flex-1 lg:flex', mobileView === 'preview' ? 'flex' : 'hidden')} />
+            <Preview data={data} device={device} setDevice={setDevice} arrange={tab === 'layout' || tab === 'links' ? arrange : undefined} onPart={onPart} className={cn('min-h-0 flex-1 lg:flex', mobileView === 'preview' ? 'flex' : 'hidden')} />
           </div>
         ) : (
           <div className="ed-scroll h-full overflow-y-auto">
@@ -253,7 +311,7 @@ export function Editor({ claim }: { claim: string | null }) {
   )
 }
 
-function Preview({ data, device, setDevice, arrange, className }: { data: Parameters<typeof BioPage>[0]['data']; device: 'desktop' | 'phone'; setDevice: (d: 'desktop' | 'phone') => void; arrange?: Arrange; className?: string }) {
+function Preview({ data, device, setDevice, arrange, onPart, className }: { data: Parameters<typeof BioPage>[0]['data']; device: 'desktop' | 'phone'; setDevice: (d: 'desktop' | 'phone') => void; arrange?: Arrange; onPart?: (p: EditPart) => void; className?: string }) {
   const box = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState({ w: 800, h: 600 })
   useEffect(() => {
@@ -272,7 +330,7 @@ function Preview({ data, device, setDevice, arrange, className }: { data: Parame
       <div ref={box} className="flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden">
         <div style={{ width: full.w * k, height: full.h * k }} className={cn('relative shrink-0 overflow-hidden border border-[var(--ed-line2)] bg-black shadow-[0_40px_120px_rgb(0_0_0/0.7)]', device === 'phone' ? 'rounded-[2.4rem]' : 'rounded-2xl')}>
           <div style={{ width: full.w, height: full.h, transform: `scale(${k})`, transformOrigin: 'top left' }} className="absolute top-0 left-0">
-            <BioPage mode="preview" data={data} arrange={arrange} />
+            <BioPage mode="preview" data={data} arrange={arrange} onPart={onPart} />
           </div>
         </div>
       </div>

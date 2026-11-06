@@ -1,20 +1,77 @@
 'use client'
 
-import { type CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 import { cn } from '@/lib/utils'
-import { Avatar, Bio, BlockList, Footer, Name, Socials } from './bits'
-import { Badges, GlassCard } from './card'
+import { Avatar, Bio, BlockList, Name, Part, Socials, useBackgroundClick } from './bits'
+import { Badges } from './card'
 import { useBio } from './context'
+import { Layer, Stage } from './stage'
 
-/** A small heading over a part of the card. */
-const Label = ({ children }: { children: string }) => <h2 className="bio-mute mb-2 text-[0.68rem] font-semibold tracking-[0.14em] uppercase">{children}</h2>
+/** Everything that holds the page in the middle of the screen. */
+function Frame({ children }: { children: React.ReactNode }) {
+  const bg = useBackgroundClick()
+  return (
+    <main onClick={bg} className="grid min-h-full w-full place-items-center px-4 pt-10 pb-16 md:pt-14">
+      {children}
+    </main>
+  )
+}
 
-/**
- * 0. Card: the page as a profile. One card floats over the background (it drifts a little and leans towards the pointer): a banner across the top,
- * the picture over its lower edge, the name with its badges, and an "about me" panel that holds the bio, the accounts and the links.
- */
+/** The title, with its badges under it. */
+function Title({ align = 'center' }: { align?: 'center' | 'left' }) {
+  return (
+    <>
+      <Part id="profile" className="mt-5">
+        <Name className="text-[clamp(1.7rem,7cqw,2.3rem)] leading-[1.1] font-semibold [overflow-wrap:anywhere]" style={{ textAlign: align }} />
+      </Part>
+      <Badges center={align === 'center'} className="mt-2.5" />
+    </>
+  )
+}
+
+/** Classic: the picture, name, badges, bio and icons down the middle of a floating card, and the links under them. */
+export function Classic() {
+  const { socials, items } = useBio()
+  return (
+    <Frame>
+      <Stage>
+        <div className="flex flex-col items-center px-7 pt-10 pb-8 text-center">
+          <Layer z={56}>
+            <Part id="profile">
+              <Avatar size={116} />
+            </Part>
+          </Layer>
+          <Layer z={38}>
+            <Title />
+          </Layer>
+          <Layer z={22} className="mt-3 w-full">
+            <Part id="profile">
+              <Bio className="mx-auto !max-w-[28rem] text-[0.95rem]" center />
+            </Part>
+          </Layer>
+          {socials.length > 0 && (
+            <Layer z={34} className="mt-5">
+              <Part id="links">
+                <Socials />
+              </Part>
+            </Layer>
+          )}
+          {items.length > 0 && (
+            <Layer z={16} className="mt-6 w-full">
+              <Part id="links" className="w-full">
+                <BlockList />
+              </Part>
+            </Layer>
+          )}
+        </div>
+      </Stage>
+    </Frame>
+  )
+}
+
+/** Card: the profile card from the old logoless: a banner, the picture over its lower edge, then an "about me" panel that holds the bio, the accounts and the links. */
 export function Card() {
-  const { data, cfg, items, socials, mode, reduced } = useBio()
+  const { data, cfg, items, socials } = useBio()
   const custom = cfg.colors.on
   const banner = cfg.card.banner
   const bannerStyle: CSSProperties = banner
@@ -23,58 +80,96 @@ export function Card() {
       ? { background: 'linear-gradient(135deg, var(--bio-accent), var(--bio-accent2))' }
       : { background: 'linear-gradient(135deg, rgb(var(--bio-fg-rgb) / 0.28), rgb(var(--bio-fg-rgb) / 0.07))' }
   const circle = cfg.avatar.shape === 'circle'
-  const drift = !reduced && mode !== 'mini'
-  const where = cfg.meta.location
-  const hasLinks = items.length > 0
-
   return (
-    <main className="grid min-h-full w-full place-items-center px-4 py-10 md:py-16">
-      <div className="flex flex-col items-center">
-        <div style={{ animation: drift ? 'bio-float 7s ease-in-out infinite' : undefined }}>
-          <GlassCard always radius="30px" className="w-[min(27.5rem,calc(100cqw-2rem))] overflow-hidden">
-            <div className="relative h-[8.25rem] overflow-hidden" style={bannerStyle}>
-              <span aria-hidden="true" className="card-sheen absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/25 to-transparent" />
-            </div>
-            <div className="relative px-5 pb-5">
-              <div className={cn('-mt-[3.4rem] mb-3 inline-block bg-[var(--bio-bg)] p-[5px]', circle ? 'rounded-full' : 'rounded-[1.4rem]')} style={{ boxShadow: custom ? '0 0 38px -8px var(--bio-accent)' : undefined }}>
+    <Frame>
+      <Stage className="overflow-visible">
+        <Part id="card" className="overflow-hidden" >
+          <div className="relative h-[8.25rem] overflow-hidden" style={{ ...bannerStyle, borderRadius: 'calc(var(--bio-r) + 8px) calc(var(--bio-r) + 8px) 0 0' }}>
+            <span aria-hidden="true" className="card-sheen absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/25 to-transparent" />
+          </div>
+        </Part>
+        <div className="relative px-5 pb-5">
+          <Layer z={52} className="-mt-[3.5rem] mb-3 inline-block">
+            <div className={cn('inline-block bg-[var(--bio-bg)] p-[5px]', circle ? 'rounded-full' : 'rounded-[1.4rem]')}>
+              <Part id="profile">
                 <Avatar size={96} />
-              </div>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <Name className="min-w-0 text-[clamp(1.6rem,7cqw,2.1rem)] leading-tight font-semibold [overflow-wrap:anywhere]" style={{ textAlign: 'left' }} />
-                <Badges center={false} className="min-w-0" />
-              </div>
-              <p className="bio-mute mt-1 text-[0.82rem]">
-                logoless.io/{data.handle}
-                {where && !cfg.meta.badges ? ` · ${where}` : ''}
-              </p>
-
-              <div className="mt-5 grid gap-5 rounded-[1.4rem] border border-[var(--bio-line)] bg-[rgb(var(--bio-fg-rgb)/0.06)] p-4">
-                {data.bio && (
-                  <section>
-                    <Label>About me</Label>
-                    <Bio className="!max-w-none text-[0.92rem]" />
-                  </section>
-                )}
-                {socials.length > 0 && (
-                  <section>
-                    <Label>Find me on</Label>
-                    <Socials justify="start" />
-                  </section>
-                )}
-                {hasLinks && (
-                  <section>
-                    <Label>Links</Label>
-                    <BlockList />
-                  </section>
-                )}
-                {!data.bio && !socials.length && !hasLinks && <p className="bio-mute text-[0.88rem]">Nothing to show yet.</p>}
-              </div>
+              </Part>
             </div>
-          </GlassCard>
+          </Layer>
+          <Layer z={34} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <Part id="profile">
+              <Name className="min-w-0 text-[clamp(1.6rem,7cqw,2.1rem)] leading-tight font-semibold [overflow-wrap:anywhere]" style={{ textAlign: 'left' }} />
+            </Part>
+            <Badges center={false} className="min-w-0" />
+          </Layer>
+          <p className="bio-mute mt-1 text-[0.82rem]">logoless.io/{data.handle}</p>
+          <Layer z={22} className="mt-5 grid gap-5 rounded-[calc(var(--bio-r)+4px)] border border-[var(--bio-line)] bg-[rgb(var(--bio-fg-rgb)/0.06)] p-4">
+            {data.bio && (
+              <Part id="profile">
+                <h2 className="bio-mute mb-2 text-[0.68rem] font-semibold tracking-[0.14em] uppercase">About me</h2>
+                <Bio className="!max-w-none text-[0.92rem]" />
+              </Part>
+            )}
+            {socials.length > 0 && (
+              <Part id="links">
+                <h2 className="bio-mute mb-2 text-[0.68rem] font-semibold tracking-[0.14em] uppercase">Find me on</h2>
+                <Socials justify="start" />
+              </Part>
+            )}
+            {items.length > 0 && (
+              <Part id="links">
+                <h2 className="bio-mute mb-2 text-[0.68rem] font-semibold tracking-[0.14em] uppercase">Links</h2>
+                <BlockList />
+              </Part>
+            )}
+            {!data.bio && !socials.length && !items.length && <p className="bio-mute text-[0.88rem]">Nothing to show yet.</p>}
+          </Layer>
         </div>
-        <Footer className="pt-8 pb-0" />
-      </div>
-    </main>
+      </Stage>
+    </Frame>
+  )
+}
+
+/** Side by side: the picture on the left, the name, badges and bio on the right, then the icons and links. */
+export function Side() {
+  const { socials, items } = useBio()
+  return (
+    <Frame>
+      <Stage>
+        <div className="px-6 pt-8 pb-7">
+          <div className="flex items-center gap-5">
+            <Layer z={54} className="shrink-0">
+              <Part id="profile">
+                <Avatar size={104} />
+              </Part>
+            </Layer>
+            <Layer z={34} className="min-w-0 flex-1">
+              <Part id="profile">
+                <Name className="text-[clamp(1.5rem,6.4cqw,2.1rem)] leading-[1.1] font-semibold [overflow-wrap:anywhere]" style={{ textAlign: 'left' }} />
+              </Part>
+              <Badges center={false} className="mt-2" />
+              <Part id="profile" className="mt-2">
+                <Bio className="!max-w-none text-[0.9rem]" />
+              </Part>
+            </Layer>
+          </div>
+          {socials.length > 0 && (
+            <Layer z={30} className="mt-5">
+              <Part id="links">
+                <Socials justify="start" />
+              </Part>
+            </Layer>
+          )}
+          {items.length > 0 && (
+            <Layer z={14} className="mt-5 w-full">
+              <Part id="links" className="w-full">
+                <BlockList />
+              </Part>
+            </Layer>
+          )}
+        </div>
+      </Stage>
+    </Frame>
   )
 }

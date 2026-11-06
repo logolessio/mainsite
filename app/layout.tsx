@@ -81,7 +81,7 @@ const cls_dm_serif_text = DM_Serif_Text({ subsets: ['latin'], display: 'swap', p
 const cls_im_fell = IM_Fell_English({ subsets: ['latin'], display: 'swap', preload: false, weight: '400', variable: '--font-f-im-fell' })
 const FONT_CLASSES = [inter, tight, geistMono, geist, dmSans, manrope, sora, spaceGrotesk, jakarta, outfit, instrument, fraunces, playfair, jetbrains, plexMono, spaceMono, bricolage, funnelDisplay, funnelSans, hanken, instrumentSans, schibsted, specialGothic, hostGrotesk, familjen, mona, onest, figtree, geologica, wix, syne, newsreader, youngSerif, gloock, bodoni, martian, dmMono, fragment, cls_cormorant, cls_eb_garamond, cls_dm_serif, cls_libre_caslon, cls_libre_baskerville, cls_cinzel, cls_abril, cls_prata, cls_rufina, cls_spectral, cls_lora, cls_old_standard, cls_gilda, cls_playfair_sc, cls_marcellus, cls_yeseva, cls_italiana, cls_bellefair, cls_vidaloka, cls_rozha, cls_cardo, cls_crimson, cls_sorts_mill, cls_libre_bodoni, cls_baskervville, cls_forum, cls_cormorant_infant, cls_castoro, cls_ovo, cls_gelasio, cls_source_serif, cls_noto_display, cls_libre_caslon_display, cls_dm_serif_text, cls_im_fell].map((f) => f.variable).join(' ')
 
-const DESCRIPTION = 'A full-screen link in bio for editors: shaders, music, twelve layouts and a cursor of your own. Claim logoless.io/you in a few seconds.'
+const DESCRIPTION = 'A link in bio for editors: a floating 3D card, effects like embers and smoke, music and a cursor of your own. Claim logoless.io/you in a few seconds.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),

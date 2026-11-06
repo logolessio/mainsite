@@ -7,9 +7,9 @@ import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 
 import { BioPage } from '@/components/bio/bio-page'
 import { Glow, LOVABLE_GLOW } from '@/components/bio/glow'
 import type { BioPageData } from '@/components/bio/context'
-import { ShaderRunner, type ShaderId } from '@/components/bio/gl'
+import { CardEffectLayer } from '@/components/profile/card-effect'
 import { useMotionPrefs } from '@/hooks/use-motion-prefs'
-import { BIO_SHADERS, LAYOUTS } from '@/lib/bio'
+import { LAYOUTS, OVERLAYS } from '@/lib/bio'
 import { CURSORS, cursorCss, cursorSvg } from '@/lib/bio-cursors'
 import { cn } from '@/lib/utils'
 import { type SampleId, SAMPLES } from './samples'
@@ -183,13 +183,13 @@ function Hero() {
       <div aria-hidden="true" className="rise relative mx-auto mt-12 h-[19rem] w-full max-w-[44rem] md:mt-14 md:h-[32rem]" style={vars({ '--d': '0.4s' })}>
         <div className="absolute top-0 left-1/2 h-[640px] w-[640px] -translate-x-1/2 origin-top scale-[0.52] sm:scale-[0.7] md:scale-100">
           <div className="float absolute top-[110px] left-0" style={vars({ '--t': '8s', '--d': '0.6s' })}>
-            <Phone id="index" width={190} still />
+            <Phone id="side" width={190} still />
           </div>
           <div className="float absolute top-0 left-[195px]" style={vars({ '--t': '7s' })}>
-            <Phone id="card" width={250} />
+            <Phone id="classic" width={250} />
           </div>
           <div className="float absolute top-[110px] left-[450px]" style={vars({ '--t': '9s', '--d': '1.2s' })}>
-            <Phone id="bento" width={190} still />
+            <Phone id="card" width={190} still />
           </div>
         </div>
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#080808]/90 to-transparent" />
@@ -201,8 +201,8 @@ function Hero() {
 /* ------------------------------------------------------------------ the facts, in one strip */
 
 const STATS = [
-  ['10', 'Layouts'],
-  ['7', 'Live backgrounds'],
+  ['4', 'Layouts'],
+  ['19', 'Effects'],
   ['13', 'Cursors'],
   ['Free', 'Nothing locked'],
 ] as const
@@ -225,8 +225,8 @@ function Stats() {
 /* ------------------------------------------------------------------ what you get */
 
 const FEATURES = [
-  { icon: Layers, t: 'Layouts', d: 'Ten ways to show your links. Pick one, change it any time.' },
-  { icon: Sparkles, t: 'Live backgrounds', d: 'Seven shader backgrounds that follow the pointer and move with your music.' },
+  { icon: Layers, t: 'A card in 3D', d: 'Your page floats on a card that turns towards the pointer, with your picture and name standing off it.' },
+  { icon: Sparkles, t: 'Effects', d: 'Snow, embers, smoke, rain, petals and thirteen more, floating over any background.' },
   { icon: MousePointer2, t: 'Your own cursor', d: 'Choose one of ours or upload a picture or SVG. It changes over your links.' },
   { icon: Music2, t: 'Music and video', d: 'Add a song, loop a video behind the page, or play your edits right on it.' },
   { icon: BarChart3, t: 'Analytics', d: 'See views, clicks and which link people press, over the last 30 days.' },
@@ -261,7 +261,7 @@ function Features() {
 
 const TABS = [
   ['layouts', 'Layouts'],
-  ['backgrounds', 'Backgrounds'],
+  ['effects', 'Effects'],
   ['cursors', 'Cursors'],
 ] as const
 type Tab = (typeof TABS)[number][0]
@@ -303,24 +303,20 @@ function LayoutsDemo() {
   )
 }
 
-function BackgroundsDemo() {
-  const ref = useRef<HTMLDivElement>(null)
-  const { px, py } = usePointer(ref)
-  const { reduced } = useMotionPrefs()
-  const level = useMotionValue(0)
-  const [i, setI] = useState(0)
-  const s = BIO_SHADERS[i]
+function EffectsDemo() {
+  const [i, setI] = useState(2)
+  const list = OVERLAYS.filter((o) => o.id !== 'none')
+  const e = list[i]
   return (
     <div className="text-left">
-      <div ref={ref} className="relative h-[20rem] overflow-hidden rounded-[24px] border border-white/10 bg-black md:h-[26rem]">
-        <ShaderRunner key={s.id} id={s.id as ShaderId} tone={2} intensity={86} speed={55} px={px} py={py} level={level} reduced={reduced} />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(80%_70%_at_50%_50%,transparent,rgb(0_0_0/0.6))]" />
-        <p className="absolute bottom-5 left-6 text-[0.8rem] text-white/80">{s.name}</p>
+      <div className="relative h-[20rem] overflow-hidden rounded-[24px] border border-white/10 bg-[radial-gradient(120%_90%_at_50%_18%,#1a1a1d,#050505_72%)] md:h-[26rem]">
+        <CardEffectLayer key={e.id} effect={e.id} intensity={70} speed={55} colors={['#ffffff', '#9a9a9a']} scope="card" />
+        <p className="absolute bottom-5 left-6 text-[0.8rem] text-white/80">{e.name}</p>
       </div>
       <div className="mt-6 flex flex-wrap justify-center gap-2">
-        {BIO_SHADERS.map((b, n) => (
-          <Pill key={b.id} on={n === i} onClick={() => setI(n)}>
-            {b.name}
+        {list.map((o, n) => (
+          <Pill key={o.id} on={n === i} onClick={() => setI(n)}>
+            {o.name}
           </Pill>
         ))}
       </div>
@@ -369,7 +365,7 @@ function TryIt() {
     <section id="try" className="scroll-mt-24 px-5 py-20">
       <Reveal className="mx-auto max-w-[64rem] text-center">
         <h2 className={H2}>Try it right here</h2>
-        <p className={SUB}>Change a layout, a background or a cursor and see what your page would look like.</p>
+        <p className={SUB}>Change a layout, an effect or a cursor and see what your page would look like.</p>
         <div role="tablist" aria-label="What to try" className="mt-8 inline-flex rounded-full border border-white/10 bg-white/[0.03] p-1">
           {TABS.map(([id, name]) => (
             <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={cn('h-10 rounded-full px-5 text-[0.8rem] transition-colors duration-200', tab === id ? 'bg-[#ececec] text-[#0a0a0a]' : 'text-white/60 hover:text-white')}>
@@ -382,7 +378,7 @@ function TryIt() {
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={tab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25, ease: 'easeOut' }}>
             {tab === 'layouts' && <LayoutsDemo />}
-            {tab === 'backgrounds' && <BackgroundsDemo />}
+            {tab === 'effects' && <EffectsDemo />}
             {tab === 'cursors' && <CursorsDemo />}
           </motion.div>
         </AnimatePresence>
@@ -395,7 +391,7 @@ function TryIt() {
 
 const HOW = [
   { icon: AtSign, t: 'Pick your name', d: 'Sign in with Google, Discord or email and take the name you want. One letter is fine.' },
-  { icon: SlidersHorizontal, t: 'Build your page', d: 'Add links, socials, videos and a song, then choose a layout, a background and a cursor.' },
+  { icon: SlidersHorizontal, t: 'Build your page', d: 'Add links, socials, videos and a song, then choose a layout, an effect and a cursor.' },
   { icon: Share2, t: 'Share one link', d: 'Paste logoless.io/yourname into your Instagram, TikTok, YouTube or Discord bio.' },
 ] as const
 
@@ -431,7 +427,7 @@ const TALK = [
   { q: 'Can I have a one letter name?', a: 'Names start at one character. Dots, dashes and a few symbols work anywhere in them. If someone already has it, they have it.' },
   { q: 'Does the music start by itself?', a: 'Browsers keep sound off until someone clicks. Turn on the enter screen and that click is what lets your song start.' },
   { q: 'Can people watch my edits on the page?', a: 'Paste a YouTube, Vimeo, TikTok or Spotify link and it plays right there. Anything else opens as a normal link.' },
-  { q: 'Will it slow my page down?', a: 'The backgrounds run on the graphics card and draw smaller on phones. Anyone who asked their device for less motion gets a still page.' },
+  { q: 'Will it slow my page down?', a: 'The effects are drawn small and stop when they are off screen. Anyone who asked their device for less motion gets a still page.' },
 ] as const
 
 function Faq() {

@@ -2,10 +2,11 @@
 
 import { Music2, Trash2, Upload } from 'lucide-react'
 import { useRef, useState } from 'react'
-import { CURSOR_TRAILS, ENTER_SCREENS, REVEALS } from '@/lib/bio'
+import { CURSOR_TRAILS, ENTER_SCREENS, OVERLAYS, REVEALS } from '@/lib/bio'
 import { CURSORS, cursorSvg } from '@/lib/bio-cursors'
 import { uploadAudio, uploadCursor } from '@/lib/image-client'
 import { cn } from '@/lib/utils'
+import { EffectTile } from './look-tile'
 import type { EditorApi } from './types'
 import { Btn, Group, Input, Row, Seg, Slider, Switch } from './ui'
 
@@ -109,6 +110,23 @@ export function EffectsPanel({ api }: { api: EditorApi }) {
   }
   return (
     <div>
+      <Group title="Effects" hint="Snow, embers, smoke and more, playing over your background. Pick one, then set how much and how fast.">
+        <div className="grid grid-cols-4 gap-2">
+          {OVERLAYS.map((o) => (
+            <EffectTile key={o.id} id={o.id} name={o.name} on={cfg.overlay.effect === o.id} onClick={() => up('overlay', { effect: o.id })} />
+          ))}
+        </div>
+        {cfg.overlay.effect !== 'none' && (
+          <>
+            <Row label="Amount" value={cfg.overlay.intensity}>
+              <Slider label="Effect amount" value={cfg.overlay.intensity} onChange={(v) => up('overlay', { intensity: v })} />
+            </Row>
+            <Row label="Speed" value={cfg.overlay.speed}>
+              <Slider label="Effect speed" value={cfg.overlay.speed} onChange={(v) => up('overlay', { speed: v })} />
+            </Row>
+          </>
+        )}
+      </Group>
       <Group title="Music" hint="plays when someone enters. keep it short: up to 1 MB, about a minute of mp3.">
         <input ref={file} type="file" accept="audio/mpeg,audio/mp4,audio/ogg,audio/wav,.mp3,.m4a,.ogg,.wav" hidden onChange={(e) => void pick(e.target.files?.[0])} />
         <div className="flex items-center gap-3">
@@ -141,7 +159,6 @@ export function EffectsPanel({ api }: { api: EditorApi }) {
         <Switch checked={fx.typewriter} onChange={(v) => up('fx', { typewriter: v })} label="Type out the bio" />
       </Group>
       <Group title="Movement">
-        <Switch checked={fx.tilt} onChange={(v) => up('fx', { tilt: v })} label="Lean towards the pointer" hint="Links and the panel tilt in 3D." />
         <Switch checked={fx.magnetic} onChange={(v) => up('fx', { magnetic: v })} label="Pull towards the pointer" />
         <Switch checked={fx.spotlight} onChange={(v) => up('fx', { spotlight: v })} label="Spotlight" hint="Everything dims except where the pointer is." />
         <Row label="Parallax" value={fx.parallax}>

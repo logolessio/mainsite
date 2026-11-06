@@ -8,8 +8,8 @@ import { type BioBlock, embedFor, linkLabel, platformOf } from '@/lib/bio'
 import { PROFILE_FONT_CLASS } from '@/lib/profile-fonts'
 import type { FontId } from '@/lib/profile-style'
 import { cn } from '@/lib/utils'
-import { Typewriter, ViewCount } from './card'
-import { useBio } from './context'
+import { Typewriter } from './card'
+import { type EditPart, useBio } from './context'
 
 /** The brand marks we have a picture for (public/brands). */
 const BRANDS = new Set(['android', 'apple', 'applemusic', 'artstation', 'audiomack', 'bandcamp', 'beatport', 'behance', 'bluesky', 'buymeacoffee', 'deezer', 'discord', 'dribbble', 'epicgames', 'facebook', 'github', 'google', 'instagram', 'kick', 'kofi', 'linktree', 'medium', 'patreon', 'paypal', 'pinterest', 'playstation', 'reddit', 'roblox', 'snapchat', 'soundcloud', 'spotify', 'steam', 'substack', 'telegram', 'threads', 'tidal', 'tiktok', 'tumblr', 'twitch', 'vimeo', 'whatsapp', 'x', 'youtube', 'youtubemusic', 'youtubeshorts', 'calendly', 'cashapp', 'etsy', 'figma', 'flickr', 'genius', 'gumroad', 'lastfm', 'linkedin', 'mastodon', 'notion', 'shopify', 'signal', 'venmo', 'vsco'])
@@ -98,19 +98,47 @@ export function Avatar({ size, className }: { size?: number; className?: string 
 }
 
 export function Socials({ className, justify = 'center' }: { className?: string; justify?: 'center' | 'start' }) {
-  const { socials, track, mode } = useBio()
+  const { socials, track, mode, cfg } = useBio()
   if (!socials.length) return null
+  const look = cfg.theme.icons
   return (
-    <ul data-in style={{ '--i': 3 } as CSSProperties} className={cn('flex flex-wrap gap-2.5', justify === 'center' ? 'justify-center' : 'justify-start', className)}>
+    <ul data-in style={{ '--i': 3 } as CSSProperties} className={cn('flex flex-wrap', look === 'boxed' ? 'gap-2.5' : 'gap-1.5', justify === 'center' ? 'justify-center' : 'justify-start', className)}>
       {socials.map((s) => (
         <li key={s.id}>
-          <a className="bs" href={s.url} target="_blank" rel="noopener noreferrer nofollow" aria-label={s.platform} onClick={() => track('click', s.id)} tabIndex={mode === 'mini' ? -1 : undefined}>
-            <BlockIcon block={s} className="size-[1.15rem]" />
+          <a className="bs" data-icons={look} href={s.url} target="_blank" rel="noopener noreferrer nofollow" aria-label={s.platform} onClick={() => track('click', s.id)} tabIndex={mode === 'mini' ? -1 : undefined}>
+            <BlockIcon block={s} className={look === 'boxed' ? 'size-[1.15rem]' : 'size-[1.55rem]'} />
           </a>
         </li>
       ))}
     </ul>
   )
+}
+
+/** In the editor's preview, a part of the page you can click to open its settings (it is outlined under the pointer). On the real page it is just a box. */
+export function Part({ id, className, children }: { id: EditPart; className?: string; children: ReactNode }) {
+  const { onPart } = useBio()
+  if (!onPart) return <div className={className}>{children}</div>
+  return (
+    <div
+      data-part={id}
+      className={cn('bio-part', className)}
+      onClickCapture={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        onPart(id)
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+/** A click on the empty background of the page, in the editor's preview, opens the background's settings. */
+export function useBackgroundClick() {
+  const { onPart } = useBio()
+  return (e: React.MouseEvent) => {
+    if (onPart && e.target === e.currentTarget) onPart('background')
+  }
 }
 
 /** Leans towards the pointer (a few degrees) and follows it a little: the soft 3D feel of a card or button. */
@@ -260,20 +288,5 @@ export function BlockList({ className, items }: { className?: string; items?: Bi
         <BlockView key={b.id} block={b} index={i} />
       ))}
     </div>
-  )
-}
-
-/** "Made on logoless", small, at the bottom. */
-export function Footer({ className }: { className?: string }) {
-  const { cfg, data, mode } = useBio()
-  return (
-    <footer className={cn('bio-mute flex items-center justify-center gap-3 py-10 text-[0.72rem] tracking-[0.04em]', className)}>
-      <ViewCount />
-      {cfg.meta.badge && (
-        <a href={mode === 'live' ? '/' : undefined} className="underline-offset-4 hover:underline" tabIndex={mode === 'mini' ? -1 : undefined}>
-          logoless
-        </a>
-      )}
-    </footer>
   )
 }

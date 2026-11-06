@@ -8,14 +8,13 @@ import { type BioBlock, hexLum, hexRgb, isLive, pageLight } from '@/lib/bio'
 import { BioBackground, BioFilm } from './background'
 import { fontClass } from './bits'
 import { MusicPlayer } from './audio'
-import { type Arrange, BioProvider, type BioMode, type BioPageData } from './context'
+import { type Arrange, BioProvider, type BioMode, type BioPageData, type EditPart } from './context'
 import { cursorVars, CursorTrailLayer, EnterGate, Spotlight } from './fx'
-import { Aura, Bento, Poster, Split, Stack } from './layouts-a'
 import { Canvas } from './canvas'
-import { Card } from './layouts-c'
-import { Chapters, Index, Orbit, Reel, Terminal } from './layouts-b'
+import { Classic, Card, Side } from './layouts-c'
+import { Corner } from './corner'
 
-const LAYOUT_VIEWS = { card: Card, aura: Aura, split: Split, poster: Poster, bento: Bento, stack: Stack, orbit: Orbit, index: Index, terminal: Terminal, chapters: Chapters, reel: Reel, canvas: Canvas } as const
+const LAYOUT_VIEWS = { classic: Classic, card: Card, side: Side, canvas: Canvas } as const
 
 const gray = (tone: number, a = 1) => {
   const v = Math.round((Math.max(0, Math.min(100, tone)) / 100) * 255)
@@ -27,7 +26,7 @@ const gray = (tone: number, a = 1) => {
  * screen page, as the editor's preview and as a small moving picture on the home page). Everything that moves against the scroll reads one smoothed scroll
  * position, so the whole page eases together.
  */
-export function BioPage({ data, mode = 'live', className, style, still = false, arrange }: { data: BioPageData; mode?: BioMode; className?: string; style?: CSSProperties; still?: boolean; arrange?: Arrange }) {
+export function BioPage({ data, mode = 'live', className, style, still = false, arrange, onPart }: { data: BioPageData; mode?: BioMode; className?: string; style?: CSSProperties; still?: boolean; arrange?: Arrange; onPart?: (part: EditPart) => void }) {
   const cfg = data.config
   const { reduced, canHover } = useMotionPrefs()
   const root = useRef<HTMLDivElement>(null)
@@ -146,12 +145,12 @@ export function BioPage({ data, mode = 'live', className, style, still = false, 
     ...cv,
     ...style,
   } as CSSProperties
-  const Layout = LAYOUT_VIEWS[cfg.layout as keyof typeof LAYOUT_VIEWS] ?? Card
+  const Layout = LAYOUT_VIEWS[cfg.layout as keyof typeof LAYOUT_VIEWS] ?? Classic
   const gate = !entered && mode !== 'mini' && cfg.fx.enter !== 'none'
   const trail = canHover && mode !== 'mini' && cfg.cursor.trail !== 'none'
 
   return (
-    <BioProvider value={{ data, cfg, mode, sy, px, py, level, reduced, scroller, entered, track, items, socials, arrange: mode === 'preview' ? arrange : undefined }}>
+    <BioProvider value={{ data, cfg, mode, sy, px, py, level, reduced, scroller, entered, track, items, socials, arrange: mode === 'preview' ? arrange : undefined, onPart: mode === 'preview' ? onPart : undefined }}>
       <div
         ref={root}
         className={`bio-root ${fontClass(cfg.theme.font)} ${className ?? ''}`}
@@ -165,6 +164,7 @@ export function BioPage({ data, mode = 'live', className, style, still = false, 
         data-reveal={reduced ? 'none' : cfg.fx.reveal}
         data-paused={gate ? 1 : undefined}
         data-cur={Object.keys(cv).length ? 1 : undefined}
+        data-edit={mode === 'preview' && onPart ? 1 : undefined}
         data-layout={cfg.layout}
         data-font={cfg.theme.font}
         onPointerMove={mode === 'mini' ? undefined : onMove}
@@ -176,6 +176,7 @@ export function BioPage({ data, mode = 'live', className, style, still = false, 
         <div ref={scroller} className="bio-scroll" style={gate ? { overflow: 'hidden' } : undefined}>
           <Layout />
         </div>
+        <Corner />
         <MusicPlayer level={level} />
         {gate && <EnterGate onEnter={() => setEntered(true)} />}
       </div>

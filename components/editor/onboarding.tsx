@@ -297,8 +297,8 @@ export function Onboarding({ api, data, fresh, onFinish, onDone, onSkip }: { api
               const on = look === p.id
               return (
                 <button key={p.id} type="button" aria-pressed={on} onClick={() => (setLook(p.id), set((c) => applyPreset(c, p)))} className={cn('flex items-center gap-3 rounded-2xl border p-2.5 text-left transition-colors duration-200', on ? 'border-white/60' : 'border-white/12 hover:border-white/35')}>
-                  <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-xl border border-white/25" style={{ background: `hsl(0 0% ${p.swatch[0]}%)` }}>
-                    <span className="size-3 rounded-full" style={{ background: `hsl(0 0% ${p.swatch[1]}%)` }} />
+                  <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-xl border border-white/25" style={{ background: `radial-gradient(120% 90% at 50% 18%, ${p.hues[1]}, ${p.hues[0]} 72%)` }}>
+                    <span className="size-3 rounded-full" style={{ background: `linear-gradient(135deg, ${p.hues[2]}, ${p.hues[3]})`, boxShadow: `0 0 10px ${p.hues[2]}` }} />
                   </span>
                   <span className="min-w-0">
                     <span className="block text-[0.8rem]">{p.name}</span>

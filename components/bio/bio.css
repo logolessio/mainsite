@@ -696,3 +696,34 @@ a.bio-tile:hover {
 @media (prefers-reduced-motion: reduce) {
   .card-sheen { animation: none; }
 }
+
+/* ---------------------------------------------------------------- the 3D card, guns.lol-style pieces */
+.stage-float { animation: stage-float 7s ease-in-out infinite; }
+@keyframes stage-float {
+  50% { transform: translateY(-7px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-float { animation: none; }
+}
+/* the picture: a soft dark ring and a glow in the page's accent */
+.ba[data-ring='1'] {
+  box-shadow: 0 0 0 5px rgb(var(--bio-fg-rgb) / 0.07), 0 0 0 6px var(--bio-line), 0 10px 40px -6px rgb(var(--bio-accent-rgb) / 0.4);
+}
+/* the social icons: no box, bright, with a soft glow */
+.bs[data-icons='glow'], .bs[data-icons='plain'] {
+  width: 2.7rem;
+  height: 2.7rem;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+}
+.bs[data-icons='glow'] { filter: drop-shadow(0 0 8px rgb(var(--bio-fg-rgb) / 0.55)); }
+.bs[data-icons='glow']:hover, .bs[data-icons='plain']:hover {
+  background: transparent;
+  color: var(--bio-fg);
+  transform: translateY(-2px) scale(1.18);
+}
+.bs[data-icons='glow']:hover { filter: drop-shadow(0 0 14px rgb(var(--bio-accent-rgb) / 0.9)); }
+/* in the editor's preview, parts you can click */
+.bio-root[data-edit] .bio-part { cursor: pointer; border-radius: 12px; outline: 1.5px dashed transparent; outline-offset: 6px; transition: outline-color 0.2s; }
+.bio-root[data-edit] .bio-part:hover { outline-color: rgb(var(--bio-fg-rgb) / 0.55); }

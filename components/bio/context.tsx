@@ -26,6 +26,9 @@ export type Arrange = {
   snap: boolean
 }
 
+/** What a click on the editor's preview of the page opens: your picture, name and bio; your links and icons; the card; or the background. */
+export type EditPart = 'profile' | 'links' | 'card' | 'background'
+
 /** `live` is the real page, `preview` is the editor's copy of it (nothing is counted), `mini` is a small moving picture of a page (the home page). */
 export type BioMode = 'live' | 'preview' | 'mini'
 
@@ -51,6 +54,8 @@ export type BioCtx = {
   socials: Extract<BioBlock, { t: 'social' }>[]
   /** the canvas layout's editing hold (editor preview only) */
   arrange?: Arrange
+  /** in the editor's preview: a click on a part of the page asks for it to be opened for editing */
+  onPart?: (part: EditPart) => void
 }
 
 const Ctx = createContext<BioCtx | null>(null)

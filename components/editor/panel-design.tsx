@@ -5,7 +5,7 @@ import { useRef, useState } from 'react'
 import { BioPage } from '@/components/bio/bio-page'
 import { fontClass } from '@/components/bio/bits'
 import { GifPicker } from '@/components/profile/gif-picker'
-import { AVATAR_SHAPES, BG_KINDS, BIO_EFFECTS, BIO_SHADERS, BUTTON_STYLES, CARD_STYLES, GRADIENT_STYLES, LAYOUTS, NAME_STYLES, OVERLAYS, PRESETS, applyPreset, grey, hslHex } from '@/lib/bio'
+import { AVATAR_SHAPES, BG_KINDS, BUTTON_STYLES, CARD_STYLES, GRADIENT_STYLES, LAYOUTS, NAME_STYLES, PRESETS, applyPreset, hslHex } from '@/lib/bio'
 import { uploadBackground, uploadBgVideo } from '@/lib/image-client'
 import { cn } from '@/lib/utils'
 import { ArrangePanel } from './panel-arrange'
@@ -13,6 +13,8 @@ import type { EditorApi } from './types'
 import { Btn, ColorField, Group, Row, Seg, Slider, Switch } from './ui'
 
 const FONTS = [
+  ['quicksand', 'Rounded'],
+  ['jelly', 'Jellybean'],
   ['geist', 'Geist'],
   ['funnel', 'Funnel'],
   ['bricolage', 'Bricolage'],
@@ -34,7 +36,7 @@ const FONTS = [
   ['hand', 'Handwritten'],
 ] as const
 
-/** A small moving picture of one layout, drawn by the real page. */
+/** A small picture of one layout, drawn by the real page. */
 function Thumb({ api, layout }: { api: EditorApi; layout: string }) {
   const { cfg, profile } = api
   const data = {
@@ -43,10 +45,10 @@ function Thumb({ api, layout }: { api: EditorApi; layout: string }) {
     bio: profile.bio,
     avatar: profile.newAvatar ? `/api/img/${profile.newAvatar}` : profile.hasAvatar ? profile.avatar : null,
     views: null,
-    config: { ...cfg, layout: layout as typeof cfg.layout, bg: { ...cfg.bg, kind: cfg.bg.kind === 'shader' || cfg.bg.kind === 'effect' || cfg.bg.kind === 'glow' ? ('tone' as const) : cfg.bg.kind }, fx: { ...cfg.fx, enter: 'none' as const, grain: 0, scanlines: 0, reveal: 'none' as const, spotlight: false }, cursor: { ...cfg.cursor, trail: 'none' as const }, audio: { ...cfg.audio, id: '' } },
+    config: { ...cfg, layout: layout as typeof cfg.layout, fx: { ...cfg.fx, enter: 'none' as const, grain: 0, scanlines: 0, reveal: 'none' as const, spotlight: false, float: false }, cursor: { ...cfg.cursor, trail: 'none' as const }, audio: { ...cfg.audio, id: '' }, overlay: { ...cfg.overlay, effect: 'none' as const } },
   }
   return (
-    <div className="pointer-events-none absolute top-0 left-0 origin-top-left" style={{ width: 390, height: 520, transform: 'scale(0.36)' }}>
+    <div className="pointer-events-none absolute top-0 left-0 origin-top-left" style={{ width: 390, height: 520, transform: 'scale(0.4)' }}>
       <BioPage mode="mini" data={data} />
     </div>
   )
@@ -93,27 +95,13 @@ export function LayoutPanel({ api }: { api: EditorApi }) {
   return (
     <div>
       {cfg.layout === 'canvas' && <ArrangePanel api={api} />}
-      <Group title="Looks" hint="one tap sets the type, background, cursor and effects. your links stay put.">
-        <div className="grid grid-cols-4 gap-2">
-          {PRESETS.map((p) => (
-            <button key={p.id} type="button" onClick={() => set((c) => applyPreset(c, p))} title={p.note} className="group text-left">
-              <span className="relative block aspect-[4/5] overflow-hidden rounded-xl border border-[var(--ed-line)] transition-colors group-hover:border-white/50" style={{ background: `linear-gradient(160deg, ${grey(p.swatch[0])}, ${grey(p.swatch[1])})` }}>
-                <span className="absolute inset-x-2 bottom-2 text-[0.62rem] font-medium" style={{ color: p.swatch[0] > 55 ? '#000' : '#fff' }}>
-                  Aa
-                </span>
-              </span>
-              <span className="mt-1.5 block truncate text-[0.7rem] text-[var(--ed-mute)] group-hover:text-white">{p.name}</span>
-            </button>
-          ))}
-        </div>
-      </Group>
-      <Group title="Layout" hint="twelve ways to lay out the same page. they all move as you scroll.">
+      <Group title="Layout" hint="four ways to lay out the same page. your links and words stay put.">
         <div className="grid grid-cols-2 gap-3">
           {LAYOUTS.map((l) => {
             const on = cfg.layout === l.id
             return (
               <button key={l.id} type="button" onClick={() => set((c) => ({ ...c, layout: l.id }))} aria-pressed={on} className="group text-left">
-                <span className={cn('relative block h-[11.2rem] overflow-hidden rounded-xl border bg-black transition-colors', on ? 'border-white' : 'border-[var(--ed-line)] group-hover:border-white/40')}>
+                <span className={cn('relative block h-[12.5rem] overflow-hidden rounded-2xl border bg-black transition-[border-color,transform] duration-200 group-hover:-translate-y-0.5', on ? 'border-white' : 'border-[var(--ed-line)] group-hover:border-white/40')}>
                   <Thumb api={api} layout={l.id} />
                   {on && (
                     <span className="absolute top-2 right-2 grid size-5 place-items-center rounded-full bg-white text-black">
@@ -128,23 +116,33 @@ export function LayoutPanel({ api }: { api: EditorApi }) {
           })}
         </div>
       </Group>
-      <Group title="Card" hint="The floating card in the Card layout, and the frosted panel in Aura.">
+      <Group title="Card" hint="The floating card your profile sits on.">
         {cfg.layout === 'card' && <BannerPicker api={api} />}
         <Seg value={cfg.card.style} options={CARD_STYLES} onChange={(v) => up('card', { style: v })} />
         {cfg.card.style === 'glass' && (
           <>
             <Row label="Blur" value={cfg.card.blur}>
-              <Slider label="Panel blur" value={cfg.card.blur} max={60} onChange={(v) => up('card', { blur: v })} />
+              <Slider label="Card blur" value={cfg.card.blur} max={60} onChange={(v) => up('card', { blur: v })} />
             </Row>
             <Row label="Frost" value={cfg.card.opacity}>
-              <Slider label="Panel frost" value={cfg.card.opacity} onChange={(v) => up('card', { opacity: v })} />
+              <Slider label="Card frost" value={cfg.card.opacity} onChange={(v) => up('card', { opacity: v })} />
             </Row>
           </>
         )}
-        <Switch checked={cfg.card.glare} onChange={(v) => up('card', { glare: v })} label="Light that follows the pointer" />
-        <Row label="Text">
-          <Seg value={cfg.theme.align} options={[{ id: 'center', name: 'Centred' }, { id: 'left', name: 'Left' }]} onChange={(v) => up('theme', { align: v })} />
+        <Row label="Width" value={`${cfg.card.width}px`}>
+          <Slider label="Card width" min={300} max={640} step={10} value={cfg.card.width} onChange={(v) => up('card', { width: v })} />
         </Row>
+        <Row label="Roundness" value={cfg.theme.radius}>
+          <Slider label="Roundness" max={40} value={cfg.theme.radius} onChange={(v) => up('theme', { radius: v })} />
+        </Row>
+        <Switch checked={cfg.card.glare} onChange={(v) => up('card', { glare: v })} label="Light on its face" hint="A soft shine that slides across the card as it turns." />
+      </Group>
+      <Group title="3D" hint="The card turns towards the pointer, and its pieces stand off it at different depths.">
+        <Switch checked={cfg.fx.tilt} onChange={(v) => up('fx', { tilt: v })} label="Turn towards the pointer" />
+        <Row label="Depth" value={cfg.fx.depth}>
+          <Slider label="3D depth" value={cfg.fx.depth} onChange={(v) => up('fx', { depth: v })} />
+        </Row>
+        <Switch checked={cfg.fx.float} onChange={(v) => up('fx', { float: v })} label="Drift" hint="The card floats up and down a little." />
       </Group>
     </div>
   )
@@ -155,7 +153,7 @@ export function StylePanel({ api }: { api: EditorApi }) {
   const t = cfg.theme
   return (
     <div>
-      <Group title="Your colours" hint="Switch these on to colour the whole page. The background, the buttons, your name and the moving backgrounds all pick them up.">
+      <Group title="Your colours" hint="Switch these on to colour the whole page. The background, the buttons, your name and the effects all pick them up.">
         <Switch checked={cfg.colors.on} onChange={(v) => up('colors', { on: v })} label="Use my own colours" />
         {cfg.colors.on && (
           <>
@@ -233,6 +231,9 @@ export function StylePanel({ api }: { api: EditorApi }) {
           <Seg value={t.size} options={[{ id: 'compact', name: 'Compact' }, { id: 'comfortable', name: 'Regular' }, { id: 'large', name: 'Large' }]} onChange={(v) => up('theme', { size: v })} />
         </Row>
       </Group>
+      <Group title="Social icons">
+        <Seg value={t.icons} options={[{ id: 'glow', name: 'Glow' }, { id: 'plain', name: 'Plain' }, { id: 'boxed', name: 'Boxed' }]} onChange={(v) => up('theme', { icons: v })} />
+      </Group>
       <Group title="Picture">
         <Seg value={cfg.avatar.shape} options={AVATAR_SHAPES} onChange={(v) => up('avatar', { shape: v })} />
         <Row label="Size" value={cfg.avatar.size}>
@@ -268,6 +269,7 @@ export function BackgroundPanel({ api }: { api: EditorApi }) {
     <div>
       <Group title="Background">
         <Seg value={bg.kind} options={BG_KINDS} cols={3} onChange={(v) => up('bg', { kind: v })} />
+        {!media && <p className="text-[0.74rem] leading-snug text-[var(--ed-mute)]">The background stays still. For snow, embers, smoke and more, see Effects.</p>}
         {bg.kind === 'tone' && cfg.colors.on && <ColorField label="Background colour" value={cfg.colors.bg} onChange={(v) => up('colors', { bg: v })} />}
         {bg.kind === 'tone' && !cfg.colors.on && (
           <Row label="Tone" value={bg.tone}>
@@ -297,48 +299,12 @@ export function BackgroundPanel({ api }: { api: EditorApi }) {
             )}
           </>
         )}
-        {bg.kind === 'glow' && (
-          <div className="grid gap-3">
-            {cfg.colors.on ? (
-              <>
-                <ColorField label="Outer colour" value={cfg.colors.accent} onChange={(v) => up('colors', { accent: v })} />
-                <ColorField label="Inner colour" value={cfg.colors.accent2} onChange={(v) => up('colors', { accent2: v })} />
-                <p className="text-[0.74rem] leading-snug text-[var(--ed-mute)]">The glow rises from the bottom and runs from one colour to the other, the short way round the colour wheel. Blue to orange passes violet, pink and red.</p>
-              </>
-            ) : (
-              <>
-                <p className="text-[0.76rem] leading-snug text-[var(--ed-mute)]">The glow is grey until the page has colours of its own.</p>
-                <Btn variant="solid" onClick={() => up('colors', { on: true })}>
-                  Use my own colours
-                </Btn>
-              </>
-            )}
-          </div>
-        )}
-        {bg.kind === 'shader' && (
-          <div className="grid grid-cols-3 gap-1.5">
-            {BIO_SHADERS.map((s) => (
-              <button key={s.id} type="button" onClick={() => up('bg', { shader: s.id })} aria-pressed={bg.shader === s.id} className={cn('h-10 rounded-lg border text-[0.76rem] transition-colors', bg.shader === s.id ? 'border-white bg-white text-black' : 'border-[var(--ed-line)] text-[var(--ed-mute)] hover:text-white')}>
-                {s.name}
-              </button>
-            ))}
-          </div>
-        )}
-        {bg.kind === 'effect' && (
-          <div className="grid grid-cols-3 gap-1.5">
-            {BIO_EFFECTS.map((s) => (
-              <button key={s.id} type="button" onClick={() => up('bg', { effect: s.id })} aria-pressed={bg.effect === s.id} className={cn('h-10 rounded-lg border px-1 text-[0.72rem] transition-colors', bg.effect === s.id ? 'border-white bg-white text-black' : 'border-[var(--ed-line)] text-[var(--ed-mute)] hover:text-white')}>
-                {s.name}
-              </button>
-            ))}
-          </div>
-        )}
         {bg.kind === 'image' && (
           <div className="flex items-center gap-3">
             <input ref={imgRef} type="file" accept="image/*" hidden onChange={(e) => void pick(e.target.files?.[0], 'image')} />
             {bg.image && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={`/api/img/${bg.image}`} alt="" className="size-14 rounded-lg border border-[var(--ed-line)] object-cover grayscale" />
+              <img src={`/api/img/${bg.image}`} alt="" className="size-14 rounded-lg border border-[var(--ed-line)] object-cover" />
             )}
             <Btn onClick={() => imgRef.current?.click()} disabled={busy}>
               <ImagePlus className="size-4" /> {bg.image ? 'Change picture' : 'Upload a picture'}
@@ -372,16 +338,6 @@ export function BackgroundPanel({ api }: { api: EditorApi }) {
           </div>
         )}
       </Group>
-      {(bg.kind === 'shader' || bg.kind === 'effect') && (
-        <Group title="Motion">
-          <Row label="Strength" value={bg.intensity}>
-            <Slider label="Strength" value={bg.intensity} onChange={(v) => up('bg', { intensity: v })} />
-          </Row>
-          <Row label="Speed" value={bg.speed}>
-            <Slider label="Speed" value={bg.speed} onChange={(v) => up('bg', { speed: v })} />
-          </Row>
-        </Group>
-      )}
       <Group title="Finish">
         {media && <Switch checked={bg.mono} onChange={(v) => up('bg', { mono: v })} label="Turn it to grey" hint="Off keeps the colours of your picture or video." />}
         <Row label="Blur" value={`${bg.blur}px`}>
@@ -393,28 +349,9 @@ export function BackgroundPanel({ api }: { api: EditorApi }) {
         <Row label="Dark edges" value={bg.vignette}>
           <Slider label="Dark edges" value={bg.vignette} onChange={(v) => up('bg', { vignette: v })} />
         </Row>
-        <Row label="Drift against the scroll" value={bg.parallax}>
-          <Slider label="Background drift" value={bg.parallax} onChange={(v) => up('bg', { parallax: v })} />
+        <Row label="Lean with the pointer" value={bg.parallax}>
+          <Slider label="Background lean" value={bg.parallax} onChange={(v) => up('bg', { parallax: v })} />
         </Row>
-      </Group>
-      <Group title="Floating over it">
-        <div className="grid grid-cols-4 gap-1.5">
-          {OVERLAYS.map((o) => (
-            <button key={o.id} type="button" onClick={() => up('overlay', { effect: o.id })} aria-pressed={cfg.overlay.effect === o.id} className={cn('h-9 rounded-lg border text-[0.72rem] transition-colors', cfg.overlay.effect === o.id ? 'border-white bg-white text-black' : 'border-[var(--ed-line)] text-[var(--ed-mute)] hover:text-white')}>
-              {o.name}
-            </button>
-          ))}
-        </div>
-        {cfg.overlay.effect !== 'none' && (
-          <>
-            <Row label="Amount" value={cfg.overlay.intensity}>
-              <Slider label="Overlay amount" value={cfg.overlay.intensity} onChange={(v) => up('overlay', { intensity: v })} />
-            </Row>
-            <Row label="Speed" value={cfg.overlay.speed}>
-              <Slider label="Overlay speed" value={cfg.overlay.speed} onChange={(v) => up('overlay', { speed: v })} />
-            </Row>
-          </>
-        )}
       </Group>
     </div>
   )

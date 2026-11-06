@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowUpRight, BarChart3, Check, Copy, CornerDownLeft, Ellipsis, ExternalLink, Eye, ImageIcon, LayoutDashboard, LayoutGrid, Link2, Loader2, type LucideIcon, LogOut, MousePointer2, Palette, Pencil, Search, Settings2, Sparkles, User, WandSparkles, X } from 'lucide-react'
+import { ArrowUpRight, BarChart3, Check, Copy, CornerDownLeft, Ellipsis, ExternalLink, Eye, ImageIcon, LayoutDashboard, LayoutGrid, Link2, Loader2, type LucideIcon, LogOut, MousePointer2, Palette, Pencil, Search, Settings2, Sparkles, User, WandSparkles, X, Undo2, Redo2 } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
@@ -43,6 +43,7 @@ type Side = (typeof SIDE)[number]
 export type NavCount = { n?: number; dot?: boolean }
 export type DashUser = { name: string; handle: string; avatar: string | null }
 export type SaveState = { dirty: boolean; saving: boolean; onSave: () => void }
+export type HistoryState = { canUndo: boolean; canRedo: boolean; undo: () => void; redo: () => void }
 
 function Badge({ c, lit }: { c?: NavCount; lit?: boolean }) {
   if (!c || (!c.n && !c.dot)) return null
@@ -170,7 +171,7 @@ function Jump({ open, onClose, cmds }: { open: boolean; onClose: () => void; cmd
   )
 }
 
-export function DashShell({ tab, onGo, counts, user, save, canPreview, view, onView, children }: { tab: DashId; onGo: (id: DashId) => void; counts: Partial<Record<DashId, NavCount>>; user: DashUser; save: SaveState; canPreview: boolean; view: 'edit' | 'preview'; onView: (v: 'edit' | 'preview') => void; children: ReactNode }) {
+export function DashShell({ tab, onGo, counts, user, save, history, canPreview, view, onView, children }: { tab: DashId; onGo: (id: DashId) => void; counts: Partial<Record<DashId, NavCount>>; user: DashUser; save: SaveState; history?: HistoryState; canPreview: boolean; view: 'edit' | 'preview'; onView: (v: 'edit' | 'preview') => void; children: ReactNode }) {
   const [jump, setJump] = useState(false)
   const [more, setMore] = useState(false)
   const current = NAV.find((n) => n.id === tab) ?? NAV[0]
@@ -314,6 +315,16 @@ export function DashShell({ tab, onGo, counts, user, save, canPreview, view, onV
           <button type="button" onClick={() => setJump(true)} aria-label="Jump to" className="grid size-9 place-items-center rounded-full border border-[var(--ed-line2)] text-white/70 md:hidden">
             <Search className="size-4" strokeWidth={1.6} />
           </button>
+          {history && (
+            <div className="flex items-center">
+              <button type="button" onClick={history.undo} disabled={!history.canUndo} aria-label="Undo" title="Undo (⌘Z)" className="grid size-9 place-items-center rounded-full text-white/60 transition-colors hover:bg-white/[0.06] hover:text-white disabled:pointer-events-none disabled:opacity-30">
+                <Undo2 className="size-4" strokeWidth={1.7} />
+              </button>
+              <button type="button" onClick={history.redo} disabled={!history.canRedo} aria-label="Redo" title="Redo (⇧⌘Z)" className="grid size-9 place-items-center rounded-full text-white/60 transition-colors hover:bg-white/[0.06] hover:text-white disabled:pointer-events-none disabled:opacity-30">
+                <Redo2 className="size-4" strokeWidth={1.7} />
+              </button>
+            </div>
+          )}
           <a href={`/${user.handle}`} target="_blank" rel="noreferrer" className="hidden h-9 items-center gap-1.5 rounded-full px-4 text-[0.8rem] text-white/60 transition-colors hover:bg-white/[0.06] hover:text-white lg:inline-flex">
             <ExternalLink className="size-3.5" /> View
           </a>
